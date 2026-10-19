@@ -58,7 +58,7 @@ jobs:
           set -o pipefail
           game-ci build . \
             --engine unity \
-            --unity-version "$UNITY_VERSION" \
+            --engine-version "$UNITY_VERSION" \
             --target-platform Android \
             --android-export-type androidPackage \
             --build-name BladePath \
