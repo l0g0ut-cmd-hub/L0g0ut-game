@@ -1,0 +1,67 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+# Одна сборка за раз: лицензия Personal — одно место, параллельные запуски упираются друг в друга.
+concurrency:
+  group: build-android
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      UNITY_VERSION: 6000.0.36f1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space (образ Unity + Android тяжёлый)
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost
+          sudo docker image prune --all --force || true
+          df -h /
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Android-${{ env.UNITY_VERSION }}-${{ hashFiles('Assets/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-Android-${{ env.UNITY_VERSION }}-
+
+      - name: Install GameCI CLI
+        uses: game-ci/cli@v0.1.72
+
+      - name: Build APK
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          set -o pipefail
+          game-ci build . \
+            --engine unity \
+            --unity-version "$UNITY_VERSION" \
+            --target-platform Android \
+            --android-export-type androidPackage \
+            --build-name BladePath \
+            --build-method BladePath.EditorTools.BuildScript.BuildAndroid 2>&1 | tee build.log
+
+      - name: Upload APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: BladePath-Android-APK
+          path: build/Android/*.apk
+          if-no-files-found: warn
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+          if-no-files-found: warn
