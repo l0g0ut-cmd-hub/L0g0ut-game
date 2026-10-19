@@ -10,20 +10,28 @@ concurrency:
   group: build-android
   cancel-in-progress: false
 
+permissions:
+  contents: write   # нужно только шагу, который кладёт очищенный лог в ветку ci-logs
+
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     env:
       UNITY_VERSION: 6000.0.36f1
+      GAMECI_VERSION: v0.1.72
     steps:
       - uses: actions/checkout@v4
+
+      - name: Environment info
+        run: |
+          { echo "== uname"; uname -a; echo "== docker"; docker version 2>&1 | head -20; echo "== df"; df -h /; } 2>&1 | tee ci.log
 
       - name: Free disk space (образ Unity + Android тяжёлый)
         run: |
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost
           sudo docker image prune --all --force || true
-          df -h /
+          df -h / | tee -a ci.log
 
       - name: Cache Unity Library
         uses: actions/cache@v4
@@ -34,7 +42,13 @@ jobs:
             Library-Android-${{ env.UNITY_VERSION }}-
 
       - name: Install GameCI CLI
-        uses: game-ci/cli@v0.1.72
+        run: |
+          set -o pipefail
+          export GAME_CI_INSTALL="$RUNNER_TEMP/game-ci/bin"
+          mkdir -p "$GAME_CI_INSTALL"
+          curl -fsSL "https://raw.githubusercontent.com/game-ci/cli/${GAMECI_VERSION}/scripts/install.sh" -o "$RUNNER_TEMP/gc-install.sh"
+          bash "$RUNNER_TEMP/gc-install.sh" "$GAMECI_VERSION" "$GAME_CI_INSTALL" 2>&1 | tee -a ci.log
+          echo "$GAME_CI_INSTALL" >> "$GITHUB_PATH"
 
       - name: Build APK
         env:
@@ -48,7 +62,7 @@ jobs:
             --target-platform Android \
             --android-export-type androidPackage \
             --build-name BladePath \
-            --build-method BladePath.EditorTools.BuildScript.BuildAndroid 2>&1 | tee build.log
+            --build-method BladePath.EditorTools.BuildScript.BuildAndroid 2>&1 | tee -a ci.log
 
       - name: Upload APK
         if: always()
@@ -58,10 +72,32 @@ jobs:
           path: build/Android/*.apk
           if-no-files-found: warn
 
-      - name: Upload build log
+      # Лог в приватную ветку ci-logs (секреты Unity вырезаются). Нужен, чтобы разбирать ошибки без доступа к логам Actions.
+      - name: Publish scrubbed log to ci-logs branch
         if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: build.log
-          if-no-files-found: warn
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import os
+          s = open('ci.log', errors='replace').read() if os.path.exists('ci.log') else '(ci.log отсутствует)'
+          for k in ('UNITY_PASSWORD', 'UNITY_EMAIL'):
+              v = os.environ.get(k)
+              if v:
+                  s = s.replace(v, '***')
+          lines = s.splitlines()
+          if len(lines) > 3500:
+              s = '\n'.join(lines[:300] + ['', '... [обрезано] ...', ''] + lines[-3200:])
+          open('ci-scrubbed.log', 'w').write(s)
+          PY
+          REPO="${GITHUB_REPOSITORY}"
+          gh api "repos/$REPO/git/refs" -f ref="refs/heads/ci-logs" -f sha="$GITHUB_SHA" >/dev/null 2>&1 || true
+          NAME="logs/run-${GITHUB_RUN_NUMBER}.log"
+          SHA=$(gh api "repos/$REPO/contents/$NAME?ref=ci-logs" --jq .sha 2>/dev/null || true)
+          if [ -n "$SHA" ]; then
+            gh api -X PUT "repos/$REPO/contents/$NAME" -f message="log run ${GITHUB_RUN_NUMBER}" -f branch=ci-logs -f sha="$SHA" -f content="$(base64 -w0 ci-scrubbed.log)" >/dev/null
+          else
+            gh api -X PUT "repos/$REPO/contents/$NAME" -f message="log run ${GITHUB_RUN_NUMBER}" -f branch=ci-logs -f content="$(base64 -w0 ci-scrubbed.log)" >/dev/null
+          fi
