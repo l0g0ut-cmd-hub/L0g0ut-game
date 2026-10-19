@@ -96,8 +96,16 @@ jobs:
           gh api "repos/$REPO/git/refs" -f ref="refs/heads/ci-logs" -f sha="$GITHUB_SHA" >/dev/null 2>&1 || true
           NAME="logs/run-${GITHUB_RUN_NUMBER}.log"
           SHA=$(gh api "repos/$REPO/contents/$NAME?ref=ci-logs" --jq .sha 2>/dev/null || true)
-          if [ -n "$SHA" ]; then
-            gh api -X PUT "repos/$REPO/contents/$NAME" -f message="log run ${GITHUB_RUN_NUMBER}" -f branch=ci-logs -f sha="$SHA" -f content="$(base64 -w0 ci-scrubbed.log)" >/dev/null
-          else
-            gh api -X PUT "repos/$REPO/contents/$NAME" -f message="log run ${GITHUB_RUN_NUMBER}" -f branch=ci-logs -f content="$(base64 -w0 ci-scrubbed.log)" >/dev/null
-          fi
+          export SHA
+          python3 - <<'PY'
+          import base64, json, os
+          body = {
+              "message": "log run " + os.environ["GITHUB_RUN_NUMBER"],
+              "branch": "ci-logs",
+              "content": base64.b64encode(open("ci-scrubbed.log", "rb").read()).decode(),
+          }
+          if os.environ.get("SHA"):
+              body["sha"] = os.environ["SHA"]
+          json.dump(body, open("put.json", "w"))
+          PY
+          gh api -X PUT "repos/$REPO/contents/$NAME" --input put.json >/dev/null
