@@ -25,13 +25,13 @@ jobs:
 
       - name: Environment info
         run: |
-          { echo "== uname"; uname -a; echo "== docker"; docker version 2>&1 | head -20; echo "== df"; df -h /; } 2>&1 | tee ci.log
+          { echo "== uname"; uname -a; echo "== docker"; docker version 2>&1 | head -20; echo "== df"; df -h /; } 2>&1 | tee "$RUNNER_TEMP/ci.log"
 
       - name: Free disk space (образ Unity + Android тяжёлый)
         run: |
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost
           sudo docker image prune --all --force || true
-          df -h / | tee -a ci.log
+          df -h / | tee -a "$RUNNER_TEMP/ci.log"
 
       - name: Cache Unity Library
         uses: actions/cache@v4
@@ -47,7 +47,7 @@ jobs:
           export GAME_CI_INSTALL="$RUNNER_TEMP/game-ci/bin"
           mkdir -p "$GAME_CI_INSTALL"
           curl -fsSL "https://raw.githubusercontent.com/game-ci/cli/${GAMECI_VERSION}/scripts/install.sh" -o "$RUNNER_TEMP/gc-install.sh"
-          bash "$RUNNER_TEMP/gc-install.sh" "$GAMECI_VERSION" "$GAME_CI_INSTALL" 2>&1 | tee -a ci.log
+          bash "$RUNNER_TEMP/gc-install.sh" "$GAMECI_VERSION" "$GAME_CI_INSTALL" 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
           echo "$GAME_CI_INSTALL" >> "$GITHUB_PATH"
 
       - name: Build APK
@@ -62,7 +62,8 @@ jobs:
             --target-platform Android \
             --android-export-type androidPackage \
             --build-name BladePath \
-            --build-method BladePath.EditorTools.BuildScript.BuildAndroid 2>&1 | tee -a ci.log
+            --versioning-strategy None \
+            --build-method BladePath.EditorTools.BuildScript.BuildAndroid 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
 
       - name: Upload APK
         if: always()
@@ -82,7 +83,9 @@ jobs:
         run: |
           python3 - <<'PY'
           import os
-          s = open('ci.log', errors='replace').read() if os.path.exists('ci.log') else '(ci.log отсутствует)'
+          T = os.environ['RUNNER_TEMP']
+          src = os.path.join(T, 'ci.log')
+          s = open(src, errors='replace').read() if os.path.exists(src) else '(ci.log отсутствует)'
           for k in ('UNITY_PASSWORD', 'UNITY_EMAIL'):
               v = os.environ.get(k)
               if v:
@@ -90,7 +93,7 @@ jobs:
           lines = s.splitlines()
           if len(lines) > 3500:
               s = '\n'.join(lines[:300] + ['', '... [обрезано] ...', ''] + lines[-3200:])
-          open('ci-scrubbed.log', 'w').write(s)
+          open(os.path.join(T, 'ci-scrubbed.log'), 'w').write(s)
           PY
           REPO="${GITHUB_REPOSITORY}"
           gh api "repos/$REPO/git/refs" -f ref="refs/heads/ci-logs" -f sha="$GITHUB_SHA" >/dev/null 2>&1 || true
@@ -99,13 +102,14 @@ jobs:
           export SHA
           python3 - <<'PY'
           import base64, json, os
+          T = os.environ['RUNNER_TEMP']
           body = {
               "message": "log run " + os.environ["GITHUB_RUN_NUMBER"],
               "branch": "ci-logs",
-              "content": base64.b64encode(open("ci-scrubbed.log", "rb").read()).decode(),
+              "content": base64.b64encode(open(os.path.join(T, "ci-scrubbed.log"), "rb").read()).decode(),
           }
           if os.environ.get("SHA"):
               body["sha"] = os.environ["SHA"]
-          json.dump(body, open("put.json", "w"))
+          json.dump(body, open(os.path.join(T, "put.json"), "w"))
           PY
-          gh api -X PUT "repos/$REPO/contents/$NAME" --input put.json >/dev/null
+          gh api -X PUT "repos/$REPO/contents/$NAME" --input "$RUNNER_TEMP/put.json" >/dev/null
