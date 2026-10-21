@@ -1,0 +1,85 @@
+# Сборка debug-APK Unity-проекта на Codemagic (macOS M2).
+# Переменные UNITY_EMAIL / UNITY_PASSWORD задаются в интерфейсе Codemagic (группа "unity", галочка Secure),
+# в репозиторий они не попадают.
+workflows:
+  unity-android:
+    name: Blade Path Android (debug APK)
+    instance_type: mac_mini_m2
+    max_build_duration: 120
+    environment:
+      groups:
+        - unity   # UNITY_EMAIL, UNITY_PASSWORD
+    scripts:
+      - name: Найти установленный Unity и модули Android
+        script: |
+          set -e
+          UNITY_APP="$(ls -d /Applications/Unity/Hub/Editor/*/Unity.app 2>/dev/null | sort -V | tail -1)"
+          if [ -z "$UNITY_APP" ]; then echo "Unity не найден в /Applications/Unity/Hub/Editor"; ls -la /Applications/Unity* || true; exit 1; fi
+          UNITY_VERSION="$(basename "$(dirname "$UNITY_APP")")"
+          echo "Найден Unity $UNITY_VERSION в $UNITY_APP"
+          echo "UNITY_APP=$UNITY_APP" >> "$CM_ENV"
+          echo "UNITY_VERSION=$UNITY_VERSION" >> "$CM_ENV"
+          if [ ! -d "$(dirname "$UNITY_APP")/PlaybackEngines/AndroidPlayer" ]; then
+            echo "Модуль Android не установлен — ставлю через Unity Hub"
+            "/Applications/Unity Hub.app/Contents/MacOS/Unity Hub" -- --headless install-modules --version "$UNITY_VERSION" -m android android-sdk-ndk-tools android-open-jdk
+          fi
+          ls "$(dirname "$UNITY_APP")/PlaybackEngines" || true
+
+      - name: Активация Personal, сборка APK, возврат лицензии
+        script: |
+          set -u
+          LOG="$CM_BUILD_DIR/unity-build.log"
+          : > "$LOG"
+
+          # Клиент лицензий: в Unity 6000.3+ лежит в Helpers, раньше — во Frameworks
+          CLIENT=""
+          for sub in Helpers Frameworks; do
+            c="$UNITY_APP/Contents/$sub/UnityLicensingClient.app/Contents/MacOS/Unity.Licensing.Client"
+            [ -x "$c" ] && CLIENT="$c" && break
+          done
+          if [ -z "$CLIENT" ]; then echo "Unity.Licensing.Client не найден"; exit 1; fi
+
+          # Место Personal-лицензии держится, пока его не вернут: возвращаем при любом выходе из скрипта
+          return_license() {
+            echo "Возвращаю место лицензии"
+            "$CLIENT" --return-ulf >> "$LOG" 2>&1 || echo "return-ulf завершился с ошибкой (смотри лог)"
+          }
+
+          FLAGS="--activate-all"
+          if "$CLIENT" --help 2>&1 | grep -q -- '--include-personal'; then FLAGS="--activate-all --include-personal"; fi
+
+          ACT_LOG="$(mktemp)"
+          ok=0
+          for attempt in 1 2 3 4; do
+            "$CLIENT" $FLAGS --username "$UNITY_EMAIL" --password "$UNITY_PASSWORD" 2>&1 | tee "$ACT_LOG"
+            # Клиент возвращает 0 и когда место НЕ выдано: смотрим, что он реально написал
+            if grep -qE "ASSIGN_SEAT|UnityPersonal" "$ACT_LOG" && ! grep -qiE "No seat available|No license activation found" "$ACT_LOG"; then ok=1; break; fi
+            echo "Активация не удалась (попытка $attempt), жду"
+            sleep $((20 * attempt))
+          done
+          if [ "$ok" -ne 1 ]; then
+            echo "ОШИБКА: место Personal-лицензии не выдано. Возможные причины: включена 2FA, аккаунт не принял условия Unity, место занято другой сборкой."
+            exit 1
+          fi
+          trap return_license EXIT
+          echo "Лицензия активирована"
+
+          # Версию проекта берём из установленного Unity, чтобы не упираться в несовпадение
+          rm -f ProjectSettings/ProjectVersion.txt
+          mkdir -p build/Android
+
+          "$UNITY_APP/Contents/MacOS/Unity" \
+            -batchmode -nographics -quit \
+            -logFile "$LOG" \
+            -projectPath "$CM_BUILD_DIR" \
+            -buildTarget Android \
+            -customBuildName BladePath \
+            -customBuildPath "$CM_BUILD_DIR/build/Android/BladePath.apk" \
+            -executeMethod BladePath.EditorTools.BuildScript.BuildAndroid
+          code=$?
+          echo "Unity завершился с кодом $code"
+          tail -n 60 "$LOG" || true
+          exit $code
+    artifacts:
+      - build/Android/*.apk
+      - unity-build.log

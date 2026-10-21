@@ -3,6 +3,10 @@
 Версия Unity в CI: **6000.0.36f1** (на ней GameCI измерил активацию Personal-лицензии; 6.0 LTS поддерживается до октября 2026, переход на 6.3 LTS — смена одной строки `UNITY_VERSION` в workflow, но на 6.3 путь не проверялся).
 Статус проверки: код типизирован компилятором C# против заглушек Unity API; в самом Unity на момент написания не запускался.
 
+## Облачная сборка на Codemagic (если GitHub недоступен)
+Файл `codemagic.yaml` в корне. Нужны: репозиторий на GitLab, приложение в Codemagic, группа переменных `unity` с `UNITY_EMAIL` и `UNITY_PASSWORD` (Secure). Сборка идёт на macOS M2 (бесплатный план: 500 минут в месяц). APK и лог Unity лежат в артефактах сборки.
+Версию Unity берём ту, что предустановлена на машине Codemagic, поэтому `ProjectSettings/ProjectVersion.txt` перед сборкой удаляется.
+
 ## Как получить APK без ПК (GitHub Actions + GameCI)
 Workflow `.github/workflows/build-android.yml` собирает debug-APK в облаке (Unity 6000.0.36f1, IL2CPP, ARM64).
 1. В репозитории → Settings → Secrets and variables → Actions добавь `UNITY_EMAIL` и `UNITY_PASSWORD` (отдельный аккаунт Unity Personal, без 2FA).

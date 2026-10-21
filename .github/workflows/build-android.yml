@@ -1,9 +1,8 @@
 name: Build Android APK
 
+# Только ручной запуск: Actions → Build Android APK → Run workflow.
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
 
 # Одна сборка за раз: лицензия Personal — одно место, параллельные запуски упираются друг в друга.
 concurrency:
