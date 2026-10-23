@@ -26,18 +26,14 @@ namespace BladePath.EditorTools
 
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
-            BuildCameraAndLight();
-            BuildArena();
-
-            Material armorRed = MakeMaterial("Fighter_Player", new Color(0.30f, 0.07f, 0.07f));
-            Material armorGrey = MakeMaterial("Fighter_Enemy", new Color(0.22f, 0.26f, 0.34f));
-            Material steel = MakeMaterial("Katana_Steel", new Color(0.75f, 0.78f, 0.82f));
-            Material wrap = MakeMaterial("Katana_Handle", new Color(0.08f, 0.06f, 0.06f));
+            Look look = VisualMaterials.Create();
+            BuildCamera();
+            EnvironmentBuilder.Build(look);
 
             // игрок слева, смотрит в +X; противник справа, смотрит в -X. Камера видит бойцов сбоку (вдоль мировой Z).
             // Оружие у игрока в правой руке (ближе к камере), у противника зеркально — тоже со стороны камеры.
-            FighterController player = BuildFighter("Player", -1.0f, +1, +1, armorRed, steel, wrap);
-            FighterController enemy = BuildFighter("Enemy", +1.0f, -1, -1, armorGrey, steel, wrap);
+            FighterController player = BuildFighter("Player", -1.0f, +1, +1, look, false);
+            FighterController enemy = BuildFighter("Enemy", +1.0f, -1, -1, look, true);
             player.opponent = enemy;
             enemy.opponent = player;
 
@@ -67,23 +63,17 @@ namespace BladePath.EditorTools
 
         // ---------------------------------------------------------------- сцена
 
-        static void BuildCameraAndLight()
+        static void BuildCamera()
         {
             GameObject cam = new GameObject("Main Camera");
             cam.tag = "MainCamera";
             Camera c = cam.AddComponent<Camera>();
             cam.AddComponent<AudioListener>();
             c.clearFlags = CameraClearFlags.SolidColor;
-            c.backgroundColor = new Color(0.10f, 0.10f, 0.12f);
+            c.backgroundColor = EnvironmentBuilder.FogColor;
             c.fieldOfView = 32f;
             cam.transform.position = new Vector3(0f, 1.15f, -5.2f);
             cam.transform.rotation = Quaternion.identity; // смотрит вдоль +Z
-
-            GameObject light = new GameObject("Directional Light");
-            Light l = light.AddComponent<Light>();
-            l.type = LightType.Directional;
-            l.intensity = 1.1f;
-            light.transform.rotation = Quaternion.Euler(45f, -25f, 0f);
         }
 
         static void BuildArena()
@@ -97,9 +87,10 @@ namespace BladePath.EditorTools
 
         // ---------------------------------------------------------------- боец
 
-        static FighterController BuildFighter(string name, float x, int facing, int handSide,
-                                              Material armor, Material steel, Material handle)
+        static FighterController BuildFighter(string name, float x, int facing, int handSide, Look look, bool undead)
         {
+            Material armor = undead ? look.enemyArmor : look.heroArmor;
+            Material headMat = undead ? look.voidBlack : look.skin;
             GameObject root = new GameObject(name);
             root.transform.position = new Vector3(x, 0f, 0f);
             // локальная +Z бойца = направление взгляда
@@ -110,12 +101,12 @@ namespace BladePath.EditorTools
             f.facing = facing;
 
             List<BodyZone> zones = new List<BodyZone>();
-            zones.Add(MakeZone(f, BodyZoneId.Head,     PrimitiveType.Sphere,  new Vector3(0f, 1.62f, 0f),       0.11f, 0f,    armor));
+            zones.Add(MakeZone(f, BodyZoneId.Head,     PrimitiveType.Sphere,  new Vector3(0f, 1.62f, 0f),       0.11f, 0f,    headMat));
             zones.Add(MakeZone(f, BodyZoneId.Torso,    PrimitiveType.Capsule, new Vector3(0f, 1.18f, 0f),       0.18f, 0.62f, armor));
             zones.Add(MakeZone(f, BodyZoneId.ArmLeft,  PrimitiveType.Capsule, new Vector3(-0.24f, 1.22f, 0f),   0.06f, 0.55f, armor));
             zones.Add(MakeZone(f, BodyZoneId.ArmRight, PrimitiveType.Capsule, new Vector3(0.24f, 1.22f, 0f),    0.06f, 0.55f, armor));
-            zones.Add(MakeZone(f, BodyZoneId.LegLeft,  PrimitiveType.Capsule, new Vector3(-0.11f, 0.43f, 0f),   0.085f, 0.86f, armor));
-            zones.Add(MakeZone(f, BodyZoneId.LegRight, PrimitiveType.Capsule, new Vector3(0.11f, 0.43f, 0f),    0.085f, 0.86f, armor));
+            zones.Add(MakeZone(f, BodyZoneId.LegLeft,  PrimitiveType.Capsule, new Vector3(-0.11f, 0.43f, 0f),   0.085f, 0.86f, look.cloth));
+            zones.Add(MakeZone(f, BodyZoneId.LegRight, PrimitiveType.Capsule, new Vector3(0.11f, 0.43f, 0f),    0.085f, 0.86f, look.cloth));
             f.zones = zones.ToArray();
 
             // Оружие: pivot (рука) → bladeRoot (основание клинка, +Z вдоль клинка)
@@ -126,9 +117,10 @@ namespace BladePath.EditorTools
             GameObject bladeRoot = new GameObject("BladeRoot");
             bladeRoot.transform.SetParent(pivot.transform, false);
 
-            MakeBox("Blade",  bladeRoot.transform, new Vector3(0f, 0f, 0.40f),   new Vector3(0.008f, 0.032f, 0.80f), steel);
-            MakeBox("Handle", bladeRoot.transform, new Vector3(0f, 0f, -0.125f), new Vector3(0.030f, 0.030f, 0.25f), handle);
-            MakeBox("Guard",  bladeRoot.transform, new Vector3(0f, 0f, 0.01f),   new Vector3(0.012f, 0.085f, 0.012f), handle);
+            MakeBox("Blade",  bladeRoot.transform, new Vector3(0f, 0f, 0.40f),   new Vector3(0.008f, 0.032f, 0.80f), look.steel);
+            CharacterVisuals.Part(bladeRoot.transform, "Handle", PrimitiveType.Cylinder, new Vector3(0f, 0f, -0.125f), new Vector3(90f, 0f, 0f), new Vector3(0.030f, 0.125f, 0.030f), look.handle);
+            CharacterVisuals.Part(bladeRoot.transform, "HandleWrap", PrimitiveType.Cylinder, new Vector3(0f, 0f, -0.125f), new Vector3(90f, 0f, 0f), new Vector3(0.034f, 0.06f, 0.034f), look.lacquer);
+            CharacterVisuals.Part(bladeRoot.transform, "Tsuba", PrimitiveType.Cylinder, new Vector3(0f, 0f, 0.008f), new Vector3(90f, 0f, 0f), new Vector3(0.095f, 0.004f, 0.095f), look.bronze);
 
             WeaponController w = pivot.AddComponent<WeaponController>();
             w.owner = f;
@@ -139,6 +131,9 @@ namespace BladePath.EditorTools
             pivot.AddComponent<BladeTrajectorySampler>();
             f.weapon = w;
             f.projectileMaterial = MakeEnergyMaterial();
+
+            if (undead) CharacterVisuals.DressUndead(root.transform, look);
+            else CharacterVisuals.DressHero(root.transform, look);
 
             return f;
         }
