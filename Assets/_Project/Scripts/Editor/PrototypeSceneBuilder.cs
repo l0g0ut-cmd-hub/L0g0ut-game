@@ -135,8 +135,10 @@ namespace BladePath.EditorTools
             w.pivot = pivot.transform;
             w.bladeRoot = bladeRoot.transform;
             w.bladeLength = 0.80f;
+            w.yawSign = handSide;   // зеркалит диагональ удара для руки с другой стороны
             pivot.AddComponent<BladeTrajectorySampler>();
             f.weapon = w;
+            f.projectileMaterial = MakeEnergyMaterial();
 
             return f;
         }
@@ -218,6 +220,21 @@ namespace BladePath.EditorTools
             Shader sh = Shader.Find("Sprites/Default");
             if (sh == null) sh = Shader.Find("Unlit/Color");
             Material m = new Material(sh);
+            AssetDatabase.CreateAsset(m, path);
+            return m;
+        }
+
+        /// <summary>Материал энергошара: Sprites/Default, оранжевый, светится за счёт яркого цвета.</summary>
+        static Material MakeEnergyMaterial()
+        {
+            string path = MatFolder + "/EnergyBall.mat";
+            Material existing = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (existing != null) return existing;
+
+            Shader sh = Shader.Find("Sprites/Default");
+            if (sh == null) sh = Shader.Find("Unlit/Color");
+            Material m = new Material(sh);
+            m.color = new Color(1f, 0.55f, 0.1f);
             AssetDatabase.CreateAsset(m, path);
             return m;
         }

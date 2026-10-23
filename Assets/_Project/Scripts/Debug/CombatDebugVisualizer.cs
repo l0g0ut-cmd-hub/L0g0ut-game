@@ -164,7 +164,7 @@ namespace BladePath
                     if (s == null) continue;
                     string warn = s.UndersampledLastFrame ? "  !! НЕДОСТАТОЧНО ПОДШАГОВ (возможны пропуски)" : "";
                     GUI.Label(new Rect(8f, y, 640f, 18f),
-                        s.Weapon.owner.displayName + ": фаза=" + s.Weapon.Phase + "  подшагов/кадр=" + s.SubstepsLastFrame + "/" + s.maxSubsteps + warn, style);
+                        s.Weapon.owner.displayName + ": " + s.Weapon.AttackLabel + "  фаза=" + s.Weapon.Phase + "  подшагов/кадр=" + s.SubstepsLastFrame + "/" + s.maxSubsteps + warn, style);
                     y += 16f;
                 }
             }

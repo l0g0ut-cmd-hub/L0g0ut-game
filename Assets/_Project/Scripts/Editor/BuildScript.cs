@@ -10,7 +10,7 @@ namespace BladePath.EditorTools
 {
     /// <summary>
     /// Сборка Android-APK без участия человека (для CI): собирает тестовую сцену этапа 1,
-    /// выставляет настройки проигрывателя и собирает debug-APK.
+    /// выставляет настройки проигрывателя и собирает debug-APK (сцены: главное меню → бой).
     ///
     /// Вызывается через -executeMethod BladePath.EditorTools.BuildScript.BuildAndroid.
     /// GameCI передаёт -customBuildPath (полный путь к .apk) и -customBuildName.
@@ -31,11 +31,19 @@ namespace BladePath.EditorTools
 
                 Debug.Log("BladePath: сборка APK → " + path);
 
-                PrototypeSceneBuilder.Build();     // сцена создаётся из кода, в репозитории её нет
+                // Сцены создаются из кода, в репозитории их нет. Порядок: меню (индекс 0), потом бой.
+                MainMenuBuilder.Build();
+                PrototypeSceneBuilder.Build();
+                string[] scenes = new string[] { MainMenuBuilder.ScenePath, PrototypeSceneBuilder.ScenePath };
+                EditorBuildSettings.scenes = new EditorBuildSettingsScene[]
+                {
+                    new EditorBuildSettingsScene(scenes[0], true),
+                    new EditorBuildSettingsScene(scenes[1], true),
+                };
                 ConfigurePlayer();
 
                 BuildPlayerOptions opts = new BuildPlayerOptions();
-                opts.scenes = new string[] { PrototypeSceneBuilder.ScenePath };
+                opts.scenes = scenes;
                 opts.locationPathName = path;
                 opts.target = BuildTarget.Android;
                 opts.targetGroup = BuildTargetGroup.Android;

@@ -42,7 +42,8 @@ namespace BladePath
         public int SubstepsLastFrame { get; private set; }
         /// <summary>true, если нужно было больше подшагов, чем разрешает maxSubsteps (возможны пропуски).</summary>
         public bool UndersampledLastFrame { get; private set; }
-        public WeaponController Weapon { get { return weapon; } }
+        /// <summary>Оружие сэмплера. Ленивая инициализация: к свойству могут обратиться раньше, чем выполнится Awake.</summary>
+        public WeaponController Weapon { get { if (weapon == null) weapon = GetComponent<WeaponController>(); return weapon; } }
 
         public struct DebugSegment { public Vector3 a, b; public float time; public float bladeT; }
         const int DebugCapacity = 1024;
