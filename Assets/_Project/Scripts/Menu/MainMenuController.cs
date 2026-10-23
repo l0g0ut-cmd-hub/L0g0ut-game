@@ -22,7 +22,8 @@ namespace BladePath
 
         VideoPlayer player;
         RenderTexture rt;
-        bool videoShowing;       // видео готово и идёт
+        bool hasFrame;           // видео уже отдало хотя бы один кадр в RenderTexture
+        bool videoFailed;        // видео не удалось воспроизвести — тогда показываем постер
         bool videoEnded;
         bool animated = true;
         bool settingsOpen;
@@ -44,12 +45,17 @@ namespace BladePath
             player.prepareCompleted += OnPrepared;
             player.loopPointReached += OnEnded;
             player.errorReceived += OnError;
+            player.sendFrameReadyEvents = true;
+            player.frameReady += OnFrameReady;
             player.Prepare();
         }
 
-        void OnPrepared(VideoPlayer vp) { if (animated) { vp.Play(); videoShowing = true; } }
+        void OnPrepared(VideoPlayer vp) { if (animated) vp.Play(); }
+        void OnFrameReady(VideoPlayer vp, long frameIdx) { hasFrame = true; }
+        // После конца ролика НИЧЕГО не подменяем: RenderTexture остаётся на последнем кадре видео.
+        // (Раньше здесь подставлялась отдельная JPEG-картинка — она отличалась от реального кадра и при подмене «прыгала».)
         void OnEnded(VideoPlayer vp) { videoEnded = true; }
-        void OnError(VideoPlayer vp, string message) { Debug.LogWarning("Меню: видео не воспроизводится: " + message); videoShowing = false; }
+        void OnError(VideoPlayer vp, string message) { Debug.LogWarning("Меню: видео не воспроизводится: " + message); videoFailed = true; }
 
         void OnDestroy() { if (rt != null) rt.Release(); }
 
@@ -73,8 +79,15 @@ namespace BladePath
         {
             animated = on;
             if (player == null) return;
-            if (on) { if (player.isPrepared) { player.Play(); videoShowing = true; videoEnded = false; } }
-            else { player.Pause(); }
+            if (on)
+            {
+                if (player.isPrepared)
+                {
+                    if (videoEnded) { player.time = 0.0; videoEnded = false; }
+                    player.Play();
+                }
+            }
+            else { player.Pause(); }   // кадр замирает там, где был: подмены на постер нет
         }
 
         void Say(string msg) { toast = msg; toastUntil = Time.time + 2.5f; }
@@ -101,10 +114,11 @@ namespace BladePath
             GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), Texture2D.blackTexture);
 
             Rect vr = VideoRect();
+            // Видеокадр, как только он есть, показывается всегда (и во время ролика, и после, и на паузе).
+            // Постер — только пока видео ещё не отдало первый кадр или если оно не запустилось.
             Texture tex;
-            if (!animated && posterLast != null) tex = posterLast;
-            else if (videoEnded && posterLast != null) tex = posterLast;
-            else if (videoShowing) tex = rt;
+            if (hasFrame && !videoFailed) tex = rt;
+            else if ((videoFailed || !animated) && posterLast != null) tex = posterLast;
             else tex = posterFirst != null ? (Texture)posterFirst : Texture2D.blackTexture;
             GUI.DrawTexture(vr, tex, ScaleMode.StretchToFill, false);
 
