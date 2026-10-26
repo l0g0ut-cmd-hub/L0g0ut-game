@@ -15,13 +15,19 @@ namespace BladePath
         public BodyZoneId zoneId;
         public FighterController owner;
         public Renderer flashRenderer;
+        [Tooltip("Зона невидима в покое и показывается только на время подсветки попадания (для скинутых моделей).")]
+        public bool overlayFlash;
 
         Material mat;
         Color baseColor;
         bool hasBase;
         float flashUntil;
 
-        void Awake() { CacheBase(); }
+        void Awake()
+        {
+            CacheBase();
+            if (overlayFlash && flashRenderer != null) flashRenderer.enabled = false;
+        }
 
         void CacheBase()
         {
@@ -35,6 +41,7 @@ namespace BladePath
         {
             CacheBase();
             if (mat == null) return;
+            if (overlayFlash && flashRenderer != null) flashRenderer.enabled = true;
             mat.color = color;
             if (mat.HasProperty("_EmissionColor")) mat.SetColor("_EmissionColor", color * 1.6f);
             flashUntil = Time.time + duration;
@@ -47,6 +54,7 @@ namespace BladePath
                 mat.color = baseColor;
                 if (mat.HasProperty("_EmissionColor")) mat.SetColor("_EmissionColor", Color.black);
             }
+            if (overlayFlash && flashRenderer != null) flashRenderer.enabled = false;
             flashUntil = 0f;
         }
 

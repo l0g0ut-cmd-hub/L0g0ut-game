@@ -32,6 +32,8 @@ namespace BladePath
         public float energySpeed = 7f;
 
         public bool Grounded { get; private set; }
+        /// <summary>Ось хода в этом кадре (-1 назад .. +1 вперёд относительно взгляда) — для аниматора.</summary>
+        public float MoveAxis { get; private set; }
 
         float forwardInput;      // -1 назад .. +1 вперёд (относительно facing)
         float vy;
@@ -83,6 +85,7 @@ namespace BladePath
 
             float speed = moveSpeed;
             if (weapon != null && weapon.Phase != SwingPhase.Idle) speed *= attackMoveMultiplier;
+            MoveAxis = forwardInput;
             float dx = forwardInput * facing * speed * dt;
             if (weapon != null) dx += facing * weapon.CurrentLunge * dt;   // бросок вперёд в ударе из прыжка
             if (Mathf.Abs(dx) > 1e-6f) Move(dx);
