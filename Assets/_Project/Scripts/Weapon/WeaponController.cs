@@ -153,8 +153,9 @@ namespace BladePath
                     break;
                 case SwingPhase.Strike:
                     // клинок (и руки, если есть pivotOffsetEnd) разгоняются к концу удара
-                    e = Vector3.Lerp(wind, end, Mathf.Pow(t, 1.5f));
-                    off = Vector3.Lerp(off0, off1, Mathf.Pow(t, 1.5f));
+                    float u = Mathf.Pow(t, 1.5f);
+                    e = Vector3.Lerp(wind, end, u);
+                    off = Vector3.Lerp(off0, off1, u) + new Vector3(0f, 0f, p.arcBulge * Mathf.Sin(Mathf.PI * u));   // руки идут по дуге
                     break;
                 case SwingPhase.FollowThrough:
                     e = Vector3.Lerp(end, follow, 1f - (1f - t) * (1f - t));

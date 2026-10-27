@@ -33,6 +33,8 @@ namespace BladePath
         public float gripRear = 0.20f;    // задняя рука (левая) — у навершия
         [Tooltip("Расстояние от запястья до центра ладони вдоль пальцев, м (кисть сдвигается так, чтобы рукоять проходила через ладонь).")]
         public float palmOffset = 0.06f;
+        [Tooltip("Максимальный излом кисти относительно руки, град. (иначе хват поперёк клинка ломает запястье при вытянутых вперёд руках).")]
+        public float maxWristBend = 50f;
 
         [Header("Тело в ударе")]
         [Tooltip("Доли поворота клинка (yaw, до bodyYawMax профиля, по умолчанию ±45°), которые отрабатывают таз / поясница / грудь.")]
@@ -218,6 +220,9 @@ namespace BladePath
             Vector3 fR, nR, fL, nL;
             GripFrame(axis, sideR, ft, out fR, out nR);
             GripFrame(axis, sideL, ft, out fL, out nL);
+            // кисть не ломается поперёк предплечья: пальцы отклоняются от направления руки (плечо → хват) не больше maxWristBend
+            if (upperArmR != null) LimitWrist(gripR - upperArmR.position, maxWristBend, ref fR, ref nR);
+            if (upperArmL != null) LimitWrist(gripL - upperArmL.position, maxWristBend, ref fL, ref nL);
             SolveArm(upperArmR, forearmR, handR, l1R, l2R, gripR - fR * palmOffset - nR * 0.015f, outward);
             Vector3 outwardL = -ft.right * 0.6f + Vector3.down + back * 0.3f;
             SolveArm(upperArmL, forearmL, handL, l1L, l2L, gripL - fL * palmOffset - nL * 0.015f, outwardL);
@@ -244,6 +249,18 @@ namespace BladePath
             Vector3 n = Vector3.Cross(fingers, axis).normalized;
             if (Vector3.Dot(n, inward) < 0f) n = -n;
             palm = n;
+        }
+
+        /// <summary>Ограничивает излом запястья: направление пальцев не дальше maxDeg от направления руки; ладонь пересчитывается под него.</summary>
+        static void LimitWrist(Vector3 armDir, float maxDeg, ref Vector3 fingers, ref Vector3 palm)
+        {
+            if (armDir.sqrMagnitude < 1e-6f || fingers.sqrMagnitude < 1e-6f) return;
+            armDir.Normalize();
+            if (Vector3.Angle(armDir, fingers) <= maxDeg) return;
+            fingers = Vector3.RotateTowards(armDir, fingers, maxDeg * Mathf.Deg2Rad, 0f).normalized;
+            Vector3 n = Vector3.ProjectOnPlane(palm, fingers);
+            if (n.sqrMagnitude < 1e-6f) n = Vector3.Cross(fingers, Vector3.up);
+            palm = n.normalized;
         }
 
         static void OrientHand(Transform hand, Quaternion bind, Vector3 fingers, Vector3 palm)

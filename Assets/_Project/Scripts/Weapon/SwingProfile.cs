@@ -30,6 +30,8 @@ namespace BladePath
         public float windupRise;
         [Tooltip("Сколько градусов поворота клинка (yaw) корпус отрабатывает в максимуме: у горизонтальных ударов корпус скручивается сильнее.")]
         public float bodyYawMax = 45f;
+        [Tooltip("Выгиб траектории рук вперёд в середине удара, м: руки идут по дуге перед телом, а не по хорде.")]
+        public float arcBulge;
         public float windupTime, strikeTime, followTime, recoveryTime;
         [Tooltip("Дополнительная скорость вперёд в фазе удара, м/с.")]
         public float lungeSpeed;
@@ -62,25 +64,27 @@ namespace BladePath
                     break;
                 case AttackType.Slash:       // горизонтальный рез: скрутка корпуса вправо с клинком у бедра, затем разворот и рез по дуге на уровне пояса
                     p.label = "РЕЗ";
-                    p.windupEuler = new Vector3(4f, 78f, 0f);
-                    p.strikeEndEuler = new Vector3(4f, -78f, 0f);
-                    p.followEuler = new Vector3(4f, -98f, 0f);
-                    p.pivotOffset = new Vector3(0.30f, -0.08f, -0.14f);
-                    p.pivotOffsetEnd = new Vector3(-0.30f, -0.10f, 0.26f);
+                    p.windupEuler = new Vector3(4f, 118f, 0f);
+                    p.strikeEndEuler = new Vector3(4f, -85f, 0f);
+                    p.followEuler = new Vector3(4f, -108f, 0f);
+                    p.pivotOffset = new Vector3(0.34f, -0.08f, -0.18f);
+                    p.pivotOffsetEnd = new Vector3(-0.32f, -0.10f, 0.30f);
+                    p.arcBulge = 0.12f;
                     p.hasOffsetEnd = true;
-                    p.windupTime = 0.38f; p.strikeTime = 0.14f; p.followTime = 0.12f; p.recoveryTime = 0.46f;
-                    p.bodyStep = 0.26f; p.strideDeg = 18f; p.crouchBoost = 0.25f; p.bodyYawMax = 85f;
+                    p.windupTime = 0.40f; p.strikeTime = 0.15f; p.followTime = 0.14f; p.recoveryTime = 0.46f;
+                    p.bodyStep = 0.32f; p.strideDeg = 24f; p.crouchBoost = 0.25f; p.bodyYawMax = 85f;
                     break;
                 case AttackType.SlashBack:   // то же в обратную сторону
                     p.label = "РЕЗ <";
-                    p.windupEuler = new Vector3(4f, -78f, 0f);
-                    p.strikeEndEuler = new Vector3(4f, 78f, 0f);
-                    p.followEuler = new Vector3(4f, 98f, 0f);
-                    p.pivotOffset = new Vector3(-0.30f, -0.08f, -0.14f);
-                    p.pivotOffsetEnd = new Vector3(0.30f, -0.10f, 0.26f);
+                    p.windupEuler = new Vector3(4f, -118f, 0f);
+                    p.strikeEndEuler = new Vector3(4f, 85f, 0f);
+                    p.followEuler = new Vector3(4f, 108f, 0f);
+                    p.pivotOffset = new Vector3(-0.34f, -0.08f, -0.18f);
+                    p.pivotOffsetEnd = new Vector3(0.32f, -0.10f, 0.30f);
+                    p.arcBulge = 0.12f;
                     p.hasOffsetEnd = true;
-                    p.windupTime = 0.38f; p.strikeTime = 0.14f; p.followTime = 0.12f; p.recoveryTime = 0.46f;
-                    p.bodyStep = 0.26f; p.strideDeg = 18f; p.crouchBoost = 0.25f; p.bodyYawMax = 85f;
+                    p.windupTime = 0.40f; p.strikeTime = 0.15f; p.followTime = 0.14f; p.recoveryTime = 0.46f;
+                    p.bodyStep = 0.32f; p.strideDeg = 24f; p.crouchBoost = 0.25f; p.bodyYawMax = 85f;
                     break;
                 case AttackType.Rising:      // гяку-кэса: присел, клинок низко у бедра остриём вниз-назад, затем диагональный рывок вверх с подъёмом рук и выпрямлением тела
                     p.label = "СНИЗУ";
@@ -95,9 +99,10 @@ namespace BladePath
                     break;
                 case AttackType.LegSweep:    // низкий рез по голеням: присед с клинком сбоку у земли, широкая дуга при развороте корпуса
                     p.label = "ПО НОГАМ";
-                    p.windupEuler = new Vector3(24f, 80f, 0f);
-                    p.strikeEndEuler = new Vector3(24f, -80f, 0f);
-                    p.followEuler = new Vector3(24f, -98f, 0f);
+                    p.windupEuler = new Vector3(24f, 112f, 0f);
+                    p.strikeEndEuler = new Vector3(24f, -85f, 0f);
+                    p.followEuler = new Vector3(24f, -105f, 0f);
+                    p.arcBulge = 0.10f;
                     p.pivotOffset = new Vector3(0.26f, -0.44f, -0.10f);
                     p.pivotOffsetEnd = new Vector3(-0.26f, -0.46f, 0.24f);
                     p.hasOffsetEnd = true;
