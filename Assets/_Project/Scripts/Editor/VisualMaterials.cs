@@ -8,7 +8,7 @@ namespace BladePath.EditorTools
     public class Look
     {
         public Material heroArmor, enemyArmor, cloth, skin, hair, lacquer, bronze, steel, handle;
-        public Material flesh, tooth, maw, voidBlack;
+        public Material flesh, tooth, maw, voidBlack, deadSkin, ember, tentacle;
         public Material stone, stoneDark, flame, moon, petal;
     }
 
@@ -39,6 +39,12 @@ namespace BladePath.EditorTools
             l.tooth = Solid("Tooth", new Color(0.92f, 0.86f, 0.76f), 0f, 0.45f);
             l.maw = Solid("Maw", new Color(0.12f, 0.01f, 0.03f), 0f, 0.60f);
             l.voidBlack = Solid("Void", new Color(0.01f, 0.01f, 0.012f), 0f, 0.10f);
+            l.deadSkin = Solid("Skin_Dead", new Color(0.36f, 0.42f, 0.38f), 0f, 0.20f);
+            l.tentacle = Solid("Tentacle", new Color(0.16f, 0.06f, 0.20f), 0f, 0.55f);
+            l.ember = Solid("Ember", new Color(1f, 0.40f, 0.08f), 0f, 0.30f);
+            l.ember.EnableKeyword("_EMISSION");
+            l.ember.SetColor("_EmissionColor", new Color(2.4f, 0.8f, 0.1f));
+            l.ember.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
             l.stone = Textured("Stone_Floor", "stone_albedo.png", "stone_normal.png", new Vector2(4f, 2f), Color.white, 0f, 0.35f);
             l.stoneDark = Solid("Stone_Dark", new Color(0.12f, 0.12f, 0.15f), 0f, 0.20f);
             l.flame = Unlit("Flame", new Color(1f, 0.55f, 0.12f));
@@ -51,6 +57,7 @@ namespace BladePath.EditorTools
             EnableRuntimeEmission(l.cloth);
             EnableRuntimeEmission(l.skin);
             EnableRuntimeEmission(l.voidBlack);
+            EnableRuntimeEmission(l.deadSkin);
             return l;
         }
 

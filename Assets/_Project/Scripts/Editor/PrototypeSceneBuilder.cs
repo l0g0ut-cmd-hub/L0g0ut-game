@@ -132,8 +132,11 @@ namespace BladePath.EditorTools
             f.weapon = w;
             f.projectileMaterial = MakeEnergyMaterial();
 
-            if (undead) CharacterVisuals.DressUndead(root.transform, look);
-            else if (!HeroModelBuilder.TryAttach(f, bladeRoot.transform, look)) CharacterVisuals.DressHero(root.transform, look);
+            if (!HeroModelBuilder.TryAttach(f, bladeRoot.transform, look, undead))
+            {
+                if (undead) CharacterVisuals.DressUndead(root.transform, look);
+                else CharacterVisuals.DressHero(root.transform, look);
+            }
 
             return f;
         }

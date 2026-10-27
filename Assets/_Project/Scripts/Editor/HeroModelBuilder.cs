@@ -14,23 +14,27 @@ namespace BladePath.EditorTools
     public static class HeroModelBuilder
     {
         public const string FbxPath = "Assets/_Project/Models/Samurai_Hero.fbx";
+        public const string UndeadFbxPath = "Assets/_Project/Models/Samurai_Undead.fbx";
         const string ControllerPath = "Assets/_Project/Animation/Hero.controller";
+        const string UndeadControllerPath = "Assets/_Project/Animation/Undead.controller";
         const float ModelScale = 0.95f;   // подгонка роста модели под зоны поражения
 
-        public static bool TryAttach(FighterController fighter, Transform bladeRoot, Look look)
+        public static bool TryAttach(FighterController fighter, Transform bladeRoot, Look look, bool undead = false)
         {
-            GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(FbxPath);
+            string fbx = undead ? UndeadFbxPath : FbxPath;
+            string ctrlPath = undead ? UndeadControllerPath : ControllerPath;
+            GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(fbx);
             if (asset == null)
             {
-                Debug.LogWarning("HeroModelBuilder: FBX героя не найден (" + FbxPath + "), используется модель из примитивов");
+                Debug.LogWarning("HeroModelBuilder: FBX не найден (" + fbx + "), используется модель из примитивов");
                 return false;
             }
 
-            ConfigureImport();
-            AnimatorController ctrl = BuildController();
+            ConfigureImport(fbx);
+            AnimatorController ctrl = BuildController(fbx, ctrlPath);
 
             GameObject model = (GameObject)PrefabUtility.InstantiatePrefab(asset);
-            model.name = "HeroModel";
+            model.name = undead ? "UndeadModel" : "HeroModel";
             model.transform.SetParent(fighter.transform, false);
             model.transform.localPosition = Vector3.zero;
             model.transform.localRotation = Quaternion.identity;
@@ -55,7 +59,7 @@ namespace BladePath.EditorTools
                 Material[] mats = smr.sharedMaterials;
                 for (int i = 0; i < mats.Length; i++)
                 {
-                    Material mapped = MapMaterial(mats[i] != null ? mats[i].name : "", look);
+                    Material mapped = MapMaterial(mats[i] != null ? mats[i].name : "", look, undead);
                     if (mapped != null) mats[i] = mapped;
                 }
                 smr.sharedMaterials = mats;
@@ -69,7 +73,7 @@ namespace BladePath.EditorTools
             anim.applyRootMotion = false;
             if (anim.avatar == null)
             {
-                foreach (Object o in AssetDatabase.LoadAllAssetsAtPath(FbxPath))
+                foreach (Object o in AssetDatabase.LoadAllAssetsAtPath(fbx))
                 {
                     Avatar av = o as Avatar;
                     if (av != null) { anim.avatar = av; break; }
@@ -91,6 +95,12 @@ namespace BladePath.EditorTools
             d.forearmR = FindBone(model.transform, "Forearm.R");
             d.handR = FindBone(model.transform, "Hand.R");
 
+            if (undead)
+            {
+                TentacleBoneWiggle tw = model.AddComponent<TentacleBoneWiggle>();
+                tw.Collect();
+            }
+
             // Накладки подсветки попадания: зоны (капсулы) в покое невидимы
             foreach (BodyZone z in fighter.zones)
             {
@@ -98,16 +108,21 @@ namespace BladePath.EditorTools
                 if (z.flashRenderer != null) z.flashRenderer.enabled = false;
             }
 
-            Debug.Log("HeroModelBuilder: модель героя подключена (кости: " + (d.handL != null && d.handR != null ? "руки найдены" : "РУКИ НЕ НАЙДЕНЫ") + ")");
+            Debug.Log("HeroModelBuilder: модель " + (undead ? "врага" : "героя") + " подключена (кости: " + (d.handL != null && d.handR != null ? "руки найдены" : "РУКИ НЕ НАЙДЕНЫ") + ")");
             return true;
         }
 
-        static Material MapMaterial(string name, Look look)
+        static Material MapMaterial(string name, Look look, bool undead)
         {
             switch (name)
             {
-                case "Skin": return look.skin;
-                case "Armor_Black": return look.heroArmor;
+                case "Skin": return undead ? look.deadSkin : look.skin;
+                case "Armor_Black": return undead ? look.enemyArmor : look.heroArmor;
+                case "Void": return look.tentacle;
+                case "Ember": return look.ember;
+                case "Flesh": return look.flesh;
+                case "Tooth": return look.tooth;
+                case "Maw": return look.maw;
                 case "Lacquer_Red": return look.lacquer;
                 case "Brass": return look.bronze;
                 case "Dark_Cloth": return look.cloth;
@@ -116,9 +131,9 @@ namespace BladePath.EditorTools
             }
         }
 
-        static void ConfigureImport()
+        static void ConfigureImport(string fbx)
         {
-            ModelImporter mi = AssetImporter.GetAtPath(FbxPath) as ModelImporter;
+            ModelImporter mi = AssetImporter.GetAtPath(fbx) as ModelImporter;
             if (mi == null) return;
             mi.animationType = ModelImporterAnimationType.Generic;
             mi.importAnimation = true;
@@ -135,9 +150,9 @@ namespace BladePath.EditorTools
             mi.SaveAndReimport();
         }
 
-        static AnimationClip Clip(string key)
+        static AnimationClip Clip(string fbx, string key)
         {
-            foreach (Object o in AssetDatabase.LoadAllAssetsAtPath(FbxPath))
+            foreach (Object o in AssetDatabase.LoadAllAssetsAtPath(fbx))
             {
                 AnimationClip c = o as AnimationClip;
                 if (c != null && !c.name.StartsWith("__preview") && c.name.Contains(key)) return c;
@@ -146,7 +161,7 @@ namespace BladePath.EditorTools
             return null;
         }
 
-        static AnimatorController BuildController()
+        static AnimatorController BuildController(string fbx, string ControllerPath)
         {
             if (!AssetDatabase.IsValidFolder("Assets/_Project/Animation")) AssetDatabase.CreateFolder("Assets/_Project", "Animation");
             AssetDatabase.DeleteAsset(ControllerPath);
@@ -157,11 +172,11 @@ namespace BladePath.EditorTools
             c.AddParameter("Hit", AnimatorControllerParameterType.Trigger);
 
             AnimatorStateMachine sm = c.layers[0].stateMachine;
-            AnimatorState idle = sm.AddState("Idle"); idle.motion = Clip("Idle");
-            AnimatorState walk = sm.AddState("Walk"); walk.motion = Clip("WalkF");
+            AnimatorState idle = sm.AddState("Idle"); idle.motion = Clip(fbx, "Idle");
+            AnimatorState walk = sm.AddState("Walk"); walk.motion = Clip(fbx, "WalkF");
             walk.speedParameterActive = true; walk.speedParameter = "WalkSpeed";
-            AnimatorState jump = sm.AddState("Jump"); jump.motion = Clip("Jump");
-            AnimatorState hit = sm.AddState("Hit"); hit.motion = Clip("Hit");
+            AnimatorState jump = sm.AddState("Jump"); jump.motion = Clip(fbx, "Jump");
+            AnimatorState hit = sm.AddState("Hit"); hit.motion = Clip(fbx, "Hit");
             sm.defaultState = idle;
 
             // стойка → шаг (вперёд или назад)
