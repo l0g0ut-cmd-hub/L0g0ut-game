@@ -28,6 +28,8 @@ namespace BladePath
         public float crouchBoost;
         [Tooltip("0…1: на замахе боец «вытягивается» — ноги сходятся, присед уходит (дзё-дан: руки вверх, тело на носки).")]
         public float windupRise;
+        [Tooltip("Сколько градусов поворота клинка (yaw) корпус отрабатывает в максимуме: у горизонтальных ударов корпус скручивается сильнее.")]
+        public float bodyYawMax = 45f;
         public float windupTime, strikeTime, followTime, recoveryTime;
         [Tooltip("Дополнительная скорость вперёд в фазе удара, м/с.")]
         public float lungeSpeed;
@@ -58,40 +60,49 @@ namespace BladePath
                     p.windupTime = 0.30f; p.strikeTime = 0.11f; p.followTime = 0.10f; p.recoveryTime = 0.42f;
                     p.bodyStep = 0.30f; p.strideDeg = 16f; p.crouchBoost = 0.25f;
                     break;
-                case AttackType.Slash:       // горизонтальный рез слева направо (поза 5)
+                case AttackType.Slash:       // горизонтальный рез: скрутка корпуса вправо с клинком у бедра, затем разворот и рез по дуге на уровне пояса
                     p.label = "РЕЗ";
-                    p.windupEuler = new Vector3(6f, 75f, 0f);
-                    p.strikeEndEuler = new Vector3(6f, -75f, 0f);
-                    p.followEuler = new Vector3(6f, -90f, 0f);
-                    p.pivotOffset = new Vector3(0f, -0.04f, 0.02f);
-                    p.windupTime = 0.30f; p.strikeTime = 0.17f; p.followTime = 0.08f; p.recoveryTime = 0.42f;
-                    p.bodyStep = 0.12f; p.strideDeg = 8f; p.crouchBoost = 0.15f;
+                    p.windupEuler = new Vector3(4f, 78f, 0f);
+                    p.strikeEndEuler = new Vector3(4f, -78f, 0f);
+                    p.followEuler = new Vector3(4f, -98f, 0f);
+                    p.pivotOffset = new Vector3(0.30f, -0.08f, -0.14f);
+                    p.pivotOffsetEnd = new Vector3(-0.30f, -0.10f, 0.26f);
+                    p.hasOffsetEnd = true;
+                    p.windupTime = 0.38f; p.strikeTime = 0.14f; p.followTime = 0.12f; p.recoveryTime = 0.46f;
+                    p.bodyStep = 0.26f; p.strideDeg = 18f; p.crouchBoost = 0.25f; p.bodyYawMax = 85f;
                     break;
-                case AttackType.SlashBack:   // горизонтальный рез справа налево (позы 12/14)
+                case AttackType.SlashBack:   // то же в обратную сторону
                     p.label = "РЕЗ <";
-                    p.windupEuler = new Vector3(6f, -75f, 0f);
-                    p.strikeEndEuler = new Vector3(6f, 75f, 0f);
-                    p.followEuler = new Vector3(6f, 90f, 0f);
-                    p.pivotOffset = new Vector3(0f, -0.04f, 0.02f);
-                    p.windupTime = 0.30f; p.strikeTime = 0.17f; p.followTime = 0.08f; p.recoveryTime = 0.42f;
-                    p.bodyStep = 0.12f; p.strideDeg = 8f; p.crouchBoost = 0.15f;
+                    p.windupEuler = new Vector3(4f, -78f, 0f);
+                    p.strikeEndEuler = new Vector3(4f, 78f, 0f);
+                    p.followEuler = new Vector3(4f, 98f, 0f);
+                    p.pivotOffset = new Vector3(-0.30f, -0.08f, -0.14f);
+                    p.pivotOffsetEnd = new Vector3(0.30f, -0.10f, 0.26f);
+                    p.hasOffsetEnd = true;
+                    p.windupTime = 0.38f; p.strikeTime = 0.14f; p.followTime = 0.12f; p.recoveryTime = 0.46f;
+                    p.bodyStep = 0.26f; p.strideDeg = 18f; p.crouchBoost = 0.25f; p.bodyYawMax = 85f;
                     break;
-                case AttackType.Rising:      // снизу вверх по диагонали
+                case AttackType.Rising:      // гяку-кэса: присел, клинок низко у бедра остриём вниз-назад, затем диагональный рывок вверх с подъёмом рук и выпрямлением тела
                     p.label = "СНИЗУ";
-                    p.windupEuler = new Vector3(75f, -25f, 0f);
-                    p.strikeEndEuler = new Vector3(-100f, 25f, 0f);
-                    p.followEuler = new Vector3(-120f, 30f, 0f);
-                    p.pivotOffset = new Vector3(0f, -0.20f, 0f);
-                    p.windupTime = 0.30f; p.strikeTime = 0.15f; p.followTime = 0.08f; p.recoveryTime = 0.42f;
-                    p.bodyStep = 0.14f; p.strideDeg = 10f; p.crouchBoost = 0.20f;
+                    p.windupEuler = new Vector3(68f, -30f, 0f);
+                    p.strikeEndEuler = new Vector3(-118f, 22f, 0f);
+                    p.followEuler = new Vector3(-134f, 26f, 0f);
+                    p.pivotOffset = new Vector3(0.20f, -0.32f, -0.10f);
+                    p.pivotOffsetEnd = new Vector3(-0.14f, 0.12f, 0.20f);
+                    p.hasOffsetEnd = true;
+                    p.windupTime = 0.34f; p.strikeTime = 0.15f; p.followTime = 0.10f; p.recoveryTime = 0.46f;
+                    p.bodyStep = 0.22f; p.strideDeg = 14f; p.crouchBoost = 0f; p.bodyYawMax = 60f;
                     break;
-                case AttackType.LegSweep:    // низкий горизонтальный рез, боец приседает
+                case AttackType.LegSweep:    // низкий рез по голеням: присед с клинком сбоку у земли, широкая дуга при развороте корпуса
                     p.label = "ПО НОГАМ";
-                    p.windupEuler = new Vector3(35f, 70f, 0f);
-                    p.strikeEndEuler = new Vector3(35f, -70f, 0f);
-                    p.followEuler = new Vector3(35f, -85f, 0f);
-                    p.pivotOffset = new Vector3(0f, -0.60f, 0.10f);
-                    p.windupTime = 0.34f; p.strikeTime = 0.18f; p.followTime = 0.08f; p.recoveryTime = 0.50f;
+                    p.windupEuler = new Vector3(24f, 80f, 0f);
+                    p.strikeEndEuler = new Vector3(24f, -80f, 0f);
+                    p.followEuler = new Vector3(24f, -98f, 0f);
+                    p.pivotOffset = new Vector3(0.26f, -0.44f, -0.10f);
+                    p.pivotOffsetEnd = new Vector3(-0.26f, -0.46f, 0.24f);
+                    p.hasOffsetEnd = true;
+                    p.windupTime = 0.36f; p.strikeTime = 0.17f; p.followTime = 0.10f; p.recoveryTime = 0.50f;
+                    p.bodyStep = 0.22f; p.strideDeg = 20f; p.crouchBoost = 0.1f; p.bodyYawMax = 85f;
                     break;
                 case AttackType.JumpStrike:  // рубящий в воздухе, с броском вперёд
                     p.label = "В ПРЫЖКЕ";

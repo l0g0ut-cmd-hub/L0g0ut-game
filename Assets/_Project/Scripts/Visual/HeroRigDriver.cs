@@ -35,7 +35,7 @@ namespace BladePath
         public float palmOffset = 0.06f;
 
         [Header("Тело в ударе")]
-        [Tooltip("Доли поворота клинка (yaw, до ±45°), которые отрабатывают таз / поясница / грудь.")]
+        [Tooltip("Доли поворота клинка (yaw, до bodyYawMax профиля, по умолчанию ±45°), которые отрабатывают таз / поясница / грудь.")]
         public float hipsYawK = 0.15f, spineYawK = 0.20f, chestYawK = 0.25f;
         public float leanBack = -12f;     // наклон корпуса на замахе, град.
         public float leanForward = 14f;   // и в конце удара
@@ -147,7 +147,8 @@ namespace BladePath
                 {
                     Vector3 e = weapon.pivot.localEulerAngles;
                     float pitch = Mathf.DeltaAngle(0f, e.x);                 // −120 … +85
-                    yawTarget = Mathf.Clamp(Mathf.DeltaAngle(0f, e.y), -45f, 45f);
+                    float maxYaw = weapon.CurrentProfile != null ? weapon.CurrentProfile.bodyYawMax : 45f;
+                    yawTarget = Mathf.Clamp(Mathf.DeltaAngle(0f, e.y), -maxYaw, maxYaw);
                     pitchTarget = Mathf.Lerp(leanBack, leanForward, Mathf.InverseLerp(-120f, 60f, pitch));
                 }
                 crouchTarget = Mathf.Clamp01((pivotRestY - weapon.pivot.localPosition.y) / 0.45f);
