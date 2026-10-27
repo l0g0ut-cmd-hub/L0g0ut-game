@@ -113,7 +113,7 @@ namespace BladePath.EditorTools
             // Оружие: pivot (рука) → bladeRoot (основание клинка, +Z вдоль клинка)
             GameObject pivot = new GameObject("WeaponPivot");
             pivot.transform.SetParent(root.transform, false);
-            pivot.transform.localPosition = new Vector3(0.06f * handSide, 1.18f, 0.36f);   // руки у живота, перед телом (стойка из позы №1: клинок вертикально вверх)
+            pivot.transform.localPosition = new Vector3(0.06f * handSide, 1.20f, 0.50f);   // руки перед животом на расстоянии вытянутых полусогнутых рук (ближе — руки «как у тираннозавра»)
 
             GameObject bladeRoot = new GameObject("BladeRoot");
             bladeRoot.transform.SetParent(pivot.transform, false);

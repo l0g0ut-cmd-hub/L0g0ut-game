@@ -29,8 +29,8 @@ namespace BladePath
         public Transform upperLegR, lowerLegR, footR;
 
         [Header("Хват (м назад от основания клинка до запястья)")]
-        public float gripFront = 0.10f;   // передняя рука (правая) — у гарды
-        public float gripRear = 0.24f;    // задняя рука (левая) — у навершия
+        public float gripFront = 0.08f;   // передняя рука (правая) — у гарды
+        public float gripRear = 0.20f;    // задняя рука (левая) — у навершия
         [Tooltip("Расстояние от запястья до центра ладони вдоль пальцев, м (кисть сдвигается так, чтобы рукоять проходила через ладонь).")]
         public float palmOffset = 0.06f;
 
