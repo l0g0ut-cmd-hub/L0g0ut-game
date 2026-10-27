@@ -69,6 +69,7 @@ namespace BladePath.EditorTools
             cam.tag = "MainCamera";
             Camera c = cam.AddComponent<Camera>();
             cam.AddComponent<AudioListener>();
+            cam.AddComponent<CameraOrbit>();   // облёт камеры свайпом, зум щипком (позицию задаёт сам компонент)
             c.clearFlags = CameraClearFlags.SolidColor;
             c.backgroundColor = EnvironmentBuilder.FogColor;
             c.fieldOfView = 32f;

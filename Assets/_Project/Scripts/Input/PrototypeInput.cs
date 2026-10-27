@@ -20,8 +20,25 @@ namespace BladePath
         public FighterController player;
         public FighterController enemy;
 
-        enum B { Left, Right, Jump, Overhead, Rising, Legs, Energy, EnemyAttack, EnemyType, Reset, Menu }
-        const int Count = 11;
+        enum B { Left, Right, Jump, Overhead, Rising, Legs, Energy, EnemyAttack, EnemyType, Reset, Menu, CamReset }
+        const int Count = 12;
+
+        public static PrototypeInput Instance { get; private set; }
+        void Awake() { Instance = this; }
+
+        /// <summary>Попадает ли точка экрана (в пикселях) на экранную кнопку — такие касания камера не берёт.</summary>
+        public bool IsOverButton(Vector2 screenPx)
+        {
+            float sc = Mathf.Max(0.01f, Screen.height / 540f);
+            Vector2 p = new Vector2(screenPx.x / sc, (Screen.height - screenPx.y) / sc);
+            for (int b = 0; b < Count; b++)
+            {
+                Rect r = rects[b];
+                r.xMin -= 8f; r.yMin -= 8f; r.xMax += 8f; r.yMax += 8f;   // небольшой запас на палец
+                if (r.Contains(p)) return true;
+            }
+            return false;
+        }
 
         static readonly AttackType[] EnemyTypes = new AttackType[] { AttackType.Overhead, AttackType.Rising, AttackType.LegSweep, AttackType.Energy };
 
@@ -46,7 +63,8 @@ namespace BladePath
             bool jump = down[(int)B.Jump];
             bool aOver = down[(int)B.Overhead], aRise = down[(int)B.Rising], aLegs = down[(int)B.Legs], aEnergy = down[(int)B.Energy];
             bool enemyAttack = down[(int)B.EnemyAttack], enemyCycle = down[(int)B.EnemyType];
-            bool reset = down[(int)B.Reset], menu = down[(int)B.Menu];
+            bool reset = down[(int)B.Reset], menu = down[(int)B.Menu], camReset = down[(int)B.CamReset];
+            if (camReset && CameraOrbit.Instance != null) CameraOrbit.Instance.ResetView();
 
 #if ENABLE_LEGACY_INPUT_MANAGER
             if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) move += 1f;
@@ -100,6 +118,7 @@ namespace BladePath
             rects[(int)B.Menu] = new Rect(W - 176f, 8f, 80f, 34f);
             rects[(int)B.EnemyType] = new Rect(W - 188f, 48f, 180f, 34f);
             rects[(int)B.EnemyAttack] = new Rect(W - 188f, 88f, 180f, 34f);
+            rects[(int)B.CamReset] = new Rect(W - 188f, 128f, 180f, 34f);
 
             bool air = player != null && !player.Grounded;
             labels[(int)B.Left] = "< назад";
@@ -113,6 +132,7 @@ namespace BladePath
             labels[(int)B.Menu] = "Меню";
             labels[(int)B.EnemyType] = "Враг: " + SwingProfile.Get(EnemyTypes[enemyTypeIndex]).label + "  ▸";
             labels[(int)B.EnemyAttack] = "ВРАГ БЬЁТ";
+            labels[(int)B.CamReset] = "Камера: сброс";
         }
 
         void Poll()
