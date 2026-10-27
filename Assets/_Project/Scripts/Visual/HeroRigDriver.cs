@@ -44,12 +44,16 @@ namespace BladePath
         [Tooltip("Глубина приседа на низких ударах: угол бедра, град. (колено ≈ ×1.8).")]
         public float crouchThigh = 38f;
 
+        [Header("Стойка")]
+        [Tooltip("Разнос ног в боевой стойке, град.: передняя нога (на стороне передней руки) вперёд, задняя назад. На ходьбе гасится.")]
+        public float stanceStagger = 14f;
+
         [Header("Отдача при попадании")]
         public float hitKickDecay = 2.8f;  // 1/с
 
         float l1L, l2L, l1R, l2R;
         float lean, yawS, yawV, bS, bV, crouchS, crouchV, kick;
-        float pivotRestY;
+        float pivotRestY, walkS;
         Vector3 baseLocalPos;
         Quaternion bindL, bindR;
         float sideL = 1f, sideR = -1f;
@@ -182,6 +186,15 @@ namespace BladePath
                 float f = crouchS * crouchThigh, k = f * 1.8f;
                 Rot(upperLegL, -f, right); Rot(lowerLegL, k, right); Rot(footL, f - k, right);
                 Rot(upperLegR, -f, right); Rot(lowerLegR, k, right); Rot(footR, f - k, right);
+            }
+
+            // ---------- 4b) боевая стойка: ноги разнесены (на ходьбе и в приседе не нужна)
+            walkS = Mathf.MoveTowards(walkS, Mathf.Abs(fighter.MoveAxis) > 0.1f || !fighter.Grounded ? 1f : 0f, 6f * dt);
+            float st = (1f - walkS) * (1f - crouchS) * stanceStagger;
+            if (st > 0.01f)
+            {
+                Rot(upperLegR, -st, right); Rot(lowerLegR, st * 0.4f, right); Rot(footR, st * 0.6f, right);
+                Rot(upperLegL, st * 0.6f, right); Rot(lowerLegL, st * 0.5f, right); Rot(footL, -st * 1.1f, right);
             }
 
             // ---------- 5) руки держат рукоять
