@@ -109,13 +109,16 @@ namespace BladePath
                     p.followEuler = new Vector3(-60f, 0f, 0f);
                     p.windupTime = 0.35f; p.strikeTime = 0.05f; p.followTime = 0.10f; p.recoveryTime = 0.45f;
                     break;
-                default:                     // Overhead — рубящий сверху по диагонали
+                default:                     // Overhead — дзё-дан: руки уходят над голову (клинок завален назад), затем руки падают вперёд-вниз, корпус садится в удар
                     p.label = "СВЕРХУ";
-                    p.windupEuler = new Vector3(-120f, 25f, 0f);
-                    p.strikeEndEuler = new Vector3(55f, -25f, 0f);
-                    p.followEuler = new Vector3(85f, -30f, 0f);
-                    p.windupTime = 0.28f; p.strikeTime = 0.16f; p.followTime = 0.08f; p.recoveryTime = 0.40f;
-                    p.bodyStep = 0.20f; p.strideDeg = 14f; p.crouchBoost = 0.15f;
+                    p.windupEuler = new Vector3(-142f, 14f, 0f);
+                    p.strikeEndEuler = new Vector3(42f, -14f, 0f);
+                    p.followEuler = new Vector3(62f, -16f, 0f);
+                    p.pivotOffset = new Vector3(0f, 0.50f, -0.06f);
+                    p.pivotOffsetEnd = new Vector3(0f, -0.12f, 0.24f);
+                    p.hasOffsetEnd = true;
+                    p.windupTime = 0.34f; p.strikeTime = 0.14f; p.followTime = 0.10f; p.recoveryTime = 0.46f;
+                    p.bodyStep = 0.26f; p.strideDeg = 16f; p.crouchBoost = 0.20f;
                     break;
             }
             return p;
