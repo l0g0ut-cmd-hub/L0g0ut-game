@@ -26,6 +26,8 @@ namespace BladePath
         public float strideDeg = 10f;
         [Tooltip("Добавочный присед на ударе, 0…1.")]
         public float crouchBoost;
+        [Tooltip("0…1: на замахе боец «вытягивается» — ноги сходятся, присед уходит (дзё-дан: руки вверх, тело на носки).")]
+        public float windupRise;
         public float windupTime, strikeTime, followTime, recoveryTime;
         [Tooltip("Дополнительная скорость вперёд в фазе удара, м/с.")]
         public float lungeSpeed;
@@ -109,16 +111,16 @@ namespace BladePath
                     p.followEuler = new Vector3(-60f, 0f, 0f);
                     p.windupTime = 0.35f; p.strikeTime = 0.05f; p.followTime = 0.10f; p.recoveryTime = 0.45f;
                     break;
-                default:                     // Overhead — дзё-дан: руки уходят над голову (клинок завален назад), затем руки падают вперёд-вниз, корпус садится в удар
+                default:                     // Overhead — по референс-видео: руки вытянуты высоко над головой, клинок завален назад, ноги сходятся; затем бросок вперёд-вниз в глубокий выпад
                     p.label = "СВЕРХУ";
-                    p.windupEuler = new Vector3(-142f, 14f, 0f);
-                    p.strikeEndEuler = new Vector3(42f, -14f, 0f);
-                    p.followEuler = new Vector3(62f, -16f, 0f);
-                    p.pivotOffset = new Vector3(0f, 0.50f, -0.06f);
-                    p.pivotOffsetEnd = new Vector3(0f, -0.12f, 0.24f);
+                    p.windupEuler = new Vector3(-165f, 10f, 0f);
+                    p.strikeEndEuler = new Vector3(32f, -10f, 0f);
+                    p.followEuler = new Vector3(45f, -12f, 0f);
+                    p.pivotOffset = new Vector3(0f, 0.85f, -0.10f);
+                    p.pivotOffsetEnd = new Vector3(0f, -0.22f, 0.30f);
                     p.hasOffsetEnd = true;
-                    p.windupTime = 0.34f; p.strikeTime = 0.14f; p.followTime = 0.10f; p.recoveryTime = 0.46f;
-                    p.bodyStep = 0.26f; p.strideDeg = 16f; p.crouchBoost = 0.20f;
+                    p.windupTime = 0.42f; p.strikeTime = 0.15f; p.followTime = 0.12f; p.recoveryTime = 0.50f;
+                    p.bodyStep = 0.34f; p.strideDeg = 22f; p.crouchBoost = 0.50f; p.windupRise = 0.8f;
                     break;
             }
             return p;

@@ -163,8 +163,9 @@ namespace BladePath
             SwingProfile prof = (weapon != null && swinging) ? weapon.CurrentProfile : null;
             float strikeK = Mathf.Max(0f, bS);
             float stepM = prof != null ? prof.bodyStep : lungeForward;
-            float cr = Mathf.Clamp01(crouchS + stanceCrouch * (1f - walkS) + (prof != null ? prof.crouchBoost * strikeK : 0f));
-            float stride = (1f - walkS) * stanceStagger + (prof != null ? prof.strideDeg * strikeK * (1f - walkS) : 0f);
+            float riseK = prof != null ? Mathf.Max(0f, -bS) * prof.windupRise : 0f;   // замах дзё-дан: ноги сходятся, тело вытягивается
+            float cr = Mathf.Clamp01(crouchS + stanceCrouch * (1f - walkS) * (1f - riseK) + (prof != null ? prof.crouchBoost * strikeK : 0f));
+            float stride = (1f - walkS) * stanceStagger * (1f - riseK) + (prof != null ? prof.strideDeg * strikeK * (1f - walkS) : 0f);
 
             // ---------- 2) дыхание и покачивание в стойке (глушится во время удара)
             float calm = swinging ? 0f : 1f;
