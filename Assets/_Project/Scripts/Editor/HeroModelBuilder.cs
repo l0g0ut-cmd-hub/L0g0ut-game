@@ -89,6 +89,14 @@ namespace BladePath.EditorTools
             d.weapon = fighter.weapon;
             d.bladeRoot = bladeRoot;
             d.animator = anim;
+            d.hips = FindBone(model.transform, "Hips");
+            d.head = FindBone(model.transform, "Head");
+            d.upperLegL = FindBone(model.transform, "UpperLeg.L");
+            d.lowerLegL = FindBone(model.transform, "LowerLeg.L");
+            d.footL = FindBone(model.transform, "Foot.L");
+            d.upperLegR = FindBone(model.transform, "UpperLeg.R");
+            d.lowerLegR = FindBone(model.transform, "LowerLeg.R");
+            d.footR = FindBone(model.transform, "Foot.R");
             d.spine = FindBone(model.transform, "Spine");
             d.chest = FindBone(model.transform, "Chest");
             d.upperArmL = FindBone(model.transform, "UpperArm.L");

@@ -37,6 +37,9 @@ namespace BladePath
         }
         public float CurrentLunge { get { return (CurrentProfile != null && Phase == SwingPhase.Strike) ? CurrentProfile.lungeSpeed : 0f; } }
 
+        /// <summary>Прогресс текущей фазы удара 0…1 (для процедурной анимации тела).</summary>
+        public float PhaseProgress { get { return Phase == SwingPhase.Idle ? 0f : Mathf.Clamp01(phaseTime / Mathf.Max(0.0001f, PhaseDuration(Phase))); } }
+
         public event Action<WeaponController> ContactWindowOpened;
         public event Action<WeaponController> ContactWindowClosed;
         /// <summary>Дальняя атака: момент выпуска снаряда.</summary>

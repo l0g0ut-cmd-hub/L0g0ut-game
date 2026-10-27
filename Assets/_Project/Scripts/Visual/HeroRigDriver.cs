@@ -3,10 +3,16 @@ using UnityEngine;
 namespace BladePath
 {
     /// <summary>
-    /// Ведёт скелет героя. Ноги и корпус играет Animator (стойка / шаг / прыжок / получение удара),
-    /// а руки целиком ведёт этот скрипт: двухкостный IK тянет обе кисти к рукояти катаны, которой управляет WeaponController.
-    /// Клинок и попадания по-прежнему считаются по pivot катаны, а не по скелету: модель только «держится» за оружие.
-    /// Порядок: Animator (в Update) → этот LateUpdate: наклон корпуса от фазы удара → IK рук.
+    /// Ведёт скелет бойца поверх Animator. Ноги, таз и позвоночник играет Animator (стойка / шаг / прыжок / получение удара),
+    /// а этот скрипт в LateUpdate добавляет «живость» и ведёт руки:
+    ///  1) тело следует за клинком: корпус скручивается и наклоняется вслед за позой катаны (таз → поясница → грудь),
+    ///     выпад вперёд на ударе, откат назад на замахе, приседание на низких ударах (ноги сгибаются, корпус опускается);
+    ///  2) отдача при получении удара (затухающий толчок назад);
+    ///  3) дыхание и лёгкое покачивание в стойке;
+    ///  4) руки: двухкостный IK тянет обе кисти к рукояти, а кисти разворачиваются так, чтобы ладони охватывали её.
+    /// Клинок и попадания по-прежнему считаются по pivot катаны, а не по скелету: модель только «держится» за оружие,
+    /// а выпад/присед — чисто визуальные (зоны поражения не двигаются).
+    /// Порядок: Animator (в Update) → этот LateUpdate: тело → IK рук.
     /// </summary>
     public class HeroRigDriver : MonoBehaviour
     {
@@ -16,33 +22,69 @@ namespace BladePath
         public Animator animator;
 
         [Header("Кости (задаёт сборщик сцены)")]
-        public Transform spine, chest;
+        public Transform hips, spine, chest, head;
         public Transform upperArmL, forearmL, handL;
         public Transform upperArmR, forearmR, handR;
+        public Transform upperLegL, lowerLegL, footL;
+        public Transform upperLegR, lowerLegR, footR;
 
         [Header("Хват (м назад от основания клинка до запястья)")]
         public float gripFront = 0.10f;   // передняя рука (правая) — у гарды
         public float gripRear = 0.24f;    // задняя рука (левая) — у навершия
+        [Tooltip("Расстояние от запястья до центра ладони вдоль пальцев, м (кисть сдвигается так, чтобы рукоять проходила через ладонь).")]
+        public float palmOffset = 0.06f;
 
-        [Header("Наклон корпуса в ударе, град.")]
-        public float leanBack = -12f;     // на замахе
-        public float leanForward = 14f;   // в конце удара
-        public float leanSpeed = 140f;    // град/с
+        [Header("Тело в ударе")]
+        [Tooltip("Доли поворота клинка (yaw, до ±45°), которые отрабатывают таз / поясница / грудь.")]
+        public float hipsYawK = 0.15f, spineYawK = 0.20f, chestYawK = 0.25f;
+        public float leanBack = -12f;     // наклон корпуса на замахе, град.
+        public float leanForward = 14f;   // и в конце удара
+        public float lungeForward = 0.16f; // выпад вперёд на ударе, м
+        public float lungeBack = 0.05f;    // откат назад на замахе, м
+        [Tooltip("Глубина приседа на низких ударах: угол бедра, град. (колено ≈ ×1.8).")]
+        public float crouchThigh = 38f;
+
+        [Header("Отдача при попадании")]
+        public float hitKickDecay = 2.8f;  // 1/с
 
         float l1L, l2L, l1R, l2R;
-        float lean;
+        float lean, yawS, yawV, bS, bV, crouchS, crouchV, kick;
+        float pivotRestY;
+        Vector3 baseLocalPos;
+        Quaternion bindL, bindR;
+        float sideL = 1f, sideR = -1f;
+        bool framesReady;
         CombatResolver resolver;
 
         void Start()
         {
             Cache(upperArmL, forearmL, handL, out l1L, out l2L);
             Cache(upperArmR, forearmR, handR, out l1R, out l2R);
+            baseLocalPos = transform.localPosition;
+            if (weapon != null && weapon.pivot != null) pivotRestY = weapon.pivot.localPosition.y;
+            CacheHandFrame(handL, forearmL, out bindL, out sideL);
+            CacheHandFrame(handR, forearmR, out bindR, out sideR);
         }
 
         static void Cache(Transform u, Transform f, Transform h, out float a, out float b)
         {
             a = (u != null && f != null) ? Vector3.Distance(u.position, f.position) : 0.3f;
             b = (f != null && h != null) ? Vector3.Distance(f.position, h.position) : 0.26f;
+        }
+
+        /// <summary>Запоминает позу кисти в покое: направление пальцев ≈ продолжение предплечья, ладонь смотрит к оси тела.</summary>
+        void CacheHandFrame(Transform hand, Transform fore, out Quaternion bind, out float side)
+        {
+            bind = Quaternion.identity; side = 1f;
+            if (hand == null || fore == null || fighter == null) return;
+            Transform ft = fighter.transform;
+            side = Mathf.Sign(Vector3.Dot(hand.position - ft.position, ft.right));
+            if (side == 0f) side = 1f;
+            Vector3 f = (hand.position - fore.position).normalized;
+            Vector3 n = Vector3.ProjectOnPlane(-side * ft.right, f);
+            if (n.sqrMagnitude < 1e-6f || f.sqrMagnitude < 1e-6f) return;
+            bind = Quaternion.Inverse(Quaternion.LookRotation(f, n.normalized)) * hand.rotation;
+            framesReady = true;
         }
 
         void OnDisable()
@@ -67,31 +109,122 @@ namespace BladePath
 
         void OnHit(HitResult r)
         {
-            if (animator != null && r.target == fighter) animator.SetTrigger("Hit");
+            if (r.target != fighter) return;
+            if (animator != null) animator.SetTrigger("Hit");
+            kick = 1f;
         }
+
+        static float Smooth(float t) { return t * t * (3f - 2f * t); }
 
         void LateUpdate()
         {
             if (fighter == null || bladeRoot == null) return;
+            float dt = Time.deltaTime;
+            Transform ft = fighter.transform;
+            Vector3 right = ft.right, up = ft.up;
+            float sc = transform.lossyScale.y;
 
-            // 1) корпус слегка откидывается на замахе и подаётся вперёд в ударе
-            float target = 0f;
-            if (weapon != null && weapon.Phase != SwingPhase.Idle && weapon.pivot != null)
+            // ---------- 1) состояние удара → «поза тела» b: −1 замах, +1 конец удара, 0 покой
+            float bTarget = 0f, yawTarget = 0f, pitchTarget = 0f, crouchTarget = 0f;
+            bool swinging = weapon != null && weapon.pivot != null && weapon.Phase != SwingPhase.Idle;
+            if (weapon != null && weapon.pivot != null)
             {
-                float pitch = Mathf.DeltaAngle(0f, weapon.pivot.localEulerAngles.x);   // −120 … +85
-                target = Mathf.Lerp(leanBack, leanForward, Mathf.InverseLerp(-120f, 60f, pitch));
+                float t = weapon.PhaseProgress;
+                switch (weapon.Phase)
+                {
+                    case SwingPhase.Windup: bTarget = -Smooth(t); break;
+                    case SwingPhase.Strike: bTarget = Mathf.Lerp(-1f, 1f, t); break;
+                    case SwingPhase.FollowThrough: bTarget = 1f; break;
+                    case SwingPhase.Recovery: bTarget = Mathf.Lerp(1f, 0f, Smooth(t)); break;
+                }
+                if (swinging)
+                {
+                    Vector3 e = weapon.pivot.localEulerAngles;
+                    float pitch = Mathf.DeltaAngle(0f, e.x);                 // −120 … +85
+                    yawTarget = Mathf.Clamp(Mathf.DeltaAngle(0f, e.y), -45f, 45f);
+                    pitchTarget = Mathf.Lerp(leanBack, leanForward, Mathf.InverseLerp(-120f, 60f, pitch));
+                }
+                crouchTarget = Mathf.Clamp01((pivotRestY - weapon.pivot.localPosition.y) / 0.45f);
             }
-            lean = Mathf.MoveTowards(lean, target, leanSpeed * Time.deltaTime);
-            Vector3 right = fighter.transform.right;
-            if (spine != null) spine.rotation = Quaternion.AngleAxis(lean * 0.5f, right) * spine.rotation;
-            if (chest != null) chest.rotation = Quaternion.AngleAxis(lean * 0.5f, right) * chest.rotation;
+            lean = Mathf.MoveTowards(lean, pitchTarget, 140f * dt);
+            yawS = Mathf.SmoothDampAngle(yawS, yawTarget, ref yawV, 0.05f);
+            bS = Mathf.SmoothDamp(bS, bTarget, ref bV, 0.04f);
+            crouchS = Mathf.SmoothDamp(crouchS, crouchTarget, ref crouchV, 0.07f);
+            kick = Mathf.MoveTowards(kick, 0f, hitKickDecay * dt);
 
-            // 2) руки держат рукоять
-            Vector3 back = -bladeRoot.forward;
-            Vector3 outward = fighter.transform.right * 0.6f + Vector3.down + back * 0.3f;
-            SolveArm(upperArmR, forearmR, handR, l1R, l2R, bladeRoot.position + back * gripFront, outward);
-            Vector3 outwardL = -fighter.transform.right * 0.6f + Vector3.down + back * 0.3f;
-            SolveArm(upperArmL, forearmL, handL, l1L, l2L, bladeRoot.position + back * gripRear, outwardL);
+            // ---------- 2) дыхание и покачивание в стойке (глушится во время удара)
+            float calm = swinging ? 0f : 1f;
+            float time = Time.time;
+            float swayYaw = Mathf.Sin(time * 0.8f) * 2.0f * calm;
+            float swayPitch = Mathf.Sin(time * 1.1f + 1f) * 1.2f * calm;
+            float headYaw = Mathf.Sin(time * 0.55f + 2f) * 3.0f * calm;
+
+            // ---------- 3) смещение всей модели: выпад / откат / присед / отдача (визуально; зоны поражения не двигаются)
+            float lunge = Mathf.Max(0f, bS) * lungeForward - Mathf.Max(0f, -bS) * lungeBack - kick * 0.10f;
+            float thighRad = crouchS * crouchThigh * Mathf.Deg2Rad;
+            float kneeRad = crouchS * crouchThigh * 1.8f * Mathf.Deg2Rad;
+            float drop = sc * (0.45f * (1f - Mathf.Cos(thighRad)) + 0.41f * (1f - Mathf.Cos(Mathf.Max(0f, kneeRad - thighRad))));
+            Vector3 off = new Vector3(0f, -drop - Mathf.Max(0f, bS) * 0.02f, lunge);
+            transform.localPosition = baseLocalPos + off;
+
+            // ---------- 4) повороты костей сверху вниз (родитель раньше ребёнка)
+            Rot(hips, yawS * hipsYawK + swayYaw * 0.4f, up);
+            Rot(spine, yawS * spineYawK + swayYaw * 0.3f, up);
+            Rot(chest, yawS * chestYawK + swayYaw * 0.3f, up);
+            float pitchTotal = lean * 0.5f - kick * 8f + swayPitch * 0.5f;
+            Rot(spine, pitchTotal, right);
+            Rot(chest, lean * 0.5f - kick * 12f + swayPitch * 0.5f, right);
+            Rot(head, headYaw - yawS * 0.25f, up);              // голова частично «смотрит» на противника, а не вслед за клинком
+            Rot(head, -pitchTotal * 0.5f + kick * 6f, right);
+
+            if (crouchS > 0.01f)
+            {
+                float f = crouchS * crouchThigh, k = f * 1.8f;
+                Rot(upperLegL, -f, right); Rot(lowerLegL, k, right); Rot(footL, f - k, right);
+                Rot(upperLegR, -f, right); Rot(lowerLegR, k, right); Rot(footR, f - k, right);
+            }
+
+            // ---------- 5) руки держат рукоять
+            Vector3 axis = bladeRoot.forward;
+            Vector3 back = -axis;
+            Vector3 outward = ft.right * 0.6f + Vector3.down + back * 0.3f;
+            Vector3 gripR = bladeRoot.position + back * gripFront;
+            Vector3 gripL = bladeRoot.position + back * gripRear;
+            Vector3 fR, nR, fL, nL;
+            GripFrame(axis, sideR, ft, out fR, out nR);
+            GripFrame(axis, sideL, ft, out fL, out nL);
+            SolveArm(upperArmR, forearmR, handR, l1R, l2R, gripR - fR * palmOffset - nR * 0.015f, outward);
+            Vector3 outwardL = -ft.right * 0.6f + Vector3.down + back * 0.3f;
+            SolveArm(upperArmL, forearmL, handL, l1L, l2L, gripL - fL * palmOffset - nL * 0.015f, outwardL);
+            if (framesReady)
+            {
+                OrientHand(handR, bindR, fR, nR);
+                OrientHand(handL, bindL, fL, nL);
+            }
+        }
+
+        static void Rot(Transform t, float angle, Vector3 axis)
+        {
+            if (t != null && Mathf.Abs(angle) > 1e-3f) t.rotation = Quaternion.AngleAxis(angle, axis) * t.rotation;
+        }
+
+        /// <summary>Нужные направления кисти: пальцы поперёк клинка (вниз-внутрь), ладонь обращена к рукояти.</summary>
+        static void GripFrame(Vector3 axis, float side, Transform ft, out Vector3 fingers, out Vector3 palm)
+        {
+            Vector3 inward = -side * ft.right;
+            Vector3 f = Vector3.ProjectOnPlane(Vector3.down * 0.8f + inward * 0.5f, axis);
+            if (f.sqrMagnitude < 1e-4f) f = Vector3.ProjectOnPlane(inward, axis);
+            if (f.sqrMagnitude < 1e-4f) f = Vector3.ProjectOnPlane(ft.forward, axis);
+            fingers = f.normalized;
+            Vector3 n = Vector3.Cross(fingers, axis).normalized;
+            if (Vector3.Dot(n, inward) < 0f) n = -n;
+            palm = n;
+        }
+
+        static void OrientHand(Transform hand, Quaternion bind, Vector3 fingers, Vector3 palm)
+        {
+            if (hand == null || fingers.sqrMagnitude < 1e-6f || palm.sqrMagnitude < 1e-6f) return;
+            hand.rotation = Quaternion.LookRotation(fingers, palm) * bind;
         }
 
         /// <summary>Аналитический двухкостный IK: локоть в плоскости (плечо → цель) со смещением в сторону pole.</summary>

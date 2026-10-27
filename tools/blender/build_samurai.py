@@ -394,7 +394,8 @@ def key_pose(spec, frame):
             if d.get(k):
                 q = q @ Quaternion(local_vec(pb, AX[k[1]]).normalized(), math.radians(d[k]))
         pb.rotation_quaternion = q
-        pb.location = local_vec(pb, (0, 0, d['dz'])) if d.get('dz') else Vector((0, 0, 0))
+        loc = (d.get('dx', 0.0), d.get('dy', 0.0), d.get('dz', 0.0))
+        pb.location = local_vec(pb, loc) if any(loc) else Vector((0, 0, 0))
         pb.keyframe_insert('rotation_quaternion', frame=frame)
         pb.keyframe_insert('location', frame=frame)
 
@@ -428,23 +429,33 @@ STANCE_THIGH, STANCE_KNEE = 7.0, 14.0
 # Idle: 60 кадров, петля — дыхание и лёгкая боевая стойка
 def idle_fn(f):
     br = math.sin((f - 1) / 60.0 * 2 * math.pi)
-    spec = {'Hips': {'dz': 0.006 * br}, 'Spine': {'rx': -0.6 * br}, 'Chest': {'rx': -1.2 * br}, 'Head': {'rx': 1.0 * br}}
-    for sd in 'LR': leg(spec, sd, STANCE_THIGH, STANCE_KNEE)
+    ph = (f - 1) / 60.0 * 2 * math.pi
+    shift = math.sin(ph)                      # вес переходит с ноги на ногу за один цикл
+    spec = {'Hips': {'dz': 0.006 * br - 0.004 * abs(shift), 'dx': 0.018 * shift, 'ry': 1.6 * shift},
+            'Spine': {'rx': -0.6 * br, 'ry': -1.0 * shift, 'rz': 1.2 * math.sin(ph + 0.8)},
+            'Chest': {'rx': -1.2 * br, 'ry': -0.8 * shift, 'rz': -1.5 * math.sin(ph + 0.8)},
+            'Neck': {'rz': 0.8 * math.sin(ph + 1.6)},
+            'Head': {'rx': 1.0 * br, 'rz': 1.5 * math.sin(ph + 2.0), 'ry': 0.8 * shift}}
+    for sd, w in (('L', shift), ('R', -shift)):   # нагруженная нога чуть прямее, разгруженная чуть согнута
+        leg(spec, sd, STANCE_THIGH + 1.5 * (-w), STANCE_KNEE + 3.0 * (-w))
     return spec
 new_action('Idle', range(1, 62), idle_fn)
 
 # WalkF: 36 кадров, петля — шаг вперёд (назад — проигрыванием с отрицательной скоростью)
 def walk_fn(f):
     ph = (f - 1) / 36.0 * 2 * math.pi
-    spec = {'Hips': {'dz': 0.020 * math.cos(2 * ph), 'rz': 4.0 * math.sin(ph)},
-            'Spine': {'rx': 3.0, 'rz': -5.0 * math.sin(ph)},
-            'Chest': {'rz': -2.0 * math.sin(ph)},
-            'Head': {'rz': 2.0 * math.sin(ph)}}
+    spec = {'Hips': {'dz': 0.026 * math.cos(2 * ph), 'dx': -0.032 * math.cos(ph), 'rz': 5.0 * math.sin(ph), 'ry': 3.5 * math.cos(ph), 'rx': 1.5},
+            'Spine': {'rx': 3.5, 'rz': -6.0 * math.sin(ph), 'ry': -2.0 * math.cos(ph)},
+            'Chest': {'rz': -3.0 * math.sin(ph), 'ry': -1.5 * math.cos(ph)},
+            'Neck': {'rz': 1.5 * math.sin(ph)},
+            'Head': {'rz': 3.0 * math.sin(ph), 'rx': -1.0 * math.cos(2 * ph)}}
     for sd, off in (('L', 0.0), ('R', math.pi)):
         p = ph + off
         swing = 26.0 * math.sin(p)
         flex = 8.0 + 42.0 * (max(0.0, math.cos(p)) ** 1.5)
         leg(spec, sd, 6.0 + swing, flex)
+        toe = 14.0 * max(0.0, -math.sin(p)) * max(0.0, math.cos(p + 0.6))   # на толчке пятка отрывается от земли
+        spec['Foot.' + sd]['rx'] = spec['Foot.' + sd]['rx'] + toe
     return spec
 new_action('WalkF', range(1, 38), walk_fn)
 
@@ -464,7 +475,8 @@ new_action('Jump', range(1, 25), jump_fn)
 H_ENV = [(1, 0.0), (4, 1.0), (16, 0.0)]
 def hit_fn(f):
     h = interp(H_ENV, f)
-    spec = {'Hips': {'dz': -0.03 * h}, 'Spine': {'rx': -8.0 * h}, 'Chest': {'rx': -14.0 * h}, 'Neck': {'rx': -4.0 * h}, 'Head': {'rx': -10.0 * h}}
+    spec = {'Hips': {'dz': -0.045 * h, 'dy': 0.05 * h, 'rz': 6.0 * h}, 'Spine': {'rx': -10.0 * h, 'rz': -4.0 * h},
+            'Chest': {'rx': -18.0 * h, 'rz': -5.0 * h, 'ry': 3.0 * h}, 'Neck': {'rx': -6.0 * h}, 'Head': {'rx': -14.0 * h, 'rz': 4.0 * h}}
     for sd in 'LR': leg(spec, sd, STANCE_THIGH + 10.0 * h, STANCE_KNEE + 14.0 * h)
     return spec
 new_action('Hit', range(1, 17), hit_fn)
