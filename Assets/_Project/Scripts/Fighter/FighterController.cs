@@ -3,8 +3,8 @@ using UnityEngine;
 namespace BladePath
 {
     /// <summary>
-    /// Боец: перемещение вдоль оси дуэли (мировая X), прыжок, границы арены, дистанция до противника,
-    /// запуск атак. Логика попаданий здесь не живёт.
+    /// Боец: свободное перемещение по площадке (плоскость XZ), всегда лицом к противнику, прыжок, границы арены,
+    /// дистанция до противника, запуск атак. Логика попаданий здесь не живёт.
     /// Двигаться можно во время удара (скорость умножается на attackMoveMultiplier).
     /// </summary>
     public class FighterController : MonoBehaviour
@@ -19,8 +19,11 @@ namespace BladePath
         [Tooltip("Множитель скорости, пока идёт любая фаза удара. 1 = без штрафа.")]
         [Range(0f, 1f)] public float attackMoveMultiplier = 0.8f;
         public float minSeparation = 0.7f;      // ближе этого бойцы не сходятся (корпуса)
-        public float arenaHalfWidth = 2.4f;
-        [Tooltip("+1: смотрит в +X, -1: смотрит в -X")]
+        public float arenaHalfWidth = 3.1f;     // половина площадки по X
+        public float arenaHalfDepth = 2.3f;     // половина площадки по Z
+        [Tooltip("Скорость разворота к противнику, град/с.")]
+        public float turnSpeed = 420f;
+        [Tooltip("Стартовый взгляд: +1 в +X, -1 в -X (дальше боец сам следит за противником).")]
         public int facing = 1;
 
         [Header("Jump")]
@@ -32,19 +35,20 @@ namespace BladePath
         public float energySpeed = 7f;
 
         public bool Grounded { get; private set; }
-        /// <summary>Ось хода в этом кадре (-1 назад .. +1 вперёд относительно взгляда) — для аниматора.</summary>
+        /// <summary>Скорость хода в этом кадре 0…1; знак минус, если идёт спиной к направлению взгляда — для аниматора.</summary>
         public float MoveAxis { get; private set; }
 
-        float forwardInput;      // -1 назад .. +1 вперёд (относительно facing)
+        Vector2 moveInput;       // желаемое движение в мировых осях X/Z, длина 0…1
         float vy;
         Vector3 startPosition;
+        Quaternion startRotation;
 
-        void Awake() { startPosition = transform.position; Grounded = true; }
+        void Awake() { startPosition = transform.position; startRotation = transform.rotation; Grounded = true; }
         void OnEnable() { if (weapon != null) weapon.Released += OnRelease; }
         void OnDisable() { if (weapon != null) weapon.Released -= OnRelease; }
 
-        /// <summary>Задать ось движения на этот кадр (+1 вперёд, -1 назад).</summary>
-        public void SetMoveInput(float axis) { forwardInput = Mathf.Clamp(axis, -1f, 1f); }
+        /// <summary>Задать движение на этот кадр: вектор в мировых осях (x → X, y → Z), длина обрезается до 1.</summary>
+        public void SetMoveVector(Vector2 worldXZ) { moveInput = Vector2.ClampMagnitude(worldXZ, 1f); }
 
         public bool Jump()
         {
@@ -83,32 +87,65 @@ namespace BladePath
                 transform.position = p;
             }
 
+            // взгляд: всегда на противника (по горизонтали)
+            Vector3 fwd = transform.forward; fwd.y = 0f;
+            if (opponent != null)
+            {
+                Vector3 to = opponent.transform.position - transform.position; to.y = 0f;
+                if (to.sqrMagnitude > 1e-4f)
+                {
+                    fwd = to.normalized;
+                    transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(fwd, Vector3.up), turnSpeed * dt);
+                }
+            }
+            if (fwd.sqrMagnitude < 1e-6f) fwd = Vector3.forward;
+            fwd.Normalize();
+
             float speed = moveSpeed;
             if (weapon != null && weapon.Phase != SwingPhase.Idle) speed *= attackMoveMultiplier;
-            MoveAxis = forwardInput;
-            float dx = forwardInput * facing * speed * dt;
-            if (weapon != null) dx += facing * weapon.CurrentLunge * dt;   // бросок вперёд в ударе из прыжка
-            if (Mathf.Abs(dx) > 1e-6f) Move(dx);
-            forwardInput = 0f;
+            Vector3 mv = new Vector3(moveInput.x, 0f, moveInput.y);
+            float mag = Mathf.Min(1f, mv.magnitude);
+            float sign = 1f;
+            if (mag > 0.01f) { mv /= mv.magnitude; if (Vector3.Dot(mv, fwd) < -0.3f) sign = -1f; }
+            MoveAxis = mag * sign;
+
+            Vector3 delta = mv * (mag * speed * dt);
+            if (weapon != null) delta += fwd * (weapon.CurrentLunge * dt);   // бросок вперёд в ударе из прыжка
+            if (delta.sqrMagnitude > 1e-10f) Move(delta);
+            moveInput = Vector2.zero;
         }
 
-        void Move(float dx)
+        void Move(Vector3 delta)
         {
             Vector3 pos = transform.position;
-            float newX = Mathf.Clamp(pos.x + dx, -arenaHalfWidth, arenaHalfWidth);
+            Vector3 np = pos + delta;
+            np.x = Mathf.Clamp(np.x, -arenaHalfWidth, arenaHalfWidth);
+            np.z = Mathf.Clamp(np.z, -arenaHalfDepth, arenaHalfDepth);
+
+            // препятствия (жаровни и т.п.): выталкиваем наружу, получается скольжение вдоль
+            for (int i = 0; i < ArenaObstacle.All.Count; i++)
+            {
+                ArenaObstacle o = ArenaObstacle.All[i];
+                if (o == null) continue;
+                Vector3 d = np - o.transform.position; d.y = 0f;
+                float r = o.radius + 0.25f;
+                float m = d.magnitude;
+                if (m < r) np = o.transform.position + (m > 1e-4f ? d / m : Vector3.right) * r + Vector3.up * np.y;
+            }
 
             if (opponent != null)
             {
-                float ox = opponent.transform.position.x;
-                float oldDist = Mathf.Abs(pos.x - ox);
-                float newDist = Mathf.Abs(newX - ox);
-                // нельзя сближаться за минимальную дистанцию и проходить сквозь противника
-                bool closing = newDist < oldDist;
-                bool crossing = Mathf.Sign(newX - ox) != Mathf.Sign(pos.x - ox);
-                if (closing && (newDist < minSeparation || crossing)) return;
+                Vector3 op = opponent.transform.position;
+                Vector3 d = np - op; d.y = 0f;
+                Vector3 old = pos - op; old.y = 0f;
+                float nd = d.magnitude;
+                // нельзя сближаться за минимальную дистанцию (корпуса) — упираемся и скользим вокруг
+                if (nd < minSeparation && nd < old.magnitude)
+                    np = new Vector3(op.x, np.y, op.z) + (nd > 1e-4f ? d / nd : old.normalized) * minSeparation;
             }
-            pos.x = newX;
-            transform.position = pos;
+            np.x = Mathf.Clamp(np.x, -arenaHalfWidth, arenaHalfWidth);
+            np.z = Mathf.Clamp(np.z, -arenaHalfDepth, arenaHalfDepth);
+            transform.position = np;
         }
 
         void OnRelease(WeaponController w)
@@ -123,9 +160,10 @@ namespace BladePath
         public void ResetFighter()
         {
             transform.position = startPosition;
+            transform.rotation = startRotation;
             vy = 0f;
             Grounded = true;
-            forwardInput = 0f;
+            moveInput = Vector2.zero;
             if (weapon != null) weapon.ResetState();
             if (zones != null) for (int i = 0; i < zones.Length; i++) if (zones[i] != null) zones[i].ClearFlash();
             EnergyProjectile.DestroyAll();

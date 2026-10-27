@@ -10,7 +10,7 @@ namespace BladePath
     ///  • Двойной тап по свободному месту или кнопка «Камера: сброс» — вернуть стандартный вид сбоку.
     /// Касания, начатые на экранных кнопках, камеру не двигают (можно ходить и бить, не задевая её).
     /// ПК/редактор: левая или правая кнопка мыши — вращение, колесо — зум.
-    /// Камера только смотрит: на бой, попадания и управление (кнопки «вперёд/назад» идут вдоль дуэльной оси) не влияет.
+    /// Камера только смотрит: на бой и попадания не влияет; джойстик ходьбы считает направления относительно неё.
     /// </summary>
     public class CameraOrbit : MonoBehaviour
     {
@@ -23,11 +23,11 @@ namespace BladePath
         [Tooltip("Градусов поворота на высоту экрана.")]
         public float yawPerScreen = 180f, pitchPerScreen = 90f;
         public float smoothTime = 0.08f;
-        [Range(0f, 1f)] public float followMidpoint = 0.5f;          // насколько камера следует за серединой между бойцами по X
+        [Range(0f, 1f)] public float followMidpoint = 0.5f;          // насколько камера следует за серединой между бойцами (X и Z)
 
         float yaw, pitch, dist;
         float yawT, pitchT, distT, yawV, pitchV, distV;
-        float midX, midV;
+        float midX, midZ, midVx, midVz;
         FighterController[] fighters;
         readonly HashSet<int> camTouches = new HashSet<int>();
         float lastTapTime = -10f;
@@ -129,16 +129,17 @@ namespace BladePath
             pitch = Mathf.SmoothDamp(pitch, pitchT, ref pitchV, smoothTime);
             dist = Mathf.SmoothDamp(dist, distT, ref distV, smoothTime);
 
-            float targetX = 0f;
+            float targetX = 0f, targetZ = 0f;
             if (fighters != null && fighters.Length > 0)
             {
-                float sum = 0f; int n = 0;
-                for (int i = 0; i < fighters.Length; i++) if (fighters[i] != null) { sum += fighters[i].transform.position.x; n++; }
-                if (n > 0) targetX = sum / n * followMidpoint;
+                float sx = 0f, sz = 0f; int n = 0;
+                for (int i = 0; i < fighters.Length; i++) if (fighters[i] != null) { sx += fighters[i].transform.position.x; sz += fighters[i].transform.position.z; n++; }
+                if (n > 0) { targetX = sx / n * followMidpoint; targetZ = sz / n * followMidpoint; }
             }
-            midX = Mathf.SmoothDamp(midX, targetX, ref midV, 0.25f);
+            midX = Mathf.SmoothDamp(midX, targetX, ref midVx, 0.25f);
+            midZ = Mathf.SmoothDamp(midZ, targetZ, ref midVz, 0.25f);
 
-            Vector3 focus = new Vector3(midX, 0f, 0f) + targetOffset;
+            Vector3 focus = new Vector3(midX, 0f, midZ) + targetOffset;
             Quaternion rot = Quaternion.Euler(pitch, yaw, 0f);
             Vector3 pos = focus + rot * new Vector3(0f, 0f, -dist);
             if (pos.y < 0.15f) pos.y = 0.15f;

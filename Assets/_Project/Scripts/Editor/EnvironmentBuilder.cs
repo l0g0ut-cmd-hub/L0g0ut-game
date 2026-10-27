@@ -34,7 +34,7 @@ namespace BladePath.EditorTools
             GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
             floor.name = "ArenaFloor";
             floor.transform.position = new Vector3(0f, -0.05f, 0f);
-            floor.transform.localScale = new Vector3(6.4f, 0.1f, 3f);
+            floor.transform.localScale = new Vector3(7.2f, 0.1f, 5.4f);
             floor.GetComponent<Renderer>().sharedMaterial = look.stone;
 
             // ворота тории на заднем плане
@@ -71,8 +71,8 @@ namespace BladePath.EditorTools
             moon.GetComponent<Renderer>().sharedMaterial = look.moon;
 
             // жаровни с мерцающим огнём
-            AddBrazier(look, new Vector3(-2.2f, 0f, 0.8f));
-            AddBrazier(look, new Vector3(2.2f, 0f, 0.8f));
+            AddBrazier(look, new Vector3(-3.2f, 0f, 2.2f));
+            AddBrazier(look, new Vector3(3.2f, 0f, 2.2f));
 
             AddPetals(look);
         }
@@ -81,6 +81,7 @@ namespace BladePath.EditorTools
         {
             Transform b = new GameObject("Brazier").transform;
             b.position = pos;
+            b.gameObject.AddComponent<ArenaObstacle>().radius = 0.32f;
             CharacterVisuals.Part(b, "Stand", PrimitiveType.Cylinder, new Vector3(0f, 0.45f, 0f), Vector3.zero, new Vector3(0.30f, 0.45f, 0.30f), look.stoneDark);
             GameObject flame = CharacterVisuals.Part(b, "Flame", PrimitiveType.Sphere, new Vector3(0f, 1.08f, 0f), Vector3.zero, new Vector3(0.20f, 0.26f, 0.20f), look.flame);
 
@@ -122,7 +123,7 @@ namespace BladePath.EditorTools
 
             ParticleSystem.ShapeModule sh = ps.shape;
             sh.shapeType = ParticleSystemShapeType.Box;
-            sh.scale = new Vector3(6f, 0.1f, 3f);
+            sh.scale = new Vector3(7f, 0.1f, 5.2f);
 
             ParticleSystem.NoiseModule noise = ps.noise;
             noise.enabled = true;
