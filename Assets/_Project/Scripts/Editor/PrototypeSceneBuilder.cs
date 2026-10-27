@@ -128,7 +128,7 @@ namespace BladePath.EditorTools
             w.pivot = pivot.transform;
             w.bladeRoot = bladeRoot.transform;
             w.bladeLength = 0.80f;
-            w.restEuler = new Vector3(-95f, 0f, 0f);   // клинок вертикально вверх, чуть назад (поза №1)
+            w.restEuler = new Vector3(-15f, 0f, 0f);   // чудан: клинок вперёд, остриё чуть выше рук, смотрит противнику в горло; хват в досягаемости рук
             w.yawSign = handSide;   // зеркалит диагональ удара для руки с другой стороны
             pivot.AddComponent<BladeTrajectorySampler>();
             f.weapon = w;
