@@ -8,7 +8,7 @@ namespace BladePath.EditorTools
     public class Look
     {
         public Material heroArmor, enemyArmor, cloth, skin, hair, lacquer, bronze, steel, handle;
-        public Material flesh, tooth, maw, voidBlack, deadSkin, ember, tentacle;
+        public Material flesh, tooth, maw, voidBlack, deadSkin, ember, tentacle, ronin;
         public Material stone, stoneDark, flame, moon, petal;
     }
 
@@ -45,6 +45,7 @@ namespace BladePath.EditorTools
             l.ember.EnableKeyword("_EMISSION");
             l.ember.SetColor("_EmissionColor", new Color(2.4f, 0.8f, 0.1f));
             l.ember.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
+            l.ronin = Ronin();
             l.stone = Textured("Stone_Floor", "stone_albedo.png", "stone_normal.png", new Vector2(4f, 2f), Color.white, 0f, 0.35f);
             l.stoneDark = Solid("Stone_Dark", new Color(0.12f, 0.12f, 0.15f), 0f, 0.20f);
             l.flame = Unlit("Flame", new Color(1f, 0.55f, 0.12f));
@@ -59,6 +60,29 @@ namespace BladePath.EditorTools
             EnableRuntimeEmission(l.voidBlack);
             EnableRuntimeEmission(l.deadSkin);
             return l;
+        }
+
+        /// <summary>Материал игрока из Meshy: цвет + нормали + металл/гладкость (R = metallic, A = smoothness).</summary>
+        static Material Ronin()
+        {
+            Material m = Textured("Ronin", "ronin_albedo.jpg", "ronin_normal.png", Vector2.one, Color.white, 1f, 0.5f);
+            string mp = TexFolder + "ronin_metal_smooth.png";
+            TextureImporter ti = AssetImporter.GetAtPath(mp) as TextureImporter;
+            if (ti != null && ti.sRGBTexture)
+            {
+                ti.sRGBTexture = false;       // маска данных, не цвет
+                ti.SaveAndReimport();
+            }
+            Texture2D mt = AssetDatabase.LoadAssetAtPath<Texture2D>(mp);
+            if (mt != null)
+            {
+                m.SetTexture("_MetallicGlossMap", mt);
+                m.EnableKeyword("_METALLICGLOSSMAP");
+                m.SetFloat("_GlossMapScale", 1f);
+            }
+            EnableRuntimeEmission(m);
+            EditorUtility.SetDirty(m);
+            return m;
         }
 
         static void EnableRuntimeEmission(Material m)

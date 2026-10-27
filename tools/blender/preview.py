@@ -10,7 +10,7 @@ if action:
     bpy.data.objects[rig_name].animation_data.action = bpy.data.actions[action]
 sc.frame_set(frame)
 sc.render.engine = 'BLENDER_WORKBENCH'
-sh = sc.display.shading; sh.light = 'STUDIO'; sh.color_type = 'MATERIAL'; sh.show_shadows = True
+sh = sc.display.shading; sh.light = 'STUDIO'; sh.color_type = os.environ.get('PREVIEW_COLOR', 'MATERIAL'); sh.show_shadows = True
 sc.render.resolution_x = 600; sc.render.resolution_y = 900
 sc.world = bpy.data.worlds.new('w'); sc.world.color = (0.12, 0.12, 0.15)
 cam = bpy.data.objects.new('cam', bpy.data.cameras.new('cam')); sc.collection.objects.link(cam); sc.camera = cam
@@ -18,7 +18,9 @@ cam.data.type = 'ORTHO'; cam.data.ortho_scale = 2.9
 target = Vector((0, 0.1, 1.05))
 views = {'front': (0, -6), 'side': (6, 0), 'back': (0, 6), 'three': (4.2, -4.2)}
 files = []
+only = os.environ.get('PREVIEW_VIEWS')
 for name, (x, y) in views.items():
+    if only and name not in only.split(','): continue
     cam.location = (x, y, 1.15)
     d = target - cam.location
     cam.rotation_euler = d.to_track_quat('-Z', 'Y').to_euler()

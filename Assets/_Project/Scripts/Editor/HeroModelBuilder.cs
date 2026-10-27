@@ -14,6 +14,8 @@ namespace BladePath.EditorTools
     public static class HeroModelBuilder
     {
         public const string FbxPath = "Assets/_Project/Models/Samurai_Hero.fbx";
+        public const string RoninFbxPath = "Assets/_Project/Models/Ronin_Player.fbx";   // игрок из Meshy (tools/blender/build_ronin.py)
+        const float RoninScale = 0.91f;                                                  // рост модели 1.90 м → как у зон поражения
         public const string UndeadFbxPath = "Assets/_Project/Models/Samurai_Undead.fbx";
         const string ControllerPath = "Assets/_Project/Animation/Hero.controller";
         const string UndeadControllerPath = "Assets/_Project/Animation/Undead.controller";
@@ -21,7 +23,8 @@ namespace BladePath.EditorTools
 
         public static bool TryAttach(FighterController fighter, Transform bladeRoot, Look look, bool undead = false)
         {
-            string fbx = undead ? UndeadFbxPath : FbxPath;
+            string fbx = undead ? UndeadFbxPath : (AssetDatabase.LoadAssetAtPath<GameObject>(RoninFbxPath) != null ? RoninFbxPath : FbxPath);
+            bool ronin = fbx == RoninFbxPath;
             string ctrlPath = undead ? UndeadControllerPath : ControllerPath;
             GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(fbx);
             if (asset == null)
@@ -34,7 +37,7 @@ namespace BladePath.EditorTools
             AnimatorController ctrl = BuildController(fbx, ctrlPath);
 
             GameObject model = (GameObject)PrefabUtility.InstantiatePrefab(asset);
-            model.name = undead ? "UndeadModel" : "HeroModel";
+            model.name = undead ? "UndeadModel" : (ronin ? "RoninModel" : "HeroModel");
             model.transform.SetParent(fighter.transform, false);
             model.transform.localPosition = Vector3.zero;
             model.transform.localRotation = Quaternion.identity;
@@ -51,7 +54,7 @@ namespace BladePath.EditorTools
                     model.transform.localRotation = Quaternion.Euler(0f, Vector3.SignedAngle(fwd, Vector3.forward, Vector3.up), 0f);
             }
             else Debug.LogWarning("HeroModelBuilder: не найден Hips/FrontMarker — ориентация модели не скорректирована");
-            model.transform.localScale = Vector3.one * ModelScale;
+            model.transform.localScale = Vector3.one * (ronin ? RoninScale : ModelScale);
 
             // Материалы: по имени из Blender → наши текстурированные
             foreach (SkinnedMeshRenderer smr in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
@@ -118,6 +121,7 @@ namespace BladePath.EditorTools
             {
                 case "Skin": return undead ? look.deadSkin : look.skin;
                 case "Armor_Black": return undead ? look.enemyArmor : look.heroArmor;
+                case "Ronin": return look.ronin;
                 case "Void": return look.tentacle;
                 case "Ember": return look.ember;
                 case "Flesh": return look.flesh;
