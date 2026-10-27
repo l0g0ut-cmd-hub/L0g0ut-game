@@ -20,8 +20,8 @@ namespace BladePath
         public FighterController player;
         public FighterController enemy;
 
-        enum B { Left, Right, Jump, Overhead, Rising, Legs, Energy, EnemyAttack, EnemyType, Reset, Menu, CamReset }
-        const int Count = 12;
+        enum B { Left, Right, Jump, Overhead, Rising, Legs, Energy, EnemyAttack, EnemyType, Reset, Menu, CamReset, Thrust, Slash }
+        const int Count = 14;
 
         public static PrototypeInput Instance { get; private set; }
         void Awake() { Instance = this; }
@@ -40,7 +40,7 @@ namespace BladePath
             return false;
         }
 
-        static readonly AttackType[] EnemyTypes = new AttackType[] { AttackType.Overhead, AttackType.Rising, AttackType.LegSweep, AttackType.Energy };
+        static readonly AttackType[] EnemyTypes = new AttackType[] { AttackType.Overhead, AttackType.Rising, AttackType.LegSweep, AttackType.Thrust, AttackType.Slash, AttackType.Energy };
 
         readonly bool[] held = new bool[Count];
         readonly bool[] down = new bool[Count];
@@ -49,6 +49,7 @@ namespace BladePath
         readonly List<Vector2> pointersHeld = new List<Vector2>();
         readonly List<Vector2> pointersDown = new List<Vector2>();
         int enemyTypeIndex;
+        bool slashFlip;   // чередование направления горизонтального реза
         float scale = 1f;
         GUIStyle style;
 
@@ -61,6 +62,7 @@ namespace BladePath
             if (held[(int)B.Right]) move += 1f;
             if (held[(int)B.Left]) move -= 1f;
             bool jump = down[(int)B.Jump];
+            bool aThrust = down[(int)B.Thrust], aSlash = down[(int)B.Slash];
             bool aOver = down[(int)B.Overhead], aRise = down[(int)B.Rising], aLegs = down[(int)B.Legs], aEnergy = down[(int)B.Energy];
             bool enemyAttack = down[(int)B.EnemyAttack], enemyCycle = down[(int)B.EnemyType];
             bool reset = down[(int)B.Reset], menu = down[(int)B.Menu], camReset = down[(int)B.CamReset];
@@ -74,6 +76,8 @@ namespace BladePath
             aRise |= Input.GetKeyDown(KeyCode.K);
             aLegs |= Input.GetKeyDown(KeyCode.N);
             aEnergy |= Input.GetKeyDown(KeyCode.M);
+            aThrust |= Input.GetKeyDown(KeyCode.I);
+            aSlash |= Input.GetKeyDown(KeyCode.O);
             enemyAttack |= Input.GetKeyDown(KeyCode.L);
             enemyCycle |= Input.GetKeyDown(KeyCode.E);
             reset |= Input.GetKeyDown(KeyCode.R);
@@ -89,6 +93,8 @@ namespace BladePath
                 if (aRise) player.Attack(AttackType.Rising);
                 if (aLegs) player.Attack(AttackType.LegSweep);
                 if (aEnergy) player.Attack(AttackType.Energy);
+                if (aThrust) player.Attack(AttackType.Thrust);
+                if (aSlash && player.Attack(slashFlip ? AttackType.SlashBack : AttackType.Slash)) slashFlip = !slashFlip;
             }
             if (enemyCycle) enemyTypeIndex = (enemyTypeIndex + 1) % EnemyTypes.Length;
             if (enemy != null && enemyAttack) enemy.Attack(EnemyTypes[enemyTypeIndex]);
@@ -114,6 +120,9 @@ namespace BladePath
             rects[(int)B.Legs] = new Rect(W - 236f, H - 100f, 108f, 92f);
             rects[(int)B.Energy] = new Rect(W - 120f, H - 100f, 108f, 92f);
 
+            rects[(int)B.Thrust] = new Rect(W - 236f, H - 300f, 108f, 92f);
+            rects[(int)B.Slash] = new Rect(W - 120f, H - 300f, 108f, 92f);
+
             rects[(int)B.Reset] = new Rect(W - 88f, 8f, 80f, 34f);
             rects[(int)B.Menu] = new Rect(W - 176f, 8f, 80f, 34f);
             rects[(int)B.EnemyType] = new Rect(W - 188f, 48f, 180f, 34f);
@@ -128,6 +137,8 @@ namespace BladePath
             labels[(int)B.Rising] = air ? "В ПРЫЖКЕ" : "СНИЗУ";
             labels[(int)B.Legs] = air ? "(по ногам\nс земли)" : "ПО НОГАМ";
             labels[(int)B.Energy] = "ШАР";
+            labels[(int)B.Thrust] = air ? "(укол\nс земли)" : "УКОЛ";
+            labels[(int)B.Slash] = air ? "(рез\nс земли)" : (slashFlip ? "РЕЗ <" : "РЕЗ >");
             labels[(int)B.Reset] = "Сброс";
             labels[(int)B.Menu] = "Меню";
             labels[(int)B.EnemyType] = "Враг: " + SwingProfile.Get(EnemyTypes[enemyTypeIndex]).label + "  ▸";

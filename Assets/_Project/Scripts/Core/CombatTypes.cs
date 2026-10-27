@@ -8,8 +8,8 @@ namespace BladePath
     /// <summary>Фазы удара (раздел 5.2 ТЗ). Контакт клинка возможен только в Strike и FollowThrough.</summary>
     public enum SwingPhase { Idle, Windup, Strike, FollowThrough, Recovery }
 
-    /// <summary>Типы атак прототипа. JumpStrike выбирается автоматически, если боец в воздухе.</summary>
-    public enum AttackType { Overhead, Rising, LegSweep, JumpStrike, Energy }
+    /// <summary>Типы атак прототипа. JumpStrike выбирается автоматически, если боец в воздухе. Thrust — укол вперёд; Slash / SlashBack — горизонтальный рез слева направо / справа налево.</summary>
+    public enum AttackType { Overhead, Rising, LegSweep, JumpStrike, Energy, Thrust, Slash, SlashBack }
 
     /// <summary>Подтверждённый контакт с зоной тела (клинок или снаряд).</summary>
     public struct BladeContact

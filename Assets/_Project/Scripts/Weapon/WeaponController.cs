@@ -142,31 +142,32 @@ namespace BladePath
             Vector3 rest = restEuler;
             Vector3 wind = Mirror(p.windupEuler), end = Mirror(p.strikeEndEuler), follow = Mirror(p.followEuler);
             Vector3 e;
-            float offsetK;
+            Vector3 off0 = new Vector3(p.pivotOffset.x * yawSign, p.pivotOffset.y, p.pivotOffset.z);
+            Vector3 off1 = p.hasOffsetEnd ? new Vector3(p.pivotOffsetEnd.x * yawSign, p.pivotOffsetEnd.y, p.pivotOffsetEnd.z) : off0;
+            Vector3 off;
             switch (Phase)
             {
                 case SwingPhase.Windup:
                     e = Vector3.Lerp(rest, wind, Smooth(t));
-                    offsetK = Smooth(t);
+                    off = off0 * Smooth(t);
                     break;
                 case SwingPhase.Strike:
-                    // клинок разгоняется к концу удара
+                    // клинок (и руки, если есть pivotOffsetEnd) разгоняются к концу удара
                     e = Vector3.Lerp(wind, end, Mathf.Pow(t, 1.5f));
-                    offsetK = 1f;
+                    off = Vector3.Lerp(off0, off1, Mathf.Pow(t, 1.5f));
                     break;
                 case SwingPhase.FollowThrough:
                     e = Vector3.Lerp(end, follow, 1f - (1f - t) * (1f - t));
-                    offsetK = 1f;
+                    off = off1;
                     break;
                 default: // Recovery
                     e = Vector3.Lerp(follow, rest, Smooth(t));
-                    offsetK = 1f - Smooth(t);
+                    off = off1 * (1f - Smooth(t));
                     break;
             }
             // Euler-интерполяция выбрана осознанно: слерп кватернионов при развороте ~180° неоднозначен.
             pivot.localRotation = Quaternion.Euler(e);
-            Vector3 off = new Vector3(p.pivotOffset.x * yawSign, p.pivotOffset.y, p.pivotOffset.z);
-            pivot.localPosition = pivotBasePos + off * offsetK;
+            pivot.localPosition = pivotBasePos + off;
         }
 
         static float Smooth(float t) { return t * t * (3f - 2f * t); }

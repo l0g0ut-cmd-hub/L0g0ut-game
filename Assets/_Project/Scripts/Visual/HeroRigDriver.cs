@@ -46,7 +46,9 @@ namespace BladePath
 
         [Header("Стойка")]
         [Tooltip("Разнос ног в боевой стойке, град.: передняя нога (на стороне передней руки) вперёд, задняя назад. На ходьбе гасится.")]
-        public float stanceStagger = 14f;
+        public float stanceStagger = 18f;
+        [Tooltip("Глубина боевой стойки (колени согнуты, таз ниже), 0…1; на ходьбе гасится.")]
+        [Range(0f, 1f)] public float stanceCrouch = 0.45f;
 
         [Header("Отдача при попадании")]
         public float hitKickDecay = 2.8f;  // 1/с
@@ -156,6 +158,14 @@ namespace BladePath
             crouchS = Mathf.SmoothDamp(crouchS, crouchTarget, ref crouchV, 0.07f);
             kick = Mathf.MoveTowards(kick, 0f, hitKickDecay * dt);
 
+            // боевая стойка действует, пока боец стоит на земле и не идёт; в удар её дополняют шаг и присед из профиля атаки
+            walkS = Mathf.MoveTowards(walkS, Mathf.Abs(fighter.MoveAxis) > 0.1f || !fighter.Grounded ? 1f : 0f, 6f * dt);
+            SwingProfile prof = (weapon != null && swinging) ? weapon.CurrentProfile : null;
+            float strikeK = Mathf.Max(0f, bS);
+            float stepM = prof != null ? prof.bodyStep : lungeForward;
+            float cr = Mathf.Clamp01(crouchS + stanceCrouch * (1f - walkS) + (prof != null ? prof.crouchBoost * strikeK : 0f));
+            float stride = (1f - walkS) * stanceStagger + (prof != null ? prof.strideDeg * strikeK * (1f - walkS) : 0f);
+
             // ---------- 2) дыхание и покачивание в стойке (глушится во время удара)
             float calm = swinging ? 0f : 1f;
             float time = Time.time;
@@ -164,10 +174,11 @@ namespace BladePath
             float headYaw = Mathf.Sin(time * 0.55f + 2f) * 3.0f * calm;
 
             // ---------- 3) смещение всей модели: выпад / откат / присед / отдача (визуально; зоны поражения не двигаются)
-            float lunge = Mathf.Max(0f, bS) * lungeForward - Mathf.Max(0f, -bS) * lungeBack - kick * 0.10f;
-            float thighRad = crouchS * crouchThigh * Mathf.Deg2Rad;
-            float kneeRad = crouchS * crouchThigh * 1.8f * Mathf.Deg2Rad;
-            float drop = sc * (0.45f * (1f - Mathf.Cos(thighRad)) + 0.41f * (1f - Mathf.Cos(Mathf.Max(0f, kneeRad - thighRad))));
+            float lunge = strikeK * stepM - Mathf.Max(0f, -bS) * lungeBack - kick * 0.10f;
+            float thighRad = cr * crouchThigh * Mathf.Deg2Rad;
+            float kneeRad = cr * crouchThigh * 1.8f * Mathf.Deg2Rad;
+            float drop = sc * (0.45f * (1f - Mathf.Cos(thighRad)) + 0.41f * (1f - Mathf.Cos(Mathf.Max(0f, kneeRad - thighRad))))
+                       + sc * 0.78f * (1f - Mathf.Cos(stride * Mathf.Deg2Rad));   // ноги врозь — таз ниже, иначе стопы повисают над полом
             Vector3 off = new Vector3(0f, -drop - Mathf.Max(0f, bS) * 0.02f, lunge);
             transform.localPosition = baseLocalPos + off;
 
@@ -181,16 +192,15 @@ namespace BladePath
             Rot(head, headYaw - yawS * 0.25f, up);              // голова частично «смотрит» на противника, а не вслед за клинком
             Rot(head, -pitchTotal * 0.5f + kick * 6f, right);
 
-            if (crouchS > 0.01f)
+            if (cr > 0.01f)
             {
-                float f = crouchS * crouchThigh, k = f * 1.8f;
+                float f = cr * crouchThigh, k = f * 1.8f;
                 Rot(upperLegL, -f, right); Rot(lowerLegL, k, right); Rot(footL, f - k, right);
                 Rot(upperLegR, -f, right); Rot(lowerLegR, k, right); Rot(footR, f - k, right);
             }
 
-            // ---------- 4b) боевая стойка: ноги разнесены (на ходьбе и в приседе не нужна)
-            walkS = Mathf.MoveTowards(walkS, Mathf.Abs(fighter.MoveAxis) > 0.1f || !fighter.Grounded ? 1f : 0f, 6f * dt);
-            float st = (1f - walkS) * (1f - crouchS) * stanceStagger;
+            // ---------- 4b) разнос ног: передняя нога (на стороне передней руки) вперёд, задняя назад; на ударе шаг шире
+            float st = stride;
             if (st > 0.01f)
             {
                 Rot(upperLegR, -st, right); Rot(lowerLegR, st * 0.4f, right); Rot(footR, st * 0.6f, right);

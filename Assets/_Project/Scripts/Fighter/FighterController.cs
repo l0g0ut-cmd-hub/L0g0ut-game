@@ -63,7 +63,7 @@ namespace BladePath
             AttackType t = type;
             if (!Grounded)
             {
-                if (type == AttackType.LegSweep) return false;
+                if (type == AttackType.LegSweep || type == AttackType.Thrust || type == AttackType.Slash || type == AttackType.SlashBack) return false;
                 if (type == AttackType.Overhead || type == AttackType.Rising) t = AttackType.JumpStrike;
             }
             else if (type == AttackType.JumpStrike) t = AttackType.Overhead;
