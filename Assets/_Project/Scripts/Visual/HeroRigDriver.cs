@@ -34,7 +34,7 @@ namespace BladePath
         [Tooltip("Расстояние от запястья до центра ладони вдоль пальцев, м (кисть сдвигается так, чтобы рукоять проходила через ладонь).")]
         public float palmOffset = 0.06f;
         [Tooltip("Максимальный излом кисти относительно руки, град. (иначе хват поперёк клинка ломает запястье при вытянутых вперёд руках).")]
-        public float maxWristBend = 50f;
+        public float maxWristBend = 30f;
 
         [Header("Тело в ударе")]
         [Tooltip("Доли поворота клинка (yaw, до bodyYawMax профиля, по умолчанию ±45°), которые отрабатывают таз / поясница / грудь.")]
@@ -48,9 +48,9 @@ namespace BladePath
 
         [Header("Стойка")]
         [Tooltip("Разнос ног в боевой стойке, град.: передняя нога (на стороне передней руки) вперёд, задняя назад. На ходьбе гасится.")]
-        public float stanceStagger = 18f;
+        public float stanceStagger = 26f;
         [Tooltip("Глубина боевой стойки (колени согнуты, таз ниже), 0…1; на ходьбе гасится.")]
-        [Range(0f, 1f)] public float stanceCrouch = 0.45f;
+        [Range(0f, 1f)] public float stanceCrouch = 0.60f;
 
         [Header("Отдача при попадании")]
         public float hitKickDecay = 2.8f;  // 1/с
@@ -132,6 +132,8 @@ namespace BladePath
             Vector3 right = ft.right, up = ft.up;
             float sc = transform.lossyScale.y;
 
+            if (weapon != null && weapon.pivot != null) weapon.pivot.localPosition = weapon.PureLocalPosition;   // снять прошлую поправку досягаемости
+
             // ---------- 1) состояние удара → «поза тела» b: −1 замах, +1 конец удара, 0 покой
             float bTarget = 0f, yawTarget = 0f, pitchTarget = 0f, crouchTarget = 0f;
             bool swinging = weapon != null && weapon.pivot != null && weapon.Phase != SwingPhase.Idle;
@@ -147,13 +149,13 @@ namespace BladePath
                 }
                 if (swinging)
                 {
-                    Vector3 e = weapon.pivot.localEulerAngles;
-                    float pitch = Mathf.DeltaAngle(0f, e.x);                 // −120 … +85
+                    Vector3 e = weapon.CurrentEuler;                          // не localEulerAngles: за ±90° по pitch Unity переворачивает yaw/roll
+                    float pitch = e.x;                                        // −165 … +85
                     float maxYaw = weapon.CurrentProfile != null ? weapon.CurrentProfile.bodyYawMax : 45f;
-                    yawTarget = Mathf.Clamp(Mathf.DeltaAngle(0f, e.y), -maxYaw, maxYaw);
+                    yawTarget = Mathf.Clamp(e.y, -maxYaw, maxYaw);
                     pitchTarget = Mathf.Lerp(leanBack, leanForward, Mathf.InverseLerp(-120f, 60f, pitch));
                 }
-                crouchTarget = Mathf.Clamp01((pivotRestY - weapon.pivot.localPosition.y) / 0.45f);
+                crouchTarget = Mathf.Clamp01((pivotRestY - weapon.PureLocalPosition.y) / 0.45f);
             }
             lean = Mathf.MoveTowards(lean, pitchTarget, 140f * dt);
             yawS = Mathf.SmoothDampAngle(yawS, yawTarget, ref yawV, 0.05f);
@@ -178,7 +180,7 @@ namespace BladePath
             float headYaw = Mathf.Sin(time * 0.55f + 2f) * 3.0f * calm;
 
             // ---------- 3) смещение всей модели: выпад / откат / присед / отдача (визуально; зоны поражения не двигаются)
-            float lunge = strikeK * stepM - Mathf.Max(0f, -bS) * lungeBack - kick * 0.10f;
+            float lunge = (weapon != null ? weapon.VisualLunge : 0f) - kick * 0.10f;   // руки с клинком едут вместе с телом (WeaponController.VisualLunge)
             float thighRad = cr * crouchThigh * Mathf.Deg2Rad;
             float kneeRad = cr * crouchThigh * 1.8f * Mathf.Deg2Rad;
             float drop = sc * (0.45f * (1f - Mathf.Cos(thighRad)) + 0.41f * (1f - Mathf.Cos(Mathf.Max(0f, kneeRad - thighRad))))
@@ -211,10 +213,29 @@ namespace BladePath
                 Rot(upperLegL, st * 0.6f, right); Rot(lowerLegL, st * 0.5f, right); Rot(footL, -st * 1.1f, right);
             }
 
+            // ---------- 4c) досягаемость: если рукоять дальше, чем достают руки (у модели они короткие), меч подтягивается к плечам —
+            // кисти всегда остаются на рукояти, а не повисают в воздухе (раньше именно это выглядело как «перелом кисти»)
+            if (upperArmR != null && upperArmL != null && weapon != null && weapon.pivot != null)
+            {
+                float reachR = (l1R + l2R) * 0.96f, reachL = (l1L + l2L) * 0.96f;
+                for (int it = 0; it < 5; it++)
+                {
+                    Vector3 ax = bladeRoot.forward;
+                    Vector3 dr = bladeRoot.position - ax * gripFront - upperArmR.position;
+                    Vector3 dl = bladeRoot.position - ax * gripRear - upperArmL.position;
+                    float mr = dr.magnitude, ml = dl.magnitude;
+                    Vector3 shift = Vector3.zero;
+                    if (mr > reachR) shift -= dr / mr * (mr - reachR);
+                    if (ml > reachL) shift -= dl / ml * (ml - reachL);
+                    if (shift.sqrMagnitude < 1e-6f) break;
+                    weapon.pivot.position += shift;
+                }
+            }
+
             // ---------- 5) руки держат рукоять
             Vector3 axis = bladeRoot.forward;
             Vector3 back = -axis;
-            Vector3 outward = ft.right * 0.6f + Vector3.down + back * 0.3f;
+            Vector3 outward = ft.right * 1.0f + Vector3.down * 0.5f + back * 0.2f;   // локти разведены в стороны, а не прижаты к корпусу
             Vector3 gripR = bladeRoot.position + back * gripFront;
             Vector3 gripL = bladeRoot.position + back * gripRear;
             Vector3 fR, nR, fL, nL;
@@ -224,7 +245,7 @@ namespace BladePath
             if (upperArmR != null) LimitWrist(gripR - upperArmR.position, maxWristBend, ref fR, ref nR);
             if (upperArmL != null) LimitWrist(gripL - upperArmL.position, maxWristBend, ref fL, ref nL);
             SolveArm(upperArmR, forearmR, handR, l1R, l2R, gripR - fR * palmOffset - nR * 0.015f, outward);
-            Vector3 outwardL = -ft.right * 0.6f + Vector3.down + back * 0.3f;
+            Vector3 outwardL = -ft.right * 1.0f + Vector3.down * 0.5f + back * 0.2f;
             SolveArm(upperArmL, forearmL, handL, l1L, l2L, gripL - fL * palmOffset - nL * 0.015f, outwardL);
             if (framesReady)
             {

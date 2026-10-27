@@ -113,7 +113,7 @@ namespace BladePath.EditorTools
             // Оружие: pivot (рука) → bladeRoot (основание клинка, +Z вдоль клинка)
             GameObject pivot = new GameObject("WeaponPivot");
             pivot.transform.SetParent(root.transform, false);
-            pivot.transform.localPosition = new Vector3(0.06f * handSide, 1.20f, 0.50f);   // руки перед животом на расстоянии вытянутых полусогнутых рук (ближе — руки «как у тираннозавра»)
+            pivot.transform.localPosition = new Vector3(0.06f * handSide, 1.30f, 0.60f);   // руки перед солнечным сплетением, руки почти вытянуты (ближе/ниже — «тираннозавр»)
 
             GameObject bladeRoot = new GameObject("BladeRoot");
             bladeRoot.transform.SetParent(pivot.transform, false);
@@ -128,7 +128,7 @@ namespace BladePath.EditorTools
             w.pivot = pivot.transform;
             w.bladeRoot = bladeRoot.transform;
             w.bladeLength = 0.80f;
-            w.restEuler = new Vector3(-15f, 0f, 0f);   // чудан: клинок вперёд, остриё чуть выше рук, смотрит противнику в горло; хват в досягаемости рук
+            w.restEuler = new Vector3(-12f, 0f, 0f);   // чудан: клинок вперёд, остриё чуть выше рук, смотрит противнику в горло; хват в досягаемости рук
             w.yawSign = handSide;   // зеркалит диагональ удара для руки с другой стороны
             pivot.AddComponent<BladeTrajectorySampler>();
             f.weapon = w;

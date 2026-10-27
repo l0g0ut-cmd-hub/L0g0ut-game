@@ -40,6 +40,13 @@ namespace BladePath
         /// <summary>Прогресс текущей фазы удара 0…1 (для процедурной анимации тела).</summary>
         public float PhaseProgress { get { return Phase == SwingPhase.Idle ? 0f : Mathf.Clamp01(phaseTime / Mathf.Max(0.0001f, PhaseDuration(Phase))); } }
 
+        /// <summary>Визуальный выпад корпуса вперёд, м (из профиля и фазы). Руки с клинком едут вместе с телом, иначе на ударе кисти вжимаются в грудь.</summary>
+        public float VisualLunge { get; private set; }
+        /// <summary>Текущие углы позы катаны без нормализации Unity (localEulerAngles за ±90° по pitch переворачивает yaw/roll и ломает расчёт тела).</summary>
+        public Vector3 CurrentEuler { get; private set; }
+        /// <summary>Локальная позиция pivot без поправки «досягаемости рук» (HeroRigDriver подтягивает меч к плечам, если рукоять дальше, чем достают руки).</summary>
+        public Vector3 PureLocalPosition { get; private set; }
+
         public event Action<WeaponController> ContactWindowOpened;
         public event Action<WeaponController> ContactWindowClosed;
         /// <summary>Дальняя атака: момент выпуска снаряда.</summary>
@@ -78,6 +85,9 @@ namespace BladePath
             if (pivot == null) return;
             pivot.localRotation = Quaternion.Euler(restEuler);
             pivot.localPosition = pivotBasePos;
+            VisualLunge = 0f;
+            CurrentEuler = restEuler;
+            PureLocalPosition = pivotBasePos;
         }
 
         void Update()
@@ -167,8 +177,19 @@ namespace BladePath
                     break;
             }
             // Euler-интерполяция выбрана осознанно: слерп кватернионов при развороте ~180° неоднозначен.
+            float b;   // поза тела: −1 замах … +1 конец удара (как в HeroRigDriver)
+            switch (Phase)
+            {
+                case SwingPhase.Windup: b = -Smooth(t); break;
+                case SwingPhase.Strike: b = Mathf.Lerp(-1f, 1f, t); break;
+                case SwingPhase.FollowThrough: b = 1f; break;
+                default: b = 1f - Smooth(t); break;
+            }
+            VisualLunge = Mathf.Max(0f, b) * p.bodyStep - Mathf.Max(0f, -b) * 0.05f;
+            CurrentEuler = e;
             pivot.localRotation = Quaternion.Euler(e);
-            pivot.localPosition = pivotBasePos + off;
+            pivot.localPosition = pivotBasePos + off + new Vector3(0f, 0f, VisualLunge);
+            PureLocalPosition = pivot.localPosition;
         }
 
         static float Smooth(float t) { return t * t * (3f - 2f * t); }
