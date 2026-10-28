@@ -74,6 +74,22 @@ jobs:
           path: build/Android/*.apk
           if-no-files-found: warn
 
+      # APK в ветку apk-latest (один коммит, перезаписывается): артефакты Actions не скачать из песочницы ассистента,
+      # а git — можно; нужен для разбора содержимого сборки (UnityPy) без телефона.
+      - name: Publish APK to apk-latest branch
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          D="$RUNNER_TEMP/apkdrop"; rm -rf "$D"; mkdir -p "$D"; cd "$D"
+          git init -q; git checkout -q -b apk-latest
+          sudo cp "$GITHUB_WORKSPACE"/build/Android/*.apk ./BladePath.apk; sudo chown "$(id -u)" BladePath.apk
+          echo "run ${GITHUB_RUN_NUMBER} sha ${GITHUB_SHA}" > info.txt
+          git -c user.name=ci -c user.email=ci@local add -A
+          git -c user.name=ci -c user.email=ci@local commit -qm "apk run ${GITHUB_RUN_NUMBER}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" apk-latest
+
       # Лог в приватную ветку ci-logs (секреты Unity вырезаются). Нужен, чтобы разбирать ошибки без доступа к логам Actions.
       - name: Publish scrubbed log to ci-logs branch
         if: always()
