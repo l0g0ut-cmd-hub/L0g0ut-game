@@ -30,44 +30,54 @@ namespace BladePath.EditorTools
             l.shadowStrength = 0.8f;
             moonLight.transform.rotation = Quaternion.Euler(38f, -35f, 0f);
 
-            // площадка
+            // площадка (с коллайдером) + каменный бордюр
             GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
             floor.name = "ArenaFloor";
             floor.transform.position = new Vector3(0f, -0.05f, 0f);
             floor.transform.localScale = new Vector3(7.2f, 0.1f, 5.4f);
             floor.GetComponent<Renderer>().sharedMaterial = look.stone;
 
+            Transform env = new GameObject("Environment").transform;
+            EnvMesh.Box(env, "Gravel", new Vector3(0f, -0.12f, 6f), Vector3.zero, new Vector3(48f, 0.1f, 40f), look.gravel, 2.2f);
+            EnvMesh.Box(env, "CurbBack", new Vector3(0f, 0.04f, 2.85f), Vector3.zero, new Vector3(7.8f, 0.1f, 0.3f), look.stoneBlock, 1.5f);
+            EnvMesh.Box(env, "CurbFront", new Vector3(0f, 0.04f, -2.85f), Vector3.zero, new Vector3(7.8f, 0.1f, 0.3f), look.stoneBlock, 1.5f);
+            EnvMesh.Box(env, "CurbL", new Vector3(-3.75f, 0.04f, 0f), Vector3.zero, new Vector3(0.3f, 0.1f, 5.4f), look.stoneBlock, 1.5f);
+            EnvMesh.Box(env, "CurbR", new Vector3(3.75f, 0.04f, 0f), Vector3.zero, new Vector3(0.3f, 0.1f, 5.4f), look.stoneBlock, 1.5f);
+
             // ворота тории на заднем плане
             Transform torii = new GameObject("Torii").transform;
+            torii.SetParent(env, false);
             CharacterVisuals.Part(torii, "PillarL", PrimitiveType.Cylinder, new Vector3(0.7f, 1.3f, 3.6f), Vector3.zero, new Vector3(0.22f, 1.3f, 0.22f), look.lacquer);
             CharacterVisuals.Part(torii, "PillarR", PrimitiveType.Cylinder, new Vector3(2.7f, 1.3f, 3.6f), Vector3.zero, new Vector3(0.22f, 1.3f, 0.22f), look.lacquer);
-            CharacterVisuals.Part(torii, "Kasagi", PrimitiveType.Cube, new Vector3(1.7f, 2.72f, 3.6f), Vector3.zero, new Vector3(3.4f, 0.16f, 0.28f), look.stoneDark);
-            CharacterVisuals.Part(torii, "Shimaki", PrimitiveType.Cube, new Vector3(1.7f, 2.60f, 3.6f), Vector3.zero, new Vector3(3.1f, 0.07f, 0.24f), look.lacquer);
-            CharacterVisuals.Part(torii, "Nuki", PrimitiveType.Cube, new Vector3(1.7f, 2.25f, 3.6f), Vector3.zero, new Vector3(2.2f, 0.12f, 0.16f), look.lacquer);
+            EnvMesh.Box(torii, "BaseL", new Vector3(0.7f, 0.08f, 3.6f), Vector3.zero, new Vector3(0.42f, 0.16f, 0.42f), look.stoneBlock, 1.2f);
+            EnvMesh.Box(torii, "BaseR", new Vector3(2.7f, 0.08f, 3.6f), Vector3.zero, new Vector3(0.42f, 0.16f, 0.42f), look.stoneBlock, 1.2f);
+            EnvMesh.Box(torii, "Kasagi", new Vector3(1.7f, 2.72f, 3.6f), Vector3.zero, new Vector3(3.4f, 0.16f, 0.28f), look.woodDark, 1f, true);
+            EnvMesh.Box(torii, "Shimaki", new Vector3(1.7f, 2.60f, 3.6f), Vector3.zero, new Vector3(3.1f, 0.07f, 0.24f), look.lacquer, 1f, true);
+            EnvMesh.Box(torii, "Nuki", new Vector3(1.7f, 2.25f, 3.6f), Vector3.zero, new Vector3(2.2f, 0.12f, 0.16f), look.lacquer, 1f, true);
 
-            // зал храма за ареной
-            Transform hall = new GameObject("TempleHall").transform;
-            CharacterVisuals.Part(hall, "Base", PrimitiveType.Cube, new Vector3(-0.8f, 0.8f, 5.4f), Vector3.zero, new Vector3(7f, 1.6f, 0.8f), look.stoneDark);
-            CharacterVisuals.Part(hall, "Roof", PrimitiveType.Cube, new Vector3(-0.8f, 1.85f, 5.3f), Vector3.zero, new Vector3(8f, 0.22f, 1.6f), look.stoneDark);
-            CharacterVisuals.Part(hall, "RoofTop", PrimitiveType.Cube, new Vector3(-0.8f, 2.15f, 5.4f), Vector3.zero, new Vector3(6f, 0.3f, 0.8f), look.stoneDark);
+            BuildHall(env, look);
+            BuildPagoda(env, look);
+            BuildWalls(env, look);
 
-            // пагода вдали
-            Transform pagoda = new GameObject("Pagoda").transform;
-            for (int i = 0; i < 4; i++)
-            {
-                float w = 1.2f - 0.2f * i;
-                float y = 0.9f + i * 1.0f;
-                CharacterVisuals.Part(pagoda, "Tier" + i, PrimitiveType.Cube, new Vector3(-3.4f, y, 7.0f), Vector3.zero, new Vector3(w, 0.7f, w), look.stoneDark);
-                CharacterVisuals.Part(pagoda, "Eave" + i, PrimitiveType.Cube, new Vector3(-3.4f, y + 0.45f, 7.0f), Vector3.zero, new Vector3(w + 0.8f, 0.1f, w + 0.8f), look.stoneDark);
-            }
-            CharacterVisuals.Part(pagoda, "Finial", PrimitiveType.Cylinder, new Vector3(-3.4f, 5.2f, 7.0f), Vector3.zero, new Vector3(0.05f, 0.5f, 0.05f), look.bronze);
+            // каменные фонари у бордюра
+            AddLantern(env, look, new Vector3(-4.5f, 0f, -1.6f));
+            AddLantern(env, look, new Vector3(4.5f, 0f, -1.6f));
+            AddLantern(env, look, new Vector3(-4.5f, 0f, 2.2f));
+            AddLantern(env, look, new Vector3(4.5f, 0f, 2.2f));
+
+            // сакуры
+            AddTree(env, look, new Vector3(5.4f, 0f, 3.4f), 1.25f, 1);
+            AddTree(env, look, new Vector3(-5.5f, 0f, 4.4f), 1.4f, 2);
+            AddTree(env, look, new Vector3(5.6f, 0f, -0.6f), 1.0f, 3);
+            AddTree(env, look, new Vector3(-5.4f, 0f, -1.0f), 1.1f, 4);
+            AddTree(env, look, new Vector3(4.6f, 0f, 8.2f), 1.6f, 5);
 
             // луна
             GameObject moon = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             moon.name = "Moon";
             Object.DestroyImmediate(moon.GetComponent<Collider>());
-            moon.transform.position = new Vector3(-4.2f, 4.8f, 11f);
-            moon.transform.localScale = Vector3.one * 1.8f;
+            moon.transform.position = new Vector3(4.8f, 6.4f, 16f);
+            moon.transform.localScale = Vector3.one * 2.8f;
             moon.GetComponent<Renderer>().sharedMaterial = look.moon;
 
             // жаровни с мерцающим огнём
@@ -75,6 +85,118 @@ namespace BladePath.EditorTools
             AddBrazier(look, new Vector3(3.2f, 0f, 2.2f));
 
             AddPetals(look);
+        }
+
+        static void BuildHall(Transform env, Look look)
+        {
+            Transform hall = new GameObject("TempleHall").transform;
+            hall.SetParent(env, false);
+            const float cx = -0.8f;
+            // каменный подиум и ступени
+            EnvMesh.Box(hall, "Platform", new Vector3(cx, 0.25f, 5.8f), Vector3.zero, new Vector3(9.2f, 0.5f, 2.6f), look.stoneBlock, 1.5f);
+            EnvMesh.Box(hall, "Step1", new Vector3(cx, 0.17f, 4.35f), Vector3.zero, new Vector3(2.6f, 0.34f, 0.32f), look.stoneBlock, 1.5f);
+            EnvMesh.Box(hall, "Step0", new Vector3(cx, 0.085f, 4.05f), Vector3.zero, new Vector3(2.6f, 0.17f, 0.3f), look.stoneBlock, 1.5f);
+            // стены и потолок
+            EnvMesh.Box(hall, "Wall", new Vector3(cx, 1.5f, 6.1f), Vector3.zero, new Vector3(7.6f, 2.0f, 1.4f), look.plaster, 2f);
+            EnvMesh.Box(hall, "Ceiling", new Vector3(cx, 2.55f, 6.0f), Vector3.zero, new Vector3(8.2f, 0.08f, 3.0f), look.woodDark, 1f, true);
+            // колонны, ставни-сёдзи, балка
+            for (int i = 0; i < 6; i++)
+            {
+                float x = cx - 3.5f + i * 1.4f;
+                CharacterVisuals.Part(hall, "Column" + i, PrimitiveType.Cylinder, new Vector3(x, 1.5f, 5.15f), Vector3.zero, new Vector3(0.2f, 1.0f, 0.2f), look.lacquer);
+                EnvMesh.Box(hall, "ColBase" + i, new Vector3(x, 0.55f, 5.15f), Vector3.zero, new Vector3(0.3f, 0.1f, 0.3f), look.stoneBlock, 1f);
+                if (i < 5) EnvMesh.Box(hall, "Shoji" + i, new Vector3(x + 0.7f, 1.3f, 5.24f), Vector3.zero, new Vector3(1.2f, 1.5f, 0.05f), look.shoji, 0f);
+            }
+            EnvMesh.Box(hall, "Lintel", new Vector3(cx, 2.35f, 5.15f), Vector3.zero, new Vector3(7.8f, 0.2f, 0.24f), look.lacquer, 1f, true);
+            EnvMesh.Box(hall, "Veranda", new Vector3(cx, 0.55f, 4.95f), Vector3.zero, new Vector3(7.6f, 0.1f, 0.6f), look.wood, 1f, true);
+            // крыша: скаты, конёк, свесы
+            const float roofY = 2.6f;
+            EnvMesh.Gable(hall, "Roof", new Vector3(cx, roofY, 6.0f), 9.2f, 3.8f, 1.15f, look.roof, look.plaster, 1.2f);
+            EnvMesh.Box(hall, "Ridge", new Vector3(cx, roofY + 1.17f, 6.0f), Vector3.zero, new Vector3(9.4f, 0.16f, 0.26f), look.woodDark, 1f, true);
+            EnvMesh.Box(hall, "EaveFront", new Vector3(cx, roofY - 0.04f, 4.1f), Vector3.zero, new Vector3(9.2f, 0.09f, 0.1f), look.woodDark, 1f, true);
+            EnvMesh.Box(hall, "EaveBack", new Vector3(cx, roofY - 0.04f, 7.9f), Vector3.zero, new Vector3(9.2f, 0.09f, 0.1f), look.woodDark, 1f, true);
+
+            GameObject lg = new GameObject("HallGlow");
+            lg.transform.SetParent(hall, false);
+            lg.transform.localPosition = new Vector3(cx, 1.5f, 4.4f);
+            Light gl = lg.AddComponent<Light>();
+            gl.type = LightType.Point;
+            gl.color = new Color(1f, 0.7f, 0.4f);
+            gl.range = 4.5f;
+            gl.intensity = 0.7f;
+        }
+
+        static void BuildPagoda(Transform env, Look look)
+        {
+            Transform pagoda = new GameObject("Pagoda").transform;
+            pagoda.SetParent(env, false);
+            Vector3 c = new Vector3(-3.4f, 0f, 9.6f);
+            EnvMesh.Box(pagoda, "Base", c + new Vector3(0f, 0.2f, 0f), Vector3.zero, new Vector3(2.8f, 0.4f, 2.8f), look.stoneBlock, 1.5f);
+            for (int i = 0; i < 5; i++)
+            {
+                float w = 1.6f - 0.2f * i;
+                float y0 = 0.4f + 1.3f * i;
+                EnvMesh.Box(pagoda, "Tier" + i, c + new Vector3(0f, y0 + 0.42f, 0f), Vector3.zero, new Vector3(w, 0.84f, w), look.plaster, 2f);
+                EnvMesh.Box(pagoda, "Trim" + i, c + new Vector3(0f, y0 + 0.42f, 0f), Vector3.zero, new Vector3(w + 0.05f, 0.12f, w + 0.05f), look.lacquer, 1f);
+                EnvMesh.Pyramid(pagoda, "Roof" + i, c + new Vector3(0f, y0 + 0.84f, 0f), (w + 1.0f) * 0.5f, 0.5f, look.roof, 1.2f);
+            }
+            CharacterVisuals.Part(pagoda, "Finial", PrimitiveType.Cylinder, c + new Vector3(0f, 0.4f + 1.3f * 5 + 0.35f, 0f), Vector3.zero, new Vector3(0.05f, 0.45f, 0.05f), look.bronze);
+        }
+
+        static void BuildWalls(Transform env, Look look)
+        {
+            Transform walls = new GameObject("Walls").transform;
+            walls.SetParent(env, false);
+            for (int side = -1; side <= 1; side += 2)
+            {
+                float x = 6.4f * side;
+                EnvMesh.Box(walls, "Wall" + side, new Vector3(x, 0.55f, 2.5f), Vector3.zero, new Vector3(0.3f, 1.1f, 12f), look.plaster, 2f);
+                EnvMesh.Box(walls, "Cap" + side, new Vector3(x, 1.16f, 2.5f), Vector3.zero, new Vector3(0.6f, 0.12f, 12.4f), look.roof, 1.2f, true);
+                for (int i = 0; i < 5; i++)
+                    EnvMesh.Box(walls, "Post" + side + i, new Vector3(x, 0.55f, -3.2f + i * 2.9f), Vector3.zero, new Vector3(0.36f, 1.1f, 0.18f), look.woodDark, 1f);
+            }
+        }
+
+        static void AddLantern(Transform env, Look look, Vector3 pos)
+        {
+            Transform t = new GameObject("StoneLantern").transform;
+            t.SetParent(env, false);
+            t.position = pos;
+            EnvMesh.Box(t, "Foot", new Vector3(0f, 0.075f, 0f), Vector3.zero, new Vector3(0.46f, 0.15f, 0.46f), look.stoneBlock, 0.8f);
+            CharacterVisuals.Part(t, "Shaft", PrimitiveType.Cylinder, new Vector3(0f, 0.4f, 0f), Vector3.zero, new Vector3(0.18f, 0.25f, 0.18f), look.stoneBlock);
+            EnvMesh.Box(t, "Plate", new Vector3(0f, 0.69f, 0f), Vector3.zero, new Vector3(0.52f, 0.08f, 0.52f), look.stoneBlock, 0.8f);
+            EnvMesh.Box(t, "Lamp", new Vector3(0f, 0.9f, 0f), Vector3.zero, new Vector3(0.34f, 0.34f, 0.34f), look.stoneBlock, 0.8f);
+            EnvMesh.Box(t, "GlowA", new Vector3(0f, 0.9f, 0f), Vector3.zero, new Vector3(0.24f, 0.2f, 0.36f), look.glow, 1f);
+            EnvMesh.Box(t, "GlowB", new Vector3(0f, 0.9f, 0f), Vector3.zero, new Vector3(0.36f, 0.2f, 0.24f), look.glow, 1f);
+            EnvMesh.Pyramid(t, "Cap", new Vector3(0f, 1.07f, 0f), 0.3f, 0.22f, look.stoneBlock, 0.8f);
+            CharacterVisuals.Part(t, "Jewel", PrimitiveType.Sphere, new Vector3(0f, 1.32f, 0f), Vector3.zero, new Vector3(0.09f, 0.09f, 0.09f), look.stoneBlock);
+        }
+
+        static void AddTree(Transform env, Look look, Vector3 pos, float s, int seed)
+        {
+            System.Random r = new System.Random(seed * 7919);
+            Transform t = new GameObject("Sakura" + seed).transform;
+            t.SetParent(env, false);
+            t.position = pos;
+            CharacterVisuals.Part(t, "Trunk", PrimitiveType.Cylinder, new Vector3(0f, 1.0f * s, 0f), new Vector3(0f, 0f, (float)(r.NextDouble() * 8 - 4)), new Vector3(0.26f * s, 1.0f * s, 0.26f * s), look.bark);
+            for (int i = 0; i < 3; i++)
+            {
+                float yaw = (float)(r.NextDouble() * 360);
+                float tilt = 35f + (float)r.NextDouble() * 25f;
+                Quaternion q = Quaternion.Euler(0f, yaw, 0f) * Quaternion.Euler(tilt, 0f, 0f);
+                Vector3 dir = q * Vector3.up;
+                float len = 1.0f * s;
+                Vector3 basePt = new Vector3(0f, 1.7f * s, 0f);
+                CharacterVisuals.Part(t, "Branch" + i, PrimitiveType.Cylinder, basePt + dir * len * 0.5f, q.eulerAngles, new Vector3(0.12f * s, len * 0.5f, 0.12f * s), look.bark);
+            }
+            for (int i = 0; i < 6; i++)
+            {
+                float a = (float)(r.NextDouble() * Mathf.PI * 2f);
+                float rad = (0.4f + (float)r.NextDouble() * 1.0f) * s;
+                float h = (2.5f + (float)r.NextDouble() * 0.9f) * s;
+                float sc = (1.3f + (float)r.NextDouble() * 0.8f) * s;
+                CharacterVisuals.Part(t, "Bloom" + i, PrimitiveType.Sphere, new Vector3(Mathf.Cos(a) * rad, h, Mathf.Sin(a) * rad), Vector3.zero, new Vector3(sc, sc * 0.75f, sc), look.blossom);
+            }
         }
 
         static void AddBrazier(Look look, Vector3 pos)

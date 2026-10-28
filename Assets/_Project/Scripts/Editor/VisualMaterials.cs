@@ -10,6 +10,7 @@ namespace BladePath.EditorTools
         public Material heroArmor, enemyArmor, cloth, skin, hair, lacquer, bronze, steel, handle;
         public Material flesh, tooth, maw, voidBlack, deadSkin, ember, tentacle, ronin;
         public Material stone, stoneDark, flame, moon, petal;
+        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow;
     }
 
     /// <summary>
@@ -48,6 +49,25 @@ namespace BladePath.EditorTools
             l.ronin = Ronin();
             l.stone = Textured("Stone_Floor", "stone_albedo.png", "stone_normal.png", new Vector2(4f, 2f), Color.white, 0f, 0.35f);
             l.stoneDark = Solid("Stone_Dark", new Color(0.12f, 0.12f, 0.15f), 0f, 0.20f);
+            // окружение v2: UV боксов в мировом масштабе (EnvMesh), поэтому tiling материалов = 1
+            l.wood = Textured("Env_Wood", "wood_albedo.png", "wood_normal.png", Vector2.one, new Color(0.95f, 0.92f, 0.9f), 0f, 0.25f);
+            l.woodDark = Textured("Env_WoodDark", "wood_albedo.png", "wood_normal.png", Vector2.one, new Color(0.42f, 0.38f, 0.36f), 0f, 0.3f);
+            l.roof = Textured("Env_Roof", "roof_albedo.png", "roof_normal.png", Vector2.one, Color.white, 0.05f, 0.45f);
+            l.plaster = Textured("Env_Plaster", "plaster_albedo.png", "plaster_normal.png", Vector2.one, new Color(0.9f, 0.9f, 0.92f), 0f, 0.1f);
+            l.stoneBlock = Textured("Env_StoneBlock", "stoneblock_albedo.png", "stoneblock_normal.png", Vector2.one, Color.white, 0f, 0.25f);
+            l.gravel = Textured("Env_Gravel", "gravel_albedo.png", "gravel_normal.png", Vector2.one, Color.white, 0f, 0.15f);
+            l.bark = Textured("Env_Bark", "bark_albedo.png", "bark_normal.png", new Vector2(2f, 2f), Color.white, 0f, 0.1f);
+            l.blossom = Textured("Env_Blossom", "blossom_albedo.png", null, new Vector2(3f, 3f), new Color(1f, 0.92f, 0.95f), 0f, 0.1f);
+            l.shoji = Textured("Env_Shoji", "shoji_albedo.png", null, Vector2.one, new Color(0.9f, 0.85f, 0.75f), 0f, 0.2f);
+            Texture2D se = Tex("shoji_emission.png", false);
+            if (se != null)
+            {
+                l.shoji.SetTexture("_EmissionMap", se);
+                l.shoji.EnableKeyword("_EMISSION");
+                l.shoji.SetColor("_EmissionColor", new Color(1.1f, 0.8f, 0.45f));
+                l.shoji.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
+            }
+            l.glow = Unlit("Env_Glow", new Color(1f, 0.72f, 0.32f));
             l.flame = Unlit("Flame", new Color(1f, 0.55f, 0.12f));
             l.moon = Unlit("Moon", new Color(0.86f, 0.90f, 1f));
             l.petal = SpriteLike("Petal", new Color(1f, 0.72f, 0.82f));
