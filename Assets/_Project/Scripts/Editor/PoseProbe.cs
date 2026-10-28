@@ -142,7 +142,7 @@ namespace BladePath.EditorTools
                     for (int k = 0; k < 8; k++)
                     {
                         c.SampleAnimation(anim.gameObject, c.length * k / 8f);
-                        Vector3 a = f.transform.InverseTransformPoint(hp.position), l = f.transform.InverseTransformPoint(fl.position), r = f.transform.InverseTransformPoint(fr.position);
+                        Vector3 a = model.InverseTransformPoint(hp.position), l = model.InverseTransformPoint(fl.position), r = model.InverseTransformPoint(fr.position);   // в системе модели (сдвиг стойки драйвера не мешает)
                         sb.AppendFormat("PROBE|{0}|loco|{1}|ph {2}|hips {3:F3} {4:F3} {5:F3}|L {6:F3} {7:F3} {8:F3}|R {9:F3} {10:F3} {11:F3}\n", f.name, c.name, k, a.x, a.y, a.z, l.x, l.y, l.z, r.x, r.y, r.z);
                     }
                 }
@@ -154,6 +154,32 @@ namespace BladePath.EditorTools
                 WalkSim(f, d, anim, model, "R", Vector3.right, 0.72f, sb);
                 WalkSim(f, d, anim, model, "L", Vector3.left, 0.72f, sb);
                 WalkSim(f, d, anim, model, "FR", new Vector3(0.7071f, 0f, 0.7071f), 0.96f, sb);
+            }
+            // физическое падение: 3 с симуляции — тело не взрывается, ложится на землю, не улетает
+            FieldInfo rf = typeof(HeroRigDriver).GetField("rag", F);
+            FighterRagdoll rg = rf != null ? rf.GetValue(d) as FighterRagdoll : null;
+            if (rg == null) sb.Append("PROBE|" + f.name + "|rag|none\n");
+            else
+            {
+                SimulationMode sm0 = Physics.simulationMode;
+                try
+                {
+                    Physics.simulationMode = SimulationMode.Script;
+                    if (anim != null) anim.enabled = false;
+                    Transform ft = f.transform; Transform hp = Find(model, "Hips");
+                    rg.Activate(-ft.forward * 1.6f + Vector3.up * 0.4f, -ft.forward * 2.4f + Vector3.up * 0.6f, hp.position + Vector3.up * 0.3f);
+                    rg.Dump(sb, f.name, "t0.0", ft);
+                    for (int i = 1; i <= 150; i++)
+                    {
+                        Physics.Simulate(0.02f);
+                        if (i == 10 || i == 25 || i == 50 || i == 100 || i == 150) rg.Dump(sb, f.name, "t" + (i * 0.02f).ToString("F1"), ft);
+                    }
+                    rg.Deactivate();
+                    Vector3 hl = ft.InverseTransformPoint(hp.position);
+                    sb.AppendFormat("PROBE|{0}|rag|restored hips {1:F3} {2:F3} {3:F3}\n", f.name, hl.x, hl.y, hl.z);
+                }
+                catch (Exception e) { sb.Append("PROBE|" + f.name + "|rag|error " + e.Message + "\n"); }
+                finally { Physics.simulationMode = sm0; if (anim != null) anim.enabled = true; }
             }
             all.Append(sb);
         }
@@ -188,8 +214,9 @@ namespace BladePath.EditorTools
                         st = (si.IsName("Loco") ? "Loco" : si.IsName("Idle") ? "Idle" : "?") + string.Format(" x {0:F2} z {1:F2} tempo {2:F2}", anim.GetFloat("MoveX"), anim.GetFloat("MoveZ"), anim.GetFloat("LocoSpeed"));
                     }
                 }
-                float minY = float.MaxValue;
-                for (int i = 0; i < frames; i++) minY = Mathf.Min(minY, Mathf.Min(L[i].y, R[i].y) - ft.position.y);
+                float minY = float.MaxValue, minAll = float.MaxValue;
+                for (int i = 0; i < frames; i++) minAll = Mathf.Min(minAll, Mathf.Min(L[i].y, R[i].y) - ft.position.y);
+                for (int i = 25; i < stopAt; i++) minY = Mathf.Min(minY, Mathf.Min(L[i].y, R[i].y) - ft.position.y);   // опора — по установившемуся ходу
                 float slideSum = 0f, slideMax = 0f; int slideN = 0; float hMin = float.MaxValue, hMax = float.MinValue;
                 for (int i = 25; i < stopAt; i++)
                 {
@@ -202,8 +229,9 @@ namespace BladePath.EditorTools
                         slideSum += v; slideN++; slideMax = Mathf.Max(slideMax, v);
                     }
                 }
-                sb.AppendFormat("PROBE|{0}|walk_{1}|v {2:F2}|slide mean {3:F2} max {4:F2} m/s (n {5})|footMinY {6:F3}|hips {7:F3}..{8:F3}|{9}\n",
-                    f.name, label, speed, slideN > 0 ? slideSum / slideN : 0f, slideMax, slideN, minY, hMin, hMax, st);
+                Vector3 hl = ft.InverseTransformPoint(hp.position);
+                sb.AppendFormat("PROBE|{0}|walk_{1}|v {2:F2}|slide mean {3:F2} max {4:F2} m/s (n {5})|footMinY walk {6:F3} all {7:F3}|hips {8:F3}..{9:F3} end {10:F2} {11:F2} {12:F2}|{13}\n",
+                    f.name, label, speed, slideN > 0 ? slideSum / slideN : 0f, slideMax, slideN, minY, minAll, hMin, hMax, hl.x, hl.y, hl.z, st);
             }
             catch (Exception e) { sb.Append("PROBE|" + f.name + "|walk_" + label + "|error " + e.Message + "\n"); }
             finally { HeroRigDriver.DtOverride = -1f; ft.position = start; }

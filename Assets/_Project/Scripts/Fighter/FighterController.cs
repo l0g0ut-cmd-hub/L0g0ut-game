@@ -55,6 +55,9 @@ namespace BladePath
         /// <summary>Секунд с начала последнего рывка (удар из рывка — «иай»).</summary>
         public float SinceDash { get { return Time.time - lastDashAt; } }
         /// <summary>Отбрасывание от удара: скорость гасится за ~0,3 с, стены арены и препятствия учитываются.</summary>
+        /// <summary>Забрать скорость отброса (её подхватывает физическое падение тела) — корень бойца дальше не скользит.</summary>
+        public Vector3 TakeKnockback() { Vector3 v = knockVel; knockVel = Vector3.zero; return v; }
+
         public void Knockback(Vector3 dir, float speed)
         {
             dir.y = 0f;

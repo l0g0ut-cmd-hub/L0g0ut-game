@@ -145,10 +145,12 @@ namespace BladePath.EditorTools
 
             Transform[] dst = new Transform[DstNames.Length];
             for (int i = 0; i < DstNames.Length; i++) { dst[i] = find(DstNames[i]); if (dst[i] == null) { Debug.LogWarning("MocapBaker: нет кости " + DstNames[i]); return res; } }
-            // все кости модели, которые пишет клип (поза стойки для рук/плеч и прочих)
+            // все кости модели, которые пишет клип, включая корневую кость над тазом: клип стойки может её сдвигать,
+            // и если её не записать, в игре она встанет в позу покоя, а таз клипа уедет (вниз/вперёд) вместе с ней
             List<Transform> bones = new List<Transform>();
-            foreach (Transform t in dst[0].parent.GetComponentsInChildren<Transform>(true))
-                if (t.GetComponent<Renderer>() == null && !t.name.StartsWith("rg_") && t != dst[0].parent && !t.name.Contains("Eye") && !t.name.Contains("Marker")) bones.Add(t);
+            Transform top = dst[0].parent != null && dst[0].parent != modelRoot ? dst[0].parent : dst[0];
+            foreach (Transform t in top.GetComponentsInChildren<Transform>(true))
+                if (t.GetComponent<Renderer>() == null && !t.name.StartsWith("rg_") && !t.name.Contains("Eye") && !t.name.Contains("Marker")) bones.Add(t);
             // запоминаем и потом возвращаем позу (сцена сохраняется после сборки)
             Dictionary<Transform, Quaternion> saveR = new Dictionary<Transform, Quaternion>(); Dictionary<Transform, Vector3> saveP = new Dictionary<Transform, Vector3>();
             foreach (Transform t in bones) { saveR[t] = t.localRotation; saveP[t] = t.localPosition; }
@@ -237,7 +239,7 @@ namespace BladePath.EditorTools
             mean /= K; mean.y = 0f;
 
             // поза по кадрам → локальные повороты всех костей
-            Quaternion[][] LR = new Quaternion[K + 1][]; Vector3[] HP = new Vector3[K + 1];
+            Quaternion[][] LR = new Quaternion[K + 1][]; Vector3[][] LP = new Vector3[K + 1][];
             for (int k = 0; k <= K; k++)
             {
                 foreach (Transform t in bones) { t.localRotation = baseR[t]; t.localPosition = baseP[t]; }
@@ -250,9 +252,8 @@ namespace BladePath.EditorTools
                     if (i >= 5 && sp.legScale != 1f) delta = Quaternion.Slerp(Quaternion.identity, delta, sp.legScale);   // ноги (DstNames[5..10])
                     dst[i].rotation = Q * delta * Quaternion.Inverse(Q) * rest[i];
                 }
-                LR[k] = new Quaternion[bones.Count];
-                for (int j = 0; j < bones.Count; j++) LR[k][j] = bones[j].localRotation;
-                HP[k] = dst[0].localPosition;
+                LR[k] = new Quaternion[bones.Count]; LP[k] = new Vector3[bones.Count];
+                for (int j = 0; j < bones.Count; j++) { LR[k][j] = bones[j].localRotation; LP[k][j] = bones[j].localPosition; }
             }
             // петля без шва: остаток (кадр K против кадра 0) разносим по циклу
             for (int j = 0; j < bones.Count; j++)
@@ -260,8 +261,11 @@ namespace BladePath.EditorTools
                 Quaternion err = LR[0][j] * Quaternion.Inverse(LR[K][j]);
                 for (int k = 1; k <= K; k++) LR[k][j] = Quaternion.Slerp(Quaternion.identity, err, (float)k / K) * LR[k][j];
             }
-            Vector3 perr = HP[0] - HP[K];
-            for (int k = 1; k <= K; k++) HP[k] += perr * ((float)k / K);
+            for (int j = 0; j < bones.Count; j++)
+            {
+                Vector3 perr = LP[0][j] - LP[K][j];
+                for (int k = 1; k <= K; k++) LP[k][j] += perr * ((float)k / K);
+            }
 
             // клип
             AnimationClip clip = new AnimationClip { name = prefix + sp.name, frameRate = 30f };
@@ -283,10 +287,9 @@ namespace BladePath.EditorTools
                 string[] comp = { "x", "y", "z", "w" };
                 for (int c = 0; c < 4; c++)
                     AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(tp, typeof(Transform), "m_LocalRotation." + comp[c]), LoopCurve(times, v[c]));
-                if (bones[j] == dst[0])
                 {
                     float[][] pv = { new float[K + 1], new float[K + 1], new float[K + 1] };
-                    for (int k = 0; k <= K; k++) { pv[0][k] = HP[k].x; pv[1][k] = HP[k].y; pv[2][k] = HP[k].z; }
+                    for (int k = 0; k <= K; k++) { pv[0][k] = LP[k][j].x; pv[1][k] = LP[k][j].y; pv[2][k] = LP[k][j].z; }
                     for (int c = 0; c < 3; c++)
                         AnimationUtility.SetEditorCurve(clip, EditorCurveBinding.FloatCurve(tp, typeof(Transform), "m_LocalPosition." + comp[c]), LoopCurve(times, pv[c]));
                 }

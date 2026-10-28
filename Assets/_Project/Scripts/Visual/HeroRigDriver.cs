@@ -86,6 +86,12 @@ namespace BladePath
         public Vector2[] locoDirs;     // направление клипа в системе бойца (x — вправо, y — вперёд)
         public float[] locoSpeeds;     // скорость клипа, м/с (темп в игре = скорость бойца / скорость клипа)
 
+        [Header("Смерть")]
+        [Tooltip("Физическое падение (ragdoll) по направлению смертельного удара; без него — прежнее падение навзничь.")]
+        public bool useRagdoll = true;
+        FighterRagdoll rag;
+        Vector3 lastHitDir, lastHitPoint;
+
         [Header("Отдача при попадании")]
         public float hitKickDecay = 2.8f;  // 1/с
 
@@ -154,6 +160,11 @@ namespace BladePath
             if (weapon != null && weapon.pivot != null) pivotRestY = weapon.pivot.localPosition.y;
             CacheHandFrame(handL, forearmL, out bindL, out sideL);
             CacheHandFrame(handR, forearmR, out bindR, out sideR);
+            if (useRagdoll && legsReady && fighter != null)
+            {
+                rag = new FighterRagdoll(this, fighter.transform);
+                if (!rag.Ready) rag = null;
+            }
         }
 
         static void Cache(Transform u, Transform f, Transform h, out float a, out float b)
@@ -240,6 +251,8 @@ namespace BladePath
             kickZone = r.zone;
             Vector3 v = r.contact.bladeVelocity;
             kickSide = fighter != null && v.sqrMagnitude > 1e-4f ? Mathf.Sign(Vector3.Dot(v, fighter.transform.right)) : 0f;
+            lastHitDir = v.sqrMagnitude > 1e-4f ? v.normalized : (fighter != null ? -fighter.transform.forward : Vector3.back);
+            lastHitPoint = r.contact.point;
         }
 
         static float Smooth(float t) { return t * t * (3f - 2f * t); }
@@ -256,6 +269,42 @@ namespace BladePath
             if (decapitated && fighter != null && !fighter.Dead) decapitated = false;   // новый раунд
             if (head != null) head.localScale = decapitated ? Vector3.one * 0.001f : Vector3.one;
             Transform ft = fighter.transform;
+
+            // физическое падение: тело живёт само, драйвер не трогает кости (только меч ложится на землю)
+            if (rag != null)
+            {
+                if (rag.Active)
+                {
+                    if (!fighter.Dead)
+                    {
+                        rag.Deactivate();
+                        if (animator != null) { animator.enabled = true; animator.Rebind(); }
+                        gaitInit = false; deadK = 0f; fallDust = false; locoW = 0f;
+                    }
+                    else
+                    {
+                        deadK = Mathf.MoveTowards(deadK, 1f, dt / 0.8f);
+                        if (deadK >= 0.97f && !fallDust)
+                        {
+                            fallDust = true;
+                            if (Juice.Instance != null && hips != null) Juice.Instance.Dust(new Vector3(hips.position.x, 0.05f, hips.position.z), Vector3.up, 26);
+                            if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.04f);
+                        }
+                        DropSword();
+                        return;
+                    }
+                }
+                else if (fighter.Dead && deadK < 0.01f)
+                {
+                    // скорость отброса — всему телу, удар — задетой части (по направлению клинка, чуть вверх)
+                    Vector3 kv = fighter.TakeKnockback();
+                    Vector3 push = Vector3.ProjectOnPlane(lastHitDir, Vector3.up).normalized * 1.6f + (kv.sqrMagnitude > 1e-4f ? kv.normalized : -ft.forward) * 1.2f + Vector3.up * 0.5f;
+                    if (animator != null) animator.enabled = false;
+                    rag.Activate(kv * 0.7f + Vector3.up * 0.4f, push, lastHitPoint.sqrMagnitude > 1e-6f ? lastHitPoint : (hips != null ? hips.position : ft.position));
+                    deadK = 0.02f;
+                    return;
+                }
+            }
             Vector3 right = ft.right, up = ft.up, fwd = ft.forward;
 
             if (weapon != null && weapon.pivot != null) weapon.pivot.localPosition = weapon.PureLocalPosition;   // снять прошлую поправку досягаемости
