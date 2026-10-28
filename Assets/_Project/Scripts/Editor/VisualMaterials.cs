@@ -273,6 +273,23 @@ namespace BladePath.EditorTools
             return m;
         }
 
+        /// <summary>
+        /// Персонаж на шейдере BladePath/Character (Standard PBR + контровой свет по силуэту).
+        /// Свойства те же, что у Standard — текстуры, ключевые слова и вспышки попаданий переносятся как есть.
+        /// Игрок — холодный лунный контур, враг-тень — лиловый (под цвет глаз и ауры).
+        /// </summary>
+        public static Material CharacterRim(Material m, bool enemy)
+        {
+            if (m == null) return null;
+            Shader sh = Shader.Find("BladePath/Character");
+            if (sh == null) { Debug.LogWarning("VisualMaterials: нет шейдера BladePath/Character — персонаж остаётся на Standard"); return m; }
+            if (m.shader != sh) m.shader = sh;
+            m.SetColor("_RimColor", enemy ? new Color(0.30f, 0.17f, 0.42f) : new Color(0.28f, 0.34f, 0.48f));
+            m.SetFloat("_RimPower", 3.2f);
+            EditorUtility.SetDirty(m);
+            return m;
+        }
+
         static Texture2D LoadTex(string tp, bool normal, bool srgb)
         {
             TextureImporter ti = AssetImporter.GetAtPath(tp) as TextureImporter;

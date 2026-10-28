@@ -136,8 +136,8 @@ namespace BladePath.EditorTools
 
         static Material MapMaterial(string name, Look look, bool undead)
         {
-            if (name.StartsWith("SAM_")) return VisualMaterials.Samurai(name.Substring(4), shadowLook);
-            if (name == "M2_Body") return VisualMaterials.Samurai2();
+            if (name.StartsWith("SAM_")) return VisualMaterials.CharacterRim(VisualMaterials.Samurai(name.Substring(4), shadowLook), shadowLook);
+            if (name == "M2_Body") return VisualMaterials.CharacterRim(VisualMaterials.Samurai2(), false);
             switch (name)
             {
                 case "Skin": return undead ? look.deadSkin : look.skin;

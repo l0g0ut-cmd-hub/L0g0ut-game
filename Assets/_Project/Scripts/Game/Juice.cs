@@ -13,7 +13,9 @@ namespace BladePath
 
         AudioSource[] voices;
         int voiceIdx;
-        AudioClip swish, hit, hitHeavy, clang, boom, drum, heart, whoosh, step, growl;
+        AudioClip swish, hit, hitHeavy, clang, boom, drum, heart, whoosh, step, growl, stepWet;
+        AudioSource stepVoice;
+        ParticleSystem footFx;
         ParticleSystem petals;
         AudioSource ambient;
         Material fxMat, softMat, splatMat, fogMat;
@@ -37,7 +39,8 @@ namespace BladePath
             voices = new AudioSource[6];
             for (int i = 0; i < voices.Length; i++) { voices[i] = gameObject.AddComponent<AudioSource>(); voices[i].spatialBlend = 0f; voices[i].playOnAwake = false; }
             swish = Swish(); hit = Thump(0.22f, 140f, 55f, 0.55f); hitHeavy = Thump(0.34f, 100f, 38f, 0.9f); clang = Clang(); boom = Thump(1.0f, 70f, 28f, 0.8f);
-            drum = Drum(); heart = Heart(); whoosh = Swish(); step = Step(); growl = Growl();
+            drum = Drum(); heart = Heart(); whoosh = Swish(); step = Step(); growl = Growl(); stepWet = StepWet();
+            stepVoice = gameObject.AddComponent<AudioSource>(); stepVoice.spatialBlend = 0f; stepVoice.playOnAwake = false;   // шаги не отнимают голоса у ударов
             ambient = gameObject.AddComponent<AudioSource>();
             ambient.clip = Wind(); ambient.loop = true; ambient.volume = 0.22f; ambient.spatialBlend = 0f; ambient.Play();
             Shader sh = Shader.Find("Sprites/Default");
@@ -211,13 +214,7 @@ namespace BladePath
                 }
                 if (t.f != null)
                 {
-                    // шаги по камню и приземление после прыжка
-                    float mv = Mathf.Abs(t.f.MoveAxis);
-                    if (t.f.Grounded && mv > 0.3f && !t.f.Dead)
-                    {
-                        t.stepT -= Time.deltaTime * (0.7f + mv);
-                        if (t.stepT <= 0f) { t.stepT = 0.42f; Play(step, 0.18f + 0.12f * mv, Random.Range(0.85f, 1.15f)); }
-                    }
+                    // шаги — от постановки стоп (HeroRigDriver → Footstep); здесь приземление после прыжка
                     if (t.f.Grounded && !t.wasGrounded)
                     {
                         Play(hit, 0.35f, 0.6f);
@@ -338,6 +335,72 @@ namespace BladePath
             rend.renderMode = ParticleSystemRenderMode.Stretch;
             rend.velocityScale = 0.05f; rend.lengthScale = 2.4f;
             ps.Play();
+        }
+
+        /// <summary>
+        /// Стопа встала на землю (из походки HeroRigDriver): глухой шаг по камню, в дождь — шлепок и брызги из-под подошвы,
+        /// на сухом — лёгкая пыль. k ~0.3…1.5: длина шага / притоп в ударе. Частицы из одной общей системы (без мусора на шаг).
+        /// </summary>
+        public void Footstep(Vector3 pos, float k)
+        {
+            bool wet = Weather.Instance != null && Weather.Instance.Raining;
+            if (stepVoice != null)
+            {
+                stepVoice.pitch = Random.Range(0.85f, 1.12f);
+                stepVoice.PlayOneShot(step, Mathf.Clamp(0.12f + 0.16f * k, 0.1f, 0.45f));
+                if (wet && stepWet != null) stepVoice.PlayOneShot(stepWet, Mathf.Clamp(0.08f + 0.12f * k, 0.06f, 0.35f));
+            }
+            if (footFx == null) footFx = MakeFootFx();
+            if (footFx == null) return;
+            ParticleSystem.EmitParams ep = new ParticleSystem.EmitParams();
+            int n = wet ? Mathf.RoundToInt(4f + 6f * k) : Mathf.RoundToInt(2f + 3f * k);
+            for (int i = 0; i < n; i++)
+            {
+                Vector2 c = Random.insideUnitCircle * 0.09f;
+                ep.position = pos + new Vector3(c.x, 0.015f, c.y);
+                Vector3 v = new Vector3(c.x, 0f, c.y) * Random.Range(4f, 9f);
+                if (wet)
+                {
+                    v.y = Random.Range(0.6f, 1.4f) * (0.7f + 0.4f * k);
+                    ep.velocity = v; ep.startSize = Random.Range(0.012f, 0.026f); ep.startLifetime = Random.Range(0.25f, 0.45f);
+                    ep.startColor = new Color(0.62f, 0.68f, 0.78f, 0.55f);
+                }
+                else
+                {
+                    v.y = Random.Range(0.05f, 0.25f);
+                    ep.velocity = v * 0.25f; ep.startSize = Random.Range(0.05f, 0.11f); ep.startLifetime = Random.Range(0.5f, 0.9f);
+                    ep.startColor = new Color(0.38f, 0.34f, 0.3f, 0.22f);
+                }
+                footFx.Emit(ep, 1);
+            }
+        }
+
+        ParticleSystem MakeFootFx()
+        {
+            if (softMat == null) return null;
+            GameObject g = new GameObject("FootFx");
+            g.transform.SetParent(transform, false);
+            ParticleSystem ps = g.AddComponent<ParticleSystem>();
+            ps.Stop();
+            var main = ps.main;
+            main.loop = true; main.playOnAwake = false;   // своей эмиссии нет — частицы только из Footstep (система всегда «играет»)
+            main.gravityModifier = 0.9f;   // брызги падают; пыль почти не летит (малая скорость)
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.maxParticles = 300;
+            var em = ps.emission; em.enabled = false;
+            var sh = ps.shape; sh.enabled = false;
+            var col = ps.colorOverLifetime; col.enabled = true;
+            Gradient gr = new Gradient();
+            gr.SetKeys(new GradientColorKey[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                       new GradientAlphaKey[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) });
+            col.color = gr;
+            ParticleSystemRenderer r = g.GetComponent<ParticleSystemRenderer>();
+            r.material = softMat;
+            r.renderMode = ParticleSystemRenderMode.Billboard;
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            r.receiveShadows = false;
+            ps.Play();
+            return ps;
         }
 
         /// <summary>Пыль из-под ног: рывок, отбрасывание, падение.</summary>
@@ -730,6 +793,24 @@ namespace BladePath
                 d[i] = (lp * 0.8f + Mathf.Sin(2f * Mathf.PI * 120f * t) * 0.4f) * Mathf.Exp(-t * 55f);
             }
             return Make("step", d);
+        }
+
+        /// <summary>Мокрый шлепок подошвы: короткий светлый шум (брызги), без низа.</summary>
+        static AudioClip StepWet()
+        {
+            int n = (int)(Rate * 0.12f);
+            float[] d = new float[n];
+            System.Random rnd = new System.Random(29);
+            float prev = 0f, hp = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)Rate;
+                float x = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                hp = 0.82f * (hp + x - prev); prev = x;   // верхние частоты
+                float env = Mathf.Min(1f, t * 400f) * Mathf.Exp(-t * 38f) * (1f + 0.6f * Mathf.Exp(-Mathf.Pow((t - 0.035f) * 90f, 2f)));
+                d[i] = Mathf.Clamp(hp * 0.55f * env, -1f, 1f);
+            }
+            return Make("step_wet", d);
         }
 
         static AudioClip Drum()

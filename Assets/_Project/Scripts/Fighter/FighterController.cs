@@ -17,7 +17,7 @@ namespace BladePath
         [Header("Movement")]
         public float moveSpeed = 1.2f;   // размеренный шаг в стойке
         [Tooltip("Боком (приставным шагом) и спиной вперёд боец ходит медленнее, чем на противника.")]
-        [Range(0.3f, 1f)] public float strafeSpeedMul = 0.75f, backSpeedMul = 0.85f;
+        [Range(0.3f, 1f)] public float strafeSpeedMul = 0.6f, backSpeedMul = 0.85f;
         [Tooltip("Множитель скорости, пока идёт любая фаза удара. 1 = без штрафа.")]
         [Range(0f, 1f)] public float attackMoveMultiplier = 0.8f;
         public float minSeparation = 0.7f;      // ближе этого бойцы не сходятся (корпуса)
