@@ -47,8 +47,9 @@ namespace BladePath.EditorTools
                 opts.locationPathName = path;
                 opts.target = BuildTarget.Android;
                 opts.targetGroup = BuildTargetGroup.Android;
-                // Development: Debug.isDebugBuild = true, иначе отладочная графика отключается
-                opts.options = BuildOptions.Development;
+                // Релизная сборка: быстрее, без плашки Development Build и без консоли ошибок поверх игры.
+                // Отладочная графика боя включается флагом CombatDebugVisualizer.forceEnableInRelease, если понадобится.
+                opts.options = BuildOptions.None;
 
                 BuildReport report = BuildPipeline.BuildPlayer(opts);
                 BuildSummary sum = report.summary;
@@ -75,8 +76,10 @@ namespace BladePath.EditorTools
         static void ConfigurePlayer()
         {
             PlayerSettings.companyName = "BladePath";
-            PlayerSettings.productName = "Blade Path";
-            PlayerSettings.bundleVersion = "0.1.0";
+            PlayerSettings.productName = "Путь клинка";
+            PlayerSettings.bundleVersion = "0.2.0";
+            PlayerSettings.Android.bundleVersionCode = 2;
+            SetIcon();
 
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.bladepath.prototype");
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
@@ -91,7 +94,7 @@ namespace BladePath.EditorTools
             PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
 
             EditorUserBuildSettings.buildAppBundle = false;                 // APK, не AAB
-            EditorUserBuildSettings.androidBuildType = AndroidBuildType.Debug;
+            EditorUserBuildSettings.androidBuildType = AndroidBuildType.Release;   // подпись всё равно debug-ключом (без своего keystore)
             PlayerSettings.Android.useCustomKeystore = false;               // стандартный debug-ключ: ставится с телефона без подписи
 
             ForceLegacyInputManager();
@@ -111,6 +114,27 @@ namespace BladePath.EditorTools
             p.intValue = 0; // 0 = Input Manager (Old), 1 = Input System Package, 2 = Both
             so.ApplyModifiedProperties();
             AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>Иконка приложения (tools/gen_icon.py → Assets/_Project/Art/icon.png).</summary>
+        static void SetIcon()
+        {
+            const string p = "Assets/_Project/Art/icon.png";
+            try
+            {
+                TextureImporter ti = AssetImporter.GetAtPath(p) as TextureImporter;
+                if (ti != null && (ti.textureCompression != TextureImporterCompression.Uncompressed || ti.npotScale != TextureImporterNPOTScale.None))
+                {
+                    ti.textureCompression = TextureImporterCompression.Uncompressed;
+                    ti.npotScale = TextureImporterNPOTScale.None;
+                    ti.mipmapEnabled = false;
+                    ti.SaveAndReimport();
+                }
+                Texture2D icon = AssetDatabase.LoadAssetAtPath<Texture2D>(p);
+                if (icon == null) { Debug.LogWarning("BladePath: иконка не найдена"); return; }
+                PlayerSettings.SetIcons(NamedBuildTarget.Unknown, new Texture2D[] { icon }, IconKind.Any);
+            }
+            catch (Exception e) { Debug.LogWarning("BladePath: иконка не выставлена: " + e.Message); }
         }
 
         static string GetArg(string name)
