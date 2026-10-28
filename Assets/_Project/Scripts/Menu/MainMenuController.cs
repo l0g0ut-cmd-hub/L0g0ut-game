@@ -145,8 +145,11 @@ namespace BladePath
         {
             switch (index)
             {
-                case 0: SceneManager.LoadScene(SceneNames.Prototype); break;
-                case 1: Say("Continue: сохранений на этапе 1 нет"); break;
+                case 0: Ladder.Index = 0; SceneManager.LoadScene(SceneNames.Prototype); break;   // новый «Путь» с первого противника
+                case 1:
+                    if (Ladder.Index > 0 || Records.Wins > 0 || Records.Losses > 0) SceneManager.LoadScene(SceneNames.Prototype);   // продолжить с текущей ступени
+                    else Say("Сохранённого пути нет — начните новую игру");
+                    break;
                 case 2: settingsOpen = true; break;
                 default: QuitGame(); break;
             }
@@ -154,12 +157,44 @@ namespace BladePath
 
         void DrawSettings()
         {
-            float w = Mathf.Min(Screen.width * 0.7f, 520f), h = 180f;
-            Rect box = new Rect((Screen.width - w) * 0.5f, (Screen.height - h) * 0.5f, w, h);
-            GUI.Box(box, "Settings", boxStyle);
-            bool on = GUI.Toggle(new Rect(box.x + 24f, box.y + 48f, w - 48f, 40f), animated, "  Анимированный фон");
-            if (on != animated) SetAnimated(on);
-            if (GUI.Button(new Rect(box.x + w * 0.5f - 70f, box.y + h - 56f, 140f, 40f), "OK")) settingsOpen = false;
+            Matrix4x4 old = UiKit.Begin();
+            float W = UiKit.Width, cx = W * 0.5f;
+            UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, 0.6f));
+            Rect box = new Rect(cx - 220f, 90f, 440f, 380f);
+            Color gold = new Color(0.86f, 0.70f, 0.38f, 1f);
+            UiKit.Rect(new Rect(box.x - 2f, box.y - 2f, box.width + 4f, box.height + 4f), gold * 0.8f);
+            UiKit.Rect(box, new Color(0.06f, 0.05f, 0.05f, 0.97f));
+            UiKit.Text(new Rect(box.x, box.y + 10f, box.width, 44f), "НАСТРОЙКИ", 32f, gold);
+
+            string[] labels =
+            {
+                "АНИМИРОВАННЫЙ ФОН: " + (animated ? "ВКЛ" : "ВЫКЛ"),
+                "СЛОЖНОСТЬ: " + EnemyAI.DifficultyName,
+                "ГРАФИКА: " + (DuelManager.Gfx == 1 ? "ВЫСОКАЯ" : "ЭКОНОМ"),
+                "ВИБРАЦИЯ: " + (PlayerPrefs.GetInt("haptics", 1) == 1 ? "ВКЛ" : "ВЫКЛ"),
+                "ГОТОВО"
+            };
+            for (int i = 0; i < labels.Length; i++)
+            {
+                Rect r = new Rect(box.x + 40f, box.y + 66f + i * 60f, box.width - 80f, 48f);
+                UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), gold * 0.7f);
+                UiKit.Rect(r, i == labels.Length - 1 ? new Color(0.35f, 0.08f, 0.06f, 1f) : new Color(0.1f, 0.08f, 0.08f, 1f));
+                UiKit.Text(r, labels[i], 18f, new Color(0.95f, 0.9f, 0.78f));
+                if (GUI.Button(r, GUIContent.none, hitStyle))
+                {
+                    switch (i)
+                    {
+                        case 0: SetAnimated(!animated); break;
+                        case 1: EnemyAI.Difficulty = (EnemyAI.Difficulty + 1) % 3; break;
+                        case 2: DuelManager.Gfx = 1 - DuelManager.Gfx; break;
+                        case 3: PlayerPrefs.SetInt("haptics", PlayerPrefs.GetInt("haptics", 1) == 1 ? 0 : 1); Haptics.Enabled = PlayerPrefs.GetInt("haptics", 1) == 1; Haptics.Pulse(40); break;
+                        default: settingsOpen = false; break;
+                    }
+                }
+            }
+            UiKit.Text(new Rect(box.x, box.yMax + 8f, box.width, 24f),
+                "ПУТЬ " + (Ladder.Index + 1) + "/" + Ladder.Count + "  ·  ПОБЕД " + Records.Wins + "  ·  ПОРАЖЕНИЙ " + Records.Losses, 14f, new Color(0.85f, 0.8f, 0.7f, 0.9f));
+            GUI.matrix = old;
         }
     }
 }
