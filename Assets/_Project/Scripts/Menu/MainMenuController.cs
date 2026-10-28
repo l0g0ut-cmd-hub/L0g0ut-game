@@ -59,7 +59,41 @@ namespace BladePath
         void OnEnded(VideoPlayer vp) { videoEnded = true; }
         void OnError(VideoPlayer vp, string message) { Debug.LogWarning("Меню: видео не воспроизводится: " + message); videoFailed = true; }
 
-        void OnDestroy() { if (rt != null) rt.Release(); }
+        // Видео декодируется в своём потоке и пишет в RenderTexture. Освобождать её, пока плеер работает, нельзя —
+        // на Android это роняет приложение при переходе в бой. Сначала стоп и отвязка, потом освобождение.
+        void StopVideo()
+        {
+            if (player != null)
+            {
+                player.prepareCompleted -= OnPrepared;
+                player.loopPointReached -= OnEnded;
+                player.errorReceived -= OnError;
+                player.frameReady -= OnFrameReady;
+                player.sendFrameReadyEvents = false;
+                player.Stop();
+                player.targetTexture = null;
+            }
+        }
+
+        void OnDestroy()
+        {
+            StopVideo();
+            if (rt != null) { rt.Release(); rt = null; }
+        }
+
+        bool loading;
+        /// <summary>Переход в бой: остановить видео, дать кадр на то, чтобы декодер отпустил текстуру, затем грузить сцену.</summary>
+        System.Collections.IEnumerator LoadBattle()
+        {
+            if (loading) yield break;
+            loading = true;
+            Breadcrumbs.Begin("меню: остановка видео");
+            StopVideo();
+            yield return null;
+            yield return null;
+            Breadcrumbs.Mark("загрузка сцены боя");
+            SceneManager.LoadScene(SceneNames.Prototype);
+        }
 
         void Update()
         {
@@ -148,9 +182,9 @@ namespace BladePath
         {
             switch (index)
             {
-                case 0: Ladder.Index = 0; Breadcrumbs.Begin("загрузка сцены боя"); SceneManager.LoadScene(SceneNames.Prototype); break;   // новый «Путь» с первого противника
+                case 0: Ladder.Index = 0; StartCoroutine(LoadBattle()); break;   // новый «Путь» с первого противника
                 case 1:
-                    if (Ladder.Index > 0 || Records.Wins > 0 || Records.Losses > 0) { Breadcrumbs.Begin("загрузка сцены боя"); SceneManager.LoadScene(SceneNames.Prototype); }   // продолжить с текущей ступени
+                    if (Ladder.Index > 0 || Records.Wins > 0 || Records.Losses > 0) StartCoroutine(LoadBattle());   // продолжить с текущей ступени
                     else Say("Сохранённого пути нет — начните новую игру");
                     break;
                 case 2: settingsOpen = true; break;
