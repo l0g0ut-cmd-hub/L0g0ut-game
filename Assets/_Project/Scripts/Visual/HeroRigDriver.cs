@@ -33,6 +33,8 @@ namespace BladePath
         public float gripRear = 0.20f;    // задняя рука (левая) — у навершия
         [Tooltip("Расстояние от запястья до центра ладони вдоль пальцев, м (кисть сдвигается так, чтобы рукоять проходила через ладонь).")]
         public float palmOffset = 0.06f;
+        [Tooltip("Насколько рукоять смещена от кости кисти к ладони, м (у сжатого кулака рукоять проходит внутри пальцев).")]
+        public float palmLift = 0.015f;
         [Tooltip("Максимальный излом кисти относительно руки, град. (иначе хват поперёк клинка ломает запястье при вытянутых вперёд руках).")]
         public float maxWristBend = 30f;
 
@@ -45,7 +47,7 @@ namespace BladePath
 
         [Header("Стойка: стопы ставит IK, таз — ключевые позы")]
         [Tooltip("Места стоп в стойке, м, в системе бойца (x вправо, z вперёд) для правши; у левши x зеркалится. Передняя — правая.")]
-        public float footFrontX = 0.12f, footFrontZ = 0.20f, footRearX = -0.13f, footRearZ = -0.20f;
+        public float footFrontX = 0.14f, footFrontZ = 0.20f, footRearX = -0.15f, footRearZ = -0.20f;
         [Tooltip("Разворот носков наружу, град.: передняя почти прямо на врага, задняя развёрнута (устойчивость).")]
         public float footFrontYaw = 8f, footRearYaw = 32f;
         public float stanceDrop = 0.04f;   // колени мягко согнуты в стойке, м
@@ -332,9 +334,9 @@ namespace BladePath
             // кисть не ломается поперёк предплечья: пальцы отклоняются от направления руки (плечо → хват) не больше maxWristBend
             if (upperArmR != null) LimitWrist(gripR - upperArmR.position, maxWristBend, ref fR, ref nR);
             if (upperArmL != null) LimitWrist(gripL - upperArmL.position, maxWristBend, ref fL, ref nL);
-            SolveArm(upperArmR, forearmR, handR, l1R, l2R, gripR - fR * palmOffset - nR * 0.015f, outward);
+            SolveArm(upperArmR, forearmR, handR, l1R, l2R, gripR - fR * palmOffset - nR * palmLift, outward);
             Vector3 outwardL = -ft.right * 1.0f + Vector3.down * 0.5f + back * 0.2f;
-            SolveArm(upperArmL, forearmL, handL, l1L, l2L, gripL - fL * palmOffset - nL * 0.015f, outwardL);
+            SolveArm(upperArmL, forearmL, handL, l1L, l2L, gripL - fL * palmOffset - nL * palmLift, outwardL);
             if (framesReady)
             {
                 OrientHand(handR, bindR, fR, nR);

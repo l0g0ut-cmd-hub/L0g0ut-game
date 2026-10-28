@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
@@ -221,6 +222,63 @@ namespace BladePath.EditorTools
             m.mainTexture = tex;
             if (m.HasProperty("_TintColor")) m.SetColor("_TintColor", tint); else m.color = tint;
             if (isNew) AssetDatabase.CreateAsset(m, path); else EditorUtility.SetDirty(m);
+            return m;
+        }
+
+        const string SamuraiTex = "Assets/_Project/Art/Samurai/";
+        /// <summary>Цвета деталей самурая, пока нет текстур художника (и тон-подкраска поверх них).</summary>
+        static readonly Dictionary<string, Color> SamuraiPalette = new Dictionary<string, Color> {
+            { "Char", new Color(0.62f, 0.47f, 0.38f) }, { "Helmet", new Color(0.10f, 0.09f, 0.10f) }, { "Horn", new Color(0.78f, 0.60f, 0.22f) },
+            { "Helmetdeko", new Color(0.78f, 0.60f, 0.22f) }, { "Helmetband", new Color(0.72f, 0.69f, 0.63f) }, { "Chestplate", new Color(0.36f, 0.07f, 0.06f) },
+            { "ChestplateDeko", new Color(0.78f, 0.60f, 0.22f) }, { "Shoulderprotection", new Color(0.15f, 0.14f, 0.15f) }, { "ForearmProtection", new Color(0.12f, 0.13f, 0.18f) },
+            { "Shirt", new Color(0.14f, 0.16f, 0.24f) }, { "Trouser", new Color(0.20f, 0.20f, 0.22f) }, { "Belt", new Color(0.42f, 0.09f, 0.07f) },
+            { "Neckprotection", new Color(0.13f, 0.12f, 0.13f) }, { "leg", new Color(0.34f, 0.25f, 0.17f) }, { "Shin", new Color(0.17f, 0.16f, 0.17f) },
+            { "LegProtection", new Color(0.31f, 0.07f, 0.06f) }, { "Eye", new Color(0.85f, 0.83f, 0.80f) }, { "Wakizashi", new Color(0.08f, 0.07f, 0.07f) },
+            { "WakizashiSaya", new Color(0.07f, 0.06f, 0.06f) }, { "KatanaSaya", new Color(0.07f, 0.06f, 0.06f) } };
+        static readonly Dictionary<string, Material> samuraiCache = new Dictionary<string, Material>();
+
+        /// <summary>
+        /// Материал детали самурая (имя в FBX: SAM_&lt;папка&gt;). Текстуры художника берутся из Assets/_Project/Art/Samurai/&lt;папка&gt;/
+        /// (*Base_Color*, *Normal_OpenGL*, *Metallic*, *Emissive*); если их нет — сплошной цвет из палитры.
+        /// </summary>
+        public static Material Samurai(string folder)
+        {
+            Material cached;
+            if (samuraiCache.TryGetValue(folder, out cached) && cached != null) return cached;
+            Color c; if (!SamuraiPalette.TryGetValue(folder, out c)) c = new Color(0.3f, 0.3f, 0.3f);
+            string dir = SamuraiTex + folder;
+            Texture2D albedo = null, normal = null, metal = null, emis = null;
+            if (AssetDatabase.IsValidFolder(dir))
+            {
+                foreach (string guid in AssetDatabase.FindAssets("t:Texture2D", new[] { dir }))
+                {
+                    string tp = AssetDatabase.GUIDToAssetPath(guid);
+                    string fn = System.IO.Path.GetFileName(tp);
+                    TextureImporter ti = AssetImporter.GetAtPath(tp) as TextureImporter;
+                    bool isN = fn.Contains("Normal"), isData = isN || fn.Contains("Metallic");
+                    if (ti != null && (ti.maxTextureSize != 1024 || (isN && ti.textureType != TextureImporterType.NormalMap) || (isData && ti.sRGBTexture)))
+                    {
+                        ti.maxTextureSize = 1024;                         // мобильный бюджет
+                        if (isN) ti.textureType = TextureImporterType.NormalMap;
+                        if (isData) ti.sRGBTexture = false;
+                        ti.SaveAndReimport();
+                    }
+                    Texture2D t = AssetDatabase.LoadAssetAtPath<Texture2D>(tp);
+                    if (fn.Contains("Base_Color")) albedo = t;
+                    else if (isN) normal = t;
+                    else if (fn.Contains("Metallic")) metal = t;
+                    else if (fn.Contains("Emissive")) emis = t;
+                }
+            }
+            string name = "Samurai_" + folder;
+            Material m = albedo != null ? Textured(name, null, null, Vector2.one, Color.white, 0f, 0.35f) : Solid(name, c, folder.Contains("Horn") || folder.Contains("deko") || folder.Contains("Deko") ? 0.8f : 0.1f, 0.35f);
+            if (albedo != null) m.mainTexture = albedo;
+            if (normal != null) { m.SetTexture("_BumpMap", normal); m.EnableKeyword("_NORMALMAP"); }
+            if (metal != null) { m.SetTexture("_MetallicGlossMap", metal); m.EnableKeyword("_METALLICGLOSSMAP"); m.SetFloat("_GlossMapScale", 0.45f); }
+            EnableRuntimeEmission(m);
+            if (emis != null) { m.SetTexture("_EmissionMap", emis); m.SetColor("_EmissionColor", Color.white); }
+            EditorUtility.SetDirty(m);
+            samuraiCache[folder] = m;
             return m;
         }
 

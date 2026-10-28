@@ -101,6 +101,8 @@ namespace BladePath
             QualitySettings.anisotropicFiltering = hi ? AnisotropicFiltering.Enable : AnisotropicFiltering.Disable;
             QualitySettings.lodBias = hi ? 1.5f : 0.8f;
             QualitySettings.realtimeReflectionProbes = false;
+            // скиннинг до 4 костей на вершину: по умолчанию на Android 2 — у плеч/шеи/таза веса обрезаются и сетку перекручивает
+            QualitySettings.skinWeights = SkinWeights.FourBones;
         }
 
         void Awake()

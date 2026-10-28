@@ -16,6 +16,8 @@ namespace BladePath.EditorTools
         public const string FbxPath = "Assets/_Project/Models/Samurai_Hero.fbx";
         public const string RoninFbxPath = "Assets/_Project/Models/Ronin_Player.fbx";   // игрок из Meshy (tools/blender/build_ronin.py)
         const float RoninScale = 0.91f;                                                  // рост модели 1.90 м → как у зон поражения
+        public const string SamuraiFbxPath = "Assets/_Project/Models/Samurai_Player.fbx"; // игрок: модель художника (CGTrader, Rigify → наш скелет, tools/blender/build_samurai_cg.py)
+        const float SamuraiScale = 1f;                                                    // собрана в метрах: макушка 1.72 м
         public const string UndeadFbxPath = "Assets/_Project/Models/Samurai_Undead.fbx";
         const string ControllerPath = "Assets/_Project/Animation/Hero.controller";
         const string UndeadControllerPath = "Assets/_Project/Animation/Undead.controller";
@@ -23,8 +25,11 @@ namespace BladePath.EditorTools
 
         public static bool TryAttach(FighterController fighter, Transform bladeRoot, Look look, bool undead = false)
         {
-            string fbx = undead ? UndeadFbxPath : (AssetDatabase.LoadAssetAtPath<GameObject>(RoninFbxPath) != null ? RoninFbxPath : FbxPath);
+            string fbx = undead ? UndeadFbxPath
+                : AssetDatabase.LoadAssetAtPath<GameObject>(SamuraiFbxPath) != null ? SamuraiFbxPath
+                : (AssetDatabase.LoadAssetAtPath<GameObject>(RoninFbxPath) != null ? RoninFbxPath : FbxPath);
             bool ronin = fbx == RoninFbxPath;
+            bool samurai = fbx == SamuraiFbxPath;
             string ctrlPath = undead ? UndeadControllerPath : ControllerPath;
             GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(fbx);
             if (asset == null)
@@ -54,7 +59,7 @@ namespace BladePath.EditorTools
                     model.transform.localRotation = Quaternion.Euler(0f, Vector3.SignedAngle(fwd, Vector3.forward, Vector3.up), 0f);
             }
             else Debug.LogWarning("HeroModelBuilder: не найден Hips/FrontMarker — ориентация модели не скорректирована");
-            model.transform.localScale = Vector3.one * (ronin ? RoninScale : ModelScale);
+            model.transform.localScale = Vector3.one * (samurai ? SamuraiScale : ronin ? RoninScale : ModelScale);
 
             // Материалы: по имени из Blender → наши текстурированные
             foreach (SkinnedMeshRenderer smr in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
@@ -105,6 +110,7 @@ namespace BladePath.EditorTools
             d.upperArmR = FindBone(model.transform, "UpperArm.R");
             d.forearmR = FindBone(model.transform, "Forearm.R");
             d.handR = FindBone(model.transform, "Hand.R");
+            if (samurai) { d.palmOffset = 0.09f; d.palmLift = 0.035f; }   // кулак сжат вокруг рукояти: рукоять внутри пальцев
 
             if (undead)
             {
@@ -125,6 +131,7 @@ namespace BladePath.EditorTools
 
         static Material MapMaterial(string name, Look look, bool undead)
         {
+            if (name.StartsWith("SAM_")) return VisualMaterials.Samurai(name.Substring(4));
             switch (name)
             {
                 case "Skin": return undead ? look.deadSkin : look.skin;
