@@ -176,7 +176,7 @@ namespace BladePath
             float fade = 0f;
             float nr = duel.NextRoundIn;
             if (nr >= 0f && nr < 0.45f) fade = 1f - nr / 0.45f;
-            if (duel.State == DuelState.Intro && duel.Round > 1) fade = Mathf.Max(fade, 1f - Mathf.Clamp01(duel.StateTime / 0.4f));
+            if (duel.State == DuelState.Intro) fade = Mathf.Max(fade, 1f - Mathf.Clamp01(duel.StateTime / (duel.Round > 1 ? 0.4f : 0.8f)));
             if (fade > 0.001f) UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, fade));
 
             DrawTutorial(W);
