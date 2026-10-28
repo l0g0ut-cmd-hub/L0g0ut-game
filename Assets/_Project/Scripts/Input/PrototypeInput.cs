@@ -374,6 +374,13 @@ namespace BladePath
         {
             float a = stickActive ? 1f : 0.55f;
             float R = StickRadius;
+            Texture2D sb = UiKit.Tex("UI/stick_base"), sk = UiKit.Tex("UI/stick_knob");
+            if (sb != null && sk != null)
+            {
+                UiKit.Image(stickCenter, R * 1.05f, sb, new Color(1f, 1f, 1f, Mathf.Lerp(0.55f, 0.95f, a)));
+                UiKit.Image(stickKnob, 34f, sk, stickActive ? new Color(1f, 0.85f, 0.75f, 1f) : new Color(1f, 1f, 1f, 0.75f));
+                return;
+            }
             UiKit.Disc(stickCenter, R, new Color(0.05f, 0.06f, 0.1f, 0.5f * a));
             UiKit.Ring(stickCenter, R, new Color(Gold.r, Gold.g, Gold.b, 0.7f * a));
             UiKit.Ring(stickCenter, R * 0.55f, new Color(1f, 1f, 1f, 0.12f * a), true);
@@ -402,6 +409,22 @@ namespace BladePath
             Vector2 c = ctr[i]; float r = rad[i];
             bool h = held[i];
             float a = ready ? 1f : 0.45f;
+            // кнопки в стиле референса: каменный круг в металлической оправе; у главных — свой нарисованный значок
+            string full = b == B.Overhead ? "UI/btn_heavy" : b == B.Block ? "UI/btn_block" : b == B.Dash ? "UI/btn_dash" : b == B.Jump ? "UI/btn_jump" : null;
+            Texture2D ft = full != null ? UiKit.Tex(full) : null;
+            Texture2D bt = ft != null ? ft : UiKit.Tex("UI/btn_base");
+            if (bt != null)
+            {
+                Color tint = h ? new Color(1f, 0.7f, 0.55f, 1f) : new Color(1f, 1f, 1f, Mathf.Lerp(0.55f, 0.95f, a));
+                float rr = r * (h ? 0.94f : 1f);
+                UiKit.Disc(c + new Vector2(0f, 4f), r * 0.98f, new Color(0f, 0f, 0f, 0.4f * a));
+                UiKit.Image(c, rr * 1.08f, bt, tint);
+                if (h) UiKit.Disc(c, rr * 0.86f, new Color(1f, 0.45f, 0.15f, 0.22f));
+                if (ft == null) DrawIcon(icon, c + new Vector2(0f, -r * 0.08f), r * 0.46f, new Color(0.85f, 0.85f, 0.85f, 0.95f * a), r >= 50f ? 4.5f : 3.5f);
+                if (!string.IsNullOrEmpty(name) && ft == null)
+                    UiKit.Text(new Rect(c.x - r, c.y + r * 0.42f, r * 2f, r * 0.42f), name, Mathf.Max(8f, r * 0.22f), new Color(0.85f, 0.82f, 0.75f, 0.8f * a), TextAnchor.MiddleCenter, false);
+                return;
+            }
             UiKit.Disc(c + new Vector2(0f, 3f), r, new Color(0f, 0f, 0f, 0.35f * a));
             UiKit.Disc(c, r, h ? new Color(0.75f, 0.28f, 0.1f, 0.95f) : new Color(0.06f, 0.05f, 0.07f, 0.72f * Mathf.Lerp(0.6f, 1f, a)));
             UiKit.Ring(c, r, new Color(Gold.r, Gold.g, Gold.b, 0.95f * a));
@@ -516,6 +539,8 @@ namespace BladePath
             int i = (int)B.Pause;
             if (!active[i]) return;
             Vector2 c = ctr[i]; float r = rad[i];
+            Texture2D pt = UiKit.Tex("UI/btn_pause");
+            if (pt != null) { UiKit.Image(c, r * 1.35f, pt, held[i] ? new Color(1f, 0.7f, 0.55f) : Color.white); return; }
             UiKit.Disc(c, r, held[i] ? new Color(0.75f, 0.28f, 0.1f, 0.95f) : new Color(0.06f, 0.05f, 0.07f, 0.75f));
             UiKit.Ring(c, r, new Color(Gold.r, Gold.g, Gold.b, 0.9f));
             UiKit.Rect(new Rect(c.x - 6f, c.y - 7f, 4f, 14f), Color.white);

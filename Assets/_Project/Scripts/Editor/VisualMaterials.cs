@@ -10,7 +10,7 @@ namespace BladePath.EditorTools
         public Material heroArmor, enemyArmor, cloth, skin, hair, lacquer, bronze, steel, handle;
         public Material flesh, tooth, maw, voidBlack, deadSkin, ember, tentacle, ronin;
         public Material stone, stoneDark, flame, moon, petal;
-        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss;
+        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner;
     }
 
     /// <summary>
@@ -47,7 +47,7 @@ namespace BladePath.EditorTools
             l.ember.SetColor("_EmissionColor", new Color(2.4f, 0.8f, 0.1f));
             l.ember.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
             l.ronin = Ronin();
-            l.stone = Textured("Stone_Floor", "stone_albedo.png", "stone_normal.png", new Vector2(4f, 2f), Color.white, 0f, 0.35f);
+            l.stone = Textured("Stone_Floor", "stone_albedo.png", "stone_normal.png", new Vector2(4f, 2f), new Color(0.62f, 0.6f, 0.62f), 0f, 0.62f);   // тёмный влажный камень: блики огня и отражения неба
             l.stoneDark = Solid("Stone_Dark", new Color(0.12f, 0.12f, 0.15f), 0f, 0.20f);
             // окружение v2: UV боксов в мировом масштабе (EnvMesh), поэтому tiling материалов = 1
             l.wood = Textured("Env_Wood", "wood_albedo.png", "wood_normal.png", Vector2.one, new Color(0.95f, 0.92f, 0.9f), 0f, 0.25f);
@@ -57,7 +57,7 @@ namespace BladePath.EditorTools
             l.stoneBlock = Textured("Env_StoneBlock", "stoneblock_albedo.png", "stoneblock_normal.png", Vector2.one, Color.white, 0f, 0.25f);
             l.gravel = Textured("Env_Gravel", "gravel_albedo.png", "gravel_normal.png", Vector2.one, Color.white, 0f, 0.15f);
             l.bark = Textured("Env_Bark", "bark_albedo.png", "bark_normal.png", new Vector2(2f, 2f), Color.white, 0f, 0.1f);
-            l.blossom = Textured("Env_Blossom", "blossom_albedo.png", null, new Vector2(3f, 3f), new Color(1f, 0.92f, 0.95f), 0f, 0.1f);
+            l.blossom = Textured("Env_Blossom", "blossom_albedo.png", null, new Vector2(3f, 3f), new Color(1f, 0.32f, 0.3f), 0f, 0.1f);   // кроны — багровый клён, как в референсе
             l.shoji = Textured("Env_Shoji", "shoji_albedo.png", null, Vector2.one, new Color(0.9f, 0.85f, 0.75f), 0f, 0.2f);
             Texture2D se = Tex("shoji_emission.png", false);
             if (se != null)
@@ -71,6 +71,9 @@ namespace BladePath.EditorTools
             l.paper = Unlit("Env_Paper", new Color(1f, 0.78f, 0.45f));
             l.mist = SpriteLike("Env_Mist", Color.white);
             l.sky = Sky();
+            Texture2D fireTex = Tex("fire_sprite.png", false);
+            l.fireSprite = Additive("Fire_Sprite", fireTex != null ? fireTex : halo, new Color(0.6f, 0.55f, 0.5f, 0.7f));
+            l.banner = Cutout("Env_Banner", "banner.png");
             l.bamboo = Solid("Env_Bamboo", new Color(0.36f, 0.48f, 0.22f), 0f, 0.55f);
             l.bambooLeaf = Solid("Env_BambooLeaf", new Color(0.16f, 0.30f, 0.12f), 0f, 0.2f);
             l.moss = Textured("Env_MossRock", "stoneblock_albedo.png", "stoneblock_normal.png", new Vector2(0.5f, 0.5f), new Color(0.62f, 0.72f, 0.58f), 0f, 0.15f);
@@ -163,6 +166,27 @@ namespace BladePath.EditorTools
             t.SetPixels(px); t.Apply();
             AssetDatabase.CreateAsset(t, path);
             return t;
+        }
+
+        /// <summary>Standard в режиме Cutout: рваная ткань знамён с прозрачными краями.</summary>
+        static Material Cutout(string name, string albedo)
+        {
+            Material m = Textured(name, albedo, null, Vector2.one, Color.white, 0f, 0.15f);
+            m.SetFloat("_Mode", 1f);
+            m.SetFloat("_Cutoff", 0.45f);
+            m.SetOverrideTag("RenderType", "TransparentCutout");
+            m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+            m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+            m.SetInt("_ZWrite", 1);
+            m.EnableKeyword("_ALPHATEST_ON");
+            m.DisableKeyword("_ALPHABLEND_ON");
+            m.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
+            m.doubleSidedGI = true;
+            Texture2D t = AssetDatabase.LoadAssetAtPath<Texture2D>(TexFolder + albedo);
+            if (t != null) { t.wrapMode = TextureWrapMode.Clamp; }
+            EditorUtility.SetDirty(m);
+            return m;
         }
 
         static Material Additive(string name, Texture2D tex, Color tint)

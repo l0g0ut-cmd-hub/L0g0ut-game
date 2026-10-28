@@ -44,6 +44,24 @@ namespace BladePath
             label.clipping = TextClipping.Overflow;
         }
 
+        static readonly System.Collections.Generic.Dictionary<string, Texture2D> texCache = new System.Collections.Generic.Dictionary<string, Texture2D>();
+        /// <summary>Текстура интерфейса из Resources (UI/…, FX/…); null, если её нет.</summary>
+        public static Texture2D Tex(string path)
+        {
+            Texture2D t;
+            if (!texCache.TryGetValue(path, out t)) { t = Resources.Load<Texture2D>(path); texCache[path] = t; }
+            return t;
+        }
+
+        /// <summary>Нарисовать текстуру по центру с тоном.</summary>
+        public static void Image(Vector2 center, float radius, Texture2D t, Color tint)
+        {
+            if (t == null) return;
+            Color o = GUI.color; GUI.color = tint;
+            GUI.DrawTexture(new Rect(center.x - radius, center.y - radius, radius * 2f, radius * 2f), t);
+            GUI.color = o;
+        }
+
         public static void Rect(Rect r, Color c) { Init(); Color o = GUI.color; GUI.color = c; GUI.DrawTexture(r, white); GUI.color = o; }
 
         public static void Disc(Vector2 center, float radius, Color c)

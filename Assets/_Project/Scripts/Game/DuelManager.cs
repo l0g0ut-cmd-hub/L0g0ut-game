@@ -97,6 +97,7 @@ namespace BladePath
             QualitySettings.antiAliasing = hi ? 2 : 0;
             QualitySettings.anisotropicFiltering = hi ? AnisotropicFiltering.Enable : AnisotropicFiltering.Disable;
             QualitySettings.lodBias = hi ? 1.5f : 0.8f;
+            QualitySettings.realtimeReflectionProbes = true;   // мокрый камень отражает огни и небо (проба рендерится один раз)
         }
 
         void Awake()

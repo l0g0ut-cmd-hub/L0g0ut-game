@@ -22,6 +22,20 @@ namespace BladePath.EditorTools
 
             if (look.sky != null) RenderSettings.skybox = look.sky;
 
+            // отражения для мокрого камня: проба рендерит кубкарту сцены один раз при старте
+            GameObject rp = new GameObject("ReflectionProbe");
+            rp.transform.position = new Vector3(0f, 1.2f, 0.5f);
+            ReflectionProbe probe = rp.AddComponent<ReflectionProbe>();
+            probe.mode = UnityEngine.Rendering.ReflectionProbeMode.Realtime;
+            probe.refreshMode = UnityEngine.Rendering.ReflectionProbeRefreshMode.OnAwake;
+            probe.timeSlicingMode = UnityEngine.Rendering.ReflectionProbeTimeSlicingMode.NoTimeSlicing;
+            probe.resolution = 128;
+            probe.size = new Vector3(30f, 12f, 30f);
+            probe.boxProjection = true;
+            probe.intensity = 1.2f;
+            probe.hdr = false;
+            probe.farClipPlane = 40f;
+
             // лунный свет
             GameObject moonLight = new GameObject("Moonlight");
             Light l = moonLight.AddComponent<Light>();
@@ -110,6 +124,13 @@ namespace BladePath.EditorTools
                 CharacterVisuals.Part(d, "LampCapT" + i, PrimitiveType.Cylinder, new Vector3(x, 2.25f, 4.75f), Vector3.zero, new Vector3(0.12f, 0.012f, 0.12f), look.woodDark);
                 CharacterVisuals.Part(d, "LampCapB" + i, PrimitiveType.Cylinder, new Vector3(x, 1.86f, 4.75f), Vector3.zero, new Vector3(0.10f, 0.012f, 0.10f), look.woodDark);
             }
+            // красные знамёна на фасаде храма (как в референсе)
+            for (int i = 0; i < 5; i++)
+            {
+                if (i == 2) continue;   // по центру — вход
+                float x = -0.8f - 2.8f + i * 1.4f;
+                EnvMesh.Box(d, "HallBanner" + i, new Vector3(x, 1.55f, 5.02f), Vector3.zero, new Vector3(0.36f, 1.3f, 0.01f), look.banner, 0f);
+            }
             // симэнава между столбами тории и бумажные зигзаги
             CharacterVisuals.Part(d, "Shimenawa", PrimitiveType.Cylinder, new Vector3(1.7f, 2.05f, 3.52f), new Vector3(0f, 0f, 90f), new Vector3(0.07f, 1.0f, 0.07f), look.bark);
             for (int i = 0; i < 4; i++)
@@ -120,7 +141,7 @@ namespace BladePath.EditorTools
                 float x = 4.25f * side;
                 CharacterVisuals.Part(d, "BannerPole" + side, PrimitiveType.Cylinder, new Vector3(x, 1.5f, 0.5f), Vector3.zero, new Vector3(0.05f, 1.5f, 0.05f), look.woodDark);
                 EnvMesh.Box(d, "BannerCross" + side, new Vector3(x - 0.2f * side, 2.88f, 0.5f), Vector3.zero, new Vector3(0.5f, 0.04f, 0.04f), look.woodDark, 0.5f, true);
-                EnvMesh.Box(d, "Banner" + side, new Vector3(x - 0.22f * side, 2.1f, 0.5f), new Vector3(0f, 0f, 0f), new Vector3(0.38f, 1.5f, 0.02f), look.lacquer, 0f);
+                EnvMesh.Box(d, "Banner" + side, new Vector3(x - 0.22f * side, 2.1f, 0.5f), new Vector3(0f, 0f, 0f), new Vector3(0.42f, 1.5f, 0.01f), look.banner, 0f);
             }
         }
 
@@ -361,12 +382,13 @@ namespace BladePath.EditorTools
             main.loop = true; main.prewarm = true;
             main.startLifetime = new ParticleSystem.MinMaxCurve(0.35f, 0.7f);
             main.startSpeed = new ParticleSystem.MinMaxCurve(0.5f, 1.1f);
-            main.startSize = new ParticleSystem.MinMaxCurve(0.18f, 0.34f);
-            main.startColor = new Color(1f, 0.7f, 0.3f, 1f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.3f, 0.5f);
+            main.startRotation = new ParticleSystem.MinMaxCurve(-0.35f, 0.35f);
+            main.startColor = new Color(1f, 0.85f, 0.7f, 1f);
             main.maxParticles = 60;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
-            var em = ps.emission; em.rateOverTime = 45f;
-            var sh = ps.shape; sh.shapeType = ParticleSystemShapeType.Circle; sh.radius = 0.16f;
+            var em = ps.emission; em.rateOverTime = 26f;
+            var sh = ps.shape; sh.shapeType = ParticleSystemShapeType.Circle; sh.radius = 0.12f;
             var col = ps.colorOverLifetime; col.enabled = true;
             Gradient g = new Gradient();
             g.SetKeys(new[] { new GradientColorKey(new Color(1f, 0.95f, 0.6f), 0f), new GradientColorKey(new Color(1f, 0.5f, 0.12f), 0.4f), new GradientColorKey(new Color(0.6f, 0.08f, 0.02f), 1f) },
@@ -376,7 +398,7 @@ namespace BladePath.EditorTools
             sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.8f), new Keyframe(0.3f, 1f), new Keyframe(1f, 0.2f)));
             var noise = ps.noise; noise.enabled = true; noise.strength = 0.35f; noise.frequency = 1.5f;
             ParticleSystemRenderer r = go.GetComponent<ParticleSystemRenderer>();
-            r.sharedMaterial = look.haloFire;
+            r.sharedMaterial = look.fireSprite;
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 
             // искры
@@ -445,9 +467,9 @@ namespace BladePath.EditorTools
             main.prewarm = true;
             main.startLifetime = 6f;
             main.startSpeed = 0f;
-            main.startSize = new ParticleSystem.MinMaxCurve(0.06f, 0.11f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.07f, 0.13f);
             main.startRotation = new ParticleSystem.MinMaxCurve(0f, 6.28f);
-            main.startColor = new Color(1f, 0.72f, 0.82f, 0.9f);
+            main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.75f, 0.55f, 0.5f, 0.95f), new Color(1f, 0.85f, 0.8f, 0.95f));   // листья клёна (текстура красная)
             main.gravityModifier = 0.05f;
             main.maxParticles = 150;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
@@ -465,7 +487,7 @@ namespace BladePath.EditorTools
             noise.frequency = 0.4f;
 
             go.GetComponent<ParticleSystemRenderer>().sharedMaterial = look.petal;
-            go.AddComponent<PetalTexture>();
+            go.AddComponent<PetalTexture>().leaf = true;
         }
     }
 }

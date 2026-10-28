@@ -47,7 +47,8 @@ namespace BladePath
                 Matrix4x4 m = GUI.matrix;
                 GUI.matrix = m * Matrix4x4.TRS(new Vector3(s.p.x, s.p.y + drip, 0f), Quaternion.Euler(0f, 0f, s.rot), Vector3.one);
                 GUI.color = new Color(0.45f, 0f, 0.02f, a);
-                GUI.DrawTexture(new Rect(-s.size * 0.5f, -s.size * 0.5f, s.size, s.size), SoftSprites.Splat);
+                Texture2D bt = UiKit.Tex("FX/blood_splat");
+                GUI.DrawTexture(new Rect(-s.size * 0.5f, -s.size * 0.5f, s.size, s.size), bt != null ? bt : SoftSprites.Splat);
                 GUI.matrix = m;
             }
             GUI.color = Color.white;
@@ -64,8 +65,12 @@ namespace BladePath
             if (!portraitsTried && Event.current.type == EventType.Repaint)
             {
                 portraitsTried = true;
-                portraitP = PortraitCam.Create(duel.player, new Color(0.08f, 0.14f, 0.22f));
-                portraitE = PortraitCam.Create(duel.enemy, new Color(0.2f, 0.06f, 0.18f));
+                // рисованные портреты из референса (UI/portrait_*); живые камеры — только если картинок нет
+                if (UiKit.Tex("UI/portrait_ronin") == null)
+                {
+                    portraitP = PortraitCam.Create(duel.player, new Color(0.08f, 0.14f, 0.22f));
+                    portraitE = PortraitCam.Create(duel.enemy, new Color(0.2f, 0.06f, 0.18f));
+                }
             }
             Matrix4x4 old = UiKit.Begin();
             float W = UiKit.Width;
@@ -85,10 +90,10 @@ namespace BladePath
 
             DrawSplats();
 
-            float barW = Mathf.Min(W * 0.36f, 420f);
+            float barW = Mathf.Clamp(W * 0.5f - 80f - 110f, 200f, 400f);
             float cx = W * 0.5f;
-            DrawBar(new Rect(cx - 52f - barW, 16f, barW, 20f), duel.player, false, playerName, new Color(0.15f, 0.55f, 0.85f));
-            DrawBar(new Rect(cx + 52f, 16f, barW, 20f), duel.enemy, true, Ladder.Current.name, new Color(0.75f, 0.2f, 0.85f));
+            DrawBar(new Rect(cx - 80f - barW, 22f, barW, 14f), duel.player, false, playerName, new Color(0.15f, 0.55f, 0.85f));
+            DrawBar(new Rect(cx + 80f, 22f, barW, 14f), duel.enemy, true, Ladder.Current.name, new Color(0.75f, 0.2f, 0.85f));
 
             // красная вспышка по краям, когда бьют игрока
             float since = duel.SinceHit(duel.player);
@@ -120,8 +125,8 @@ namespace BladePath
             }
 
             // шкалы духа (ки) под полосками здоровья
-            DrawKi(new Rect(cx - 122f - barW * 0.6f, 61f, barW * 0.6f, 6f), duel.player, false);
-            DrawKi(new Rect(cx + 122f, 61f, barW * 0.6f, 6f), duel.enemy, true);
+            DrawKi(new Rect(cx - 80f - barW * 0.55f, 88f, barW * 0.55f, 6f), duel.player, false);
+            DrawKi(new Rect(cx + 80f, 88f, barW * 0.55f, 6f), duel.enemy, true);
 
             // таймер раунда
             Vector2 tc = new Vector2(cx, 28f);
@@ -172,8 +177,8 @@ namespace BladePath
             DrawCombo(duel.enemy, new Vector2(W - 70f, 150f), TextAnchor.MiddleRight);
 
             // счёт раундов: по два ромба под полосками
-            DrawPips(new Vector2(cx - 52f - 26f, 62f), duel.PlayerWins, duel.winsToMatch, false);
-            DrawPips(new Vector2(cx + 52f + 26f, 62f), duel.EnemyWins, duel.winsToMatch, true);
+            DrawPips(new Vector2(cx - 92f, 64f), duel.PlayerWins, duel.winsToMatch, false);
+            DrawPips(new Vector2(cx + 92f, 64f), duel.EnemyWins, duel.winsToMatch, true);
 
             // «БОЙ!»
             if (duel.State == DuelState.Intro)
@@ -315,7 +320,9 @@ namespace BladePath
 
         void DrawKi(Rect r, FighterController f, bool mirror)
         {
-            UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), Frame);
+            Texture2D kf = UiKit.Tex("UI/bar_ki");
+            if (kf == null) UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), Frame);
+            else UiKit.Rect(r, new Color(0.02f, 0.02f, 0.03f, 1f));
             float k = f.Ki01;
             float w = r.width * k;
             bool full = f.CanEnergy;
@@ -325,7 +332,8 @@ namespace BladePath
             // отметка стоимости шара
             float m = r.width * (f.energyCost / Mathf.Max(1f, f.kiMax));
             UiKit.Rect(new Rect(mirror ? r.x + m : r.xMax - m, r.y - 1f, 1.5f, r.height + 2f), new Color(1f, 1f, 1f, 0.6f));
-            UiKit.Text(new Rect(mirror ? r.xMax + 4f : r.x - 34f, r.y - 6f, 30f, 18f), "ДУХ", 9f, new Color(0.7f, 0.85f, 1f, 0.9f), mirror ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight, false);
+            DrawFrame(r, kf, KiWin, mirror);
+            UiKit.Text(new Rect(mirror ? r.xMax + 24f : r.x - 54f, r.y - 6f, 30f, 18f), "ДУХ", 9f, new Color(0.7f, 0.85f, 1f, 0.9f), mirror ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight, false);
         }
 
         void DrawCombo(FighterController f, Vector2 at, TextAnchor anchor)
@@ -353,51 +361,59 @@ namespace BladePath
             }
         }
 
+        // окно заливки внутри рамки bar_hp.png (476x53): x 42..440, y 19..34 — см. tools/extract_ref.py
+        static readonly Rect HpWin = new Rect(42f / 476f, 19f / 53f, 398f / 476f, 15f / 53f);
+        static readonly Rect KiWin = new Rect(38f / 422f, 17f / 47f, 361f / 422f, 13f / 47f);
+
+        /// <summary>Рамка-текстура вокруг прямоугольника заливки r (окно win в долях текстуры). Для правой полоски — зеркально.</summary>
+        static void DrawFrame(Rect r, Texture2D t, Rect win, bool mirror)
+        {
+            if (t == null) return;
+            float fw = r.width / win.width, fh = r.height / win.height;
+            float fx = mirror ? r.xMax - (win.x + win.width) * fw : r.x - win.x * fw;
+            Rect fr = new Rect(fx, r.y - win.y * fh, fw, fh);
+            if (mirror) GUI.DrawTextureWithTexCoords(fr, t, new Rect(1f, 0f, -1f, 1f));
+            else GUI.DrawTexture(fr, t);
+        }
+
         void DrawBar(Rect r, FighterController f, bool mirror, string name, Color portrait)
         {
             float hp = duel.Hp01(f), tr = duel.Trail01(f);
             float since = duel.SinceHit(f);
-            // рамка + подложка
-            UiKit.Rect(new Rect(r.x - 3f, r.y - 3f, r.width + 6f, r.height + 6f), Frame);
-            UiKit.Rect(new Rect(r.x - 1f, r.y - 1f, r.width + 2f, r.height + 2f), new Color(0.55f, 0.43f, 0.22f, 0.9f));
-            UiKit.Rect(r, new Color(0.08f, 0.02f, 0.02f, 1f));
+            Texture2D frame = UiKit.Tex("UI/bar_hp");
+            if (frame == null)
+            {
+                UiKit.Rect(new Rect(r.x - 3f, r.y - 3f, r.width + 6f, r.height + 6f), Frame);
+                UiKit.Rect(new Rect(r.x - 1f, r.y - 1f, r.width + 2f, r.height + 2f), new Color(0.55f, 0.43f, 0.22f, 0.9f));
+            }
+            UiKit.Rect(r, new Color(0.05f, 0.01f, 0.01f, 1f));
             // шлейф и текущее
             DrawFill(r, tr, mirror, new Color(0.95f, 0.75f, 0.3f, 0.95f));
-            Color main = hp > 0.3f ? new Color(0.78f, 0.1f, 0.1f) : new Color(0.95f, 0.18f, 0.08f);
+            Color main = hp > 0.3f ? new Color(0.72f, 0.07f, 0.08f) : new Color(0.95f, 0.16f, 0.08f);
             if (since < 0.12f) main = Color.white;
             DrawFill(r, hp, mirror, main);
-            // блик
-            DrawFill(new Rect(r.x, r.y, r.width, r.height * 0.35f), hp, mirror, new Color(1f, 1f, 1f, 0.16f));
-            // деления
-            for (int i = 1; i < 4; i++) UiKit.Rect(new Rect(r.x + r.width * i / 4f - 0.5f, r.y, 1f, r.height), new Color(0f, 0f, 0f, 0.45f));
+            DrawFill(new Rect(r.x, r.y, r.width, r.height * 0.4f), hp, mirror, new Color(1f, 0.6f, 0.55f, 0.18f));   // блик
+            DrawFill(new Rect(r.x, r.yMax - r.height * 0.3f, r.width, r.height * 0.3f), hp, mirror, new Color(0f, 0f, 0f, 0.25f));
+            DrawFrame(r, frame, HpWin, mirror);
 
-            // портрет
-            float px = mirror ? r.xMax + 28f : r.x - 28f;
-            Vector2 pc = new Vector2(px, r.y + r.height * 0.5f);
-            PortraitCam pcam = mirror ? portraitE : portraitP;
-            if (pcam != null && pcam.Texture != null)
+            // портрет за наружным концом рамки
+            float px = mirror ? r.xMax + 66f : r.x - 66f;
+            Vector2 pc = new Vector2(px, r.y + r.height * 0.5f + 4f);
+            Texture2D pt = UiKit.Tex(mirror ? "UI/portrait_undead" : "UI/portrait_ronin");
+            if (pt != null)
             {
-                // живое лицо + маска-кольцо поверх (закрывает углы квадрата)
-                float pr = 27f;
-                if (since < 0.15f) GUI.color = new Color(1f, 0.6f, 0.6f);
-                GUI.DrawTexture(new Rect(pc.x - pr, pc.y - pr, pr * 2f, pr * 2f), pcam.Texture, ScaleMode.ScaleAndCrop, false);
-                GUI.color = Color.white;
-                if (portraitMask == null) portraitMask = MakeMask();
-                GUI.color = new Color(0.04f, 0.03f, 0.03f, 1f);
-                GUI.DrawTexture(new Rect(pc.x - pr - 1f, pc.y - pr - 1f, pr * 2f + 2f, pr * 2f + 2f), portraitMask);
-                GUI.color = Color.white;
-                UiKit.Ring(pc, 25f, Gold);
+                Color tint = since < 0.18f ? new Color(1f, 0.55f, 0.5f) : Color.white;
+                if (f.Dead) tint = new Color(0.4f, 0.4f, 0.4f);
+                UiKit.Image(pc, 32f, pt, tint);
             }
             else
             {
                 UiKit.Disc(pc, 24f, Frame);
                 UiKit.Disc(pc, 20f, portrait * 0.55f);
                 UiKit.Ring(pc, 24f, Gold);
-                UiKit.Text(new Rect(pc.x - 20f, pc.y - 18f, 40f, 36f), mirror ? "П" : "Р", 22f, new Color(1f, 1f, 1f, 0.95f), TextAnchor.MiddleCenter, false);
             }
 
-            UiKit.Text(new Rect(mirror ? r.xMax - 260f : r.x, r.yMax + 3f, 260f, 18f), name, 13f, new Color(0.9f, 0.85f, 0.7f, 0.95f), mirror ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft);
-            UiKit.Text(new Rect(mirror ? r.x : r.xMax - 80f, r.yMax + 3f, 80f, 18f), Mathf.CeilToInt(duel.Hp(f)) + "", 13f, new Color(1f, 1f, 1f, 0.75f), mirror ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight);
+            UiKit.Text(new Rect(mirror ? r.xMax - 260f : r.x, r.y + 34f, 260f, 18f), name, 13f, new Color(0.9f, 0.85f, 0.7f, 0.95f), mirror ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft);
         }
 
         static void DrawFill(Rect r, float k, bool mirror, Color c)

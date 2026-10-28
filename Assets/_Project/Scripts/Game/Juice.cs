@@ -65,7 +65,7 @@ namespace BladePath
             {
                 fxMat = new Material(sh);
                 softMat = new Material(sh); softMat.mainTexture = SoftSprites.Disc;
-                splatMat = new Material(sh); splatMat.mainTexture = SoftSprites.Splat;
+                splatMat = new Material(sh); Texture2D bs = Resources.Load<Texture2D>("FX/blood_splat"); splatMat.mainTexture = bs != null ? bs : SoftSprites.Splat;
                 fogMat = new Material(sh); fogMat.mainTexture = SoftSprites.Fog;
             }
             mpb = new MaterialPropertyBlock();
