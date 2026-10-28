@@ -10,7 +10,7 @@ namespace BladePath.EditorTools
         public Material heroArmor, enemyArmor, cloth, skin, hair, lacquer, bronze, steel, handle;
         public Material flesh, tooth, maw, voidBlack, deadSkin, ember, tentacle, ronin;
         public Material stone, stoneDark, flame, moon, petal;
-        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner;
+        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle;
     }
 
     /// <summary>
@@ -74,6 +74,7 @@ namespace BladePath.EditorTools
             Texture2D fireTex = Tex("fire_sprite.png", false);
             l.fireSprite = Additive("Fire_Sprite", fireTex != null ? fireTex : halo, new Color(0.6f, 0.55f, 0.5f, 0.7f));
             l.banner = Cutout("Env_Banner", "banner.png");
+            l.puddle = Puddle();
             l.bamboo = Solid("Env_Bamboo", new Color(0.36f, 0.48f, 0.22f), 0f, 0.55f);
             l.bambooLeaf = Solid("Env_BambooLeaf", new Color(0.16f, 0.30f, 0.12f), 0f, 0.2f);
             l.moss = Textured("Env_MossRock", "stoneblock_albedo.png", "stoneblock_normal.png", new Vector2(0.5f, 0.5f), new Color(0.62f, 0.72f, 0.58f), 0f, 0.15f);
@@ -185,6 +186,23 @@ namespace BladePath.EditorTools
             m.doubleSidedGI = true;
             Texture2D t = AssetDatabase.LoadAssetAtPath<Texture2D>(TexFolder + albedo);
             if (t != null) { t.wrapMode = TextureWrapMode.Clamp; }
+            EditorUtility.SetDirty(m);
+            return m;
+        }
+
+        /// <summary>Лужа: почти чёрная, зеркально гладкая, полупрозрачная по форме кляксы (Standard, режим Fade).</summary>
+        static Material Puddle()
+        {
+            Material m = Textured("Env_Puddle", "blood_splat.png", null, Vector2.one, new Color(0.05f, 0.055f, 0.07f, 0.75f), 0.2f, 0.97f);
+            m.SetFloat("_Mode", 2f);
+            m.SetOverrideTag("RenderType", "Transparent");
+            m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            m.SetInt("_ZWrite", 0);
+            m.DisableKeyword("_ALPHATEST_ON");
+            m.EnableKeyword("_ALPHABLEND_ON");
+            m.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent - 10;
             EditorUtility.SetDirty(m);
             return m;
         }

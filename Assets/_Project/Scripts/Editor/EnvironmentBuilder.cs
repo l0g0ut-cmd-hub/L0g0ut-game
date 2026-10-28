@@ -54,6 +54,14 @@ namespace BladePath.EditorTools
             floor.GetComponent<Renderer>().sharedMaterial = look.stone;
 
             Transform env = new GameObject("Environment").transform;
+            // лужи на камне арены: в них отражаются огни и небо
+            System.Random pr = new System.Random(5);
+            for (int i = 0; i < 7; i++)
+            {
+                Vector3 pp = new Vector3((float)(pr.NextDouble() - 0.5) * 6.4f, 0.004f + i * 0.0005f, (float)(pr.NextDouble() - 0.5) * 4.6f);
+                float sz = 0.6f + (float)pr.NextDouble() * 1.1f;
+                EnvMesh.Box(env, "Puddle" + i, pp, new Vector3(0f, (float)pr.NextDouble() * 360f, 0f), new Vector3(sz * 1.3f, 0.002f, sz), look.puddle, 0f);
+            }
             EnvMesh.Box(env, "Gravel", new Vector3(0f, -0.12f, 6f), Vector3.zero, new Vector3(48f, 0.1f, 40f), look.gravel, 2.2f);
             EnvMesh.Box(env, "CurbBack", new Vector3(0f, 0.04f, 2.85f), Vector3.zero, new Vector3(7.8f, 0.1f, 0.3f), look.stoneBlock, 1.5f);
             EnvMesh.Box(env, "CurbFront", new Vector3(0f, 0.04f, -2.85f), Vector3.zero, new Vector3(7.8f, 0.1f, 0.3f), look.stoneBlock, 1.5f);
