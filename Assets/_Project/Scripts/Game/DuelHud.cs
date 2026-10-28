@@ -61,7 +61,7 @@ namespace BladePath
         void OnGUI()
         {
             if (duel == null || duel.player == null || duel.enemy == null) return;
-            if (!hooked) { duel.Damaged += OnDamaged; hooked = true; }
+            if (!hooked) { duel.Damaged += OnDamaged; hooked = true; Breadcrumbs.Mark("HUD: первый OnGUI"); }
             if (!portraitsTried && Event.current.type == EventType.Repaint)
             {
                 portraitsTried = true;

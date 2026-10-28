@@ -46,6 +46,7 @@ namespace BladePath
 
         void Awake()
         {
+            Breadcrumbs.Mark("камера: Awake");
             Instance = this;
             ResetView(true);
         }

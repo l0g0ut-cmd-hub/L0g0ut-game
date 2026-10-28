@@ -284,7 +284,7 @@ namespace BladePath
                 hpTrail[f] = tr;
             }
 
-            if (frames < 30 && ++frames == 30) Breadcrumbs.Clear();   // 30 кадров отрисовано — загрузка прошла
+            Breadcrumbs.Frame();
             if (State == DuelState.Intro && StateTime >= IntroLength)
             {
                 SetState(DuelState.Fighting); Freeze(false);

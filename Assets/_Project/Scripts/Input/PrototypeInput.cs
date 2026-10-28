@@ -24,7 +24,7 @@ namespace BladePath
         const float StickRadius = 84f;
 
         public static PrototypeInput Instance { get; private set; }
-        void Awake() { Instance = this; }
+        void Awake() { Instance = this; Breadcrumbs.Mark("ввод: Awake"); }
 
         static readonly AttackType[] EnemyTypes = { AttackType.Overhead, AttackType.Rising, AttackType.LegSweep, AttackType.Thrust, AttackType.Slash, AttackType.Energy };
 

@@ -148,9 +148,9 @@ namespace BladePath
         {
             switch (index)
             {
-                case 0: Ladder.Index = 0; Breadcrumbs.Mark("загрузка сцены боя"); SceneManager.LoadScene(SceneNames.Prototype); break;   // новый «Путь» с первого противника
+                case 0: Ladder.Index = 0; Breadcrumbs.Begin("загрузка сцены боя"); SceneManager.LoadScene(SceneNames.Prototype); break;   // новый «Путь» с первого противника
                 case 1:
-                    if (Ladder.Index > 0 || Records.Wins > 0 || Records.Losses > 0) { Breadcrumbs.Mark("загрузка сцены боя"); SceneManager.LoadScene(SceneNames.Prototype); }   // продолжить с текущей ступени
+                    if (Ladder.Index > 0 || Records.Wins > 0 || Records.Losses > 0) { Breadcrumbs.Begin("загрузка сцены боя"); SceneManager.LoadScene(SceneNames.Prototype); }   // продолжить с текущей ступени
                     else Say("Сохранённого пути нет — начните новую игру");
                     break;
                 case 2: settingsOpen = true; break;

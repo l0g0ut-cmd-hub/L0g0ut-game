@@ -67,6 +67,7 @@ namespace BladePath
         public bool leaf;   // красный лист клёна из референса (Resources/FX/maple_leaf)
         void Awake()
         {
+            Breadcrumbs.Mark("частицы: " + name);
             ParticleSystemRenderer r = GetComponent<ParticleSystemRenderer>();
             if (r == null || r.sharedMaterial == null) return;
             Material m = new Material(r.sharedMaterial);
