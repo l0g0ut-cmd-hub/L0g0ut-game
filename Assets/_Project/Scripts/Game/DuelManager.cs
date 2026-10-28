@@ -337,6 +337,19 @@ namespace BladePath
             }
         }
 
+        /// <summary>Шар отбит клинком: дух за мастерство, надпись, стоп-кадр.</summary>
+        public void OnDeflect(Vector3 pos, FighterController by)
+        {
+            by.AddKi(15f);
+            hitStopUntil = Time.unscaledTime + 0.08f;
+            if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.04f);
+            if (by == player) Haptics.Pulse(35);
+            Popup p = new Popup();
+            p.world = pos + Vector3.up * 0.3f; p.text = "ОТРАЖЕНО!"; p.color = new Color(0.6f, 0.95f, 1f);
+            p.born = Time.unscaledTime; p.size = 28f;
+            Popups.Add(p);
+        }
+
         bool flourishDone;
         /// <summary>Тибури: победитель стряхивает кровь с клинка резким взмахом.</summary>
         void Flourish()

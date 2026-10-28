@@ -469,6 +469,35 @@ namespace BladePath
             Sparks(b, (b - a).normalized, 30);
         }
 
+        /// <summary>Шар духа: светящийся хвост цвета владельца.</summary>
+        public void DecorateBall(GameObject ball, FighterController owner)
+        {
+            if (fxMat == null) return;
+            TrailRenderer tr = ball.AddComponent<TrailRenderer>();
+            tr.material = fxMat;
+            tr.time = 0.3f;
+            tr.minVertexDistance = 0.03f;
+            tr.widthCurve = new AnimationCurve(new Keyframe(0f, 0.26f), new Keyframe(1f, 0f));
+            bool p = DuelManager.Instance != null && DuelManager.Instance.player == owner;
+            Color c = p ? new Color(0.5f, 0.85f, 1f) : new Color(0.8f, 0.4f, 1f);
+            Gradient g = new Gradient();
+            g.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(c, 0.3f), new GradientColorKey(c, 1f) },
+                      new[] { new GradientAlphaKey(0.9f, 0f), new GradientAlphaKey(0f, 1f) });
+            tr.colorGradient = g;
+            tr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            Play(whoosh, 0.5f, 1.4f);
+        }
+
+        /// <summary>Шар отбит клинком.</summary>
+        public void Deflect(Vector3 pos, FighterController by)
+        {
+            Play(clang, 0.9f, 1.3f);
+            Sparks(pos, Vector3.up, 24);
+            TrailRenderer[] trs = null;
+            foreach (EnergyProjectile e in FindObjectsByType<EnergyProjectile>(FindObjectsSortMode.None))
+                if (e.owner == by) { trs = e.GetComponents<TrailRenderer>(); foreach (TrailRenderer tr in trs) tr.Clear(); }
+        }
+
         /// <summary>Клинки столкнулись: сноп искр во все стороны и звонкий лязг.</summary>
         public void Clash(Vector3 pos)
         {

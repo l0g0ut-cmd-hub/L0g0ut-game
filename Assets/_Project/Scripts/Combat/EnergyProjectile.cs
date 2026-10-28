@@ -32,6 +32,7 @@ namespace BladePath
             go.transform.position = position;
             go.transform.localScale = Vector3.one * (p.radius * 2f);
             if (material != null) go.GetComponent<Renderer>().sharedMaterial = material;
+            if (Juice.Instance != null) Juice.Instance.DecorateBall(go, owner);
             return p;
         }
 
@@ -52,6 +53,25 @@ namespace BladePath
             float dist = step.magnitude;
 
             Physics.SyncTransforms();
+
+            // 0) отражение: противник рубит шар клинком в фазе удара — шар летит обратно
+            FighterController foe = owner != null ? owner.opponent : null;
+            if (foe != null && foe.weapon != null && foe.weapon.bladeRoot != null && foe.weapon.Phase == SwingPhase.Strike)
+            {
+                Vector3 b0 = foe.weapon.bladeRoot.position, b1 = b0 + foe.weapon.bladeRoot.forward * foe.weapon.bladeLength;
+                Vector3 seg = b1 - b0;
+                float tt = Mathf.Clamp01(Vector3.Dot(pos - b0, seg) / Mathf.Max(1e-5f, seg.sqrMagnitude));
+                if ((b0 + seg * tt - pos).magnitude < radius + 0.12f)
+                {
+                    Vector3 back = owner.transform.position + Vector3.up * 1.1f - pos;
+                    velocity = back.normalized * velocity.magnitude * 1.25f;
+                    owner = foe;
+                    born = Time.time;
+                    if (Juice.Instance != null) Juice.Instance.Deflect(pos, foe);
+                    if (DuelManager.Instance != null) DuelManager.Instance.OnDeflect(pos, foe);
+                    return;
+                }
+            }
 
             // 1) уже внутри чужой зоны (шар появился в теле / противник шагнул навстречу)
             int oc = Physics.OverlapSphereNonAlloc(pos, radius, overlapBuf, ~0, QueryTriggerInteraction.Ignore);
