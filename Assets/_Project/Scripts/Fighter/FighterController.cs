@@ -49,6 +49,9 @@ namespace BladePath
         public float Ki01 { get { return Mathf.Clamp01(Ki / Mathf.Max(1f, kiMax)); } }
         public bool CanEnergy { get { return Ki >= energyCost; } }
         Vector3 knockVel;
+        float lastDashAt = -10f;
+        /// <summary>Секунд с начала последнего рывка (удар из рывка — «иай»).</summary>
+        public float SinceDash { get { return Time.time - lastDashAt; } }
         /// <summary>Отбрасывание от удара: скорость гасится за ~0,3 с, стены арены и препятствия учитываются.</summary>
         public void Knockback(Vector3 dir, float speed)
         {
@@ -145,6 +148,7 @@ namespace BladePath
             dashDir = d.normalized;
             dashLeft = dashTime;
             dashReadyAt = Time.time + dashCooldown;
+            lastDashAt = Time.time;
             if (Juice.Instance != null) { Juice.Instance.DashSound(); Juice.Instance.Dust(transform.position + Vector3.up * 0.05f, -dashDir, 14); }
             return true;
         }

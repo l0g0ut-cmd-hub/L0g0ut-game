@@ -439,7 +439,16 @@ namespace BladePath
 
             AttackType type = r.attacker.weapon != null && r.attacker.weapon.CurrentProfile != null ? r.attacker.weapon.CurrentProfile.type : AttackType.Overhead;
             float dmg = BaseDamage(type) * ZoneMul(r.zone) * (r.glancing ? 0.5f : 1f) * (r.attacker == enemy ? Ladder.Current.dmgMul * Records.Assist : 1f);
+            bool iai = r.attacker.SinceDash < 0.6f;   // удар прямо из рывка
+            if (iai) dmg *= 1.25f;
             dmg = Mathf.Round(dmg);
+            if (iai && !r.target.Blocking)
+            {
+                Popup ip = new Popup();
+                ip.world = r.contact.point + Vector3.up * 0.55f; ip.text = "ИАЙ!"; ip.color = new Color(0.6f, 0.9f, 1f);
+                ip.born = Time.unscaledTime; ip.size = 26f;
+                Popups.Add(ip);
+            }
             if (r.target.Blocking)
             {
                 bool parry = r.target.BlockTime < 0.25f;
