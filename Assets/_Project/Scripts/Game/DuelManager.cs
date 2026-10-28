@@ -64,6 +64,7 @@ namespace BladePath
         /// <summary>Сколько секунд до следующего раунда (для затемнения на HUD); отрицательно — не ждём.</summary>
         public float NextRoundIn { get { return (!MatchOver && (State == DuelState.PlayerWon || State == DuelState.PlayerLost)) ? nextRoundAt - Time.unscaledTime : -1f; } }
         float nextHeartAt;
+        int frames;
 
         /// <summary>Статистика за матч (для финального экрана).</summary>
         public class Stats { public int damage, hits, maxCombo, blocks, parries, supers; }
@@ -104,6 +105,7 @@ namespace BladePath
 
         void Awake()
         {
+            Breadcrumbs.Mark("бой: Awake");
             Instance = this;
             // Android по умолчанию держит 30 кадров/с — для файтинга нужно 60
             QualitySettings.vSyncCount = 0;
@@ -114,14 +116,19 @@ namespace BladePath
         }
         void Start()
         {
+            Breadcrumbs.Mark("бой: эффекты");
             Juice j = GetComponent<Juice>();
             if (j == null) j = gameObject.AddComponent<Juice>();
             if (player != null) j.Track(player.weapon);
             if (enemy != null) j.Track(enemy.weapon);
+            Breadcrumbs.Mark("бой: погода");
             if (GetComponent<Weather>() == null) gameObject.AddComponent<Weather>();
+            Breadcrumbs.Mark("бой: музыка");
             if (GetComponent<Music>() == null) gameObject.AddComponent<Music>();
+            Breadcrumbs.Mark("бой: ступень пути");
             ApplyStage();
             ResetDuel();
+            Breadcrumbs.Mark("бой: первый кадр");
         }
 
         // свернули приложение / пришёл звонок — бой встаёт на паузу
@@ -277,6 +284,7 @@ namespace BladePath
                 hpTrail[f] = tr;
             }
 
+            if (frames < 30 && ++frames == 30) Breadcrumbs.Clear();   // 30 кадров отрисовано — загрузка прошла
             if (State == DuelState.Intro && StateTime >= IntroLength)
             {
                 SetState(DuelState.Fighting); Freeze(false);

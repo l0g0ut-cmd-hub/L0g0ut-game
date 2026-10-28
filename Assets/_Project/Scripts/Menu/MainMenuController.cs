@@ -33,6 +33,8 @@ namespace BladePath
 
         void Start()
         {
+            string crash = Breadcrumbs.TakeReport();
+            if (crash != null) { toast = crash; toastUntil = Time.time + 12f; }
             rt = new RenderTexture(852, 480, 0, RenderTextureFormat.ARGB32);
             player = gameObject.AddComponent<VideoPlayer>();
             player.playOnAwake = false;
@@ -137,7 +139,8 @@ namespace BladePath
             if (Time.time < toastUntil)
             {
                 labelStyle.fontSize = Mathf.RoundToInt(Mathf.Max(14f, Screen.height * 0.035f));
-                GUI.Box(new Rect(Screen.width * 0.5f - 260f, Screen.height - 90f, 520f, 56f), toast, boxStyle);
+                boxStyle.wordWrap = true; boxStyle.fontSize = Mathf.RoundToInt(Mathf.Max(12f, Screen.height * 0.025f));
+                GUI.Box(new Rect(Screen.width * 0.5f - Screen.width * 0.4f, Screen.height - Screen.height * 0.3f, Screen.width * 0.8f, Screen.height * 0.25f), toast, boxStyle);
             }
         }
 
@@ -145,9 +148,9 @@ namespace BladePath
         {
             switch (index)
             {
-                case 0: Ladder.Index = 0; SceneManager.LoadScene(SceneNames.Prototype); break;   // новый «Путь» с первого противника
+                case 0: Ladder.Index = 0; Breadcrumbs.Mark("загрузка сцены боя"); SceneManager.LoadScene(SceneNames.Prototype); break;   // новый «Путь» с первого противника
                 case 1:
-                    if (Ladder.Index > 0 || Records.Wins > 0 || Records.Losses > 0) SceneManager.LoadScene(SceneNames.Prototype);   // продолжить с текущей ступени
+                    if (Ladder.Index > 0 || Records.Wins > 0 || Records.Losses > 0) { Breadcrumbs.Mark("загрузка сцены боя"); SceneManager.LoadScene(SceneNames.Prototype); }   // продолжить с текущей ступени
                     else Say("Сохранённого пути нет — начните новую игру");
                     break;
                 case 2: settingsOpen = true; break;
