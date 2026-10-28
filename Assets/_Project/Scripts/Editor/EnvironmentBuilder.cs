@@ -58,6 +58,7 @@ namespace BladePath.EditorTools
             EnvMesh.Box(torii, "Nuki", new Vector3(1.7f, 2.25f, 3.6f), Vector3.zero, new Vector3(2.2f, 0.12f, 0.16f), look.lacquer, 1f, true);
 
             BuildHall(env, look);
+            BuildGarden(env, look);
             BuildPagoda(env, look);
             BuildWalls(env, look);
 
@@ -181,6 +182,47 @@ namespace BladePath.EditorTools
             go.GetComponent<ParticleSystemRenderer>().sharedMaterial = look.petal;
             PetalTexture pt = go.AddComponent<PetalTexture>();
             pt.disc = true;
+        }
+
+        /// <summary>Сад: бамбуковые рощи по углам двора, замшелые камни, дорожка из плоских камней к храму.</summary>
+        static void BuildGarden(Transform env, Look look)
+        {
+            Transform g = new GameObject("Garden").transform;
+            g.SetParent(env, false);
+            System.Random r = new System.Random(77);
+            Vector3[] groves = { new Vector3(-5.6f, 0f, 7.6f), new Vector3(5.7f, 0f, 6.4f), new Vector3(-5.7f, 0f, -3.4f), new Vector3(5.6f, 0f, -3.2f) };
+            int n = 0;
+            foreach (Vector3 c in groves)
+            {
+                for (int i = 0; i < 9; i++)
+                {
+                    Vector3 p = c + new Vector3((float)(r.NextDouble() - 0.5) * 1.4f, 0f, (float)(r.NextDouble() - 0.5) * 1.4f);
+                    float h = 2.6f + (float)r.NextDouble() * 2.2f;
+                    float th = 0.05f + (float)r.NextDouble() * 0.035f;
+                    Vector3 tilt = new Vector3((float)(r.NextDouble() - 0.5) * 8f, 0f, (float)(r.NextDouble() - 0.5) * 8f);
+                    Transform stalk = new GameObject("Bamboo" + n++).transform;
+                    stalk.SetParent(g, false);
+                    stalk.localPosition = p;
+                    stalk.localEulerAngles = tilt;
+                    CharacterVisuals.Part(stalk, "Stem", PrimitiveType.Cylinder, new Vector3(0f, h * 0.5f, 0f), Vector3.zero, new Vector3(th, h * 0.5f, th), look.bamboo);
+                    for (float y = 0.45f; y < h - 0.2f; y += 0.42f)
+                        CharacterVisuals.Part(stalk, "Node", PrimitiveType.Cylinder, new Vector3(0f, y, 0f), Vector3.zero, new Vector3(th * 1.25f, 0.012f, th * 1.25f), look.bambooLeaf);
+                    for (int k = 0; k < 3; k++)
+                    {
+                        float a = (float)r.NextDouble() * 360f;
+                        CharacterVisuals.Part(stalk, "Leaves", PrimitiveType.Sphere, new Vector3(Mathf.Cos(a) * 0.25f, h - 0.2f - k * 0.35f, Mathf.Sin(a) * 0.25f), new Vector3(0f, a, 20f), new Vector3(0.7f, 0.14f, 0.32f), look.bambooLeaf);
+                    }
+                }
+                for (int k = 0; k < 3; k++)
+                {
+                    float s = 0.25f + (float)r.NextDouble() * 0.35f;
+                    CharacterVisuals.Part(g, "Rock", PrimitiveType.Sphere, c + new Vector3((float)(r.NextDouble() - 0.5) * 2.2f, s * 0.25f, (float)(r.NextDouble() - 0.5) * 2.2f),
+                        new Vector3(0f, (float)r.NextDouble() * 360f, 0f), new Vector3(s * 1.4f, s * 0.7f, s), look.moss);
+                }
+            }
+            // дорожка к ступеням храма
+            for (int i = 0; i < 3; i++)
+                CharacterVisuals.Part(g, "SteppingStone" + i, PrimitiveType.Cylinder, new Vector3(-0.8f + (i % 2 == 0 ? -0.12f : 0.12f), -0.03f, 3.15f + i * 0.33f), new Vector3(0f, i * 40f, 0f), new Vector3(0.42f, 0.04f, 0.32f), look.stoneBlock);
         }
 
         static void BuildHall(Transform env, Look look)

@@ -10,7 +10,7 @@ namespace BladePath.EditorTools
         public Material heroArmor, enemyArmor, cloth, skin, hair, lacquer, bronze, steel, handle;
         public Material flesh, tooth, maw, voidBlack, deadSkin, ember, tentacle, ronin;
         public Material stone, stoneDark, flame, moon, petal;
-        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, paper, mist, haloWarm, haloFire, haloMoon;
+        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss;
     }
 
     /// <summary>
@@ -71,6 +71,9 @@ namespace BladePath.EditorTools
             l.paper = Unlit("Env_Paper", new Color(1f, 0.78f, 0.45f));
             l.mist = SpriteLike("Env_Mist", new Color(0.55f, 0.62f, 0.8f));
             l.sky = Sky();
+            l.bamboo = Solid("Env_Bamboo", new Color(0.36f, 0.48f, 0.22f), 0f, 0.55f);
+            l.bambooLeaf = Solid("Env_BambooLeaf", new Color(0.16f, 0.30f, 0.12f), 0f, 0.2f);
+            l.moss = Textured("Env_MossRock", "stoneblock_albedo.png", "stoneblock_normal.png", new Vector2(0.5f, 0.5f), new Color(0.62f, 0.72f, 0.58f), 0f, 0.15f);
             Texture2D halo = HaloTexture();
             l.haloWarm = Additive("Halo_Warm", halo, new Color(1f, 0.62f, 0.28f, 0.55f));
             l.haloFire = Additive("Halo_Fire", halo, new Color(1f, 0.45f, 0.12f, 0.75f));
