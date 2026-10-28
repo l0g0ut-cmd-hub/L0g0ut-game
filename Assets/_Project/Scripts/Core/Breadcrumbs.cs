@@ -55,6 +55,46 @@ namespace BladePath
             if (frames >= 60) { open = false; try { File.WriteAllText(PathF, "OK\n"); } catch { } }
         }
 
+        /// <summary>
+        /// Системный лог Android (logcat) нашего приложения: приложение может читать собственные строки лога,
+        /// в том числе оставшиеся от упавшего процесса (тот же UID). Возвращает только важное: Unity, сбои, сигналы.
+        /// </summary>
+        public static string ReadLogcat()
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            try
+            {
+                System.Text.StringBuilder all = new System.Text.StringBuilder();
+                System.Collections.Generic.List<string> keep = new System.Collections.Generic.List<string>();
+                using (AndroidJavaClass rtc = new AndroidJavaClass("java.lang.Runtime"))
+                using (AndroidJavaObject rt = rtc.CallStatic<AndroidJavaObject>("getRuntime"))
+                using (AndroidJavaObject p = rt.Call<AndroidJavaObject>("exec", "logcat -d -v time -t 4000"))
+                using (AndroidJavaObject ins = p.Call<AndroidJavaObject>("getInputStream"))
+                using (AndroidJavaObject isr = new AndroidJavaObject("java.io.InputStreamReader", ins))
+                using (AndroidJavaObject br = new AndroidJavaObject("java.io.BufferedReader", isr))
+                {
+                    string line;
+                    int n = 0;
+                    while ((line = br.Call<string>("readLine")) != null && n < 20000)
+                    {
+                        n++;
+                        if (line.Contains("CRASH") || line.Contains("Fatal") || line.Contains("SIGSEGV") || line.Contains("SIGABRT") || line.Contains("SIGBUS")
+                            || line.Contains("libunity") || line.Contains("libil2cpp") || line.Contains("libmain") || line.Contains("backtrace")
+                            || line.Contains(" E Unity") || line.Contains("E/Unity") || line.Contains("Unity  :") || line.Contains("AndroidRuntime")
+                            || line.Contains("OutOfMemory") || line.Contains("lowmemory") || line.Contains("DEBUG") || line.Contains("Vulkan") || line.Contains("Adreno") || line.Contains("Mali"))
+                            keep.Add(line);
+                    }
+                }
+                int from = System.Math.Max(0, keep.Count - 70);
+                for (int i = from; i < keep.Count; i++) all.Append(keep[i]).Append('\n');
+                return all.Length > 0 ? all.ToString() : "(в logcat нет подходящих строк)";
+            }
+            catch (System.Exception e) { return "logcat недоступен: " + e.Message; }
+#else
+            return "(logcat только на Android)";
+#endif
+        }
+
         /// <summary>Отчёт о прошлом вылете (или null) — показывается один раз.</summary>
         public static string TakeReport()
         {

@@ -34,7 +34,11 @@ namespace BladePath
         void Start()
         {
             string crash = Breadcrumbs.TakeReport();
-            if (crash != null) { toast = crash; toastUntil = Time.time + 12f; }
+            if (crash != null)
+            {
+                crashLog = crash + "\n\n--- logcat ---\n" + Breadcrumbs.ReadLogcat();
+                try { System.IO.File.WriteAllText(System.IO.Path.Combine(Application.persistentDataPath, "crash_report.txt"), crashLog); } catch { }
+            }
             rt = new RenderTexture(852, 480, 0, RenderTextureFormat.ARGB32);
             player = gameObject.AddComponent<VideoPlayer>();
             player.playOnAwake = false;
@@ -158,6 +162,7 @@ namespace BladePath
             else tex = posterFirst != null ? (Texture)posterFirst : Texture2D.blackTexture;
             GUI.DrawTexture(vr, tex, ScaleMode.StretchToFill, false);
 
+            if (crashLog != null) { DrawCrash(); return; }
             if (settingsOpen) { DrawSettings(); return; }
 
             float k = vr.width / CW;
@@ -190,6 +195,35 @@ namespace BladePath
                 case 2: settingsOpen = true; break;
                 default: QuitGame(); break;
             }
+        }
+
+        string crashLog;
+        Vector2 crashScroll;
+        bool copied;
+
+        /// <summary>Экран отчёта о вылете: текст лога с прокруткой, кнопки «Скопировать» и «Закрыть».</summary>
+        void DrawCrash()
+        {
+            float W = Screen.width, H = Screen.height;
+            GUI.color = new Color(0f, 0f, 0f, 0.9f);
+            GUI.DrawTexture(new Rect(0f, 0f, W, H), Texture2D.whiteTexture);
+            GUI.color = Color.white;
+            GUIStyle st = new GUIStyle(GUI.skin.label);
+            st.fontSize = Mathf.RoundToInt(Mathf.Max(11f, H * 0.022f));
+            st.wordWrap = true;
+            st.normal.textColor = new Color(0.9f, 0.9f, 0.85f);
+            float bh = H * 0.1f;
+            Rect view = new Rect(W * 0.03f, H * 0.03f, W * 0.94f, H * 0.94f - bh - 10f);
+            float ch = st.CalcHeight(new GUIContent(crashLog), view.width - 30f);
+            crashScroll = GUI.BeginScrollView(view, crashScroll, new Rect(0f, 0f, view.width - 30f, ch));
+            GUI.Label(new Rect(0f, 0f, view.width - 30f, ch), crashLog, st);
+            GUI.EndScrollView();
+            GUIStyle bs = new GUIStyle(GUI.skin.button);
+            bs.fontSize = Mathf.RoundToInt(H * 0.035f);
+            if (GUI.Button(new Rect(W * 0.03f, H - bh - H * 0.02f, W * 0.45f, bh), copied ? "СКОПИРОВАНО" : "СКОПИРОВАТЬ ЛОГ", bs)) { GUIUtility.systemCopyBuffer = crashLog; copied = true; }
+            if (GUI.Button(new Rect(W * 0.52f, H - bh - H * 0.02f, W * 0.45f, bh), "ЗАКРЫТЬ", bs)) crashLog = null;
+            // прокрутка пальцем
+            if (Event.current.type == EventType.MouseDrag) { crashScroll.y -= Event.current.delta.y; Event.current.Use(); }
         }
 
         void DrawSettings()
