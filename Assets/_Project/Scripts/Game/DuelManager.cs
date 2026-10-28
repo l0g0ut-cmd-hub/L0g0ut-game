@@ -184,7 +184,11 @@ namespace BladePath
             SuperBy = null;
             if (Juice.Instance != null) Juice.Instance.CleanBlades();
             TimeLeft = roundSeconds; TimedOut = false; LastDraw = false; Perfect = false;
-            if (Juice.Instance != null) Juice.Instance.Taiko(0.9f, 0.95f);
+            if (Juice.Instance != null)
+            {
+                Juice.Instance.Taiko(0.9f, 0.95f);
+                if (Round <= 1) Juice.Instance.Growl(1f / Mathf.Sqrt(Ladder.Current.hpMul));   // чем крепче враг, тем ниже рык
+            }
             SetState(DuelState.Intro);
             Freeze(true);
         }
@@ -434,7 +438,7 @@ namespace BladePath
             lastSwing[r.attacker] = id;
 
             AttackType type = r.attacker.weapon != null && r.attacker.weapon.CurrentProfile != null ? r.attacker.weapon.CurrentProfile.type : AttackType.Overhead;
-            float dmg = BaseDamage(type) * ZoneMul(r.zone) * (r.glancing ? 0.5f : 1f) * (r.attacker == enemy ? Ladder.Current.dmgMul : 1f);
+            float dmg = BaseDamage(type) * ZoneMul(r.zone) * (r.glancing ? 0.5f : 1f) * (r.attacker == enemy ? Ladder.Current.dmgMul * Records.Assist : 1f);
             dmg = Mathf.Round(dmg);
             if (r.target.Blocking)
             {

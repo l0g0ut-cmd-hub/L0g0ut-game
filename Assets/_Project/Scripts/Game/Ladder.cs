@@ -41,8 +41,12 @@ namespace BladePath
         public static int BestStage { get { return PlayerPrefs.GetInt("rec_best", 0); } }
         public static int Cleared { get { return PlayerPrefs.GetInt("rec_cleared", 0); } }
 
+        /// <summary>Подстраховка: после поражений подряд на одной ступени враг бьёт чуть слабее (до −20%).</summary>
+        public static float Assist { get { return 1f - 0.07f * Mathf.Min(3, PlayerPrefs.GetInt("rec_losestreak", 0)); } }
+
         public static void OnMatch(bool won, int stage)
         {
+            PlayerPrefs.SetInt("rec_losestreak", won ? 0 : PlayerPrefs.GetInt("rec_losestreak", 0) + 1);
             if (won)
             {
                 PlayerPrefs.SetInt("rec_wins", Wins + 1);

@@ -33,7 +33,8 @@ namespace BladePath
 
         AudioSource[] voices;
         int voiceIdx;
-        AudioClip swish, hit, hitHeavy, clang, boom, drum, heart, whoosh, step;
+        AudioClip swish, hit, hitHeavy, clang, boom, drum, heart, whoosh, step, growl;
+        ParticleSystem petals;
         AudioSource ambient;
         Material fxMat, softMat, splatMat;
         const int MaxDecals = 220;
@@ -56,7 +57,7 @@ namespace BladePath
             voices = new AudioSource[6];
             for (int i = 0; i < voices.Length; i++) { voices[i] = gameObject.AddComponent<AudioSource>(); voices[i].spatialBlend = 0f; voices[i].playOnAwake = false; }
             swish = Swish(); hit = Thump(0.22f, 140f, 55f, 0.55f); hitHeavy = Thump(0.34f, 100f, 38f, 0.9f); clang = Clang(); boom = Thump(1.0f, 70f, 28f, 0.8f);
-            drum = Drum(); heart = Heart(); whoosh = Swish(); step = Step();
+            drum = Drum(); heart = Heart(); whoosh = Swish(); step = Step(); growl = Growl();
             ambient = gameObject.AddComponent<AudioSource>();
             ambient.clip = Wind(); ambient.loop = true; ambient.volume = 0.22f; ambient.spatialBlend = 0f; ambient.Play();
             Shader sh = Shader.Find("Sprites/Default");
@@ -214,6 +215,14 @@ namespace BladePath
 
         /// <summary>Удар тайко: начало раунда, «БОЙ!».</summary>
         public void Taiko(float vol = 1f, float pitch = 1f) { Play(drum, vol, pitch); }
+        /// <summary>Рык нежити перед боем.</summary>
+        public void Growl(float pitch = 1f) { Play(growl, 0.85f, pitch); }
+        /// <summary>Порыв лепестков сакуры (сильный удар, KO).</summary>
+        public void PetalBurst(int n)
+        {
+            if (petals == null) { GameObject g = GameObject.Find("Petals"); if (g != null) petals = g.GetComponent<ParticleSystem>(); }
+            if (petals != null) petals.Emit(n);
+        }
         /// <summary>Стук сердца на низком здоровье.</summary>
         public void Heartbeat() { Play(heart, 0.7f, 1f); }
         /// <summary>Рывок.</summary>
@@ -234,7 +243,8 @@ namespace BladePath
             SlashFlash(point, dir, strength);
             Blood(point, normal, dir, strength, kill);
             if (bleedAt != null) Bleed(bleedAt, Mathf.Lerp(1.2f, 3.5f, Mathf.Clamp01(strength - 0.4f)), strength);
-            if (kill) Play(boom, 1f, 1f);
+            if (kill) { Play(boom, 1f, 1f); PetalBurst(60); }
+            else if (strength > 1.2f) PetalBurst(12);
         }
 
         // ---------------------------------------------------------------- кровь
@@ -565,6 +575,27 @@ namespace BladePath
             AudioClip c = AudioClip.Create(name, d.Length, 1, Rate, false);
             c.SetData(d, 0);
             return c;
+        }
+
+        static AudioClip Growl()
+        {
+            int n = (int)(Rate * 1.4f);
+            float[] d = new float[n];
+            System.Random rnd = new System.Random(23);
+            float lp = 0f, lp2 = 0f, ph = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)Rate;
+                float env = Mathf.Min(1f, t * 5f) * Mathf.Clamp01((1.4f - t) * 2.5f);
+                float f = 48f + 10f * Mathf.Sin(t * 7f) + 6f * Mathf.Sin(t * 23f);
+                ph += 2f * Mathf.PI * f / Rate;
+                float buzz = Mathf.Sign(Mathf.Sin(ph)) * 0.5f + Mathf.Sin(ph * 2f) * 0.3f;   // хриплая пила
+                float x = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                lp += 0.06f * (x - lp);
+                lp2 += 0.08f * ((buzz * (0.6f + 0.4f * lp * 4f)) - lp2);                   // рычание «сквозь» шум
+                d[i] = Mathf.Clamp(lp2 * 1.6f * env * (0.75f + 0.25f * Mathf.Sin(t * 31f)), -1f, 1f);
+            }
+            return Make("growl", d);
         }
 
         static AudioClip Step()
