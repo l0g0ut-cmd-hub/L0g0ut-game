@@ -146,6 +146,10 @@ namespace BladePath
             Quaternion rot = Quaternion.Euler(pitch, yaw, 0f);
             Vector3 pos = focus + rot * new Vector3(0f, 0f, -dist);
             if (pos.y < 0.15f) pos.y = 0.15f;
+            // камера не заходит в стены храма, ворота и сады за пределами арены
+            pos.x = Mathf.Clamp(pos.x, -5.7f, 5.7f);
+            pos.z = Mathf.Clamp(pos.z, -6.5f, 3.2f);
+            pos.y = Mathf.Min(pos.y, 6f);
             if (shakeAmp > 0.0005f)
             {
                 pos += Random.insideUnitSphere * shakeAmp;
