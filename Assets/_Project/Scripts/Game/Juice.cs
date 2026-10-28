@@ -33,7 +33,7 @@ namespace BladePath
 
         AudioSource[] voices;
         int voiceIdx;
-        AudioClip swish, hit, hitHeavy, clang, boom, drum, heart, whoosh;
+        AudioClip swish, hit, hitHeavy, clang, boom, drum, heart, whoosh, step;
         AudioSource ambient;
         Material fxMat, softMat, splatMat;
         const int MaxDecals = 220;
@@ -46,6 +46,7 @@ namespace BladePath
         {
             public WeaponController w; public SwingPhase last; public TrailRenderer trail;
             public FighterController f; public ParticleSystem aura; public Renderer[] blade; public float blood;
+            public float stepT; public bool wasGrounded = true;
         }
         readonly List<Tracked> tracked = new List<Tracked>();
 
@@ -55,7 +56,7 @@ namespace BladePath
             voices = new AudioSource[6];
             for (int i = 0; i < voices.Length; i++) { voices[i] = gameObject.AddComponent<AudioSource>(); voices[i].spatialBlend = 0f; voices[i].playOnAwake = false; }
             swish = Swish(); hit = Thump(0.22f, 140f, 55f, 0.55f); hitHeavy = Thump(0.34f, 100f, 38f, 0.9f); clang = Clang(); boom = Thump(1.0f, 70f, 28f, 0.8f);
-            drum = Drum(); heart = Heart(); whoosh = Swish();
+            drum = Drum(); heart = Heart(); whoosh = Swish(); step = Step();
             ambient = gameObject.AddComponent<AudioSource>();
             ambient.clip = Wind(); ambient.loop = true; ambient.volume = 0.22f; ambient.spatialBlend = 0f; ambient.Play();
             Shader sh = Shader.Find("Sprites/Default");
@@ -161,6 +162,22 @@ namespace BladePath
                     if ((ph == SwingPhase.Recovery || ph == SwingPhase.Idle) && t.trail != null) t.trail.emitting = false;
                     t.last = ph;
                 }
+                if (t.f != null)
+                {
+                    // шаги по камню и приземление после прыжка
+                    float mv = Mathf.Abs(t.f.MoveAxis);
+                    if (t.f.Grounded && mv > 0.3f && !t.f.Dead)
+                    {
+                        t.stepT -= Time.deltaTime * (0.7f + mv);
+                        if (t.stepT <= 0f) { t.stepT = 0.42f; Play(step, 0.18f + 0.12f * mv, Random.Range(0.85f, 1.15f)); }
+                    }
+                    if (t.f.Grounded && !t.wasGrounded)
+                    {
+                        Play(hit, 0.35f, 0.6f);
+                        Dust(t.f.transform.position + Vector3.up * 0.05f, Vector3.up, 12);
+                    }
+                    t.wasGrounded = t.f.Grounded;
+                }
                 if (t.aura != null && t.f != null)
                 {
                     var em = t.aura.emission;
@@ -200,6 +217,7 @@ namespace BladePath
         {
             if (blocked) { Play(clang, 0.8f, Random.Range(0.9f, 1.2f)); Sparks(point, normal, 16); return; }
             Play(strength > 1f ? hitHeavy : hit, 0.95f, Random.Range(0.92f, 1.08f));
+            SlashFlash(point, dir, strength);
             Blood(point, normal, dir, strength, kill);
             if (bleedAt != null) Bleed(bleedAt, Mathf.Lerp(1.2f, 3.5f, Mathf.Clamp01(strength - 0.4f)), strength);
             if (kill) Play(boom, 1f, 1f);
@@ -361,6 +379,29 @@ namespace BladePath
             if (g != null) Destroy(g);
         }
 
+        /// <summary>Вспышка разреза: короткая яркая дуга вдоль хода клинка через точку попадания.</summary>
+        void SlashFlash(Vector3 p, Vector3 dir, float strength)
+        {
+            if (fxMat == null) return;
+            if (dir.sqrMagnitude < 1e-4f) dir = Vector3.right;
+            dir.Normalize();
+            Camera cam = Camera.main;
+            Vector3 side = cam != null ? Vector3.Cross(dir, cam.transform.forward).normalized : Vector3.up;
+            float len = 0.5f + 0.35f * strength;
+            GameObject g = new GameObject("SlashFlash");
+            LineRenderer lr = g.AddComponent<LineRenderer>();
+            lr.material = fxMat;
+            lr.positionCount = 5;
+            for (int i = 0; i < 5; i++)
+            {
+                float u = i / 4f - 0.5f;
+                lr.SetPosition(i, p + dir * (u * len) + side * ((0.25f - u * u) * 0.18f * len));   // лёгкий изгиб дугой
+            }
+            lr.widthCurve = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.5f, 0.05f + 0.03f * strength), new Keyframe(1f, 0f));
+            lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            g.AddComponent<FadeLine>().Init(lr, new Color(1f, 0.9f, 0.85f), 0.16f);
+        }
+
         /// <summary>Заряд супер-удара: воронка светящихся частиц втягивается в бойца.</summary>
         public void SuperCharge(Vector3 pos)
         {
@@ -510,6 +551,21 @@ namespace BladePath
             AudioClip c = AudioClip.Create(name, d.Length, 1, Rate, false);
             c.SetData(d, 0);
             return c;
+        }
+
+        static AudioClip Step()
+        {
+            int n = (int)(Rate * 0.09f);
+            float[] d = new float[n];
+            System.Random rnd = new System.Random(17);
+            float lp = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)Rate;
+                lp += 0.3f * ((float)(rnd.NextDouble() * 2.0 - 1.0) - lp);
+                d[i] = (lp * 0.8f + Mathf.Sin(2f * Mathf.PI * 120f * t) * 0.4f) * Mathf.Exp(-t * 55f);
+            }
+            return Make("step", d);
         }
 
         static AudioClip Drum()

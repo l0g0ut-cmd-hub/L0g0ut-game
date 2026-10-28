@@ -68,6 +68,26 @@ namespace BladePath
         public int Combo(FighterController f) { int v; return combo.TryGetValue(f, out v) ? v : 0; }
         public float ComboAge(FighterController f) { float v; return comboTime.TryGetValue(f, out v) ? Time.unscaledTime - v : 99f; }
 
+        /// <summary>Графика: 1 — высокая (мягкие тени, MSAA, 4 источника света), 0 — экономная для слабых телефонов.</summary>
+        public static int Gfx
+        {
+            get { return PlayerPrefs.GetInt("gfx", 1); }
+            set { PlayerPrefs.SetInt("gfx", value); ApplyQuality(); }
+        }
+
+        public static void ApplyQuality()
+        {
+            bool hi = Gfx == 1;
+            QualitySettings.pixelLightCount = hi ? 4 : 1;
+            QualitySettings.shadows = hi ? ShadowQuality.All : ShadowQuality.HardOnly;
+            QualitySettings.shadowResolution = hi ? ShadowResolution.Medium : ShadowResolution.Low;
+            QualitySettings.shadowDistance = hi ? 16f : 9f;
+            QualitySettings.shadowCascades = 1;
+            QualitySettings.antiAliasing = hi ? 2 : 0;
+            QualitySettings.anisotropicFiltering = hi ? AnisotropicFiltering.Enable : AnisotropicFiltering.Disable;
+            QualitySettings.lodBias = hi ? 1.5f : 0.8f;
+        }
+
         void Awake()
         {
             Instance = this;
@@ -76,13 +96,7 @@ namespace BladePath
             Application.targetFrameRate = 60;
             // профиль качества по умолчанию на Android — «Medium»: 1 пиксельный источник света, жёсткие тени.
             // Нужны мягкие тени от луны и живой свет жаровен/фонарей храма.
-            QualitySettings.pixelLightCount = 4;
-            QualitySettings.shadows = ShadowQuality.All;
-            QualitySettings.shadowResolution = ShadowResolution.Medium;
-            QualitySettings.shadowDistance = 16f;
-            QualitySettings.shadowCascades = 1;
-            QualitySettings.antiAliasing = 2;
-            QualitySettings.anisotropicFiltering = AnisotropicFiltering.Enable;
+            ApplyQuality();
         }
         void Start()
         {

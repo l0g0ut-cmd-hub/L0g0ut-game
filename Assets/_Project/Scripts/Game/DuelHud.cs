@@ -130,6 +130,12 @@ namespace BladePath
             // итог
             if (duel.State == DuelState.PlayerWon || duel.State == DuelState.PlayerLost)
             {
+                // кадр удара KO: на мгновение экран в красно-чёрных тонах
+                if (duel.StateTime < 0.14f && !duel.TimedOut)
+                {
+                    float kf = 1f - duel.StateTime / 0.14f;
+                    UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0.35f, 0f, 0f, 0.55f * kf));
+                }
                 float t = Mathf.Clamp01((duel.StateTime - 0.5f) / 0.8f);
                 bool won = duel.State == DuelState.PlayerWon;
                 UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, 0.55f * t));

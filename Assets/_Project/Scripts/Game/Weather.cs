@@ -47,6 +47,7 @@ namespace BladePath
         void StartRain()
         {
             if (rain == null) Build();
+            var re = rain.emission; re.rateOverTime = DuelManager.Gfx == 1 ? 700f : 300f;
             rain.Play(); splash.Play();
             if (rainAudio != null && !rainAudio.isPlaying) rainAudio.Play();
             RenderSettings.fogDensity = 0.065f;
