@@ -49,10 +49,12 @@ namespace BladePath
         float stateStart;
         float slowUntil, hitStopUntil;
         float nextRoundAt;
+        /// <summary>Сколько секунд до следующего раунда (для затемнения на HUD); отрицательно — не ждём.</summary>
+        public float NextRoundIn { get { return (!MatchOver && (State == DuelState.PlayerWon || State == DuelState.PlayerLost)) ? nextRoundAt - Time.unscaledTime : -1f; } }
         float nextHeartAt;
 
         /// <summary>Статистика за матч (для финального экрана).</summary>
-        public class Stats { public int damage, hits, maxCombo, blocks, parries; }
+        public class Stats { public int damage, hits, maxCombo, blocks, parries, supers; }
         readonly Dictionary<FighterController, Stats> stats = new Dictionary<FighterController, Stats>();
         public Stats StatsOf(FighterController f)
         {
@@ -88,6 +90,7 @@ namespace BladePath
             if (j == null) j = gameObject.AddComponent<Juice>();
             if (player != null) j.Track(player.weapon);
             if (enemy != null) j.Track(enemy.weapon);
+            if (GetComponent<Weather>() == null) gameObject.AddComponent<Weather>();
             ResetDuel();
         }
 
@@ -103,6 +106,7 @@ namespace BladePath
         {
             PlayerWins = 0; EnemyWins = 0; Round = 1; MatchOver = false;
             stats.Clear();
+            if (Weather.Instance != null) Weather.Instance.Roll();
             ResetDuel();
         }
 
@@ -116,6 +120,8 @@ namespace BladePath
             if (enemy != null) { enemy.ResetFighter(); hp[enemy] = maxHp; hpTrail[enemy] = maxHp; lastSwing[enemy] = -1; }
             Popups.Clear();
             combo.Clear(); comboTime.Clear();
+            SuperBy = null;
+            if (Juice.Instance != null) Juice.Instance.CleanBlades();
             TimeLeft = roundSeconds; TimedOut = false; LastDraw = false; Perfect = false;
             if (Juice.Instance != null) Juice.Instance.Taiko(0.9f, 0.95f);
             SetState(DuelState.Intro);
@@ -165,7 +171,7 @@ namespace BladePath
             }
             if (State == DuelState.Fighting && !Paused)
             {
-                TimeLeft = Mathf.Max(0f, TimeLeft - Time.deltaTime);
+                if (!SuperActive) TimeLeft = Mathf.Max(0f, TimeLeft - Time.deltaTime);
                 if (TimeLeft <= 0f) TimeUp();
                 // низкое здоровье игрока: стук сердца
                 if (player != null && Hp01(player) < 0.3f && Time.unscaledTime >= nextHeartAt)
@@ -179,8 +185,78 @@ namespace BladePath
             ApplyTimeScale();
 
             CheckClash();
+            UpdateSuper();
 
             for (int i = Popups.Count - 1; i >= 0; i--) if (Time.unscaledTime - Popups[i].born > 1.0f) Popups.RemoveAt(i);
+        }
+
+        // ---------------------------------------------------------------- супер-удар «УДАР ДУХА»
+        public const float SuperWindup = 0.6f, SuperEnd = 1.05f;
+        public FighterController SuperBy { get; private set; }
+        public bool SuperActive { get { return SuperBy != null; } }
+        public float SuperTime { get { return Time.unscaledTime - superStart; } }
+        public bool SuperLanded { get; private set; }
+        float superStart;
+        bool superStruck;
+        Vector3 superFrom;
+
+        /// <summary>Супер-удар на полном духе: короткая заставка, рывок сквозь противника, сокрушительный разрез.</summary>
+        public bool TrySuper(FighterController f)
+        {
+            if (State != DuelState.Fighting || SuperActive || f == null || f.opponent == null) return false;
+            if (!f.KiFull || !f.CanAct || !f.Grounded || f.opponent.Dead) return false;
+            if (f.weapon != null && f.weapon.Phase != SwingPhase.Idle) return false;
+            f.DrainKi();
+            SuperBy = f; superStart = Time.unscaledTime; superStruck = false; SuperLanded = false;
+            superFrom = f.transform.position;
+            Freeze(true);
+            if (f.opponent.weapon != null) f.opponent.weapon.ResetState();
+            if (Juice.Instance != null) { Juice.Instance.Taiko(1f, 0.7f); Juice.Instance.SuperCharge(f.transform.position); }
+            Haptics.Pulse(50);
+            return true;
+        }
+
+        void UpdateSuper()
+        {
+            if (!SuperActive) return;
+            FighterController a = SuperBy, t = a.opponent;
+            float st = SuperTime;
+            if (!superStruck && st >= SuperWindup)
+            {
+                superStruck = true;
+                Vector3 dir = t.transform.position - a.transform.position; dir.y = 0f;
+                float d = dir.magnitude;
+                dir = d > 1e-3f ? dir / d : a.transform.forward;
+                SuperLanded = d < 3.2f && !t.Dead;
+                Vector3 end = SuperLanded ? t.transform.position + dir * 1.0f : a.transform.position + dir * Mathf.Min(2.2f, d - 0.8f);
+                a.Teleport(end);
+                if (a.weapon != null)
+                {
+                    a.weapon.ResetState();
+                    a.weapon.TryStartSwing(AttackType.Slash);
+                    lastSwing[a] = a.weapon.SwingId;          // попадания этого замаха уже учтены здесь
+                }
+                if (Juice.Instance != null)
+                {
+                    Juice.Instance.Streak(superFrom + Vector3.up * 1.0f, a.transform.position + Vector3.up * 1.0f, a == player);
+                    Juice.Instance.Dust(superFrom + Vector3.up * 0.05f, dir, 18);
+                }
+                if (SuperLanded)
+                {
+                    Vector3 hp = t.transform.position + Vector3.up * 1.15f;
+                    Freeze(false); t.Frozen = true;   // урон проходит по «живому» бойцу, двигаться он ещё не может
+                    ApplyDamage(t, a, 32f, hp, true, false, -dir, Vector3.Cross(Vector3.up, dir) + dir * 0.4f, null);
+                    StatsOf(a).supers++;
+                    hitStopUntil = Time.unscaledTime + 0.22f;
+                    if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.14f);
+                    Haptics.Pulse(140);
+                }
+            }
+            if (st >= SuperEnd)
+            {
+                SuperBy = null;
+                if (State == DuelState.Fighting) Freeze(false);
+            }
         }
 
         int lastClashA = -1, lastClashB = -1;
@@ -340,6 +416,7 @@ namespace BladePath
                 target.Knockback(target.transform.position - attacker.transform.position, dmg >= Hp(target) ? 3.2f : (heavy ? 2.4f : 1.4f));
                 if (heavy && Juice.Instance != null) Juice.Instance.Dust(target.transform.position + Vector3.up * 0.05f, target.transform.position - attacker.transform.position, 10);
                 attacker.AddKi(10f);
+                if (Juice.Instance != null && attacker.weapon != null) Juice.Instance.BloodyBlade(attacker.weapon, 0.22f);
                 target.AddKi(7f);
                 Haptics.Pulse(target == player ? (dmg >= 20f ? 70 : 40) : 18);
             }

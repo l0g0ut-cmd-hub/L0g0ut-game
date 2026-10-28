@@ -80,6 +80,9 @@ namespace BladePath
             }
             self.SetMoveVector(new Vector2(mv.x, mv.z));
 
+            // супер-удар при полном духе
+            if (!busy && self.KiFull && dist < 2.8f && Random.value < 0.02f + 0.01f * Level && DuelManager.Instance != null && DuelManager.Instance.TrySuper(self)) return;
+
             // шар духа издалека
             if (!busy && dist > 2.2f && self.CanEnergy && Time.time >= energyAt && Time.time >= blockUntil)
             {

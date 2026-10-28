@@ -56,6 +56,24 @@ namespace BladePath
             if (dir.sqrMagnitude < 1e-6f) dir = -transform.forward;
             knockVel = dir.normalized * speed;
         }
+        public bool KiFull { get { return Ki >= kiMax - 0.5f; } }
+        public void DrainKi() { Ki = 0f; }
+
+        /// <summary>Мгновенно переставить бойца (супер-удар «сквозь» противника), с учётом границ арены.</summary>
+        public void Teleport(Vector3 p)
+        {
+            p.x = Mathf.Clamp(p.x, -arenaHalfWidth, arenaHalfWidth);
+            p.z = Mathf.Clamp(p.z, -arenaHalfDepth, arenaHalfDepth);
+            p.y = transform.position.y;
+            transform.position = p;
+            if (opponent != null)
+            {
+                Vector3 to = opponent.transform.position - p; to.y = 0f;
+                if (to.sqrMagnitude > 1e-4f) transform.rotation = Quaternion.LookRotation(to.normalized, Vector3.up);
+            }
+            knockVel = Vector3.zero; dashLeft = 0f;
+        }
+
         public void AddKi(float v) { Ki = Mathf.Clamp(Ki + v, 0f, kiMax); }
 
         public bool Grounded { get; private set; }

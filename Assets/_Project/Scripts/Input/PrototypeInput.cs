@@ -18,8 +18,8 @@ namespace BladePath
         public FighterController enemy;
 
         enum B { Stick, Jump, Dash, Overhead, Rising, Legs, Energy, Thrust, Slash, Pause,
-                 Resume, Restart, CamReset, AiToggle, DebugToggle, ToMenu, OverAgain, OverMenu, Block, Vibro, Difficulty }
-        const int Count = 21;
+                 Resume, Restart, CamReset, AiToggle, DebugToggle, ToMenu, OverAgain, OverMenu, Block, Vibro, Difficulty, Super }
+        const int Count = 22;
 
         const float StickRadius = 84f;
 
@@ -94,6 +94,7 @@ namespace BladePath
             bool reset = down[(int)B.Restart] || down[(int)B.OverAgain];
             bool menu = down[(int)B.ToMenu] || down[(int)B.OverMenu];
             bool pauseBtn = down[(int)B.Pause] || down[(int)B.Resume];
+            bool superBtn = down[(int)B.Super];
             if (down[(int)B.CamReset] && CameraOrbit.Instance != null) CameraOrbit.Instance.ResetView();
             if (down[(int)B.DebugToggle] && debugViz != null) debugViz.visible = !debugViz.visible;
             if (down[(int)B.Vibro]) { Haptics.Enabled = !Haptics.Enabled; PlayerPrefs.SetInt("haptics", Haptics.Enabled ? 1 : 0); Haptics.Pulse(40); }
@@ -110,6 +111,7 @@ namespace BladePath
             aRise |= Input.GetKeyDown(KeyCode.K);
             aLegs |= Input.GetKeyDown(KeyCode.N);
             aEnergy |= Input.GetKeyDown(KeyCode.M);
+            superBtn |= Input.GetKeyDown(KeyCode.U);
             aThrust |= Input.GetKeyDown(KeyCode.I);
             aSlash |= Input.GetKeyDown(KeyCode.O);
             enemyAttack |= Input.GetKeyDown(KeyCode.L);
@@ -136,6 +138,7 @@ namespace BladePath
                 player.SetMoveVector(mv);
                 if (jump) player.Jump();
                 if (dash) player.Dash(mv);
+                if (superBtn && duel != null) duel.TrySuper(player);
                 bool blockHeld = held[(int)B.Block];
 #if ENABLE_LEGACY_INPUT_MANAGER
                 blockHeld |= Input.GetKey(KeyCode.B) || Input.GetKey(KeyCode.LeftControl);
@@ -186,6 +189,7 @@ namespace BladePath
             Circle(B.Jump, W - 214f, H - 296f, 34f);
             Circle(B.Dash, W - 412f, H - 66f, 32f);
             Circle(B.Block, W - 408f, H - 150f, 32f);
+            Circle(B.Super, W - 92f, H - 330f, 40f);
             Circle(B.Pause, W * 0.5f, 88f, 18f);   // под таймером раунда
 
             float cx = W * 0.5f;
@@ -203,6 +207,7 @@ namespace BladePath
             for (int i = 0; i < Count; i++) active[i] = false;
             if (play)
                 foreach (B b in new[] { B.Stick, B.Jump, B.Dash, B.Block, B.Overhead, B.Rising, B.Legs, B.Energy, B.Thrust, B.Slash, B.Pause }) active[(int)b] = true;
+            if (play && player != null && player.KiFull) active[(int)B.Super] = true;
             if (paused)
                 foreach (B b in new[] { B.Resume, B.Restart, B.Difficulty, B.Vibro, B.CamReset, B.AiToggle, B.DebugToggle, B.ToMenu }) active[(int)b] = true;
             if (over) { active[(int)B.OverAgain] = true; active[(int)B.OverMenu] = true; }
@@ -332,6 +337,7 @@ namespace BladePath
             DrawAttack(B.Jump, Icon.Jump, "ПРЫЖОК", player != null && player.CanAct && player.Grounded);
             DrawAttack(B.Block, Icon.Shield, "БЛОК", player != null && player.CanAct && !player.GuardBroken && player.weapon != null && player.weapon.Phase == SwingPhase.Idle);
             DrawAttack(B.Dash, Icon.Dash, "РЫВОК", player != null && player.CanAct && player.DashReady01 >= 1f);
+            DrawSuper();
             DrawPause();
 
             if (paused)
@@ -463,6 +469,23 @@ namespace BladePath
                     UiKit.Line(c + new Vector2(0f, s * 0.6f), c + new Vector2(s * 0.7f, 0f), th, col);
                     break;
             }
+        }
+
+        void DrawSuper()
+        {
+            int i = (int)B.Super;
+            if (!active[i]) return;
+            Vector2 c = ctr[i]; float r = rad[i];
+            float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 7f);
+            UiKit.Disc(c, r + 8f + pulse * 6f, new Color(0.4f, 0.8f, 1f, 0.18f + 0.15f * pulse));
+            UiKit.Disc(c, r, held[i] ? new Color(0.9f, 0.95f, 1f, 1f) : new Color(0.1f, 0.35f, 0.6f, 0.92f));
+            UiKit.Ring(c, r, new Color(1f, 0.9f, 0.55f, 1f));
+            UiKit.Ring(c, r * 0.8f, new Color(1f, 1f, 1f, 0.35f), true);
+            // молния-разрез
+            Color w = Color.white;
+            UiKit.Line(c + new Vector2(-r * 0.45f, r * 0.4f), c + new Vector2(r * 0.05f, -r * 0.05f), 4f, w);
+            UiKit.Line(c + new Vector2(-r * 0.1f, r * 0.05f), c + new Vector2(r * 0.45f, -r * 0.45f), 4f, w);
+            UiKit.Text(new Rect(c.x - r, c.y + r * 0.3f, r * 2f, r * 0.5f), "ДУХ!", 12f, new Color(1f, 0.95f, 0.8f), TextAnchor.MiddleCenter, false);
         }
 
         void DrawPause()

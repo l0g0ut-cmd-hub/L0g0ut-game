@@ -7,6 +7,26 @@ namespace BladePath
     /// «Сок» боя без внешних ассетов: процедурные звуки (взмах, удар, лязг блока, гул смерти), искры/кровь при попадании,
     /// светящийся след клинка во время удара. Всё создаётся в рантайме из кода.
     /// </summary>
+    /// <summary>Линия, которая гаснет и удаляется (по реальному времени — живёт и во время замедления).</summary>
+    public class FadeLine : MonoBehaviour
+    {
+        LineRenderer lr; Color c; float life, born;
+        public void Init(LineRenderer l, Color col, float t) { lr = l; c = col; life = t; born = Time.unscaledTime; Apply(1f); }
+        void Apply(float a)
+        {
+            Gradient g = new Gradient();
+            g.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(c, 1f) },
+                      new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(a * 0.9f, 0.6f), new GradientAlphaKey(a, 1f) });
+            lr.colorGradient = g;
+        }
+        void Update()
+        {
+            float k = (Time.unscaledTime - born) / life;
+            if (k >= 1f) { Destroy(gameObject); return; }
+            Apply(1f - k);
+        }
+    }
+
     public class Juice : MonoBehaviour
     {
         public static Juice Instance { get; private set; }
@@ -22,7 +42,11 @@ namespace BladePath
         struct Decal { public Transform t; public Renderer r; public float born, life, size, grow; }
         MaterialPropertyBlock mpb;
 
-        class Tracked { public WeaponController w; public SwingPhase last; public TrailRenderer trail; }
+        class Tracked
+        {
+            public WeaponController w; public SwingPhase last; public TrailRenderer trail;
+            public FighterController f; public ParticleSystem aura; public Renderer[] blade; public float blood;
+        }
         readonly List<Tracked> tracked = new List<Tracked>();
 
         void Awake()
@@ -67,8 +91,56 @@ namespace BladePath
                 tr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 t.trail = tr;
             }
+            t.f = w.GetComponentInParent<FighterController>();
+            if (w.bladeRoot != null)
+            {
+                // только стальное лезвие (не рукоять, не цуба и не след клинка)
+                List<Renderer> steel = new List<Renderer>();
+                foreach (Renderer r in w.bladeRoot.GetComponentsInChildren<Renderer>(true))
+                    if (r is MeshRenderer && r.sharedMaterial != null && r.sharedMaterial.name.Contains("Steel")) steel.Add(r);
+                t.blade = steel.ToArray();
+            }
+            if (t.f != null && softMat != null) t.aura = MakeAura(t.f);
             tracked.Add(t);
         }
+
+        /// <summary>Аура полного духа: светящиеся частицы поднимаются вокруг бойца, пока шар доступен.</summary>
+        ParticleSystem MakeAura(FighterController f)
+        {
+            GameObject g = new GameObject("KiAura");
+            g.transform.SetParent(f.transform, false);
+            g.transform.localPosition = new Vector3(0f, 0.1f, 0f);
+            g.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
+            ParticleSystem ps = g.AddComponent<ParticleSystem>();
+            ps.Stop();
+            var main = ps.main;
+            main.loop = true; main.duration = 1f;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.6f, 1.1f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.6f, 1.4f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.05f, 0.12f);
+            bool isPlayer = DuelManager.Instance != null && DuelManager.Instance.player == f;
+            main.startColor = isPlayer ? new Color(0.45f, 0.8f, 1f, 0.7f) : new Color(0.75f, 0.35f, 1f, 0.7f);
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.maxParticles = 80;
+            var em = ps.emission; em.rateOverTime = 0f;
+            var sp = ps.shape; sp.shapeType = ParticleSystemShapeType.Circle; sp.radius = 0.35f; sp.radiusThickness = 0.3f;
+            var col = ps.colorOverLifetime; col.enabled = true;
+            Gradient gr = new Gradient();
+            gr.SetKeys(new GradientColorKey[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                       new GradientAlphaKey[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.2f), new GradientAlphaKey(0f, 1f) });
+            col.color = gr;
+            g.GetComponent<ParticleSystemRenderer>().material = softMat;
+            ps.Play();
+            return ps;
+        }
+
+        /// <summary>Клинок в крови: каждое попадание окрашивает лезвие, к новому раунду оно снова чистое.</summary>
+        public void BloodyBlade(WeaponController w, float amount)
+        {
+            for (int i = 0; i < tracked.Count; i++) if (tracked[i].w == w) tracked[i].blood = Mathf.Clamp01(tracked[i].blood + amount);
+        }
+
+        public void CleanBlades() { for (int i = 0; i < tracked.Count; i++) tracked[i].blood = 0f; }
 
         void Update()
         {
@@ -82,6 +154,23 @@ namespace BladePath
                     if (ph == SwingPhase.Strike) { Play(swish, 0.55f, Random.Range(0.9f, 1.15f)); if (t.trail != null) { t.trail.Clear(); t.trail.emitting = true; } }
                     if ((ph == SwingPhase.Recovery || ph == SwingPhase.Idle) && t.trail != null) t.trail.emitting = false;
                     t.last = ph;
+                }
+                if (t.aura != null && t.f != null)
+                {
+                    var em = t.aura.emission;
+                    em.rateOverTime = (t.f.CanEnergy && !t.f.Dead) ? 30f : 0f;
+                }
+                if (t.blade != null && mpb != null)
+                {
+                    Color c = Color.Lerp(Color.white, new Color(0.5f, 0.06f, 0.06f), t.blood * 0.85f);
+                    for (int k = 0; k < t.blade.Length; k++)
+                    {
+                        Renderer r = t.blade[k];
+                        if (r == null) continue;
+                        r.GetPropertyBlock(mpb);
+                        mpb.SetColor("_Color", c);
+                        r.SetPropertyBlock(mpb);
+                    }
                 }
             }
         }
@@ -264,6 +353,49 @@ namespace BladePath
             if (ps != null) ps.Stop(true, ParticleSystemStopBehavior.StopEmitting);
             yield return new WaitForSeconds(1.5f);
             if (g != null) Destroy(g);
+        }
+
+        /// <summary>Заряд супер-удара: воронка светящихся частиц втягивается в бойца.</summary>
+        public void SuperCharge(Vector3 pos)
+        {
+            if (softMat == null) return;
+            GameObject g = new GameObject("SuperCharge");
+            g.transform.position = pos + Vector3.up * 1.0f;
+            ParticleSystem ps = g.AddComponent<ParticleSystem>();
+            ps.Stop();
+            var main = ps.main;
+            main.loop = false; main.duration = 0.5f;
+            main.startLifetime = 0.45f;
+            main.startSpeed = -3.2f;                       // к центру
+            main.startSize = new ParticleSystem.MinMaxCurve(0.05f, 0.12f);
+            main.startColor = new Color(0.6f, 0.9f, 1f, 0.9f);
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.stopAction = ParticleSystemStopAction.Destroy;
+            main.useUnscaledTime = true;
+            var em = ps.emission; em.rateOverTime = 160f;
+            var sp = ps.shape; sp.shapeType = ParticleSystemShapeType.Sphere; sp.radius = 1.4f; sp.radiusThickness = 0.1f;
+            var rend = g.GetComponent<ParticleSystemRenderer>();
+            rend.material = softMat; rend.renderMode = ParticleSystemRenderMode.Stretch; rend.velocityScale = 0.05f; rend.lengthScale = 2f;
+            ps.Play();
+            Play(swish, 0.8f, 0.45f);
+        }
+
+        /// <summary>Светящийся след рывка супер-удара (затухающая полоса между двумя точками).</summary>
+        public void Streak(Vector3 a, Vector3 b, bool player)
+        {
+            if (fxMat == null) return;
+            GameObject g = new GameObject("SuperStreak");
+            LineRenderer lr = g.AddComponent<LineRenderer>();
+            lr.material = fxMat;
+            lr.positionCount = 2;
+            lr.SetPosition(0, a); lr.SetPosition(1, b);
+            lr.widthCurve = new AnimationCurve(new Keyframe(0f, 0.02f), new Keyframe(0.7f, 0.22f), new Keyframe(1f, 0.05f));
+            lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            Color c = player ? new Color(0.6f, 0.9f, 1f) : new Color(0.85f, 0.45f, 1f);
+            g.AddComponent<FadeLine>().Init(lr, c, 0.45f);
+            Play(swish, 1f, 0.7f);
+            Play(hitHeavy, 1f, 0.8f);
+            Sparks(b, (b - a).normalized, 30);
         }
 
         /// <summary>Клинки столкнулись: сноп искр во все стороны и звонкий лязг.</summary>

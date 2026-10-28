@@ -28,6 +28,7 @@ namespace BladePath
         float shakeAmp;
         float koK, cineYaw;   // кинематографичный облёт после KO
         bool introPlaying;
+        float superK, autoD, autoV;
         public void Shake(float amount) { shakeAmp = Mathf.Max(shakeAmp, amount); }
 
         float yaw, pitch, dist;
@@ -163,8 +164,27 @@ namespace BladePath
             else introPlaying = false;
 
             Vector3 focus = new Vector3(midX, 0f, midZ) + targetOffset - Vector3.up * 0.25f * ck;
-            Quaternion rot = Quaternion.Euler(pitch + 4f * ck + 14f * ik, yaw + cineYaw - 40f * ik, 0f);
-            Vector3 pos = focus + rot * new Vector3(0f, 0f, -dist * (1f - 0.3f * ck + 0.5f * ik));
+
+            // автокадрирование: бойцы разошлись — камера отъезжает, чтобы оба были в кадре
+            float sep = 0f;
+            if (fighters != null && fighters.Length >= 2 && fighters[0] != null && fighters[1] != null)
+            {
+                Vector3 dd = fighters[0].transform.position - fighters[1].transform.position; dd.y = 0f;
+                sep = dd.magnitude;
+            }
+            float want = Mathf.Max(0f, 2.4f + sep * 1.35f - dist);
+            autoD = Mathf.SmoothDamp(autoD, want, ref autoV, 0.35f, Mathf.Infinity, udt);
+            // супер-удар: наезд на атакующего
+            float sk = 0f;
+            if (dm != null && dm.SuperActive && dm.SuperTime < DuelManager.SuperWindup)
+            {
+                sk = Mathf.Clamp01(dm.SuperTime / 0.25f);
+                Vector3 sp = dm.SuperBy.transform.position;
+                focus = Vector3.Lerp(focus, new Vector3(sp.x, 0f, sp.z) + targetOffset, sk * 0.8f);
+            }
+            superK = Mathf.MoveTowards(superK, sk, udt / 0.15f);
+            Quaternion rot = Quaternion.Euler(pitch + 4f * ck + 14f * ik - 4f * superK, yaw + cineYaw - 40f * ik + 22f * superK, 0f);
+            Vector3 pos = focus + rot * new Vector3(0f, 0f, -(dist + autoD) * (1f - 0.3f * ck + 0.5f * ik - 0.45f * superK));
             if (pos.y < 0.15f) pos.y = 0.15f;
             // камера не заходит в стены храма, ворота и сады за пределами арены
             pos.x = Mathf.Clamp(pos.x, -5.7f, 5.7f);

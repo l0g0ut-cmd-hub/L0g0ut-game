@@ -78,6 +78,30 @@ namespace BladePath
             float tp = hurry ? 1f + 0.12f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * 6f)) : 1f;
             UiKit.Text(new Rect(tc.x - 30f, tc.y - 22f, 60f, 44f), secs.ToString(), 26f * tp, hurry ? new Color(1f, 0.3f, 0.2f) : Color.white, TextAnchor.MiddleCenter, false);
 
+            // супер-удар: затемнение, плашка с названием, вспышка при ударе
+            if (duel.SuperActive)
+            {
+                float st = duel.SuperTime;
+                bool mine = duel.SuperBy == duel.player;
+                if (st < DuelManager.SuperWindup)
+                {
+                    float k = Mathf.Clamp01(st / 0.15f);
+                    UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0.03f, 0.5f * k));
+                    float slide = 1f - Mathf.Clamp01(st / 0.18f);
+                    float bx = (mine ? -1f : 1f) * slide * W;
+                    Color band = mine ? new Color(0.1f, 0.35f, 0.6f, 0.85f) : new Color(0.4f, 0.1f, 0.5f, 0.85f);
+                    UiKit.Rect(new Rect(bx, 220f, W, 90f), band);
+                    UiKit.Rect(new Rect(bx, 218f, W, 2f), Gold);
+                    UiKit.Rect(new Rect(bx, 310f, W, 2f), Gold);
+                    UiKit.Text(new Rect(bx, 222f, W, 86f), "УДАР ДУХА", 64f, Color.white);
+                }
+                else
+                {
+                    float f = 1f - Mathf.Clamp01((st - DuelManager.SuperWindup) / 0.3f);
+                    if (duel.SuperLanded) UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(1f, 1f, 1f, 0.8f * f * f));
+                }
+            }
+
             // серии ударов
             DrawCombo(duel.player, new Vector2(70f, 150f), TextAnchor.MiddleLeft);
             DrawCombo(duel.enemy, new Vector2(W - 70f, 150f), TextAnchor.MiddleRight);
@@ -116,8 +140,47 @@ namespace BladePath
                 if (!duel.MatchOver) UiKit.Text(new Rect(cx - 300f, 250f, 600f, 40f), duel.PlayerWins + " : " + duel.EnemyWins, 34f, new Color(1f, 1f, 1f, t));
                 UiKit.Rect(new Rect(cx - 200f, 232f, 400f, 2f), new Color(c.r, c.g, c.b, 0.8f * t));
             }
+            // затемнение между раундами
+            float fade = 0f;
+            float nr = duel.NextRoundIn;
+            if (nr >= 0f && nr < 0.45f) fade = 1f - nr / 0.45f;
+            if (duel.State == DuelState.Intro && duel.Round > 1) fade = Mathf.Max(fade, 1f - Mathf.Clamp01(duel.StateTime / 0.4f));
+            if (fade > 0.001f) UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, fade));
+
+            DrawTutorial(W);
             GUI.matrix = old;
         }
+
+        // подсказки первого боя (один раз)
+        static readonly string[] Tips =
+        {
+            "ДЖОЙСТИК СЛЕВА — ДВИЖЕНИЕ, СВАЙП ПО ЭКРАНУ — КАМЕРА",
+            "КРУГЛЫЕ КНОПКИ СПРАВА — УДАРЫ: СВЕРХУ, СНИЗУ, ПО НОГАМ, УКОЛ, РЕЗ",
+            "ЩИТ — БЛОК. БЛОК В ПОСЛЕДНИЙ МИГ — ПАРИРОВАНИЕ И ОГЛУШЕНИЕ ВРАГА",
+            "ПОПАДАНИЯ КОПЯТ ДУХ. ШАР ТРАТИТ ДУХ, ПОЛНЫЙ ДУХ — УДАР ДУХА",
+            "РЫВОК — УЙТИ ИЗ-ПОД УДАРА. ДВА ВЫИГРАННЫХ РАУНДА — ПОБЕДА"
+        };
+        float tutStart = -1f;
+        int tutDone = -1;
+
+        void DrawTutorial(float W)
+        {
+            if (tutDone < 0) tutDone = PlayerPrefs.GetInt("tut_done", 0);
+            if (tutDone == 1) return;
+            if (duel.State != DuelState.Fighting || duel.Round != 1) { if (tutStart >= 0f && duel.State != DuelState.Fighting) Finish(); return; }
+            if (tutStart < 0f) tutStart = Time.unscaledTime;
+            float t = Time.unscaledTime - tutStart;
+            int i = Mathf.FloorToInt(t / 3.6f);
+            if (i >= Tips.Length) { Finish(); return; }
+            float lt = t - i * 3.6f;
+            float a = Mathf.Clamp01(lt / 0.25f) * Mathf.Clamp01((3.6f - lt) / 0.3f);
+            Rect r = new Rect(W * 0.5f - 330f, 112f, 660f, 30f);
+            UiKit.Rect(r, new Color(0f, 0f, 0f, 0.55f * a));
+            UiKit.Rect(new Rect(r.x, r.yMax - 2f, r.width * Mathf.Clamp01(lt / 3.6f), 2f), new Color(Gold.r, Gold.g, Gold.b, a));
+            UiKit.Text(r, Tips[i], 14f, new Color(1f, 0.95f, 0.85f, a));
+        }
+
+        void Finish() { tutDone = 1; PlayerPrefs.SetInt("tut_done", 1); }
 
         void DrawStats(float cx, float y, float a)
         {
