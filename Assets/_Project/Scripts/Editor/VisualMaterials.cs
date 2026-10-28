@@ -57,7 +57,7 @@ namespace BladePath.EditorTools
             l.stoneBlock = Textured("Env_StoneBlock", "stoneblock_albedo.png", "stoneblock_normal.png", Vector2.one, Color.white, 0f, 0.25f);
             l.gravel = Textured("Env_Gravel", "gravel_albedo.png", "gravel_normal.png", Vector2.one, Color.white, 0f, 0.15f);
             l.bark = Textured("Env_Bark", "bark_albedo.png", "bark_normal.png", new Vector2(2f, 2f), Color.white, 0f, 0.1f);
-            l.blossom = Textured("Env_Blossom", "blossom_albedo.png", null, new Vector2(3f, 3f), new Color(1f, 0.32f, 0.3f), 0f, 0.1f);   // кроны — багровый клён, как в референсе
+            l.blossom = Textured("Env_Blossom", "blossom_albedo.png", null, new Vector2(3f, 3f), new Color(0.95f, 0.85f, 0.85f), 0f, 0.1f);   // кроны — текстура красного клёна (лист 2)
             l.shoji = Textured("Env_Shoji", "shoji_albedo.png", null, Vector2.one, new Color(0.9f, 0.85f, 0.75f), 0f, 0.2f);
             Texture2D se = Tex("shoji_emission.png", false);
             if (se != null)

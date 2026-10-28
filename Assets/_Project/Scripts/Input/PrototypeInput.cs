@@ -410,7 +410,19 @@ namespace BladePath
             bool h = held[i];
             float a = ready ? 1f : 0.45f;
             // кнопки в стиле референса: каменный круг в металлической оправе; у главных — свой нарисованный значок
-            string full = b == B.Overhead ? "UI/btn_heavy" : b == B.Block ? "UI/btn_block" : b == B.Dash ? "UI/btn_dash" : b == B.Jump ? "UI/btn_jump" : null;
+            string full = null;
+            switch (b)
+            {
+                case B.Overhead: full = "UI/btn_overhead"; break;
+                case B.Rising: full = "UI/btn_rising"; break;
+                case B.Legs: full = "UI/btn_legs"; break;
+                case B.Thrust: full = "UI/btn_thrust"; break;
+                case B.Slash: full = "UI/btn_slash"; break;
+                case B.Energy: full = "UI/btn_energy"; break;
+                case B.Block: full = "UI/btn_block"; break;
+                case B.Dash: full = "UI/btn_dash"; break;
+                case B.Jump: full = "UI/btn_jump"; break;
+            }
             Texture2D ft = full != null ? UiKit.Tex(full) : null;
             Texture2D bt = ft != null ? ft : UiKit.Tex("UI/btn_base");
             if (bt != null)
@@ -524,6 +536,12 @@ namespace BladePath
             Vector2 c = ctr[i]; float r = rad[i];
             float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 7f);
             UiKit.Disc(c, r + 8f + pulse * 6f, new Color(0.4f, 0.8f, 1f, 0.18f + 0.15f * pulse));
+            Texture2D st = UiKit.Tex("UI/btn_super");
+            if (st != null)
+            {
+                UiKit.Image(c, r * (held[i] ? 1.0f : 1.08f), st, held[i] ? new Color(1f, 1f, 1f) : new Color(0.85f + 0.15f * pulse, 0.9f + 0.1f * pulse, 1f));
+                return;
+            }
             UiKit.Disc(c, r, held[i] ? new Color(0.9f, 0.95f, 1f, 1f) : new Color(0.1f, 0.35f, 0.6f, 0.92f));
             UiKit.Ring(c, r, new Color(1f, 0.9f, 0.55f, 1f));
             UiKit.Ring(c, r * 0.8f, new Color(1f, 1f, 1f, 0.35f), true);
