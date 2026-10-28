@@ -7,6 +7,7 @@ namespace BladePath
     /// и цветокоррекция. Высокая графика — bloom + цвет, экономная — только цвет (один проход).
     /// </summary>
     [RequireComponent(typeof(Camera))]
+    [ExecuteAlways]   // и в редакторе: кадры сцены из CI (SceneShots) — с той же пост-обработкой, что в игре
     public class PostFX : MonoBehaviour
     {
         public Material material;

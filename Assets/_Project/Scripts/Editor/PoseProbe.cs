@@ -30,6 +30,7 @@ namespace BladePath.EditorTools
                 EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
                 foreach (FighterController f in UnityEngine.Object.FindObjectsByType<FighterController>(FindObjectsSortMode.None))
                     Probe(f);
+                SceneShots.Capture(all);   // кадры сцены (build/shots) — оценка картинки без телефона
             }
             catch (Exception e) { all.Append("PROBE|error|" + e + "\n"); }
             finally { EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single); }   // изменения сцены не сохраняются
