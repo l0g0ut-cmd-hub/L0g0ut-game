@@ -157,7 +157,7 @@ namespace BladePath
             float ik = 0f;
             if (dm != null && dm.State == DuelState.Intro)
             {
-                float u = Mathf.Clamp01(dm.StateTime / Mathf.Max(0.1f, dm.introSeconds * 0.9f));
+                float u = Mathf.Clamp01(dm.StateTime / Mathf.Max(0.1f, dm.IntroLength * 0.9f));
                 ik = 1f - u * u * (3f - 2f * u);
                 if (!introPlaying) { cineYaw = 0f; introPlaying = true; }
             }

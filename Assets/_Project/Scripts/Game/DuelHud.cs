@@ -114,14 +114,14 @@ namespace BladePath
             if (duel.State == DuelState.Intro)
             {
                 bool deciding = duel.PlayerWins == duel.winsToMatch - 1 && duel.EnemyWins == duel.winsToMatch - 1;
-                float ta = Mathf.Clamp01(1f - duel.StateTime / duel.introSeconds * 0.9f);
+                float ta = Mathf.Clamp01(1f - duel.StateTime / duel.IntroLength * 0.9f);
                 UiKit.Text(new Rect(cx - 300f, 110f, 600f, 40f), deciding ? "РЕШАЮЩИЙ РАУНД" : "РАУНД " + duel.Round, 26f, new Color(0.95f, 0.9f, 0.8f, ta));
                 if (duel.Round == 1)
                 {
                     UiKit.Text(new Rect(cx - 400f, 262f, 800f, 34f), "ПУТЬ " + (Ladder.Index + 1) + " / " + Ladder.Count + "  ·  " + Ladder.Current.name, 22f, new Color(Gold.r, Gold.g, Gold.b, ta));
                     UiKit.Text(new Rect(cx - 400f, 292f, 800f, 24f), Ladder.Current.title, 15f, new Color(0.9f, 0.88f, 0.82f, ta * 0.9f));
                 }
-                float t = duel.StateTime / duel.introSeconds;
+                float t = duel.StateTime / duel.IntroLength;
                 float a = t < 0.75f ? 1f : Mathf.Clamp01((1f - t) * 4f);
                 float sc = 1f + (1f - Mathf.Clamp01(t * 3f)) * 0.8f;
                 UiKit.Text(new Rect(cx - 300f, 150f, 600f, 110f), "БОЙ!", 78f * sc, new Color(Gold.r, Gold.g, Gold.b, a));

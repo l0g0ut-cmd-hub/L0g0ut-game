@@ -18,6 +18,8 @@ namespace BladePath
         public FighterController player, enemy;
         public float maxHp = 100f;
         public float introSeconds = 1.4f;
+        /// <summary>Первый раунд матча — дольше: карточка противника «Пути».</summary>
+        public float IntroLength { get { return Round <= 1 ? introSeconds + 1.3f : introSeconds; } }
         public int winsToMatch = 2;                       // матч до двух побед
         public float nextRoundDelay = 2.8f;
         public int PlayerWins { get; private set; }
@@ -217,7 +219,7 @@ namespace BladePath
                 hpTrail[f] = tr;
             }
 
-            if (State == DuelState.Intro && StateTime >= introSeconds)
+            if (State == DuelState.Intro && StateTime >= IntroLength)
             {
                 SetState(DuelState.Fighting); Freeze(false);
                 if (Juice.Instance != null) Juice.Instance.Taiko(1f, 1.1f);
