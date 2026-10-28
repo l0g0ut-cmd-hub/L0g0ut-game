@@ -50,6 +50,16 @@ namespace BladePath.EditorTools
             viz.fighters = new FighterController[] { player, enemy };
             viz.resolver = resolver;
             viz.lineMaterial = MakeLineMaterial();
+            viz.visible = false;   // зоны и журнал только по запросу (пауза → ОТЛАДКА / F1)
+
+            DuelManager duel = systems.AddComponent<DuelManager>();
+            duel.player = player;
+            duel.enemy = enemy;
+            DuelHud hud = systems.AddComponent<DuelHud>();
+            hud.duel = duel;
+            EnemyAI ai = systems.AddComponent<EnemyAI>();
+            ai.self = enemy;
+            ai.target = player;
 
             PrototypeInput input = systems.AddComponent<PrototypeInput>();
             input.player = player;

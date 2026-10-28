@@ -34,10 +34,27 @@ namespace BladePath
         public Material projectileMaterial;
         public float energySpeed = 7f;
 
+        [Header("Dash")]
+        public float dashSpeed = 6.5f;
+        public float dashTime = 0.18f;
+        public float dashCooldown = 0.9f;
+
         public bool Grounded { get; private set; }
+        /// <summary>Боец повержен: не двигается и не бьёт, тело падает (HeroRigDriver).</summary>
+        public bool Dead { get; set; }
+        /// <summary>Заморожен менеджером дуэли (до начала боя / после победы / пауза).</summary>
+        public bool Frozen { get; set; }
+        /// <summary>Оглушён после попадания (сек. осталось).</summary>
+        public float StunLeft { get { return Mathf.Max(0f, stunUntil - Time.time); } }
+        public bool Stunned { get { return Time.time < stunUntil; } }
+        public bool CanAct { get { return !Dead && !Frozen && !Stunned; } }
+        public bool Dashing { get { return dashLeft > 0f; } }
+        public float DashReady01 { get { return Mathf.Clamp01(1f - (dashReadyAt - Time.time) / dashCooldown); } }
         /// <summary>Скорость хода в этом кадре 0…1; знак минус, если идёт спиной к направлению взгляда — для аниматора.</summary>
         public float MoveAxis { get; private set; }
 
+        float stunUntil, dashLeft, dashReadyAt;
+        Vector3 dashDir;
         Vector2 moveInput;       // желаемое движение в мировых осях X/Z, длина 0…1
         float vy;
         Vector3 startPosition;
@@ -50,8 +67,28 @@ namespace BladePath
         /// <summary>Задать движение на этот кадр: вектор в мировых осях (x → X, y → Z), длина обрезается до 1.</summary>
         public void SetMoveVector(Vector2 worldXZ) { moveInput = Vector2.ClampMagnitude(worldXZ, 1f); }
 
+        public void Stun(float seconds) { stunUntil = Mathf.Max(stunUntil, Time.time + seconds); }
+
+        /// <summary>Рывок: в сторону вектора (мировой XZ); без вектора — шаг назад от противника.</summary>
+        public bool Dash(Vector2 worldXZ)
+        {
+            if (!CanAct || Time.time < dashReadyAt || !Grounded) return false;
+            Vector3 d = new Vector3(worldXZ.x, 0f, worldXZ.y);
+            if (d.sqrMagnitude < 0.04f)
+            {
+                d = opponent != null ? transform.position - opponent.transform.position : -transform.forward;
+                d.y = 0f;
+            }
+            if (d.sqrMagnitude < 1e-6f) d = -transform.forward;
+            dashDir = d.normalized;
+            dashLeft = dashTime;
+            dashReadyAt = Time.time + dashCooldown;
+            return true;
+        }
+
         public bool Jump()
         {
+            if (!CanAct) return false;
             if (!Grounded) return false;
             vy = jumpVelocity;
             Grounded = false;
@@ -63,7 +100,7 @@ namespace BladePath
         /// </summary>
         public bool Attack(AttackType type)
         {
-            if (weapon == null) return false;
+            if (weapon == null || !CanAct) return false;
             AttackType t = type;
             if (!Grounded)
             {
@@ -103,13 +140,19 @@ namespace BladePath
 
             float speed = moveSpeed;
             if (weapon != null && weapon.Phase != SwingPhase.Idle) speed *= attackMoveMultiplier;
-            Vector3 mv = new Vector3(moveInput.x, 0f, moveInput.y);
+            Vector3 mv = CanAct ? new Vector3(moveInput.x, 0f, moveInput.y) : Vector3.zero;
             float mag = Mathf.Min(1f, mv.magnitude);
             float sign = 1f;
             if (mag > 0.01f) { mv /= mv.magnitude; if (Vector3.Dot(mv, fwd) < -0.3f) sign = -1f; }
             MoveAxis = mag * sign;
 
             Vector3 delta = mv * (mag * speed * dt);
+            if (dashLeft > 0f)
+            {
+                float dd = Mathf.Min(dt, dashLeft);
+                delta += dashDir * (dashSpeed * dd);
+                dashLeft -= dt;
+            }
             if (weapon != null) delta += fwd * (weapon.CurrentLunge * dt);   // бросок вперёд в ударе из прыжка
             if (delta.sqrMagnitude > 1e-10f) Move(delta);
             moveInput = Vector2.zero;
@@ -164,6 +207,7 @@ namespace BladePath
             vy = 0f;
             Grounded = true;
             moveInput = Vector2.zero;
+            Dead = false; Frozen = false; stunUntil = 0f; dashLeft = 0f; dashReadyAt = 0f;
             if (weapon != null) weapon.ResetState();
             if (zones != null) for (int i = 0; i < zones.Length; i++) if (zones[i] != null) zones[i].ClearFlash();
             EnergyProjectile.DestroyAll();

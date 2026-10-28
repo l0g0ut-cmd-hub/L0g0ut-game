@@ -57,8 +57,9 @@ namespace BladePath
 
         float l1L, l2L, l1R, l2R;
         float lean, yawS, yawV, bS, bV, crouchS, crouchV, kick;
-        float pivotRestY, walkS;
+        float pivotRestY, walkS, deadK;
         Vector3 baseLocalPos;
+        Quaternion baseLocalRot = Quaternion.identity;
         Quaternion bindL, bindR;
         float sideL = 1f, sideR = -1f;
         bool framesReady;
@@ -69,6 +70,7 @@ namespace BladePath
             Cache(upperArmL, forearmL, handL, out l1L, out l2L);
             Cache(upperArmR, forearmR, handR, out l1R, out l2R);
             baseLocalPos = transform.localPosition;
+            baseLocalRot = transform.localRotation;
             if (weapon != null && weapon.pivot != null) pivotRestY = weapon.pivot.localPosition.y;
             CacheHandFrame(handL, forearmL, out bindL, out sideL);
             CacheHandFrame(handR, forearmR, out bindR, out sideR);
@@ -157,6 +159,7 @@ namespace BladePath
                 }
                 crouchTarget = Mathf.Clamp01((pivotRestY - weapon.PureLocalPosition.y) / 0.45f);
             }
+            if (fighter.Dashing) { crouchTarget = Mathf.Max(crouchTarget, 0.35f); pitchTarget = Mathf.Max(pitchTarget, 10f); }
             lean = Mathf.MoveTowards(lean, pitchTarget, 140f * dt);
             yawS = Mathf.SmoothDampAngle(yawS, yawTarget, ref yawV, 0.05f);
             bS = Mathf.SmoothDamp(bS, bTarget, ref bV, 0.04f);
@@ -187,6 +190,15 @@ namespace BladePath
                        + sc * 0.78f * (1f - Mathf.Cos(stride * Mathf.Deg2Rad));   // ноги врозь — таз ниже, иначе стопы повисают над полом
             Vector3 off = new Vector3(0f, -drop - Mathf.Max(0f, bS) * 0.02f, lunge);
             transform.localPosition = baseLocalPos + off;
+            deadK = Mathf.MoveTowards(deadK, fighter.Dead ? 1f : 0f, dt / 0.8f);
+            if (deadK > 0.001f)
+            {
+                // падение навзничь вокруг стоп (поворот в системе бойца: +Z вперёд, +X вправо)
+                Quaternion q = Quaternion.AngleAxis(-84f * Smooth(deadK), Vector3.right);
+                transform.localPosition = q * (baseLocalPos + off);
+                transform.localRotation = q * baseLocalRot;
+            }
+            else transform.localRotation = baseLocalRot;
 
             // ---------- 4) повороты костей сверху вниз (родитель раньше ребёнка)
             Rot(hips, yawS * hipsYawK + swayYaw * 0.4f, up);
@@ -232,6 +244,8 @@ namespace BladePath
                 }
             }
 
+            if (deadK > 0.5f) { DropSword(); return; }
+
             // ---------- 5) руки держат рукоять
             Vector3 axis = bladeRoot.forward;
             Vector3 back = -axis;
@@ -252,6 +266,17 @@ namespace BladePath
                 OrientHand(handR, bindR, fR, nR);
                 OrientHand(handL, bindL, fL, nL);
             }
+        }
+
+        /// <summary>Повержен: меч выпадает из рук и ложится на землю рядом.</summary>
+        void DropSword()
+        {
+            if (weapon == null || weapon.pivot == null) return;
+            float k = Smooth(Mathf.InverseLerp(0.5f, 1f, deadK));
+            Transform pv = weapon.pivot;
+            Vector3 lie = new Vector3(0.40f * weapon.yawSign, 0.04f, 0.45f);
+            pv.localPosition = Vector3.Lerp(pv.localPosition, lie, k);
+            pv.localRotation = Quaternion.Slerp(pv.localRotation, Quaternion.Euler(0f, 70f * weapon.yawSign, 0f), k);
         }
 
         static void Rot(Transform t, float angle, Vector3 axis)
