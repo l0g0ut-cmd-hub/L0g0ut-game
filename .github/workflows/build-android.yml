@@ -101,6 +101,7 @@ jobs:
           D="$RUNNER_TEMP/apkdrop"; rm -rf "$D"; mkdir -p "$D"; cd "$D"
           git init -q; git checkout -q -b apk-latest
           sudo cp "$GITHUB_WORKSPACE"/build/Android/*.apk ./BladePath.apk; sudo chown "$(id -u)" BladePath.apk
+          if [ -f "$GITHUB_WORKSPACE/build/probe.txt" ]; then sudo cp "$GITHUB_WORKSPACE/build/probe.txt" ./probe.txt; sudo chown "$(id -u)" probe.txt; fi
           echo "run ${GITHUB_RUN_NUMBER} sha ${GITHUB_SHA}" > info.txt
           git -c user.name=ci -c user.email=ci@local add -A
           git -c user.name=ci -c user.email=ci@local commit -qm "apk run ${GITHUB_RUN_NUMBER}"

@@ -34,6 +34,7 @@ namespace BladePath.EditorTools
                 // Сцены создаются из кода, в репозитории их нет. Порядок: меню (индекс 0), потом бой.
                 MainMenuBuilder.Build();
                 PrototypeSceneBuilder.Build();
+                PoseProbe.Run(PrototypeSceneBuilder.ScenePath);   // диагностика позы скелета в Unity (build/probe.txt → ветка apk-latest)
                 string[] scenes = new string[] { MainMenuBuilder.ScenePath, PrototypeSceneBuilder.ScenePath };
                 EditorBuildSettings.scenes = new EditorBuildSettingsScene[]
                 {
