@@ -81,6 +81,11 @@ namespace BladePath
         public float postureBack = 6f;     // осанка: грудь назад/вверх, голова поднята (против сутулости модели), град.
         [Range(0f, 1f)] public float headStabilize = 0.75f;   // голова держит горизонт и смотрит на врага, а не болтается с корпусом
 
+        [Header("Мокап-ходьба (Animator: состояние Loco — клипы CMU, запечённые под эту модель, MocapBaker)")]
+        public bool mocapLoco;
+        public Vector2[] locoDirs;     // направление клипа в системе бойца (x — вправо, y — вперёд)
+        public float[] locoSpeeds;     // скорость клипа, м/с (темп в игре = скорость бойца / скорость клипа)
+
         [Header("Отдача при попадании")]
         public float hitKickDecay = 2.8f;  // 1/с
 
@@ -102,6 +107,12 @@ namespace BladePath
         float rollK = 1f, hipsYS;   // перекат стопы по ходу; сглаженная высота таза (руки гасят качание)
         float yF, yR;
         Vector3 lastFtPos;
+        float locoW, prevWLeg = 1f;
+        bool locoMoving, gaitFromBones, footUpL = true, footUpR = true;
+        Vector3 lastPosU, velUS;
+        /// <summary>Шаг времени для диагностики в редакторе (PoseProbe: в edit mode Time.deltaTime = 0). Меньше нуля — обычный Time.deltaTime.</summary>
+        public static float DtOverride = -1f;
+        static float Dt { get { return DtOverride >= 0f ? DtOverride : Time.deltaTime; } }
         bool fallDust;
         bool decapitated;
         /// <summary>Смертельный удар в голову: голова «исчезает» (кость сжимается в точку), из шеи бьёт фонтан.</summary>
@@ -180,9 +191,44 @@ namespace BladePath
                 resolver.HitRegistered += OnHit;
             }
             if (animator == null || fighter == null) return;
-            float move = fighter.MoveAxis;
-            animator.SetFloat("Move", 0f);   // ходьбу делают шаги стоп (HeroRigDriver.Gait), клип WalkF не нужен
+            animator.SetFloat("Move", 0f);   // старый клип WalkF не нужен: ходьба — мокап (Loco) или шаги стоп (Gait)
             animator.SetBool("Grounded", fighter.Grounded);
+            if (mocapLoco)
+            {
+                // мокап-ходьба: направление хода в системе бойца и темп под настоящую скорость (стопы не скользят)
+                float dt = Dt;
+                Transform ft = fighter.transform;
+                Vector3 v = dt > 1e-5f ? (ft.position - lastPosU) / dt : Vector3.zero; v.y = 0f;
+                lastPosU = ft.position;
+                if (v.sqrMagnitude > 25f) v = Vector3.zero;
+                velUS = Vector3.Lerp(velUS, v, 1f - Mathf.Exp(-dt / 0.08f));
+                float spd = velUS.magnitude;
+                bool keyed = weapon != null && weapon.Keyed;
+                locoMoving = Mathf.Abs(fighter.MoveAxis) > 0.1f && !keyed && fighter.Grounded && !fighter.Dead && spd > 0.15f;
+                animator.SetBool("Moving", locoMoving);
+                if (spd > 0.05f)
+                {
+                    Vector3 lv = ft.InverseTransformDirection(velUS / spd);
+                    animator.SetFloat("MoveX", lv.x, 0.1f, dt);
+                    animator.SetFloat("MoveZ", lv.z, 0.1f, dt);
+                    animator.SetFloat("LocoSpeed", Mathf.Clamp(spd / ExpectedLocoSpeed(new Vector2(lv.x, lv.z)), 0.6f, 1.8f));
+                }
+            }
+        }
+
+        /// <summary>Скорость смеси клипов для направления d (веса как у 2D-смеси: ближние по направлению клипы).</summary>
+        float ExpectedLocoSpeed(Vector2 d)
+        {
+            if (locoDirs == null || locoSpeeds == null || locoDirs.Length == 0) return 1f;
+            float ws = 0f, sum = 0f, best = -2f, bestS = 1f;
+            for (int i = 0; i < locoDirs.Length && i < locoSpeeds.Length; i++)
+            {
+                float c = Vector2.Dot(d.normalized, locoDirs[i]);
+                if (c > best) { best = c; bestS = locoSpeeds[i]; }
+                float w = c > 0f ? c * c : 0f;
+                ws += w; sum += w * locoSpeeds[i];
+            }
+            return Mathf.Max(0.2f, ws > 1e-3f ? sum / ws : bestS);
         }
 
         void OnHit(HitResult r)
@@ -206,7 +252,7 @@ namespace BladePath
         void LateUpdate()
         {
             if (fighter == null || bladeRoot == null) return;
-            float dt = Time.deltaTime;
+            float dt = Dt;
             if (decapitated && fighter != null && !fighter.Dead) decapitated = false;   // новый раунд
             if (head != null) head.localScale = decapitated ? Vector3.one * 0.001f : Vector3.one;
             Transform ft = fighter.transform;
@@ -285,25 +331,32 @@ namespace BladePath
             pd *= 1f - 0.85f * postK; pf *= 1f - postK; hYaw *= 1f - 0.85f * postK; hPit *= 1f - 0.6f * postK; cPit *= 1f - 0.5f * postK;
             cYaw += 0.75f * (hYaw0 - hYaw);   // на ходу таз разворачивается по ходу, а грудь с мечом остаётся в стойке — корпус не крутится туда-сюда при каждом старте и остановке
 
+            // мокап-ходьба: ногами и тазом ведёт клип Loco, IK ног уходит; остановился — стопы встают там, где их поставил клип, и шагают в стойку
+            locoW = Mathf.MoveTowards(locoW, mocapLoco && locoMoving ? 1f : 0f, dt / 0.2f);
+            float procW = 1f - locoW;   // доля процедурной ходьбы
+
             // стопы (походка) — до тела: таз и грудь в этом же кадре идут за шагом
-            float wLeg = legsReady && deadK < 0.01f ? wSt : 0f;
+            float wLeg = legsReady && deadK < 0.01f ? wSt * procW : 0f;
+            if (wLeg > 0.001f && prevWLeg <= 0.001f && mocapLoco) { gaitInit = false; gaitFromBones = true; }
+            prevWLeg = wLeg;
             if (wLeg > 0.001f) UpdateGait(ft, ys, ff, rf, keyed, dt);
+            else lastFtPos = ft.position;
             float walkSx = 0f, walkBobY = 0f;
-            if (wLeg > 0.001f && moveK > 0.001f)
+            if (wLeg > 0.001f && moveK > 0.001f && procW > 0.001f)
             {
                 bool frontIsR = footFrontX * ys > 0f;
                 Vector3 posR = frontIsR ? gF.pos : gR.pos, posL = frontIsR ? gR.pos : gF.pos;
                 float dz = Vector3.Dot(posR - posL, fwd);   // правая стопа впереди — правый бок таза вперёд (поворот с минусом)
-                hYaw -= walkHipYaw * dz * moveK; cYaw += walkChestYaw * dz * moveK;
+                hYaw -= walkHipYaw * dz * moveK * procW; cYaw += walkChestYaw * dz * moveK * procW;
                 float swF = gF.step ? Mathf.Sin(Mathf.PI * Mathf.Clamp01(gF.u)) : 0f, swR = gR.step ? Mathf.Sin(Mathf.PI * Mathf.Clamp01(gR.u)) : 0f;
-                walkSx = -walkSway * (gF.side * swF + gR.side * swR) * moveK;
-                walkBobY = walkBob * (swF + swR) * moveK;
+                walkSx = -walkSway * (gF.side * swF + gR.side * swR) * moveK * procW;
+                walkBobY = walkBob * (swF + swR) * moveK * procW;
                 float spd = walkVelS.magnitude;
                 if (spd > 0.05f) cPit += 3f * Vector3.Dot(walkVelS, fwd) / spd * postK;   // корпус чуть подаётся по ходу
             }
 
             // ---------- 2) таз: вынос вперёд и высота (вся модель) — визуально; зоны поражения едут следом (FollowZones)
-            float drop = (stanceDrop * (1f - 0.5f * postK) + pd + walkCrouch * moveK) * wSt;
+            float drop = (stanceDrop * (1f - 0.5f * postK) + pd + walkCrouch * moveK) * wSt * procW;   // на мокапе высоту таза задаёт клип
             Vector3 off = new Vector3(walkSx * wLeg, -drop, pf);
             transform.localPosition = baseLocalPos + off;
             deadK = Mathf.MoveTowards(deadK, fighter.Dead ? 1f : 0f, dt / 0.8f);
@@ -350,8 +403,20 @@ namespace BladePath
             if (wLeg > 0.001f) SolveLegs(ft, ys, hYaw, heel, walkBobY, wLeg);
             else if (fighter.Grounded && deadK < 0.01f && footL != null && footR != null)
             {
+                if (locoW > 0.001f && legsReady) { Rot(upperLegL, -hYaw, up); Rot(upperLegR, -hYaw, up); }   // ноги клипа идут по ходу, а не за поворотом таза стойки
                 float lowest = Mathf.Min(footL.position.y, footR.position.y);   // ходьба: просто ставим нижнюю стопу на землю
                 transform.position += Vector3.up * ((ft.position.y + footRestH) - lowest);
+            }
+
+            // шаги мокапа: стопа опустилась на землю — звук и брызги
+            if (locoW > 0.5f && Juice.Instance != null && footL != null && footR != null)
+            {
+                float gy = ft.position.y + footRestH;
+                float hL = footL.position.y - gy, hR = footR.position.y - gy;
+                if (footUpL && hL < 0.012f) { footUpL = false; Juice.Instance.Footstep(new Vector3(footL.position.x, ft.position.y, footL.position.z), 0.8f); }
+                else if (hL > 0.035f) footUpL = true;
+                if (footUpR && hR < 0.012f) { footUpR = false; Juice.Instance.Footstep(new Vector3(footR.position.x, ft.position.y, footR.position.z), 0.8f); }
+                else if (hR > 0.035f) footUpR = true;
             }
 
             // ---------- 5) руки ставятся относительно плеч в системе корпуса: корпус присел / скрутился / вынесен вперёд — руки с клинком идут за ним
@@ -450,7 +515,18 @@ namespace BladePath
             walkVelS = Vector3.Lerp(walkVelS, vel, 1f - Mathf.Exp(-dt / 0.15f));
             float spS = walkVelS.magnitude, kfS = spS > 0.05f ? Vector3.Dot(walkVelS, ft.forward) / spS : 0f;
             rollK = Mathf.Max(0f, kfS) + 0.5f * Mathf.Max(0f, -kfS);   // перекат пятка→носок только по ходу вперёд (назад — вполовину, вбок — без него)
-            if (!gaitInit) { gF = NewFoot(tF, yF, sideF); gR = NewFoot(tR, yR, sideR); gaitInit = true; walking = false; }
+            if (!gaitInit)
+            {
+                if (gaitFromBones && footL != null && footR != null)
+                {
+                    // после мокап-ходьбы стопы стоят там, где их поставил клип
+                    Transform fb = frontIsR ? footR : footL, rb = frontIsR ? footL : footR;
+                    Vector3 pF = fb.position, pR = rb.position; pF.y = ground; pR.y = ground;
+                    gF = NewFoot(pF, ftYaw + sideF * walkFootOut, sideF); gR = NewFoot(pR, ftYaw + sideR * walkFootOut, sideR);
+                }
+                else { gF = NewFoot(tF, yF, sideF); gR = NewFoot(tR, yR, sideR); }
+                gaitFromBones = false; gaitInit = true; walking = false;
+            }
             gF.side = sideF; gR.side = sideR;
             bool stepF0 = gF.step, stepR0 = gR.step;
             keyW = Mathf.MoveTowards(keyW, keyed ? 1f : 0f, dt / 0.12f);

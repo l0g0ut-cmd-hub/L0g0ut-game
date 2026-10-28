@@ -128,7 +128,85 @@ namespace BladePath.EditorTools
                     Dump(f, model, "oh" + tau.ToString("0.00"), sb);
                 }
             }
+            // шейдеры персонажа: не розовый ли (ошибка компиляции → InternalErrorShader)
+            foreach (Renderer r in model.GetComponentsInChildren<Renderer>(true))
+                foreach (Material m in r.sharedMaterials)
+                    if (m != null) sb.Append("PROBE|" + f.name + "|shader|" + r.name + "|" + m.name + "|" + m.shader.name + "|supported " + m.shader.isSupported + "\n");
+            // мокап-клипы: поза по фазам (таз и стопы в системе бойца)
+            if (anim != null && anim.runtimeAnimatorController != null)
+                foreach (AnimationClip c in anim.runtimeAnimatorController.animationClips)
+                {
+                    if (!c.name.Contains("Loco")) continue;
+                    sb.Append("PROBE|" + f.name + "|loco|" + c.name + "|len " + c.length.ToString("F2") + " loop " + c.isLooping + "\n");
+                    Transform hp = Find(model, "Hips"), fl = Find(model, "Foot.L"), fr = Find(model, "Foot.R");
+                    for (int k = 0; k < 8; k++)
+                    {
+                        c.SampleAnimation(anim.gameObject, c.length * k / 8f);
+                        Vector3 a = f.transform.InverseTransformPoint(hp.position), l = f.transform.InverseTransformPoint(fl.position), r = f.transform.InverseTransformPoint(fr.position);
+                        sb.AppendFormat("PROBE|{0}|loco|{1}|ph {2}|hips {3:F3} {4:F3} {5:F3}|L {6:F3} {7:F3} {8:F3}|R {9:F3} {10:F3} {11:F3}\n", f.name, c.name, k, a.x, a.y, a.z, l.x, l.y, l.z, r.x, r.y, r.z);
+                    }
+                }
+            // ходьба целиком (Animator + драйвер, шаг времени 1/30): проскальзывание стоп в опоре, провал в пол, состояние
+            if (anim != null && d.mocapLoco)
+            {
+                WalkSim(f, d, anim, model, "F", Vector3.forward, 1.2f, sb);
+                WalkSim(f, d, anim, model, "B", Vector3.back, 1.02f, sb);
+                WalkSim(f, d, anim, model, "R", Vector3.right, 0.72f, sb);
+                WalkSim(f, d, anim, model, "L", Vector3.left, 0.72f, sb);
+                WalkSim(f, d, anim, model, "FR", new Vector3(0.7071f, 0f, 0.7071f), 0.96f, sb);
+            }
             all.Append(sb);
+        }
+
+        static void WalkSim(FighterController f, HeroRigDriver d, Animator anim, Transform model, string label, Vector3 dirLocal, float speed, StringBuilder sb)
+        {
+            const float dt = 1f / 30f;
+            Transform ft = f.transform; Vector3 start = ft.position;
+            MethodInfo fu = typeof(FighterController).GetMethod("Update", F);
+            Transform fl = Find(model, "Foot.L"), fr = Find(model, "Foot.R"), hp = Find(model, "Hips");
+            HeroRigDriver.DtOverride = dt;
+            if (f.weapon != null) f.weapon.ResetState();   // после кадров удара — снова стойка
+            try
+            {
+                Vector3 wdir = ft.TransformDirection(dirLocal);
+                List<Vector3> L = new List<Vector3>(), R = new List<Vector3>(); List<float> H = new List<float>();
+                int frames = 90, stopAt = 70;
+                string st = "";
+                for (int i = 0; i < frames; i++)
+                {
+                    bool go = i < stopAt;
+                    if (go) f.SetMoveVector(new Vector2(wdir.x, wdir.z));
+                    if (fu != null) fu.Invoke(f, null);
+                    if (go) ft.position += wdir * (speed * dt);
+                    Call(d, "Update");
+                    anim.Update(dt);
+                    Call(d, "LateUpdate");
+                    L.Add(fl.position); R.Add(fr.position); H.Add(hp.position.y - ft.position.y);
+                    if (i == stopAt - 1)
+                    {
+                        AnimatorStateInfo si = anim.GetCurrentAnimatorStateInfo(0);
+                        st = (si.IsName("Loco") ? "Loco" : si.IsName("Idle") ? "Idle" : "?") + string.Format(" x {0:F2} z {1:F2} tempo {2:F2}", anim.GetFloat("MoveX"), anim.GetFloat("MoveZ"), anim.GetFloat("LocoSpeed"));
+                    }
+                }
+                float minY = float.MaxValue;
+                for (int i = 0; i < frames; i++) minY = Mathf.Min(minY, Mathf.Min(L[i].y, R[i].y) - ft.position.y);
+                float slideSum = 0f, slideMax = 0f; int slideN = 0; float hMin = float.MaxValue, hMax = float.MinValue;
+                for (int i = 25; i < stopAt; i++)
+                {
+                    hMin = Mathf.Min(hMin, H[i]); hMax = Mathf.Max(hMax, H[i]);
+                    for (int s = 0; s < 2; s++)
+                    {
+                        Vector3 a = s == 0 ? L[i - 1] : R[i - 1], b = s == 0 ? L[i] : R[i];
+                        if (Mathf.Min(a.y, b.y) - ft.position.y > minY + 0.02f) continue;   // стопа в воздухе
+                        Vector3 dv = b - a; dv.y = 0f; float v = dv.magnitude / dt;
+                        slideSum += v; slideN++; slideMax = Mathf.Max(slideMax, v);
+                    }
+                }
+                sb.AppendFormat("PROBE|{0}|walk_{1}|v {2:F2}|slide mean {3:F2} max {4:F2} m/s (n {5})|footMinY {6:F3}|hips {7:F3}..{8:F3}|{9}\n",
+                    f.name, label, speed, slideN > 0 ? slideSum / slideN : 0f, slideMax, slideN, minY, hMin, hMax, st);
+            }
+            catch (Exception e) { sb.Append("PROBE|" + f.name + "|walk_" + label + "|error " + e.Message + "\n"); }
+            finally { HeroRigDriver.DtOverride = -1f; ft.position = start; }
         }
     }
 }

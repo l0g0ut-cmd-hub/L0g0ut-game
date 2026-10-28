@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
@@ -44,7 +45,6 @@ namespace BladePath.EditorTools
             }
 
             ConfigureImport(fbx);
-            AnimatorController ctrl = BuildController(fbx, ctrlPath);
 
             GameObject model = (GameObject)PrefabUtility.InstantiatePrefab(asset);
             model.name = undead ? "UndeadModel" : (ronin ? "RoninModel" : "HeroModel");
@@ -78,6 +78,11 @@ namespace BladePath.EditorTools
                 smr.sharedMaterials = mats;
                 smr.updateWhenOffscreen = true;   // модель сильно двигается, bounds из позы покоя не годятся для отсечения
             }
+
+            // Мокап-ходьба: клипы под скелет этой модели (вперёд/назад/вбок), до сборки контроллера
+            if (!AssetDatabase.IsValidFolder("Assets/_Project/Animation")) AssetDatabase.CreateFolder("Assets/_Project", "Animation");
+            List<MocapBaker.Result> loco = MocapBaker.Bake(model.transform, fighter.transform, n => FindBone(model.transform, n), Clip(fbx, "Idle"), "Assets/_Project/Animation", undead ? "Undead_" : "Hero_");
+            AnimatorController ctrl = BuildController(fbx, ctrlPath, loco);
 
             // Аниматор
             Animator anim = model.GetComponent<Animator>();
@@ -115,6 +120,9 @@ namespace BladePath.EditorTools
             d.upperArmR = FindBone(model.transform, "UpperArm.R");
             d.forearmR = FindBone(model.transform, "Forearm.R");
             d.handR = FindBone(model.transform, "Hand.R");
+            d.mocapLoco = loco.Count >= 3;
+            d.locoDirs = new Vector2[loco.Count]; d.locoSpeeds = new float[loco.Count];
+            for (int i = 0; i < loco.Count; i++) { d.locoDirs[i] = loco[i].dir; d.locoSpeeds[i] = loco[i].speed; }
             if (samurai) { d.palmOffset = fbx == Samurai2FbxPath ? 0.085f : 0.09f; d.palmLift = fbx == Samurai2FbxPath ? 0.03f : 0.035f; d.eyeHeight = 0.10f; }   // кулак сжат вокруг рукояти: рукоять внутри пальцев
 
             if (undead)
@@ -186,7 +194,7 @@ namespace BladePath.EditorTools
             return null;
         }
 
-        static AnimatorController BuildController(string fbx, string ControllerPath)
+        static AnimatorController BuildController(string fbx, string ControllerPath, List<MocapBaker.Result> loco)
         {
             if (!AssetDatabase.IsValidFolder("Assets/_Project/Animation")) AssetDatabase.CreateFolder("Assets/_Project", "Animation");
             AssetDatabase.DeleteAsset(ControllerPath);
@@ -203,6 +211,29 @@ namespace BladePath.EditorTools
             AnimatorState jump = sm.AddState("Jump"); jump.motion = Clip(fbx, "Jump");
             AnimatorState hit = sm.AddState("Hit"); hit.motion = Clip(fbx, "Hit");
             sm.defaultState = idle;
+
+            // мокап-ходьба: 2D-смесь клипов по направлению хода в системе бойца (x — вправо, y — вперёд), темп — LocoSpeed
+            if (loco != null && loco.Count >= 3)
+            {
+                c.AddParameter("MoveX", AnimatorControllerParameterType.Float);
+                c.AddParameter("MoveZ", AnimatorControllerParameterType.Float);
+                c.AddParameter("Moving", AnimatorControllerParameterType.Bool);
+                c.AddParameter("LocoSpeed", AnimatorControllerParameterType.Float);
+                BlendTree bt = new BlendTree { name = "Loco", blendType = BlendTreeType.FreeformDirectional2D, blendParameter = "MoveX", blendParameterY = "MoveZ", useAutomaticThresholds = false };
+                AssetDatabase.AddObjectToAsset(bt, c);
+                foreach (MocapBaker.Result r in loco) bt.AddChild(r.clip, r.dir);
+                AnimatorState ls = sm.AddState("Loco"); ls.motion = bt;
+                ls.speedParameterActive = true; ls.speedParameter = "LocoSpeed";
+                AnimatorStateTransition lt = idle.AddTransition(ls);
+                lt.hasExitTime = false; lt.duration = 0.2f;
+                lt.AddCondition(AnimatorConditionMode.If, 0f, "Moving");
+                lt = ls.AddTransition(idle);
+                lt.hasExitTime = false; lt.duration = 0.2f;
+                lt.AddCondition(AnimatorConditionMode.IfNot, 0f, "Moving");
+                lt = ls.AddTransition(jump);
+                lt.hasExitTime = false; lt.duration = 0.08f;
+                lt.AddCondition(AnimatorConditionMode.IfNot, 0f, "Grounded");
+            }
 
             // стойка → шаг (вперёд или назад)
             AnimatorStateTransition t = idle.AddTransition(walk);
