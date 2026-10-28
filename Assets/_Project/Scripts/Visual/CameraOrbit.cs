@@ -25,6 +25,9 @@ namespace BladePath
         public float smoothTime = 0.08f;
         [Range(0f, 1f)] public float followMidpoint = 0.5f;          // насколько камера следует за серединой между бойцами (X и Z)
 
+        float shakeAmp;
+        public void Shake(float amount) { shakeAmp = Mathf.Max(shakeAmp, amount); }
+
         float yaw, pitch, dist;
         float yawT, pitchT, distT, yawV, pitchV, distV;
         float midX, midZ, midVx, midVz;
@@ -143,6 +146,11 @@ namespace BladePath
             Quaternion rot = Quaternion.Euler(pitch, yaw, 0f);
             Vector3 pos = focus + rot * new Vector3(0f, 0f, -dist);
             if (pos.y < 0.15f) pos.y = 0.15f;
+            if (shakeAmp > 0.0005f)
+            {
+                pos += Random.insideUnitSphere * shakeAmp;
+                shakeAmp *= Mathf.Exp(-14f * Time.unscaledDeltaTime);
+            }
             transform.position = pos;
             transform.rotation = Quaternion.LookRotation(focus - pos, Vector3.up);
         }

@@ -34,10 +34,17 @@ namespace BladePath
         readonly Dictionary<FighterController, float> lastHitTime = new Dictionary<FighterController, float>();
         CombatResolver resolver;
         float stateStart;
-        float slowUntil;
+        float slowUntil, hitStopUntil;
 
         void Awake() { Instance = this; }
-        void Start() { ResetDuel(); }
+        void Start()
+        {
+            Juice j = GetComponent<Juice>();
+            if (j == null) j = gameObject.AddComponent<Juice>();
+            if (player != null) j.Track(player.weapon);
+            if (enemy != null) j.Track(enemy.weapon);
+            ResetDuel();
+        }
 
         void OnDestroy() { Time.timeScale = 1f; if (resolver != null) resolver.HitRegistered -= OnHit; if (Instance == this) Instance = null; }
 
@@ -49,7 +56,7 @@ namespace BladePath
         public void ResetDuel()
         {
             Time.timeScale = 1f;
-            Paused = false; Slowmo = false;
+            Paused = false; Slowmo = false; hitStopUntil = 0f;
             if (player != null) { player.ResetFighter(); hp[player] = maxHp; hpTrail[player] = maxHp; lastSwing[player] = -1; }
             if (enemy != null) { enemy.ResetFighter(); hp[enemy] = maxHp; hpTrail[enemy] = maxHp; lastSwing[enemy] = -1; }
             Popups.Clear();
@@ -65,10 +72,13 @@ namespace BladePath
             if (enemy != null) enemy.Frozen = on;
         }
 
-        public void SetPaused(bool p)
+        public void SetPaused(bool p) { Paused = p; ApplyTimeScale(); }
+
+        void ApplyTimeScale()
         {
-            Paused = p;
-            Time.timeScale = p ? 0f : (Slowmo ? 0.3f : 1f);
+            if (Paused) Time.timeScale = 0f;
+            else if (Time.unscaledTime < hitStopUntil) Time.timeScale = 0.03f;
+            else Time.timeScale = Slowmo ? 0.3f : 1f;
         }
 
         void Update()
@@ -90,7 +100,8 @@ namespace BladePath
             }
 
             if (State == DuelState.Intro && StateTime >= introSeconds) { SetState(DuelState.Fighting); Freeze(false); }
-            if (Slowmo && Time.unscaledTime >= slowUntil) { Slowmo = false; if (!Paused) Time.timeScale = 1f; }
+            if (Slowmo && Time.unscaledTime >= slowUntil) Slowmo = false;
+            ApplyTimeScale();
 
             for (int i = Popups.Count - 1; i >= 0; i--) if (Time.unscaledTime - Popups[i].born > 1.0f) Popups.RemoveAt(i);
         }
@@ -135,10 +146,30 @@ namespace BladePath
             AttackType type = r.attacker.weapon != null && r.attacker.weapon.CurrentProfile != null ? r.attacker.weapon.CurrentProfile.type : AttackType.Overhead;
             float dmg = BaseDamage(type) * ZoneMul(r.zone) * (r.glancing ? 0.5f : 1f);
             dmg = Mathf.Round(dmg);
-            ApplyDamage(r.target, r.attacker, dmg, r.contact.point, r.zone == BodyZoneId.Head);
+            if (r.target.Blocking)
+            {
+                bool parry = r.target.BlockTime < 0.25f;
+                Popup bp = new Popup();
+                bp.world = r.contact.point + Vector3.up * 0.2f;
+                bp.text = parry ? "ПАРИРОВАНИЕ!" : "БЛОК";
+                bp.color = parry ? new Color(0.4f, 0.9f, 1f) : new Color(0.75f, 0.85f, 1f);
+                bp.born = Time.unscaledTime; bp.size = parry ? 30f : 24f;
+                Popups.Add(bp);
+                if (Juice.Instance != null) Juice.Instance.OnHit(r.contact.point, r.contact.normal, false, true, false);
+                if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(parry ? 0.05f : 0.025f);
+                if (parry)
+                {
+                    if (r.attacker.weapon != null) r.attacker.weapon.ResetState();
+                    r.attacker.Stun(0.8f);
+                    hitStopUntil = Time.unscaledTime + 0.09f;
+                }
+                else ApplyDamage(r.target, r.attacker, Mathf.Max(1f, Mathf.Round(dmg * 0.15f)), r.contact.point, false, true);
+                return;
+            }
+            ApplyDamage(r.target, r.attacker, dmg, r.contact.point, r.zone == BodyZoneId.Head, false, r.contact.normal);
         }
 
-        void ApplyDamage(FighterController target, FighterController attacker, float dmg, Vector3 point, bool crit)
+        void ApplyDamage(FighterController target, FighterController attacker, float dmg, Vector3 point, bool crit, bool chip = false, Vector3 normal = default(Vector3))
         {
             hp[target] = Mathf.Max(0f, Hp(target) - dmg);
             lastHitTime[target] = Time.unscaledTime;
@@ -150,10 +181,17 @@ namespace BladePath
             p.size = crit ? 34f : 26f;
             Popups.Add(p);
             if (Damaged != null) Damaged(target, dmg);
+            bool kill = Hp(target) <= 0f;
+            if (!chip)
+            {
+                if (Juice.Instance != null) Juice.Instance.OnHit(point, normal, dmg >= 20f || crit, false, kill);
+                if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(kill ? 0.12f : (dmg >= 20f ? 0.07f : 0.04f));
+                hitStopUntil = Time.unscaledTime + (kill ? 0.16f : (dmg >= 20f ? 0.08f : 0.05f));
+            }
 
             // оглушение: рубящие выбивают из замаха сильнее
-            if (target.weapon != null && target.weapon.Phase == SwingPhase.Windup) target.weapon.ResetState();
-            target.Stun(dmg >= 20f ? 0.55f : 0.38f);
+            if (!chip && target.weapon != null && target.weapon.Phase == SwingPhase.Windup) target.weapon.ResetState();
+            if (!chip) target.Stun(dmg >= 20f ? 0.55f : 0.38f);
 
             if (Hp(target) <= 0f)
             {
@@ -162,7 +200,6 @@ namespace BladePath
                 SetState(target == player ? DuelState.PlayerLost : DuelState.PlayerWon);
                 if (attacker != null) attacker.Frozen = true;
                 Slowmo = true; slowUntil = Time.unscaledTime + 1.1f;
-                if (!Paused) Time.timeScale = 0.3f;
             }
         }
     }

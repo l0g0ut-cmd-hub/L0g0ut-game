@@ -26,6 +26,10 @@ namespace BladePath
         public Vector3 restEuler = new Vector3(-30f, 0f, 0f);
         [Tooltip("Положение рук в стойке относительно середины плеч в системе корпуса (x вправо, y вверх, z вперёд), м.")]
         public Vector3 restHand = new Vector3(0.02f, -0.30f, 0.33f);
+        [Tooltip("Блок: клинок почти вертикально перед лицом, руки у груди.")]
+        public Vector3 guardEuler = new Vector3(-82f, 8f, 0f);
+        public Vector3 guardHand = new Vector3(0.03f, 0.02f, 0.30f);
+        float blockK;
 
         public SwingProfile CurrentProfile { get; private set; }
         public SwingPhase Phase { get; private set; }
@@ -87,16 +91,20 @@ namespace BladePath
         void ApplyRestPose()
         {
             if (pivot == null) return;
-            pivot.localRotation = Quaternion.Euler(restEuler);
+            Vector3 re = Vector3.Lerp(restEuler, new Vector3(guardEuler.x, guardEuler.y * yawSign, guardEuler.z), Smooth(blockK));
+            pivot.localRotation = Quaternion.Euler(re);
             pivot.localPosition = pivotBasePos;
             VisualLunge = 0f;
-            CurrentEuler = restEuler;
+            CurrentEuler = re;
             PureLocalPosition = pivotBasePos;
-            HandOffset = new Vector3(restHand.x * yawSign, restHand.y, restHand.z);
+            HandOffset = Vector3.Lerp(new Vector3(restHand.x * yawSign, restHand.y, restHand.z), new Vector3(guardHand.x * yawSign, guardHand.y, guardHand.z), Smooth(blockK));
         }
 
         void Update()
         {
+            float bt = (owner != null && owner.Blocking) ? 1f : 0f;
+            blockK = Mathf.MoveTowards(blockK, bt, Time.deltaTime / 0.12f);
+            if (Phase == SwingPhase.Idle && pivot != null) { ApplyRestPose(); return; }
             if (Phase == SwingPhase.Idle || pivot == null || CurrentProfile == null) return;
 
             phaseTime += Time.deltaTime;

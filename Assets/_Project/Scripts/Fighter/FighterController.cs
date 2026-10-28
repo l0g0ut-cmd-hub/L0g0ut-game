@@ -48,12 +48,19 @@ namespace BladePath
         public float StunLeft { get { return Mathf.Max(0f, stunUntil - Time.time); } }
         public bool Stunned { get { return Time.time < stunUntil; } }
         public bool CanAct { get { return !Dead && !Frozen && !Stunned; } }
+        /// <summary>Держит блок: клинок вертикально перед собой, урон сильно режется. Недоступно во время удара, оглушения и смерти.</summary>
+        public bool Blocking { get; private set; }
+        /// <summary>Сколько секунд подряд держится блок (для окна парирования).</summary>
+        public float BlockTime { get; private set; }
+        /// <summary>Блок «выдохся» — какое-то время нельзя поднять снова.</summary>
+        public bool GuardBroken { get { return Time.time < guardBrokenUntil; } }
         public bool Dashing { get { return dashLeft > 0f; } }
         public float DashReady01 { get { return Mathf.Clamp01(1f - (dashReadyAt - Time.time) / dashCooldown); } }
         /// <summary>Скорость хода в этом кадре 0…1; знак минус, если идёт спиной к направлению взгляда — для аниматора.</summary>
         public float MoveAxis { get; private set; }
 
-        float stunUntil, dashLeft, dashReadyAt;
+        float stunUntil, dashLeft, dashReadyAt, guardBrokenUntil;
+        bool blockWanted;
         Vector3 dashDir;
         Vector2 moveInput;       // желаемое движение в мировых осях X/Z, длина 0…1
         float vy;
@@ -66,6 +73,9 @@ namespace BladePath
 
         /// <summary>Задать движение на этот кадр: вектор в мировых осях (x → X, y → Z), длина обрезается до 1.</summary>
         public void SetMoveVector(Vector2 worldXZ) { moveInput = Vector2.ClampMagnitude(worldXZ, 1f); }
+
+        /// <summary>Хочет ли боец держать блок в этом кадре (вызывать каждый кадр).</summary>
+        public void SetBlock(bool want) { blockWanted = want; }
 
         public void Stun(float seconds) { stunUntil = Mathf.Max(stunUntil, Time.time + seconds); }
 
@@ -115,6 +125,13 @@ namespace BladePath
         {
             float dt = Time.deltaTime;
 
+            bool canBlock = CanAct && Grounded && weapon != null && weapon.Phase == SwingPhase.Idle && !GuardBroken;
+            bool wasBlocking = Blocking;
+            Blocking = canBlock && blockWanted;
+            if (Blocking) { BlockTime += dt; if (BlockTime > 2.5f) { Blocking = false; guardBrokenUntil = Time.time + 1.2f; BlockTime = 0f; } }
+            else BlockTime = 0f;
+            blockWanted = false;
+
             if (!Grounded)
             {
                 vy -= gravity * dt;
@@ -140,6 +157,7 @@ namespace BladePath
 
             float speed = moveSpeed;
             if (weapon != null && weapon.Phase != SwingPhase.Idle) speed *= attackMoveMultiplier;
+            if (Blocking) speed *= 0.45f;
             Vector3 mv = CanAct ? new Vector3(moveInput.x, 0f, moveInput.y) : Vector3.zero;
             float mag = Mathf.Min(1f, mv.magnitude);
             float sign = 1f;
@@ -207,7 +225,7 @@ namespace BladePath
             vy = 0f;
             Grounded = true;
             moveInput = Vector2.zero;
-            Dead = false; Frozen = false; stunUntil = 0f; dashLeft = 0f; dashReadyAt = 0f;
+            Dead = false; Frozen = false; Blocking = false; BlockTime = 0f; guardBrokenUntil = 0f; stunUntil = 0f; dashLeft = 0f; dashReadyAt = 0f;
             if (weapon != null) weapon.ResetState();
             if (zones != null) for (int i = 0; i < zones.Length; i++) if (zones[i] != null) zones[i].ClearFlash();
             EnergyProjectile.DestroyAll();

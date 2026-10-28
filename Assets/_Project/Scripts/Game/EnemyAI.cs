@@ -12,7 +12,8 @@ namespace BladePath
         public bool aiEnabled = true;
         [Range(0f, 1f)] public float aggression = 0.55f;
 
-        float nextAttackAt, strafeUntil, retreatUntil, dashAt;
+        float nextAttackAt, strafeUntil, retreatUntil, dashAt, blockUntil;
+        int lastSeenSwing = -1;
         float strafeDir = 1f;
         static readonly AttackType[] Pool = { AttackType.Overhead, AttackType.Overhead, AttackType.Slash, AttackType.SlashBack, AttackType.Thrust, AttackType.Rising, AttackType.LegSweep };
 
@@ -31,6 +32,16 @@ namespace BladePath
 
             if (Time.time > strafeUntil) { strafeUntil = Time.time + Random.Range(0.8f, 1.8f); strafeDir = Random.value < 0.5f ? -1f : 1f; }
 
+            // реакция на атаку игрока: иногда ставит блок
+            WeaponController pw = target.weapon;
+            if (pw != null && pw.Phase == SwingPhase.Windup && pw.SwingId != lastSeenSwing && dist < 1.8f && !busy)
+            {
+                lastSeenSwing = pw.SwingId;
+                if (Random.value < 0.4f) blockUntil = Time.time + Random.Range(0.5f, 0.8f);
+                else if (Random.value < 0.25f) { self.Dash(-dir + side * strafeDir); dashAt = Time.time + 1.5f; }
+            }
+            if (Time.time < blockUntil && !busy) self.SetBlock(true);
+
             Vector3 mv = Vector3.zero;
             const float want = 1.15f;
             if (Time.time < retreatUntil) mv = -dir * 0.9f + side * strafeDir * 0.3f;
@@ -42,7 +53,7 @@ namespace BladePath
             }
             self.SetMoveVector(new Vector2(mv.x, mv.z));
 
-            if (!busy && Time.time >= nextAttackAt && dist < 1.35f)
+            if (!busy && Time.time >= nextAttackAt && Time.time >= blockUntil && dist < 1.35f)
             {
                 AttackType t = Pool[Random.Range(0, Pool.Length)];
                 if (self.Attack(t))

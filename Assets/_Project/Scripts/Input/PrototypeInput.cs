@@ -18,8 +18,8 @@ namespace BladePath
         public FighterController enemy;
 
         enum B { Stick, Jump, Dash, Overhead, Rising, Legs, Energy, Thrust, Slash, Pause,
-                 Resume, Restart, CamReset, AiToggle, DebugToggle, ToMenu, OverAgain, OverMenu }
-        const int Count = 18;
+                 Resume, Restart, CamReset, AiToggle, DebugToggle, ToMenu, OverAgain, OverMenu, Block }
+        const int Count = 19;
 
         const float StickRadius = 84f;
 
@@ -133,6 +133,11 @@ namespace BladePath
                 player.SetMoveVector(mv);
                 if (jump) player.Jump();
                 if (dash) player.Dash(mv);
+                bool blockHeld = held[(int)B.Block];
+#if ENABLE_LEGACY_INPUT_MANAGER
+                blockHeld |= Input.GetKey(KeyCode.B) || Input.GetKey(KeyCode.LeftControl);
+#endif
+                player.SetBlock(blockHeld);
                 if (aOver) player.Attack(AttackType.Overhead);
                 if (aRise) player.Attack(AttackType.Rising);
                 if (aLegs) player.Attack(AttackType.LegSweep);
@@ -177,6 +182,7 @@ namespace BladePath
             Circle(B.Energy, W - 322f, H - 226f, 36f);
             Circle(B.Jump, W - 214f, H - 296f, 34f);
             Circle(B.Dash, W - 412f, H - 66f, 32f);
+            Circle(B.Block, W - 408f, H - 150f, 32f);
             Circle(B.Pause, W * 0.5f, 34f, 20f);
 
             float cx = W * 0.5f;
@@ -191,7 +197,7 @@ namespace BladePath
 
             for (int i = 0; i < Count; i++) active[i] = false;
             if (play)
-                foreach (B b in new[] { B.Stick, B.Jump, B.Dash, B.Overhead, B.Rising, B.Legs, B.Energy, B.Thrust, B.Slash, B.Pause }) active[(int)b] = true;
+                foreach (B b in new[] { B.Stick, B.Jump, B.Dash, B.Block, B.Overhead, B.Rising, B.Legs, B.Energy, B.Thrust, B.Slash, B.Pause }) active[(int)b] = true;
             if (paused)
                 foreach (B b in new[] { B.Resume, B.Restart, B.CamReset, B.AiToggle, B.DebugToggle, B.ToMenu }) active[(int)b] = true;
             if (over) { active[(int)B.OverAgain] = true; active[(int)B.OverMenu] = true; }
@@ -316,6 +322,7 @@ namespace BladePath
             DrawAttack(B.Legs, Icon.Low, air ? "" : "ПО НОГАМ", canAct && !air);
             DrawAttack(B.Energy, Icon.Orb, "ШАР", canAct);
             DrawAttack(B.Jump, Icon.Jump, "ПРЫЖОК", player != null && player.CanAct && player.Grounded);
+            DrawAttack(B.Block, Icon.Shield, "БЛОК", player != null && player.CanAct && !player.GuardBroken && player.weapon != null && player.weapon.Phase == SwingPhase.Idle);
             DrawAttack(B.Dash, Icon.Dash, "РЫВОК", player != null && player.CanAct && player.DashReady01 >= 1f);
             DrawPause();
 
@@ -362,7 +369,7 @@ namespace BladePath
             UiKit.Ring(stickKnob, k, new Color(0f, 0f, 0f, 0.5f));
         }
 
-        enum Icon { Down, Up, Low, Thrust, Slash, SlashBack, Orb, Jump, Dash }
+        enum Icon { Down, Up, Low, Thrust, Slash, SlashBack, Orb, Jump, Dash, Shield }
 
         void DrawAttack(B b, Icon icon, string name, bool ready)
         {
@@ -417,6 +424,13 @@ namespace BladePath
                     UiKit.Line(c + new Vector2(-s * 0.7f, s * 0.8f), c + new Vector2(0f, 0.1f * s), th, new Color(col.r, col.g, col.b, col.a * 0.6f));
                     UiKit.Line(c + new Vector2(s * 0.7f, s * 0.8f), c + new Vector2(0f, 0.1f * s), th, new Color(col.r, col.g, col.b, col.a * 0.6f));
                     break;
+                case Icon.Shield:
+                    {
+                        Vector2[] pts = { new Vector2(-0.75f, -0.8f), new Vector2(0.75f, -0.8f), new Vector2(0.75f, 0.1f), new Vector2(0f, 0.95f), new Vector2(-0.75f, 0.1f) };
+                        for (int i = 0; i < pts.Length; i++) UiKit.Line(c + pts[i] * s, c + pts[(i + 1) % pts.Length] * s, th, col);
+                        UiKit.Line(c + new Vector2(0f, -0.6f) * s, c + new Vector2(0f, 0.55f) * s, th * 0.6f, new Color(col.r, col.g, col.b, col.a * 0.6f));
+                        break;
+                    }
                 case Icon.Dash:
                     UiKit.Line(c + new Vector2(-s * 0.9f, -s * 0.6f), c + new Vector2(-s * 0.2f, 0f), th, col);
                     UiKit.Line(c + new Vector2(-s * 0.9f, s * 0.6f), c + new Vector2(-s * 0.2f, 0f), th, col);
