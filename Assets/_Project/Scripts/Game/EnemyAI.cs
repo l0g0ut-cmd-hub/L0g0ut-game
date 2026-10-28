@@ -32,7 +32,7 @@ namespace BladePath
             if (Time.time > strafeUntil) { strafeUntil = Time.time + Random.Range(0.8f, 1.8f); strafeDir = Random.value < 0.5f ? -1f : 1f; }
 
             Vector3 mv = Vector3.zero;
-            const float want = 1.35f;
+            const float want = 1.15f;
             if (Time.time < retreatUntil) mv = -dir * 0.9f + side * strafeDir * 0.3f;
             else if (!busy)
             {
@@ -42,7 +42,7 @@ namespace BladePath
             }
             self.SetMoveVector(new Vector2(mv.x, mv.z));
 
-            if (!busy && Time.time >= nextAttackAt && dist < 1.6f)
+            if (!busy && Time.time >= nextAttackAt && dist < 1.35f)
             {
                 AttackType t = Pool[Random.Range(0, Pool.Length)];
                 if (self.Attack(t))

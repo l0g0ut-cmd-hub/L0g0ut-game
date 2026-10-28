@@ -44,20 +44,20 @@ namespace BladePath
         public float lungeForward = 0.16f; // выпад вперёд на ударе, м
         public float lungeBack = 0.05f;    // откат назад на замахе, м
         [Tooltip("Глубина приседа на низких ударах: угол бедра, град. (колено ≈ ×1.8).")]
-        public float crouchThigh = 38f;
+        public float crouchThigh = 66f;
 
         [Header("Стойка")]
         [Tooltip("Разнос ног в боевой стойке, град.: передняя нога (на стороне передней руки) вперёд, задняя назад. На ходьбе гасится.")]
-        public float stanceStagger = 26f;
+        public float stanceStagger = 46f;
         [Tooltip("Глубина боевой стойки (колени согнуты, таз ниже), 0…1; на ходьбе гасится.")]
-        [Range(0f, 1f)] public float stanceCrouch = 0.60f;
+        [Range(0f, 1f)] public float stanceCrouch = 0.65f;
 
         [Header("Отдача при попадании")]
         public float hitKickDecay = 2.8f;  // 1/с
 
         float l1L, l2L, l1R, l2R;
         float lean, yawS, yawV, bS, bV, crouchS, crouchV, kick;
-        float pivotRestY, walkS, deadK;
+        float pivotRestY, walkS, deadK, footRestH;
         Vector3 baseLocalPos;
         Quaternion baseLocalRot = Quaternion.identity;
         Quaternion bindL, bindR;
@@ -71,6 +71,7 @@ namespace BladePath
             Cache(upperArmR, forearmR, handR, out l1R, out l2R);
             baseLocalPos = transform.localPosition;
             baseLocalRot = transform.localRotation;
+            if (footL != null && footR != null && fighter != null) footRestH = Mathf.Min(footL.position.y, footR.position.y) - fighter.transform.position.y;
             if (weapon != null && weapon.pivot != null) pivotRestY = weapon.pivot.localPosition.y;
             CacheHandFrame(handL, forearmL, out bindL, out sideL);
             CacheHandFrame(handR, forearmR, out bindR, out sideR);
@@ -157,7 +158,7 @@ namespace BladePath
                     yawTarget = Mathf.Clamp(e.y, -maxYaw, maxYaw);
                     pitchTarget = Mathf.Lerp(leanBack, leanForward, Mathf.InverseLerp(-120f, 60f, pitch));
                 }
-                crouchTarget = Mathf.Clamp01((pivotRestY - weapon.PureLocalPosition.y) / 0.45f);
+                crouchTarget = Mathf.Clamp01((weapon.restHand.y - weapon.HandOffset.y) / 0.45f);
             }
             if (fighter.Dashing) { crouchTarget = Mathf.Max(crouchTarget, 0.35f); pitchTarget = Mathf.Max(pitchTarget, 10f); }
             lean = Mathf.MoveTowards(lean, pitchTarget, 140f * dt);
@@ -186,9 +187,6 @@ namespace BladePath
             float lunge = (weapon != null ? weapon.VisualLunge : 0f) - kick * 0.10f;   // руки с клинком едут вместе с телом (WeaponController.VisualLunge)
             float thighRad = cr * crouchThigh * Mathf.Deg2Rad;
             float kneeRad = cr * crouchThigh * 1.8f * Mathf.Deg2Rad;
-            float drop = sc * (0.45f * (1f - Mathf.Cos(thighRad)) + 0.41f * (1f - Mathf.Cos(Mathf.Max(0f, kneeRad - thighRad))))
-                       + sc * 0.78f * (1f - Mathf.Cos(stride * Mathf.Deg2Rad));   // ноги врозь — таз ниже, иначе стопы повисают над полом
-            Vector3 off = new Vector3(0f, -drop - Mathf.Max(0f, bS) * 0.02f, lunge);
             transform.localPosition = baseLocalPos + off;
             deadK = Mathf.MoveTowards(deadK, fighter.Dead ? 1f : 0f, dt / 0.8f);
             if (deadK > 0.001f)
@@ -225,6 +223,22 @@ namespace BladePath
                 Rot(upperLegL, st * 0.6f, right); Rot(lowerLegL, st * 0.5f, right); Rot(footL, -st * 1.1f, right);
             }
 
+            // ---------- 4b') стопы стоят на земле: глубина приседа и ширина шага сами решают, насколько опустить таз
+            if (fighter.Grounded && deadK < 0.01f && footL != null && footR != null)
+            {
+                float lowest = Mathf.Min(footL.position.y, footR.position.y);
+                transform.position += Vector3.up * ((ft.position.y + footRestH) - lowest);
+            }
+
+            // ---------- 4b'') руки ставятся относительно плеч в системе корпуса: корпус присел / скрутился / выпал вперёд — руки с клинком идут за ним
+            if (weapon != null && weapon.pivot != null && upperArmR != null && upperArmL != null)
+            {
+                Vector3 shMid = (upperArmR.position + upperArmL.position) * 0.5f;
+                float twist = yawS * (hipsYawK + spineYawK + chestYawK);
+                Quaternion frame = Quaternion.AngleAxis(twist, up) * ft.rotation;
+                weapon.pivot.position = shMid + frame * weapon.HandOffset;
+            }
+
             // ---------- 4c) досягаемость: если рукоять дальше, чем достают руки (у модели они короткие), меч подтягивается к плечам —
             // кисти всегда остаются на рукояти, а не повисают в воздухе (раньше именно это выглядело как «перелом кисти»)
             if (upperArmR != null && upperArmL != null && weapon != null && weapon.pivot != null)
@@ -246,6 +260,9 @@ namespace BladePath
 
             if (deadK > 0.5f) { DropSword(); return; }
 
+            // ---------- 4d) зоны попадания едут за моделью (присед, выпад), иначе клинок бьёт по воздуху рядом с видимым телом
+            FollowZones(ft, lunge);
+
             // ---------- 5) руки держат рукоять
             Vector3 axis = bladeRoot.forward;
             Vector3 back = -axis;
@@ -266,6 +283,27 @@ namespace BladePath
                 OrientHand(handR, bindR, fR, nR);
                 OrientHand(handL, bindL, fL, nL);
             }
+        }
+
+        Vector3[] zoneBase;
+        void FollowZones(Transform ft, float lunge)
+        {
+            if (fighter.zones == null) return;
+            if (zoneBase == null)
+            {
+                zoneBase = new Vector3[fighter.zones.Length];
+                for (int i = 0; i < zoneBase.Length; i++) zoneBase[i] = fighter.zones[i] != null ? fighter.zones[i].transform.localPosition : Vector3.zero;
+            }
+            float sink = deadK > 0.01f ? 0f : Mathf.Max(0f, (ft.position.y + baseLocalPos.y) - transform.position.y);
+            if (deadK > 0.01f) lunge = 0f;
+            for (int i = 0; i < zoneBase.Length; i++)
+            {
+                BodyZone z = fighter.zones[i];
+                if (z == null) continue;
+                bool leg = z.zoneId == BodyZoneId.LegLeft || z.zoneId == BodyZoneId.LegRight;
+                z.transform.localPosition = zoneBase[i] + new Vector3(0f, -sink * (leg ? 0.5f : 1f), lunge);
+            }
+            Physics.SyncTransforms();
         }
 
         /// <summary>Повержен: меч выпадает из рук и ложится на землю рядом.</summary>

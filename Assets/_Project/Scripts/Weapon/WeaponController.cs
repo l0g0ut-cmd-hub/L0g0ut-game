@@ -24,6 +24,8 @@ namespace BladePath
         [Tooltip("+1/-1: зеркалит боковое отклонение (yaw) ударов для руки с другой стороны. Без этого удары врага мажут.")]
         public int yawSign = 1;
         public Vector3 restEuler = new Vector3(-30f, 0f, 0f);
+        [Tooltip("Положение рук в стойке относительно середины плеч в системе корпуса (x вправо, y вверх, z вперёд), м.")]
+        public Vector3 restHand = new Vector3(0.02f, -0.30f, 0.33f);
 
         public SwingProfile CurrentProfile { get; private set; }
         public SwingPhase Phase { get; private set; }
@@ -46,6 +48,8 @@ namespace BladePath
         public Vector3 CurrentEuler { get; private set; }
         /// <summary>Локальная позиция pivot без поправки «досягаемости рук» (HeroRigDriver подтягивает меч к плечам, если рукоять дальше, чем достают руки).</summary>
         public Vector3 PureLocalPosition { get; private set; }
+        /// <summary>Где должны быть руки сейчас: смещение от середины плеч в системе корпуса. Модель (HeroRigDriver) ставит pivot по нему; без модели работает старое смещение pivotOffset.</summary>
+        public Vector3 HandOffset { get; private set; }
 
         public event Action<WeaponController> ContactWindowOpened;
         public event Action<WeaponController> ContactWindowClosed;
@@ -88,6 +92,7 @@ namespace BladePath
             VisualLunge = 0f;
             CurrentEuler = restEuler;
             PureLocalPosition = pivotBasePos;
+            HandOffset = new Vector3(restHand.x * yawSign, restHand.y, restHand.z);
         }
 
         void Update()
@@ -176,6 +181,20 @@ namespace BladePath
                     off = off1 * (1f - Smooth(t));
                     break;
             }
+            // положение рук относительно плеч (то же время/форма, что и у pivotOffset)
+            Vector3 hr = new Vector3(restHand.x * yawSign, restHand.y, restHand.z);
+            Vector3 h0 = p.hasHand ? new Vector3(p.hand0.x * yawSign, p.hand0.y, p.hand0.z) : hr;
+            Vector3 h1 = p.hasHand ? new Vector3(p.hand1.x * yawSign, p.hand1.y, p.hand1.z) : h0;
+            Vector3 hand;
+            switch (Phase)
+            {
+                case SwingPhase.Windup: hand = Vector3.Lerp(hr, h0, Smooth(t)); break;
+                case SwingPhase.Strike:
+                    { float uu = Mathf.Pow(t, 1.5f); hand = Vector3.Lerp(h0, h1, uu) + new Vector3(0f, 0f, p.arcBulge * Mathf.Sin(Mathf.PI * uu)); break; }
+                case SwingPhase.FollowThrough: hand = h1; break;
+                default: hand = Vector3.Lerp(h1, hr, Smooth(t)); break;
+            }
+            HandOffset = hand;
             // Euler-интерполяция выбрана осознанно: слерп кватернионов при развороте ~180° неоднозначен.
             float b;   // поза тела: −1 замах … +1 конец удара (как в HeroRigDriver)
             switch (Phase)
