@@ -155,6 +155,26 @@ namespace BladePath.EditorTools
             return g;
         }
 
+        /// <summary>Ореол-биллборд: аддитивный квад с мягким диском, разворачивается к камере (GlowSprite).</summary>
+        public static GameObject Glow(Transform parent, string name, Vector3 pos, float size, Material mat, float flicker = 0.12f)
+        {
+            string key = "glowquad";
+            Mesh m;
+            if (!cache.TryGetValue(key, out m) || m == null)
+            {
+                MB mb = new MB();
+                mb.Poly(new[] { new Vector3(-0.5f, -0.5f, 0f), new Vector3(0.5f, -0.5f, 0f), new Vector3(0.5f, 0.5f, 0f), new Vector3(-0.5f, 0.5f, 0f) }, 1f, new Vector3(0f, 0f, -1f), true, false);
+                m = Save(key, mb);
+            }
+            GameObject g = Make(parent, name, m, pos, Vector3.zero, mat);
+            g.transform.localScale = Vector3.one * size;
+            MeshRenderer r = g.GetComponent<MeshRenderer>();
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            r.receiveShadows = false;
+            g.AddComponent<BladePath.GlowSprite>().flicker = flicker;
+            return g;
+        }
+
         public static GameObject Pyramid(Transform parent, string name, Vector3 pos, float half, float height, Material mat, float tile)
         {
             return Make(parent, name, PyramidMesh(half, height, tile), pos, Vector3.zero, mat);

@@ -80,6 +80,7 @@ namespace BladePath.EditorTools
             Object.DestroyImmediate(moon.GetComponent<Collider>());
             moon.transform.position = new Vector3(4.8f, 6.4f, 16f);
             moon.transform.localScale = Vector3.one * 2.8f;
+            EnvMesh.Glow(null, "MoonHalo", moon.transform.position + new Vector3(0f, 0f, 0.5f), 11f, look.haloMoon, 0f);
             moon.GetComponent<Renderer>().sharedMaterial = look.moon;
 
             // жаровни с мерцающим огнём
@@ -103,6 +104,7 @@ namespace BladePath.EditorTools
                 float x = -0.8f - 2.8f + i * 1.4f + 0.7f;
                 EnvMesh.Box(d, "String" + i, new Vector3(x, 2.28f, 4.75f), Vector3.zero, new Vector3(0.012f, 0.16f, 0.012f), look.woodDark, 0.2f);
                 GameObject lamp = CharacterVisuals.Part(d, "PaperLamp" + i, PrimitiveType.Sphere, new Vector3(x, 2.05f, 4.75f), Vector3.zero, new Vector3(0.28f, 0.36f, 0.28f), look.paper);
+                EnvMesh.Glow(d, "LampHalo" + i, new Vector3(x, 2.05f, 4.6f), 1.0f, look.haloWarm, 0.06f);
                 CharacterVisuals.Part(d, "LampCapT" + i, PrimitiveType.Cylinder, new Vector3(x, 2.25f, 4.75f), Vector3.zero, new Vector3(0.12f, 0.012f, 0.12f), look.woodDark);
                 CharacterVisuals.Part(d, "LampCapB" + i, PrimitiveType.Cylinder, new Vector3(x, 1.86f, 4.75f), Vector3.zero, new Vector3(0.10f, 0.012f, 0.10f), look.woodDark);
             }
@@ -262,6 +264,7 @@ namespace BladePath.EditorTools
             EnvMesh.Box(t, "Lamp", new Vector3(0f, 0.9f, 0f), Vector3.zero, new Vector3(0.34f, 0.34f, 0.34f), look.stoneBlock, 0.8f);
             EnvMesh.Box(t, "GlowA", new Vector3(0f, 0.9f, 0f), Vector3.zero, new Vector3(0.24f, 0.2f, 0.36f), look.glow, 1f);
             EnvMesh.Box(t, "GlowB", new Vector3(0f, 0.9f, 0f), Vector3.zero, new Vector3(0.36f, 0.2f, 0.24f), look.glow, 1f);
+            EnvMesh.Glow(t, "Halo", new Vector3(0f, 0.9f, 0f), 0.9f, look.haloWarm, 0.08f);
             EnvMesh.Pyramid(t, "Cap", new Vector3(0f, 1.07f, 0f), 0.3f, 0.22f, look.stoneBlock, 0.8f);
             CharacterVisuals.Part(t, "Jewel", PrimitiveType.Sphere, new Vector3(0f, 1.32f, 0f), Vector3.zero, new Vector3(0.09f, 0.09f, 0.09f), look.stoneBlock);
         }
@@ -293,13 +296,74 @@ namespace BladePath.EditorTools
             }
         }
 
+        /// <summary>Живой огонь: языки пламени и искры, аддитивные частицы.</summary>
+        static void AddFire(Transform parent, Look look)
+        {
+            GameObject go = new GameObject("Fire");
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = new Vector3(0f, 1.0f, 0f);
+            go.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
+            ParticleSystem ps = go.AddComponent<ParticleSystem>();
+            var main = ps.main;
+            main.loop = true; main.prewarm = true;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.35f, 0.7f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.5f, 1.1f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.18f, 0.34f);
+            main.startColor = new Color(1f, 0.7f, 0.3f, 1f);
+            main.maxParticles = 60;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            var em = ps.emission; em.rateOverTime = 45f;
+            var sh = ps.shape; sh.shapeType = ParticleSystemShapeType.Circle; sh.radius = 0.16f;
+            var col = ps.colorOverLifetime; col.enabled = true;
+            Gradient g = new Gradient();
+            g.SetKeys(new[] { new GradientColorKey(new Color(1f, 0.95f, 0.6f), 0f), new GradientColorKey(new Color(1f, 0.5f, 0.12f), 0.4f), new GradientColorKey(new Color(0.6f, 0.08f, 0.02f), 1f) },
+                      new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.15f), new GradientAlphaKey(0.6f, 0.6f), new GradientAlphaKey(0f, 1f) });
+            col.color = g;
+            var sz = ps.sizeOverLifetime; sz.enabled = true;
+            sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.8f), new Keyframe(0.3f, 1f), new Keyframe(1f, 0.2f)));
+            var noise = ps.noise; noise.enabled = true; noise.strength = 0.35f; noise.frequency = 1.5f;
+            ParticleSystemRenderer r = go.GetComponent<ParticleSystemRenderer>();
+            r.sharedMaterial = look.haloFire;
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+            // искры
+            GameObject sp = new GameObject("Embers");
+            sp.transform.SetParent(go.transform, false);
+            ParticleSystem es = sp.AddComponent<ParticleSystem>();
+            var em2 = es.main;
+            em2.loop = true; em2.prewarm = true;
+            em2.startLifetime = new ParticleSystem.MinMaxCurve(1.2f, 2.4f);
+            em2.startSpeed = new ParticleSystem.MinMaxCurve(0.6f, 1.6f);
+            em2.startSize = new ParticleSystem.MinMaxCurve(0.02f, 0.04f);
+            em2.startColor = new Color(1f, 0.6f, 0.2f, 1f);
+            em2.maxParticles = 40;
+            em2.simulationSpace = ParticleSystemSimulationSpace.World;
+            var ee = es.emission; ee.rateOverTime = 7f;
+            var esh = es.shape; esh.shapeType = ParticleSystemShapeType.Cone; esh.angle = 20f; esh.radius = 0.1f;
+            var en = es.noise; en.enabled = true; en.strength = 0.6f; en.frequency = 0.8f;
+            var ec = es.colorOverLifetime; ec.enabled = true;
+            Gradient g2 = new Gradient();
+            g2.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                       new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 0.6f), new GradientAlphaKey(0f, 1f) });
+            ec.color = g2;
+            ParticleSystemRenderer r2 = sp.GetComponent<ParticleSystemRenderer>();
+            r2.sharedMaterial = look.haloFire;
+            r2.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        }
+
         static void AddBrazier(Look look, Vector3 pos)
         {
             Transform b = new GameObject("Brazier").transform;
             b.position = pos;
             b.gameObject.AddComponent<ArenaObstacle>().radius = 0.32f;
-            CharacterVisuals.Part(b, "Stand", PrimitiveType.Cylinder, new Vector3(0f, 0.45f, 0f), Vector3.zero, new Vector3(0.30f, 0.45f, 0.30f), look.stoneDark);
-            GameObject flame = CharacterVisuals.Part(b, "Flame", PrimitiveType.Sphere, new Vector3(0f, 1.08f, 0f), Vector3.zero, new Vector3(0.20f, 0.26f, 0.20f), look.flame);
+            CharacterVisuals.Part(b, "Stand", PrimitiveType.Cylinder, new Vector3(0f, 0.45f, 0f), Vector3.zero, new Vector3(0.22f, 0.45f, 0.22f), look.stoneBlock);
+            EnvMesh.Box(b, "Foot", new Vector3(0f, 0.06f, 0f), Vector3.zero, new Vector3(0.46f, 0.12f, 0.46f), look.stoneBlock, 0.8f);
+            CharacterVisuals.Part(b, "Bowl", PrimitiveType.Cylinder, new Vector3(0f, 0.93f, 0f), Vector3.zero, new Vector3(0.52f, 0.05f, 0.52f), look.bronze);
+            CharacterVisuals.Part(b, "BowlRim", PrimitiveType.Cylinder, new Vector3(0f, 0.99f, 0f), Vector3.zero, new Vector3(0.56f, 0.02f, 0.56f), look.bronze);
+            CharacterVisuals.Part(b, "Coals", PrimitiveType.Sphere, new Vector3(0f, 0.99f, 0f), Vector3.zero, new Vector3(0.42f, 0.08f, 0.42f), look.ember);
+            GameObject flame = CharacterVisuals.Part(b, "Flame", PrimitiveType.Sphere, new Vector3(0f, 1.1f, 0f), Vector3.zero, new Vector3(0.12f, 0.16f, 0.12f), look.flame);
+            AddFire(b, look);
+            EnvMesh.Glow(b, "Halo", new Vector3(0f, 1.2f, 0f), 1.6f, look.haloFire, 0.18f);
 
             GameObject lightObj = new GameObject("FireLight");
             lightObj.transform.SetParent(b, false);

@@ -10,7 +10,7 @@ namespace BladePath.EditorTools
         public Material heroArmor, enemyArmor, cloth, skin, hair, lacquer, bronze, steel, handle;
         public Material flesh, tooth, maw, voidBlack, deadSkin, ember, tentacle, ronin;
         public Material stone, stoneDark, flame, moon, petal;
-        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, paper, mist;
+        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, paper, mist, haloWarm, haloFire, haloMoon;
     }
 
     /// <summary>
@@ -71,6 +71,10 @@ namespace BladePath.EditorTools
             l.paper = Unlit("Env_Paper", new Color(1f, 0.78f, 0.45f));
             l.mist = SpriteLike("Env_Mist", new Color(0.55f, 0.62f, 0.8f));
             l.sky = Sky();
+            Texture2D halo = HaloTexture();
+            l.haloWarm = Additive("Halo_Warm", halo, new Color(1f, 0.62f, 0.28f, 0.55f));
+            l.haloFire = Additive("Halo_Fire", halo, new Color(1f, 0.45f, 0.12f, 0.75f));
+            l.haloMoon = Additive("Halo_Moon", halo, new Color(0.55f, 0.65f, 1f, 0.35f));
             l.flame = Unlit("Flame", new Color(1f, 0.55f, 0.12f));
             l.moon = Unlit("Moon", new Color(0.86f, 0.90f, 1f));
             l.petal = SpriteLike("Petal", new Color(1f, 0.72f, 0.82f));
@@ -130,6 +134,45 @@ namespace BladePath.EditorTools
             m.SetColor("_Tint", new Color(0.5f, 0.5f, 0.5f, 1f));
             m.SetFloat("_Exposure", 1.3f);
             m.SetFloat("_Rotation", 0f);
+            if (isNew) AssetDatabase.CreateAsset(m, path); else EditorUtility.SetDirty(m);
+            return m;
+        }
+
+        /// <summary>Мягкий радиальный ореол (сохраняется ассетом, чтобы попал в сборку).</summary>
+        static Texture2D HaloTexture()
+        {
+            string path = MatFolder + "HaloTex.asset";
+            Texture2D t = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            if (t != null) return t;
+            const int n = 128;
+            t = new Texture2D(n, n, TextureFormat.RGBA32, true);
+            t.wrapMode = TextureWrapMode.Clamp;
+            Color[] px = new Color[n * n];
+            for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                {
+                    float dx = (x - (n - 1) * 0.5f) / (n * 0.5f), dy = (y - (n - 1) * 0.5f) / (n * 0.5f);
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+                    float a = Mathf.Clamp01(1f - d);
+                    a = a * a * (0.35f + 0.65f * a * a);   // яркое ядро + длинный мягкий хвост
+                    px[y * n + x] = new Color(1f, 1f, 1f, a);
+                }
+            t.SetPixels(px); t.Apply();
+            AssetDatabase.CreateAsset(t, path);
+            return t;
+        }
+
+        static Material Additive(string name, Texture2D tex, Color tint)
+        {
+            Shader sh = Shader.Find("Legacy Shaders/Particles/Additive");
+            if (sh == null) sh = Shader.Find("Particles/Additive");
+            if (sh == null) sh = Shader.Find("Sprites/Default");
+            string path = MatFolder + name + ".mat";
+            Material m = AssetDatabase.LoadAssetAtPath<Material>(path);
+            bool isNew = m == null;
+            if (isNew) m = new Material(sh);
+            m.mainTexture = tex;
+            if (m.HasProperty("_TintColor")) m.SetColor("_TintColor", tint); else m.color = tint;
             if (isNew) AssetDatabase.CreateAsset(m, path); else EditorUtility.SetDirty(m);
             return m;
         }
