@@ -79,6 +79,7 @@ namespace BladePath
                 FighterController owner = w.GetComponentInParent<FighterController>();
                 bool isPlayer = DuelManager.Instance != null && DuelManager.Instance.player == owner;
                 WeaponTrail.Attach(w, isPlayer ? new Color(0.55f, 0.8f, 1f) : new Color(0.85f, 0.35f, 1f));
+                if (!isPlayer && owner != null) MakeEyes(owner);
             }
             if (false && fxMat != null && w.bladeRoot != null)   // старый след только за остриём — заменён WeaponTrail
             {
@@ -142,8 +143,37 @@ namespace BladePath
             return ps;
         }
 
+        readonly List<Material> eyeMats = new List<Material>();
+
+        /// <summary>Горящие глаза нежити: два аддитивных огонька на кости головы (пропадают вместе с головой).</summary>
+        void MakeEyes(FighterController f)
+        {
+            HeroRigDriver rig = f.GetComponentInChildren<HeroRigDriver>();
+            if (rig == null || rig.head == null) return;
+            Shader sh = Shader.Find("Legacy Shaders/Particles/Additive");
+            if (sh == null) return;
+            Material m = new Material(sh);
+            m.mainTexture = SoftSprites.Disc;
+            m.SetColor("_TintColor", new Color(0.9f, 0.3f, 1f, 0.9f));
+            eyeMats.Add(m);
+            Mesh q = QuadMesh();
+            for (int s = -1; s <= 1; s += 2)
+            {
+                GameObject g = new GameObject("Eye");
+                g.transform.SetParent(rig.head, true);
+                g.transform.position = rig.head.position + f.transform.forward * 0.1f + f.transform.right * (0.034f * s) + Vector3.up * 0.045f;
+                g.transform.localScale = Vector3.one * 0.07f / Mathf.Max(0.01f, rig.head.lossyScale.x);
+                g.AddComponent<MeshFilter>().sharedMesh = q;
+                MeshRenderer r = g.AddComponent<MeshRenderer>();
+                r.sharedMaterial = m;
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                g.AddComponent<GlowSprite>().flicker = 0.25f;
+            }
+        }
+
         public void SetAuraColor(FighterController f, Color c)
         {
+            for (int i = 0; i < eyeMats.Count; i++) eyeMats[i].SetColor("_TintColor", new Color(c.r, c.g, c.b, 0.9f));
             for (int i = 0; i < tracked.Count; i++)
                 if (tracked[i].f == f && tracked[i].aura != null) { var m = tracked[i].aura.main; c.a = 0.7f; m.startColor = c; }
         }
