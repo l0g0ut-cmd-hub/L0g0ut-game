@@ -94,19 +94,49 @@ namespace BladePath
             GUI.matrix = m;
         }
 
+        static Font display, body, digits;
+        static bool fontsLoaded;
+        static void LoadFonts()
+        {
+            if (fontsLoaded) return;
+            fontsLoaded = true;
+            display = Resources.Load<Font>("Fonts/YesevaOne-Regular");
+            body = Resources.Load<Font>("Fonts/OldStandard-Bold");
+            digits = Resources.Load<Font>("Fonts/RussoOne-Regular");
+        }
+
+        static bool IsNumeric(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return false;
+            for (int i = 0; i < s.Length; i++) { char ch = s[i]; if (!(char.IsDigit(ch) || ch == ' ' || ch == ':' || ch == '/' || ch == '-' || ch == '+')) return false; }
+            return true;
+        }
+
+        /// <summary>
+        /// Текст в виртуальных единицах, но растеризуется в реальных пикселях (иначе шрифт мылится при масштабе GUI).
+        /// Шрифты: крупные надписи — Yeseva One, мелкие — Old Standard, цифры — Russo One (все OFL, Resources/Fonts).
+        /// </summary>
         public static void Text(Rect r, string s, float size, Color c, TextAnchor anchor = TextAnchor.MiddleCenter, bool shadow = true)
         {
             Init();
-            label.fontSize = Mathf.Max(6, Mathf.RoundToInt(size));
+            LoadFonts();
+            Font f = IsNumeric(s) ? digits : (size >= 26f ? display : body);
+            label.font = f;   // null → шрифт по умолчанию
+            Matrix4x4 m = GUI.matrix;
+            float k = Scale;
+            GUI.matrix = m * Matrix4x4.Scale(new Vector3(1f / k, 1f / k, 1f));
+            Rect pr = new Rect(r.x * k, r.y * k, r.width * k, r.height * k);
+            label.fontSize = Mathf.Max(6, Mathf.RoundToInt(size * k));
             label.alignment = anchor;
             if (shadow)
             {
                 label.normal.textColor = new Color(0f, 0f, 0f, 0.85f * c.a);
-                Rect sr = r; sr.x += 1.5f; sr.y += 1.5f;
+                Rect sr = pr; sr.x += 1.5f * k; sr.y += 1.5f * k;
                 GUI.Label(sr, s, label);
             }
             label.normal.textColor = c;
-            GUI.Label(r, s, label);
+            GUI.Label(pr, s, label);
+            GUI.matrix = m;
         }
 
         public static Matrix4x4 Begin()
