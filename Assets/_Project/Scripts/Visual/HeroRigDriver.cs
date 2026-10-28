@@ -59,6 +59,8 @@ namespace BladePath
         float lean, yawS, yawV, bS, bV, crouchS, crouchV, kick;
         float pivotRestY, walkS, deadK, footRestH;
         bool fallDust;
+        BodyZoneId kickZone;
+        float kickSide;
         Vector3 baseLocalPos;
         Quaternion baseLocalRot = Quaternion.identity;
         Quaternion bindL, bindR;
@@ -124,6 +126,10 @@ namespace BladePath
             if (r.target != fighter) return;
             if (animator != null) animator.SetTrigger("Hit");
             kick = 1f;
+            // реакция зависит от зоны: голова запрокидывается, ноги подламываются, рука/корпус уводят плечи вбок
+            kickZone = r.zone;
+            Vector3 v = r.contact.bladeVelocity;
+            kickSide = fighter != null && v.sqrMagnitude > 1e-4f ? Mathf.Sign(Vector3.Dot(v, fighter.transform.right)) : 0f;
         }
 
         static float Smooth(float t) { return t * t * (3f - 2f * t); }
@@ -162,6 +168,8 @@ namespace BladePath
                 crouchTarget = Mathf.Clamp01((weapon.restHand.y - weapon.HandOffset.y) / 0.45f);
             }
             if (fighter.Dashing) { crouchTarget = Mathf.Max(crouchTarget, 0.35f); pitchTarget = Mathf.Max(pitchTarget, 10f); }
+            if (kick > 0.05f && kickZone != BodyZoneId.Head && kickZone != BodyZoneId.Torso && kickZone != BodyZoneId.ArmLeft && kickZone != BodyZoneId.ArmRight)
+                crouchTarget = Mathf.Max(crouchTarget, 0.55f * kick);   // удар по ногам — колени подламываются
             lean = Mathf.MoveTowards(lean, pitchTarget, 140f * dt);
             yawS = Mathf.SmoothDampAngle(yawS, yawTarget, ref yawV, 0.05f);
             bS = Mathf.SmoothDamp(bS, bTarget, ref bV, 0.04f);
@@ -214,6 +222,14 @@ namespace BladePath
             Rot(chest, lean * 0.5f - kick * 12f + swayPitch * 0.5f, right);
             Rot(head, headYaw - yawS * 0.25f, up);              // голова частично «смотрит» на противника, а не вслед за клинком
             Rot(head, -pitchTotal * 0.5f + kick * 6f, right);
+            if (kick > 0.01f)
+            {
+                Vector3 fw = ft.forward;
+                float k2 = kick * kick;
+                if (kickZone == BodyZoneId.Head) { Rot(head, -k2 * 22f, right); Rot(head, kickSide * k2 * 14f, up); }
+                Rot(chest, -kickSide * k2 * (kickZone == BodyZoneId.ArmLeft || kickZone == BodyZoneId.ArmRight ? 16f : 9f), fw);
+                Rot(spine, kickSide * k2 * 6f, up);
+            }
 
             if (cr > 0.01f)
             {

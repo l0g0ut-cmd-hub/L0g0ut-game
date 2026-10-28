@@ -91,6 +91,7 @@ namespace BladePath
             if (player != null) j.Track(player.weapon);
             if (enemy != null) j.Track(enemy.weapon);
             if (GetComponent<Weather>() == null) gameObject.AddComponent<Weather>();
+            if (GetComponent<Music>() == null) gameObject.AddComponent<Music>();
             ApplyStage();
             ResetDuel();
         }
