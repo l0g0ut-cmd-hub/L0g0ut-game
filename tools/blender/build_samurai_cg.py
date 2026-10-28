@@ -19,8 +19,8 @@ from mathutils import Vector, Matrix, Quaternion
 SRC = os.environ['SAMURAI_FBX']
 OUT_DIR = os.environ.get('HERO_OUT', '/tmp/hero')
 os.makedirs(OUT_DIR, exist_ok=True)
-FBX_PATH = os.path.join(OUT_DIR, 'Samurai_Player.fbx')
-BLEND_PATH = os.path.join(OUT_DIR, 'Samurai_Player.blend')
+FBX_PATH = os.path.join(OUT_DIR, 'Samurai_Shadow.fbx')
+BLEND_PATH = os.path.join(OUT_DIR, 'Samurai_Shadow.blend')
 HEAD_TOP = float(os.environ.get('HEAD_TOP', '1.72'))       # макушка (верх кости головы) в метрах
 A_POSE = float(os.environ.get('A_POSE', '50'))             # на сколько опустить руки из T-позы, град.
 CURL = [float(x) for x in os.environ.get('CURL', '62,78,52').split(',')]   # сгиб фаланг пальцев в хвате, град.

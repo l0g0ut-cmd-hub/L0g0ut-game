@@ -157,7 +157,7 @@ namespace BladePath
             {
                 GameObject g = new GameObject("Eye");
                 g.transform.SetParent(rig.head, true);
-                g.transform.position = rig.head.position + f.transform.forward * 0.1f + f.transform.right * (0.034f * s) + Vector3.up * 0.045f;
+                g.transform.position = rig.head.position + f.transform.forward * 0.1f + f.transform.right * (0.034f * s) + Vector3.up * rig.eyeHeight;
                 g.transform.localScale = Vector3.one * 0.07f / Mathf.Max(0.01f, rig.head.lossyScale.x);
                 g.AddComponent<MeshFilter>().sharedMesh = q;
                 MeshRenderer r = g.AddComponent<MeshRenderer>();

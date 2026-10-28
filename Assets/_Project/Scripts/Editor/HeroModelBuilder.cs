@@ -16,20 +16,25 @@ namespace BladePath.EditorTools
         public const string FbxPath = "Assets/_Project/Models/Samurai_Hero.fbx";
         public const string RoninFbxPath = "Assets/_Project/Models/Ronin_Player.fbx";   // игрок из Meshy (tools/blender/build_ronin.py)
         const float RoninScale = 0.91f;                                                  // рост модели 1.90 м → как у зон поражения
-        public const string SamuraiFbxPath = "Assets/_Project/Models/Samurai_Player.fbx"; // игрок: модель художника (CGTrader, Rigify → наш скелет, tools/blender/build_samurai_cg.py)
-        const float SamuraiScale = 1f;                                                    // собрана в метрах: макушка 1.72 м
+        public const string Samurai2FbxPath = "Assets/_Project/Models/Samurai2_Player.fbx"; // игрок: самурай в красном доспехе с текстурами (tools/blender/build_samurai_m2.py)
+        public const string ShadowFbxPath = "Assets/_Project/Models/Samurai_Shadow.fbx";    // враг: самурай в рогатом шлеме (CGTrader, Rigify → наш скелет, tools/blender/build_samurai_cg.py), тёмная раскраска
+        const float SamuraiScale = 1f;                                                       // обе собраны в метрах: макушка 1.72 м
         public const string UndeadFbxPath = "Assets/_Project/Models/Samurai_Undead.fbx";
         const string ControllerPath = "Assets/_Project/Animation/Hero.controller";
         const string UndeadControllerPath = "Assets/_Project/Animation/Undead.controller";
         const float ModelScale = 0.95f;   // подгонка роста модели под зоны поражения
 
+        static bool shadowLook;
+        static bool Exists(string path) { return AssetDatabase.LoadAssetAtPath<GameObject>(path) != null; }
+
         public static bool TryAttach(FighterController fighter, Transform bladeRoot, Look look, bool undead = false)
         {
-            string fbx = undead ? UndeadFbxPath
-                : AssetDatabase.LoadAssetAtPath<GameObject>(SamuraiFbxPath) != null ? SamuraiFbxPath
-                : (AssetDatabase.LoadAssetAtPath<GameObject>(RoninFbxPath) != null ? RoninFbxPath : FbxPath);
+            string fbx = undead
+                ? (Exists(ShadowFbxPath) ? ShadowFbxPath : UndeadFbxPath)
+                : (Exists(Samurai2FbxPath) ? Samurai2FbxPath : Exists(RoninFbxPath) ? RoninFbxPath : FbxPath);
             bool ronin = fbx == RoninFbxPath;
-            bool samurai = fbx == SamuraiFbxPath;
+            bool samurai = fbx == Samurai2FbxPath || fbx == ShadowFbxPath;
+            shadowLook = fbx == ShadowFbxPath;
             string ctrlPath = undead ? UndeadControllerPath : ControllerPath;
             GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(fbx);
             if (asset == null)
@@ -110,7 +115,7 @@ namespace BladePath.EditorTools
             d.upperArmR = FindBone(model.transform, "UpperArm.R");
             d.forearmR = FindBone(model.transform, "Forearm.R");
             d.handR = FindBone(model.transform, "Hand.R");
-            if (samurai) { d.palmOffset = 0.09f; d.palmLift = 0.035f; }   // кулак сжат вокруг рукояти: рукоять внутри пальцев
+            if (samurai) { d.palmOffset = fbx == Samurai2FbxPath ? 0.085f : 0.09f; d.palmLift = fbx == Samurai2FbxPath ? 0.03f : 0.035f; d.eyeHeight = 0.10f; }   // кулак сжат вокруг рукояти: рукоять внутри пальцев
 
             if (undead)
             {
@@ -131,7 +136,8 @@ namespace BladePath.EditorTools
 
         static Material MapMaterial(string name, Look look, bool undead)
         {
-            if (name.StartsWith("SAM_")) return VisualMaterials.Samurai(name.Substring(4));
+            if (name.StartsWith("SAM_")) return VisualMaterials.Samurai(name.Substring(4), shadowLook);
+            if (name == "M2_Body") return VisualMaterials.Samurai2();
             switch (name)
             {
                 case "Skin": return undead ? look.deadSkin : look.skin;
