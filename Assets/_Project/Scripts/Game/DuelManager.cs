@@ -50,6 +50,17 @@ namespace BladePath
         float slowUntil, hitStopUntil;
         float nextRoundAt;
         float nextHeartAt;
+
+        /// <summary>Статистика за матч (для финального экрана).</summary>
+        public class Stats { public int damage, hits, maxCombo, blocks, parries; }
+        readonly Dictionary<FighterController, Stats> stats = new Dictionary<FighterController, Stats>();
+        public Stats StatsOf(FighterController f)
+        {
+            Stats s;
+            if (f == null) return new Stats();
+            if (!stats.TryGetValue(f, out s)) { s = new Stats(); stats[f] = s; }
+            return s;
+        }
         readonly Dictionary<FighterController, int> combo = new Dictionary<FighterController, int>();
         readonly Dictionary<FighterController, float> comboTime = new Dictionary<FighterController, float>();
         public int Combo(FighterController f) { int v; return combo.TryGetValue(f, out v) ? v : 0; }
@@ -61,6 +72,15 @@ namespace BladePath
             // Android по умолчанию держит 30 кадров/с — для файтинга нужно 60
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = 60;
+            // профиль качества по умолчанию на Android — «Medium»: 1 пиксельный источник света, жёсткие тени.
+            // Нужны мягкие тени от луны и живой свет жаровен/фонарей храма.
+            QualitySettings.pixelLightCount = 4;
+            QualitySettings.shadows = ShadowQuality.All;
+            QualitySettings.shadowResolution = ShadowResolution.Medium;
+            QualitySettings.shadowDistance = 16f;
+            QualitySettings.shadowCascades = 1;
+            QualitySettings.antiAliasing = 2;
+            QualitySettings.anisotropicFiltering = AnisotropicFiltering.Enable;
         }
         void Start()
         {
@@ -82,6 +102,7 @@ namespace BladePath
         public void ResetMatch()
         {
             PlayerWins = 0; EnemyWins = 0; Round = 1; MatchOver = false;
+            stats.Clear();
             ResetDuel();
         }
 
@@ -157,7 +178,65 @@ namespace BladePath
             if (!MatchOver && !Paused && (State == DuelState.PlayerWon || State == DuelState.PlayerLost) && Time.unscaledTime >= nextRoundAt) { Round++; ResetDuel(); return; }
             ApplyTimeScale();
 
+            CheckClash();
+
             for (int i = Popups.Count - 1; i >= 0; i--) if (Time.unscaledTime - Popups[i].born > 1.0f) Popups.RemoveAt(i);
+        }
+
+        int lastClashA = -1, lastClashB = -1;
+
+        /// <summary>Сшибка: оба бьют одновременно и клинки пересеклись — удары гасятся, бойцов отбрасывает.</summary>
+        void CheckClash()
+        {
+            if (State != DuelState.Fighting || player == null || enemy == null) return;
+            WeaponController a = player.weapon, b = enemy.weapon;
+            if (a == null || b == null || a.bladeRoot == null || b.bladeRoot == null) return;
+            if (a.Phase != SwingPhase.Strike || b.Phase != SwingPhase.Strike) return;
+            if (a.SwingId == lastClashA && b.SwingId == lastClashB) return;
+            Vector3 a0 = a.bladeRoot.position, a1 = a0 + a.bladeRoot.forward * a.bladeLength;
+            Vector3 b0 = b.bladeRoot.position, b1 = b0 + b.bladeRoot.forward * b.bladeLength;
+            Vector3 pa, pb;
+            if (SegDist(a0, a1, b0, b1, out pa, out pb) > 0.09f) return;
+            lastClashA = a.SwingId; lastClashB = b.SwingId;
+            Vector3 p = (pa + pb) * 0.5f;
+            a.ResetState(); b.ResetState();
+            player.Stun(0.3f); enemy.Stun(0.3f);
+            player.Knockback(player.transform.position - enemy.transform.position, 2.2f);
+            enemy.Knockback(enemy.transform.position - player.transform.position, 2.2f);
+            player.AddKi(8f); enemy.AddKi(8f);
+            if (Juice.Instance != null) Juice.Instance.Clash(p);
+            if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.07f);
+            hitStopUntil = Time.unscaledTime + 0.12f;
+            Haptics.Pulse(60);
+            Popup cp = new Popup();
+            cp.world = p + Vector3.up * 0.25f; cp.text = "СШИБКА!"; cp.color = new Color(1f, 0.9f, 0.5f);
+            cp.born = Time.unscaledTime; cp.size = 34f;
+            Popups.Add(cp);
+        }
+
+        /// <summary>Кратчайшее расстояние между отрезками и ближайшие точки.</summary>
+        static float SegDist(Vector3 p1, Vector3 q1, Vector3 p2, Vector3 q2, out Vector3 c1, out Vector3 c2)
+        {
+            Vector3 d1 = q1 - p1, d2 = q2 - p2, r = p1 - p2;
+            float a = Vector3.Dot(d1, d1), e = Vector3.Dot(d2, d2), f = Vector3.Dot(d2, r);
+            float s, t;
+            if (a < 1e-6f && e < 1e-6f) { c1 = p1; c2 = p2; return (c1 - c2).magnitude; }
+            if (a < 1e-6f) { s = 0f; t = Mathf.Clamp01(f / e); }
+            else
+            {
+                float c = Vector3.Dot(d1, r);
+                if (e < 1e-6f) { t = 0f; s = Mathf.Clamp01(-c / a); }
+                else
+                {
+                    float b = Vector3.Dot(d1, d2), den = a * e - b * b;
+                    s = den > 1e-6f ? Mathf.Clamp01((b * f - c * e) / den) : 0f;
+                    t = (b * s + f) / e;
+                    if (t < 0f) { t = 0f; s = Mathf.Clamp01(-c / a); }
+                    else if (t > 1f) { t = 1f; s = Mathf.Clamp01((b - c) / a); }
+                }
+            }
+            c1 = p1 + d1 * s; c2 = p2 + d2 * t;
+            return (c1 - c2).magnitude;
         }
 
         static float BaseDamage(AttackType t)
@@ -204,6 +283,9 @@ namespace BladePath
             {
                 bool parry = r.target.BlockTime < 0.25f;
                 r.target.AddKi(parry ? 20f : 6f);
+                if (parry) StatsOf(r.target).parries++; else StatsOf(r.target).blocks++;
+                if (!parry) r.target.Knockback(r.target.transform.position - r.attacker.transform.position, 1.0f);
+                else r.attacker.Knockback(r.attacker.transform.position - r.target.transform.position, 1.6f);
                 if (r.target == player) Haptics.Pulse(parry ? 35 : 15);
                 Popup bp = new Popup();
                 bp.world = r.contact.point + Vector3.up * 0.2f;
@@ -252,6 +334,11 @@ namespace BladePath
                 combo[attacker] = c; comboTime[attacker] = Time.unscaledTime;
                 combo[target] = 0;
                 dmg = Mathf.Round(dmg * Mathf.Min(1.4f, 1f + 0.1f * (c - 1)));
+                Stats st = StatsOf(attacker);
+                st.hits++; st.damage += (int)Mathf.Min(dmg, Hp(target)); st.maxCombo = Mathf.Max(st.maxCombo, c);
+                bool heavy = dmg >= 20f || dmg >= Hp(target);
+                target.Knockback(target.transform.position - attacker.transform.position, dmg >= Hp(target) ? 3.2f : (heavy ? 2.4f : 1.4f));
+                if (heavy && Juice.Instance != null) Juice.Instance.Dust(target.transform.position + Vector3.up * 0.05f, target.transform.position - attacker.transform.position, 10);
                 attacker.AddKi(10f);
                 target.AddKi(7f);
                 Haptics.Pulse(target == player ? (dmg >= 20f ? 70 : 40) : 18);

@@ -58,6 +58,7 @@ namespace BladePath
         float l1L, l2L, l1R, l2R;
         float lean, yawS, yawV, bS, bV, crouchS, crouchV, kick;
         float pivotRestY, walkS, deadK, footRestH;
+        bool fallDust;
         Vector3 baseLocalPos;
         Quaternion baseLocalRot = Quaternion.identity;
         Quaternion bindL, bindR;
@@ -188,6 +189,13 @@ namespace BladePath
             Vector3 off = new Vector3(0f, -Mathf.Max(0f, bS) * 0.02f, lunge);   // высоту (присед) задаёт посадка стоп на землю ниже
             transform.localPosition = baseLocalPos + off;
             deadK = Mathf.MoveTowards(deadK, fighter.Dead ? 1f : 0f, dt / 0.8f);
+            if (deadK >= 0.97f && !fallDust)
+            {
+                fallDust = true;   // тело ударилось о землю: облако пыли и глухой удар
+                if (Juice.Instance != null) Juice.Instance.Dust(fighter.transform.position - fighter.transform.forward * 0.8f + Vector3.up * 0.05f, Vector3.up, 26);
+                if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.04f);
+            }
+            else if (deadK < 0.01f) fallDust = false;
             if (deadK > 0.001f)
             {
                 // падение навзничь вокруг стоп (поворот в системе бойца: +Z вперёд, +X вправо)

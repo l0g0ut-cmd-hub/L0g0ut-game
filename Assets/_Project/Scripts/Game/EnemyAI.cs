@@ -31,7 +31,15 @@ namespace BladePath
             if (victim == self && Random.value < 0.4f) retreatUntil = Time.time + 0.6f;
         }
 
-        int Level { get { return DuelManager.Instance != null ? Mathf.Clamp(DuelManager.Instance.Round - 1, 0, 3) : 0; } }
+        /// <summary>0 — ученик, 1 — воин, 2 — мастер. Хранится между запусками.</summary>
+        public static int Difficulty
+        {
+            get { return PlayerPrefs.GetInt("ai_diff", 1); }
+            set { PlayerPrefs.SetInt("ai_diff", Mathf.Clamp(value, 0, 2)); }
+        }
+        public static string DifficultyName { get { int d = Difficulty; return d == 0 ? "УЧЕНИК" : (d == 1 ? "ВОИН" : "МАСТЕР"); } }
+
+        int Level { get { int r = DuelManager.Instance != null ? DuelManager.Instance.Round - 1 : 0; return Mathf.Clamp(r + Difficulty - 1, 0, 4); } }
 
         static Vector2 XZ(Vector3 v) { return new Vector2(v.x, v.z); }
 
@@ -41,7 +49,7 @@ namespace BladePath
             if (!aiEnabled || self == null || target == null || !self.CanAct) return;
             if (DuelManager.Instance != null && DuelManager.Instance.State != DuelState.Fighting) return;
 
-            float agg = Mathf.Clamp01(aggression + 0.15f * Level);
+            float agg = Mathf.Clamp01(aggression - 0.2f + 0.2f * Difficulty + 0.12f * Mathf.Max(0, Level));
             Vector3 to = target.transform.position - self.transform.position; to.y = 0f;
             float dist = to.magnitude;
             Vector3 dir = dist > 1e-3f ? to / dist : Vector3.right;

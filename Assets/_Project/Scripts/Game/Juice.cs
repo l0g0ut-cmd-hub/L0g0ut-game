@@ -170,6 +170,39 @@ namespace BladePath
             ps.Play();
         }
 
+        /// <summary>Пыль из-под ног: рывок, отбрасывание, падение.</summary>
+        public void Dust(Vector3 pos, Vector3 dir, int count)
+        {
+            if (softMat == null) return;
+            GameObject g = new GameObject("Dust");
+            g.transform.position = pos;
+            Vector3 d = (dir.normalized * 0.8f + Vector3.up * 0.6f);
+            g.transform.rotation = Quaternion.LookRotation(d.sqrMagnitude > 1e-4f ? d : Vector3.up);
+            ParticleSystem ps = g.AddComponent<ParticleSystem>();
+            ps.Stop();
+            var main = ps.main;
+            main.loop = false; main.duration = 0.1f;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.5f, 1.1f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.3f, 1.5f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.12f, 0.3f);
+            main.startColor = new Color(0.55f, 0.52f, 0.5f, 0.35f);
+            main.gravityModifier = -0.02f;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.stopAction = ParticleSystemStopAction.Destroy;
+            var em = ps.emission; em.rateOverTime = 0f;
+            em.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, (short)count) });
+            var sp = ps.shape; sp.shapeType = ParticleSystemShapeType.Cone; sp.angle = 70f; sp.radius = 0.12f;
+            var col = ps.colorOverLifetime; col.enabled = true;
+            Gradient gr = new Gradient();
+            gr.SetKeys(new GradientColorKey[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                       new GradientAlphaKey[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) });
+            col.color = gr;
+            var sz = ps.sizeOverLifetime; sz.enabled = true;
+            sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.6f), new Keyframe(1f, 1.8f)));
+            g.GetComponent<ParticleSystemRenderer>().material = softMat;
+            ps.Play();
+        }
+
         void Mist(Vector3 pos, Vector3 dir, int count, float life)
         {
             GameObject g = new GameObject("BloodMist");
@@ -231,6 +264,14 @@ namespace BladePath
             if (ps != null) ps.Stop(true, ParticleSystemStopBehavior.StopEmitting);
             yield return new WaitForSeconds(1.5f);
             if (g != null) Destroy(g);
+        }
+
+        /// <summary>Клинки столкнулись: сноп искр во все стороны и звонкий лязг.</summary>
+        public void Clash(Vector3 pos)
+        {
+            Play(clang, 1f, Random.Range(0.75f, 0.9f));
+            Sparks(pos, Vector3.up, 28);
+            Sparks(pos, Random.onUnitSphere, 18);
         }
 
         void Sparks(Vector3 pos, Vector3 normal, int count)

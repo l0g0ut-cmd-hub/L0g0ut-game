@@ -112,10 +112,29 @@ namespace BladePath
                 if (duel.Perfect && !duel.LastDraw) sub = "ИДЕАЛЬНО";
                 if (sub.Length > 0) UiKit.Text(new Rect(cx - 300f, 70f, 600f, 44f), sub, 30f, new Color(1f, 0.85f, 0.35f, t));
                 UiKit.Text(new Rect(cx - 400f, 110f, 800f, 120f), title, duel.MatchOver ? 90f : 64f, c);
+                if (duel.MatchOver) DrawStats(cx, 240f, t);
                 if (!duel.MatchOver) UiKit.Text(new Rect(cx - 300f, 250f, 600f, 40f), duel.PlayerWins + " : " + duel.EnemyWins, 34f, new Color(1f, 1f, 1f, t));
                 UiKit.Rect(new Rect(cx - 200f, 232f, 400f, 2f), new Color(c.r, c.g, c.b, 0.8f * t));
             }
             GUI.matrix = old;
+        }
+
+        void DrawStats(float cx, float y, float a)
+        {
+            DuelManager.Stats p = duel.StatsOf(duel.player), e = duel.StatsOf(duel.enemy);
+            string[] names = { "УРОН", "ПОПАДАНИЯ", "МАКС. СЕРИЯ", "ПАРИРОВАНИЯ" };
+            int[] pv = { p.damage, p.hits, p.maxCombo, p.parries };
+            int[] ev = { e.damage, e.hits, e.maxCombo, e.parries };
+            for (int i = 0; i < names.Length; i++)
+            {
+                float ry = y + i * 14f;
+                Color pc = pv[i] >= ev[i] ? Gold : new Color(0.85f, 0.85f, 0.85f);
+                Color ec = ev[i] >= pv[i] ? Gold : new Color(0.85f, 0.85f, 0.85f);
+                pc.a = a; ec.a = a;
+                UiKit.Text(new Rect(cx - 170f, ry, 80f, 14f), pv[i].ToString(), 13f, pc, TextAnchor.MiddleRight, false);
+                UiKit.Text(new Rect(cx - 80f, ry, 160f, 14f), names[i], 11f, new Color(0.85f, 0.8f, 0.7f, a), TextAnchor.MiddleCenter, false);
+                UiKit.Text(new Rect(cx + 90f, ry, 80f, 14f), ev[i].ToString(), 13f, ec, TextAnchor.MiddleLeft, false);
+            }
         }
 
         static Texture2D vignette;

@@ -48,6 +48,14 @@ namespace BladePath
         public float Ki { get; private set; }
         public float Ki01 { get { return Mathf.Clamp01(Ki / Mathf.Max(1f, kiMax)); } }
         public bool CanEnergy { get { return Ki >= energyCost; } }
+        Vector3 knockVel;
+        /// <summary>Отбрасывание от удара: скорость гасится за ~0,3 с, стены арены и препятствия учитываются.</summary>
+        public void Knockback(Vector3 dir, float speed)
+        {
+            dir.y = 0f;
+            if (dir.sqrMagnitude < 1e-6f) dir = -transform.forward;
+            knockVel = dir.normalized * speed;
+        }
         public void AddKi(float v) { Ki = Mathf.Clamp(Ki + v, 0f, kiMax); }
 
         public bool Grounded { get; private set; }
@@ -104,7 +112,7 @@ namespace BladePath
             dashDir = d.normalized;
             dashLeft = dashTime;
             dashReadyAt = Time.time + dashCooldown;
-            if (Juice.Instance != null) Juice.Instance.DashSound();
+            if (Juice.Instance != null) { Juice.Instance.DashSound(); Juice.Instance.Dust(transform.position + Vector3.up * 0.05f, -dashDir, 14); }
             return true;
         }
 
@@ -187,6 +195,11 @@ namespace BladePath
                 delta += dashDir * (dashSpeed * dd);
                 dashLeft -= dt;
             }
+            if (knockVel.sqrMagnitude > 1e-4f)
+            {
+                delta += knockVel * dt;
+                knockVel = Vector3.MoveTowards(knockVel, Vector3.zero, 10f * dt);
+            }
             if (weapon != null) delta += fwd * (weapon.CurrentLunge * dt);   // бросок вперёд в ударе из прыжка
             if (delta.sqrMagnitude > 1e-10f) Move(delta);
             moveInput = Vector2.zero;
@@ -241,7 +254,7 @@ namespace BladePath
             vy = 0f;
             Grounded = true;
             moveInput = Vector2.zero;
-            Ki = kiStart;
+            Ki = kiStart; knockVel = Vector3.zero;
             Dead = false; Frozen = false; Blocking = false; BlockTime = 0f; guardBrokenUntil = 0f; stunUntil = 0f; dashLeft = 0f; dashReadyAt = 0f;
             if (weapon != null) weapon.ResetState();
             if (zones != null) for (int i = 0; i < zones.Length; i++) if (zones[i] != null) zones[i].ClearFlash();
