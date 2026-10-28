@@ -51,7 +51,7 @@ namespace BladePath
                         float dx = (x - c) / c, dy = (y - c) / c;
                         float r2 = dx * dx + dy * dy;
                         float fade = Mathf.Clamp01(1f - Mathf.Sqrt(r2));
-                        float core = Mathf.Exp(-r2 * 60f) + 0.35f * Mathf.Exp(-r2 * 9f);
+                        float core = Mathf.Exp(-r2 * 80f) + 0.12f * Mathf.Exp(-r2 * 14f);
                         // лучи: узкие по одной оси, длинные по другой; диагональные — слабее и короче
                         float rays = Mathf.Exp(-Mathf.Abs(dy) * 70f) * Mathf.Exp(-Mathf.Abs(dx) * 2.2f) + Mathf.Exp(-Mathf.Abs(dx) * 70f) * Mathf.Exp(-Mathf.Abs(dy) * 2.2f);
                         float u = (dx + dy) * 0.7071f, v = (dx - dy) * 0.7071f;

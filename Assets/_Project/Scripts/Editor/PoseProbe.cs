@@ -155,6 +155,7 @@ namespace BladePath.EditorTools
                 WalkSim(f, d, anim, model, "R", Vector3.right, 0.72f, sb);
                 WalkSim(f, d, anim, model, "L", Vector3.left, 0.72f, sb);
                 WalkSim(f, d, anim, model, "FR", new Vector3(0.7071f, 0f, 0.7071f), 0.96f, sb);
+                WalkSim(f, d, anim, model, "Rcircle", Vector3.right, 0.72f, sb, -30f);   // кружит вокруг противника: стопы не должны ехать от поворота
             }
             // физическое падение: 3 с симуляции — тело не взрывается, ложится на землю, не улетает
             FieldInfo rf = typeof(HeroRigDriver).GetField("rag", F);
@@ -185,10 +186,10 @@ namespace BladePath.EditorTools
             all.Append(sb);
         }
 
-        static void WalkSim(FighterController f, HeroRigDriver d, Animator anim, Transform model, string label, Vector3 dirLocal, float speed, StringBuilder sb)
+        static void WalkSim(FighterController f, HeroRigDriver d, Animator anim, Transform model, string label, Vector3 dirLocal, float speed, StringBuilder sb, float yawDeg = 0f)
         {
             const float dt = 1f / 30f;
-            Transform ft = f.transform; Vector3 start = ft.position;
+            Transform ft = f.transform; Vector3 start = ft.position; Quaternion startRot = ft.rotation;
             MethodInfo fu = typeof(FighterController).GetMethod("Update", F);
             Transform fl = Find(model, "Foot.L"), fr = Find(model, "Foot.R"), hp = Find(model, "Hips");
             HeroRigDriver.DtOverride = dt;
@@ -196,12 +197,16 @@ namespace BladePath.EditorTools
             try
             {
                 Vector3 wdir = ft.TransformDirection(dirLocal);
-                List<Vector3> L = new List<Vector3>(), R = new List<Vector3>(), SL = new List<Vector3>(), SR = new List<Vector3>(); List<float> H = new List<float>();
+                List<Vector3> L = new List<Vector3>(), R = new List<Vector3>(); List<float> H = new List<float>();
+                // точки подошвы (пятка/подушечка/носок) каждой стопы — по отдельности: скольжение опорной точки, а не «нижней из трёх»
+                Vector3[] solL = typeof(HeroRigDriver).GetField("solL", F).GetValue(d) as Vector3[], solR = typeof(HeroRigDriver).GetField("solR", F).GetValue(d) as Vector3[];
+                List<Vector3[]> SP = new List<Vector3[]>();
                 int frames = 90, stopAt = 70;
                 string st = "";
                 for (int i = 0; i < frames; i++)
                 {
                     bool go = i < stopAt;
+                    if (go && yawDeg != 0f) { ft.Rotate(0f, yawDeg * dt, 0f, Space.World); wdir = ft.TransformDirection(dirLocal); }   // кружит вокруг противника
                     if (go) f.SetMoveVector(new Vector2(wdir.x, wdir.z));
                     if (fu != null) fu.Invoke(f, null);
                     if (go) ft.position += wdir * (speed * dt);
@@ -209,7 +214,13 @@ namespace BladePath.EditorTools
                     anim.Update(dt);
                     Call(d, "LateUpdate");
                     L.Add(fl.position); R.Add(fr.position); H.Add(hp.position.y - ft.position.y);
-                    SL.Add(d.SoleL != Vector3.zero ? d.SoleL : fl.position); SR.Add(d.SoleR != Vector3.zero ? d.SoleR : fr.position);
+                    if (solL != null && solR != null)
+                    {
+                        Vector3[] pp = new Vector3[solL.Length + solR.Length];
+                        for (int k = 0; k < solL.Length; k++) pp[k] = fl.TransformPoint(solL[k]);
+                        for (int k = 0; k < solR.Length; k++) pp[solL.Length + k] = fr.TransformPoint(solR[k]);
+                        SP.Add(pp);
+                    }
                     if (i == stopAt - 1)
                     {
                         AnimatorStateInfo si = anim.GetCurrentAnimatorStateInfo(0);
@@ -233,12 +244,12 @@ namespace BladePath.EditorTools
                 }
                 // по подошве: точка опоры на земле (пятка/подушечка) — настоящее скольжение, без переката голеностопа
                 float sSum = 0f, sMax = 0f, sMin = float.MaxValue; int sN = 0;
-                for (int i = 25; i < stopAt; i++)
-                    for (int s = 0; s < 2; s++)
+                for (int i = 25; i < stopAt && i < SP.Count; i++)
+                    for (int k = 0; k < SP[i].Length; k++)
                     {
-                        Vector3 a = s == 0 ? SL[i - 1] : SR[i - 1], b = s == 0 ? SL[i] : SR[i];
+                        Vector3 a = SP[i - 1][k], b = SP[i][k];
                         sMin = Mathf.Min(sMin, b.y - ft.position.y);
-                        if (Mathf.Max(a.y, b.y) - ft.position.y > 0.015f) continue;
+                        if (Mathf.Max(a.y, b.y) - ft.position.y > 0.012f) continue;   // точка на земле в обоих кадрах
                         Vector3 dv = b - a; dv.y = 0f; float v = dv.magnitude / dt;
                         sSum += v; sN++; sMax = Mathf.Max(sMax, v);
                     }
@@ -248,7 +259,7 @@ namespace BladePath.EditorTools
                     f.name, label, speed, slideN > 0 ? slideSum / slideN : 0f, slideMax, slideN, minY, minAll, hMin, hMax, hl.x, hl.y, hl.z, st);
             }
             catch (Exception e) { sb.Append("PROBE|" + f.name + "|walk_" + label + "|error " + e.Message + "\n"); }
-            finally { HeroRigDriver.DtOverride = -1f; ft.position = start; }
+            finally { HeroRigDriver.DtOverride = -1f; ft.position = start; ft.rotation = startRot; }
         }
     }
 }

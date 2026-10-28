@@ -144,7 +144,7 @@ namespace BladePath
                 {
                     float age = Time.unscaledTime - kv.Value;
                     if (kv.Key == null || age > 0.9f) continue;
-                    Vector3 g = cam.WorldToScreenPoint(kv.Key.transform.position + Vector3.up * 2.25f);
+                    Vector3 g = cam.WorldToScreenPoint(kv.Key.transform.position + Vector3.up * 2.6f);
                     if (g.z < 0f) continue;
                     float a = Mathf.Clamp01(age / 0.06f) * Mathf.Clamp01((0.9f - age) / 0.25f);
                     float sz = 74f * (1f + 0.35f * Mathf.Max(0f, 0.15f - age) / 0.15f);
@@ -266,17 +266,18 @@ namespace BladePath
         static readonly string[] Tips =
         {
             "ДЖОЙСТИК СЛЕВА — ДВИЖЕНИЕ, СВАЙП ПО ЭКРАНУ — КАМЕРА",
-            "КРУГЛЫЕ КНОПКИ СПРАВА — УДАРЫ: СВЕРХУ, СНИЗУ, ПО НОГАМ, УКОЛ, РЕЗ",
-            "ЩИТ — БЛОК. БЛОК В ПОСЛЕДНИЙ МИГ — ПАРИРОВАНИЕ И ОГЛУШЕНИЕ ВРАГА",
-            "ПОПАДАНИЯ КОПЯТ ДУХ. ШАР ТРАТИТ ДУХ, ПОЛНЫЙ ДУХ — УДАР ДУХА",
-            "РЫВОК — УЙТИ ИЗ-ПОД УДАРА. ДВА ВЫИГРАННЫХ РАУНДА — ПОБЕДА"
+            "КНОПКИ СПРАВА — УДАРЫ. НАЖМИ ЕЩЁ ВО ВРЕМЯ УДАРА — ПОЙДЁТ СЕРИЯ",
+            "ЩИТ — БЛОК. БЛОК В ПОСЛЕДНИЙ МИГ — ОТРАЖЕНИЕ. ЧАСТЫЕ НАЖАТИЯ НЕ ОТРАЖАЮТ",
+            "ЖЁЛТАЯ ШКАЛА — РАВНОВЕСИЕ. СЛОМАЙ ЕГО ВРАГУ — И ОДИН УДАР УБЬЁТ",
+            "КРАСНЫЙ ЗНАК НАД ВРАГОМ — БЛОК НЕ ДЕРЖИТ: ВЫПАД — РЫВОК НАВСТРЕЧУ, ПОДСЕЧКА — ПРЫЖОК",
+            "ПОПАДАНИЯ КОПЯТ ДУХ. ПОЛНЫЙ ДУХ — УДАР ДУХА. ДВА РАУНДА — ПОБЕДА"
         };
         float tutStart = -1f;
         int tutDone = -1;
 
         void DrawTutorial(float W)
         {
-            if (tutDone < 0) tutDone = PlayerPrefs.GetInt("tut_done", 0);
+            if (tutDone < 0) tutDone = PlayerPrefs.GetInt("tut_v2", 0);
             if (tutDone == 1) return;
             if (duel.State != DuelState.Fighting || duel.Round != 1) { if (tutStart >= 0f && duel.State != DuelState.Fighting) Finish(); return; }
             if (tutStart < 0f) tutStart = Time.unscaledTime;
@@ -285,13 +286,13 @@ namespace BladePath
             if (i >= Tips.Length) { Finish(); return; }
             float lt = t - i * 3.6f;
             float a = Mathf.Clamp01(lt / 0.25f) * Mathf.Clamp01((3.6f - lt) / 0.3f);
-            Rect r = new Rect(W * 0.5f - 330f, 112f, 660f, 30f);
+            Rect r = new Rect(W * 0.5f - 380f, 112f, 760f, 30f);
             UiKit.Rect(r, new Color(0f, 0f, 0f, 0.55f * a));
             UiKit.Rect(new Rect(r.x, r.yMax - 2f, r.width * Mathf.Clamp01(lt / 3.6f), 2f), new Color(Gold.r, Gold.g, Gold.b, a));
             UiKit.Text(r, Tips[i], 14f, new Color(1f, 0.95f, 0.85f, a));
         }
 
-        void Finish() { tutDone = 1; PlayerPrefs.SetInt("tut_done", 1); }
+        void Finish() { tutDone = 1; PlayerPrefs.SetInt("tut_v2", 1); }
 
         void DrawStats(float cx, float y, float a)
         {

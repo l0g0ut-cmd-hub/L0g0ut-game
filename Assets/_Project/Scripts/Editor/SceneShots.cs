@@ -56,6 +56,9 @@ namespace BladePath.EditorTools
                         Call(d, "LateUpdate");
                     }
 
+                // компоненты, которые в игре готовятся в Awake (текстуры листьев/лепестков, ореолы) — в редакторе вызываем сами
+                foreach (MonoBehaviour mb in UnityEngine.Object.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
+                    if (mb is PetalTexture || mb is GlowSprite || mb is FlickerLight) Call(mb, "Awake");
                 // окружение: огонь, туман, светлячки, лепестки — уже «живут» несколько секунд
                 foreach (ParticleSystem ps in UnityEngine.Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None))
                     if (ps.transform.parent == null || ps.GetComponentInParent<FighterController>() == null) ps.Simulate(4f, true, true);
@@ -69,10 +72,10 @@ namespace BladePath.EditorTools
                 float dist = 5.2f + Mathf.Max(0f, 2.4f + sep * 1.35f - 5.2f);
                 Vector3 focus = new Vector3(mid.x * 0.5f, 1.15f, mid.z * 0.5f);
 
-                Shot(cam, dir, "1_game", focus + new Vector3(0f, 0f, -dist), focus, 60f, log);
-                if (player != null) Shot(cam, dir, "2_player", pp + player.transform.forward * 1.5f + player.transform.right * -0.9f + Vector3.up * 1.45f, pp + Vector3.up * 1.15f, 45f, log);
-                if (enemy != null) Shot(cam, dir, "3_enemy", ep + enemy.transform.forward * 1.5f + enemy.transform.right * 0.9f + Vector3.up * 1.45f, ep + Vector3.up * 1.2f, 45f, log);
-                Shot(cam, dir, "4_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 60f, log);
+                Shot(cam, dir, "1_game", focus + new Vector3(0f, 0f, -dist), focus, cam.fieldOfView, log);   // как в игре (FOV камеры боя)
+                if (player != null) Shot(cam, dir, "2_player", pp + player.transform.forward * 2.7f + player.transform.right * -1.4f + Vector3.up * 1.25f, pp + Vector3.up * 0.95f, 36f, log);
+                if (enemy != null) Shot(cam, dir, "3_enemy", ep + enemy.transform.forward * 2.7f + enemy.transform.right * 1.4f + Vector3.up * 1.25f, ep + Vector3.up * 0.95f, 36f, log);
+                Shot(cam, dir, "4_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);
 
                 // парирование: вспышка, блик, волна и искры через 50 мс после удара
                 Juice juice = UnityEngine.Object.FindFirstObjectByType<Juice>();
@@ -83,9 +86,13 @@ namespace BladePath.EditorTools
                     HashSet<ParticleSystem> before = new HashSet<ParticleSystem>(UnityEngine.Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None));
                     Vector3 hit = new Vector3(mid.x, 1.25f, mid.z);
                     juice.Parry(hit, (pp - ep).normalized);
+                    List<ParticleSystem> fresh = new List<ParticleSystem>();
                     foreach (ParticleSystem ps in UnityEngine.Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None))
-                        if (!before.Contains(ps)) ps.Simulate(0.05f, true, true);
-                    Shot(cam, dir, "5_parry", hit + new Vector3(0f, 0.15f, -2.6f), hit, 55f, log);
+                        if (!before.Contains(ps)) fresh.Add(ps);
+                    foreach (ParticleSystem ps in fresh) ps.Simulate(0.035f, true, true);
+                    Shot(cam, dir, "5_parry", hit + new Vector3(0f, 0.15f, -2.6f), hit, 34f, log);
+                    foreach (ParticleSystem ps in fresh) if (ps != null) ps.Simulate(0.12f, true, true);
+                    Shot(cam, dir, "6_parry_late", hit + new Vector3(0f, 0.15f, -2.6f), hit, 34f, log);
                 }
             }
             catch (Exception e) { log.Append("PROBE|shots|error " + e + "\n"); }
@@ -103,6 +110,7 @@ namespace BladePath.EditorTools
                 cam.transform.position = pos;
                 cam.transform.rotation = Quaternion.LookRotation(look - pos, Vector3.up);
                 cam.fieldOfView = fov;
+                foreach (GlowSprite gs in UnityEngine.Object.FindObjectsByType<GlowSprite>(FindObjectsSortMode.None)) Call(gs, "LateUpdate");   // ореолы — лицом к камере
                 cam.targetTexture = rt;
                 cam.Render();
                 RenderTexture.active = rt;

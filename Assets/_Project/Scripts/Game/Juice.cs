@@ -270,7 +270,7 @@ namespace BladePath
         /// <summary>Попадание. dir — направление удара (скорость клинка), strength ~0.4…2 (урон/крит/убийство).</summary>
         public void OnHit(Vector3 point, Vector3 normal, Vector3 dir, float strength, bool blocked, bool kill, Transform bleedAt)
         {
-            if (blocked) { Play(clang, 0.8f, Random.Range(0.9f, 1.2f)); Sparks(point, normal, 22, 0.8f); Flash(point, 0.35f, new Color(1f, 0.82f, 0.5f), 0.08f, false); return; }
+            if (blocked) { Play(clang, 0.8f, Random.Range(0.9f, 1.2f)); Sparks(point, normal, 22, 0.8f); Flash(point, 0.22f, new Color(1f, 0.82f, 0.5f, 0.8f), 0.07f, false); return; }
             Play(strength > 1f ? hitHeavy : hit, 0.95f, Random.Range(0.92f, 1.08f));
             SlashFlash(point, dir, strength);
             Blood(point, normal, dir, strength, kill);
@@ -659,7 +659,7 @@ namespace BladePath
             Play(clang, 1f, Random.Range(0.75f, 0.9f));
             Sparks(pos, Vector3.up, 34, 1.1f);
             Sparks(pos, Random.onUnitSphere, 22, 1f);
-            Flash(pos, 0.7f, new Color(1f, 0.85f, 0.55f), 0.11f, true);
+            Flash(pos, 0.32f, new Color(1f, 0.85f, 0.55f, 0.85f), 0.10f, true);
         }
 
         /// <summary>Отражение (парирование): самая яркая вспышка в игре — блик, кольцо волны, веер искр от клинка.</summary>
@@ -669,11 +669,11 @@ namespace BladePath
             Play(clang, 0.6f, Random.Range(1.6f, 1.75f));   // высокий призвук «дзинь»
             Sparks(pos, normal.sqrMagnitude > 1e-4f ? normal : Vector3.up, 46, 1.35f);
             Sparks(pos, Vector3.up, 20, 0.9f);
-            Flash(pos, 1.05f, new Color(0.85f, 0.95f, 1f), 0.14f, true);
-            Shockwave(pos, 1.3f, new Color(0.6f, 0.85f, 1f, 0.8f), 0.22f);
+            Flash(pos, 0.42f, new Color(0.85f, 0.95f, 1f, 0.9f), 0.13f, true);
+            Shockwave(pos, 0.9f, new Color(0.6f, 0.85f, 1f, 0.55f), 0.2f);
         }
 
-        Material addMat, starMat, ringMat;
+        Material addMat, glowMat, starMat, ringMat;
         Transform sparkFloor;
 
         Material Additive(ref Material m, Texture2D tex)
@@ -689,8 +689,9 @@ namespace BladePath
         // одна частица-вспышка (ядро) и, если glint, крестовой блик поверх: короткие, аддитивные — их подхватывает bloom
         void Flash(Vector3 pos, float size, Color c, float life, bool glint)
         {
-            Burst1(pos, size, c, life, Additive(ref addMat, SoftSprites.Disc), Random.Range(0f, 360f));
-            if (glint) Burst1(pos, size * 1.8f, Color.Lerp(c, Color.white, 0.5f), life * 1.3f, Additive(ref starMat, SoftSprites.Star), Random.Range(-12f, 12f));
+            // ядро — гауссово пятно без края (диск с краем читается как «белая тарелка»), блик — тонкие лучи крупнее ядра
+            Burst1(pos, size, c, life, Additive(ref glowMat, SoftSprites.Fog), Random.Range(0f, 360f));
+            if (glint) Burst1(pos, size * 2.6f, Color.Lerp(c, Color.white, 0.5f), life * 1.4f, Additive(ref starMat, SoftSprites.Star), Random.Range(-12f, 12f));
         }
 
         void Shockwave(Vector3 pos, float size, Color c, float life)
@@ -1015,18 +1016,39 @@ namespace BladePath
             return Make("thump", d);
         }
 
+        /// <summary>
+        /// Лязг клинков: моды стальной полосы (1 : 2,756 : 5,404 — свободные концы) для двух клинков с разной основной частотой,
+        /// у каждой моды пара чуть расстроенных тонов (биения — «звенит»), щелчок удара (шум с ВЧ) и короткий «тук» корпуса.
+        /// </summary>
         static AudioClip Clang()
         {
-            int n = (int)(Rate * 0.7f);
+            int n = (int)(Rate * 1.1f);
             float[] d = new float[n];
-            float[] fr = { 880f, 1320f, 1870f, 2650f, 3400f };
-            float[] dc = { 6f, 8f, 10f, 13f, 18f };
+            float[] f0 = { 1180f, 1415f };
+            float[] ratio = { 1f, 2.756f, 5.404f };
+            float[] dec = { 2.6f, 5.5f, 10f };
+            float[] amp = { 1f, 0.55f, 0.3f };
+            System.Random rnd = new System.Random(5);
+            float lp = 0f, peak = 1e-4f;
             for (int i = 0; i < n; i++)
             {
                 float t = i / (float)Rate, v = 0f;
-                for (int k = 0; k < fr.Length; k++) v += Mathf.Sin(2f * Mathf.PI * fr[k] * t) * Mathf.Exp(-t * dc[k]) / (1f + k * 0.4f);
-                d[i] = v * 0.5f * Mathf.Min(1f, t * 400f);
+                for (int b = 0; b < f0.Length; b++)
+                    for (int k = 0; k < ratio.Length; k++)
+                    {
+                        float f = f0[b] * ratio[k];
+                        if (f > Rate * 0.45f) continue;
+                        float e = Mathf.Exp(-t * dec[k] * (b == 0 ? 1f : 1.3f)) * amp[k] * (b == 0 ? 1f : 0.7f);
+                        v += e * (Mathf.Sin(2f * Mathf.PI * (f - 1.3f) * t) + Mathf.Sin(2f * Mathf.PI * (f + 1.3f) * t + 0.7f)) * 0.5f;
+                    }
+                float nz = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                lp += 0.35f * (nz - lp);
+                v += (nz - lp) * Mathf.Exp(-t * 600f) * 1.4f;                       // щелчок
+                v += Mathf.Sin(2f * Mathf.PI * 310f * t) * Mathf.Exp(-t * 45f) * 0.5f;   // «тук»
+                v *= Mathf.Min(1f, t * 3000f);
+                d[i] = v; peak = Mathf.Max(peak, Mathf.Abs(v));
             }
+            for (int i = 0; i < n; i++) d[i] *= 0.9f / peak;
             return Make("clang", d);
         }
     }

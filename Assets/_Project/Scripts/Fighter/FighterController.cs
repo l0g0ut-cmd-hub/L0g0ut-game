@@ -111,6 +111,9 @@ namespace BladePath
         public bool CanAct { get { return !Dead && !Frozen && !Stunned; } }
         /// <summary>Держит блок: клинок вертикально перед собой, урон сильно режется. Недоступно во время удара, оглушения и смерти.</summary>
         public bool Blocking { get; private set; }
+        /// <summary>Окно отражения (парирования) от начала блока: 0,25 с, при частых нажатиях — уже.</summary>
+        public float ParryWindow { get { return 0.25f / (1f + 0.8f * blockSpam); } }
+        int blockSpam; float lastBlockStart = -10f;
         /// <summary>Сколько секунд подряд держится блок (для окна парирования).</summary>
         public float BlockTime { get; private set; }
         /// <summary>Блок «выдохся» — какое-то время нельзя поднять снова.</summary>
@@ -202,12 +205,31 @@ namespace BladePath
             return true;
         }
 
-        /// <summary>
-        /// Начать атаку. В воздухе рубящие (Overhead/Rising) превращаются в удар в прыжке; по ногам из воздуха нельзя.
-        /// </summary>
+        /// <summary>Идёт серия ударов (ставит ИИ): отражение посреди серии не оглушает — следующий удар уже в пути.</summary>
+        public bool InString { get; set; }
+
+        /// <summary>Рывок начался (направление в мире) — для микири.</summary>
         public event Action<FighterController, Vector3> Dashed;
         public void StopDash() { dashLeft = 0f; }
 
+        /// <summary>Следующий удар серии прямо из восстановления после предыдущего (на земле, без шара духа).</summary>
+        public bool Chain(AttackType type)
+        {
+            if (weapon == null || !CanAct || !Grounded || type == AttackType.Energy || type == AttackType.JumpStrike) return false;
+            if (weapon.Phase == SwingPhase.Idle) return Attack(type);
+            return weapon.TryChain(type);
+        }
+
+        /// <summary>Удар сейчас, а если идёт восстановление после прошлого — продолжение серии.</summary>
+        public bool AttackOrChain(AttackType type)
+        {
+            if (weapon != null && weapon.Phase == SwingPhase.Recovery && Grounded) return Chain(type);
+            return Attack(type);
+        }
+
+        /// <summary>
+        /// Начать атаку. В воздухе рубящие (Overhead/Rising) превращаются в удар в прыжке; по ногам из воздуха нельзя.
+        /// </summary>
         public bool Attack(AttackType type, bool perilous = false)
         {
             if (weapon == null || !CanAct) return false;
@@ -232,6 +254,12 @@ namespace BladePath
             bool canBlock = CanAct && Grounded && weapon != null && weapon.Phase == SwingPhase.Idle && !GuardBroken;
             bool wasBlocking = Blocking;
             Blocking = canBlock && blockWanted;
+            if (Blocking && !wasBlocking)
+            {
+                // частые нажатия блока сужают окно отражения (как в Sekiro: «спам» не парирует)
+                blockSpam = Time.time - lastBlockStart < 0.45f ? Mathf.Min(blockSpam + 1, 4) : 0;
+                lastBlockStart = Time.time;
+            }
             if (Blocking) BlockTime += dt;   // блок держится сколько угодно — ломается равновесием, а не временем
             else BlockTime = 0f;
             // равновесие после слома: снова в стойке, шкала наполовину
@@ -344,7 +372,7 @@ namespace BladePath
             moveInput = Vector2.zero;
             Ki = kiStart; knockVel = Vector3.zero;
             Dead = false; Frozen = false; Blocking = false; BlockTime = 0f; guardBrokenUntil = 0f; stunUntil = 0f; dashLeft = 0f; dashReadyAt = 0f;
-            Posture = 0f; postureBrokenUntil = 0f; postureHitAt = -10f;
+            Posture = 0f; postureBrokenUntil = 0f; postureHitAt = -10f; blockSpam = 0; lastBlockStart = -10f;
             if (weapon != null) weapon.ResetState();
             if (zones != null) for (int i = 0; i < zones.Length; i++) if (zones[i] != null) zones[i].ClearFlash();
             EnergyProjectile.DestroyAll();

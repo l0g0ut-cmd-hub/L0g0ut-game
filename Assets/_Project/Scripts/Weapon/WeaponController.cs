@@ -118,6 +118,23 @@ namespace BladePath
             return true;
         }
 
+        /// <summary>
+        /// Серия: из восстановления после удара сразу в замах следующего (поза смешивается из текущей).
+        /// Раньше доли minRec01 восстановления нельзя — у каждого удара остаётся «хвост», серия читается по ритму.
+        /// </summary>
+        public bool TryChain(AttackType type, float minRec01 = 0.3f)
+        {
+            if (Phase == SwingPhase.Idle) return TryStartSwing(type);
+            if (Phase != SwingPhase.Recovery || PhaseProgress < minRec01) return false;
+            Perilous = false;
+            CurrentProfile = SwingProfile.Get(type);
+            SwingId++;
+            SnapshotForBlend();
+            Phase = SwingPhase.Windup;
+            phaseTime = 0f;
+            return true;
+        }
+
         public void ResetState()
         {
             bool wasOpen = ContactWindowOpen;

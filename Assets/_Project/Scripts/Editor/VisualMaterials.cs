@@ -11,7 +11,7 @@ namespace BladePath.EditorTools
         public Material heroArmor, enemyArmor, cloth, skin, hair, lacquer, bronze, steel, handle;
         public Material flesh, tooth, maw, voidBlack, deadSkin, ember, tentacle, ronin;
         public Material stone, stoneDark, flame, moon, petal;
-        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron;
+        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage;
     }
 
     /// <summary>
@@ -48,7 +48,11 @@ namespace BladePath.EditorTools
             l.ember.SetColor("_EmissionColor", new Color(2.4f, 0.8f, 0.1f));
             l.ember.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
             l.ronin = Ronin();
-            l.stone = Textured("Stone_Floor", "stone_albedo.png", "stone_normal.png", new Vector2(4f, 2f), new Color(0.62f, 0.6f, 0.62f), 0f, 0.62f);   // тёмный влажный камень: блики огня и отражения неба
+            // мостовая из неправильных плит (исидатами, процедурная 1024²): квадратная плитка 2,4 м на площадке 7,2×5,4;
+            // гладкость — по карте: мокрые плиты и лужицы блестят, швы с землёй и мхом матовые
+            l.stone = Textured("Stone_Floor", "flagstone_albedo.png", "flagstone_normal.png", new Vector2(3f, 2.25f), new Color(0.78f, 0.78f, 0.82f), 0f, 0.62f);
+            Gloss(l.stone, "flagstone_ms.png", 1f);
+            Aniso("flagstone_albedo.png", 4); Aniso("flagstone_normal.png", 4);
             l.stoneDark = Solid("Stone_Dark", new Color(0.12f, 0.12f, 0.15f), 0f, 0.20f);
             // окружение v2: UV боксов в мировом масштабе (EnvMesh), поэтому tiling материалов = 1
             l.wood = Textured("Env_Wood", "wood_albedo.png", "wood_normal.png", Vector2.one, new Color(0.95f, 0.92f, 0.9f), 0f, 0.25f);
@@ -56,8 +60,12 @@ namespace BladePath.EditorTools
             l.roof = Textured("Env_Roof", "roof_albedo.png", "roof_normal.png", Vector2.one, Color.white, 0.05f, 0.45f);
             l.plaster = Textured("Env_Plaster", "plaster_albedo.png", "plaster_normal.png", Vector2.one, new Color(0.9f, 0.9f, 0.92f), 0f, 0.1f);
             l.stoneBlock = Textured("Env_StoneBlock", "stoneblock_albedo.png", "stoneblock_normal.png", Vector2.one, Color.white, 0f, 0.25f);
+            Gloss(l.stoneBlock, "stoneblock_ms.png", 1f);   // тёсаный гранит: следы зубила, фаски, лишайник (tools: texgen/stoneblock.py)
             l.gravel = Textured("Env_Gravel", "gravel_albedo.png", "gravel_normal.png", Vector2.one, Color.white, 0f, 0.15f);
             l.bark = Textured("Env_Bark", "bark_albedo.png", "bark_normal.png", new Vector2(2f, 2f), Color.white, 0f, 0.1f);
+            // крона клёна: карточки гроздей листьев с альфа-срезом (tools/texgen/maple_cluster.py)
+            l.bambooFoliage = Cutout("Env_BambooFoliage", "bamboo_leaves.png", Color.white, 0.42f, new Color(0.006f, 0.012f, 0.004f));
+            l.mapleCrown = Cutout("Env_MapleCrown", "maple_cluster.png", new Color(0.92f, 0.92f, 0.92f), 0.42f, new Color(0.05f, 0.006f, 0.004f));
             l.blossom = Textured("Env_Blossom", "blossom_albedo.png", null, new Vector2(3f, 3f), new Color(0.95f, 0.85f, 0.85f), 0f, 0.1f);   // кроны — текстура красного клёна (лист 2)
             l.shoji = Textured("Env_Shoji", "shoji_albedo.png", null, Vector2.one, new Color(0.9f, 0.85f, 0.75f), 0f, 0.2f);
             Texture2D se = Tex("shoji_emission.png", false);
@@ -127,10 +135,10 @@ namespace BladePath.EditorTools
         {
             string tp = TexFolder + "sky_night.png";
             TextureImporter ti = AssetImporter.GetAtPath(tp) as TextureImporter;
-            if (ti != null && (ti.mipmapEnabled || ti.maxTextureSize < 2048))
+            if (ti != null && (ti.mipmapEnabled || ti.maxTextureSize < 4096))
             {
                 ti.mipmapEnabled = false;
-                ti.maxTextureSize = 2048;
+                ti.maxTextureSize = 4096;   // панорама 4096: при FOV 32° на экран приходится ~360 px неба — меньше уже «мыло»
                 ti.wrapMode = TextureWrapMode.Repeat;
                 ti.SaveAndReimport();
             }
@@ -284,8 +292,8 @@ namespace BladePath.EditorTools
             Shader sh = Shader.Find("BladePath/Character");
             if (sh == null) { Debug.LogWarning("VisualMaterials: нет шейдера BladePath/Character — персонаж остаётся на Standard"); return m; }
             if (m.shader != sh) m.shader = sh;
-            m.SetColor("_RimColor", enemy ? new Color(0.30f, 0.17f, 0.42f) : new Color(0.28f, 0.34f, 0.48f));
-            m.SetFloat("_RimPower", 3.2f);
+            m.SetColor("_RimColor", enemy ? new Color(0.15f, 0.09f, 0.22f) : new Color(0.17f, 0.21f, 0.30f));
+            m.SetFloat("_RimPower", 3.6f);
             EditorUtility.SetDirty(m);
             return m;
         }
@@ -368,6 +376,64 @@ namespace BladePath.EditorTools
                 }
             }
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+
+        /// <summary>
+        /// Листва/гроздья: Standard в режиме Cutout (альфа-срез, тень по альфе). Мип-уровни сохраняют покрытие —
+        /// издалека крона не «лысеет». Лёгкое свечение — листва просвечивает в свете фонарей и не тонет в ночи.
+        /// </summary>
+        static Material Cutout(string name, string file, Color tint, float cutoff, Color emission)
+        {
+            Shader sh = Shader.Find("Standard");
+            string tp = TexFolder + file;
+            TextureImporter ti = AssetImporter.GetAtPath(tp) as TextureImporter;
+            if (ti != null && (!ti.mipMapsPreserveCoverage || !ti.alphaIsTransparency))
+            {
+                ti.alphaIsTransparency = true;
+                ti.mipMapsPreserveCoverage = true;
+                ti.alphaTestReferenceValue = cutoff;
+                ti.SaveAndReimport();
+            }
+            Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(tp);
+            if (sh == null || tex == null) return Solid(name, tint, 0f, 0.1f);
+            string path = MatFolder + name + ".mat";
+            Material m = AssetDatabase.LoadAssetAtPath<Material>(path);
+            bool isNew = m == null;
+            if (isNew) m = new Material(sh);
+            m.mainTexture = tex; m.color = tint;
+            m.SetFloat("_Mode", 1f);
+            m.SetOverrideTag("RenderType", "TransparentCutout");
+            m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+            m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+            m.SetInt("_ZWrite", 1);
+            m.EnableKeyword("_ALPHATEST_ON"); m.DisableKeyword("_ALPHABLEND_ON"); m.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            m.SetFloat("_Cutoff", cutoff);
+            m.SetFloat("_Metallic", 0f); m.SetFloat("_Glossiness", 0.12f);
+            m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.AlphaTest;
+            if (emission.maxColorComponent > 0f) { m.EnableKeyword("_EMISSION"); m.SetColor("_EmissionColor", emission); m.SetTexture("_EmissionMap", tex); m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None; }
+            if (isNew) AssetDatabase.CreateAsset(m, path); else EditorUtility.SetDirty(m);
+            return m;
+        }
+
+        /// <summary>Карта металличности/гладкости (A — гладкость), линейная.</summary>
+        static void Gloss(Material m, string file, float scale)
+        {
+            if (m == null) return;
+            TextureImporter ti = AssetImporter.GetAtPath(TexFolder + file) as TextureImporter;
+            if (ti != null && ti.sRGBTexture) { ti.sRGBTexture = false; ti.SaveAndReimport(); }
+            Texture2D t = Tex(file, false);
+            if (t == null) return;
+            m.SetTexture("_MetallicGlossMap", t);
+            m.EnableKeyword("_METALLICGLOSSMAP");
+            m.SetFloat("_GlossMapScale", scale);
+            EditorUtility.SetDirty(m);
+        }
+
+        /// <summary>Анизотропная фильтрация: пол под скользящим углом камеры не «мылится».</summary>
+        static void Aniso(string file, int level)
+        {
+            TextureImporter ti = AssetImporter.GetAtPath(TexFolder + file) as TextureImporter;
+            if (ti != null && ti.anisoLevel != level) { ti.anisoLevel = level; ti.SaveAndReimport(); }
         }
 
         static Material Textured(string name, string albedo, string normal, Vector2 tiling, Color tint, float metallic, float smoothness)

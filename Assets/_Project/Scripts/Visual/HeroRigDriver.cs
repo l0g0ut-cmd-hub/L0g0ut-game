@@ -49,7 +49,7 @@ namespace BladePath
 
         [Header("Стойка: стопы ставит IK, таз — ключевые позы")]
         [Tooltip("Места стоп в стойке, м, в системе бойца (x вправо, z вперёд) для игрока; у врага x зеркалится (yawSign). Какая нога передняя — по знаку x.")]
-        public float footFrontX = -0.14f, footFrontZ = 0.48f, footRearX = 0.30f, footRearZ = -0.50f;
+        public float footFrontX = -0.12f, footFrontZ = 0.38f, footRearX = 0.26f, footRearZ = -0.36f;   // стопы ~0,75 м по ходу: широкая стойка, но не выпад
         [Tooltip("Разворот стоп в стойке, град. (+ носок вправо), для игрока; у врага зеркалится. Задняя развёрнута наружу — открытая стойка.")]
         public float footFrontYaw = -10f, footRearYaw = 75f;
 
@@ -75,7 +75,7 @@ namespace BladePath
         [Tooltip("Перед отрывом пятка поднимается (перекат на носок): доля цикла и угол.")]
         public float heelPeel = 0.15f, heelPeelDeg = 25f;
         public float maxAutoDrop = 0.12f;
-        public float stanceDrop = 0.04f;   // колени мягко согнуты в стойке, м
+        public float stanceDrop = 0.03f;   // колени мягко согнуты в стойке, м
         public float stepLift = 0.07f;     // подъём стопы в шаге, м
         public float heelLift = 0.05f;     // подъём пятки задней ноги (вес на носке), м
         public float postureBack = 6f;     // осанка: грудь назад/вверх, голова поднята (против сутулости модели), град.
@@ -97,10 +97,16 @@ namespace BladePath
 
         float l1L, l2L, l1R, l2R;
         float lgL1, lgL2, lgR1, lgR2;
-        float lean, yawS, yawV, bS, bV, crouchS, crouchV, kick;
+        float lean, yawS, yawV, bS, bV, crouchS, crouchV, kick, kickV;
+        [Tooltip("Отдача от удара — пружина: жёсткость (1/с) и затухание. Корпус отлетает, проскакивает чуть вперёд и встаёт.")]
+        public float hitStiffness = 15f, hitDamping = 0.45f;
         float pivotRestY, walkS, deadK, footRestH, wLegS;
         // точки подошвы (пятка, подушечка, носок) в системе кости стопы — по позе покоя, где подошва стоит на земле
         Vector3[] solL, solR;
+        // фиксация опорной стопы на мокап-ходьбе: точка подошвы, вставшая на землю, держится на месте (поворот к противнику,
+        // смесь клипов, неточный темп — стопа не едет), IK ноги дотягивает голеностоп; на отрыве поправка тает
+        struct FootLock { public bool on; public Vector3 pos, off; }
+        FootLock lockL, lockR;
         /// <summary>Нижняя точка подошвы (мир) — после постановки на землю в этом кадре (для пыли/шагов и проб).</summary>
         public Vector3 SoleL { get; private set; }
         public Vector3 SoleR { get; private set; }
@@ -243,6 +249,28 @@ namespace BladePath
         }
 
         // кончик носка может уйти в землю на 2 см: пальцы гнутся, а кость стопы одна
+        void LockFoot(ref FootLock lk, Transform up, Transform lo, Transform foot, float l1, float l2, Vector3[] sol, bool use, Transform ft, float dt)
+        {
+            Vector3 sole = SolePoint(foot, sol);
+            float h = sole.y - ft.position.y;
+            if (!use) lk.on = false;
+            else if (!lk.on && h < 0.012f) { lk.on = true; lk.pos = sole; }
+            else if (lk.on && h > 0.03f) lk.on = false;
+            Vector3 want = Vector3.zero;
+            if (lk.on)
+            {
+                want = lk.pos - sole; want.y = 0f;
+                if (want.sqrMagnitude > 0.18f * 0.18f) { lk.on = false; want = Vector3.zero; }   // ушло слишком далеко — пусть шагает
+            }
+            lk.off = lk.on ? want : Vector3.Lerp(lk.off, Vector3.zero, 1f - Mathf.Exp(-dt / 0.06f));
+            if (lk.off.sqrMagnitude < 1e-8f) return;
+            Quaternion fr = foot.rotation;
+            // колено — куда его согнул клип; у почти прямой ноги направление шумное — подталкиваем вперёд (колени смотрят вперёд всегда)
+            Vector3 pole = lo.position - (up.position + foot.position) * 0.5f + ft.forward * 0.05f;
+            SolveArm(up, lo, foot, l1, l2, foot.position + lk.off, pole);
+            foot.rotation = fr;
+        }
+
         static float SoleY(Transform foot, Vector3[] pts)
         {
             float y = float.MaxValue;
@@ -275,7 +303,9 @@ namespace BladePath
         {
             if (r.target != fighter) return;
             if (animator != null) animator.SetTrigger("Hit");
-            kick = 1f;
+            // толчок пружины отдачи: в блок — слабый, вскользь — средний, чистый — полный
+            float imp = (fighter != null && fighter.Blocking ? 0.35f : 1f) * (r.glancing ? 0.6f : 1f);
+            kickV += 26f * imp;   // пик отдачи ≈ 1 через 80 мс, отскок вперёд ≈ 0.2
             // реакция зависит от зоны: голова запрокидывается, ноги подламываются, рука/корпус уводят плечи вбок
             kickZone = r.zone;
             Vector3 v = r.contact.bladeVelocity;
@@ -370,7 +400,10 @@ namespace BladePath
             yawS = Mathf.SmoothDampAngle(yawS, yawTarget, ref yawV, 0.05f);
             bS = Mathf.SmoothDamp(bS, bTarget, ref bV, 0.04f);
             crouchS = Mathf.SmoothDamp(crouchS, crouchTarget, ref crouchV, 0.07f);
-            kick = Mathf.MoveTowards(kick, 0f, hitKickDecay * dt);
+            // пружина отдачи (полунеявный Эйлер — устойчив при dt до 1/30)
+            kickV += (-hitStiffness * hitStiffness * kick - 2f * hitDamping * hitStiffness * kickV) * dt;
+            kick = Mathf.Clamp(kick + kickV * dt, -0.45f, 1.3f);
+            if (Mathf.Abs(kick) < 1e-4f && Mathf.Abs(kickV) < 1e-3f) { kick = 0f; kickV = 0f; }
             if (!keyed)
             {
                 float strikeK = Mathf.Max(0f, bS);
@@ -393,7 +426,7 @@ namespace BladePath
             pf -= kick * 0.10f;
             cPit -= kick * 10f;
             bool legHit = kickZone == BodyZoneId.LegLeft || kickZone == BodyZoneId.LegRight;
-            if (legHit) pd += 0.12f * kick;
+            if (legHit) pd += 0.12f * Mathf.Max(0f, kick);
 
             // стойку (IK ног) держим всегда, пока боец на земле: при ходьбе стопы переступают сами; в прыжке ноги отдаются Animator
             walkS = Mathf.MoveTowards(walkS, Mathf.Abs(fighter.MoveAxis) > 0.1f ? 1f : 0f, 6f * dt);
@@ -478,7 +511,7 @@ namespace BladePath
             }
 
             // ---------- 4) ноги: IK на стоящие стопы (вес стойки wSt; при ходьбе/прыжке/смерти — Animator)
-            if (wLeg > 0.001f) SolveLegs(ft, ys, hYaw, heel, walkBobY, wLeg);
+            if (wLeg > 0.001f) { SolveLegs(ft, ys, hYaw, heel, walkBobY, wLeg); lockL = default(FootLock); lockR = default(FootLock); }
             else if (fighter.Grounded && deadK < 0.01f && footL != null && footR != null)
             {
                 if (locoW > 0.001f && legsReady) { Rot(upperLegL, -hYaw, up); Rot(upperLegR, -hYaw, up); }   // ноги клипа идут по ходу, а не за поворотом таза стойки
@@ -486,7 +519,14 @@ namespace BladePath
                 // иначе при перекате на носок стопа уходит в землю, а тело проседает
                 float lowest = solL != null ? Mathf.Min(SoleY(footL, solL), SoleY(footR, solR)) : Mathf.Min(footL.position.y, footR.position.y) - footRestH;
                 transform.position += Vector3.up * (ft.position.y - lowest);
+                if (solL != null && legsReady)
+                {
+                    bool use = locoW > 0.5f;
+                    LockFoot(ref lockL, upperLegL, lowerLegL, footL, lgL1, lgL2, solL, use, ft, dt);
+                    LockFoot(ref lockR, upperLegR, lowerLegR, footR, lgR1, lgR2, solR, use, ft, dt);
+                }
             }
+            else { lockL.on = lockR.on = false; lockL.off = lockR.off = Vector3.zero; }
             if (solL != null && footL != null && footR != null) { SoleL = SolePoint(footL, solL); SoleR = SolePoint(footR, solR); }
 
             // шаги мокапа: стопа опустилась на землю — звук и брызги

@@ -40,6 +40,14 @@ namespace BladePath
         readonly List<Vector2> pointersDown = new List<Vector2>();
         int enemyTypeIndex;
         bool slashFlip;
+        AttackType buffered; bool hasBuffered; float bufferedAt;
+
+        // удар сразу; не вышло (идёт прошлый удар) — запомнить последнее нажатие
+        void Press(AttackType t)
+        {
+            if (player.AttackOrChain(t)) { hasBuffered = false; return; }
+            buffered = t; hasBuffered = true; bufferedAt = Time.unscaledTime;
+        }
         float scale = 1f;
 
         int stickFinger = -1;
@@ -145,12 +153,15 @@ namespace BladePath
                 blockHeld |= Input.GetKey(KeyCode.B) || Input.GetKey(KeyCode.LeftControl);
 #endif
                 player.SetBlock(blockHeld);
-                if (aOver) player.Attack(AttackType.Overhead);
-                if (aRise) player.Attack(AttackType.Rising);
-                if (aLegs) player.Attack(AttackType.LegSweep);
+                // буфер ввода: нажал во время удара — следующий начнётся сам, как только можно (серия из восстановления)
                 if (aEnergy) player.Attack(AttackType.Energy);
-                if (aThrust) player.Attack(AttackType.Thrust);
-                if (aSlash && player.Attack(slashFlip ? AttackType.SlashBack : AttackType.Slash)) slashFlip = !slashFlip;
+                if (aOver) Press(AttackType.Overhead);
+                if (aRise) Press(AttackType.Rising);
+                if (aLegs) Press(AttackType.LegSweep);
+                if (aThrust) Press(AttackType.Thrust);
+                if (aSlash) { Press(slashFlip ? AttackType.SlashBack : AttackType.Slash); slashFlip = !slashFlip; }
+                if (hasBuffered && Time.unscaledTime - bufferedAt < 0.35f && player.AttackOrChain(buffered)) hasBuffered = false;
+                else if (hasBuffered && Time.unscaledTime - bufferedAt >= 0.35f) hasBuffered = false;
             }
             if (enemyCycle) enemyTypeIndex = (enemyTypeIndex + 1) % EnemyTypes.Length;
             if (enemy != null && enemyAttack) enemy.Attack(EnemyTypes[enemyTypeIndex]);

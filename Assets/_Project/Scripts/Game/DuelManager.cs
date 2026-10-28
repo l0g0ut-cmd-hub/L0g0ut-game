@@ -630,6 +630,9 @@ namespace BladePath
                 lastHitHead = r.zone == BodyZoneId.Head;
                 Announce("СМЕРТЕЛЬНЫЙ УДАР", new Color(0.95f, 0.08f, 0.06f));
                 DeathblowAt = Time.unscaledTime; DeathblowPos = r.contact.point;
+                if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Punch(6f); CameraOrbit.Instance.Shake(0.08f); }
+                if (Juice.Instance != null) Juice.Instance.Taiko(1f, 0.8f);
+                Haptics.Pulse(90);
                 ApplyDamage(r.target, r.attacker, Mathf.Max(1f, Hp(r.target)), r.contact.point, true, false, r.contact.normal, r.contact.bladeVelocity, r.contact.zone != null ? r.contact.zone.transform : null);
                 return;
             }
@@ -656,7 +659,7 @@ namespace BladePath
             }
             if (r.target.Blocking && !perilous)
             {
-                bool parry = r.target.BlockTime < 0.25f;
+                bool parry = r.target.BlockTime < r.target.ParryWindow;
                 r.target.AddKi(parry ? 20f : 6f);
                 if (parry) StatsOf(r.target).parries++; else StatsOf(r.target).blocks++;
                 if (!parry) r.target.Knockback(r.target.transform.position - r.attacker.transform.position, 1.0f);
@@ -673,18 +676,26 @@ namespace BladePath
                     if (parry) Juice.Instance.Parry(r.contact.point, r.contact.normal);
                     else Juice.Instance.OnHit(r.contact.point, r.contact.normal, r.contact.bladeVelocity, 0.5f, true, false, null);
                 }
-                if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(parry ? 0.05f : 0.025f);
+                if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(parry ? 0.05f : 0.025f); if (parry) CameraOrbit.Instance.Punch(2.5f); }
                 // равновесие: блок копит урон защитнику, отражение (парирование) — атакующему
                 if (parry) { r.target.AddPosture(4f); r.attacker.AddPosture(PostureDamage(type) * 0.9f); }
                 else r.target.AddPosture(PostureDamage(type));
                 if (r.target.PostureBroken) return;
                 if (parry)
                 {
-                    if (r.attacker.weapon != null) r.attacker.weapon.ResetState();
-                    r.attacker.Stun(0.8f);
-                    hitStopUntil = Time.unscaledTime + 0.09f;
-                    counterUntil[r.target] = Time.unscaledTime + 1.0f;     // окно контратаки
-                    Slowmo = true; slowUntil = Time.unscaledTime + 0.35f;
+                    if (r.attacker.weapon != null) r.attacker.weapon.ResetState();   // клинок отброшен назад
+                    if (r.attacker.InString)
+                    {
+                        // посреди серии отражение не останавливает противника: следующий удар уже идёт — держи ритм
+                        hitStopUntil = Time.unscaledTime + 0.05f;
+                    }
+                    else
+                    {
+                        r.attacker.Stun(0.8f);
+                        hitStopUntil = Time.unscaledTime + 0.09f;
+                        counterUntil[r.target] = Time.unscaledTime + 1.0f;     // окно контратаки
+                        Slowmo = true; slowUntil = Time.unscaledTime + 0.35f;
+                    }
                 }
                 else ApplyDamage(r.target, r.attacker, Mathf.Max(1f, Mathf.Round(dmg * 0.15f)), r.contact.point, false, true);
                 return;

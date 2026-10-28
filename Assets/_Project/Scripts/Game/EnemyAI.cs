@@ -19,6 +19,10 @@ namespace BladePath
         int lastBall;
         float strafeDir = 1f;
         bool hooked;
+        // серия (как у мечников Sekiro): 2–4 удара подряд из восстановления, каждый надо отбить; парирование её обрывает
+        int feintSwing = -1;   // финт: замах обрывается на середине — ловит ранний блок/парирование, следом настоящий удар
+        int stringLeft; AttackType stringLast; bool stringDelay; float stringPauseUntil, stringIdleAt = -1f;
+        static readonly AttackType[] StringNext = { AttackType.Slash, AttackType.SlashBack, AttackType.Overhead, AttackType.Thrust };
         static readonly AttackType[] Pool = { AttackType.Overhead, AttackType.Overhead, AttackType.Slash, AttackType.SlashBack, AttackType.Thrust, AttackType.Rising, AttackType.LegSweep };
         static readonly AttackType[] Followups = { AttackType.Slash, AttackType.SlashBack, AttackType.Thrust, AttackType.Overhead };
 
@@ -48,6 +52,8 @@ namespace BladePath
         void Update()
         {
             if (!hooked && DuelManager.Instance != null) { DuelManager.Instance.Damaged += OnDamaged; hooked = true; }
+            if (self != null && (self.Stunned || self.Dead)) stringLeft = 0;   // оглушён (сломлено равновесие, микири) — серия сорвана
+            if (self != null) self.InString = stringLeft > 0;
             if (!aiEnabled || self == null || target == null || !self.CanAct) return;
             if (DuelManager.Instance != null && DuelManager.Instance.State != DuelState.Fighting) return;
 
@@ -59,6 +65,47 @@ namespace BladePath
             bool busy = self.weapon != null && self.weapon.Phase != SwingPhase.Idle;
 
             if (Time.time > strafeUntil) { strafeUntil = Time.time + Random.Range(0.8f, 1.8f); strafeDir = Random.value < 0.5f ? -1f : 1f; }
+
+            if (feintSwing >= 0 && self.weapon != null)
+            {
+                if (self.weapon.SwingId != feintSwing || self.weapon.Phase != SwingPhase.Windup) feintSwing = -1;
+                else if (self.weapon.PhaseProgress > 0.55f)
+                {
+                    feintSwing = -1;
+                    self.weapon.ResetState();
+                    nextAttackAt = Time.time + Random.Range(0.22f, 0.4f);   // настоящий удар — почти сразу
+                    return;
+                }
+            }
+
+            // продолжение серии: рубящие чередуют сторону; последний удар мастер иногда придерживает (ломает ритм)
+            if (stringLeft > 0 && self.weapon != null)
+            {
+                if (dist > 1.9f || target.Dead) stringLeft = 0;
+                else
+                {
+                    bool last = stringLeft == 1;
+                    if (last && stringDelay && self.weapon.Phase == SwingPhase.Recovery) { if (stringPauseUntil <= 0f) stringPauseUntil = Time.time + Random.Range(0.25f, 0.4f); }
+                    bool ready = !(last && stringDelay) || (stringPauseUntil > 0f && Time.time >= stringPauseUntil);
+                    // клинок отбит (сразу стойка) — короткая пауза, иначе следующий удар без зазора
+                    bool idle = self.weapon.Phase == SwingPhase.Idle;
+                    if (!idle) stringIdleAt = -1f; else if (stringIdleAt < 0f) stringIdleAt = Time.time;
+                    if (idle && Time.time - stringIdleAt < 0.14f) ready = false;
+                    if (ready && (self.weapon.Phase == SwingPhase.Recovery || self.weapon.Phase == SwingPhase.Idle))
+                    {
+                        AttackType t = stringLast == AttackType.Slash ? AttackType.SlashBack : stringLast == AttackType.SlashBack ? AttackType.Slash : StringNext[Random.Range(0, StringNext.Length)];
+                        if (last && Random.value < 0.4f) t = Random.value < 0.5f ? AttackType.Overhead : AttackType.Thrust;   // тяжёлый финал
+                        if (dist > 1.4f) self.SetMoveVector(new Vector2(dir.x, dir.z));   // догоняет отступающего
+                        if (self.Chain(t))
+                        {
+                            stringLast = t; stringLeft--; stringPauseUntil = 0f; self.InString = stringLeft > 0;
+                            nextAttackAt = Time.time + Mathf.Lerp(2.6f, 1.2f, agg) + Random.Range(0f, 0.6f);
+                            return;
+                        }
+                    }
+                    if (self.weapon.Phase != SwingPhase.Idle) { self.SetMoveVector(Vector2.zero); return; }
+                }
+            }
 
             // равновесие игрока сломлено — добить (опытный враг не упускает)
             if (target.PostureBroken && !busy && dist < 1.7f && Random.value < 0.25f + 0.2f * Level)
@@ -143,7 +190,14 @@ namespace BladePath
                 if (self.Attack(t, peril))
                 {
                     nextAttackAt = Time.time + Mathf.Lerp(2.4f, 0.8f, agg) + Random.Range(0f, 0.7f);
-                    if (Random.value < 0.45f - 0.08f * Level) retreatUntil = Time.time + 0.9f;
+                    // серия: с уровня «воин», не после опасной атаки и не шаром
+                    if (!peril && !quick && Level >= 1 && t != AttackType.Energy && Random.value < 0.18f + 0.08f * Level)
+                    {
+                        stringLeft = 1 + Random.Range(0, Level >= 2 ? 3 : 2);
+                        stringLast = t; stringDelay = Level >= 3 && Random.value < 0.35f; stringPauseUntil = 0f; self.InString = true;
+                    }
+                    else if (!peril && !quick && Level >= 2 && t != AttackType.Energy && Random.value < 0.08f * (Level - 1)) feintSwing = self.weapon.SwingId;
+                    else if (Random.value < 0.45f - 0.08f * Level) retreatUntil = Time.time + 0.9f;
                 }
             }
             if (!busy && dist < 1.0f && Time.time > dashAt && Random.value < 0.01f) { self.Dash(XZ(-dir + side * strafeDir)); dashAt = Time.time + 2f; }
