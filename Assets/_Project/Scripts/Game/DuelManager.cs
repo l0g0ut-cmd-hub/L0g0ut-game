@@ -113,6 +113,10 @@ namespace BladePath
             ResetDuel();
         }
 
+        // свернули приложение / пришёл звонок — бой встаёт на паузу
+        void OnApplicationPause(bool p) { if (p && (State == DuelState.Fighting || State == DuelState.Intro)) SetPaused(true); }
+        void OnApplicationFocus(bool f) { if (!f && State == DuelState.Fighting) SetPaused(true); }
+
         void OnDestroy() { Time.timeScale = 1f; if (resolver != null) resolver.HitRegistered -= OnHit; if (Instance == this) Instance = null; }
 
         public float MaxHp(FighterController f) { return f != null && f == enemy ? maxHp * Ladder.Current.hpMul : maxHp; }
@@ -243,6 +247,7 @@ namespace BladePath
 
             CheckClash();
             UpdateSuper();
+            Flourish();
 
             for (int i = Popups.Count - 1; i >= 0; i--) if (Time.unscaledTime - Popups[i].born > 1.0f) Popups.RemoveAt(i);
         }
@@ -313,6 +318,25 @@ namespace BladePath
             {
                 SuperBy = null;
                 if (State == DuelState.Fighting) Freeze(false);
+            }
+        }
+
+        bool flourishDone;
+        /// <summary>Тибури: победитель стряхивает кровь с клинка резким взмахом.</summary>
+        void Flourish()
+        {
+            if (State == DuelState.Fighting || State == DuelState.Intro) { flourishDone = false; return; }
+            if (flourishDone || TimedOut || LastDraw || StateTime < 0.9f) return;
+            flourishDone = true;
+            FighterController w = State == DuelState.PlayerWon ? player : enemy;
+            if (w == null || w.Dead || w.weapon == null) return;
+            w.weapon.ResetState();
+            w.weapon.TryStartSwing(AttackType.SlashBack);
+            lastSwing[w] = w.weapon.SwingId;
+            if (Juice.Instance != null)
+            {
+                Juice.Instance.ShakeBlood(w.weapon);
+                if (w.weapon.bladeRoot != null) Juice.Instance.Drip(w.weapon.bladeRoot.position + w.weapon.bladeRoot.forward * w.weapon.bladeLength * 0.7f);
             }
         }
 

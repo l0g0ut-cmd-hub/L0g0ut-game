@@ -147,6 +147,20 @@ namespace BladePath
             for (int i = 0; i < tracked.Count; i++) if (tracked[i].w == w) tracked[i].blood = Mathf.Clamp01(tracked[i].blood + amount);
         }
 
+        public void ShakeBlood(WeaponController w)
+        {
+            for (int i = 0; i < tracked.Count; i++) if (tracked[i].w == w) tracked[i].blood *= 0.35f;
+        }
+
+        /// <summary>Брызги с клинка при тибури: короткая дуга капель и пятна на земле.</summary>
+        public void Drip(Vector3 pos)
+        {
+            Vector3 dir = Camera.main != null ? Vector3.Cross(Vector3.up, Camera.main.transform.forward).normalized : Vector3.right;
+            Spray(pos, (dir + Vector3.down * 0.6f).normalized, 40, 3.2f, 30f);
+            for (int i = 0; i < 6; i++)
+                AddDecal(new Vector3(pos.x, 0.012f, pos.z) + new Vector3(dir.x, 0f, dir.z) * Random.Range(0.3f, 1.2f), Random.Range(0.06f, 0.14f), new Vector2(dir.x, dir.z), 40f, Random.Range(0.1f, 0.35f));
+        }
+
         public void CleanBlades() { for (int i = 0; i < tracked.Count; i++) tracked[i].blood = 0f; }
 
         void Update()
