@@ -282,7 +282,7 @@ namespace BladePath.EditorTools
             // крыша: скаты, конёк, свесы
             const float roofY = 2.6f;
             // вальмовая крыша с вогнутыми скатами и загнутыми углами (как в референсе)
-            EnvMesh.CurvedHip(hall, "Roof", new Vector3(cx, roofY - 0.1f, 6.0f), 5.0f, 2.1f, 1.45f, 0.45f, look.roof, look.woodDark, 1.6f);
+            EnvMesh.CurvedHip(hall, "Roof", new Vector3(cx, roofY - 0.1f, 6.0f), 5.0f, 2.1f, 1.45f, 0.3f, look.roof, look.woodDark, 1.6f);
             EnvMesh.Box(hall, "Ridge", new Vector3(cx, roofY - 0.1f + 1.47f, 6.0f), Vector3.zero, new Vector3(2f * (5.0f - 2.1f) + 0.4f, 0.18f, 0.24f), look.woodDark, 1f, true);
             CharacterVisuals.Part(hall, "RidgeEndL", PrimitiveType.Sphere, new Vector3(cx - 5.0f + 2.1f - 0.2f, roofY + 1.5f, 6.0f), Vector3.zero, new Vector3(0.22f, 0.32f, 0.22f), look.woodDark);
             CharacterVisuals.Part(hall, "RidgeEndR", PrimitiveType.Sphere, new Vector3(cx + 5.0f - 2.1f + 0.2f, roofY + 1.5f, 6.0f), Vector3.zero, new Vector3(0.22f, 0.32f, 0.22f), look.woodDark);
@@ -310,7 +310,7 @@ namespace BladePath.EditorTools
                 EnvMesh.Box(pagoda, "Tier" + i, c + new Vector3(0f, y0 + 0.42f, 0f), Vector3.zero, new Vector3(w, 0.84f, w), look.plaster, 2f);
                 EnvMesh.Box(pagoda, "Trim" + i, c + new Vector3(0f, y0 + 0.42f, 0f), Vector3.zero, new Vector3(w + 0.05f, 0.12f, w + 0.05f), look.lacquer, 1f);
                 float hw = (w + 1.1f) * 0.5f;
-                EnvMesh.CurvedHip(pagoda, "Roof" + i, c + new Vector3(0f, y0 + 0.8f, 0f), hw, hw, 0.55f, 0.3f, look.roof, look.woodDark, 1.2f);
+                EnvMesh.CurvedHip(pagoda, "Roof" + i, c + new Vector3(0f, y0 + 0.8f, 0f), hw, hw, 0.55f, 0.2f, look.roof, look.woodDark, 1.2f);
             }
             CharacterVisuals.Part(pagoda, "Finial", PrimitiveType.Cylinder, c + new Vector3(0f, 0.4f + 1.3f * 5 + 0.35f, 0f), Vector3.zero, new Vector3(0.05f, 0.45f, 0.05f), look.bronze);
         }

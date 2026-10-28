@@ -201,10 +201,10 @@ namespace BladePath.EditorTools
                             float tx = Mathf.Max(0f, Mathf.Abs(x) - ridgeHalf) / Mathf.Max(0.01f, hz);
                             float tz = Mathf.Abs(z) / Mathf.Max(0.01f, hz);
                             float t = Mathf.Clamp01(Mathf.Max(tx, tz));              // 0 на коньке, 1 на карнизе
-                            float y = height * Mathf.Pow(1f - t, 1.6f);               // вогнутый скат
+                            float y = height * Mathf.Pow(1f - t, 1.25f);              // вогнутый скат
                             float cx = Mathf.Abs(x) / hx, cz = Mathf.Abs(z) / hz;
-                            y += upturn * Mathf.Pow(cx * cz, 4f);                      // углы карниза загнуты вверх
-                            y += upturn * 0.25f * Mathf.Pow(t, 6f);                    // лёгкий загиб всей кромки
+                            y += upturn * t * t * t * Mathf.Pow(Mathf.Min(cx, cz), 2.2f); // углы карниза загнуты вверх
+                            y += upturn * 0.12f * t * t * t * t;                         // лёгкий загиб всей кромки
                             if (pass == 1) y -= 0.06f;
                             v.Add(new Vector3(x, y, z));
                             uv.Add(new Vector2(x / tile, z / tile));
