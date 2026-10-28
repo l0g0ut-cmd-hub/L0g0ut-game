@@ -24,6 +24,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # MonoBehaviour вне одноимённого файла в сборке теряет связь со скриптом, и сцена «портится» (вылет при загрузке).
+      - name: Check MonoBehaviour file names
+        run: |
+          python3 - <<'PY'
+          import re, glob, os, sys
+          bad = []
+          for f in glob.glob('Assets/**/*.cs', recursive=True):
+              s = open(f, encoding='utf-8', errors='ignore').read()
+              for m in re.finditer(r'class\s+(\w+)\s*:\s*(MonoBehaviour|ScriptableObject)\b', s):
+                  if m.group(1) != os.path.splitext(os.path.basename(f))[0]:
+                      bad.append(f + ' -> ' + m.group(1))
+          if bad:
+              print('MonoBehaviour/ScriptableObject в файле с другим именем:'); print('\n'.join(bad)); sys.exit(1)
+          print('ok')
+          PY
+
       - name: Environment info
         run: |
           { echo "== uname"; uname -a; echo "== docker"; docker version 2>&1 | head -20; echo "== df"; df -h /; } 2>&1 | tee "$RUNNER_TEMP/ci.log"
