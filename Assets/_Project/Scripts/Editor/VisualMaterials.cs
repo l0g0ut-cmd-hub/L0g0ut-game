@@ -71,6 +71,7 @@ namespace BladePath.EditorTools
             l.paper = Unlit("Env_Paper", new Color(1f, 0.78f, 0.45f));
             l.mist = SpriteLike("Env_Mist", Color.white);
             l.sky = Sky();
+            Texture2D halo = HaloTexture();
             Texture2D fireTex = Tex("fire_sprite.png", false);
             l.fireSprite = Additive("Fire_Sprite", fireTex != null ? fireTex : halo, new Color(0.6f, 0.55f, 0.5f, 0.7f));
             l.banner = Cutout("Env_Banner", "banner.png");
@@ -78,7 +79,6 @@ namespace BladePath.EditorTools
             l.bamboo = Solid("Env_Bamboo", new Color(0.36f, 0.48f, 0.22f), 0f, 0.55f);
             l.bambooLeaf = Solid("Env_BambooLeaf", new Color(0.16f, 0.30f, 0.12f), 0f, 0.2f);
             l.moss = Textured("Env_MossRock", "stoneblock_albedo.png", "stoneblock_normal.png", new Vector2(0.5f, 0.5f), new Color(0.62f, 0.72f, 0.58f), 0f, 0.15f);
-            Texture2D halo = HaloTexture();
             l.haloWarm = Additive("Halo_Warm", halo, new Color(1f, 0.62f, 0.28f, 0.55f));
             l.haloFire = Additive("Halo_Fire", halo, new Color(1f, 0.45f, 0.12f, 0.75f));
             l.haloMoon = Additive("Halo_Moon", halo, new Color(0.55f, 0.65f, 1f, 0.35f));
