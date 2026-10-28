@@ -25,7 +25,7 @@ namespace BladePath
         public int yawSign = 1;
         public Vector3 restEuler = new Vector3(-30f, 0f, 0f);
         [Tooltip("Положение рук в стойке относительно середины плеч в системе корпуса (x вправо, y вверх, z вперёд), м.")]
-        public Vector3 restHand = new Vector3(0.10f, -0.46f, 0.28f);   // руки опущены и вытянуты, клинок низко вперёд (как в референсе) — не «тираннозавр»
+        public Vector3 restHand = new Vector3(0.06f, -0.40f, 0.30f);   // чудан: руки у пупка и вперёд (= SwingProfile.ReadyPose)
         [Tooltip("Блок: клинок почти вертикально перед лицом, руки у груди.")]
         public Vector3 guardEuler = new Vector3(-82f, 8f, 0f);
         public Vector3 guardHand = new Vector3(0.03f, 0.02f, 0.30f);
@@ -55,6 +55,33 @@ namespace BladePath
         /// <summary>Где должны быть руки сейчас: смещение от середины плеч в системе корпуса. Модель (HeroRigDriver) ставит pivot по нему; без модели работает старое смещение pivotOffset.</summary>
         public Vector3 HandOffset { get; private set; }
 
+        /// <summary>Поза всего тела сейчас (каналы PoseCh, уже зеркалены по yawSign): руки, клинок, таз, грудь, стопы. Её ставит на скелет HeroRigDriver.</summary>
+        public readonly float[] Pose = new float[PoseCh.N];
+        /// <summary>Текущий удар задан ключевыми позами всего тела (таз/грудь/стопы берутся из Pose), а не старой парой поз клинка.</summary>
+        public bool Keyed { get { return Phase != SwingPhase.Idle && CurrentProfile != null && CurrentProfile.track != null; } }
+        /// <summary>Время от начала удара, с (сквозь все фазы).</summary>
+        public float SwingTime
+        {
+            get
+            {
+                if (Phase == SwingPhase.Idle || CurrentProfile == null) return 0f;
+                float s = phaseTime;
+                if (Phase >= SwingPhase.Strike) s += CurrentProfile.windupTime;
+                if (Phase >= SwingPhase.FollowThrough) s += CurrentProfile.strikeTime;
+                if (Phase >= SwingPhase.Recovery) s += CurrentProfile.followTime;
+                return s;
+            }
+        }
+        /// <summary>Скорость передней / задней стопы вдоль шага, м/с (нога в шаге приподнимается).</summary>
+        public float FootSpeedF { get; private set; }
+        public float FootSpeedR { get; private set; }
+        const float BlendTime = 0.12f;
+        readonly float[] blendFrom = new float[PoseCh.N];
+        readonly float[] sample = new float[PoseCh.N];
+        float blendLeft;
+        /// <summary>Поза прервалась скачком (новый удар из восстановления, сброс замаха): плавно перетекаем из прежней позы, а не телепортируем клинок.</summary>
+        void SnapshotForBlend() { System.Array.Copy(Pose, blendFrom, PoseCh.N); blendLeft = BlendTime; }
+
         public event Action<WeaponController> ContactWindowOpened;
         public event Action<WeaponController> ContactWindowClosed;
         /// <summary>Дальняя атака: момент выпуска снаряда.</summary>
@@ -74,6 +101,7 @@ namespace BladePath
             if (Phase != SwingPhase.Idle) return false;
             CurrentProfile = SwingProfile.Get(type);
             SwingId++;
+            SnapshotForBlend();
             Phase = SwingPhase.Windup;
             phaseTime = 0f;
             return true;
@@ -82,6 +110,7 @@ namespace BladePath
         public void ResetState()
         {
             bool wasOpen = ContactWindowOpen;
+            if (Phase != SwingPhase.Idle) SnapshotForBlend();
             Phase = SwingPhase.Idle;
             phaseTime = 0f;
             ApplyRestPose();
@@ -91,19 +120,26 @@ namespace BladePath
         void ApplyRestPose()
         {
             if (pivot == null) return;
-            Vector3 re = Vector3.Lerp(restEuler, new Vector3(guardEuler.x, guardEuler.y * yawSign, guardEuler.z), Smooth(blockK));
-            pivot.localRotation = Quaternion.Euler(re);
+            float bk = Smooth(blockK);
+            Vector3 re = Vector3.Lerp(restEuler, new Vector3(guardEuler.x, guardEuler.y * yawSign, guardEuler.z), bk);
+            Vector3 rh = Vector3.Lerp(new Vector3(restHand.x * yawSign, restHand.y, restHand.z), new Vector3(guardHand.x * yawSign, guardHand.y, guardHand.z), bk);
+            for (int c = PoseCh.PF; c < PoseCh.N; c++) Pose[c] = SwingProfile.ReadyPose[c];
+            Pose[PoseCh.HYAW] *= yawSign; Pose[PoseCh.CYAW] *= yawSign;
+            Pose[PoseCh.PF] -= 0.04f * bk; Pose[PoseCh.PD] += 0.03f * bk; Pose[PoseCh.CPIT] -= 3f * bk;   // блок: вес чуть назад, колени ниже
+            SetHandEuler(rh, re);
+            FootSpeedF = FootSpeedR = 0f;
+            ApplyBlend();
+            pivot.localRotation = Quaternion.Euler(CurrentEuler);
             pivot.localPosition = pivotBasePos;
             VisualLunge = 0f;
-            CurrentEuler = re;
             PureLocalPosition = pivotBasePos;
-            HandOffset = Vector3.Lerp(new Vector3(restHand.x * yawSign, restHand.y, restHand.z), new Vector3(guardHand.x * yawSign, guardHand.y, guardHand.z), Smooth(blockK));
         }
 
         void Update()
         {
             float bt = (owner != null && owner.Blocking) ? 1f : 0f;
             blockK = Mathf.MoveTowards(blockK, bt, Time.deltaTime / 0.12f);
+            blendLeft = Mathf.Max(0f, blendLeft - Time.deltaTime);
             if (Phase == SwingPhase.Idle && pivot != null) { ApplyRestPose(); return; }
             if (Phase == SwingPhase.Idle || pivot == null || CurrentProfile == null) return;
 
@@ -161,6 +197,7 @@ namespace BladePath
             if (Phase == SwingPhase.Idle) { ApplyRestPose(); return; }
 
             SwingProfile p = CurrentProfile;
+            if (p.track != null) { ApplyKeyed(p); return; }
             float t = Mathf.Clamp01(phaseTime / Mathf.Max(0.0001f, PhaseDuration(Phase)));
             Vector3 rest = restEuler;
             Vector3 wind = Mirror(p.windupEuler), end = Mirror(p.strikeEndEuler), follow = Mirror(p.followEuler);
@@ -202,7 +239,6 @@ namespace BladePath
                 case SwingPhase.FollowThrough: hand = h1; break;
                 default: hand = Vector3.Lerp(h1, hr, Smooth(t)); break;
             }
-            HandOffset = hand;
             // Euler-интерполяция выбрана осознанно: слерп кватернионов при развороте ~180° неоднозначен.
             float b;   // поза тела: −1 замах … +1 конец удара (как в HeroRigDriver)
             switch (Phase)
@@ -213,9 +249,60 @@ namespace BladePath
                 default: b = 1f - Smooth(t); break;
             }
             VisualLunge = Mathf.Max(0f, b) * p.bodyStep - Mathf.Max(0f, -b) * 0.05f;
-            CurrentEuler = e;
+            for (int c = PoseCh.PF; c < PoseCh.N; c++) Pose[c] = SwingProfile.ReadyPose[c];   // тело для старых профилей достраивает HeroRigDriver
+            Pose[PoseCh.HYAW] *= yawSign; Pose[PoseCh.CYAW] *= yawSign;
+            FootSpeedF = FootSpeedR = 0f;
+            SetHandEuler(hand, e);
+            ApplyBlend();
+            e = CurrentEuler;
             pivot.localRotation = Quaternion.Euler(e);
             pivot.localPosition = pivotBasePos + off + new Vector3(0f, 0f, VisualLunge);
+            PureLocalPosition = pivot.localPosition;
+        }
+
+        void SetHandEuler(Vector3 hand, Vector3 e)
+        {
+            Pose[PoseCh.HX] = hand.x; Pose[PoseCh.HY] = hand.y; Pose[PoseCh.HZ] = hand.z;
+            Pose[PoseCh.EP] = e.x; Pose[PoseCh.EY] = e.y; Pose[PoseCh.ER] = e.z;
+        }
+
+        void ApplyBlend()
+        {
+            if (blendLeft > 0f)
+            {
+                float k = Smooth(1f - blendLeft / BlendTime);
+                for (int c = 0; c < PoseCh.N; c++) Pose[c] = Mathf.Lerp(blendFrom[c], Pose[c], k);
+            }
+            HandOffset = new Vector3(Pose[PoseCh.HX], Pose[PoseCh.HY], Pose[PoseCh.HZ]);
+            CurrentEuler = new Vector3(Pose[PoseCh.EP], Pose[PoseCh.EY], Pose[PoseCh.ER]);
+        }
+
+        /// <summary>
+        /// Удар по ключевым позам. Кинетическая цепь — сдвигом времени по каналам: стопы и таз проходят ключи раньше рук,
+        /// грудь чуть раньше, клинок чуть позже кистей (хлёст). Окно sin(π·τ/T) гасит сдвиг к началу и концу — стойка не дёргается.
+        /// </summary>
+        void ApplyKeyed(SwingProfile p)
+        {
+            PoseTrack tr = p.track;
+            float tau = SwingTime, T = Mathf.Max(0.01f, tr.Duration);
+            float w = Mathf.Sin(Mathf.PI * Mathf.Clamp01(tau / T));
+            tr.Sample(tau, sample, PoseCh.HX, PoseCh.HZ + 1);
+            tr.Sample(tau - p.bladeLag * w, sample, PoseCh.EP, PoseCh.ER + 1);
+            tr.Sample(tau + p.leadPelvis * w, sample, PoseCh.PF, PoseCh.HPIT + 1);
+            tr.Sample(tau + p.leadChest * w, sample, PoseCh.CYAW, PoseCh.CPIT + 1);
+            tr.Sample(tau + p.leadFeet * w, sample, PoseCh.FF, PoseCh.HEEL + 1);
+            System.Array.Copy(sample, Pose, PoseCh.N);
+            // скорость передней стопы (для подъёма ноги в шаге): та же кривая чуть раньше/позже
+            float tf = tau + p.leadFeet * w;
+            tr.Sample(tf + 0.01f, sample, PoseCh.FF, PoseCh.RF + 1); float f1 = sample[PoseCh.FF], r1 = sample[PoseCh.RF];
+            tr.Sample(tf - 0.01f, sample, PoseCh.FF, PoseCh.RF + 1);
+            FootSpeedF = (f1 - sample[PoseCh.FF]) / 0.02f; FootSpeedR = (r1 - sample[PoseCh.RF]) / 0.02f;
+            Pose[PoseCh.HX] *= yawSign; Pose[PoseCh.EY] *= yawSign; Pose[PoseCh.ER] *= yawSign;
+            Pose[PoseCh.HYAW] *= yawSign; Pose[PoseCh.CYAW] *= yawSign;
+            ApplyBlend();
+            VisualLunge = Pose[PoseCh.PF];
+            pivot.localRotation = Quaternion.Euler(CurrentEuler);
+            pivot.localPosition = pivotBasePos + new Vector3(0f, 0f, VisualLunge);
             PureLocalPosition = pivot.localPosition;
         }
 

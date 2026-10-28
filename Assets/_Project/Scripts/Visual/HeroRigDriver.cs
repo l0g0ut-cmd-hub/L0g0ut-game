@@ -36,29 +36,29 @@ namespace BladePath
         [Tooltip("Максимальный излом кисти относительно руки, град. (иначе хват поперёк клинка ломает запястье при вытянутых вперёд руках).")]
         public float maxWristBend = 30f;
 
-        [Header("Тело в ударе")]
+        [Header("Тело в ударе (старые профили без ключевых поз)")]
         [Tooltip("Доли поворота клинка (yaw, до bodyYawMax профиля, по умолчанию ±45°), которые отрабатывают таз / поясница / грудь.")]
         public float hipsYawK = 0.15f, spineYawK = 0.20f, chestYawK = 0.25f;
         public float leanBack = -12f;     // наклон корпуса на замахе, град.
         public float leanForward = 14f;   // и в конце удара
         public float lungeForward = 0.16f; // выпад вперёд на ударе, м
-        public float lungeBack = 0.05f;    // откат назад на замахе, м
-        [Tooltip("Глубина приседа на низких ударах: угол бедра, град. (колено ≈ ×1.8).")]
-        public float crouchThigh = 66f;
 
-        [Header("Стойка")]
-        [Tooltip("Разнос ног в боевой стойке, град.: передняя нога (на стороне передней руки) вперёд, задняя назад. На ходьбе гасится.")]
-        public float stanceStagger = 36f;
-        [Tooltip("Глубина боевой стойки (колени согнуты, таз ниже), 0…1; на ходьбе гасится.")]
-        [Range(0f, 1f)] public float stanceCrouch = 0.05f;
-        public float postureBack = 10f;   // осанка: грудь назад/вверх, голова поднята (против сутулости модели), град.
-        public float stanceSpread = 10f;   // ноги разведены в стороны (широкая стойка из референса), град.
-        public float stFrontKnee = 0.9f, stRearHip = 0.75f, stRearKnee = 0.05f;   // доли угла шага для колена/бедра
+        [Header("Стойка: стопы ставит IK, таз — ключевые позы")]
+        [Tooltip("Места стоп в стойке, м, в системе бойца (x вправо, z вперёд) для правши; у левши x зеркалится. Передняя — правая.")]
+        public float footFrontX = 0.12f, footFrontZ = 0.20f, footRearX = -0.13f, footRearZ = -0.20f;
+        [Tooltip("Разворот носков наружу, град.: передняя почти прямо на врага, задняя развёрнута (устойчивость).")]
+        public float footFrontYaw = 8f, footRearYaw = 32f;
+        public float stanceDrop = 0.04f;   // колени мягко согнуты в стойке, м
+        public float stepLift = 0.07f;     // подъём стопы в шаге, м
+        public float heelLift = 0.05f;     // подъём пятки задней ноги (вес на носке), м
+        public float postureBack = 6f;     // осанка: грудь назад/вверх, голова поднята (против сутулости модели), град.
+        [Range(0f, 1f)] public float headStabilize = 0.75f;   // голова держит горизонт и смотрит на врага, а не болтается с корпусом
 
         [Header("Отдача при попадании")]
         public float hitKickDecay = 2.8f;  // 1/с
 
         float l1L, l2L, l1R, l2R;
+        float lgL1, lgL2, lgR1, lgR2;
         float lean, yawS, yawV, bS, bV, crouchS, crouchV, kick;
         float pivotRestY, walkS, deadK, footRestH;
         bool fallDust;
@@ -75,17 +75,29 @@ namespace BladePath
         Vector3 baseLocalPos;
         Quaternion baseLocalRot = Quaternion.identity;
         Quaternion bindL, bindR;
+        Quaternion footRelL = Quaternion.identity, footRelR = Quaternion.identity, headRel = Quaternion.identity;
         float sideL = 1f, sideR = -1f;
-        bool framesReady;
+        bool framesReady, legsReady;
         CombatResolver resolver;
 
         void Start()
         {
             Cache(upperArmL, forearmL, handL, out l1L, out l2L);
             Cache(upperArmR, forearmR, handR, out l1R, out l2R);
+            Cache(upperLegL, lowerLegL, footL, out lgL1, out lgL2);
+            Cache(upperLegR, lowerLegR, footR, out lgR1, out lgR2);
             baseLocalPos = transform.localPosition;
             baseLocalRot = transform.localRotation;
-            if (footL != null && footR != null && fighter != null) footRestH = Mathf.Min(footL.position.y, footR.position.y) - fighter.transform.position.y;
+            if (footL != null && footR != null && fighter != null)
+            {
+                Transform ft = fighter.transform;
+                footRestH = Mathf.Min(footL.position.y, footR.position.y) - ft.position.y;
+                // поза покоя модели: подошвы стоят на земле — запоминаем, как стопа повёрнута относительно бойца
+                footRelL = Quaternion.Inverse(ft.rotation) * footL.rotation;
+                footRelR = Quaternion.Inverse(ft.rotation) * footR.rotation;
+                if (head != null) headRel = Quaternion.Inverse(ft.rotation) * head.rotation;
+                legsReady = upperLegL != null && lowerLegL != null && upperLegR != null && lowerLegR != null;
+            }
             if (weapon != null && weapon.pivot != null) pivotRestY = weapon.pivot.localPosition.y;
             CacheHandFrame(handL, forearmL, out bindL, out sideL);
             CacheHandFrame(handR, forearmR, out bindR, out sideR);
@@ -145,6 +157,11 @@ namespace BladePath
 
         static float Smooth(float t) { return t * t * (3f - 2f * t); }
 
+        /// <summary>
+        /// Порядок: Animator (Update) → здесь: поза всего тела из WeaponController.Pose (ключевые позы удара или стойка) →
+        /// таз (вынос, высота, поворот, наклон) → грудь → голова держит горизонт → ноги IK на стоящие стопы → руки IK на рукоять.
+        /// Стопы не скользят: каждая стоит на своём месте, пока клип не «шагнул» ею (канал FF/RF).
+        /// </summary>
         void LateUpdate()
         {
             if (fighter == null || bladeRoot == null) return;
@@ -152,15 +169,21 @@ namespace BladePath
             if (decapitated && fighter != null && !fighter.Dead) decapitated = false;   // новый раунд
             if (head != null) head.localScale = decapitated ? Vector3.one * 0.001f : Vector3.one;
             Transform ft = fighter.transform;
-            Vector3 right = ft.right, up = ft.up;
-            float sc = transform.lossyScale.y;
+            Vector3 right = ft.right, up = ft.up, fwd = ft.forward;
 
             if (weapon != null && weapon.pivot != null) weapon.pivot.localPosition = weapon.PureLocalPosition;   // снять прошлую поправку досягаемости
 
-            // ---------- 1) состояние удара → «поза тела» b: −1 замах, +1 конец удара, 0 покой
-            float bTarget = 0f, yawTarget = 0f, pitchTarget = 0f, crouchTarget = 0f;
+            // ---------- 1) поза тела
+            float[] P = weapon != null ? weapon.Pose : SwingProfile.ReadyPose;
+            float ys = weapon != null ? weapon.yawSign : 1f;
             bool swinging = weapon != null && weapon.pivot != null && weapon.Phase != SwingPhase.Idle;
-            if (weapon != null && weapon.pivot != null)
+            bool keyed = weapon != null && weapon.Keyed;
+            float pf = P[PoseCh.PF], pd = P[PoseCh.PD], hYaw = P[PoseCh.HYAW], hPit = P[PoseCh.HPIT];
+            float cYaw = P[PoseCh.CYAW], cPit = P[PoseCh.CPIT], ff = P[PoseCh.FF], rf = P[PoseCh.RF], heel = P[PoseCh.HEEL];
+
+            // старые профили (ещё без ключевых поз): тело достраивается из угла клинка, как раньше
+            float bTarget = 0f, yawTarget = 0f, pitchTarget = 0f, crouchTarget = 0f;
+            if (swinging && !keyed)
             {
                 float t = weapon.PhaseProgress;
                 switch (weapon.Phase)
@@ -170,44 +193,49 @@ namespace BladePath
                     case SwingPhase.FollowThrough: bTarget = 1f; break;
                     case SwingPhase.Recovery: bTarget = Mathf.Lerp(1f, 0f, Smooth(t)); break;
                 }
-                if (swinging)
-                {
-                    Vector3 e = weapon.CurrentEuler;                          // не localEulerAngles: за ±90° по pitch Unity переворачивает yaw/roll
-                    float pitch = e.x;                                        // −165 … +85
-                    float maxYaw = weapon.CurrentProfile != null ? weapon.CurrentProfile.bodyYawMax : 45f;
-                    yawTarget = Mathf.Clamp(e.y, -maxYaw, maxYaw) * (weapon.CurrentProfile != null ? weapon.CurrentProfile.twistMul : 1f);
-                    pitchTarget = Mathf.Lerp(leanBack, leanForward, Mathf.InverseLerp(-120f, 60f, pitch));
-                }
+                Vector3 e = weapon.CurrentEuler;
+                float maxYaw = weapon.CurrentProfile.bodyYawMax;
+                yawTarget = Mathf.Clamp(e.y, -maxYaw, maxYaw) * weapon.CurrentProfile.twistMul;
+                pitchTarget = Mathf.Lerp(leanBack, leanForward, Mathf.InverseLerp(-120f, 60f, e.x));
                 crouchTarget = Mathf.Clamp01((weapon.restHand.y - weapon.HandOffset.y) / 0.45f);
             }
             if (fighter.Dashing) { crouchTarget = Mathf.Max(crouchTarget, 0.35f); pitchTarget = Mathf.Max(pitchTarget, 10f); }
-            if (kick > 0.05f && kickZone != BodyZoneId.Head && kickZone != BodyZoneId.Torso && kickZone != BodyZoneId.ArmLeft && kickZone != BodyZoneId.ArmRight)
-                crouchTarget = Mathf.Max(crouchTarget, 0.55f * kick);   // удар по ногам — колени подламываются
             lean = Mathf.MoveTowards(lean, pitchTarget, 140f * dt);
             yawS = Mathf.SmoothDampAngle(yawS, yawTarget, ref yawV, 0.05f);
             bS = Mathf.SmoothDamp(bS, bTarget, ref bV, 0.04f);
             crouchS = Mathf.SmoothDamp(crouchS, crouchTarget, ref crouchV, 0.07f);
             kick = Mathf.MoveTowards(kick, 0f, hitKickDecay * dt);
+            if (!keyed)
+            {
+                float strikeK = Mathf.Max(0f, bS);
+                float lg = weapon != null ? weapon.VisualLunge : 0f;
+                SwingProfile prof = swinging ? weapon.CurrentProfile : null;
+                hYaw += yawS * hipsYawK; cYaw += yawS * (spineYawK + chestYawK); cPit += lean;
+                pf += lg * 0.6f; ff += Mathf.Max(0f, lg); heel += strikeK * 0.5f;
+                pd += crouchS * 0.16f + (prof != null ? prof.crouchBoost * strikeK * 0.2f : 0f);
+            }
 
-            // боевая стойка действует, пока боец стоит на земле и не идёт; в удар её дополняют шаг и присед из профиля атаки
-            walkS = Mathf.MoveTowards(walkS, Mathf.Abs(fighter.MoveAxis) > 0.1f || !fighter.Grounded ? 1f : 0f, 6f * dt);
-            SwingProfile prof = (weapon != null && swinging) ? weapon.CurrentProfile : null;
-            float strikeK = Mathf.Max(0f, bS);
-            float stepM = prof != null ? prof.bodyStep : lungeForward;
-            float riseK = prof != null ? Mathf.Max(0f, -bS) * prof.windupRise : 0f;   // замах дзё-дан: ноги сходятся, тело вытягивается
-            float cr = Mathf.Clamp01(crouchS + stanceCrouch * (1f - walkS) * (1f - riseK) + (prof != null ? prof.crouchBoost * strikeK : 0f));
-            float stride = (1f - walkS) * stanceStagger * (1f - riseK) + (prof != null ? prof.strideDeg * strikeK * (1f - walkS) : 0f);
-
-            // ---------- 2) дыхание и покачивание в стойке (глушится во время удара)
+            // дыхание и покачивание в стойке (глушится во время удара)
             float calm = swinging ? 0f : 1f;
             float time = Time.time;
-            float swayYaw = Mathf.Sin(time * 0.8f) * 2.0f * calm;
-            float swayPitch = Mathf.Sin(time * 1.1f + 1f) * 1.2f * calm;
-            float headYaw = Mathf.Sin(time * 0.55f + 2f) * 3.0f * calm;
+            hYaw += Mathf.Sin(time * 0.8f) * 0.8f * calm;
+            cPit += Mathf.Sin(time * 1.1f + 1f) * 0.6f * calm;
+            pd += (Mathf.Sin(time * 1.1f + 1f) * 0.006f) * calm;
+            float headYaw = Mathf.Sin(time * 0.55f + 2f) * 2.0f * calm;
 
-            // ---------- 3) смещение всей модели: выпад / откат / присед / отдача (визуально; зоны поражения не двигаются)
-            float lunge = (weapon != null ? weapon.VisualLunge : 0f) - kick * 0.10f;   // руки с клинком едут вместе с телом (WeaponController.VisualLunge)
-            Vector3 off = new Vector3(0f, -Mathf.Max(0f, bS) * 0.02f, lunge);   // высоту (присед) задаёт посадка стоп на землю ниже
+            // отдача: корпус назад, при ударе по ногам — колени подламываются
+            pf -= kick * 0.10f;
+            cPit -= kick * 10f;
+            bool legHit = kickZone == BodyZoneId.LegLeft || kickZone == BodyZoneId.LegRight;
+            if (legHit) pd += 0.12f * kick;
+
+            // стойку (IK ног) ведём, пока боец стоит и не идёт; на ходьбе ноги отдаются Animator
+            walkS = Mathf.MoveTowards(walkS, Mathf.Abs(fighter.MoveAxis) > 0.1f || !fighter.Grounded ? 1f : 0f, 6f * dt);
+            float wSt = (1f - walkS);
+
+            // ---------- 2) таз: вынос вперёд и высота (вся модель) — визуально; зоны поражения едут следом (FollowZones)
+            float drop = (stanceDrop + pd) * wSt;
+            Vector3 off = new Vector3(0f, -drop, pf);
             transform.localPosition = baseLocalPos + off;
             deadK = Mathf.MoveTowards(deadK, fighter.Dead ? 1f : 0f, dt / 0.8f);
             if (deadK >= 0.97f && !fallDust)
@@ -226,72 +254,50 @@ namespace BladePath
             }
             else transform.localRotation = baseLocalRot;
 
-            // ---------- 4) повороты костей сверху вниз (родитель раньше ребёнка)
-            Rot(hips, yawS * hipsYawK + swayYaw * 0.4f, up);
-            Rot(spine, yawS * spineYawK + swayYaw * 0.3f, up);
-            Rot(chest, yawS * chestYawK + swayYaw * 0.3f, up);
-            float pitchTotal = lean * 0.5f - kick * 8f + swayPitch * 0.5f;
-            Rot(spine, pitchTotal, right);
-            Rot(chest, lean * 0.5f - kick * 12f + swayPitch * 0.5f, right);
-            Rot(spine, -postureBack * 0.4f, right); Rot(chest, -postureBack * 0.6f, right);
-            Rot(head, headYaw - yawS * 0.25f, up);              // голова частично «смотрит» на противника, а не вслед за клинком
-            Rot(head, -pitchTotal * 0.5f + kick * 6f + postureBack * 0.7f, right);
+            // ---------- 3) таз → поясница → грудь (родитель раньше ребёнка); ось наклона повёрнута вместе с тазом
+            Rot(hips, hYaw, up);
+            Vector3 hipRight = Quaternion.AngleAxis(hYaw, up) * right;
+            Rot(hips, hPit, hipRight);
+            Rot(spine, cYaw * 0.4f, up);
+            Rot(chest, cYaw * 0.6f, up);
+            Vector3 chestRight = Quaternion.AngleAxis(hYaw + cYaw, up) * right;
+            Rot(spine, cPit * 0.45f - postureBack * 0.4f, chestRight);
+            Rot(chest, cPit * 0.55f - postureBack * 0.6f, chestRight);
             if (kick > 0.01f)
             {
-                Vector3 fw = ft.forward;
                 float k2 = kick * kick;
-                if (kickZone == BodyZoneId.Head) { Rot(head, -k2 * 22f, right); Rot(head, kickSide * k2 * 14f, up); }
-                Rot(chest, -kickSide * k2 * (kickZone == BodyZoneId.ArmLeft || kickZone == BodyZoneId.ArmRight ? 16f : 9f), fw);
+                Rot(chest, -kickSide * k2 * (kickZone == BodyZoneId.ArmLeft || kickZone == BodyZoneId.ArmRight ? 16f : 9f), fwd);
                 Rot(spine, kickSide * k2 * 6f, up);
             }
-
-            // ноги не крутятся вместе с тазом: стопы остаются на месте, скручивается только корпус
-            float hipYaw = yawS * hipsYawK + swayYaw * 0.4f;
-            Rot(upperLegL, -hipYaw, up); Rot(upperLegR, -hipYaw, up);
-
-            if (cr > 0.01f)
+            // голова держит горизонт и смотрит на противника (лишь частично следует за поворотом корпуса)
+            if (head != null && deadK < 0.01f)
             {
-                float f = cr * crouchThigh, k = f * 1.8f;
-                Rot(upperLegL, -f, right); Rot(lowerLegL, k, right); Rot(footL, f - k, right);
-                Rot(upperLegR, -f, right); Rot(lowerLegR, k, right); Rot(footR, f - k, right);
+                Quaternion level = Quaternion.AngleAxis((hYaw + cYaw) * 0.3f + headYaw, up) * ft.rotation * headRel;
+                head.rotation = Quaternion.Slerp(head.rotation, level, headStabilize);
+                if (kick > 0.01f && kickZone == BodyZoneId.Head) { float k2 = kick * kick; Rot(head, -k2 * 22f, right); Rot(head, kickSide * k2 * 14f, up); }
             }
 
-            // ---------- 4b) разнос ног: передняя нога (на стороне передней руки) вперёд, задняя назад; на ударе шаг шире
-            float st = stride;
-            if (st > 0.01f)
+            // ---------- 4) ноги: IK на стоящие стопы (вес стойки wSt; при ходьбе/прыжке/смерти — Animator)
+            float wLeg = legsReady && fighter.Grounded && deadK < 0.01f ? wSt : 0f;
+            if (wLeg > 0.001f) SolveLegs(ft, ys, hYaw, ff, rf, heel, wLeg);
+            else if (fighter.Grounded && deadK < 0.01f && footL != null && footR != null)
             {
-                // передняя: бедро вперёд, голень почти вертикально, стопа плашмя; задняя: прямая нога назад, стопа плашмя
-                Rot(upperLegR, -st, right); Rot(lowerLegR, st * stFrontKnee, right); Rot(footR, st * (1f - stFrontKnee), right);
-                Rot(upperLegL, st * stRearHip, right); Rot(lowerLegL, st * stRearKnee, right); Rot(footL, -st * (stRearHip + stRearKnee), right);
-            }
-
-            // ---------- 4b+) широкая стойка: бёдра разведены в стороны, стопы остаются параллельно земле
-            float spread = stanceSpread * (1f - walkS) * (1f - riseK);
-            if (spread > 0.01f)
-            {
-                Vector3 fw2 = ft.forward;
-                Rot(upperLegL, -spread, fw2); Rot(footL, spread, fw2);
-                Rot(upperLegR, spread, fw2); Rot(footR, -spread, fw2);
-            }
-
-            // ---------- 4b') стопы стоят на земле: глубина приседа и ширина шага сами решают, насколько опустить таз
-            if (fighter.Grounded && deadK < 0.01f && footL != null && footR != null)
-            {
-                float lowest = Mathf.Min(footL.position.y, footR.position.y);
+                float lowest = Mathf.Min(footL.position.y, footR.position.y);   // ходьба: просто ставим нижнюю стопу на землю
                 transform.position += Vector3.up * ((ft.position.y + footRestH) - lowest);
             }
 
-            // ---------- 4b'') руки ставятся относительно плеч в системе корпуса: корпус присел / скрутился / выпал вперёд — руки с клинком идут за ним
+            // ---------- 5) руки ставятся относительно плеч в системе корпуса: корпус присел / скрутился / вынесен вперёд — руки с клинком идут за ним
             if (weapon != null && weapon.pivot != null && upperArmR != null && upperArmL != null)
             {
                 Vector3 shMid = (upperArmR.position + upperArmL.position) * 0.5f;
-                float twist = yawS * (hipsYawK + spineYawK + chestYawK);
+                // ключевые позы и стойка задают руки в системе бойца (линия реза не уезжает вбок с поворотом таза);
+                // старые профили — в системе скрученного корпуса, как раньше
+                float twist = (swinging && !keyed) ? yawS * (hipsYawK + spineYawK + chestYawK) : 0f;
                 Quaternion frame = Quaternion.AngleAxis(twist, up) * ft.rotation;
                 weapon.pivot.position = shMid + frame * weapon.HandOffset;
             }
 
-            // ---------- 4c) досягаемость: если рукоять дальше, чем достают руки (у модели они короткие), меч подтягивается к плечам —
-            // кисти всегда остаются на рукояти, а не повисают в воздухе (раньше именно это выглядело как «перелом кисти»)
+            // досягаемость: если рукоять дальше, чем достают руки, меч подтягивается к плечам — кисти всегда на рукояти
             if (upperArmR != null && upperArmL != null && weapon != null && weapon.pivot != null)
             {
                 float reachR = (l1R + l2R) * 0.96f, reachL = (l1L + l2L) * 0.96f;
@@ -311,10 +317,10 @@ namespace BladePath
 
             if (deadK > 0.5f) { DropSword(); return; }
 
-            // ---------- 4d) зоны попадания едут за моделью (присед, выпад), иначе клинок бьёт по воздуху рядом с видимым телом
-            FollowZones(ft, lunge);
+            // зоны попадания едут за моделью (присед, выпад), иначе клинок бьёт по воздуху рядом с видимым телом
+            FollowZones(ft, pf);
 
-            // ---------- 5) руки держат рукоять
+            // ---------- 6) руки держат рукоять
             Vector3 axis = bladeRoot.forward;
             Vector3 back = -axis;
             Vector3 outward = ft.right * 1.0f + Vector3.down * 0.5f + back * 0.2f;   // локти разведены в стороны, а не прижаты к корпусу
@@ -334,6 +340,69 @@ namespace BladePath
                 OrientHand(handR, bindR, fR, nR);
                 OrientHand(handL, bindL, fL, nL);
             }
+        }
+
+        /// <summary>
+        /// Ноги: каждая стопа стоит на своём месте стойки (+ шаг из клипа), таз опускается ровно настолько, чтобы обе ноги доставали
+        /// (колено не выпрямляется в струну и не проваливается), колено смотрит по носку, подошва параллельна земле,
+        /// у задней ноги пятка может подниматься (вес на носке), передняя в шаге отрывается от земли.
+        /// </summary>
+        void SolveLegs(Transform ft, float ys, float hYaw, float ff, float rf, float heel, float w)
+        {
+            Vector3 up = ft.up, right = ft.right;
+            bool frontIsR = ys > 0f;
+            Transform fU = frontIsR ? upperLegR : upperLegL, fL_ = frontIsR ? lowerLegR : lowerLegL, fF = frontIsR ? footR : footL;
+            Transform rU = frontIsR ? upperLegL : upperLegR, rL_ = frontIsR ? lowerLegL : lowerLegR, rF = frontIsR ? footL : footR;
+            float f1 = frontIsR ? lgR1 : lgL1, f2 = frontIsR ? lgR2 : lgL2, r1 = frontIsR ? lgL1 : lgR1, r2 = frontIsR ? lgL2 : lgR2;
+            Quaternion fRel = frontIsR ? footRelR : footRelL, rRel = frontIsR ? footRelL : footRelR;
+            float fSide = frontIsR ? 1f : -1f;   // +1 — правая стопа (носок наружу = вправо)
+
+            // позы Animator — для смешивания при переходе в ходьбу
+            Quaternion a0 = fU.localRotation, a1 = fL_.localRotation, a2 = fF != null ? fF.localRotation : Quaternion.identity;
+            Quaternion b0 = rU.localRotation, b1 = rL_.localRotation, b2 = rF != null ? rF.localRotation : Quaternion.identity;
+
+            float sF = weapon != null ? weapon.FootSpeedF : 0f;
+            float lift = stepLift * Mathf.Clamp01(Mathf.Abs(sF) / 2.5f);
+            float ground = ft.position.y;
+            Vector3 frontPos = ft.position + ft.rotation * new Vector3(footFrontX * ys, 0f, footFrontZ + ff);
+            Vector3 rearPos = ft.position + ft.rotation * new Vector3(footRearX * ys, 0f, footRearZ + rf);
+            frontPos.y = ground + footRestH + lift;
+            rearPos.y = ground + footRestH + heel * heelLift;
+
+            // таз ниже, если иначе нога не дотягивается (широкий шаг, вынос таза)
+            Rot(fU, -hYaw, up); Rot(rU, -hYaw, up);   // бёдра не скручиваются вместе с тазом
+            float need = 0f;
+            need = Mathf.Max(need, DropNeeded(fU.position, frontPos, (f1 + f2) * 0.985f, up));
+            need = Mathf.Max(need, DropNeeded(rU.position, rearPos, (r1 + r2) * 0.985f, up));
+            if (need > 0f) transform.position -= up * (need * w);
+
+            float fYaw = fSide * footFrontYaw, rYaw = -fSide * footRearYaw;
+            Vector3 poleF = Quaternion.AngleAxis(fYaw, up) * ft.forward + up * 0.1f;
+            Vector3 poleR = Quaternion.AngleAxis(rYaw, up) * ft.forward + up * 0.1f;
+            SolveArm(fU, fL_, fF, f1, f2, frontPos, poleF);
+            SolveArm(rU, rL_, rF, r1, r2, rearPos, poleR);
+            float liftK = stepLift > 0f ? lift / stepLift : 0f;
+            if (fF != null) fF.rotation = Quaternion.AngleAxis(fYaw, up) * Quaternion.AngleAxis(-12f * liftK, right) * ft.rotation * fRel;   // в шаге носок чуть вверх
+            if (rF != null) rF.rotation = Quaternion.AngleAxis(rYaw, up) * Quaternion.AngleAxis(28f * heel, right) * ft.rotation * rRel;    // пятка поднята — стопа на носке
+
+            if (w < 0.999f)
+            {
+                fU.localRotation = Quaternion.Slerp(a0, fU.localRotation, w); fL_.localRotation = Quaternion.Slerp(a1, fL_.localRotation, w);
+                rU.localRotation = Quaternion.Slerp(b0, rU.localRotation, w); rL_.localRotation = Quaternion.Slerp(b1, rL_.localRotation, w);
+                if (fF != null) fF.localRotation = Quaternion.Slerp(a2, fF.localRotation, w);
+                if (rF != null) rF.localRotation = Quaternion.Slerp(b2, rF.localRotation, w);
+            }
+        }
+
+        /// <summary>На сколько опустить бедро, чтобы нога длины maxLen достала до точки target.</summary>
+        static float DropNeeded(Vector3 hip, Vector3 target, float maxLen, Vector3 up)
+        {
+            Vector3 v = target - hip;
+            float vert = -Vector3.Dot(v, up);
+            float hor = (v + up * vert).magnitude;
+            if (v.magnitude <= maxLen) return 0f;
+            float h = Mathf.Sqrt(Mathf.Max(0f, maxLen * maxLen - hor * hor));
+            return Mathf.Max(0f, vert - h);
         }
 
         Vector3[] zoneBase;
