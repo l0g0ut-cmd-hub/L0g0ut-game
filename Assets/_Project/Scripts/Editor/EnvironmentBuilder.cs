@@ -141,7 +141,8 @@ namespace BladePath.EditorTools
             {
                 if (i == 2) continue;   // по центру — вход
                 float x = -0.8f - 2.8f + i * 1.4f;
-                EnvMesh.Box(d, "HallBanner" + i, new Vector3(x, 1.55f, 5.02f), Vector3.zero, new Vector3(0.36f, 1.3f, 0.01f), look.banner, 0f);
+                Transform hp = SwayPivot(d, "HallBannerPivot" + i, new Vector3(x, 2.2f, 5.02f), 3f);
+                EnvMesh.Box(hp, "HallBanner" + i, new Vector3(0f, -0.65f, 0f), Vector3.zero, new Vector3(0.36f, 1.3f, 0.01f), look.banner, 0f);
             }
             // симэнава между столбами тории и бумажные зигзаги
             CharacterVisuals.Part(d, "Shimenawa", PrimitiveType.Cylinder, new Vector3(1.7f, 2.05f, 3.52f), new Vector3(0f, 0f, 90f), new Vector3(0.07f, 1.0f, 0.07f), look.bark);
@@ -153,7 +154,8 @@ namespace BladePath.EditorTools
                 float x = 4.25f * side;
                 CharacterVisuals.Part(d, "BannerPole" + side, PrimitiveType.Cylinder, new Vector3(x, 1.5f, 0.5f), Vector3.zero, new Vector3(0.05f, 1.5f, 0.05f), look.woodDark);
                 EnvMesh.Box(d, "BannerCross" + side, new Vector3(x - 0.2f * side, 2.88f, 0.5f), Vector3.zero, new Vector3(0.5f, 0.04f, 0.04f), look.woodDark, 0.5f, true);
-                EnvMesh.Box(d, "Banner" + side, new Vector3(x - 0.22f * side, 2.1f, 0.5f), new Vector3(0f, 0f, 0f), new Vector3(0.42f, 1.5f, 0.01f), look.banner, 0f);
+                Transform bp = SwayPivot(d, "BannerPivot" + side, new Vector3(x - 0.22f * side, 2.86f, 0.5f), 6f);
+                EnvMesh.Box(bp, "Banner" + side, new Vector3(0f, -0.76f, 0f), Vector3.zero, new Vector3(0.42f, 1.5f, 0.01f), look.banner, 0f);
             }
         }
 
@@ -220,11 +222,20 @@ namespace BladePath.EditorTools
 
         /// <summary>Сад: бамбуковые рощи по углам двора, замшелые камни, дорожка из плоских камней к храму.</summary>
         /// <summary>Неподвижные декорации — в статический батчинг: сотни объектов сада и храма сливаются в несколько draw call.</summary>
+        static Transform SwayPivot(Transform parent, string name, Vector3 pos, float amp)
+        {
+            Transform p = new GameObject(name).transform;
+            p.SetParent(parent, false);
+            p.localPosition = pos;
+            p.gameObject.AddComponent<BladePath.BannerSway>().amp = amp;
+            return p;
+        }
+
         static void MarkStatic(Transform root)
         {
             foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
             {
-                if (t.GetComponent<BladePath.GlowSprite>() != null || t.GetComponent<ParticleSystem>() != null) continue;
+                if (t.GetComponent<BladePath.GlowSprite>() != null || t.GetComponent<ParticleSystem>() != null || t.GetComponentInParent<BladePath.BannerSway>() != null) continue;
                 UnityEditor.GameObjectUtility.SetStaticEditorFlags(t.gameObject, UnityEditor.StaticEditorFlags.BatchingStatic);
             }
         }
