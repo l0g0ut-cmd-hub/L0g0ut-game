@@ -132,30 +132,54 @@ namespace BladePath
         public float Hp01(FighterController f) { return Mathf.Clamp01(Hp(f) / MaxHp(f)); }
         public float Trail01(FighterController f) { float v; return hpTrail.TryGetValue(f, out v) ? Mathf.Clamp01(v / MaxHp(f)) : 1f; }
 
-        /// <summary>Применить ступень «Пути»: скорость, окрас и аура противника.</summary>
+        /// <summary>Материалы тела бойца (без оружия) и их исходные цвета — для окраса ступени и «окровавленности».</summary>
+        class BodyMats { public List<Material> mats = new List<Material>(); public List<Color> baseCol = new List<Color>(); public Color tint = Color.white; public float blood; public Color applied = Color.white; }
+        readonly Dictionary<FighterController, BodyMats> bodyMats = new Dictionary<FighterController, BodyMats>();
         float enemyBaseSpeed = -1f;
-        System.Collections.Generic.List<Material> enemyMats;
-        System.Collections.Generic.List<Color> enemyBaseColors;
+
+        BodyMats MatsOf(FighterController f)
+        {
+            BodyMats b;
+            if (bodyMats.TryGetValue(f, out b)) return b;
+            b = new BodyMats();
+            HashSet<Renderer> flash = new HashSet<Renderer>();   // подсветки зон попадания не трогаем — у них своя логика цвета
+            foreach (BodyZone z in f.GetComponentsInChildren<BodyZone>(true)) if (z.flashRenderer != null) flash.Add(z.flashRenderer);
+            foreach (Renderer r in f.GetComponentsInChildren<Renderer>(true))
+            {
+                if (flash.Contains(r)) continue;
+                if (!(r is SkinnedMeshRenderer || r is MeshRenderer)) continue;
+                if (f.weapon != null && f.weapon.bladeRoot != null && r.transform.IsChildOf(f.weapon.bladeRoot)) continue;
+                if (r.GetComponent<WeaponTrail>() != null) continue;
+                foreach (Material m in r.materials)
+                    if (m != null && m.HasProperty("_Color")) { b.mats.Add(m); b.baseCol.Add(m.color); }
+            }
+            bodyMats[f] = b;
+            return b;
+        }
+
+        /// <summary>Чем меньше здоровья, тем темнее и краснее тело — следы ран.</summary>
+        void UpdateBodyTint(FighterController f)
+        {
+            if (f == null) return;
+            BodyMats b = MatsOf(f);
+            float target = (1f - Hp01(f)) * 0.45f;
+            b.blood = Mathf.MoveTowards(b.blood, target, Time.unscaledDeltaTime * 0.8f);
+            Color k = BloodCol(b.blood) * b.tint;
+            if (k == b.applied) return;
+            b.applied = k;
+            for (int i = 0; i < b.mats.Count; i++) b.mats[i].color = b.baseCol[i] * k;
+        }
+
+        static Color BloodCol(float k) { return Color.Lerp(Color.white, new Color(0.62f, 0.2f, 0.18f), k); }
+
+        /// <summary>Применить ступень «Пути»: скорость, окрас и аура противника.</summary>
         public void ApplyStage()
         {
             if (enemy == null) return;
             Ladder.Stage s = Ladder.Current;
             if (enemyBaseSpeed < 0f) enemyBaseSpeed = enemy.moveSpeed;
             enemy.moveSpeed = enemyBaseSpeed * s.speedMul;
-            if (enemyMats == null)
-            {
-                enemyMats = new System.Collections.Generic.List<Material>();
-                enemyBaseColors = new System.Collections.Generic.List<Color>();
-                foreach (Renderer r in enemy.GetComponentsInChildren<Renderer>(true))
-                {
-                    if (!(r is SkinnedMeshRenderer || r is MeshRenderer)) continue;
-                    if (enemy.weapon != null && enemy.weapon.bladeRoot != null && r.transform.IsChildOf(enemy.weapon.bladeRoot)) continue;
-                    if (r.GetComponentInParent<BodyZone>() != null && r.GetComponent<BodyZone>() == null && r.sharedMaterial != null && r.sharedMaterial.name.Contains("Flash")) continue;
-                    foreach (Material m in r.materials)
-                        if (m != null && m.HasProperty("_Color")) { enemyMats.Add(m); enemyBaseColors.Add(m.color); }
-                }
-            }
-            for (int i = 0; i < enemyMats.Count; i++) enemyMats[i].color = enemyBaseColors[i] * s.tint;
+            MatsOf(enemy).tint = s.tint;
             if (Juice.Instance != null) Juice.Instance.SetAuraColor(enemy, s.aura);
         }
         public float SinceHit(FighterController f) { float v; return lastHitTime.TryGetValue(f, out v) ? Time.unscaledTime - v : 99f; }
@@ -263,6 +287,8 @@ namespace BladePath
 
             CheckClash();
             UpdateSuper();
+            UpdateBodyTint(player);
+            UpdateBodyTint(enemy);
             Flourish();
 
             for (int i = Popups.Count - 1; i >= 0; i--) if (Time.unscaledTime - Popups[i].born > 1.0f) Popups.RemoveAt(i);
