@@ -564,6 +564,22 @@ namespace BladePath
                       new[] { new GradientAlphaKey(0.9f, 0f), new GradientAlphaKey(0f, 1f) });
             tr.colorGradient = g;
             tr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            // ореол вокруг шара (аддитивный, всегда к камере)
+            Shader ash = Shader.Find("Legacy Shaders/Particles/Additive");
+            if (ash != null)
+            {
+                Material hm = new Material(ash);
+                hm.mainTexture = SoftSprites.Fog;
+                hm.SetColor("_TintColor", new Color(c.r * 0.5f, c.g * 0.5f, c.b * 0.5f, 0.5f));
+                GameObject halo = new GameObject("BallHalo");
+                halo.transform.SetParent(ball.transform, false);
+                halo.transform.localScale = Vector3.one * 4.5f;   // шар ~0,28 м → ореол ~1,2 м
+                halo.AddComponent<MeshFilter>().sharedMesh = QuadMesh();
+                MeshRenderer hr = halo.AddComponent<MeshRenderer>();
+                hr.sharedMaterial = hm;
+                hr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                halo.AddComponent<GlowSprite>().flicker = 0.2f;
+            }
             Play(whoosh, 0.5f, 1.4f);
         }
 
