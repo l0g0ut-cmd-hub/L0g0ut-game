@@ -133,7 +133,7 @@ namespace BladePath
         public float Trail01(FighterController f) { float v; return hpTrail.TryGetValue(f, out v) ? Mathf.Clamp01(v / MaxHp(f)) : 1f; }
 
         /// <summary>Материалы тела бойца (без оружия) и их исходные цвета — для окраса ступени и «окровавленности».</summary>
-        class BodyMats { public List<Material> mats = new List<Material>(); public List<Color> baseCol = new List<Color>(); public Color tint = Color.white; public float blood; public Color applied = Color.white; }
+        class BodyMats { public List<Material> mats = new List<Material>(); public List<Color> baseCol = new List<Color>(); public List<Color> baseEm = new List<Color>(); public Color tint = Color.white; public float blood; public Color applied = Color.white; public float flashAt = -10f, flashK; }
         readonly Dictionary<FighterController, BodyMats> bodyMats = new Dictionary<FighterController, BodyMats>();
         float enemyBaseSpeed = -1f;
 
@@ -151,7 +151,7 @@ namespace BladePath
                 if (f.weapon != null && f.weapon.bladeRoot != null && r.transform.IsChildOf(f.weapon.bladeRoot)) continue;
                 if (r.GetComponent<WeaponTrail>() != null) continue;
                 foreach (Material m in r.materials)
-                    if (m != null && m.HasProperty("_Color")) { b.mats.Add(m); b.baseCol.Add(m.color); }
+                    if (m != null && m.HasProperty("_Color")) { b.mats.Add(m); b.baseCol.Add(m.color); b.baseEm.Add(m.HasProperty("_EmissionColor") ? m.GetColor("_EmissionColor") : Color.black); }
             }
             bodyMats[f] = b;
             return b;
@@ -165,9 +165,19 @@ namespace BladePath
             float target = (1f - Hp01(f)) * 0.45f;
             b.blood = Mathf.MoveTowards(b.blood, target, Time.unscaledDeltaTime * 0.8f);
             Color k = BloodCol(b.blood) * b.tint;
-            if (k == b.applied) return;
+            // вспышка попадания по самой модели: красно-белое свечение на 0,15 с
+            float fl = Mathf.Clamp01(1f - (Time.unscaledTime - b.flashAt) / 0.15f);
+            if (fl > 0f) k = Color.Lerp(k, new Color(1f, 0.75f, 0.7f), fl * 0.6f);
+            if (k == b.applied && fl == b.flashK) return;
             b.applied = k;
-            for (int i = 0; i < b.mats.Count; i++) b.mats[i].color = b.baseCol[i] * k;
+            Color em = new Color(0.9f, 0.08f, 0.04f) * (fl * 1.4f);
+            bool emisChanged = fl > 0f || b.flashK > 0f;
+            b.flashK = fl;
+            for (int i = 0; i < b.mats.Count; i++)
+            {
+                b.mats[i].color = b.baseCol[i] * k;
+                if (emisChanged && b.mats[i].HasProperty("_EmissionColor")) b.mats[i].SetColor("_EmissionColor", b.baseEm[i] + em);
+            }
         }
 
         static Color BloodCol(float k) { return Color.Lerp(Color.white, new Color(0.62f, 0.2f, 0.18f), k); }
@@ -585,6 +595,7 @@ namespace BladePath
                 Haptics.Pulse(target == player ? (dmg >= 20f ? 70 : 40) : 18);
             }
             hp[target] = Mathf.Max(0f, Hp(target) - dmg);
+            if (!chip) MatsOf(target).flashAt = Time.unscaledTime;
             lastHitTime[target] = Time.unscaledTime;
             Popup p = new Popup();
             p.world = point + Vector3.up * 0.15f;

@@ -39,9 +39,12 @@ namespace BladePath
 
         public void Flash(Color color, float duration)
         {
+            // У скинутых моделей зона — грубая капсула/сфера, а не часть тела: её не показываем никогда
+            // (иначе при ударе «вылетает» примитивная голова, а после смерти стоит кусок туловища).
+            // Подсветку попадания делает DuelManager по материалам самой модели.
+            if (overlayFlash) { if (flashRenderer != null) flashRenderer.enabled = false; return; }
             CacheBase();
             if (mat == null) return;
-            if (overlayFlash && flashRenderer != null) flashRenderer.enabled = true;
             mat.color = color;
             if (mat.HasProperty("_EmissionColor")) mat.SetColor("_EmissionColor", color * 1.6f);
             flashUntil = Time.time + duration;
