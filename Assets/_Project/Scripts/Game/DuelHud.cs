@@ -12,9 +12,19 @@ namespace BladePath
         static readonly Color Frame = new Color(0.04f, 0.03f, 0.03f, 0.92f);
         static readonly Color Gold = new Color(0.86f, 0.70f, 0.38f, 1f);
 
+        PortraitCam portraitP, portraitE;
+        bool portraitsTried;
+        static Texture2D portraitMask;
+
         void OnGUI()
         {
             if (duel == null || duel.player == null || duel.enemy == null) return;
+            if (!portraitsTried && Event.current.type == EventType.Repaint)
+            {
+                portraitsTried = true;
+                portraitP = PortraitCam.Create(duel.player, new Color(0.08f, 0.14f, 0.22f));
+                portraitE = PortraitCam.Create(duel.enemy, new Color(0.2f, 0.06f, 0.18f));
+            }
             Matrix4x4 old = UiKit.Begin();
             float W = UiKit.Width;
 
@@ -211,6 +221,24 @@ namespace BladePath
             }
         }
 
+        /// <summary>Квадрат с прозрачным кругом в центре: превращает квадратный портрет в круглый.</summary>
+        static Texture2D MakeMask()
+        {
+            const int n = 96;
+            Texture2D t = new Texture2D(n, n, TextureFormat.RGBA32, false);
+            t.wrapMode = TextureWrapMode.Clamp;
+            Color[] px = new Color[n * n];
+            float c = (n - 1) * 0.5f, R = n * 0.5f - 3f;
+            for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                {
+                    float d = Mathf.Sqrt((x - c) * (x - c) + (y - c) * (y - c));
+                    px[y * n + x] = new Color(1f, 1f, 1f, Mathf.Clamp01(d - R + 0.5f));
+                }
+            t.SetPixels(px); t.Apply();
+            return t;
+        }
+
         static Texture2D vignette;
         static Texture2D MakeVignette()
         {
@@ -291,10 +319,27 @@ namespace BladePath
             // портрет
             float px = mirror ? r.xMax + 28f : r.x - 28f;
             Vector2 pc = new Vector2(px, r.y + r.height * 0.5f);
-            UiKit.Disc(pc, 24f, Frame);
-            UiKit.Disc(pc, 20f, portrait * 0.55f);
-            UiKit.Ring(pc, 24f, Gold);
-            UiKit.Text(new Rect(pc.x - 20f, pc.y - 18f, 40f, 36f), mirror ? "П" : "Р", 22f, new Color(1f, 1f, 1f, 0.95f), TextAnchor.MiddleCenter, false);
+            PortraitCam pcam = mirror ? portraitE : portraitP;
+            if (pcam != null && pcam.Texture != null)
+            {
+                // живое лицо + маска-кольцо поверх (закрывает углы квадрата)
+                float pr = 27f;
+                if (since < 0.15f) GUI.color = new Color(1f, 0.6f, 0.6f);
+                GUI.DrawTexture(new Rect(pc.x - pr, pc.y - pr, pr * 2f, pr * 2f), pcam.Texture, ScaleMode.ScaleAndCrop, false);
+                GUI.color = Color.white;
+                if (portraitMask == null) portraitMask = MakeMask();
+                GUI.color = new Color(0.04f, 0.03f, 0.03f, 1f);
+                GUI.DrawTexture(new Rect(pc.x - pr - 1f, pc.y - pr - 1f, pr * 2f + 2f, pr * 2f + 2f), portraitMask);
+                GUI.color = Color.white;
+                UiKit.Ring(pc, 25f, Gold);
+            }
+            else
+            {
+                UiKit.Disc(pc, 24f, Frame);
+                UiKit.Disc(pc, 20f, portrait * 0.55f);
+                UiKit.Ring(pc, 24f, Gold);
+                UiKit.Text(new Rect(pc.x - 20f, pc.y - 18f, 40f, 36f), mirror ? "П" : "Р", 22f, new Color(1f, 1f, 1f, 0.95f), TextAnchor.MiddleCenter, false);
+            }
 
             UiKit.Text(new Rect(mirror ? r.xMax - 260f : r.x, r.yMax + 3f, 260f, 18f), name, 13f, new Color(0.9f, 0.85f, 0.7f, 0.95f), mirror ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft);
             UiKit.Text(new Rect(mirror ? r.x : r.xMax - 80f, r.yMax + 3f, 80f, 18f), Mathf.CeilToInt(duel.Hp(f)) + "", 13f, new Color(1f, 1f, 1f, 0.75f), mirror ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight);
