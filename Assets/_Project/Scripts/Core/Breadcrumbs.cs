@@ -73,19 +73,20 @@ namespace BladePath
                 using (AndroidJavaObject isr = new AndroidJavaObject("java.io.InputStreamReader", ins))
                 using (AndroidJavaObject br = new AndroidJavaObject("java.io.BufferedReader", isr))
                 {
+                    // Берём все строки движка (тег Unity) и строки сбоя, но без повторного бэктрейса от DEBUG:
+                    // причина падения (ошибка Unity) печатается прямо перед блоком CRASH.
                     string line;
                     int n = 0;
-                    while ((line = br.Call<string>("readLine")) != null && n < 20000)
+                    while ((line = br.Call<string>("readLine")) != null && n < 40000)
                     {
                         n++;
-                        if (line.Contains("CRASH") || line.Contains("Fatal") || line.Contains("SIGSEGV") || line.Contains("SIGABRT") || line.Contains("SIGBUS")
-                            || line.Contains("libunity") || line.Contains("libil2cpp") || line.Contains("libmain") || line.Contains("backtrace")
-                            || line.Contains(" E Unity") || line.Contains("E/Unity") || line.Contains("Unity  :") || line.Contains("AndroidRuntime")
-                            || line.Contains("OutOfMemory") || line.Contains("lowmemory") || line.Contains("DEBUG") || line.Contains("Vulkan") || line.Contains("Adreno") || line.Contains("Mali"))
-                            keep.Add(line);
+                        bool unity = line.Contains("/Unity") || line.Contains(" Unity ");
+                        bool crash = line.Contains("/CRASH") && !line.Contains("libunity.so") && !line.Contains("#");
+                        bool fatal = line.Contains("F/libc") || line.Contains("OutOfMemory") || line.Contains("lowmemory") || line.Contains("AndroidRuntime");
+                        if (unity || crash || fatal) keep.Add(line);
                     }
                 }
-                int from = System.Math.Max(0, keep.Count - 70);
+                int from = System.Math.Max(0, keep.Count - 150);
                 for (int i = from; i < keep.Count; i++) all.Append(keep[i]).Append('\n');
                 return all.Length > 0 ? all.ToString() : "(в logcat нет подходящих строк)";
             }
