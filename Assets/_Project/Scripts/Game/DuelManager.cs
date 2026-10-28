@@ -65,6 +65,7 @@ namespace BladePath
             if (!stats.TryGetValue(f, out s)) { s = new Stats(); stats[f] = s; }
             return s;
         }
+        readonly Dictionary<FighterController, float> counterUntil = new Dictionary<FighterController, float>();
         readonly Dictionary<FighterController, int> combo = new Dictionary<FighterController, int>();
         readonly Dictionary<FighterController, float> comboTime = new Dictionary<FighterController, float>();
         public int Combo(FighterController f) { int v; return combo.TryGetValue(f, out v) ? v : 0; }
@@ -175,7 +176,7 @@ namespace BladePath
             if (player != null) { player.ResetFighter(); hp[player] = maxHp; hpTrail[player] = maxHp; lastSwing[player] = -1; }
             if (enemy != null) { enemy.ResetFighter(); hp[enemy] = MaxHp(enemy); hpTrail[enemy] = MaxHp(enemy); lastSwing[enemy] = -1; }
             Popups.Clear();
-            combo.Clear(); comboTime.Clear();
+            combo.Clear(); comboTime.Clear(); counterUntil.Clear();
             SuperBy = null;
             if (Juice.Instance != null) Juice.Instance.CleanBlades();
             TimeLeft = roundSeconds; TimedOut = false; LastDraw = false; Perfect = false;
@@ -432,6 +433,8 @@ namespace BladePath
                     if (r.attacker.weapon != null) r.attacker.weapon.ResetState();
                     r.attacker.Stun(0.8f);
                     hitStopUntil = Time.unscaledTime + 0.09f;
+                    counterUntil[r.target] = Time.unscaledTime + 1.0f;     // окно контратаки
+                    Slowmo = true; slowUntil = Time.unscaledTime + 0.35f;
                 }
                 else ApplyDamage(r.target, r.attacker, Mathf.Max(1f, Mathf.Round(dmg * 0.15f)), r.contact.point, false, true);
                 return;
@@ -454,6 +457,7 @@ namespace BladePath
             if (playerLost) EnemyWins++; else PlayerWins++;
             Perfect = playerLost ? hpE >= MaxHp(enemy) : hpP >= MaxHp(player);
             MatchOver = PlayerWins >= winsToMatch || EnemyWins >= winsToMatch;
+            if (MatchOver) Records.OnMatch(PlayerWins >= winsToMatch, Ladder.Index);
             if (Juice.Instance != null) Juice.Instance.Taiko(1f, 0.8f);
         }
 
@@ -461,6 +465,18 @@ namespace BladePath
         {
             if (!chip && attacker != null)
             {
+                // контратака после парирования: ×1,5
+                float cu;
+                if (counterUntil.TryGetValue(attacker, out cu) && Time.unscaledTime < cu)
+                {
+                    counterUntil[attacker] = 0f;
+                    dmg = Mathf.Round(dmg * 1.5f);
+                    crit = true;
+                    Popup cp = new Popup();
+                    cp.world = point + Vector3.up * 0.45f; cp.text = "КОНТРАТАКА!"; cp.color = new Color(1f, 0.55f, 0.2f);
+                    cp.born = Time.unscaledTime; cp.size = 28f;
+                    Popups.Add(cp);
+                }
                 // серия: попадания подряд, пока соперник не ответил; каждое следующее чуть сильнее
                 int c = ComboAge(attacker) < 1.6f ? Combo(attacker) + 1 : 1;
                 combo[attacker] = c; comboTime[attacker] = Time.unscaledTime;
@@ -508,6 +524,7 @@ namespace BladePath
                 SetState(playerLost ? DuelState.PlayerLost : DuelState.PlayerWon);
                 if (playerLost) EnemyWins++; else PlayerWins++;
                 MatchOver = PlayerWins >= winsToMatch || EnemyWins >= winsToMatch;
+                if (MatchOver) Records.OnMatch(PlayerWins >= winsToMatch, Ladder.Index);
                 nextRoundAt = Time.unscaledTime + nextRoundDelay;
                 if (attacker != null) attacker.Frozen = true;
                 Slowmo = true; slowUntil = Time.unscaledTime + 1.1f;

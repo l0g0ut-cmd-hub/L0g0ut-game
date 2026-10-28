@@ -56,6 +56,21 @@ namespace BladePath
             if (dir.sqrMagnitude < 1e-6f) dir = -transform.forward;
             knockVel = dir.normalized * speed;
         }
+        /// <summary>Множитель накопления духа: «последний рубеж» при низком здоровье, особенности противника «Пути».</summary>
+        public float KiRegenMul
+        {
+            get
+            {
+                float m = 1f;
+                DuelManager dm = DuelManager.Instance;
+                if (dm != null)
+                {
+                    if (dm.Hp01(this) < 0.25f) m *= 2.2f;
+                    if (this == dm.enemy) m *= Ladder.Current.kiMul;
+                }
+                return m;
+            }
+        }
         public bool KiFull { get { return Ki >= kiMax - 0.5f; } }
         public void DrainKi() { Ki = 0f; }
 
@@ -165,7 +180,7 @@ namespace BladePath
         void Update()
         {
             float dt = Time.deltaTime;
-            if (!Dead && !Frozen) AddKi(kiRegen * dt);
+            if (!Dead && !Frozen) AddKi(kiRegen * KiRegenMul * dt);
 
             bool canBlock = CanAct && Grounded && weapon != null && weapon.Phase == SwingPhase.Idle && !GuardBroken;
             bool wasBlocking = Blocking;

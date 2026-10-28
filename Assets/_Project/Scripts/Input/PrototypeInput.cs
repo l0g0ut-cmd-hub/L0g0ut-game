@@ -349,6 +349,9 @@ namespace BladePath
                 UiKit.Text(new Rect(W * 0.5f - 200f, 62f, 400f, 50f), "ПАУЗА", 40f, Gold);
                 for (int b = (int)B.Resume; b <= (int)B.ToMenu; b++) DrawRectButton(b);
                 DrawRectButton((int)B.Vibro); DrawRectButton((int)B.Difficulty); DrawRectButton((int)B.Gfx);
+                UiKit.Text(new Rect(W * 0.5f - 400f, 510f, 800f, 24f),
+                    "ПУТЬ " + (Ladder.Index + 1) + "/" + Ladder.Count + "  ·  ПОБЕД " + Records.Wins + "  ·  ПОРАЖЕНИЙ " + Records.Losses + "  ·  ЛУЧШЕЕ " + Records.BestStage + "/" + Ladder.Count + (Records.Cleared > 0 ? "  ·  ПРОЙДЕН ×" + Records.Cleared : ""),
+                    13f, new Color(0.85f, 0.8f, 0.7f, 0.9f));
             }
             if (over) { DrawRectButton((int)B.OverAgain); DrawRectButton((int)B.OverMenu); }
 

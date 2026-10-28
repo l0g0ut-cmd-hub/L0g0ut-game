@@ -65,7 +65,7 @@ namespace BladePath
                 lastSeenSwing = pw.SwingId;
                 float r = Random.value;
                 if (r < 0.32f + 0.1f * Level) blockUntil = Time.time + Random.Range(0.45f, 0.75f);
-                else if (r < 0.5f + 0.08f * Level && Time.time > dashAt) { self.Dash(XZ(-dir + side * strafeDir)); dashAt = Time.time + 1.5f; }
+                else if (r < 0.5f + 0.08f * Level + Ladder.Current.dashBias && Time.time > dashAt) { self.Dash(XZ(-dir + side * strafeDir)); dashAt = Time.time + 1.5f; }
             }
             if (Time.time < blockUntil && !busy) self.SetBlock(true);
 
@@ -94,6 +94,7 @@ namespace BladePath
             {
                 bool quick = Time.time - nextAttackAt < 0.4f && DuelManager.Instance != null && DuelManager.Instance.Combo(self) > 0 && DuelManager.Instance.ComboAge(self) < 1.2f;
                 AttackType t = quick ? Followups[Random.Range(0, Followups.Length)] : Pool[Random.Range(0, Pool.Length)];
+                if (!quick && Random.value < Ladder.Current.heavyBias) t = AttackType.Overhead;   // Они любит рубить сверху
                 if (self.Attack(t))
                 {
                     nextAttackAt = Time.time + Mathf.Lerp(2.4f, 0.8f, agg) + Random.Range(0f, 0.7f);
