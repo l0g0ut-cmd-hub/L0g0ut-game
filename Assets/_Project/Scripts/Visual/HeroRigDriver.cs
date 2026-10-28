@@ -245,6 +245,10 @@ namespace BladePath
                 Rot(spine, kickSide * k2 * 6f, up);
             }
 
+            // ноги не крутятся вместе с тазом: стопы остаются на месте, скручивается только корпус
+            float hipYaw = yawS * hipsYawK + swayYaw * 0.4f;
+            Rot(upperLegL, -hipYaw, up); Rot(upperLegR, -hipYaw, up);
+
             if (cr > 0.01f)
             {
                 float f = cr * crouchThigh, k = f * 1.8f;
