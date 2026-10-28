@@ -14,7 +14,8 @@ namespace BladePath
         [Range(0f, 1f)] public float aggression = 0.5f;
 
         float nextAttackAt, strafeUntil, retreatUntil, dashAt, blockUntil, energyAt;
-        int lastSeenSwing = -1;
+        int lastSeenSwing = -1, parrySwing = -1;
+        float punishAt;
         float strafeDir = 1f;
         bool hooked;
         static readonly AttackType[] Pool = { AttackType.Overhead, AttackType.Overhead, AttackType.Slash, AttackType.SlashBack, AttackType.Thrust, AttackType.Rising, AttackType.LegSweep };
@@ -64,10 +65,23 @@ namespace BladePath
             {
                 lastSeenSwing = pw.SwingId;
                 float r = Random.value;
-                if (r < 0.32f + 0.1f * Level) blockUntil = Time.time + Random.Range(0.45f, 0.75f);
+                if (r < 0.32f + 0.1f * Level)
+                {
+                    // мастер ставит блок в последний миг — это парирование
+                    if (Level >= 2 && Random.value < 0.35f + 0.1f * Level) parrySwing = pw.SwingId;
+                    else blockUntil = Time.time + Random.Range(0.45f, 0.75f);
+                }
                 else if (r < 0.5f + 0.08f * Level + Ladder.Current.dashBias && Time.time > dashAt) { self.Dash(XZ(-dir + side * strafeDir)); dashAt = Time.time + 1.5f; }
             }
+            if (pw != null && parrySwing == pw.SwingId && pw.Phase == SwingPhase.Strike) { parrySwing = -1; blockUntil = Time.time + 0.35f; }
             if (Time.time < blockUntil && !busy) self.SetBlock(true);
+
+            // наказание за промах: игрок восстанавливается после удара рядом — бьём сразу
+            if (pw != null && pw.Phase == SwingPhase.Recovery && dist < 1.4f && !busy && Time.time >= punishAt && Random.value < 0.35f + 0.1f * Level)
+            {
+                punishAt = Time.time + 1.2f;
+                if (self.Attack(Random.value < 0.5f ? AttackType.Thrust : AttackType.Slash)) { nextAttackAt = Time.time + 0.6f; return; }
+            }
 
             Vector3 mv = Vector3.zero;
             const float want = 1.15f;
