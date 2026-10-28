@@ -10,7 +10,7 @@ namespace BladePath.EditorTools
         public Material heroArmor, enemyArmor, cloth, skin, hair, lacquer, bronze, steel, handle;
         public Material flesh, tooth, maw, voidBlack, deadSkin, ember, tentacle, ronin;
         public Material stone, stoneDark, flame, moon, petal;
-        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow;
+        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, paper, mist;
     }
 
     /// <summary>
@@ -68,6 +68,9 @@ namespace BladePath.EditorTools
                 l.shoji.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
             }
             l.glow = Unlit("Env_Glow", new Color(1f, 0.72f, 0.32f));
+            l.paper = Unlit("Env_Paper", new Color(1f, 0.78f, 0.45f));
+            l.mist = SpriteLike("Env_Mist", new Color(0.55f, 0.62f, 0.8f));
+            l.sky = Sky();
             l.flame = Unlit("Flame", new Color(1f, 0.55f, 0.12f));
             l.moon = Unlit("Moon", new Color(0.86f, 0.90f, 1f));
             l.petal = SpriteLike("Petal", new Color(1f, 0.72f, 0.82f));
@@ -102,6 +105,32 @@ namespace BladePath.EditorTools
             }
             EnableRuntimeEmission(m);
             EditorUtility.SetDirty(m);
+            return m;
+        }
+
+        /// <summary>Небо-панорама (tools/gen_sky.py) на шейдере Skybox/Panoramic.</summary>
+        static Material Sky()
+        {
+            string tp = TexFolder + "sky_night.png";
+            TextureImporter ti = AssetImporter.GetAtPath(tp) as TextureImporter;
+            if (ti != null && (ti.mipmapEnabled || ti.maxTextureSize < 2048))
+            {
+                ti.mipmapEnabled = false;
+                ti.maxTextureSize = 2048;
+                ti.wrapMode = TextureWrapMode.Repeat;
+                ti.SaveAndReimport();
+            }
+            Shader sh = Shader.Find("Skybox/Panoramic");
+            if (sh == null) return null;
+            string path = MatFolder + "Sky_Night.mat";
+            Material m = AssetDatabase.LoadAssetAtPath<Material>(path);
+            bool isNew = m == null;
+            if (isNew) m = new Material(sh);
+            m.SetTexture("_MainTex", AssetDatabase.LoadAssetAtPath<Texture2D>(tp));
+            m.SetColor("_Tint", new Color(0.5f, 0.5f, 0.5f, 1f));
+            m.SetFloat("_Exposure", 1.3f);
+            m.SetFloat("_Rotation", 0f);
+            if (isNew) AssetDatabase.CreateAsset(m, path); else EditorUtility.SetDirty(m);
             return m;
         }
 

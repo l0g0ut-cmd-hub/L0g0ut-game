@@ -18,6 +18,12 @@ namespace BladePath
         public FighterController player, enemy;
         public float maxHp = 100f;
         public float introSeconds = 1.4f;
+        public int winsToMatch = 2;                       // матч до двух побед
+        public float nextRoundDelay = 2.8f;
+        public int PlayerWins { get; private set; }
+        public int EnemyWins { get; private set; }
+        public int Round { get; private set; }
+        public bool MatchOver { get; private set; }
 
         public DuelState State { get; private set; }
         public bool Paused { get; private set; }
@@ -35,6 +41,7 @@ namespace BladePath
         CombatResolver resolver;
         float stateStart;
         float slowUntil, hitStopUntil;
+        float nextRoundAt;
 
         void Awake() { Instance = this; }
         void Start()
@@ -53,8 +60,17 @@ namespace BladePath
         public float Trail01(FighterController f) { float v; return hpTrail.TryGetValue(f, out v) ? Mathf.Clamp01(v / maxHp) : 1f; }
         public float SinceHit(FighterController f) { float v; return lastHitTime.TryGetValue(f, out v) ? Time.unscaledTime - v : 99f; }
 
+        /// <summary>Новый матч: счёт раундов обнуляется.</summary>
+        public void ResetMatch()
+        {
+            PlayerWins = 0; EnemyWins = 0; Round = 1; MatchOver = false;
+            ResetDuel();
+        }
+
+        /// <summary>Новый раунд: здоровье и позиции сбрасываются, счёт остаётся.</summary>
         public void ResetDuel()
         {
+            if (Round < 1) Round = 1;
             Time.timeScale = 1f;
             Paused = false; Slowmo = false; hitStopUntil = 0f;
             if (player != null) { player.ResetFighter(); hp[player] = maxHp; hpTrail[player] = maxHp; lastSwing[player] = -1; }
@@ -101,6 +117,7 @@ namespace BladePath
 
             if (State == DuelState.Intro && StateTime >= introSeconds) { SetState(DuelState.Fighting); Freeze(false); }
             if (Slowmo && Time.unscaledTime >= slowUntil) Slowmo = false;
+            if (!MatchOver && !Paused && (State == DuelState.PlayerWon || State == DuelState.PlayerLost) && Time.unscaledTime >= nextRoundAt) { Round++; ResetDuel(); return; }
             ApplyTimeScale();
 
             for (int i = Popups.Count - 1; i >= 0; i--) if (Time.unscaledTime - Popups[i].born > 1.0f) Popups.RemoveAt(i);
@@ -197,7 +214,11 @@ namespace BladePath
             {
                 target.Dead = true;
                 if (target.weapon != null) target.weapon.ResetState();
-                SetState(target == player ? DuelState.PlayerLost : DuelState.PlayerWon);
+                bool playerLost = target == player;
+                SetState(playerLost ? DuelState.PlayerLost : DuelState.PlayerWon);
+                if (playerLost) EnemyWins++; else PlayerWins++;
+                MatchOver = PlayerWins >= winsToMatch || EnemyWins >= winsToMatch;
+                nextRoundAt = Time.unscaledTime + nextRoundDelay;
                 if (attacker != null) attacker.Frozen = true;
                 Slowmo = true; slowUntil = Time.unscaledTime + 1.1f;
             }

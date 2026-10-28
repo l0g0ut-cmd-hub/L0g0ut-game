@@ -61,7 +61,7 @@ namespace BladePath
         }
 
         bool Paused { get { return duel != null && duel.Paused; } }
-        bool Over { get { return duel != null && (duel.State == DuelState.PlayerWon || duel.State == DuelState.PlayerLost) && duel.StateTime > 1.3f; } }
+        bool Over { get { return duel != null && (duel.State == DuelState.PlayerWon || duel.State == DuelState.PlayerLost) && duel.MatchOver && duel.StateTime > 1.3f; } }
 
         public bool IsOverButton(Vector2 screenPx)
         {
@@ -119,7 +119,7 @@ namespace BladePath
             if (menu) { Time.timeScale = 1f; SceneManager.LoadScene(SceneNames.MainMenu); return; }
             if (reset)
             {
-                if (duel != null) duel.ResetDuel();
+                if (duel != null) duel.ResetMatch();
                 else { if (player != null) player.ResetFighter(); if (enemy != null) enemy.ResetFighter(); }
                 return;
             }

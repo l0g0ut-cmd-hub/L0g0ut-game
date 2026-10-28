@@ -80,8 +80,9 @@ namespace BladePath.EditorTools
             Camera c = cam.AddComponent<Camera>();
             cam.AddComponent<AudioListener>();
             cam.AddComponent<CameraOrbit>();   // облёт камеры свайпом, зум щипком (позицию задаёт сам компонент)
-            c.clearFlags = CameraClearFlags.SolidColor;
+            c.clearFlags = CameraClearFlags.Skybox;   // ночное небо из EnvironmentBuilder
             c.backgroundColor = EnvironmentBuilder.FogColor;
+            c.farClipPlane = 80f;
             c.fieldOfView = 32f;
             cam.transform.position = new Vector3(0f, 1.15f, -5.2f);
             cam.transform.rotation = Quaternion.identity; // смотрит вдоль +Z

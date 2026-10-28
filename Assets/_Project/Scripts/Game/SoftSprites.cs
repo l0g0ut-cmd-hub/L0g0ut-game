@@ -39,12 +39,13 @@ namespace BladePath
     /// <summary>Вешается на систему частиц: подменяет материал копией с мягкой текстурой (лепестки сакуры вместо квадратов).</summary>
     public class PetalTexture : MonoBehaviour
     {
+        public bool disc;   // круглый мягкий спрайт (дымка, светлячки) вместо лепестка
         void Awake()
         {
             ParticleSystemRenderer r = GetComponent<ParticleSystemRenderer>();
             if (r == null || r.sharedMaterial == null) return;
             Material m = new Material(r.sharedMaterial);
-            m.mainTexture = SoftSprites.Petal;
+            m.mainTexture = disc ? SoftSprites.Disc : SoftSprites.Petal;
             r.material = m;
         }
     }

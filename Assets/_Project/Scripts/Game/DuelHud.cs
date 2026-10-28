@@ -52,9 +52,16 @@ namespace BladePath
                 }
             }
 
+            // счёт раундов: по два ромба под полосками
+            DrawPips(new Vector2(cx - 52f - 26f, 62f), duel.PlayerWins, duel.winsToMatch, false);
+            DrawPips(new Vector2(cx + 52f + 26f, 62f), duel.EnemyWins, duel.winsToMatch, true);
+
             // «БОЙ!»
             if (duel.State == DuelState.Intro)
             {
+                bool deciding = duel.PlayerWins == duel.winsToMatch - 1 && duel.EnemyWins == duel.winsToMatch - 1;
+                float ta = Mathf.Clamp01(1f - duel.StateTime / duel.introSeconds * 0.9f);
+                UiKit.Text(new Rect(cx - 300f, 110f, 600f, 40f), deciding ? "РЕШАЮЩИЙ РАУНД" : "РАУНД " + duel.Round, 26f, new Color(0.95f, 0.9f, 0.8f, ta));
                 float t = duel.StateTime / duel.introSeconds;
                 float a = t < 0.75f ? 1f : Mathf.Clamp01((1f - t) * 4f);
                 float sc = 1f + (1f - Mathf.Clamp01(t * 3f)) * 0.8f;
@@ -69,10 +76,23 @@ namespace BladePath
                 UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, 0.55f * t));
                 Color c = won ? Gold : new Color(0.85f, 0.15f, 0.12f);
                 c.a = t;
-                UiKit.Text(new Rect(cx - 400f, 110f, 800f, 120f), won ? "ПОБЕДА" : "ПОРАЖЕНИЕ", 90f, c);
+                string title = duel.MatchOver ? (won ? "ПОБЕДА" : "ПОРАЖЕНИЕ") : (won ? "РАУНД ВЫИГРАН" : "РАУНД ПРОИГРАН");
+                UiKit.Text(new Rect(cx - 400f, 110f, 800f, 120f), title, duel.MatchOver ? 90f : 64f, c);
+                if (!duel.MatchOver) UiKit.Text(new Rect(cx - 300f, 250f, 600f, 40f), duel.PlayerWins + " : " + duel.EnemyWins, 34f, new Color(1f, 1f, 1f, t));
                 UiKit.Rect(new Rect(cx - 200f, 232f, 400f, 2f), new Color(c.r, c.g, c.b, 0.8f * t));
             }
             GUI.matrix = old;
+        }
+
+        void DrawPips(Vector2 c, int wins, int total, bool mirror)
+        {
+            for (int i = 0; i < total; i++)
+            {
+                Vector2 p = new Vector2(c.x + (mirror ? 1f : -1f) * i * 26f, c.y);
+                UiKit.Disc(p, 9f, Frame);
+                UiKit.Disc(p, 6.5f, i < wins ? Gold : new Color(0.2f, 0.17f, 0.12f, 0.9f));
+                UiKit.Ring(p, 9f, new Color(Gold.r, Gold.g, Gold.b, 0.8f), true);
+            }
         }
 
         void DrawBar(Rect r, FighterController f, bool mirror, string name, Color portrait)

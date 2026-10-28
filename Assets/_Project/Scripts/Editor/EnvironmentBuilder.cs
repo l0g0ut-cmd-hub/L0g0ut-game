@@ -20,6 +20,8 @@ namespace BladePath.EditorTools
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
             RenderSettings.ambientLight = new Color(0.17f, 0.18f, 0.26f);
 
+            if (look.sky != null) RenderSettings.skybox = look.sky;
+
             // лунный свет
             GameObject moonLight = new GameObject("Moonlight");
             Light l = moonLight.AddComponent<Light>();
@@ -84,7 +86,99 @@ namespace BladePath.EditorTools
             AddBrazier(look, new Vector3(-3.2f, 0f, 2.2f));
             AddBrazier(look, new Vector3(3.2f, 0f, 2.2f));
 
+            BuildDetails(env, look);
+            AddMist(look);
+            AddFireflies(look);
             AddPetals(look);
+        }
+
+        /// <summary>Мелочи, оживляющие кадр: бумажные фонари на веранде, верёвка симэнава на тории, знамёна.</summary>
+        static void BuildDetails(Transform env, Look look)
+        {
+            Transform d = new GameObject("Details").transform;
+            d.SetParent(env, false);
+            // бумажные фонари под карнизом храма
+            for (int i = 0; i < 5; i++)
+            {
+                float x = -0.8f - 2.8f + i * 1.4f + 0.7f;
+                EnvMesh.Box(d, "String" + i, new Vector3(x, 2.28f, 4.75f), Vector3.zero, new Vector3(0.012f, 0.16f, 0.012f), look.woodDark, 0.2f);
+                GameObject lamp = CharacterVisuals.Part(d, "PaperLamp" + i, PrimitiveType.Sphere, new Vector3(x, 2.05f, 4.75f), Vector3.zero, new Vector3(0.28f, 0.36f, 0.28f), look.paper);
+                CharacterVisuals.Part(d, "LampCapT" + i, PrimitiveType.Cylinder, new Vector3(x, 2.25f, 4.75f), Vector3.zero, new Vector3(0.12f, 0.012f, 0.12f), look.woodDark);
+                CharacterVisuals.Part(d, "LampCapB" + i, PrimitiveType.Cylinder, new Vector3(x, 1.86f, 4.75f), Vector3.zero, new Vector3(0.10f, 0.012f, 0.10f), look.woodDark);
+            }
+            // симэнава между столбами тории и бумажные зигзаги
+            CharacterVisuals.Part(d, "Shimenawa", PrimitiveType.Cylinder, new Vector3(1.7f, 2.05f, 3.52f), new Vector3(0f, 0f, 90f), new Vector3(0.07f, 1.0f, 0.07f), look.bark);
+            for (int i = 0; i < 4; i++)
+                EnvMesh.Box(d, "Shide" + i, new Vector3(1.2f + i * 0.34f, 1.88f, 3.52f), new Vector3(0f, 0f, i % 2 == 0 ? 8f : -8f), new Vector3(0.1f, 0.22f, 0.012f), look.plaster, 0.3f);
+            // знамёна-нобори по краям площадки
+            for (int side = -1; side <= 1; side += 2)
+            {
+                float x = 4.25f * side;
+                CharacterVisuals.Part(d, "BannerPole" + side, PrimitiveType.Cylinder, new Vector3(x, 1.5f, 0.5f), Vector3.zero, new Vector3(0.05f, 1.5f, 0.05f), look.woodDark);
+                EnvMesh.Box(d, "BannerCross" + side, new Vector3(x - 0.2f * side, 2.88f, 0.5f), Vector3.zero, new Vector3(0.5f, 0.04f, 0.04f), look.woodDark, 0.5f, true);
+                EnvMesh.Box(d, "Banner" + side, new Vector3(x - 0.22f * side, 2.1f, 0.5f), new Vector3(0f, 0f, 0f), new Vector3(0.38f, 1.5f, 0.02f), look.lacquer, 0f);
+            }
+        }
+
+        /// <summary>Низкая дымка над гравием.</summary>
+        static void AddMist(Look look)
+        {
+            GameObject go = new GameObject("GroundMist");
+            go.transform.position = new Vector3(0f, 0.25f, 3f);
+            ParticleSystem ps = go.AddComponent<ParticleSystem>();
+            ParticleSystem.MainModule main = ps.main;
+            main.loop = true; main.prewarm = true;
+            main.startLifetime = 14f;
+            main.startSpeed = 0.05f;
+            main.startSize = new ParticleSystem.MinMaxCurve(2.5f, 4.5f);
+            main.startColor = new Color(0.6f, 0.68f, 0.85f, 0.07f);
+            main.maxParticles = 40;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            ParticleSystem.EmissionModule em = ps.emission;
+            em.rateOverTime = 3f;
+            ParticleSystem.ShapeModule sh = ps.shape;
+            sh.shapeType = ParticleSystemShapeType.Box;
+            sh.scale = new Vector3(13f, 0.2f, 11f);
+            ParticleSystem.VelocityOverLifetimeModule vel = ps.velocityOverLifetime;
+            vel.enabled = true;
+            vel.x = new ParticleSystem.MinMaxCurve(0.12f);
+            ParticleSystemRenderer r = go.GetComponent<ParticleSystemRenderer>();
+            r.sharedMaterial = look.mist;
+            r.renderMode = ParticleSystemRenderMode.HorizontalBillboard;
+            PetalTexture pt = go.AddComponent<PetalTexture>();
+            pt.disc = true;
+        }
+
+        /// <summary>Светлячки / искры, плывущие над двором.</summary>
+        static void AddFireflies(Look look)
+        {
+            GameObject go = new GameObject("Fireflies");
+            go.transform.position = new Vector3(0f, 1.3f, 2f);
+            ParticleSystem ps = go.AddComponent<ParticleSystem>();
+            ParticleSystem.MainModule main = ps.main;
+            main.loop = true; main.prewarm = true;
+            main.startLifetime = 7f;
+            main.startSpeed = 0.1f;
+            main.startSize = new ParticleSystem.MinMaxCurve(0.05f, 0.09f);
+            main.startColor = new Color(1f, 0.85f, 0.45f, 0.9f);
+            main.maxParticles = 40;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            ParticleSystem.EmissionModule em = ps.emission;
+            em.rateOverTime = 6f;
+            ParticleSystem.ShapeModule sh = ps.shape;
+            sh.shapeType = ParticleSystemShapeType.Box;
+            sh.scale = new Vector3(10f, 1.8f, 8f);
+            ParticleSystem.NoiseModule noise = ps.noise;
+            noise.enabled = true; noise.strength = 0.5f; noise.frequency = 0.5f;
+            ParticleSystem.ColorOverLifetimeModule col = ps.colorOverLifetime;
+            col.enabled = true;
+            Gradient g = new Gradient();
+            g.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                      new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.25f), new GradientAlphaKey(1f, 0.75f), new GradientAlphaKey(0f, 1f) });
+            col.color = g;
+            go.GetComponent<ParticleSystemRenderer>().sharedMaterial = look.petal;
+            PetalTexture pt = go.AddComponent<PetalTexture>();
+            pt.disc = true;
         }
 
         static void BuildHall(Transform env, Look look)
