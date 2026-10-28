@@ -57,8 +57,23 @@ namespace BladePath
         public float stepThreshold = 0.08f;   // стопа ушла от своего места стойки дальше — шаг
         public float stepTimeMin = 0.18f, stepTimeMax = 0.26f;
         public float stepThresholdPerSpeed = 0.06f;
-        [Tooltip("На ходу стойка собирается (ноги ближе, ~0.35 длины), остановился — снова широкая: иначе ноги не дотягиваются и боец «садится в шпагат».")]
-        public float walkStanceZ = 0.35f, walkStanceX = 0.7f;
+        [Header("Ходьба: цикл шага (ноги переносятся по очереди и обгоняют друг друга), остановка — шагами в стойку")]
+        [Tooltip("Темп, шагов в секунду = base + perSpeed·скорость + lateral·|скорость вбок| (приставной шаг вбок чаще и короче).")]
+        public float cadenceBase = 1.5f, cadencePerSpeed = 0.8f, cadenceLateral = 1.2f;
+        [Tooltip("Доля шага, когда стопа в воздухе (остальное — опора на обе ноги).")]
+        public float swingFrac = 0.8f;
+        [Tooltip("На ходу стопы идут по ±walkHalfWidth от оси бойца; вбок — приставным шагом, стопы не сходятся ближе walkMinSep.")]
+        public float walkHalfWidth = 0.14f, walkMinSep = 0.12f;
+        [Tooltip("Стопа ставится на walkLead длины шага впереди таза (по ходу движения).")]
+        public float walkLead = 0.6f;
+        public float walkLift = 0.08f;      // подъём стопы на ходу, м
+        public float walkCrouch = 0.015f;   // на ходу колени чуть мягче (меньше подбрасывает таз), м
+        public float walkFootOut = 8f;      // носки на ходу чуть наружу, град.
+        public float walkBob = 0.02f;       // таз поднимается, пока несёт одна нога, м
+        public float walkSway = 0.025f;     // таз смещается на опорную ногу, м
+        public float walkHipYaw = 9f, walkChestYaw = 12f;   // таз поворачивается за вынесенной ногой, грудь — навстречу, град. на метр разноса стоп
+        [Tooltip("Перед отрывом пятка поднимается (перекат на носок): доля цикла и угол.")]
+        public float heelPeel = 0.15f, heelPeelDeg = 25f;
         public float maxAutoDrop = 0.12f;
         public float stanceDrop = 0.04f;   // колени мягко согнуты в стойке, м
         public float stepLift = 0.07f;     // подъём стопы в шаге, м
@@ -73,10 +88,18 @@ namespace BladePath
         float lgL1, lgL2, lgR1, lgR2;
         float lean, yawS, yawV, bS, bV, crouchS, crouchV, kick;
         float pivotRestY, walkS, deadK, footRestH, wLegS;
-        struct Foot { public Vector3 pos, from, to; public float yaw, yawFrom, yawTo, u, dur, lift; public bool step; }
+        struct Foot
+        {
+            public Vector3 pos, from, to;
+            public float yaw, yawFrom, yawTo, u, dur, lift;
+            public float pit, p0, land, side;   // тангаж стопы (+ пятка вверх), с какого тангажа начат шаг, сколько стоит после шага, сторона (+1 правая)
+            public bool step, walkStep, pend;
+        }
         Foot gF, gR;
-        bool gaitInit;
-        float keyW, moveK;
+        bool gaitInit, walking;
+        float keyW, moveK, postK, walkPhase;
+        Vector3 walkVel, tF, tR, wOffF, wOffR;
+        float yF, yR;
         Vector3 lastFtPos;
         bool fallDust;
         bool decapitated;
@@ -253,19 +276,32 @@ namespace BladePath
             if (!groundedOk) gaitInit = false;
             wLegS = Mathf.MoveTowards(wLegS, groundedOk ? 1f : 0f, dt / 0.1f);
             float wSt = wLegS;
-            moveK = Mathf.MoveTowards(moveK, Mathf.Abs(fighter.MoveAxis) > 0.1f && !keyed ? 1f : 0f, dt / 0.25f);
-            pd *= 1f - 0.6f * moveK; pf *= 1f - moveK;   // на ходу таз выше и над стопами
-            // ритм шага: таз поворачивается за шагающей ногой, грудь — навстречу, корпус чуть подаётся по ходу
-            if (stepLift > 0f)
+            bool moving = Mathf.Abs(fighter.MoveAxis) > 0.1f && !keyed;
+            moveK = Mathf.MoveTowards(moveK, moving ? 1f : 0f, dt / 0.25f);
+            // осанка на ходу: таз выше и прямо над стопами, корпус ровнее (поднимается чуть медленнее, чем ноги собираются из стойки)
+            postK = Mathf.MoveTowards(postK, moving ? 1f : 0f, dt / (moving ? 0.4f : 0.3f));
+            pd *= 1f - 0.85f * postK; pf *= 1f - postK; hYaw *= 1f - 0.85f * postK; hPit *= 1f - 0.6f * postK; cPit *= 1f - 0.5f * postK;
+
+            // стопы (походка) — до тела: таз и грудь в этом же кадре идут за шагом
+            float wLeg = legsReady && deadK < 0.01f ? wSt : 0f;
+            if (wLeg > 0.001f) UpdateGait(ft, ys, ff, rf, keyed, dt);
+            float walkSx = 0f, walkBobY = 0f;
+            if (wLeg > 0.001f && moveK > 0.001f)
             {
-                float sw = (gF.lift - gR.lift) / stepLift * ys;
-                hYaw += 5f * sw; cYaw -= 3f * sw;
+                bool frontIsR = footFrontX * ys > 0f;
+                Vector3 posR = frontIsR ? gF.pos : gR.pos, posL = frontIsR ? gR.pos : gF.pos;
+                float dz = Vector3.Dot(posR - posL, fwd);   // правая стопа впереди — правый бок таза вперёд (поворот с минусом)
+                hYaw -= walkHipYaw * dz * moveK; cYaw += walkChestYaw * dz * moveK;
+                float swF = gF.step ? Mathf.Sin(Mathf.PI * Mathf.Clamp01(gF.u)) : 0f, swR = gR.step ? Mathf.Sin(Mathf.PI * Mathf.Clamp01(gR.u)) : 0f;
+                walkSx = -walkSway * (gF.side * swF + gR.side * swR) * moveK;
+                walkBobY = walkBob * (swF + swR) * moveK;
+                float spd = walkVel.magnitude;
+                if (spd > 0.05f) cPit += 3f * Vector3.Dot(walkVel, fwd) / spd * postK;   // корпус чуть подаётся по ходу
             }
-            cPit += 4f * moveK * Mathf.Sign(fighter.MoveAxis);
 
             // ---------- 2) таз: вынос вперёд и высота (вся модель) — визуально; зоны поражения едут следом (FollowZones)
-            float drop = (stanceDrop + pd) * wSt;
-            Vector3 off = new Vector3(0f, -drop, pf);
+            float drop = (stanceDrop * (1f - 0.5f * postK) + pd + walkCrouch * moveK) * wSt;
+            Vector3 off = new Vector3(walkSx * wLeg, -drop, pf);
             transform.localPosition = baseLocalPos + off;
             deadK = Mathf.MoveTowards(deadK, fighter.Dead ? 1f : 0f, dt / 0.8f);
             if (deadK >= 0.97f && !fallDust)
@@ -308,8 +344,7 @@ namespace BladePath
             }
 
             // ---------- 4) ноги: IK на стоящие стопы (вес стойки wSt; при ходьбе/прыжке/смерти — Animator)
-            float wLeg = legsReady && deadK < 0.01f ? wSt : 0f;
-            if (wLeg > 0.001f) SolveLegs(ft, ys, hYaw, ff, rf, heel, wLeg, keyed, dt);
+            if (wLeg > 0.001f) SolveLegs(ft, ys, hYaw, heel, walkBobY, wLeg);
             else if (fighter.Grounded && deadK < 0.01f && footL != null && footR != null)
             {
                 float lowest = Mathf.Min(footL.position.y, footR.position.y);   // ходьба: просто ставим нижнюю стопу на землю
@@ -380,11 +415,122 @@ namespace BladePath
         }
 
         /// <summary>
-        /// Ноги: каждая стопа стоит на своём месте (мировые координаты) и переступает, когда боец ушёл/повернулся (походка),
-        /// а во время удара следует клипу (шаг вперёд и назад). Таз опускается ровно настолько, чтобы обе ноги доставали,
-        /// колено смотрит по носку, подошва параллельна земле, у задней ноги пятка может подниматься, стопа в шаге отрывается от земли.
+        /// Походка (до позы тела): каждая стопа стоит на своём месте в мире.
+        /// Стоит — стопы на местах стойки, переступают, когда боец повернулся/сдвинулся (Gait).
+        /// Идёт — цикл шага (WalkCycle): ноги по очереди переносятся и обгоняют друг друга, вбок — приставной шаг;
+        /// пятка опорной ноги отрывается перед шагом, стопа ставится с пятки.
+        /// Удар — стопы ведёт клип (каналы FF/RF), походка садится в те же точки.
         /// </summary>
-        void SolveLegs(Transform ft, float ys, float hYaw, float ff, float rf, float heel, float w, bool keyed, float dt)
+        void UpdateGait(Transform ft, float ys, float ff, float rf, bool keyed, float dt)
+        {
+            bool frontIsR = footFrontX * ys > 0f;
+            float sideF = frontIsR ? 1f : -1f, sideR = -sideF;
+            float ground = ft.position.y, ftYaw = ft.eulerAngles.y;
+            Vector3 sF = new Vector3(footFrontX * ys, 0f, footFrontZ + ff), sR = new Vector3(footRearX * ys, 0f, footRearZ + rf);
+            wOffF = new Vector3(sideF * walkHalfWidth, 0f, 0f); wOffR = new Vector3(sideR * walkHalfWidth, 0f, 0f);
+            tF = ft.position + ft.rotation * Vector3.Lerp(sF, wOffF, moveK); tF.y = ground;
+            tR = ft.position + ft.rotation * Vector3.Lerp(sR, wOffR, moveK); tR.y = ground;
+            yF = ftYaw + Mathf.Lerp(footFrontYaw * ys, sideF * walkFootOut, moveK);
+            yR = ftYaw + Mathf.Lerp(footRearYaw * ys, sideR * walkFootOut, moveK);
+
+            Vector3 vel = dt > 1e-5f ? (ft.position - lastFtPos) / dt : Vector3.zero; vel.y = 0f;
+            if (vel.sqrMagnitude > 25f) vel = Vector3.zero;   // телепорт (новый раунд, супер-удар), рывок
+            lastFtPos = ft.position;
+            walkVel = vel;
+            if (!gaitInit) { gF = NewFoot(tF, yF, sideF); gR = NewFoot(tR, yR, sideR); gaitInit = true; walking = false; }
+            gF.side = sideF; gR.side = sideR;
+            keyW = Mathf.MoveTowards(keyW, keyed ? 1f : 0f, dt / 0.12f);
+            if (keyW > 0.001f) { walking = false; Settle(ref gF, tF, yF, keyW); Settle(ref gR, tR, yR, keyW); }
+            else if (vel.sqrMagnitude > 0.0225f && Mathf.Abs(fighter.MoveAxis) > 0.1f) WalkCycle(ft, vel, dt);   // идёт сам (отброс ударом — шагами стойки)
+            else { walking = false; Gait(tF, yF, tR, yR, vel, dt); }
+            FootPitch(ref gF, 0f, dt);
+            FootPitch(ref gR, 0.5f, dt);
+        }
+
+        static Foot NewFoot(Vector3 p, float y, float side) { return new Foot { pos = p, from = p, to = p, yaw = y, yawFrom = y, yawTo = y, land = 9f, side = side }; }
+
+        float Cadence(Transform ft, Vector3 vel)
+        {
+            return cadenceBase + cadencePerSpeed * vel.magnitude + cadenceLateral * Mathf.Abs(Vector3.Dot(vel, ft.right));
+        }
+
+        /// <summary>
+        /// Ходьба: фаза цикла задаёт темп; передняя стопа (стойки) отрывается при фазе 0, задняя — при 0.5.
+        /// Первой идёт стопа, которая отстанет от своего места больше (вперёд — задняя, назад — передняя, вбок — дальняя от хода).
+        /// </summary>
+        void WalkCycle(Transform ft, Vector3 vel, float dt)
+        {
+            float c = Cadence(ft, vel);
+            float swing = swingFrac / c;
+            if (!walking)
+            {
+                walking = true;
+                // стопа уже в шаге стойки (и не на излёте) — цикл подхватывает её, иначе первой идёт отстающая
+                if (gF.step && gF.u < 0.6f) { walkPhase = gF.u * swingFrac * 0.5f; BeginWalk(ref gF, wOffF, yF, vel, swing, ft, c); }
+                else if (gR.step && gR.u < 0.6f) { walkPhase = 0.5f + gR.u * swingFrac * 0.5f; BeginWalk(ref gR, wOffR, yR, vel, swing, ft, c); }
+                else
+                {
+                    Vector3 eF = gF.pos - vel * 0.3f - (ft.position + ft.rotation * wOffF); eF.y = 0f;
+                    Vector3 eR = gR.pos - vel * 0.3f - (ft.position + ft.rotation * wOffR); eR.y = 0f;
+                    walkPhase = eF.sqrMagnitude > eR.sqrMagnitude ? 0.999f : 0.499f;
+                }
+            }
+            float prev = walkPhase;
+            walkPhase += c * 0.5f * dt;
+            bool wrap = walkPhase >= 1f;
+            if (wrap) walkPhase -= 1f;
+            Advance(ref gF, dt); Advance(ref gR, dt);
+            bool hitF = wrap, hitR = (prev < 0.5f && walkPhase >= 0.5f) || (wrap && (prev < 0.5f || walkPhase >= 0.5f));
+            if (hitF) gF.pend = true;
+            if (gF.pend && !gF.step && (!gR.step || gR.u > 0.85f)) BeginWalk(ref gF, wOffF, yF, vel, hitF ? swing : swing * 0.85f, ft, c);
+            if (hitR) gR.pend = true;
+            if (gR.pend && !gR.step && (!gF.step || gF.u > 0.85f)) BeginWalk(ref gR, wOffR, yR, vel, hitR ? swing : swing * 0.85f, ft, c);
+        }
+
+        /// <summary>Шаг на ходу: стопа встаёт под тазом в момент постановки + walkLead шага вперёд по ходу; вбок ведущая стопа уходит шире, приставляемая — ближе.</summary>
+        void BeginWalk(ref Foot f, Vector3 wOff, float y, Vector3 vel, float dur, Transform ft, float c)
+        {
+            float vF = Vector3.Dot(vel, ft.forward), vL = Vector3.Dot(vel, ft.right);
+            float sF = vF / c, sL = vL / c;
+            float dO = Mathf.Max(0f, walkMinSep + Mathf.Abs(sL) - 2f * walkHalfWidth);
+            bool lat = Mathf.Abs(vL) > 0.05f;
+            bool lead = lat && (f.side > 0f) == (vL > 0f);
+            float latOff = walkLead * sL + (lat ? Mathf.Sign(vL) * dO * 0.5f * (lead ? 1f : -1f) : 0f);
+            Vector3 to = ft.position + vel * dur + ft.rotation * (wOff + new Vector3(latOff, 0f, walkLead * sF)); to.y = ft.position.y;
+            if (f.step)
+            {
+                // стопа уже в воздухе (шаг стойки): доводим по новой траектории, не роняя на землю
+                float s = Smooth(Mathf.Clamp01(f.u));
+                f.to = to; f.from = (f.pos - to * s) / Mathf.Max(1e-3f, 1f - s); f.walkStep = true; f.pend = false; f.yawTo = y;
+                return;
+            }
+            f.dur = dur; f.from = f.pos; f.to = to; f.p0 = f.pit;
+            f.yawFrom = f.yaw; f.yawTo = y; f.u = 0f; f.step = true; f.walkStep = true; f.pend = false;
+        }
+
+        /// <summary>Тангаж стопы: в шаге — с носка (пятка была поднята) на пятку (носок вверх), после постановки перекат на всю стопу, перед отрывом пятка поднимается.</summary>
+        void FootPitch(ref Foot f, float liftPhase, float dt)
+        {
+            float p;
+            if (f.step) p = f.walkStep ? f.p0 + (-12f - f.p0) * Smooth(Mathf.Clamp01(f.u)) : -12f * f.lift / Mathf.Max(1e-4f, stepLift);
+            else
+            {
+                p = (f.walkStep && f.land < 0.1f) ? -12f * (1f - Smooth(Mathf.Clamp01(f.land / 0.1f))) : 0f;
+                if (walking)
+                {
+                    float rem = Mathf.Repeat(liftPhase - walkPhase, 1f);
+                    if (rem < heelPeel) p = heelPeelDeg * Smooth(1f - rem / heelPeel);
+                }
+                if (!walking && f.pit > p) p = Mathf.Max(p, f.pit - 200f * dt);   // остановился на носке — пятка опускается, а не падает
+            }
+            f.pit = p;
+        }
+
+        /// <summary>
+        /// Ноги: IK на стопы походки. Таз опускается ровно настолько, чтобы обе ноги доставали (не больше maxAutoDrop),
+        /// колено смотрит по носку, стопа повёрнута по тангажу походки; у задней ноги стойки пятка поднимается по клипу.
+        /// </summary>
+        void SolveLegs(Transform ft, float ys, float hYaw, float heel, float bob, float w)
         {
             Vector3 up = ft.up, right = ft.right;
             bool frontIsR = footFrontX * ys > 0f;
@@ -397,34 +543,14 @@ namespace BladePath
             Quaternion a0 = fU.localRotation, a1 = fL_.localRotation, a2 = fF != null ? fF.localRotation : Quaternion.identity;
             Quaternion b0 = rU.localRotation, b1 = rL_.localRotation, b2 = rF != null ? rF.localRotation : Quaternion.identity;
 
-            // места стоп по стойке и клипу удара
-            float ground = ft.position.y, ftYaw = ft.eulerAngles.y;
-            float sx = Mathf.Lerp(1f, walkStanceX, moveK), sz = Mathf.Lerp(1f, walkStanceZ, moveK);
-            Vector3 tF = ft.position + ft.rotation * new Vector3(footFrontX * ys * sx, 0f, footFrontZ * sz + ff); tF.y = ground;
-            Vector3 tR = ft.position + ft.rotation * new Vector3(footRearX * ys * sx, 0f, footRearZ * sz + rf); tR.y = ground;
-            float yF = ftYaw + footFrontYaw * ys, yR = ftYaw + footRearYaw * ys;
-
-            // походка: стопы стоят, пока не «отстали» от своих мест, затем переступают по очереди
-            Vector3 vel = dt > 1e-5f ? (ft.position - lastFtPos) / dt : Vector3.zero; vel.y = 0f;
-            if (vel.sqrMagnitude > 25f) vel = Vector3.zero;   // телепорт (новый раунд, супер-удар)
-            lastFtPos = ft.position;
-            if (!gaitInit) { gF = new Foot { pos = tF, yaw = yF }; gR = new Foot { pos = tR, yaw = yR }; gaitInit = true; }
-            keyW = Mathf.MoveTowards(keyW, keyed ? 1f : 0f, dt / 0.12f);
-            if (keyW > 0.001f)
-            {
-                // удар: стопы ведёт клип, походка садится в те же точки (без рывка в начале и в конце удара)
-                Settle(ref gF, tF, yF, keyW); Settle(ref gR, tR, yR, keyW);
-            }
-            else Gait(tF, yF, tR, yR, vel, dt);
-
+            float ftYaw = ft.eulerAngles.y;
             float sF = weapon != null ? weapon.FootSpeedF : 0f;
             float keyLift = stepLift * Mathf.Clamp01(Mathf.Abs(sF) / 2.5f) * keyW;
-            Vector3 frontPos = gF.pos + up * (footRestH + gF.lift + keyLift);
-            Vector3 rearPos = gR.pos + up * (footRestH + gR.lift + heel * heelLift);
+            float riseF = heelLift * Mathf.Max(0f, gF.pit) / 28f, riseR = heelLift * Mathf.Max(0f, gR.pit) / 28f;   // пятка вверх — стопа на носке, лодыжка выше
+            Vector3 frontPos = gF.pos + up * (footRestH + gF.lift + keyLift + riseF);
+            Vector3 rearPos = gR.pos + up * (footRestH + gR.lift + heel * heelLift + riseR);
             float relF = Mathf.DeltaAngle(ftYaw, gF.yaw), relR = Mathf.DeltaAngle(ftYaw, gR.yaw);
-            // в шаге таз чуть проседает и снова поднимается
-            float bob = 0.015f * (Mathf.Sin(Mathf.PI * Mathf.Clamp01(gF.step ? gF.u : 0f)) + Mathf.Sin(Mathf.PI * Mathf.Clamp01(gR.step ? gR.u : 0f)));
-            transform.position -= up * (bob * w);
+            transform.position += up * (bob * w);   // на одной ноге таз выше, в двойной опоре — ниже
 
             // таз ниже, если иначе нога не дотягивается (широкий шаг, вынос таза)
             Rot(fU, -hYaw, up); Rot(rU, -hYaw, up);   // бёдра не скручиваются вместе с тазом
@@ -437,9 +563,10 @@ namespace BladePath
             Vector3 poleR = Quaternion.AngleAxis(relR, up) * ft.forward + up * 0.1f;
             SolveArm(fU, fL_, fF, f1, f2, frontPos, poleF);
             SolveArm(rU, rL_, rF, r1, r2, rearPos, poleR);
-            float liftKF = stepLift > 0f ? (gF.lift + keyLift) / stepLift : 0f, liftKR = stepLift > 0f ? gR.lift / stepLift : 0f;
-            if (fF != null) fF.rotation = Quaternion.AngleAxis(relF, up) * Quaternion.AngleAxis(-12f * liftKF, right) * ft.rotation * fRel;   // в шаге носок чуть вверх
-            if (rF != null) rF.rotation = Quaternion.AngleAxis(relR, up) * Quaternion.AngleAxis(28f * heel - 12f * liftKR, right) * ft.rotation * rRel;    // пятка поднята — стопа на носке
+            float pitF = gF.pit - (stepLift > 0f ? 12f * keyLift / stepLift : 0f);   // шаг клипа удара: носок чуть вверх
+            float pitR = gR.pit + 28f * heel;                                          // пятка задней ноги по клипу
+            if (fF != null) fF.rotation = Quaternion.AngleAxis(relF, up) * Quaternion.AngleAxis(pitF, right) * ft.rotation * fRel;
+            if (rF != null) rF.rotation = Quaternion.AngleAxis(relR, up) * Quaternion.AngleAxis(pitR, right) * ft.rotation * rRel;
 
             if (w < 0.999f)
             {
@@ -452,7 +579,7 @@ namespace BladePath
 
         static void Settle(ref Foot f, Vector3 t, float y, float k)
         {
-            f.pos = Vector3.Lerp(f.pos, t, k); f.yaw = Mathf.LerpAngle(f.yaw, y, k); f.step = false; f.lift = 0f;
+            f.pos = Vector3.Lerp(f.pos, t, k); f.yaw = Mathf.LerpAngle(f.yaw, y, k); f.step = false; f.lift = 0f; f.walkStep = false; f.pend = false;
         }
 
         static float FootErr(Foot f, Vector3 t, float y)
@@ -465,17 +592,9 @@ namespace BladePath
         {
             Advance(ref gF, dt); Advance(ref gR, dt);
             float eF = FootErr(gF, tF, yF), eR = FootErr(gR, tR, yR);
-            if (eF > 1.2f || eR > 1.2f) { gF = new Foot { pos = tF, yaw = yF }; gR = new Foot { pos = tR, yaw = yR }; return; }   // телепорт / новый раунд: встать сразу
+            if (eF > 1.2f || eR > 1.2f) { gF = NewFoot(tF, yF, gF.side); gR = NewFoot(tR, yR, gR.side); return; }   // телепорт / новый раунд: встать сразу
             float thr = vel.sqrMagnitude > 0.04f ? stepThreshold + stepThresholdPerSpeed * vel.magnitude : stepThreshold * 0.6f;
             const float urgent = 0.25f;   // обычно ноги переступают по очереди; сильно отставшая — шагает, не дожидаясь другой
-            // вбок первой шагает нога со стороны движения — ноги не перекрещиваются
-            Transform ftr = fighter.transform;
-            Vector3 vl = ftr.InverseTransformDirection(vel);
-            if (Mathf.Abs(vl.x) > 0.2f)
-            {
-                float fx = ftr.InverseTransformPoint(gF.pos).x, rx = ftr.InverseTransformPoint(gR.pos).x;
-                if ((fx > rx) == (vl.x > 0f)) eF += 0.05f; else eR += 0.05f;
-            }
             bool canF = !gF.step && eF > thr && (!gR.step || eF > urgent);
             bool canR = !gR.step && eR > thr && (!gF.step || eR > urgent);
             if (canF && (!canR || eF >= eR)) Begin(ref gF, tF, yF, vel);
@@ -489,18 +608,19 @@ namespace BladePath
             Transform ftr = fighter.transform;
             Vector3 vl = ftr.InverseTransformDirection(vel);
             f.from = f.pos; f.to = t + ftr.TransformDirection(new Vector3(vl.x * 0.9f, 0f, vl.z * 1.5f)) * f.dur; f.to.y = t.y;   // стопа встаёт с запасом вперёд по ходу — до следующего шага она «в своём месте»
-            f.yawFrom = f.yaw; f.yawTo = y; f.u = 0f; f.step = true;
+            f.yawFrom = f.yaw; f.yawTo = y; f.u = 0f; f.step = true; f.walkStep = false; f.p0 = 0f; f.pend = false;
         }
 
         void Advance(ref Foot f, float dt)
         {
-            if (!f.step) return;
+            if (!f.step) { f.land += dt; return; }
             f.u += dt / Mathf.Max(0.05f, f.dur);
             float u = Mathf.Clamp01(f.u), s = Smooth(u);
             f.pos = Vector3.Lerp(f.from, f.to, s);
             f.yaw = Mathf.LerpAngle(f.yawFrom, f.yawTo, s);
-            f.lift = stepLift * Mathf.Sin(Mathf.PI * u) * Mathf.Clamp01((f.to - f.from).magnitude / 0.25f);
-            if (f.u >= 1f) { f.step = false; f.lift = 0f; }
+            // стопа выше всего в первой половине переноса (колено сгибается сразу после отрыва)
+            f.lift = Mathf.Lerp(stepLift, walkLift, moveK) * Mathf.Sin(Mathf.PI * Mathf.Pow(u, 0.8f)) * Mathf.Clamp01((f.to - f.from).magnitude / 0.25f);
+            if (f.u >= 1f) { f.step = false; f.lift = 0f; f.land = f.walkStep ? 0f : 9f; }
         }
 
         /// <summary>На сколько опустить бедро, чтобы нога длины maxLen достала до точки target.</summary>

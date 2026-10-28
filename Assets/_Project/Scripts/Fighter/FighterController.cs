@@ -16,6 +16,8 @@ namespace BladePath
 
         [Header("Movement")]
         public float moveSpeed = 1.2f;   // размеренный шаг в стойке
+        [Tooltip("Боком (приставным шагом) и спиной вперёд боец ходит медленнее, чем на противника.")]
+        [Range(0.3f, 1f)] public float strafeSpeedMul = 0.75f, backSpeedMul = 0.85f;
         [Tooltip("Множитель скорости, пока идёт любая фаза удара. 1 = без штрафа.")]
         [Range(0f, 1f)] public float attackMoveMultiplier = 0.8f;
         public float minSeparation = 0.7f;      // ближе этого бойцы не сходятся (корпуса)
@@ -222,7 +224,13 @@ namespace BladePath
             Vector3 mv = CanAct ? new Vector3(moveInput.x, 0f, moveInput.y) : Vector3.zero;
             float mag = Mathf.Min(1f, mv.magnitude);
             float sign = 1f;
-            if (mag > 0.01f) { mv /= mv.magnitude; if (Vector3.Dot(mv, fwd) < -0.3f) sign = -1f; }
+            if (mag > 0.01f)
+            {
+                mv /= mv.magnitude;
+                float fd = Vector3.Dot(mv, fwd);
+                if (fd < -0.3f) sign = -1f;
+                speed *= Mathf.Lerp(strafeSpeedMul, fd >= 0f ? 1f : backSpeedMul, fd * fd);
+            }
             MoveAxis = mag * sign;
 
             Vector3 delta = mv * (mag * speed * dt);
