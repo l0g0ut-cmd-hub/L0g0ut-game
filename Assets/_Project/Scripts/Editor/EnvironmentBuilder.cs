@@ -135,7 +135,7 @@ namespace BladePath.EditorTools
             main.startLifetime = 14f;
             main.startSpeed = 0.05f;
             main.startSize = new ParticleSystem.MinMaxCurve(2.5f, 4.5f);
-            main.startColor = new Color(0.6f, 0.68f, 0.85f, 0.07f);
+            main.startColor = new Color(0.42f, 0.42f, 0.44f, 0.05f);   // нейтральная серая дымка, без синевы
             main.maxParticles = 40;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             ParticleSystem.EmissionModule em = ps.emission;
@@ -150,7 +150,7 @@ namespace BladePath.EditorTools
             r.sharedMaterial = look.mist;
             r.renderMode = ParticleSystemRenderMode.HorizontalBillboard;
             PetalTexture pt = go.AddComponent<PetalTexture>();
-            pt.disc = true;
+            pt.fog = true;
         }
 
         /// <summary>Светлячки / искры, плывущие над двором.</summary>

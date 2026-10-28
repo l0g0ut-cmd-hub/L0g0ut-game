@@ -69,7 +69,7 @@ namespace BladePath.EditorTools
             }
             l.glow = Unlit("Env_Glow", new Color(1f, 0.72f, 0.32f));
             l.paper = Unlit("Env_Paper", new Color(1f, 0.78f, 0.45f));
-            l.mist = SpriteLike("Env_Mist", new Color(0.55f, 0.62f, 0.8f));
+            l.mist = SpriteLike("Env_Mist", Color.white);
             l.sky = Sky();
             l.bamboo = Solid("Env_Bamboo", new Color(0.36f, 0.48f, 0.22f), 0f, 0.55f);
             l.bambooLeaf = Solid("Env_BambooLeaf", new Color(0.16f, 0.30f, 0.12f), 0f, 0.2f);

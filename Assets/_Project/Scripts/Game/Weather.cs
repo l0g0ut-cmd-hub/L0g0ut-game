@@ -113,7 +113,7 @@ namespace BladePath
             var sm = splash.main;
             sm.loop = true; sm.startLifetime = 0.25f; sm.startSpeed = new ParticleSystem.MinMaxCurve(0.4f, 1.0f);
             sm.startSize = new ParticleSystem.MinMaxCurve(0.02f, 0.04f);
-            sm.startColor = new Color(0.8f, 0.85f, 1f, 0.45f);
+            sm.startColor = new Color(0.7f, 0.7f, 0.72f, 0.35f);
             sm.gravityModifier = 1f; sm.maxParticles = 400;
             sm.simulationSpace = ParticleSystemSimulationSpace.World;
             var se = splash.emission; se.rateOverTime = 260f;

@@ -36,7 +36,7 @@ namespace BladePath
         AudioClip swish, hit, hitHeavy, clang, boom, drum, heart, whoosh, step, growl;
         ParticleSystem petals;
         AudioSource ambient;
-        Material fxMat, softMat, splatMat;
+        Material fxMat, softMat, splatMat, fogMat;
         const int MaxDecals = 220;
         readonly List<Decal> decals = new List<Decal>();
         int decalIdx;
@@ -66,6 +66,7 @@ namespace BladePath
                 fxMat = new Material(sh);
                 softMat = new Material(sh); softMat.mainTexture = SoftSprites.Disc;
                 splatMat = new Material(sh); splatMat.mainTexture = SoftSprites.Splat;
+                fogMat = new Material(sh); fogMat.mainTexture = SoftSprites.Fog;
             }
             mpb = new MaterialPropertyBlock();
         }
@@ -356,9 +357,9 @@ namespace BladePath
             var main = ps.main;
             main.loop = false; main.duration = 0.1f;
             main.startLifetime = new ParticleSystem.MinMaxCurve(0.5f, 1.1f);
-            main.startSpeed = new ParticleSystem.MinMaxCurve(0.3f, 1.5f);
-            main.startSize = new ParticleSystem.MinMaxCurve(0.12f, 0.3f);
-            main.startColor = new Color(0.55f, 0.52f, 0.5f, 0.35f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.2f, 0.9f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.05f, 0.12f);
+            main.startColor = new Color(0.38f, 0.34f, 0.3f, 0.3f);   // тёплая серо-бурая пыль
             main.gravityModifier = -0.02f;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             main.stopAction = ParticleSystemStopAction.Destroy;
@@ -371,8 +372,8 @@ namespace BladePath
                        new GradientAlphaKey[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) });
             col.color = gr;
             var sz = ps.sizeOverLifetime; sz.enabled = true;
-            sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.6f), new Keyframe(1f, 1.8f)));
-            g.GetComponent<ParticleSystemRenderer>().material = softMat;
+            sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.7f), new Keyframe(1f, 1.3f)));
+            g.GetComponent<ParticleSystemRenderer>().material = fogMat != null ? fogMat : softMat;
             ps.Play();
         }
 
