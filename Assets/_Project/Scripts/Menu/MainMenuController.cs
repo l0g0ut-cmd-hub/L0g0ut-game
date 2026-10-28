@@ -174,6 +174,8 @@ namespace BladePath
                 "ВИБРАЦИЯ: " + (PlayerPrefs.GetInt("haptics", 1) == 1 ? "ВКЛ" : "ВЫКЛ"),
                 "ГОТОВО"
             };
+            Color oldBg = GUI.backgroundColor;
+            GUI.backgroundColor = new Color(1f, 1f, 1f, 0.2f);
             for (int i = 0; i < labels.Length; i++)
             {
                 Rect r = new Rect(box.x + 40f, box.y + 66f + i * 60f, box.width - 80f, 48f);
@@ -192,6 +194,7 @@ namespace BladePath
                     }
                 }
             }
+            GUI.backgroundColor = oldBg;
             UiKit.Text(new Rect(box.x, box.yMax + 8f, box.width, 24f),
                 "ПУТЬ " + (Ladder.Index + 1) + "/" + Ladder.Count + "  ·  ПОБЕД " + Records.Wins + "  ·  ПОРАЖЕНИЙ " + Records.Losses, 14f, new Color(0.85f, 0.8f, 0.7f, 0.9f));
             GUI.matrix = old;
