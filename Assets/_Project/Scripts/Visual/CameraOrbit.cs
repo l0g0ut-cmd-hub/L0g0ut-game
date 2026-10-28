@@ -83,6 +83,7 @@ namespace BladePath
                 if (t.phase == TouchPhase.Began)
                 {
                     bool onButton = PrototypeInput.Instance != null && PrototypeInput.Instance.IsOverButton(t.position);
+                    diagTouch = string.Format("камера: касание ({0:F0},{1:F0}) из {2}x{3} на кнопке={4}", t.position.x, t.position.y, Screen.width, Screen.height, onButton);
                     if (!onButton)
                     {
                         camTouches.Add(t.fingerId);
@@ -133,6 +134,16 @@ namespace BladePath
             distT -= Input.mouseScrollDelta.y * 0.4f;
         }
 #endif
+
+        string diagTouch = "";
+        void OnGUI()
+        {
+            if (!HeroRigDriver.Diag) return;
+            GUIStyle g = new GUIStyle(GUI.skin.label) { fontSize = Mathf.Max(12, Screen.height / 45) };
+            string t = diagTouch + string.Format(" | yaw {0:F0} pitch {1:F0} | пальцев камеры {2}", yaw, pitch, camTouches.Count);
+            g.normal.textColor = Color.black; GUI.Label(new Rect(12, Screen.height * 0.36f + 2, Screen.width, 40), t, g);
+            g.normal.textColor = Color.cyan; GUI.Label(new Rect(10, Screen.height * 0.36f, Screen.width, 40), t, g);
+        }
 
         void LateUpdate()
         {

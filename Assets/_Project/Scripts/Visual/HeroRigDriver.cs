@@ -176,6 +176,7 @@ namespace BladePath
             Vector3 right = ft.right, up = ft.up, fwd = ft.forward;
 
             if (weapon != null && weapon.pivot != null) weapon.pivot.localPosition = weapon.PureLocalPosition;   // снять прошлую поправку досягаемости
+            float diagHipA = DiagYaw(upperLegL, upperLegR, ft), diagChestA = DiagYaw(upperArmL, upperArmR, ft);   // поза Animator до драйвера
 
             // ---------- 1) поза тела
             float[] P = weapon != null ? weapon.Pose : SwingProfile.ReadyPose;
@@ -319,6 +320,13 @@ namespace BladePath
                 }
             }
 
+            if (Diag)
+            {
+                string st = animator == null ? "-" : animator.GetCurrentAnimatorStateInfo(0).IsName("Idle") ? "Idle" : animator.GetCurrentAnimatorStateInfo(0).IsName("Walk") ? "Walk" : animator.GetCurrentAnimatorStateInfo(0).IsName("Jump") ? "Jump" : animator.GetCurrentAnimatorStateInfo(0).IsName("Hit") ? "Hit" : "?";
+                diag = string.Format("{0}: anim hips {1:F0} chest {2:F0} | после hips {3:F0} chest {4:F0} | model {5:F0} base {6:F0} | walk {7:F2} leg {8:F2} keyed {9} {10} | hY {11:F0} cY {12:F0} yawS {13:F0} | move {14:F2} gnd {15} | {16} fps {17:F0}",
+                    fighter.name, diagHipA, diagChestA, DiagYaw(upperLegL, upperLegR, ft), DiagYaw(upperArmL, upperArmR, ft), transform.localEulerAngles.y, baseLocalRot.eulerAngles.y,
+                    walkS, wLeg, keyed, weapon != null ? weapon.Phase.ToString() : "-", hYaw, cYaw, yawS, fighter.MoveAxis, fighter.Grounded, st, 1f / Mathf.Max(1e-4f, Time.smoothDeltaTime));
+            }
             if (deadK > 0.5f) { DropSword(); return; }
 
             // зоны попадания едут за моделью (присед, выпад), иначе клинок бьёт по воздуху рядом с видимым телом
@@ -407,6 +415,24 @@ namespace BladePath
             if (v.magnitude <= maxLen) return 0f;
             float h = Mathf.Sqrt(Mathf.Max(0f, maxLen * maxLen - hor * hor));
             return Mathf.Max(0f, vert - h);
+        }
+
+        /// <summary>Диагностика на экране (временно): поворот таза/груди относительно бойца до и после драйвера, состояние.</summary>
+        public static bool Diag = true;
+        string diag = "";
+        static float DiagYaw(Transform l, Transform r, Transform ft)
+        {
+            if (l == null || r == null) return 0f;
+            Vector3 d = ft.InverseTransformDirection(r.position - l.position); d.y = 0f;   // линия «левое → правое» должна идти по +X бойца
+            return Mathf.Atan2(-d.z, d.x) * Mathf.Rad2Deg;
+        }
+        void OnGUI()
+        {
+            if (!Diag || string.IsNullOrEmpty(diag)) return;
+            float y = Screen.height * (weapon != null && weapon.yawSign < 0 ? 0.30f : 0.26f);
+            GUIStyle g = new GUIStyle(GUI.skin.label) { fontSize = Mathf.Max(12, Screen.height / 45) };
+            g.normal.textColor = Color.black; GUI.Label(new Rect(12, y + 2, Screen.width, 60), diag, g);
+            g.normal.textColor = Color.yellow; GUI.Label(new Rect(10, y, Screen.width, 60), diag, g);
         }
 
         Vector3[] zoneBase;

@@ -90,6 +90,21 @@ namespace BladePath.EditorTools
                 Call(d, "LateUpdate");
             }
             Dump(f, model, "idle", sb);
+            // как в игре: позу пишет сам Animator (контроллер, аватар, переходы), а не SampleAnimation
+            if (anim != null)
+            {
+                try
+                {
+                    anim.Rebind();
+                    anim.Update(0f);
+                    Dump(f, model, "rt_anim0", sb);
+                    for (int i = 0; i < 30; i++) { anim.Update(1f / 30f); if (i == 0) Dump(f, model, "rt_anim1", sb); Call(d, "LateUpdate"); }
+                    Dump(f, model, "rt_idle", sb);
+                    sb.Append("PROBE|" + f.name + "|rt_info|root " + anim.applyRootMotion + " avatar " + (anim.avatar != null ? anim.avatar.name + " valid " + anim.avatar.isValid + " human " + anim.avatar.isHuman : "null")
+                        + " state " + (anim.runtimeAnimatorController != null ? anim.GetCurrentAnimatorStateInfo(0).shortNameHash.ToString() : "-") + " cull " + anim.cullingMode + "\n");
+                }
+                catch (Exception e) { sb.Append("PROBE|" + f.name + "|rt_error|" + e.Message + "\n"); }
+            }
             // кадры удара сверху: фаза и время ставятся напрямую, поза — как в игре
             if (w != null && w.TryStartSwing(AttackType.Overhead))
             {
