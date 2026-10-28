@@ -12,6 +12,47 @@ namespace BladePath
         static readonly Color Frame = new Color(0.04f, 0.03f, 0.03f, 0.92f);
         static readonly Color Gold = new Color(0.86f, 0.70f, 0.38f, 1f);
 
+        // кровь «на объективе», когда игроку прилетает сильный удар
+        struct Splat { public Vector2 p; public float size, born, rot; }
+        readonly System.Collections.Generic.List<Splat> splats = new System.Collections.Generic.List<Splat>();
+        bool hooked;
+
+        void OnDamaged(FighterController f, float dmg)
+        {
+            if (duel == null || f != duel.player || dmg < 14f) return;
+            int n = dmg >= 24f ? 6 : 3;
+            float W = UiKit.Width;
+            for (int i = 0; i < n; i++)
+            {
+                Splat s = new Splat();
+                // ближе к краям экрана, чтобы не закрывать бой
+                float side = Random.value < 0.5f ? Random.Range(0f, 0.25f) : Random.Range(0.75f, 1f);
+                s.p = new Vector2(side * W, Random.Range(60f, 480f));
+                s.size = Random.Range(40f, 110f) * (dmg >= 24f ? 1.3f : 1f);
+                s.born = Time.unscaledTime; s.rot = Random.Range(0f, 360f);
+                splats.Add(s);
+            }
+            if (splats.Count > 24) splats.RemoveRange(0, splats.Count - 24);
+        }
+
+        void DrawSplats()
+        {
+            for (int i = splats.Count - 1; i >= 0; i--)
+            {
+                Splat s = splats[i];
+                float age = Time.unscaledTime - s.born;
+                if (age > 2.2f) { splats.RemoveAt(i); continue; }
+                float a = Mathf.Clamp01((2.2f - age) / 1.2f) * 0.75f;
+                float drip = age * 14f;   // медленно стекает
+                Matrix4x4 m = GUI.matrix;
+                GUI.matrix = m * Matrix4x4.TRS(new Vector3(s.p.x, s.p.y + drip, 0f), Quaternion.Euler(0f, 0f, s.rot), Vector3.one);
+                GUI.color = new Color(0.45f, 0f, 0.02f, a);
+                GUI.DrawTexture(new Rect(-s.size * 0.5f, -s.size * 0.5f, s.size, s.size), SoftSprites.Splat);
+                GUI.matrix = m;
+            }
+            GUI.color = Color.white;
+        }
+
         PortraitCam portraitP, portraitE;
         bool portraitsTried;
         static Texture2D portraitMask;
@@ -19,6 +60,7 @@ namespace BladePath
         void OnGUI()
         {
             if (duel == null || duel.player == null || duel.enemy == null) return;
+            if (!hooked) { duel.Damaged += OnDamaged; hooked = true; }
             if (!portraitsTried && Event.current.type == EventType.Repaint)
             {
                 portraitsTried = true;
@@ -40,6 +82,8 @@ namespace BladePath
             GUI.color = vc;
             GUI.DrawTexture(new Rect(0f, 0f, W, 540f), vignette);
             GUI.color = Color.white;
+
+            DrawSplats();
 
             float barW = Mathf.Min(W * 0.36f, 420f);
             float cx = W * 0.5f;
