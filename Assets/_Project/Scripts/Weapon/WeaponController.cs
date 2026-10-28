@@ -28,7 +28,7 @@ namespace BladePath
         public Vector3 restHand = new Vector3(0.06f, -0.40f, 0.30f);   // чудан: руки у пупка и вперёд (= SwingProfile.ReadyPose)
         [Tooltip("Блок: клинок почти вертикально перед лицом, руки у груди.")]
         public Vector3 guardEuler = new Vector3(-82f, 8f, 0f);
-        public Vector3 guardHand = new Vector3(0.03f, 0.02f, 0.30f);
+        public Vector3 guardHand = new Vector3(0.03f, -0.02f, 0.40f);   // блок: клинок вертикально перед собой на вытянутых руках
         float blockK;
 
         public SwingProfile CurrentProfile { get; private set; }

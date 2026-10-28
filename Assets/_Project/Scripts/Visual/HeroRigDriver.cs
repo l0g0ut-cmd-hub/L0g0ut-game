@@ -104,6 +104,7 @@ namespace BladePath
             Cache(upperLegL, lowerLegL, footL, out lgL1, out lgL2);
             Cache(upperLegR, lowerLegR, footR, out lgR1, out lgR2);
             baseLocalPos = transform.localPosition;
+            wLegS = 1f;   // стойка сразу, без «проседания» в первый кадр
             baseLocalRot = transform.localRotation;
             if (footL != null && footR != null && fighter != null)
             {
@@ -254,6 +255,13 @@ namespace BladePath
             float wSt = wLegS;
             moveK = Mathf.MoveTowards(moveK, Mathf.Abs(fighter.MoveAxis) > 0.1f && !keyed ? 1f : 0f, dt / 0.25f);
             pd *= 1f - 0.6f * moveK; pf *= 1f - moveK;   // на ходу таз выше и над стопами
+            // ритм шага: таз поворачивается за шагающей ногой, грудь — навстречу, корпус чуть подаётся по ходу
+            if (stepLift > 0f)
+            {
+                float sw = (gF.lift - gR.lift) / stepLift * ys;
+                hYaw += 5f * sw; cYaw -= 3f * sw;
+            }
+            cPit += 4f * moveK * Mathf.Sign(fighter.MoveAxis);
 
             // ---------- 2) таз: вынос вперёд и высота (вся модель) — визуально; зоны поражения едут следом (FollowZones)
             float drop = (stanceDrop + pd) * wSt;
