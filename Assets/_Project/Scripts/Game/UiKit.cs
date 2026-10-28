@@ -67,10 +67,10 @@ namespace BladePath
             float len = d.magnitude;
             if (len < 0.01f) return;
             Matrix4x4 m = GUI.matrix;
-            float ang = Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg;
-            GUIUtility.RotateAroundPivot(ang, a);
+            // поворот вокруг начала отрезка в локальных (виртуальных) координатах; RotateAroundPivot тут не годится: его точка задана в пикселях
+            GUI.matrix = m * Matrix4x4.TRS(new Vector3(a.x, a.y, 0f), Quaternion.Euler(0f, 0f, ang), Vector3.one);
             Color o = GUI.color; GUI.color = c;
-            GUI.DrawTexture(new Rect(a.x, a.y - thickness * 0.5f, len, thickness), white);
+            GUI.DrawTexture(new Rect(0f, -thickness * 0.5f, len, thickness), white);
             GUI.color = o;
             GUI.matrix = m;
         }

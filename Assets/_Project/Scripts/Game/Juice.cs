@@ -247,6 +247,18 @@ namespace BladePath
             ps.Play();
         }
 
+        static Mesh quad;
+        static Mesh QuadMesh()
+        {
+            if (quad != null) return quad;
+            quad = new Mesh();
+            quad.vertices = new Vector3[] { new Vector3(-0.5f, -0.5f, 0f), new Vector3(0.5f, -0.5f, 0f), new Vector3(0.5f, 0.5f, 0f), new Vector3(-0.5f, 0.5f, 0f) };
+            quad.uv = new Vector2[] { new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(0f, 1f) };
+            quad.triangles = new int[] { 0, 2, 1, 0, 3, 2 };   // нормаль -Z, как у стандартного Quad
+            quad.RecalculateNormals();
+            return quad;
+        }
+
         // пятна крови на земле (пул плоских квадов)
         void AddDecal(Vector3 pos, float size, Vector2 dir, float life, float delay, float grow = 0f)
         {
@@ -254,10 +266,10 @@ namespace BladePath
             Decal d;
             if (decals.Count < MaxDecals)
             {
-                GameObject q = GameObject.CreatePrimitive(PrimitiveType.Quad);
-                Destroy(q.GetComponent<Collider>());
-                q.name = "BloodDecal";
-                Renderer rr = q.GetComponent<Renderer>();
+                // CreatePrimitive нельзя: он добавляет MeshCollider, а модуль физики для мешей в сборке вырезан
+                GameObject q = new GameObject("BloodDecal");
+                q.AddComponent<MeshFilter>().sharedMesh = QuadMesh();
+                Renderer rr = q.AddComponent<MeshRenderer>();
                 rr.sharedMaterial = splatMat;
                 rr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 rr.receiveShadows = false;
