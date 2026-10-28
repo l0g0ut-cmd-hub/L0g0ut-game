@@ -374,6 +374,8 @@ namespace BladePath.EditorTools
             Transform t = new GameObject("Sakura" + seed).transform;
             t.SetParent(env, false);
             t.position = pos;
+            BladePath.BannerSway sw = t.gameObject.AddComponent<BladePath.BannerSway>();   // крона покачивается
+            sw.amp = 1.1f; sw.speed = 0.55f;
             CharacterVisuals.Part(t, "Trunk", PrimitiveType.Cylinder, new Vector3(0f, 1.0f * s, 0f), new Vector3(0f, 0f, (float)(r.NextDouble() * 8 - 4)), new Vector3(0.26f * s, 1.0f * s, 0.26f * s), look.bark);
             for (int i = 0; i < 3; i++)
             {
