@@ -33,6 +33,8 @@ namespace BladePath
         public bool TimedOut { get; private set; }
         public bool LastDraw { get; private set; }
         public bool Perfect { get; private set; }
+        /// <summary>Босс в ярости (вторая фаза): быстрее, аура ярче.</summary>
+        public bool Enraged { get; private set; }
 
         public DuelState State { get; private set; }
         public bool Paused { get; private set; }
@@ -225,6 +227,8 @@ namespace BladePath
             if (enemy != null) { enemy.ResetFighter(); hp[enemy] = MaxHp(enemy); hpTrail[enemy] = MaxHp(enemy); lastSwing[enemy] = -1; }
             Popups.Clear();
             combo.Clear(); comboTime.Clear(); counterUntil.Clear();
+            Enraged = false;
+            ApplyStage();   // скорость врага к базовой ступени (сброс ярости)
             SuperBy = null;
             if (Juice.Instance != null) Juice.Instance.CleanBlades();
             lastStandShown = false; tenSecShown = false;
@@ -595,7 +599,18 @@ namespace BladePath
                 target.AddKi(7f);
                 Haptics.Pulse(target == player ? (dmg >= 20f ? 70 : 40) : 18);
             }
+            float before01 = Hp01(target);
             hp[target] = Mathf.Max(0f, Hp(target) - dmg);
+            // финальный противник «Пути» на половине здоровья впадает в ярость
+            if (target == enemy && Ladder.IsLast && !Enraged && before01 > 0.5f && Hp01(target) <= 0.5f && Hp(target) > 0f)
+            {
+                Enraged = true;
+                enemy.moveSpeed *= 1.18f;
+                enemy.AddKi(60f);
+                Announce("ЯРОСТЬ СЁГУНА", new Color(1f, 0.75f, 0.2f));
+                if (Juice.Instance != null) { Juice.Instance.Growl(0.75f); Juice.Instance.Taiko(1f, 0.6f); }
+                if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.06f);
+            }
             if (!chip) MatsOf(target).flashAt = Time.unscaledTime;
             lastHitTime[target] = Time.unscaledTime;
             Popup p = new Popup();

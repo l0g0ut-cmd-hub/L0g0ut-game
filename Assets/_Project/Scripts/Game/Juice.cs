@@ -233,7 +233,8 @@ namespace BladePath
                 if (t.aura != null && t.f != null)
                 {
                     var em = t.aura.emission;
-                    em.rateOverTime = (t.f.CanEnergy && !t.f.Dead) ? 30f : 0f;
+                    bool rage = DuelManager.Instance != null && DuelManager.Instance.Enraged && t.f == DuelManager.Instance.enemy;
+                    em.rateOverTime = t.f.Dead ? 0f : (rage ? 70f : (t.f.CanEnergy ? 30f : 0f));
                 }
                 if (t.blade != null && mpb != null)
                 {
