@@ -670,7 +670,7 @@ namespace BladePath
             Sparks(pos, normal.sqrMagnitude > 1e-4f ? normal : Vector3.up, 46, 1.35f);
             Sparks(pos, Vector3.up, 20, 0.9f);
             Flash(pos, 0.42f, new Color(0.85f, 0.95f, 1f, 0.9f), 0.13f, true);
-            Shockwave(pos, 0.9f, new Color(0.6f, 0.85f, 1f, 0.55f), 0.2f);
+            Shockwave(pos, 0.7f, new Color(0.6f, 0.85f, 1f, 0.22f), 0.16f);   // едва заметная волна воздуха, не «магическое кольцо»
         }
 
         Material addMat, glowMat, starMat, ringMat;

@@ -58,7 +58,7 @@ namespace BladePath.EditorTools
 
                 // компоненты, которые в игре готовятся в Awake (текстуры листьев/лепестков, ореолы) — в редакторе вызываем сами
                 foreach (MonoBehaviour mb in UnityEngine.Object.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
-                    if (mb is PetalTexture || mb is GlowSprite || mb is FlickerLight) Call(mb, "Awake");
+                    if (mb is PetalTexture || mb is GlowSprite || mb is FlickerLight || mb is FloorReflection) Call(mb, "Awake");
                 // окружение: огонь, туман, светлячки, лепестки — уже «живут» несколько секунд
                 foreach (ParticleSystem ps in UnityEngine.Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None))
                     if (ps.transform.parent == null || ps.GetComponentInParent<FighterController>() == null) ps.Simulate(4f, true, true);
@@ -73,8 +73,16 @@ namespace BladePath.EditorTools
                 Vector3 focus = new Vector3(mid.x * 0.5f, 1.15f, mid.z * 0.5f);
 
                 Shot(cam, dir, "1_game", focus + new Vector3(0f, 0f, -dist), focus, cam.fieldOfView, log);   // как в игре (FOV камеры боя)
-                if (player != null) Shot(cam, dir, "2_player", pp + player.transform.forward * 2.7f + player.transform.right * -1.4f + Vector3.up * 1.25f, pp + Vector3.up * 0.95f, 36f, log);
-                if (enemy != null) Shot(cam, dir, "3_enemy", ep + enemy.transform.forward * 2.7f + enemy.transform.right * 1.4f + Vector3.up * 1.25f, ep + Vector3.up * 0.95f, 36f, log);
+                if (player != null) Shot(cam, dir, "2_player", pp + new Vector3(0f, 1.2f, -3.0f) + player.transform.forward * 0.9f, pp + Vector3.up * 0.95f, 36f, log);   // со стороны камеры боя, чуть спереди
+                if (enemy != null) Shot(cam, dir, "3_enemy", ep + new Vector3(0f, 1.2f, -3.0f) + enemy.transform.forward * 0.9f, ep + Vector3.up * 0.95f, 36f, log);
+                // хват: руки на рукояти крупно (с камеры спереди-сбоку и сверху-сбоку)
+                if (player != null && player.weapon != null && player.weapon.pivot != null)
+                {
+                    Vector3 hp = player.weapon.pivot.position;
+                    Transform pt = player.transform;
+                    Shot(cam, dir, "7_grip", hp + pt.forward * 0.75f - pt.right * 0.55f + Vector3.up * 0.15f, hp, 34f, log);
+                    Shot(cam, dir, "8_grip_top", hp + pt.forward * 0.35f + pt.right * 0.45f + Vector3.up * 0.65f, hp, 34f, log);
+                }
                 Shot(cam, dir, "4_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);
 
                 // парирование: вспышка, блик, волна и искры через 50 мс после удара
@@ -111,6 +119,7 @@ namespace BladePath.EditorTools
                 cam.transform.rotation = Quaternion.LookRotation(look - pos, Vector3.up);
                 cam.fieldOfView = fov;
                 foreach (GlowSprite gs in UnityEngine.Object.FindObjectsByType<GlowSprite>(FindObjectsSortMode.None)) Call(gs, "LateUpdate");   // ореолы — лицом к камере
+                foreach (FloorReflection fr in UnityEngine.Object.FindObjectsByType<FloorReflection>(FindObjectsSortMode.None)) Call(fr, "LateUpdate");   // отражения — под эту камеру
                 cam.targetTexture = rt;
                 cam.Render();
                 RenderTexture.active = rt;

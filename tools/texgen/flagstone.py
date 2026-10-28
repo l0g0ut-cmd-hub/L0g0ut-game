@@ -115,7 +115,7 @@ def normal_from_height(h, strength):
     return np.stack([nx / l, ny / l, nz / l], -1)
 
 hs = ndimage.gaussian_filter(height, 0.7, mode='wrap')
-n = normal_from_height(hs, N / 64.0)
+n = normal_from_height(hs, N / 110.0)   # мягче фаска: на ночном свете края не «светятся» мультяшным кантом
 def save(a, name, mode='RGB'):
     Image.fromarray(np.clip(a * 255 + 0.5, 0, 255).astype(np.uint8), mode).save(os.path.join(out, name))
 # sRGB для альбедо (значения выше задуманы в линейном → в гамму)

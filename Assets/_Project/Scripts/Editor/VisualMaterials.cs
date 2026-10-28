@@ -50,8 +50,8 @@ namespace BladePath.EditorTools
             l.ronin = Ronin();
             // мостовая из неправильных плит (исидатами, процедурная 1024²): квадратная плитка 2,4 м на площадке 7,2×5,4;
             // гладкость — по карте: мокрые плиты и лужицы блестят, швы с землёй и мхом матовые
-            l.stone = Textured("Stone_Floor", "flagstone_albedo.png", "flagstone_normal.png", new Vector2(3f, 2.25f), new Color(0.78f, 0.78f, 0.82f), 0f, 0.62f);
-            Gloss(l.stone, "flagstone_ms.png", 1f);
+            l.stone = Textured("Stone_Floor", "flagstone_albedo.png", "flagstone_normal.png", new Vector2(4.2f, 3.15f), new Color(0.78f, 0.78f, 0.82f), 0f, 0.62f);
+            Gloss(l.stone, "flagstone_ms.png", 0.85f);   // в дождь Weather поднимает до 1
             Aniso("flagstone_albedo.png", 4); Aniso("flagstone_normal.png", 4);
             l.stoneDark = Solid("Stone_Dark", new Color(0.12f, 0.12f, 0.15f), 0f, 0.20f);
             // окружение v2: UV боксов в мировом масштабе (EnvMesh), поэтому tiling материалов = 1

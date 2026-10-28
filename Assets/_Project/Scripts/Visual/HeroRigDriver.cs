@@ -75,7 +75,9 @@ namespace BladePath
         [Tooltip("Перед отрывом пятка поднимается (перекат на носок): доля цикла и угол.")]
         public float heelPeel = 0.15f, heelPeelDeg = 25f;
         public float maxAutoDrop = 0.12f;
-        public float stanceDrop = 0.03f;   // колени мягко согнуты в стойке, м
+        public float stanceDrop = 0.03f;
+        [Tooltip("Мокап-ходьба в бою: насколько таз ниже, чем в клипе (м) — колени согнуты, шаг «в стойке».")]
+        public float mocapCrouch = 0.06f;   // колени мягко согнуты в стойке, м
         public float stepLift = 0.07f;     // подъём стопы в шаге, м
         public float heelLift = 0.05f;     // подъём пятки задней ноги (вес на носке), м
         public float postureBack = 6f;     // осанка: грудь назад/вверх, голова поднята (против сутулости модели), град.
@@ -105,7 +107,7 @@ namespace BladePath
         Vector3[] solL, solR;
         // фиксация опорной стопы на мокап-ходьбе: точка подошвы, вставшая на землю, держится на месте (поворот к противнику,
         // смесь клипов, неточный темп — стопа не едет), IK ноги дотягивает голеностоп; на отрыве поправка тает
-        struct FootLock { public bool on; public Vector3 pos, off; }
+        struct FootLock { public bool on; public int idx; public Vector3 pos, off; }
         FootLock lockL, lockR;
         /// <summary>Нижняя точка подошвы (мир) — после постановки на землю в этом кадре (для пыли/шагов и проб).</summary>
         public Vector3 SoleL { get; private set; }
@@ -251,16 +253,21 @@ namespace BladePath
         // кончик носка может уйти в землю на 2 см: пальцы гнутся, а кость стопы одна
         void LockFoot(ref FootLock lk, Transform up, Transform lo, Transform foot, float l1, float l2, Vector3[] sol, bool use, Transform ft, float dt)
         {
-            Vector3 sole = SolePoint(foot, sol);
-            float h = sole.y - ft.position.y;
+            // нижняя точка подошвы (пятка → подушечка при перекате): держим ту, что сейчас опора
+            int j = 0; float y = float.MaxValue;
+            for (int i = 0; i < sol.Length; i++) { float py = foot.TransformPoint(sol[i]).y + (i == 2 ? 0.02f : 0f); if (py < y) { y = py; j = i; } }
+            Vector3 pj = foot.TransformPoint(sol[j]);
+            float h = pj.y - ft.position.y;
             if (!use) lk.on = false;
-            else if (!lk.on && h < 0.012f) { lk.on = true; lk.pos = sole; }
+            else if (!lk.on && h < 0.012f) { lk.on = true; lk.idx = j; lk.pos = pj; lk.off = Vector3.zero; }
             else if (lk.on && h > 0.03f) lk.on = false;
             Vector3 want = Vector3.zero;
             if (lk.on)
             {
-                want = lk.pos - sole; want.y = 0f;
-                if (want.sqrMagnitude > 0.18f * 0.18f) { lk.on = false; want = Vector3.zero; }   // ушло слишком далеко — пусть шагает
+                // перекат на другую точку подошвы: новая опора там, где она окажется с текущей поправкой — без скачка
+                if (j != lk.idx) { lk.idx = j; lk.pos = pj + lk.off; }
+                want = lk.pos - pj; want.y = 0f;
+                if (want.sqrMagnitude > 0.2f * 0.2f) { lk.on = false; want = Vector3.zero; }   // ушло слишком далеко — пусть шагает
             }
             lk.off = lk.on ? want : Vector3.Lerp(lk.off, Vector3.zero, 1f - Mathf.Exp(-dt / 0.06f));
             if (lk.off.sqrMagnitude < 1e-8f) return;
@@ -519,6 +526,17 @@ namespace BladePath
                 // иначе при перекате на носок стопа уходит в землю, а тело проседает
                 float lowest = solL != null ? Mathf.Min(SoleY(footL, solL), SoleY(footR, solR)) : Mathf.Min(footL.position.y, footR.position.y) - footRestH;
                 transform.position += Vector3.up * (ft.position.y - lowest);
+                // боевой шаг: таз ниже, чем в обычной ходьбе клипа, стопы остаются на своих местах (IK) — колени согнуты, как в стойке,
+                // и при переходе стойка ↔ ходьба тело не «вырастает»
+                float crouch = mocapCrouch * locoW;
+                if (crouch > 1e-4f && legsReady)
+                {
+                    Vector3 aL = footL.position, aR = footR.position; Quaternion qL = footL.rotation, qR = footR.rotation;
+                    transform.position -= Vector3.up * crouch;
+                    SolveArm(upperLegL, lowerLegL, footL, lgL1, lgL2, aL, lowerLegL.position - (upperLegL.position + aL) * 0.5f + ft.forward * 0.05f);
+                    SolveArm(upperLegR, lowerLegR, footR, lgR1, lgR2, aR, lowerLegR.position - (upperLegR.position + aR) * 0.5f + ft.forward * 0.05f);
+                    footL.rotation = qL; footR.rotation = qR;
+                }
                 if (solL != null && legsReady)
                 {
                     bool use = locoW > 0.5f;

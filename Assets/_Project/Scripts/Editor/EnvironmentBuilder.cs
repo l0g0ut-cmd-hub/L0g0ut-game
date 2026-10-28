@@ -13,6 +13,7 @@ namespace BladePath.EditorTools
 
         public static void Build(Look look)
         {
+            reflRoot = null;
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.Exponential;
             RenderSettings.fogDensity = 0.05f;
@@ -120,6 +121,7 @@ namespace BladePath.EditorTools
                 float x = -0.8f - 2.8f + i * 1.4f + 0.7f;
                 EnvMesh.Box(d, "String" + i, new Vector3(x, 2.28f, 4.75f), Vector3.zero, new Vector3(0.012f, 0.16f, 0.012f), look.woodDark, 0.2f);
                 GameObject lamp = CharacterVisuals.Part(d, "PaperLamp" + i, PrimitiveType.Sphere, new Vector3(x, 2.05f, 4.75f), Vector3.zero, new Vector3(0.28f, 0.36f, 0.28f), look.paper);
+                AddReflection(lamp.transform, null, 1f, new Color(1f, 0.8f, 0.5f), 0.22f, 1.4f, 0.28f);
                 EnvMesh.Glow(d, "LampHalo" + i, new Vector3(x, 2.05f, 4.6f), 1.0f, look.haloWarm, 0.06f);
                 CharacterVisuals.Part(d, "LampCapT" + i, PrimitiveType.Cylinder, new Vector3(x, 2.25f, 4.75f), Vector3.zero, new Vector3(0.12f, 0.012f, 0.12f), look.woodDark);
                 CharacterVisuals.Part(d, "LampCapB" + i, PrimitiveType.Cylinder, new Vector3(x, 1.86f, 4.75f), Vector3.zero, new Vector3(0.10f, 0.012f, 0.10f), look.woodDark);
@@ -219,6 +221,18 @@ namespace BladePath.EditorTools
             return p;
         }
 
+        static Transform reflRoot;
+        /// <summary>Отражение источника в мокром камне (FloorReflection) — в отдельном нестатичном корне: полоса движется за камерой.</summary>
+        static void AddReflection(Transform src, Light l, float baseI, Color c, float width, float length, float strength)
+        {
+            if (reflRoot == null) reflRoot = new GameObject("FloorReflections").transform;
+            GameObject g = new GameObject("Refl_" + src.parent.name);
+            g.transform.SetParent(reflRoot, false);
+            g.AddComponent<MeshFilter>(); g.AddComponent<MeshRenderer>();
+            BladePath.FloorReflection fr = g.AddComponent<BladePath.FloorReflection>();
+            fr.source = src; fr.lightRef = l; fr.baseIntensity = baseI; fr.color = c; fr.width = width; fr.length = length; fr.strength = strength;
+        }
+
         static void MarkStatic(Transform root)
         {
             foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
@@ -289,7 +303,13 @@ namespace BladePath.EditorTools
                 float x = cx - 3.5f + i * 1.4f;
                 CharacterVisuals.Part(hall, "Column" + i, PrimitiveType.Cylinder, new Vector3(x, 1.5f, 5.15f), Vector3.zero, new Vector3(0.2f, 1.0f, 0.2f), look.lacquer);
                 EnvMesh.Box(hall, "ColBase" + i, new Vector3(x, 0.55f, 5.15f), Vector3.zero, new Vector3(0.3f, 0.1f, 0.3f), look.stoneBlock, 1f);
-                if (i < 5) EnvMesh.Box(hall, "Shoji" + i, new Vector3(x + 0.7f, 1.3f, 5.24f), Vector3.zero, new Vector3(1.2f, 1.5f, 0.05f), look.shoji, 0f);
+                if (i < 5)
+                {
+                    GameObject sj = EnvMesh.Box(hall, "Shoji" + i, new Vector3(x + 0.7f, 1.3f, 5.24f), Vector3.zero, new Vector3(1.2f, 1.5f, 0.05f), look.shoji, 0f);
+                    // светящиеся сёдзи отражаются в мокрой площадке широкими тёплыми полосами
+                    GameObject sp = new GameObject("ShojiPoint"); sp.transform.SetParent(sj.transform.parent, false); sp.transform.localPosition = new Vector3(x + 0.7f, 1.15f, 5.2f);
+                    AddReflection(sp.transform, null, 1f, new Color(1f, 0.74f, 0.42f), 1.0f, 2.2f, 0.22f);
+                }
             }
             EnvMesh.Box(hall, "Lintel", new Vector3(cx, 2.35f, 5.15f), Vector3.zero, new Vector3(7.8f, 0.2f, 0.24f), look.lacquer, 1f, true);
             EnvMesh.Box(hall, "Veranda", new Vector3(cx, 0.55f, 4.95f), Vector3.zero, new Vector3(7.6f, 0.1f, 0.6f), look.wood, 1f, true);
@@ -338,6 +358,8 @@ namespace BladePath.EditorTools
                 float x = 6.4f * side;
                 EnvMesh.Box(walls, "Wall" + side, new Vector3(x, 0.55f, 2.5f), Vector3.zero, new Vector3(0.3f, 1.1f, 12f), look.plaster, 2f);
                 EnvMesh.Box(walls, "Cap" + side, new Vector3(x, 1.16f, 2.5f), Vector3.zero, new Vector3(0.6f, 0.12f, 12.4f), look.roof, 1.2f, true);
+                EnvMesh.Box(walls, "Base" + side, new Vector3(x, 0.17f, 2.5f), Vector3.zero, new Vector3(0.38f, 0.34f, 12.05f), look.stoneBlock, 1.1f);   // каменный цоколь стены
+                EnvMesh.Box(walls, "Beam" + side, new Vector3(x, 0.98f, 2.5f), Vector3.zero, new Vector3(0.33f, 0.07f, 12.02f), look.woodDark, 1f, true); // брус под кровлей
                 for (int i = 0; i < 5; i++)
                     EnvMesh.Box(walls, "Post" + side + i, new Vector3(x, 0.55f, -3.2f + i * 2.9f), Vector3.zero, new Vector3(0.36f, 1.1f, 0.18f), look.woodDark, 1f);
             }
@@ -355,6 +377,8 @@ namespace BladePath.EditorTools
             EnvMesh.Box(t, "GlowA", new Vector3(0f, 0.9f, 0f), Vector3.zero, new Vector3(0.24f, 0.2f, 0.36f), look.glow, 1f);
             EnvMesh.Box(t, "GlowB", new Vector3(0f, 0.9f, 0f), Vector3.zero, new Vector3(0.36f, 0.2f, 0.24f), look.glow, 1f);
             EnvMesh.Glow(t, "Halo", new Vector3(0f, 0.9f, 0f), 0.9f, look.haloWarm, 0.08f);
+            GameObject lp = new GameObject("LampPoint"); lp.transform.SetParent(t, false); lp.transform.localPosition = new Vector3(0f, 0.9f, 0f);
+            AddReflection(lp.transform, null, 1f, new Color(1f, 0.72f, 0.38f), 0.32f, 1.6f, 0.35f);
             EnvMesh.Pyramid(t, "Cap", new Vector3(0f, 1.07f, 0f), 0.3f, 0.22f, look.stoneBlock, 0.8f);
             CharacterVisuals.Part(t, "Jewel", PrimitiveType.Sphere, new Vector3(0f, 1.32f, 0f), Vector3.zero, new Vector3(0.09f, 0.09f, 0.09f), look.stoneBlock);
         }
@@ -474,6 +498,7 @@ namespace BladePath.EditorTools
             fl.color = new Color(1f, 0.6f, 0.25f);
             fl.range = 5f;
             fl.intensity = 1.7f;
+            AddReflection(lightObj.transform, fl, 1.7f, new Color(1f, 0.52f, 0.18f), 0.55f, 2.8f, 0.7f);
 
             BladePath.FlickerLight flicker = lightObj.AddComponent<BladePath.FlickerLight>();
             flicker.lightSource = fl;

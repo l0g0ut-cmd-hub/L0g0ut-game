@@ -40,17 +40,17 @@ namespace BladePath.EditorTools
             MB wood = new MB(), crown = new MB();
             List<Tip> tips = new List<Tip>();
             Vector3 lean = new Vector3(R(r, -0.12f, 0.12f), 1f, R(r, -0.12f, 0.12f)).normalized;
-            Branch(wood, tips, r, Vector3.zero, lean, 1.35f * s, 0.16f * s, 0, s, 0f);
+            Branch(wood, tips, r, Vector3.zero, lean, 1.9f * s, 0.15f * s, 0, s, 0f);   // ствол до развилки ~1,9 м: крона над головами, не до земли
 
             // центр кроны — по концам веток
             Vector3 cc = Vector3.zero; foreach (Tip tp in tips) cc += tp.p; cc /= Mathf.Max(1, tips.Count); cc.y -= 0.25f * s;
             foreach (Tip tp in tips)
             {
-                int cards = tp.level >= 4 ? 3 : (tp.level == 3 ? 2 : 1);
+                int cards = tp.level >= 4 ? 2 : (tp.level == 3 ? 1 : 0);   // ажурная крона: между гроздьями видно небо
                 for (int k = 0; k < cards; k++)
                 {
-                    Vector3 c = tp.p + tp.dir * R(r, -0.15f, 0.25f) * s + RandUnit(r) * 0.22f * s;
-                    float size = R(0.75f, 1.15f, r) * s * (tp.level >= 4 ? 1f : 0.85f);
+                    Vector3 c = tp.p + tp.dir * R(r, -0.1f, 0.2f) * s + RandUnit(r) * 0.16f * s;
+                    float size = R(0.55f, 0.85f, r) * s;
                     Card(crown, r, c, size, cc);
                 }
             }
@@ -98,7 +98,8 @@ namespace BladePath.EditorTools
             {
                 float k0 = i / (float)sub, k1 = (i + 1) / (float)sub;
                 Vector3 bend = RandUnit(r) * (level == 0 ? 0.12f : 0.28f);
-                Vector3 tend = level == 0 ? Vector3.up * 0.15f : (new Vector3(d.x, 0f, d.z).normalized * 0.12f + Vector3.down * 0.05f * level * k1);
+                // ствол и первые ветви тянутся вверх, к концам ветви ложатся почти горизонтально и чуть свисают
+                Vector3 tend = level == 0 ? Vector3.up * 0.15f : (level <= 2 ? Vector3.up * 0.08f + new Vector3(d.x, 0f, d.z).normalized * 0.06f : new Vector3(d.x, 0f, d.z).normalized * 0.1f + Vector3.down * 0.03f * level * k1);
                 d = (d + bend + tend).normalized;
                 Vector3 nxt = cur + d * (len / sub);
                 float r0 = Mathf.Lerp(rad, radEnd, k0), r1 = Mathf.Lerp(rad, radEnd, k1);
@@ -119,10 +120,10 @@ namespace BladePath.EditorTools
             for (int c = 0; c < kids; c++)
             {
                 float az = az0 + 360f / kids * c + R(r, -25f, 25f);
-                float spread = level == 0 ? R(r, 42f, 62f) : R(r, 22f, 42f);
+                float spread = level == 0 ? R(r, 30f, 48f) : R(r, 22f, 40f);
                 Vector3 axis = Vector3.Cross(d, Quaternion.AngleAxis(az, d) * Perp(d)).normalized;
                 Vector3 cd = Quaternion.AngleAxis(spread, axis) * d;
-                Child(m, tips, r, cur, cd, len * (level == 0 ? 0.95f : 0.7f) * R(r, 0.85f, 1.1f), radEnd * (level == 0 ? 0.68f : 0.72f), level + 1, s, v);
+                Child(m, tips, r, cur, cd, len * (level == 0 ? 0.62f : 0.66f) * R(r, 0.85f, 1.1f), radEnd * (level == 0 ? 0.68f : 0.72f), level + 1, s, v);
             }
         }
 

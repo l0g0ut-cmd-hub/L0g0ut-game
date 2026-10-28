@@ -12,7 +12,7 @@ namespace BladePath
         [Range(0f, 1f)] public float rainChance = 0.45f;
         public bool Raining { get; private set; }
 
-        ParticleSystem rain, splash;
+        ParticleSystem rain, splash, ripples;
         AudioSource rainAudio, thunderAudio;
         AudioClip thunder;
         Light moon;
@@ -48,7 +48,7 @@ namespace BladePath
         {
             if (rain == null) Build();
             var re = rain.emission; re.rateOverTime = DuelManager.Gfx == 1 ? 700f : 300f;
-            rain.Play(); splash.Play();
+            rain.Play(); splash.Play(); if (ripples != null) ripples.Play();
             if (rainAudio != null && !rainAudio.isPlaying) rainAudio.Play();
             RenderSettings.fogDensity = 0.065f;
             Wet(true);
@@ -58,13 +58,14 @@ namespace BladePath
         void StopRain()
         {
             if (rain != null) { rain.Stop(); splash.Stop(); }
+            if (ripples != null) ripples.Stop();
             if (rainAudio != null) rainAudio.Stop();
             RenderSettings.fogDensity = 0.05f;
             Wet(false);
             RenderSettings.fogColor = fogBase;
         }
 
-        Material floorMat; float floorGloss;
+        Material floorMat; float floorGloss, floorGlossMap = -1f;
         /// <summary>Мокрый камень арены: гладкость растёт, появляются блики от огня и молний.</summary>
         void Wet(bool on)
         {
@@ -79,6 +80,12 @@ namespace BladePath
             }
             if (floorMat.HasProperty("_Glossiness")) floorMat.SetFloat("_Glossiness", on ? 0.82f : floorGloss);
             floorMat.color = on ? new Color(0.72f, 0.74f, 0.8f) : Color.white;
+            // пол с картой гладкости (мостовая): блеск задаёт масштаб карты, а не _Glossiness
+            if (floorMat.IsKeywordEnabled("_METALLICGLOSSMAP") && floorMat.HasProperty("_GlossMapScale"))
+            {
+                if (floorGlossMap < 0f) floorGlossMap = floorMat.GetFloat("_GlossMapScale");
+                floorMat.SetFloat("_GlossMapScale", on ? 1f : floorGlossMap);
+            }
         }
 
         void Build()
@@ -120,6 +127,31 @@ namespace BladePath
             var ss = splash.shape; ss.shapeType = ParticleSystemShapeType.Box; ss.scale = new Vector3(10f, 7f, 0.01f);
             var sr = s.GetComponent<ParticleSystemRenderer>(); sr.material = m;
             sr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+            // круги от капель на мокрых плитах: кольца лежат на земле, расходятся и тают
+            GameObject rp = new GameObject("RainRipples");
+            rp.transform.position = new Vector3(0f, 0.012f, 0f);
+            rp.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            ripples = rp.AddComponent<ParticleSystem>();
+            ripples.Stop();
+            var rm = ripples.main;
+            rm.loop = true; rm.startLifetime = new ParticleSystem.MinMaxCurve(0.35f, 0.6f); rm.startSpeed = 0f;
+            rm.startSize = new ParticleSystem.MinMaxCurve(0.12f, 0.26f);
+            rm.startColor = new Color(0.75f, 0.8f, 0.9f, 0.32f);
+            rm.maxParticles = 160; rm.simulationSpace = ParticleSystemSimulationSpace.World;
+            var re = ripples.emission; re.rateOverTime = 95f;
+            var rs = ripples.shape; rs.shapeType = ParticleSystemShapeType.Box; rs.scale = new Vector3(7f, 5.2f, 0.01f);
+            var rsz = ripples.sizeOverLifetime; rsz.enabled = true;
+            rsz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.1f, 0f, 2.5f), new Keyframe(1f, 1f, 0f, 0f)));
+            var rc = ripples.colorOverLifetime; rc.enabled = true;
+            Gradient rg = new Gradient();
+            rg.SetKeys(new GradientColorKey[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                       new GradientAlphaKey[] { new GradientAlphaKey(0.9f, 0f), new GradientAlphaKey(0.5f, 0.4f), new GradientAlphaKey(0f, 1f) });
+            rc.color = rg;
+            var rr = rp.GetComponent<ParticleSystemRenderer>();
+            Material rmat = new Material(sh); rmat.mainTexture = SoftSprites.Ring;
+            rr.material = rmat; rr.renderMode = ParticleSystemRenderMode.HorizontalBillboard;
+            rr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; rr.receiveShadows = false;
 
             rainAudio = gameObject.AddComponent<AudioSource>();
             rainAudio.clip = RainClip(); rainAudio.loop = true; rainAudio.volume = 0.35f; rainAudio.spatialBlend = 0f;

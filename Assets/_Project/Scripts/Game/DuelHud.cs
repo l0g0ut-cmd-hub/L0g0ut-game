@@ -372,6 +372,9 @@ namespace BladePath
             if (broken) { k = 1f; col = new Color(1f, 0.1f, 0.06f, 0.6f + 0.4f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * 10f))); }
             float fw = w * k;
             UiKit.Rect(new Rect(c.x - fw * 0.5f, r.y, fw, h), col);
+            // удар по равновесию — полоса на миг вспыхивает
+            float ph = f.SincePostureHit;
+            if (ph < 0.18f && !broken) UiKit.Rect(new Rect(c.x - fw * 0.5f, r.y, fw, h), new Color(1f, 1f, 0.9f, 0.7f * (1f - ph / 0.18f)));
             if (k > 0.75f || broken) UiKit.Rect(new Rect(c.x - fw * 0.5f, r.y - 1f, fw, 1.5f), new Color(1f, 1f, 0.8f, 0.6f));
             if (broken)
             {
