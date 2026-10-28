@@ -128,6 +128,36 @@ namespace BladePath
             DrawKi(new Rect(cx - 80f - barW * 0.55f, 88f, barW * 0.55f, 6f), duel.player, false);
             DrawKi(new Rect(cx + 80f, 88f, barW * 0.55f, 6f), duel.enemy, true);
 
+            // равновесие (как в Sekiro): у врага — над головой, у игрока — внизу по центру; полоса растёт от середины к краям
+            if (cam != null && duel.State == DuelState.Fighting)
+            {
+                Vector3 ehp = duel.enemy.transform.position + Vector3.up * 2.05f;
+                Vector3 esp = cam.WorldToScreenPoint(ehp);
+                if (esp.z > 0f) DrawPosture(new Vector2(esp.x / UiKit.Scale, (Screen.height - esp.y) / UiKit.Scale), 130f, duel.enemy);
+                DrawPosture(new Vector2(cx, 470f), 230f, duel.player);
+            }
+
+            // 危 над тем, кто начал опасную атаку; 斬 на месте добивания
+            if (cam != null)
+            {
+                foreach (System.Collections.Generic.KeyValuePair<FighterController, float> kv in duel.PerilAt)
+                {
+                    float age = Time.unscaledTime - kv.Value;
+                    if (kv.Key == null || age > 0.9f) continue;
+                    Vector3 g = cam.WorldToScreenPoint(kv.Key.transform.position + Vector3.up * 2.25f);
+                    if (g.z < 0f) continue;
+                    float a = Mathf.Clamp01(age / 0.06f) * Mathf.Clamp01((0.9f - age) / 0.25f);
+                    float sz = 74f * (1f + 0.35f * Mathf.Max(0f, 0.15f - age) / 0.15f);
+                    DrawGlyph("UI/kiken", new Vector2(g.x / UiKit.Scale, (Screen.height - g.y) / UiKit.Scale), sz, a);
+                }
+                float da = Time.unscaledTime - duel.DeathblowAt;
+                if (da < 1.4f)
+                {
+                    Vector3 g = cam.WorldToScreenPoint(duel.DeathblowPos);
+                    if (g.z > 0f) DrawGlyph("UI/zan", new Vector2(g.x / UiKit.Scale, (Screen.height - g.y) / UiKit.Scale - 30f), 150f * (1f + 0.6f * Mathf.Max(0f, 0.2f - da)), Mathf.Clamp01((1.4f - da) / 0.5f));
+                }
+            }
+
             // таймер раунда
             Vector2 tc = new Vector2(cx, 28f);
             UiKit.Disc(tc, 30f, Frame);
@@ -316,6 +346,41 @@ namespace BladePath
                 }
             t.SetPixels(px); t.Apply();
             return t;
+        }
+
+        static void DrawGlyph(string tex, Vector2 c, float size, float alpha)
+        {
+            Texture2D t = UiKit.Tex(tex);
+            if (t == null || alpha <= 0.01f) return;
+            Color o = GUI.color; GUI.color = new Color(1f, 1f, 1f, alpha);
+            GUI.DrawTexture(new Rect(c.x - size * 0.5f, c.y - size * 0.5f, size, size), t);
+            GUI.color = o;
+        }
+
+        void DrawPosture(Vector2 c, float w, FighterController f)
+        {
+            float k = f.Posture01;
+            bool broken = f.PostureBroken;
+            if (k < 0.01f && !broken) return;
+            float h = 7f;
+            Rect r = new Rect(c.x - w * 0.5f, c.y - h * 0.5f, w, h);
+            UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), new Color(0f, 0f, 0f, 0.65f));
+            UiKit.Rect(new Rect(c.x - 1f, r.y - 4f, 2f, h + 8f), new Color(1f, 0.85f, 0.4f, 0.5f));   // засечка середины
+            Color col = Color.Lerp(new Color(1f, 0.82f, 0.25f), new Color(1f, 0.45f, 0.1f), Mathf.InverseLerp(0.4f, 0.75f, k));
+            col = Color.Lerp(col, new Color(1f, 0.12f, 0.08f), Mathf.InverseLerp(0.75f, 1f, k));
+            if (broken) { k = 1f; col = new Color(1f, 0.1f, 0.06f, 0.6f + 0.4f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * 10f))); }
+            float fw = w * k;
+            UiKit.Rect(new Rect(c.x - fw * 0.5f, r.y, fw, h), col);
+            if (k > 0.75f || broken) UiKit.Rect(new Rect(c.x - fw * 0.5f, r.y - 1f, fw, 1.5f), new Color(1f, 1f, 0.8f, 0.6f));
+            if (broken)
+            {
+                // знак добивания: красная точка, как в Sekiro
+                Vector2 m = new Vector2(c.x, r.y - 22f);
+                float pul = 1f + 0.18f * Mathf.Sin(Time.unscaledTime * 9f);
+                UiKit.Disc(m, 13f * pul, new Color(0.9f, 0.05f, 0.04f, 0.35f));
+                UiKit.Disc(m, 8f * pul, new Color(1f, 0.12f, 0.08f, 0.95f));
+                UiKit.Ring(m, 11f * pul, new Color(1f, 0.6f, 0.5f, 0.8f), true);
+            }
         }
 
         void DrawKi(Rect r, FighterController f, bool mirror)

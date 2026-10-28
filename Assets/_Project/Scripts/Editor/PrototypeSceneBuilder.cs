@@ -86,6 +86,18 @@ namespace BladePath.EditorTools
             c.fieldOfView = 32f;
             cam.transform.position = new Vector3(0f, 1.15f, -5.2f);
             cam.transform.rotation = Quaternion.identity; // смотрит вдоль +Z
+            // пост-обработка: свечение огня/фонарей/искр и цветокоррекция (материал — ассет, чтобы скрытый шейдер попал в сборку)
+            Shader ps = Shader.Find("Hidden/BladePath/PostFX");
+            if (ps != null)
+            {
+                if (!AssetDatabase.IsValidFolder("Assets/_Project/Materials")) AssetDatabase.CreateFolder("Assets/_Project", "Materials");
+                const string mp = "Assets/_Project/Materials/PostFX.mat";
+                Material m = AssetDatabase.LoadAssetAtPath<Material>(mp);
+                if (m == null) { m = new Material(ps); AssetDatabase.CreateAsset(m, mp); }
+                else m.shader = ps;
+                cam.AddComponent<BladePath.PostFX>().material = m;
+            }
+            else Debug.LogWarning("PrototypeSceneBuilder: нет шейдера Hidden/BladePath/PostFX — без пост-обработки");
         }
 
         static void BuildArena()

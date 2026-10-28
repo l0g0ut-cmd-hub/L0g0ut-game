@@ -235,7 +235,7 @@ namespace BladePath
             if (player != null) { player.ResetFighter(); hp[player] = maxHp; hpTrail[player] = maxHp; lastSwing[player] = -1; }
             if (enemy != null) { enemy.ResetFighter(); hp[enemy] = MaxHp(enemy); hpTrail[enemy] = MaxHp(enemy); lastSwing[enemy] = -1; }
             Popups.Clear();
-            combo.Clear(); comboTime.Clear(); counterUntil.Clear();
+            combo.Clear(); comboTime.Clear(); counterUntil.Clear(); PerilAt.Clear(); perilSwing.Clear(); jumpedSweep.Clear(); DeathblowAt = -10f;
             Enraged = false;
             ApplyStage();   // скорость врага к базовой ступени (сброс ярости)
             SuperBy = null;
@@ -293,8 +293,17 @@ namespace BladePath
                 if (Juice.Instance != null) Juice.Instance.Taiko(1f, 1.1f);
                 Haptics.Pulse(40);
             }
+            if (!postureHooked && player != null && enemy != null)
+            {
+                player.PostureBreak += OnPostureBreak; enemy.PostureBreak += OnPostureBreak;
+                player.Dashed += OnDashed; enemy.Dashed += OnDashed;
+                postureHooked = true;
+            }
+            WatchPeril(player); WatchPeril(enemy);
             if (State == DuelState.Fighting && !Paused)
             {
+                // равновесие восстанавливается, когда по бойцу не бьют: медленнее при низком здоровье, быстрее в блоке
+                RegenPosture(player); RegenPosture(enemy);
                 if (!SuperActive) TimeLeft = Mathf.Max(0f, TimeLeft - Time.deltaTime);
                 if (TimeLeft <= 0f) TimeUp();
                 if (!tenSecShown && TimeLeft <= 10f) { tenSecShown = true; Announce("10 СЕКУНД!", new Color(1f, 0.4f, 0.25f)); }
@@ -493,6 +502,89 @@ namespace BladePath
             return 15f;
         }
 
+        /// <summary>Урон по равновесию от удара, принятого в блок (отражённый удар бьёт по равновесию атакующего).</summary>
+        static float PostureDamage(AttackType t)
+        {
+            switch (t)
+            {
+                case AttackType.Overhead: return 30f;
+                case AttackType.JumpStrike: return 36f;
+                case AttackType.Thrust: return 26f;
+                case AttackType.Rising: return 24f;
+                case AttackType.LegSweep: return 20f;
+                case AttackType.Energy: return 18f;
+                default: return 22f;
+            }
+        }
+
+        bool postureHooked;
+        /// <summary>Добивание (для HUD: знак 斬 на месте удара).</summary>
+        public float DeathblowAt { get; private set; } = -10f;
+        public Vector3 DeathblowPos { get; private set; }
+        /// <summary>Опасная атака (危): когда показан знак над атакующим (для HUD).</summary>
+        public readonly Dictionary<FighterController, float> PerilAt = new Dictionary<FighterController, float>();
+        readonly Dictionary<FighterController, int> perilSwing = new Dictionary<FighterController, int>();
+        readonly Dictionary<FighterController, int> jumpedSweep = new Dictionary<FighterController, int>();
+        static int perilTips;
+
+        void WatchPeril(FighterController f)
+        {
+            if (f == null || f.weapon == null || !f.weapon.Perilous) return;
+            int last;
+            if (perilSwing.TryGetValue(f, out last) && last == f.weapon.SwingId) return;
+            perilSwing[f] = f.weapon.SwingId;
+            PerilAt[f] = Time.unscaledTime;
+            if (Juice.Instance != null) Juice.Instance.Danger();
+            if (f == enemy && perilTips < 2 && PlayerPrefs.GetInt("peril_tip", 0) < 3)
+            {
+                perilTips++; PlayerPrefs.SetInt("peril_tip", PlayerPrefs.GetInt("peril_tip", 0) + 1);
+                Announce(f.weapon.CurrentProfile != null && f.weapon.CurrentProfile.type == AttackType.LegSweep ? "ОПАСНО: ПОДСЕЧКА — ПРЫГАЙ!" : "ОПАСНО: ВЫПАД — РЫВОК НАВСТРЕЧУ!", new Color(1f, 0.25f, 0.15f));
+            }
+        }
+
+        /// <summary>Микири: рывок навстречу опасному выпаду — клинок противника прижат к земле, он открыт и теряет равновесие.</summary>
+        void OnDashed(FighterController f, Vector3 dir)
+        {
+            if (State != DuelState.Fighting) return;
+            FighterController o = f == player ? enemy : player;
+            if (o == null || o.weapon == null || !o.weapon.Perilous || o.weapon.CurrentProfile == null || o.weapon.CurrentProfile.type != AttackType.Thrust) return;
+            SwingPhase ph = o.weapon.Phase;
+            bool window = (ph == SwingPhase.Windup && o.weapon.PhaseProgress > 0.35f) || ph == SwingPhase.Strike;
+            Vector3 to = o.transform.position - f.transform.position; to.y = 0f;
+            if (!window || to.magnitude > 2.6f || Vector3.Dot(dir.normalized, to.normalized) < 0.35f) return;
+            f.StopDash();
+            o.weapon.ResetState();
+            o.Stun(1.3f);
+            o.AddPosture(45f);
+            f.AddKi(15f);
+            Popup mp = new Popup();
+            mp.world = o.transform.position + Vector3.up * 1.6f; mp.text = "МИКИРИ!"; mp.color = new Color(0.5f, 0.95f, 1f);
+            mp.born = Time.unscaledTime; mp.size = 32f;
+            Popups.Add(mp);
+            if (Juice.Instance != null) Juice.Instance.Clash(o.transform.position + Vector3.up * 0.25f + o.transform.forward * 0.4f);
+            if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.06f);
+            Haptics.Pulse(60);
+            hitStopUntil = Time.unscaledTime + 0.12f;
+            Slowmo = true; slowUntil = Time.unscaledTime + 0.5f;
+            counterUntil[f] = Time.unscaledTime + 1.0f;
+        }
+        void RegenPosture(FighterController f)
+        {
+            if (f != null && f.SincePostureHit > 1.0f)
+                f.RecoverPosture(Time.deltaTime * 14f * (0.35f + 0.65f * Hp01(f)) * (f.Blocking ? 1.6f : 1f));
+        }
+        void OnPostureBreak(FighterController f)
+        {
+            if (State != DuelState.Fighting) return;
+            bool isPlayer = f == player;
+            Announce(isPlayer ? "РАВНОВЕСИЕ СЛОМЛЕНО!" : "РАВНОВЕСИЕ СЛОМЛЕНО — ДОБЕЙ!", isPlayer ? new Color(1f, 0.45f, 0.2f) : new Color(1f, 0.2f, 0.12f));
+            if (Juice.Instance != null) Juice.Instance.Clash(f.transform.position + Vector3.up * 1.2f + f.transform.forward * 0.3f);
+            if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.07f);
+            Haptics.Pulse(isPlayer ? 80 : 50);
+            hitStopUntil = Time.unscaledTime + 0.1f;
+            Slowmo = true; slowUntil = Time.unscaledTime + 0.45f;
+        }
+
         static float ZoneMul(BodyZoneId z)
         {
             switch (z)
@@ -512,9 +604,35 @@ namespace BladePath
             int id = r.contact.swingId;
             int last;
             if (lastSwing.TryGetValue(r.attacker, out last) && last == id) return;   // один удар — одно попадание
-            lastSwing[r.attacker] = id;
 
             AttackType type = r.attacker.weapon != null && r.attacker.weapon.CurrentProfile != null ? r.attacker.weapon.CurrentProfile.type : AttackType.Overhead;
+            // подсечку перепрыгивают: пока цель в воздухе, клинок проходит под ногами (удар ещё может попасть, если она приземлится)
+            if (type == AttackType.LegSweep && !r.target.Grounded && r.target.transform.position.y > 0.12f)
+            {
+                int j;
+                if (!jumpedSweep.TryGetValue(r.target, out j) || j != id)
+                {
+                    jumpedSweep[r.target] = id;
+                    bool pr = r.attacker.weapon != null && r.attacker.weapon.Perilous;
+                    Popup jp = new Popup();
+                    jp.world = r.target.transform.position + Vector3.up * 1.9f; jp.text = pr ? "ПЕРЕПРЫГНУЛ!" : "МИМО"; jp.color = new Color(0.5f, 0.95f, 1f);
+                    jp.born = Time.unscaledTime; jp.size = pr ? 28f : 20f;
+                    Popups.Add(jp);
+                    if (pr) { r.attacker.AddPosture(25f); r.target.AddKi(10f); }
+                }
+                return;
+            }
+            lastSwing[r.attacker] = id;
+
+            // добивание: удар по сломленному равновесию смертелен (как deathblow в Sekiro)
+            if (r.target.PostureBroken)
+            {
+                lastHitHead = r.zone == BodyZoneId.Head;
+                Announce("СМЕРТЕЛЬНЫЙ УДАР", new Color(0.95f, 0.08f, 0.06f));
+                DeathblowAt = Time.unscaledTime; DeathblowPos = r.contact.point;
+                ApplyDamage(r.target, r.attacker, Mathf.Max(1f, Hp(r.target)), r.contact.point, true, false, r.contact.normal, r.contact.bladeVelocity, r.contact.zone != null ? r.contact.zone.transform : null);
+                return;
+            }
             float dmg = BaseDamage(type) * ZoneMul(r.zone) * (r.glancing ? 0.5f : 1f) * (r.attacker == enemy ? Ladder.Current.dmgMul * Records.Assist : 1f);
             bool iai = r.attacker.SinceDash < 0.6f;   // удар прямо из рывка
             if (iai) dmg *= 1.25f;
@@ -526,7 +644,17 @@ namespace BladePath
                 ip.born = Time.unscaledTime; ip.size = 26f;
                 Popups.Add(ip);
             }
-            if (r.target.Blocking)
+            bool perilous = r.attacker.weapon != null && r.attacker.weapon.Perilous;
+            if (r.target.Blocking && perilous)
+            {
+                // опасную атаку блок не держит
+                Popup ub = new Popup();
+                ub.world = r.contact.point + Vector3.up * 0.3f; ub.text = "БЛОК ПРОБИТ"; ub.color = new Color(1f, 0.35f, 0.2f);
+                ub.born = Time.unscaledTime; ub.size = 24f;
+                Popups.Add(ub);
+                r.target.AddPosture(20f);
+            }
+            if (r.target.Blocking && !perilous)
             {
                 bool parry = r.target.BlockTime < 0.25f;
                 r.target.AddKi(parry ? 20f : 6f);
@@ -540,8 +668,16 @@ namespace BladePath
                 bp.color = parry ? new Color(0.4f, 0.9f, 1f) : new Color(0.75f, 0.85f, 1f);
                 bp.born = Time.unscaledTime; bp.size = parry ? 30f : 24f;
                 Popups.Add(bp);
-                if (Juice.Instance != null) Juice.Instance.OnHit(r.contact.point, r.contact.normal, r.contact.bladeVelocity, 0.5f, true, false, null);
+                if (Juice.Instance != null)
+                {
+                    if (parry) Juice.Instance.Parry(r.contact.point, r.contact.normal);
+                    else Juice.Instance.OnHit(r.contact.point, r.contact.normal, r.contact.bladeVelocity, 0.5f, true, false, null);
+                }
                 if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(parry ? 0.05f : 0.025f);
+                // равновесие: блок копит урон защитнику, отражение (парирование) — атакующему
+                if (parry) { r.target.AddPosture(4f); r.attacker.AddPosture(PostureDamage(type) * 0.9f); }
+                else r.target.AddPosture(PostureDamage(type));
+                if (r.target.PostureBroken) return;
                 if (parry)
                 {
                     if (r.attacker.weapon != null) r.attacker.weapon.ResetState();
@@ -555,6 +691,7 @@ namespace BladePath
             }
             lastHitHead = r.zone == BodyZoneId.Head;
             ApplyDamage(r.target, r.attacker, dmg, r.contact.point, r.zone == BodyZoneId.Head, false, r.contact.normal, r.contact.bladeVelocity, r.contact.zone != null ? r.contact.zone.transform : null);
+            if (!r.target.Dead) r.target.AddPosture(dmg * 0.6f);   // пропущенный удар тоже сбивает равновесие
         }
 
         /// <summary>Время раунда вышло: побеждает тот, у кого больше здоровья; при равенстве — переигровка.</summary>

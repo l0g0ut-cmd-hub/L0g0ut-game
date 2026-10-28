@@ -195,7 +195,7 @@ namespace BladePath.EditorTools
             try
             {
                 Vector3 wdir = ft.TransformDirection(dirLocal);
-                List<Vector3> L = new List<Vector3>(), R = new List<Vector3>(); List<float> H = new List<float>();
+                List<Vector3> L = new List<Vector3>(), R = new List<Vector3>(), SL = new List<Vector3>(), SR = new List<Vector3>(); List<float> H = new List<float>();
                 int frames = 90, stopAt = 70;
                 string st = "";
                 for (int i = 0; i < frames; i++)
@@ -208,6 +208,7 @@ namespace BladePath.EditorTools
                     anim.Update(dt);
                     Call(d, "LateUpdate");
                     L.Add(fl.position); R.Add(fr.position); H.Add(hp.position.y - ft.position.y);
+                    SL.Add(d.SoleL != Vector3.zero ? d.SoleL : fl.position); SR.Add(d.SoleR != Vector3.zero ? d.SoleR : fr.position);
                     if (i == stopAt - 1)
                     {
                         AnimatorStateInfo si = anim.GetCurrentAnimatorStateInfo(0);
@@ -229,6 +230,18 @@ namespace BladePath.EditorTools
                         slideSum += v; slideN++; slideMax = Mathf.Max(slideMax, v);
                     }
                 }
+                // по подошве: точка опоры на земле (пятка/подушечка) — настоящее скольжение, без переката голеностопа
+                float sSum = 0f, sMax = 0f, sMin = float.MaxValue; int sN = 0;
+                for (int i = 25; i < stopAt; i++)
+                    for (int s = 0; s < 2; s++)
+                    {
+                        Vector3 a = s == 0 ? SL[i - 1] : SR[i - 1], b = s == 0 ? SL[i] : SR[i];
+                        sMin = Mathf.Min(sMin, b.y - ft.position.y);
+                        if (Mathf.Max(a.y, b.y) - ft.position.y > 0.015f) continue;
+                        Vector3 dv = b - a; dv.y = 0f; float v = dv.magnitude / dt;
+                        sSum += v; sN++; sMax = Mathf.Max(sMax, v);
+                    }
+                sb.AppendFormat("PROBE|{0}|sole_{1}|slide mean {2:F2} max {3:F2} m/s (n {4})|soleMinY {5:F3}\n", f.name, label, sN > 0 ? sSum / sN : 0f, sMax, sN, sMin);
                 Vector3 hl = ft.InverseTransformPoint(hp.position);
                 sb.AppendFormat("PROBE|{0}|walk_{1}|v {2:F2}|slide mean {3:F2} max {4:F2} m/s (n {5})|footMinY walk {6:F3} all {7:F3}|hips {8:F3}..{9:F3} end {10:F2} {11:F2} {12:F2}|{13}\n",
                     f.name, label, speed, slideN > 0 ? slideSum / slideN : 0f, slideMax, slideN, minY, minAll, hMin, hMax, hl.x, hl.y, hl.z, st);

@@ -13,7 +13,7 @@ namespace BladePath
 
         AudioSource[] voices;
         int voiceIdx;
-        AudioClip swish, hit, hitHeavy, clang, boom, drum, heart, whoosh, step, growl, stepWet;
+        AudioClip swish, hit, hitHeavy, clang, boom, drum, heart, whoosh, step, growl, stepWet, danger;
         AudioSource stepVoice;
         ParticleSystem footFx;
         ParticleSystem petals;
@@ -39,7 +39,7 @@ namespace BladePath
             voices = new AudioSource[6];
             for (int i = 0; i < voices.Length; i++) { voices[i] = gameObject.AddComponent<AudioSource>(); voices[i].spatialBlend = 0f; voices[i].playOnAwake = false; }
             swish = Swish(); hit = Thump(0.22f, 140f, 55f, 0.55f); hitHeavy = Thump(0.34f, 100f, 38f, 0.9f); clang = Clang(); boom = Thump(1.0f, 70f, 28f, 0.8f);
-            drum = Drum(); heart = Heart(); whoosh = Swish(); step = Step(); growl = Growl(); stepWet = StepWet();
+            drum = Drum(); heart = Heart(); whoosh = Swish(); step = Step(); growl = Growl(); stepWet = StepWet(); danger = Danger_();
             stepVoice = gameObject.AddComponent<AudioSource>(); stepVoice.spatialBlend = 0f; stepVoice.playOnAwake = false;   // шаги не отнимают голоса у ударов
             ambient = gameObject.AddComponent<AudioSource>();
             ambient.clip = Wind(); ambient.loop = true; ambient.volume = 0.22f; ambient.spatialBlend = 0f; ambient.Play();
@@ -255,6 +255,8 @@ namespace BladePath
         }
         /// <summary>Стук сердца на низком здоровье.</summary>
         public void Heartbeat() { Play(heart, 0.7f, 1f); }
+        /// <summary>Опасная атака (危): низкий удар гонга с металлическим призвуком.</summary>
+        public void Danger() { Play(danger, 0.9f, 1f); }
         /// <summary>Рывок.</summary>
         public void DashSound() { Play(whoosh, 0.45f, 0.6f); }
 
@@ -268,7 +270,7 @@ namespace BladePath
         /// <summary>Попадание. dir — направление удара (скорость клинка), strength ~0.4…2 (урон/крит/убийство).</summary>
         public void OnHit(Vector3 point, Vector3 normal, Vector3 dir, float strength, bool blocked, bool kill, Transform bleedAt)
         {
-            if (blocked) { Play(clang, 0.8f, Random.Range(0.9f, 1.2f)); Sparks(point, normal, 16); return; }
+            if (blocked) { Play(clang, 0.8f, Random.Range(0.9f, 1.2f)); Sparks(point, normal, 22, 0.8f); Flash(point, 0.35f, new Color(1f, 0.82f, 0.5f), 0.08f, false); return; }
             Play(strength > 1f ? hitHeavy : hit, 0.95f, Random.Range(0.92f, 1.08f));
             SlashFlash(point, dir, strength);
             Blood(point, normal, dir, strength, kill);
@@ -651,15 +653,86 @@ namespace BladePath
                 if (e.owner == by) { trs = e.GetComponents<TrailRenderer>(); foreach (TrailRenderer tr in trs) tr.Clear(); }
         }
 
-        /// <summary>Клинки столкнулись: сноп искр во все стороны и звонкий лязг.</summary>
+        /// <summary>Клинки столкнулись: вспышка с бликом, сноп раскалённых искр (отскакивают от земли) и звонкий лязг.</summary>
         public void Clash(Vector3 pos)
         {
             Play(clang, 1f, Random.Range(0.75f, 0.9f));
-            Sparks(pos, Vector3.up, 28);
-            Sparks(pos, Random.onUnitSphere, 18);
+            Sparks(pos, Vector3.up, 34, 1.1f);
+            Sparks(pos, Random.onUnitSphere, 22, 1f);
+            Flash(pos, 0.7f, new Color(1f, 0.85f, 0.55f), 0.11f, true);
         }
 
-        void Sparks(Vector3 pos, Vector3 normal, int count)
+        /// <summary>Отражение (парирование): самая яркая вспышка в игре — блик, кольцо волны, веер искр от клинка.</summary>
+        public void Parry(Vector3 pos, Vector3 normal)
+        {
+            Play(clang, 1f, Random.Range(1.05f, 1.2f));
+            Play(clang, 0.6f, Random.Range(1.6f, 1.75f));   // высокий призвук «дзинь»
+            Sparks(pos, normal.sqrMagnitude > 1e-4f ? normal : Vector3.up, 46, 1.35f);
+            Sparks(pos, Vector3.up, 20, 0.9f);
+            Flash(pos, 1.05f, new Color(0.85f, 0.95f, 1f), 0.14f, true);
+            Shockwave(pos, 1.3f, new Color(0.6f, 0.85f, 1f, 0.8f), 0.22f);
+        }
+
+        Material addMat, starMat, ringMat;
+        Transform sparkFloor;
+
+        Material Additive(ref Material m, Texture2D tex)
+        {
+            if (m != null) return m;
+            Shader a = Shader.Find("Legacy Shaders/Particles/Additive");
+            if (a == null) return softMat;
+            m = new Material(a); m.mainTexture = tex;
+            m.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0.5f));
+            return m;
+        }
+
+        // одна частица-вспышка (ядро) и, если glint, крестовой блик поверх: короткие, аддитивные — их подхватывает bloom
+        void Flash(Vector3 pos, float size, Color c, float life, bool glint)
+        {
+            Burst1(pos, size, c, life, Additive(ref addMat, SoftSprites.Disc), Random.Range(0f, 360f));
+            if (glint) Burst1(pos, size * 1.8f, Color.Lerp(c, Color.white, 0.5f), life * 1.3f, Additive(ref starMat, SoftSprites.Star), Random.Range(-12f, 12f));
+        }
+
+        void Shockwave(Vector3 pos, float size, Color c, float life)
+        {
+            Burst1(pos, size, c, life, Additive(ref ringMat, SoftSprites.Ring), 0f, true);
+        }
+
+        void Burst1(Vector3 pos, float size, Color c, float life, Material m, float rotDeg, bool grow = false)
+        {
+            if (m == null) return;
+            GameObject g = new GameObject("Flash");
+            g.transform.position = pos;
+            ParticleSystem ps = g.AddComponent<ParticleSystem>();
+            ps.Stop();
+            var main = ps.main;
+            main.loop = false; main.duration = 0.05f;
+            main.startLifetime = life; main.startSpeed = 0f; main.startSize = size;
+            main.startRotation = rotDeg * Mathf.Deg2Rad;
+            main.startColor = c;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.stopAction = ParticleSystemStopAction.Destroy;
+            main.useUnscaledTime = true;   // вспышка не застывает в хит-стопе
+            var em = ps.emission; em.rateOverTime = 0f;
+            em.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, (short)1) });
+            var sh = ps.shape; sh.enabled = false;
+            var sz = ps.sizeOverLifetime; sz.enabled = true;
+            sz.size = grow ? new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.15f, 0f, 4f), new Keyframe(1f, 1f, 0f, 0f)))
+                           : new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.55f, 0f, 5f), new Keyframe(0.25f, 1f), new Keyframe(1f, 0.75f)));
+            var col = ps.colorOverLifetime; col.enabled = true;
+            Gradient gr = new Gradient();
+            gr.SetKeys(new GradientColorKey[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                       new GradientAlphaKey[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0.85f, 0.3f), new GradientAlphaKey(0f, 1f) });
+            col.color = gr;
+            ParticleSystemRenderer r = g.GetComponent<ParticleSystemRenderer>();
+            r.material = m; r.renderMode = ParticleSystemRenderMode.Billboard;
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; r.receiveShadows = false;
+            r.sortingFudge = -10f;   // поверх искр и крови
+            ps.Play();
+        }
+
+        // искры: раскалённые (белое → оранжевое → тёмно-красное), тают и тормозят в воздухе, отскакивают от земли
+        void Sparks(Vector3 pos, Vector3 normal, int count, float power = 1f)
         {
             if (softMat == null) return;
             GameObject g = new GameObject("Sparks");
@@ -669,18 +742,33 @@ namespace BladePath
             ps.Stop();
             var main = ps.main;
             main.loop = false; main.duration = 0.1f;
-            main.startLifetime = new ParticleSystem.MinMaxCurve(0.2f, 0.45f);
-            main.startSpeed = new ParticleSystem.MinMaxCurve(1.5f, 5f);
-            main.startSize = new ParticleSystem.MinMaxCurve(0.02f, 0.04f);
-            main.startColor = new Color(1f, 0.85f, 0.45f);
-            main.gravityModifier = 1.2f;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.18f, 0.6f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(2f * power, 8.5f * power);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.010f, 0.026f);
+            main.startColor = Color.white;
+            main.gravityModifier = 1.5f;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             main.stopAction = ParticleSystemStopAction.Destroy;
+            main.maxParticles = 200;
             var em = ps.emission; em.rateOverTime = 0f;
             em.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, (short)count) });
-            var sp = ps.shape; sp.shapeType = ParticleSystemShapeType.Cone; sp.angle = 50f; sp.radius = 0.02f;
+            var sp = ps.shape; sp.shapeType = ParticleSystemShapeType.Cone; sp.angle = 55f; sp.radius = 0.02f;
+            var lv = ps.limitVelocityOverLifetime; lv.enabled = true; lv.drag = 2.2f; lv.multiplyDragByParticleSize = false; lv.multiplyDragByParticleVelocity = true;
+            var col = ps.colorOverLifetime; col.enabled = true;
+            Gradient gr = new Gradient();
+            gr.SetKeys(new GradientColorKey[] { new GradientColorKey(new Color(1f, 1f, 0.92f), 0f), new GradientColorKey(new Color(1f, 0.72f, 0.28f), 0.25f), new GradientColorKey(new Color(0.95f, 0.32f, 0.06f), 0.7f), new GradientColorKey(new Color(0.5f, 0.08f, 0.02f), 1f) },
+                       new GradientAlphaKey[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 0.6f), new GradientAlphaKey(0f, 1f) });
+            col.color = gr;
+            var sz = ps.sizeOverLifetime; sz.enabled = true;
+            sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(1f, 0.35f)));
+            // земля — плоскость коллизий (без физики мешей): искры скачут по камню
+            if (sparkFloor == null) { GameObject fl = new GameObject("SparkFloor"); fl.transform.position = new Vector3(0f, 0.01f, 0f); sparkFloor = fl.transform; }
+            var cl = ps.collision; cl.enabled = true; cl.type = ParticleSystemCollisionType.Planes; cl.SetPlane(0, sparkFloor);
+            cl.bounce = new ParticleSystem.MinMaxCurve(0.25f, 0.5f); cl.dampen = new ParticleSystem.MinMaxCurve(0.3f, 0.5f); cl.lifetimeLoss = 0.25f; cl.radiusScale = 0.3f;
             var rend = g.GetComponent<ParticleSystemRenderer>();
-            rend.material = softMat; rend.renderMode = ParticleSystemRenderMode.Stretch; rend.velocityScale = 0.06f; rend.lengthScale = 2.5f;
+            rend.material = Additive(ref addMat, SoftSprites.Disc);
+            rend.renderMode = ParticleSystemRenderMode.Stretch; rend.velocityScale = 0.035f; rend.lengthScale = 2.2f;
+            rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             ps.Play();
         }
 
@@ -793,6 +881,24 @@ namespace BladePath
                 d[i] = (lp * 0.8f + Mathf.Sin(2f * Mathf.PI * 120f * t) * 0.4f) * Mathf.Exp(-t * 55f);
             }
             return Make("step", d);
+        }
+
+        static AudioClip Danger_()
+        {
+            int n = (int)(Rate * 1.1f);
+            float[] d = new float[n];
+            System.Random rnd = new System.Random(41);
+            float lp = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)Rate;
+                float env = Mathf.Min(1f, t * 300f) * Mathf.Exp(-t * 3.2f);
+                float gong = Mathf.Sin(2f * Mathf.PI * 92f * t) * 0.55f + Mathf.Sin(2f * Mathf.PI * 92f * 2.76f * t) * 0.25f * Mathf.Exp(-t * 5f) + Mathf.Sin(2f * Mathf.PI * 92f * 5.4f * t) * 0.12f * Mathf.Exp(-t * 9f);
+                lp += 0.2f * ((float)(rnd.NextDouble() * 2.0 - 1.0) - lp);
+                float hit = lp * Mathf.Exp(-t * 40f) * 0.6f;
+                d[i] = Mathf.Clamp((gong + hit) * env, -1f, 1f);
+            }
+            return Make("danger", d);
         }
 
         /// <summary>Мокрый шлепок подошвы: короткий светлый шум (брызги), без низа.</summary>

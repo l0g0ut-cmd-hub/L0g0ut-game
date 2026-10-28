@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace BladePath
@@ -113,7 +114,40 @@ namespace BladePath
         /// <summary>Сколько секунд подряд держится блок (для окна парирования).</summary>
         public float BlockTime { get; private set; }
         /// <summary>Блок «выдохся» — какое-то время нельзя поднять снова.</summary>
-        public bool GuardBroken { get { return Time.time < guardBrokenUntil; } }
+        public bool GuardBroken { get { return Time.time < guardBrokenUntil || PostureBroken; } }
+
+        [Header("Равновесие (posture, как в Sekiro)")]
+        public float maxPosture = 100f;
+        public float postureBreakTime = 2.0f;   // сколько боец «поплыл» после слома равновесия (окно добивания)
+        /// <summary>Равновесие 0…maxPosture: растёт от принятых в блок ударов, отражённых противником атак и пропущенных ударов; полное — слом.</summary>
+        public float Posture { get; private set; }
+        public float Posture01 { get { return maxPosture > 0f ? Mathf.Clamp01(Posture / maxPosture) : 0f; } }
+        public bool PostureBroken { get { return Time.time < postureBrokenUntil; } }
+        public float SincePostureHit { get { return Time.time - postureHitAt; } }
+        public event Action<FighterController> PostureBreak;
+        float postureBrokenUntil, postureHitAt = -10f;
+
+        public void AddPosture(float v)
+        {
+            if (Dead || PostureBroken || v <= 0f) return;
+            Posture = Mathf.Min(maxPosture, Posture + v);
+            postureHitAt = Time.time;
+            if (Posture >= maxPosture)
+            {
+                postureBrokenUntil = Time.time + postureBreakTime;
+                Blocking = false; BlockTime = 0f;
+                Stun(postureBreakTime);
+                if (weapon != null) weapon.ResetState();
+                if (PostureBreak != null) PostureBreak(this);
+            }
+        }
+
+        /// <summary>Восстановление равновесия (скорость считает DuelManager: зависит от здоровья и блока).</summary>
+        public void RecoverPosture(float v)
+        {
+            if (PostureBroken) return;
+            Posture = Mathf.Max(0f, Posture - v);
+        }
         public bool Dashing { get { return dashLeft > 0f; } }
         public float DashReady01 { get { return Mathf.Clamp01(1f - (dashReadyAt - Time.time) / dashCooldown); } }
         /// <summary>Скорость хода в этом кадре 0…1; знак минус, если идёт спиной к направлению взгляда — для аниматора.</summary>
@@ -153,6 +187,7 @@ namespace BladePath
             dashDir = d.normalized;
             dashLeft = dashTime;
             dashReadyAt = Time.time + dashCooldown;
+            if (Dashed != null) Dashed(this, dashDir);
             lastDashAt = Time.time;
             if (Juice.Instance != null) { Juice.Instance.DashSound(); Juice.Instance.Dust(transform.position + Vector3.up * 0.05f, -dashDir, 14); }
             return true;
@@ -170,7 +205,10 @@ namespace BladePath
         /// <summary>
         /// Начать атаку. В воздухе рубящие (Overhead/Rising) превращаются в удар в прыжке; по ногам из воздуха нельзя.
         /// </summary>
-        public bool Attack(AttackType type)
+        public event Action<FighterController, Vector3> Dashed;
+        public void StopDash() { dashLeft = 0f; }
+
+        public bool Attack(AttackType type, bool perilous = false)
         {
             if (weapon == null || !CanAct) return false;
             AttackType t = type;
@@ -181,7 +219,7 @@ namespace BladePath
             }
             else if (type == AttackType.JumpStrike) t = AttackType.Overhead;
             if (t == AttackType.Energy && !CanEnergy) return false;
-            bool ok = weapon.TryStartSwing(t);
+            bool ok = weapon.TryStartSwing(t, perilous && (t == AttackType.Thrust || t == AttackType.LegSweep));
             if (ok && t == AttackType.Energy) Ki -= energyCost;
             return ok;
         }
@@ -194,8 +232,10 @@ namespace BladePath
             bool canBlock = CanAct && Grounded && weapon != null && weapon.Phase == SwingPhase.Idle && !GuardBroken;
             bool wasBlocking = Blocking;
             Blocking = canBlock && blockWanted;
-            if (Blocking) { BlockTime += dt; if (BlockTime > 2.5f) { Blocking = false; guardBrokenUntil = Time.time + 1.2f; BlockTime = 0f; } }
+            if (Blocking) BlockTime += dt;   // блок держится сколько угодно — ломается равновесием, а не временем
             else BlockTime = 0f;
+            // равновесие после слома: снова в стойке, шкала наполовину
+            if (postureBrokenUntil > 0f && !PostureBroken) { postureBrokenUntil = 0f; Posture = maxPosture * 0.4f; }
             blockWanted = false;
 
             if (!Grounded)
@@ -304,6 +344,7 @@ namespace BladePath
             moveInput = Vector2.zero;
             Ki = kiStart; knockVel = Vector3.zero;
             Dead = false; Frozen = false; Blocking = false; BlockTime = 0f; guardBrokenUntil = 0f; stunUntil = 0f; dashLeft = 0f; dashReadyAt = 0f;
+            Posture = 0f; postureBrokenUntil = 0f; postureHitAt = -10f;
             if (weapon != null) weapon.ResetState();
             if (zones != null) for (int i = 0; i < zones.Length; i++) if (zones[i] != null) zones[i].ClearFlash();
             EnergyProjectile.DestroyAll();

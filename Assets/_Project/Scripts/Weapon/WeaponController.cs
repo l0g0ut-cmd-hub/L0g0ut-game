@@ -29,7 +29,10 @@ namespace BladePath
         [Tooltip("Блок: клинок почти вертикально перед лицом, руки у груди.")]
         public Vector3 guardEuler = new Vector3(-82f, 8f, 0f);
         public Vector3 guardHand = new Vector3(0.03f, -0.02f, 0.40f);   // блок: клинок вертикально перед собой на вытянутых руках
-        float blockK;
+        float blockK, stagK;
+        [Tooltip("Слом равновесия: клинок опущен остриём к земле, руки внизу, корпус осел.")]
+        public Vector3 staggerEuler = new Vector3(62f, -25f, 15f);
+        public Vector3 staggerHand = new Vector3(0.16f, -0.70f, 0.22f);
 
         public SwingProfile CurrentProfile { get; private set; }
         public SwingPhase Phase { get; private set; }
@@ -99,9 +102,14 @@ namespace BladePath
             ApplyRestPose();
         }
 
-        public bool TryStartSwing(AttackType type)
+        /// <summary>Опасная атака (危): блок её не держит; замах дольше — время среагировать (рывок навстречу выпаду, прыжок от подсечки).</summary>
+        public bool Perilous { get; private set; }
+        public float perilousWindupRate = 0.7f;
+
+        public bool TryStartSwing(AttackType type, bool perilous = false)
         {
             if (Phase != SwingPhase.Idle) return false;
+            Perilous = perilous;
             CurrentProfile = SwingProfile.Get(type);
             SwingId++;
             SnapshotForBlend();
@@ -114,7 +122,7 @@ namespace BladePath
         {
             bool wasOpen = ContactWindowOpen;
             if (Phase != SwingPhase.Idle) SnapshotForBlend();
-            Phase = SwingPhase.Idle;
+            Phase = SwingPhase.Idle; Perilous = false;
             phaseTime = 0f;
             ApplyRestPose();
             if (wasOpen && ContactWindowClosed != null) ContactWindowClosed(this);
@@ -129,6 +137,17 @@ namespace BladePath
             for (int c = PoseCh.PF; c < PoseCh.N; c++) Pose[c] = SwingProfile.ReadyPose[c];
             Pose[PoseCh.HYAW] *= yawSign; Pose[PoseCh.CYAW] *= yawSign;
             Pose[PoseCh.PF] -= 0.04f * bk; Pose[PoseCh.PD] += 0.03f * bk; Pose[PoseCh.CPIT] -= 3f * bk;   // блок: вес чуть назад, колени ниже
+            float sk = Smooth(stagK);
+            if (sk > 0.001f)
+            {
+                // «поплыл»: клинок повис, колени подогнулись, корпус осел и покачивается
+                re = Vector3.Lerp(re, new Vector3(staggerEuler.x, staggerEuler.y * yawSign, staggerEuler.z * yawSign), sk);
+                rh = Vector3.Lerp(rh, new Vector3(staggerHand.x * yawSign, staggerHand.y, staggerHand.z), sk);
+                float wob = Mathf.Sin(Time.time * 4.5f);
+                Pose[PoseCh.PD] += 0.15f * sk; Pose[PoseCh.PF] -= 0.08f * sk;
+                Pose[PoseCh.CPIT] += (24f + 3f * wob) * sk; Pose[PoseCh.HPIT] += 10f * sk;
+                Pose[PoseCh.CYAW] += 6f * wob * sk * yawSign;
+            }
             SetHandEuler(rh, re);
             FootSpeedF = FootSpeedR = 0f;
             ApplyBlend();
@@ -142,11 +161,13 @@ namespace BladePath
         {
             float bt = (owner != null && owner.Blocking) ? 1f : 0f;
             blockK = Mathf.MoveTowards(blockK, bt, Time.deltaTime / 0.12f);
+            bool stag = owner != null && owner.PostureBroken;
+            stagK = Mathf.MoveTowards(stagK, stag ? 1f : 0f, Time.deltaTime / (stag ? 0.15f : 0.4f));
             blendLeft = Mathf.Max(0f, blendLeft - Time.deltaTime);
             if (Phase == SwingPhase.Idle && pivot != null) { ApplyRestPose(); return; }
             if (Phase == SwingPhase.Idle || pivot == null || CurrentProfile == null) return;
 
-            phaseTime += Time.deltaTime;
+            phaseTime += Time.deltaTime * (Perilous && Phase == SwingPhase.Windup ? perilousWindupRate : 1f);
             // перенос остатка времени между фазами (длинный кадр не «съедает» фазу)
             int guard = 8;
             while (Phase != SwingPhase.Idle && guard-- > 0)
@@ -188,7 +209,7 @@ namespace BladePath
                     if (!CurrentProfile.ranged && ContactWindowClosed != null) ContactWindowClosed(this);
                     break;
                 case SwingPhase.Recovery:
-                    Phase = SwingPhase.Idle;
+                    Phase = SwingPhase.Idle; Perilous = false;
                     break;
             }
         }

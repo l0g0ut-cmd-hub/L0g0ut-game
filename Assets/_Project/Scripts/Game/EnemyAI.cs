@@ -60,6 +60,15 @@ namespace BladePath
 
             if (Time.time > strafeUntil) { strafeUntil = Time.time + Random.Range(0.8f, 1.8f); strafeDir = Random.value < 0.5f ? -1f : 1f; }
 
+            // равновесие игрока сломлено — добить (опытный враг не упускает)
+            if (target.PostureBroken && !busy && dist < 1.7f && Random.value < 0.25f + 0.2f * Level)
+            {
+                if (dist > 1.2f) self.SetMoveVector(new Vector2(dir.x, dir.z));
+                else if (self.Attack(AttackType.Thrust)) { nextAttackAt = Time.time + 0.8f; return; }
+            }
+            // своё равновесие на исходе — не лезть под удар: больше блока и отхода
+            if (self.Posture01 > 0.7f && Time.time > retreatUntil && Random.value < 0.02f) retreatUntil = Time.time + 0.8f;
+
             // реакция на замах игрока: блок или уход рывком
             WeaponController pw = target.weapon;
             if (pw != null && pw.Phase == SwingPhase.Windup && pw.SwingId != lastSeenSwing && dist < 1.8f && !busy)
@@ -128,7 +137,10 @@ namespace BladePath
                 bool quick = Time.time - nextAttackAt < 0.4f && DuelManager.Instance != null && DuelManager.Instance.Combo(self) > 0 && DuelManager.Instance.ComboAge(self) < 1.2f;
                 AttackType t = quick ? Followups[Random.Range(0, Followups.Length)] : Pool[Random.Range(0, Pool.Length)];
                 if (!quick && Random.value < Ladder.Current.heavyBias) t = AttackType.Overhead;   // Они любит рубить сверху
-                if (self.Attack(t))
+                // опасная атака (危): с уровня «воин», не в серии
+                bool peril = !quick && Level >= 1 && Random.value < 0.10f + 0.04f * Level;
+                if (peril) t = Random.value < 0.6f ? AttackType.Thrust : AttackType.LegSweep;
+                if (self.Attack(t, peril))
                 {
                     nextAttackAt = Time.time + Mathf.Lerp(2.4f, 0.8f, agg) + Random.Range(0f, 0.7f);
                     if (Random.value < 0.45f - 0.08f * Level) retreatUntil = Time.time + 0.9f;

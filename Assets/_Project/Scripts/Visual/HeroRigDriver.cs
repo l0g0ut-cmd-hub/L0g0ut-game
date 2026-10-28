@@ -99,6 +99,11 @@ namespace BladePath
         float lgL1, lgL2, lgR1, lgR2;
         float lean, yawS, yawV, bS, bV, crouchS, crouchV, kick;
         float pivotRestY, walkS, deadK, footRestH, wLegS;
+        // точки подошвы (пятка, подушечка, носок) в системе кости стопы — по позе покоя, где подошва стоит на земле
+        Vector3[] solL, solR;
+        /// <summary>Нижняя точка подошвы (мир) — после постановки на землю в этом кадре (для пыли/шагов и проб).</summary>
+        public Vector3 SoleL { get; private set; }
+        public Vector3 SoleR { get; private set; }
         struct Foot
         {
             public Vector3 pos, from, to;
@@ -151,6 +156,8 @@ namespace BladePath
             {
                 Transform ft = fighter.transform;
                 footRestH = Mathf.Min(footL.position.y, footR.position.y) - ft.position.y;
+                float sc = hips != null ? Mathf.Clamp((hips.position.y - ft.position.y) / 0.92f, 0.5f, 2f) : 1f;
+                solL = SolePoints(footL, ft, sc); solR = SolePoints(footR, ft, sc);
                 // поза покоя модели: подошвы стоят на земле — запоминаем, как стопа повёрнута относительно бойца
                 footRelL = Quaternion.Inverse(ft.rotation) * footL.rotation;
                 footRelR = Quaternion.Inverse(ft.rotation) * footR.rotation;
@@ -228,6 +235,28 @@ namespace BladePath
         }
 
         /// <summary>Скорость смеси клипов для направления d (веса как у 2D-смеси: ближние по направлению клипы).</summary>
+        static Vector3[] SolePoints(Transform foot, Transform ft, float sc)
+        {
+            Vector3 a = foot.position, g = new Vector3(a.x, ft.position.y, a.z);
+            Vector3 f = ft.forward; f.y = 0f; f.Normalize();
+            return new Vector3[] { foot.InverseTransformPoint(g - f * (0.05f * sc)), foot.InverseTransformPoint(g + f * (0.11f * sc)), foot.InverseTransformPoint(g + f * (0.16f * sc)) };
+        }
+
+        // кончик носка может уйти в землю на 2 см: пальцы гнутся, а кость стопы одна
+        static float SoleY(Transform foot, Vector3[] pts)
+        {
+            float y = float.MaxValue;
+            for (int i = 0; i < pts.Length; i++) y = Mathf.Min(y, foot.TransformPoint(pts[i]).y + (i == 2 ? 0.02f : 0f));
+            return y;
+        }
+
+        static Vector3 SolePoint(Transform foot, Vector3[] pts)
+        {
+            Vector3 best = foot.position; float y = float.MaxValue;
+            for (int i = 0; i < pts.Length; i++) { Vector3 p = foot.TransformPoint(pts[i]); float py = p.y + (i == 2 ? 0.02f : 0f); if (py < y) { y = py; best = p; } }
+            return best;
+        }
+
         float ExpectedLocoSpeed(Vector2 d)
         {
             if (locoDirs == null || locoSpeeds == null || locoDirs.Length == 0) return 1f;
@@ -453,15 +482,18 @@ namespace BladePath
             else if (fighter.Grounded && deadK < 0.01f && footL != null && footR != null)
             {
                 if (locoW > 0.001f && legsReady) { Rot(upperLegL, -hYaw, up); Rot(upperLegR, -hYaw, up); }   // ноги клипа идут по ходу, а не за поворотом таза стойки
-                float lowest = Mathf.Min(footL.position.y, footR.position.y);   // ходьба: просто ставим нижнюю стопу на землю
-                transform.position += Vector3.up * ((ft.position.y + footRestH) - lowest);
+                // ходьба: на землю встаёт нижняя точка подошв (пятка при ударе, подушечка при отрыве пятки), а не голеностоп —
+                // иначе при перекате на носок стопа уходит в землю, а тело проседает
+                float lowest = solL != null ? Mathf.Min(SoleY(footL, solL), SoleY(footR, solR)) : Mathf.Min(footL.position.y, footR.position.y) - footRestH;
+                transform.position += Vector3.up * (ft.position.y - lowest);
             }
+            if (solL != null && footL != null && footR != null) { SoleL = SolePoint(footL, solL); SoleR = SolePoint(footR, solR); }
 
             // шаги мокапа: стопа опустилась на землю — звук и брызги
             if (locoW > 0.5f && Juice.Instance != null && footL != null && footR != null)
             {
-                float gy = ft.position.y + footRestH;
-                float hL = footL.position.y - gy, hR = footR.position.y - gy;
+                float gy = ft.position.y;
+                float hL = solL != null ? SoleL.y - gy : footL.position.y - gy - footRestH, hR = solR != null ? SoleR.y - gy : footR.position.y - gy - footRestH;
                 if (footUpL && hL < 0.012f) { footUpL = false; Juice.Instance.Footstep(new Vector3(footL.position.x, ft.position.y, footL.position.z), 0.8f); }
                 else if (hL > 0.035f) footUpL = true;
                 if (footUpR && hR < 0.012f) { footUpR = false; Juice.Instance.Footstep(new Vector3(footR.position.x, ft.position.y, footR.position.z), 0.8f); }
