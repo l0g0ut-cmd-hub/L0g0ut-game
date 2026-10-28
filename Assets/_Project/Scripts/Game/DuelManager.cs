@@ -506,7 +506,7 @@ namespace BladePath
             if (!chip)
             {
                 if (Juice.Instance != null) Juice.Instance.OnHit(point, normal, hitDir, Mathf.Clamp(dmg / 16f + (crit ? 0.4f : 0f) + (kill ? 0.5f : 0f), 0.4f, 2.2f), false, kill, zoneT);
-                if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(kill ? 0.12f : (dmg >= 20f ? 0.07f : 0.04f));
+                if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(kill ? 0.12f : (dmg >= 20f ? 0.07f : 0.04f)); CameraOrbit.Instance.Punch(kill ? 5f : (dmg >= 20f ? 2.5f : 1f)); }
                 hitStopUntil = Time.unscaledTime + (kill ? 0.16f : (dmg >= 20f ? 0.08f : 0.05f));
             }
 

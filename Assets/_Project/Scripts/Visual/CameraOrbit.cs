@@ -30,6 +30,10 @@ namespace BladePath
         bool introPlaying;
         float superK, autoD, autoV;
         public void Shake(float amount) { shakeAmp = Mathf.Max(shakeAmp, amount); }
+        /// <summary>Резкий «наезд» объективом на тяжёлом ударе (FOV уменьшается и возвращается).</summary>
+        public void Punch(float degrees) { fovPunch = Mathf.Max(fovPunch, degrees); }
+        float fovPunch, baseFov = -1f;
+        Camera cam;
 
         float yaw, pitch, dist;
         float yawT, pitchT, distT, yawV, pitchV, distV;
@@ -197,6 +201,13 @@ namespace BladePath
             }
             transform.position = pos;
             transform.rotation = Quaternion.LookRotation(focus - pos, Vector3.up);
+            if (cam == null) cam = GetComponent<Camera>();
+            if (cam != null)
+            {
+                if (baseFov < 0f) baseFov = cam.fieldOfView;
+                fovPunch = Mathf.MoveTowards(fovPunch, 0f, udt * 18f);
+                cam.fieldOfView = baseFov - fovPunch - 3f * superK;
+            }
         }
     }
 }
