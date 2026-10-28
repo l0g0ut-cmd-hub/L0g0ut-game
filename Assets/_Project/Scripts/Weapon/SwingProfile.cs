@@ -121,6 +121,7 @@ namespace BladePath
                     break;
                 case AttackType.JumpStrike:  // рубящий в воздухе, с броском вперёд
                     p.label = "В ПРЫЖКЕ";
+                    p.Hands(new Vector3(0.00f, 0.34f, 0.04f), new Vector3(0.00f, -0.12f, 0.40f));
                     p.windupEuler = new Vector3(-100f, 20f, 0f);
                     p.strikeEndEuler = new Vector3(70f, -20f, 0f);
                     p.followEuler = new Vector3(95f, -25f, 0f);
@@ -131,6 +132,7 @@ namespace BladePath
                     break;
                 case AttackType.Energy:      // дальний энергетический шар
                     p.label = "ШАР";
+                    p.Hands(new Vector3(0.02f, 0.06f, 0.28f), new Vector3(0.02f, 0.06f, 0.28f));
                     p.ranged = true;
                     p.windupEuler = new Vector3(-70f, 0f, 0f);
                     p.strikeEndEuler = new Vector3(-70f, 0f, 0f);
