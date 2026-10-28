@@ -340,6 +340,9 @@ namespace BladePath
             DrawAttack(B.Jump, Icon.Jump, "ПРЫЖОК", player != null && player.CanAct && player.Grounded);
             DrawAttack(B.Block, Icon.Shield, "БЛОК", player != null && player.CanAct && !player.GuardBroken && player.weapon != null && player.weapon.Phase == SwingPhase.Idle);
             DrawAttack(B.Dash, Icon.Dash, "РЫВОК", player != null && player.CanAct && player.DashReady01 >= 1f);
+            // запас блока: точки вокруг щита тают, пока держишь блок; красные — блок выбит
+            if (player != null && (player.Blocking || player.GuardBroken))
+                DrawDotRing(B.Block, player.GuardBroken ? 1f : 1f - player.BlockTime / 2.5f, player.GuardBroken ? new Color(1f, 0.25f, 0.2f, 1f) : new Color(0.9f, 0.85f, 0.6f, 1f));
             DrawSuper();
             DrawPause();
 
@@ -474,6 +477,20 @@ namespace BladePath
                     UiKit.Line(c + new Vector2(0f, -s * 0.6f), c + new Vector2(s * 0.7f, 0f), th, col);
                     UiKit.Line(c + new Vector2(0f, s * 0.6f), c + new Vector2(s * 0.7f, 0f), th, col);
                     break;
+            }
+        }
+
+        void DrawDotRing(B b, float k, Color on)
+        {
+            int i = (int)b;
+            if (!active[i]) return;
+            Vector2 c = ctr[i]; float r = rad[i] + 6f;
+            const int N = 16;
+            for (int s = 0; s < N; s++)
+            {
+                float ang = -Mathf.PI * 0.5f + s / (float)N * Mathf.PI * 2f;
+                bool lit = s < Mathf.CeilToInt(Mathf.Clamp01(k) * N - 0.001f);
+                UiKit.Disc(c + new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * r, 2.4f, lit ? on : new Color(0f, 0f, 0f, 0.4f));
             }
         }
 
