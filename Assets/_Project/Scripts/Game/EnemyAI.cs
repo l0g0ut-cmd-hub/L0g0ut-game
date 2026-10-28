@@ -15,7 +15,8 @@ namespace BladePath
 
         float nextAttackAt, strafeUntil, retreatUntil, dashAt, blockUntil, energyAt;
         int lastSeenSwing = -1, parrySwing = -1;
-        float punishAt;
+        float punishAt, ballCheckAt;
+        int lastBall;
         float strafeDir = 1f;
         bool hooked;
         static readonly AttackType[] Pool = { AttackType.Overhead, AttackType.Overhead, AttackType.Slash, AttackType.SlashBack, AttackType.Thrust, AttackType.Rising, AttackType.LegSweep };
@@ -93,6 +94,24 @@ namespace BladePath
                 mv += side * strafeDir * 0.35f;
             }
             self.SetMoveVector(new Vector2(mv.x, mv.z));
+
+            // летит шар игрока: отбить клинком (опытный враг) или уйти рывком
+            if (!busy && Time.time >= ballCheckAt)
+            {
+                ballCheckAt = Time.time + 0.08f;
+                foreach (EnergyProjectile e in FindObjectsByType<EnergyProjectile>(FindObjectsSortMode.None))
+                {
+                    if (e.owner != target || e.GetInstanceID() == lastBall) continue;
+                    Vector3 rel = self.transform.position + Vector3.up * 1.1f - e.transform.position;
+                    float closing = Vector3.Dot(rel.normalized, e.velocity.normalized);
+                    if (closing < 0.7f || rel.magnitude > 1.6f) continue;
+                    lastBall = e.GetInstanceID();
+                    float r = Random.value;
+                    if (r < 0.15f + 0.15f * Level) { if (self.Attack(AttackType.Slash)) return; }
+                    else if (r < 0.45f + 0.1f * Level && Time.time > dashAt) { self.Dash(XZ(side * strafeDir)); dashAt = Time.time + 1.2f; return; }
+                    else blockUntil = Time.time + 0.4f;
+                }
+            }
 
             // супер-удар при полном духе
             if (!busy && self.KiFull && dist < 2.8f && Random.value < 0.02f + 0.01f * Level && DuelManager.Instance != null && DuelManager.Instance.TrySuper(self)) return;
