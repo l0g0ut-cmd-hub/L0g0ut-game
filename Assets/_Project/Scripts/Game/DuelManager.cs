@@ -155,7 +155,7 @@ namespace BladePath
                 bp.color = parry ? new Color(0.4f, 0.9f, 1f) : new Color(0.75f, 0.85f, 1f);
                 bp.born = Time.unscaledTime; bp.size = parry ? 30f : 24f;
                 Popups.Add(bp);
-                if (Juice.Instance != null) Juice.Instance.OnHit(r.contact.point, r.contact.normal, false, true, false);
+                if (Juice.Instance != null) Juice.Instance.OnHit(r.contact.point, r.contact.normal, r.contact.bladeVelocity, 0.5f, true, false, null);
                 if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(parry ? 0.05f : 0.025f);
                 if (parry)
                 {
@@ -166,10 +166,10 @@ namespace BladePath
                 else ApplyDamage(r.target, r.attacker, Mathf.Max(1f, Mathf.Round(dmg * 0.15f)), r.contact.point, false, true);
                 return;
             }
-            ApplyDamage(r.target, r.attacker, dmg, r.contact.point, r.zone == BodyZoneId.Head, false, r.contact.normal);
+            ApplyDamage(r.target, r.attacker, dmg, r.contact.point, r.zone == BodyZoneId.Head, false, r.contact.normal, r.contact.bladeVelocity, r.contact.zone != null ? r.contact.zone.transform : null);
         }
 
-        void ApplyDamage(FighterController target, FighterController attacker, float dmg, Vector3 point, bool crit, bool chip = false, Vector3 normal = default(Vector3))
+        void ApplyDamage(FighterController target, FighterController attacker, float dmg, Vector3 point, bool crit, bool chip = false, Vector3 normal = default(Vector3), Vector3 hitDir = default(Vector3), Transform zoneT = null)
         {
             hp[target] = Mathf.Max(0f, Hp(target) - dmg);
             lastHitTime[target] = Time.unscaledTime;
@@ -184,7 +184,7 @@ namespace BladePath
             bool kill = Hp(target) <= 0f;
             if (!chip)
             {
-                if (Juice.Instance != null) Juice.Instance.OnHit(point, normal, dmg >= 20f || crit, false, kill);
+                if (Juice.Instance != null) Juice.Instance.OnHit(point, normal, hitDir, Mathf.Clamp(dmg / 16f + (crit ? 0.4f : 0f) + (kill ? 0.5f : 0f), 0.4f, 2.2f), false, kill, zoneT);
                 if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(kill ? 0.12f : (dmg >= 20f ? 0.07f : 0.04f));
                 hitStopUntil = Time.unscaledTime + (kill ? 0.16f : (dmg >= 20f ? 0.08f : 0.05f));
             }

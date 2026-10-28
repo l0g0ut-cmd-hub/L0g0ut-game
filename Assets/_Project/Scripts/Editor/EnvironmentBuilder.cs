@@ -112,7 +112,8 @@ namespace BladePath.EditorTools
             main.prewarm = true;
             main.startLifetime = 6f;
             main.startSpeed = 0f;
-            main.startSize = new ParticleSystem.MinMaxCurve(0.05f, 0.09f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.06f, 0.11f);
+            main.startRotation = new ParticleSystem.MinMaxCurve(0f, 6.28f);
             main.startColor = new Color(1f, 0.72f, 0.82f, 0.9f);
             main.gravityModifier = 0.05f;
             main.maxParticles = 150;
@@ -131,6 +132,7 @@ namespace BladePath.EditorTools
             noise.frequency = 0.4f;
 
             go.GetComponent<ParticleSystemRenderer>().sharedMaterial = look.petal;
+            go.AddComponent<PetalTexture>();
         }
     }
 }

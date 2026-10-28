@@ -23,6 +23,18 @@ namespace BladePath
             DrawBar(new Rect(cx - 52f - barW, 16f, barW, 20f), duel.player, false, playerName, new Color(0.15f, 0.55f, 0.85f));
             DrawBar(new Rect(cx + 52f, 16f, barW, 20f), duel.enemy, true, enemyName, new Color(0.75f, 0.2f, 0.85f));
 
+            // красная вспышка по краям, когда бьют игрока
+            float since = duel.SinceHit(duel.player);
+            if (since < 0.5f)
+            {
+                float a = (0.5f - since) / 0.5f * 0.35f;
+                Color c = new Color(0.7f, 0f, 0f, a);
+                UiKit.Rect(new Rect(0f, 0f, W, 70f), c);
+                UiKit.Rect(new Rect(0f, 470f, W, 70f), c);
+                UiKit.Rect(new Rect(0f, 0f, 60f, 540f), c);
+                UiKit.Rect(new Rect(W - 60f, 0f, 60f, 540f), c);
+            }
+
             // цифры урона
             Camera cam = Camera.main;
             if (cam != null)
