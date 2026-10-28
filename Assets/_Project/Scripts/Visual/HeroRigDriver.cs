@@ -185,8 +185,7 @@ namespace BladePath
 
             // ---------- 3) смещение всей модели: выпад / откат / присед / отдача (визуально; зоны поражения не двигаются)
             float lunge = (weapon != null ? weapon.VisualLunge : 0f) - kick * 0.10f;   // руки с клинком едут вместе с телом (WeaponController.VisualLunge)
-            float thighRad = cr * crouchThigh * Mathf.Deg2Rad;
-            float kneeRad = cr * crouchThigh * 1.8f * Mathf.Deg2Rad;
+            Vector3 off = new Vector3(0f, -Mathf.Max(0f, bS) * 0.02f, lunge);   // высоту (присед) задаёт посадка стоп на землю ниже
             transform.localPosition = baseLocalPos + off;
             deadK = Mathf.MoveTowards(deadK, fighter.Dead ? 1f : 0f, dt / 0.8f);
             if (deadK > 0.001f)
