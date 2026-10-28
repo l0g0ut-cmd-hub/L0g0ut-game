@@ -22,19 +22,7 @@ namespace BladePath.EditorTools
 
             if (look.sky != null) RenderSettings.skybox = look.sky;
 
-            // отражения для мокрого камня: проба рендерит кубкарту сцены один раз при старте
-            GameObject rp = new GameObject("ReflectionProbe");
-            rp.transform.position = new Vector3(0f, 1.2f, 0.5f);
-            ReflectionProbe probe = rp.AddComponent<ReflectionProbe>();
-            probe.mode = UnityEngine.Rendering.ReflectionProbeMode.Realtime;
-            probe.refreshMode = UnityEngine.Rendering.ReflectionProbeRefreshMode.OnAwake;
-            probe.timeSlicingMode = UnityEngine.Rendering.ReflectionProbeTimeSlicingMode.NoTimeSlicing;
-            probe.resolution = 128;
-            probe.size = new Vector3(30f, 12f, 30f);
-            probe.boxProjection = true;
-            probe.intensity = 1.2f;
-            probe.hdr = false;
-            probe.farClipPlane = 40f;
+            // Realtime ReflectionProbe убран: на части Android-драйверов рендер пробы при загрузке сцены роняет приложение.
 
             // лунный свет
             GameObject moonLight = new GameObject("Moonlight");
