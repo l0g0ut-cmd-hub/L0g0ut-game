@@ -401,6 +401,47 @@ namespace BladePath
             StartCoroutine(StopBleed(ps, g, seconds));
         }
 
+        /// <summary>Фонтан крови из шеи после обезглавливания: мощная струя вверх, затухающая за несколько секунд.</summary>
+        public void Fountain(Transform neck, float seconds)
+        {
+            if (softMat == null || neck == null) return;
+            GameObject g = new GameObject("Fountain");
+            g.transform.SetParent(neck, false);
+            g.transform.localPosition = Vector3.zero;
+            g.transform.rotation = Quaternion.LookRotation(Vector3.up);
+            ParticleSystem ps = g.AddComponent<ParticleSystem>();
+            ps.Stop();
+            var main = ps.main;
+            main.loop = true; main.duration = seconds;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.5f, 1.1f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(1.8f, 3.6f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.03f, 0.07f);
+            main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.45f, 0f, 0.02f), new Color(0.85f, 0.04f, 0.05f));
+            main.gravityModifier = 1.4f;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.maxParticles = 600;
+            var em = ps.emission;
+            em.rateOverTime = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 160f), new Keyframe(0.3f, 90f), new Keyframe(1f, 10f)));
+            var sp = ps.shape; sp.shapeType = ParticleSystemShapeType.Cone; sp.angle = 14f; sp.radius = 0.03f;
+            var rend = g.GetComponent<ParticleSystemRenderer>();
+            rend.material = softMat; rend.renderMode = ParticleSystemRenderMode.Stretch; rend.velocityScale = 0.05f; rend.lengthScale = 2f;
+            ps.Play();
+            Play(hitHeavy, 1f, 0.55f);
+            StartCoroutine(FountainDecals(neck, seconds));
+            StartCoroutine(StopBleed(ps, g, seconds));
+        }
+
+        System.Collections.IEnumerator FountainDecals(Transform neck, float seconds)
+        {
+            float end = Time.time + seconds;
+            while (Time.time < end && neck != null)
+            {
+                Vector3 p = neck.position + new Vector3(Random.Range(-0.6f, 0.6f), 0f, Random.Range(-0.6f, 0.6f));
+                AddDecal(new Vector3(p.x, 0.012f, p.z), Random.Range(0.08f, 0.2f), Random.insideUnitCircle, 60f, 0.3f, 0.2f);
+                yield return new WaitForSeconds(0.12f);
+            }
+        }
+
         System.Collections.IEnumerator StopBleed(ParticleSystem ps, GameObject g, float seconds)
         {
             yield return new WaitForSeconds(seconds);

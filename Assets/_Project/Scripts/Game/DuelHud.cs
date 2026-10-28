@@ -113,7 +113,7 @@ namespace BladePath
             }
 
             // объявления
-            if (!string.IsNullOrEmpty(duel.AnnounceText) && duel.AnnounceAge < 1.4f && duel.State == DuelState.Fighting)
+            if (!string.IsNullOrEmpty(duel.AnnounceText) && duel.AnnounceAge < 1.4f && duel.State != DuelState.Intro)
             {
                 float age = duel.AnnounceAge;
                 float aa = Mathf.Clamp01(age / 0.1f) * Mathf.Clamp01((1.4f - age) / 0.4f);

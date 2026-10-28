@@ -59,6 +59,14 @@ namespace BladePath
         float lean, yawS, yawV, bS, bV, crouchS, crouchV, kick;
         float pivotRestY, walkS, deadK, footRestH;
         bool fallDust;
+        bool decapitated;
+        /// <summary>Смертельный удар в голову: голова «исчезает» (кость сжимается в точку), из шеи бьёт фонтан.</summary>
+        public void Decapitate()
+        {
+            if (decapitated || head == null) return;
+            decapitated = true;
+            if (Juice.Instance != null) Juice.Instance.Fountain(head, 3.2f);
+        }
         BodyZoneId kickZone;
         float kickSide;
         Vector3 baseLocalPos;
@@ -138,6 +146,8 @@ namespace BladePath
         {
             if (fighter == null || bladeRoot == null) return;
             float dt = Time.deltaTime;
+            if (decapitated && fighter != null && !fighter.Dead) decapitated = false;   // новый раунд
+            if (head != null) head.localScale = decapitated ? Vector3.one * 0.001f : Vector3.one;
             Transform ft = fighter.transform;
             Vector3 right = ft.right, up = ft.up;
             float sc = transform.lossyScale.y;

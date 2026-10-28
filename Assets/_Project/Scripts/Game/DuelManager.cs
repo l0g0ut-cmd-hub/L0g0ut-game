@@ -350,6 +350,7 @@ namespace BladePath
             Popups.Add(p);
         }
 
+        bool lastHitHead;
         bool flourishDone;
         /// <summary>Тибури: победитель стряхивает кровь с клинка резким взмахом.</summary>
         void Flourish()
@@ -501,6 +502,7 @@ namespace BladePath
                 else ApplyDamage(r.target, r.attacker, Mathf.Max(1f, Mathf.Round(dmg * 0.15f)), r.contact.point, false, true);
                 return;
             }
+            lastHitHead = r.zone == BodyZoneId.Head;
             ApplyDamage(r.target, r.attacker, dmg, r.contact.point, r.zone == BodyZoneId.Head, false, r.contact.normal, r.contact.bladeVelocity, r.contact.zone != null ? r.contact.zone.transform : null);
         }
 
@@ -581,6 +583,12 @@ namespace BladePath
             if (Hp(target) <= 0f)
             {
                 target.Dead = true;
+                if (lastHitHead && !chip)
+                {
+                    HeroRigDriver rig = target.GetComponentInChildren<HeroRigDriver>();
+                    if (rig != null) rig.Decapitate();
+                    Announce("ОБЕЗГЛАВЛЕН", new Color(0.9f, 0.1f, 0.08f));
+                }
                 if (target.weapon != null) target.weapon.ResetState();
                 bool playerLost = target == player;
                 Haptics.Pulse(120);
