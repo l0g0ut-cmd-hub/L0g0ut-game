@@ -57,6 +57,14 @@ namespace BladePath
 
         void K(float time, params float[] v) { if (track == null) track = new PoseTrack(); track.Add(time, v); }
         void KReady(float time) { K(time, ReadyPose); }
+        /// <summary>Ключ зеркально (удар в другую сторону): x рук, yaw и крен клинка, повороты таза и груди меняют знак.</summary>
+        void KMirror(float time, params float[] v)
+        {
+            float[] m = (float[])v.Clone();
+            m[PoseCh.HX] = -m[PoseCh.HX]; m[PoseCh.EY] = -m[PoseCh.EY]; m[PoseCh.ER] = -m[PoseCh.ER];
+            m[PoseCh.HYAW] = -m[PoseCh.HYAW]; m[PoseCh.CYAW] = -m[PoseCh.CYAW];
+            K(time, m);
+        }
 
         static readonly SwingProfile[] cache = new SwingProfile[System.Enum.GetValues(typeof(AttackType)).Length];
 
@@ -77,54 +85,74 @@ namespace BladePath
             {
                 // Позы сняты с кадров референс-видео: широкая стойка, корпус на замахе разворачивается почти спиной к врагу,
                 // меч заносится за плечо/над головой, удар идёт большой дугой всем телом с глубоким выпадом.
-                case AttackType.Thrust:      // цуки: рукоять прижата к правому бедру, затем длинный выпад с полностью вытянутыми руками
+                case AttackType.Thrust:      // цуки: рукоять к бедру и взвод, затем выпад тазом и шагом, руки вытягиваются последними
                     p.label = "УКОЛ";
-                    p.Hands(new Vector3(0.16f, -0.24f, -0.10f), new Vector3(0.02f, -0.04f, 0.52f));
-                    p.windupEuler = new Vector3(-6f, 8f, 0f);
-                    p.strikeEndEuler = new Vector3(3f, 0f, 0f);
-                    p.followEuler = new Vector3(5f, 0f, 0f);
-                    p.windupTime = 0.26f; p.strikeTime = 0.10f; p.followTime = 0.12f; p.recoveryTime = 0.40f;
-                    p.bodyStep = 0.48f; p.strideDeg = 10f; p.crouchBoost = 0f; p.bodyYawMax = 30f;
+                    p.windupTime = 0.26f; p.strikeTime = 0.1f; p.followTime = 0.12f; p.recoveryTime = 0.4f;
+                    //        t      руки x,y,z              клинок p,y,r      таз F,D        таз yaw,pitch  грудь yaw,pitch  стопы F,R,пятка
+                    p.KReady(0f);
+                    p.K(0.14f, 0.2f, -0.32f, 0.14f, -6f, 4f, 0f, -0.05f, 0.02f, 10f, 0f, 4f, 0f, 0f, 0f, 0f);   // рукоять к правому бедру, вес назад
+                    p.K(0.26f, 0.22f, -0.3f, 0.1f, -4f, 2f, 0f, -0.07f, 0.04f, 14f, 0f, 6f, 0f, 0f, 0f, 0f);   // взвод: колени согнуты, остриё на врага
+                    p.K(0.32f, 0.05f, -0.2f, 0.4f, -2f, 1f, 0f, 0.22f, 0.07f, -6f, 3f, -2f, 2f, 0.3f, 0f, 0.5f);   // выпад: таз и шаг ведут
+                    p.K(0.36f, 0.02f, -0.13f, 0.58f, 0f, 0f, 0f, 0.34f, 0.09f, -16f, 5f, -6f, 4f, 0.4f, 0f, 0.7f);   // укол: руки вытянуты, вес на передней ноге
+                    p.K(0.48f, 0.02f, -0.13f, 0.6f, 1f, 0f, 0f, 0.36f, 0.1f, -18f, 6f, -6f, 5f, 0.4f, 0f, 0.75f);   // дожим
+                    p.K(0.7f, 0.05f, -0.3f, 0.38f, -8f, 0f, 0f, 0.12f, 0.04f, -14f, 3f, -4f, 3f, 0.12f, 0f, 0.2f);   // шаг назад в стойку
+                    p.KReady(0.88f);
                     break;
-                case AttackType.Slash:       // большой горизонтальный рез: меч за правым плечом, корпус скручен вправо → дуга на уровне груди через всё тело
+                case AttackType.Slash:      // ёко-гири: клинок за правым плечом, таз разворачивается первым и тянет руки — горизонтальная дуга на уровне груди
                     p.label = "РЕЗ";
-                    p.Hands(new Vector3(0.20f, 0.14f, 0.00f), new Vector3(-0.22f, 0.00f, 0.42f));
-                    p.windupEuler = new Vector3(-22f, 145f, 0f);
-                    p.strikeEndEuler = new Vector3(4f, -100f, 0f);
-                    p.followEuler = new Vector3(8f, -125f, 0f);
-                    p.arcBulge = 0.26f;
                     p.windupTime = 0.36f; p.strikeTime = 0.14f; p.followTime = 0.14f; p.recoveryTime = 0.44f;
-                    p.bodyStep = 0.45f; p.strideDeg = 6f; p.crouchBoost = 0f; p.bodyYawMax = 100f; p.twistMul = 1.3f;
+                    //        t      руки x,y,z              клинок p,y,r      таз F,D        таз yaw,pitch  грудь yaw,pitch  стопы F,R,пятка
+                    p.KReady(0f);
+                    p.K(0.14f, 0.2f, -0.1f, 0.2f, -35f, 70f, -60f, -0.03f, 0.01f, 8f, 0f, 6f, -2f, 0f, 0f, 0f);   // руки уходят к правому плечу, вес назад
+                    p.K(0.28f, 0.27f, 0.06f, 0.02f, -14f, 150f, -90f, -0.06f, 0.02f, 24f, -2f, 16f, -4f, 0f, 0f, 0f);   // клинок за правым плечом, кромка вперёд, таз и грудь скручены вправо
+                    p.K(0.36f, 0.28f, 0.08f, -0.03f, -12f, 162f, -90f, -0.07f, 0.02f, 28f, -3f, 18f, -5f, 0f, 0f, 0f);   // взвод: пауза перед ударом
+                    p.K(0.43f, 0.18f, 0.04f, 0.36f, -6f, 70f, -90f, 0.1f, 0.04f, 0f, 2f, 4f, 2f, 0.2f, 0f, 0.3f);   // таз уже развернулся к врагу и тянет руки, шаг вперёд
+                    p.K(0.5f, -0.1f, 0.0f, 0.5f, 0f, -40f, -90f, 0.2f, 0.05f, -22f, 4f, -10f, 4f, 0.28f, 0f, 0.5f);   // клинок прошёл через центр на уровне груди
+                    p.K(0.64f, -0.24f, -0.06f, 0.3f, 4f, -105f, -90f, 0.22f, 0.06f, -30f, 5f, -20f, 5f, 0.28f, 0f, 0.6f);   // проводка влево, корпус докручивается
+                    p.K(0.86f, -0.04f, -0.3f, 0.32f, -10f, -25f, -30f, 0.06f, 0.02f, -16f, 2f, -6f, 2f, 0.05f, 0f, 0.1f);   // шаг назад, клинок возвращается в чудан
+                    p.KReady(1.08f);
                     break;
-                case AttackType.SlashBack:   // то же в обратную сторону: меч за левым плечом
+                case AttackType.SlashBack:      // то же зеркально: от левого плеча вправо
                     p.label = "РЕЗ <";
-                    p.Hands(new Vector3(-0.20f, 0.14f, 0.00f), new Vector3(0.22f, 0.00f, 0.42f));
-                    p.windupEuler = new Vector3(-22f, -145f, 0f);
-                    p.strikeEndEuler = new Vector3(4f, 100f, 0f);
-                    p.followEuler = new Vector3(8f, 125f, 0f);
-                    p.arcBulge = 0.26f;
                     p.windupTime = 0.36f; p.strikeTime = 0.14f; p.followTime = 0.14f; p.recoveryTime = 0.44f;
-                    p.bodyStep = 0.45f; p.strideDeg = 6f; p.crouchBoost = 0f; p.bodyYawMax = 100f; p.twistMul = 1.3f;
+                    //        t      руки x,y,z              клинок p,y,r      таз F,D        таз yaw,pitch  грудь yaw,pitch  стопы F,R,пятка
+                    p.KReady(0f);
+                    p.KMirror(0.14f, 0.2f, -0.1f, 0.2f, -35f, 70f, -60f, -0.03f, 0.01f, 8f, 0f, 6f, -2f, 0f, 0f, 0f);   // руки уходят к левому плечу, вес назад
+                    p.KMirror(0.28f, 0.27f, 0.06f, 0.02f, -14f, 150f, -90f, -0.06f, 0.02f, 24f, -2f, 16f, -4f, 0f, 0f, 0f);   // клинок за левым плечом, кромка вперёд, таз и грудь скручены влево
+                    p.KMirror(0.36f, 0.28f, 0.08f, -0.03f, -12f, 162f, -90f, -0.07f, 0.02f, 28f, -3f, 18f, -5f, 0f, 0f, 0f);   // взвод: пауза перед ударом
+                    p.KMirror(0.43f, 0.18f, 0.04f, 0.36f, -6f, 70f, -90f, 0.1f, 0.04f, 0f, 2f, 4f, 2f, 0.2f, 0f, 0.3f);   // таз уже развернулся к врагу и тянет руки, шаг вперёд
+                    p.KMirror(0.5f, -0.1f, 0.0f, 0.5f, 0f, -40f, -90f, 0.2f, 0.05f, -22f, 4f, -10f, 4f, 0.28f, 0f, 0.5f);   // клинок прошёл через центр на уровне груди
+                    p.KMirror(0.64f, -0.24f, -0.06f, 0.3f, 4f, -105f, -90f, 0.22f, 0.06f, -30f, 5f, -20f, 5f, 0.28f, 0f, 0.6f);   // проводка вправо, корпус докручивается
+                    p.KMirror(0.86f, -0.04f, -0.3f, 0.32f, -10f, -25f, -30f, 0.06f, 0.02f, -16f, 2f, -6f, 2f, 0.05f, 0f, 0.1f);   // шаг назад, клинок возвращается в чудан
+                    p.KReady(1.08f);
                     break;
-                case AttackType.Rising:      // гяку-кэса: клинок низко за правым бедром, диагональ снизу-справа вверх-влево через корпус
+                case AttackType.Rising:      // кири-агэ: от правого бедра вверх-влево по диагонали
                     p.label = "СНИЗУ";
-                    p.Hands(new Vector3(0.22f, -0.30f, 0.06f), new Vector3(-0.14f, 0.18f, 0.42f));
-                    p.windupEuler = new Vector3(40f, 120f, 0f);
-                    p.strikeEndEuler = new Vector3(-45f, -60f, 0f);
-                    p.followEuler = new Vector3(-58f, -75f, 0f);
-                    p.arcBulge = 0.22f;
                     p.windupTime = 0.32f; p.strikeTime = 0.14f; p.followTime = 0.12f; p.recoveryTime = 0.44f;
-                    p.bodyStep = 0.42f; p.strideDeg = 6f; p.crouchBoost = 0f; p.bodyYawMax = 100f; p.twistMul = 1.2f;
+                    //        t      руки x,y,z              клинок p,y,r      таз F,D        таз yaw,pitch  грудь yaw,pitch  стопы F,R,пятка
+                    p.KReady(0f);
+                    p.K(0.14f, 0.18f, -0.38f, 0.14f, 20f, 60f, -120f, -0.03f, 0.03f, 8f, 2f, 4f, 2f, 0f, 0f, 0f);   // клинок опускается к правому бедру
+                    p.K(0.28f, 0.24f, -0.4f, 0.02f, 38f, 125f, -100f, -0.06f, 0.06f, 22f, 4f, 12f, 4f, 0f, 0f, 0f);   // низко за правым бедром, остриё назад-вниз
+                    p.K(0.32f, 0.25f, -0.4f, -0.01f, 40f, 132f, -100f, -0.07f, 0.06f, 24f, 4f, 14f, 4f, 0f, 0f, 0f);   // взвод
+                    p.K(0.39f, 0.1f, -0.22f, 0.38f, 10f, 50f, -110f, 0.12f, 0.05f, 0f, 2f, 2f, 0f, 0.22f, 0f, 0.3f);   // таз и шаг ведут, клинок идёт вверх по диагонали
+                    p.K(0.46f, -0.12f, 0.1f, 0.46f, -38f, -40f, -120f, 0.2f, 0.04f, -20f, 0f, -10f, -4f, 0.28f, 0f, 0.5f);   // вверху слева
+                    p.K(0.58f, -0.18f, 0.2f, 0.36f, -55f, -70f, -125f, 0.22f, 0.04f, -24f, 0f, -14f, -6f, 0.28f, 0f, 0.55f);   // проводка
+                    p.K(0.8f, 0.0f, -0.2f, 0.32f, -20f, -20f, -20f, 0.07f, 0.02f, -14f, 2f, -6f, 1f, 0.05f, 0f, 0.1f);   // возврат
+                    p.KReady(1.02f);
                     break;
-                case AttackType.LegSweep:    // нижний рез: глубокий присед, клинок у земли за правой ногой, широкая дуга по голеням
+                case AttackType.LegSweep:      // аси-барай: присед и низкая дуга по голеням
                     p.label = "ПО НОГАМ";
-                    p.Hands(new Vector3(0.24f, -0.30f, 0.04f), new Vector3(-0.22f, -0.36f, 0.44f));
-                    p.windupEuler = new Vector3(28f, 130f, 0f);
-                    p.strikeEndEuler = new Vector3(26f, -100f, 0f);
-                    p.followEuler = new Vector3(26f, -120f, 0f);
-                    p.arcBulge = 0.22f;
                     p.windupTime = 0.34f; p.strikeTime = 0.15f; p.followTime = 0.12f; p.recoveryTime = 0.48f;
-                    p.bodyStep = 0.42f; p.strideDeg = 6f; p.crouchBoost = 0.15f; p.bodyYawMax = 100f; p.twistMul = 1.2f;
+                    //        t      руки x,y,z              клинок p,y,r      таз F,D        таз yaw,pitch  грудь yaw,pitch  стопы F,R,пятка
+                    p.KReady(0f);
+                    p.K(0.16f, 0.18f, -0.4f, 0.12f, 20f, 70f, -60f, -0.03f, 0.06f, 8f, 4f, 6f, 6f, 0f, 0f, 0f);   // клинок вниз-вправо, колени сгибаются
+                    p.K(0.3f, 0.3f, -0.44f, -0.02f, 30f, 140f, -85f, -0.06f, 0.12f, 24f, 6f, 14f, 10f, 0f, 0f, 0f);   // низкий взвод за правой ногой
+                    p.K(0.34f, 0.31f, -0.45f, -0.05f, 30f, 148f, -88f, -0.07f, 0.13f, 26f, 6f, 16f, 10f, 0f, 0f, 0f);   // пауза
+                    p.K(0.42f, 0.14f, -0.48f, 0.34f, 34f, 60f, -88f, 0.1f, 0.2f, 0f, 10f, 4f, 22f, 0.22f, 0f, 0.3f);   // присед и шаг, клинок у голеней
+                    p.K(0.49f, -0.1f, -0.5f, 0.4f, 34f, -40f, -88f, 0.18f, 0.22f, -20f, 12f, -10f, 24f, 0.28f, 0f, 0.5f);   // рез по ногам
+                    p.K(0.61f, -0.22f, -0.46f, 0.26f, 32f, -100f, -88f, 0.2f, 0.22f, -26f, 12f, -16f, 24f, 0.28f, 0f, 0.55f);   // проводка
+                    p.K(0.85f, -0.02f, -0.4f, 0.32f, 0f, -20f, -30f, 0.06f, 0.06f, -14f, 4f, -6f, 4f, 0.05f, 0f, 0.1f);   // подъём в стойку
+                    p.KReady(1.09f);
                     break;
                 case AttackType.JumpStrike:  // рубящий в воздухе, с броском вперёд
                     p.label = "В ПРЫЖКЕ";
