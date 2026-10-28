@@ -67,7 +67,11 @@ namespace BladePath.EditorTools
             CharacterVisuals.Part(torii, "PillarR", PrimitiveType.Cylinder, new Vector3(2.7f, 1.3f, 3.6f), Vector3.zero, new Vector3(0.22f, 1.3f, 0.22f), look.lacquer);
             EnvMesh.Box(torii, "BaseL", new Vector3(0.7f, 0.08f, 3.6f), Vector3.zero, new Vector3(0.42f, 0.16f, 0.42f), look.stoneBlock, 1.2f);
             EnvMesh.Box(torii, "BaseR", new Vector3(2.7f, 0.08f, 3.6f), Vector3.zero, new Vector3(0.42f, 0.16f, 0.42f), look.stoneBlock, 1.2f);
-            EnvMesh.Box(torii, "Kasagi", new Vector3(1.7f, 2.72f, 3.6f), Vector3.zero, new Vector3(3.4f, 0.16f, 0.28f), look.woodDark, 1f, true);
+            // касаги с загнутыми вверх концами
+            EnvMesh.Box(torii, "Kasagi", new Vector3(1.7f, 2.72f, 3.6f), Vector3.zero, new Vector3(2.5f, 0.16f, 0.28f), look.woodDark, 1f, true);
+            EnvMesh.Box(torii, "KasagiL", new Vector3(1.7f - 1.48f, 2.76f, 3.6f), new Vector3(0f, 0f, -9f), new Vector3(0.5f, 0.16f, 0.28f), look.woodDark, 1f, true);
+            EnvMesh.Box(torii, "KasagiR", new Vector3(1.7f + 1.48f, 2.76f, 3.6f), new Vector3(0f, 0f, 9f), new Vector3(0.5f, 0.16f, 0.28f), look.woodDark, 1f, true);
+            EnvMesh.Box(torii, "Gakuzuka", new Vector3(1.7f, 2.43f, 3.6f), Vector3.zero, new Vector3(0.14f, 0.3f, 0.12f), look.lacquer, 1f);
             EnvMesh.Box(torii, "Shimaki", new Vector3(1.7f, 2.60f, 3.6f), Vector3.zero, new Vector3(3.1f, 0.07f, 0.24f), look.lacquer, 1f, true);
             EnvMesh.Box(torii, "Nuki", new Vector3(1.7f, 2.25f, 3.6f), Vector3.zero, new Vector3(2.2f, 0.12f, 0.16f), look.lacquer, 1f, true);
 
