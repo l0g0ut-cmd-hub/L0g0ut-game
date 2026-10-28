@@ -175,6 +175,62 @@ namespace BladePath.EditorTools
             return g;
         }
 
+        /// <summary>
+        /// Японская вальмовая крыша: вогнутые скаты и приподнятые углы карниза (ирими-мойя упрощённо).
+        /// hx/hz — полуразмеры по свесу, height — подъём конька над краем, upturn — подъём углов.
+        /// Две подсетки: 0 — черепица сверху, 1 — дерево снизу (свес виден снизу).
+        /// </summary>
+        public static GameObject CurvedHip(Transform parent, string name, Vector3 pos, float hx, float hz, float height, float upturn, Material roof, Material under, float tile)
+        {
+            string key = string.Format("hip{0:F3},{1:F3},{2:F3},{3:F3},{4}", hx, hz, height, upturn, tile);
+            Mesh m;
+            if (!cache.TryGetValue(key, out m) || m == null)
+            {
+                const int N = 28;
+                List<Vector3> v = new List<Vector3>();
+                List<Vector2> uv = new List<Vector2>();
+                List<int> top = new List<int>(), bot = new List<int>();
+                float ridgeHalf = Mathf.Max(0f, hx - hz);
+                for (int pass = 0; pass < 2; pass++)
+                {
+                    int b = v.Count;
+                    for (int j = 0; j <= N; j++)
+                        for (int i = 0; i <= N; i++)
+                        {
+                            float x = Mathf.Lerp(-hx, hx, i / (float)N), z = Mathf.Lerp(-hz, hz, j / (float)N);
+                            float tx = Mathf.Max(0f, Mathf.Abs(x) - ridgeHalf) / Mathf.Max(0.01f, hz);
+                            float tz = Mathf.Abs(z) / Mathf.Max(0.01f, hz);
+                            float t = Mathf.Clamp01(Mathf.Max(tx, tz));              // 0 на коньке, 1 на карнизе
+                            float y = height * Mathf.Pow(1f - t, 1.6f);               // вогнутый скат
+                            float cx = Mathf.Abs(x) / hx, cz = Mathf.Abs(z) / hz;
+                            y += upturn * Mathf.Pow(cx * cz, 4f);                      // углы карниза загнуты вверх
+                            y += upturn * 0.25f * Mathf.Pow(t, 6f);                    // лёгкий загиб всей кромки
+                            if (pass == 1) y -= 0.06f;
+                            v.Add(new Vector3(x, y, z));
+                            uv.Add(new Vector2(x / tile, z / tile));
+                        }
+                    for (int j = 0; j < N; j++)
+                        for (int i = 0; i < N; i++)
+                        {
+                            int a = b + j * (N + 1) + i, c = a + N + 1;
+                            if (pass == 0) { top.Add(a); top.Add(c); top.Add(a + 1); top.Add(a + 1); top.Add(c); top.Add(c + 1); }
+                            else { bot.Add(a); bot.Add(a + 1); bot.Add(c); bot.Add(a + 1); bot.Add(c + 1); bot.Add(c); }
+                        }
+                }
+                m = new Mesh { name = "hip" };
+                m.SetVertices(v); m.SetUVs(0, uv);
+                m.subMeshCount = 2;
+                m.SetTriangles(top, 0); m.SetTriangles(bot, 1);
+                m.RecalculateNormals(); m.RecalculateBounds(); m.RecalculateTangents();
+                if (!AssetDatabase.IsValidFolder(Folder)) AssetDatabase.CreateFolder("Assets/_Project/Models", "Env");
+                AssetDatabase.CreateAsset(m, Folder + "/env_" + (counter++) + ".asset");
+                cache[key] = m;
+            }
+            GameObject g = Make(parent, name, m, pos, Vector3.zero, roof);
+            g.GetComponent<MeshRenderer>().sharedMaterials = new Material[] { roof, under };
+            return g;
+        }
+
         public static GameObject Pyramid(Transform parent, string name, Vector3 pos, float half, float height, Material mat, float tile)
         {
             return Make(parent, name, PyramidMesh(half, height, tile), pos, Vector3.zero, mat);
