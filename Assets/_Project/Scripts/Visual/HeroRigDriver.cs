@@ -48,9 +48,9 @@ namespace BladePath
 
         [Header("Стойка")]
         [Tooltip("Разнос ног в боевой стойке, град.: передняя нога (на стороне передней руки) вперёд, задняя назад. На ходьбе гасится.")]
-        public float stanceStagger = 26f;
+        public float stanceStagger = 22f;
         [Tooltip("Глубина боевой стойки (колени согнуты, таз ниже), 0…1; на ходьбе гасится.")]
-        [Range(0f, 1f)] public float stanceCrouch = 0.12f;
+        [Range(0f, 1f)] public float stanceCrouch = 0.07f;
 
         [Header("Отдача при попадании")]
         public float hitKickDecay = 2.8f;  // 1/с
