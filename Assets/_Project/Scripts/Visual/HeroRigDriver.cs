@@ -48,9 +48,11 @@ namespace BladePath
 
         [Header("Стойка")]
         [Tooltip("Разнос ног в боевой стойке, град.: передняя нога (на стороне передней руки) вперёд, задняя назад. На ходьбе гасится.")]
-        public float stanceStagger = 22f;
+        public float stanceStagger = 36f;
         [Tooltip("Глубина боевой стойки (колени согнуты, таз ниже), 0…1; на ходьбе гасится.")]
-        [Range(0f, 1f)] public float stanceCrouch = 0.07f;
+        [Range(0f, 1f)] public float stanceCrouch = 0.05f;
+        public float stanceSpread = 10f;   // ноги разведены в стороны (широкая стойка из референса), град.
+        public float stFrontKnee = 0.9f, stRearHip = 0.75f, stRearKnee = 0.05f;   // доли угла шага для колена/бедра
 
         [Header("Отдача при попадании")]
         public float hitKickDecay = 2.8f;  // 1/с
@@ -172,7 +174,7 @@ namespace BladePath
                     Vector3 e = weapon.CurrentEuler;                          // не localEulerAngles: за ±90° по pitch Unity переворачивает yaw/roll
                     float pitch = e.x;                                        // −165 … +85
                     float maxYaw = weapon.CurrentProfile != null ? weapon.CurrentProfile.bodyYawMax : 45f;
-                    yawTarget = Mathf.Clamp(e.y, -maxYaw, maxYaw);
+                    yawTarget = Mathf.Clamp(e.y, -maxYaw, maxYaw) * (weapon.CurrentProfile != null ? weapon.CurrentProfile.twistMul : 1f);
                     pitchTarget = Mathf.Lerp(leanBack, leanForward, Mathf.InverseLerp(-120f, 60f, pitch));
                 }
                 crouchTarget = Mathf.Clamp01((weapon.restHand.y - weapon.HandOffset.y) / 0.45f);
@@ -252,8 +254,18 @@ namespace BladePath
             float st = stride;
             if (st > 0.01f)
             {
-                Rot(upperLegR, -st, right); Rot(lowerLegR, st * 0.4f, right); Rot(footR, st * 0.6f, right);
-                Rot(upperLegL, st * 0.6f, right); Rot(lowerLegL, st * 0.5f, right); Rot(footL, -st * 1.1f, right);
+                // передняя: бедро вперёд, голень почти вертикально, стопа плашмя; задняя: прямая нога назад, стопа плашмя
+                Rot(upperLegR, -st, right); Rot(lowerLegR, st * stFrontKnee, right); Rot(footR, st * (1f - stFrontKnee), right);
+                Rot(upperLegL, st * stRearHip, right); Rot(lowerLegL, st * stRearKnee, right); Rot(footL, -st * (stRearHip + stRearKnee), right);
+            }
+
+            // ---------- 4b+) широкая стойка: бёдра разведены в стороны, стопы остаются параллельно земле
+            float spread = stanceSpread * (1f - walkS) * (1f - riseK);
+            if (spread > 0.01f)
+            {
+                Vector3 fw2 = ft.forward;
+                Rot(upperLegL, -spread, fw2); Rot(footL, spread, fw2);
+                Rot(upperLegR, spread, fw2); Rot(footR, -spread, fw2);
             }
 
             // ---------- 4b') стопы стоят на земле: глубина приседа и ширина шага сами решают, насколько опустить таз

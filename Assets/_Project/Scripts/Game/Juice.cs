@@ -94,69 +94,49 @@ namespace BladePath
             tracked.Add(t);
         }
 
-        /// <summary>Аура полного духа: светящиеся частицы поднимаются вокруг бойца, пока шар доступен.</summary>
+        /// <summary>
+        /// Аура полного духа: редкие тонкие искры поднимаются от корпуса (аддитивные, цвет владельца).
+        /// Раньше это были крупные диски у ног — выглядели как пузыри, заменено.
+        /// </summary>
         ParticleSystem MakeAura(FighterController f)
         {
             GameObject g = new GameObject("KiAura");
             g.transform.SetParent(f.transform, false);
-            g.transform.localPosition = new Vector3(0f, 0.1f, 0f);
-            g.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
+            g.transform.localPosition = new Vector3(0f, 1.05f, 0f);
             ParticleSystem ps = g.AddComponent<ParticleSystem>();
             ps.Stop();
             var main = ps.main;
             main.loop = true; main.duration = 1f;
-            main.startLifetime = new ParticleSystem.MinMaxCurve(0.6f, 1.1f);
-            main.startSpeed = new ParticleSystem.MinMaxCurve(0.6f, 1.4f);
-            main.startSize = new ParticleSystem.MinMaxCurve(0.05f, 0.12f);
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.5f, 0.9f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.05f, 0.2f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.012f, 0.025f);
             bool isPlayer = DuelManager.Instance != null && DuelManager.Instance.player == f;
-            main.startColor = isPlayer ? new Color(0.45f, 0.8f, 1f, 0.7f) : new Color(0.75f, 0.35f, 1f, 0.7f);
+            main.startColor = isPlayer ? new Color(0.55f, 0.85f, 1f, 1f) : new Color(0.85f, 0.45f, 1f, 1f);
             main.simulationSpace = ParticleSystemSimulationSpace.World;
-            main.maxParticles = 80;
+            main.maxParticles = 60;
             var em = ps.emission; em.rateOverTime = 0f;
-            var sp = ps.shape; sp.shapeType = ParticleSystemShapeType.Circle; sp.radius = 0.35f; sp.radiusThickness = 0.3f;
+            var sp = ps.shape; sp.shapeType = ParticleSystemShapeType.Sphere; sp.radius = 0.32f; sp.radiusThickness = 0.15f;
+            var vel = ps.velocityOverLifetime; vel.enabled = true; vel.space = ParticleSystemSimulationSpace.World;
+            vel.x = new ParticleSystem.MinMaxCurve(0f); vel.y = new ParticleSystem.MinMaxCurve(0.5f, 0.9f); vel.z = new ParticleSystem.MinMaxCurve(0f);
             var col = ps.colorOverLifetime; col.enabled = true;
             Gradient gr = new Gradient();
             gr.SetKeys(new GradientColorKey[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
                        new GradientAlphaKey[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.2f), new GradientAlphaKey(0f, 1f) });
             col.color = gr;
-            g.GetComponent<ParticleSystemRenderer>().material = softMat;
+            ParticleSystemRenderer r = g.GetComponent<ParticleSystemRenderer>();
+            Shader add = Shader.Find("Legacy Shaders/Particles/Additive");
+            if (add != null)
+            {
+                Material m = new Material(add);
+                m.mainTexture = SoftSprites.Fog;
+                m.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0.5f));
+                r.material = m;
+            }
+            else r.material = softMat;
+            r.renderMode = ParticleSystemRenderMode.Stretch; r.velocityScale = 0.06f; r.lengthScale = 1.5f;
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             ps.Play();
             return ps;
-        }
-
-        readonly List<Material> eyeMats = new List<Material>();
-
-        /// <summary>Горящие глаза нежити: два аддитивных огонька на кости головы (пропадают вместе с головой).</summary>
-        void MakeEyes(FighterController f)
-        {
-            HeroRigDriver rig = f.GetComponentInChildren<HeroRigDriver>();
-            if (rig == null || rig.head == null) return;
-            Shader sh = Shader.Find("Legacy Shaders/Particles/Additive");
-            if (sh == null) return;
-            Material m = new Material(sh);
-            m.mainTexture = SoftSprites.Disc;
-            m.SetColor("_TintColor", new Color(0.9f, 0.3f, 1f, 0.9f));
-            eyeMats.Add(m);
-            Mesh q = QuadMesh();
-            for (int s = -1; s <= 1; s += 2)
-            {
-                GameObject g = new GameObject("Eye");
-                g.transform.SetParent(rig.head, true);
-                g.transform.position = rig.head.position + f.transform.forward * 0.1f + f.transform.right * (0.034f * s) + Vector3.up * 0.045f;
-                g.transform.localScale = Vector3.one * 0.07f / Mathf.Max(0.01f, rig.head.lossyScale.x);
-                g.AddComponent<MeshFilter>().sharedMesh = q;
-                MeshRenderer r = g.AddComponent<MeshRenderer>();
-                r.sharedMaterial = m;
-                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                g.AddComponent<GlowSprite>().flicker = 0.25f;
-            }
-        }
-
-        public void SetAuraColor(FighterController f, Color c)
-        {
-            for (int i = 0; i < eyeMats.Count; i++) eyeMats[i].SetColor("_TintColor", new Color(c.r, c.g, c.b, 0.9f));
-            for (int i = 0; i < tracked.Count; i++)
-                if (tracked[i].f == f && tracked[i].aura != null) { var m = tracked[i].aura.main; c.a = 0.7f; m.startColor = c; }
         }
 
         /// <summary>Клинок в крови: каждое попадание окрашивает лезвие, к новому раунду оно снова чистое.</summary>
@@ -214,7 +194,7 @@ namespace BladePath
                 {
                     var em = t.aura.emission;
                     bool rage = DuelManager.Instance != null && DuelManager.Instance.Enraged && t.f == DuelManager.Instance.enemy;
-                    em.rateOverTime = t.f.Dead ? 0f : (rage ? 70f : (t.f.CanEnergy ? 30f : 0f));
+                    em.rateOverTime = t.f.Dead ? 0f : (rage ? 45f : (t.f.KiFull ? 18f : 0f));
                 }
                 if (t.blade != null && mpb != null)
                 {

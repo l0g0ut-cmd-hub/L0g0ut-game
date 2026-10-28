@@ -33,6 +33,8 @@ namespace BladePath
         public float windupRise;
         [Tooltip("Сколько градусов поворота клинка (yaw) корпус отрабатывает в максимуме: у горизонтальных ударов корпус скручивается сильнее.")]
         public float bodyYawMax = 45f;
+        [Tooltip("Множитель скрутки корпуса за клинком: у размашистых ударов корпус почти разворачивается спиной к врагу.")]
+        public float twistMul = 1f;
         [Tooltip("Выгиб траектории рук вперёд в середине удара, м: руки идут по дуге перед телом, а не по хорде.")]
         public float arcBulge;
         public float windupTime, strikeTime, followTime, recoveryTime;
@@ -56,100 +58,85 @@ namespace BladePath
             p.type = t;
             switch (t)
             {
-                case AttackType.Thrust:      // колющий выпад вперёд (позы 3/6/15): руки назад к поясу, затем резко вперёд
+                // Позы сняты с кадров референс-видео: широкая стойка, корпус на замахе разворачивается почти спиной к врагу,
+                // меч заносится за плечо/над головой, удар идёт большой дугой всем телом с глубоким выпадом.
+                case AttackType.Thrust:      // цуки: рукоять прижата к правому бедру, затем длинный выпад с полностью вытянутыми руками
                     p.label = "УКОЛ";
-                    p.Hands(new Vector3(0.10f, -0.34f, 0.04f), new Vector3(0.00f, -0.08f, 0.44f));
-                    p.windupEuler = new Vector3(-6f, 0f, 0f);
+                    p.Hands(new Vector3(0.16f, -0.24f, -0.10f), new Vector3(0.02f, -0.04f, 0.52f));
+                    p.windupEuler = new Vector3(-6f, 8f, 0f);
                     p.strikeEndEuler = new Vector3(3f, 0f, 0f);
-                    p.followEuler = new Vector3(4f, 0f, 0f);
-                    p.pivotOffset = new Vector3(0f, -0.10f, -0.28f);
-                    p.pivotOffsetEnd = new Vector3(0f, -0.02f, 0.40f);
-                    p.hasOffsetEnd = true;
-                    p.windupTime = 0.30f; p.strikeTime = 0.11f; p.followTime = 0.10f; p.recoveryTime = 0.42f;
-                    p.bodyStep = 0.30f; p.strideDeg = 16f; p.crouchBoost = 0.25f;
+                    p.followEuler = new Vector3(5f, 0f, 0f);
+                    p.windupTime = 0.26f; p.strikeTime = 0.10f; p.followTime = 0.12f; p.recoveryTime = 0.40f;
+                    p.bodyStep = 0.48f; p.strideDeg = 10f; p.crouchBoost = 0f; p.bodyYawMax = 30f;
                     break;
-                case AttackType.Slash:       // горизонтальный рез: скрутка корпуса вправо с клинком у бедра, затем разворот и рез по дуге на уровне пояса
+                case AttackType.Slash:       // большой горизонтальный рез: меч за правым плечом, корпус скручен вправо → дуга на уровне груди через всё тело
                     p.label = "РЕЗ";
-                    p.Hands(new Vector3(0.24f, -0.10f, 0.10f), new Vector3(-0.26f, -0.12f, 0.34f));
-                    p.windupEuler = new Vector3(4f, 118f, 0f);
-                    p.strikeEndEuler = new Vector3(4f, -85f, 0f);
-                    p.followEuler = new Vector3(4f, -108f, 0f);
-                    p.pivotOffset = new Vector3(0.34f, -0.08f, -0.18f);
-                    p.pivotOffsetEnd = new Vector3(-0.32f, -0.10f, 0.30f);
-                    p.arcBulge = 0.12f;
-                    p.hasOffsetEnd = true;
-                    p.windupTime = 0.40f; p.strikeTime = 0.15f; p.followTime = 0.14f; p.recoveryTime = 0.46f;
-                    p.bodyStep = 0.38f; p.strideDeg = 24f; p.crouchBoost = 0.25f; p.bodyYawMax = 85f;
+                    p.Hands(new Vector3(0.20f, 0.14f, 0.00f), new Vector3(-0.22f, 0.00f, 0.42f));
+                    p.windupEuler = new Vector3(-22f, 145f, 0f);
+                    p.strikeEndEuler = new Vector3(4f, -100f, 0f);
+                    p.followEuler = new Vector3(8f, -125f, 0f);
+                    p.arcBulge = 0.26f;
+                    p.windupTime = 0.36f; p.strikeTime = 0.14f; p.followTime = 0.14f; p.recoveryTime = 0.44f;
+                    p.bodyStep = 0.45f; p.strideDeg = 6f; p.crouchBoost = 0f; p.bodyYawMax = 100f; p.twistMul = 1.3f;
                     break;
-                case AttackType.SlashBack:   // то же в обратную сторону
+                case AttackType.SlashBack:   // то же в обратную сторону: меч за левым плечом
                     p.label = "РЕЗ <";
-                    p.Hands(new Vector3(-0.24f, -0.10f, 0.10f), new Vector3(0.26f, -0.12f, 0.34f));
-                    p.windupEuler = new Vector3(4f, -118f, 0f);
-                    p.strikeEndEuler = new Vector3(4f, 85f, 0f);
-                    p.followEuler = new Vector3(4f, 108f, 0f);
-                    p.pivotOffset = new Vector3(-0.34f, -0.08f, -0.18f);
-                    p.pivotOffsetEnd = new Vector3(0.32f, -0.10f, 0.30f);
-                    p.arcBulge = 0.12f;
-                    p.hasOffsetEnd = true;
-                    p.windupTime = 0.40f; p.strikeTime = 0.15f; p.followTime = 0.14f; p.recoveryTime = 0.46f;
-                    p.bodyStep = 0.38f; p.strideDeg = 24f; p.crouchBoost = 0.25f; p.bodyYawMax = 85f;
+                    p.Hands(new Vector3(-0.20f, 0.14f, 0.00f), new Vector3(0.22f, 0.00f, 0.42f));
+                    p.windupEuler = new Vector3(-22f, -145f, 0f);
+                    p.strikeEndEuler = new Vector3(4f, 100f, 0f);
+                    p.followEuler = new Vector3(8f, 125f, 0f);
+                    p.arcBulge = 0.26f;
+                    p.windupTime = 0.36f; p.strikeTime = 0.14f; p.followTime = 0.14f; p.recoveryTime = 0.44f;
+                    p.bodyStep = 0.45f; p.strideDeg = 6f; p.crouchBoost = 0f; p.bodyYawMax = 100f; p.twistMul = 1.3f;
                     break;
-                case AttackType.Rising:      // гяку-кэса: присел, клинок низко у бедра остриём вниз-назад, затем диагональный рывок вверх с подъёмом рук и выпрямлением тела
+                case AttackType.Rising:      // гяку-кэса: клинок низко за правым бедром, диагональ снизу-справа вверх-влево через корпус
                     p.label = "СНИЗУ";
-                    p.Hands(new Vector3(0.20f, -0.38f, 0.10f), new Vector3(-0.12f, 0.20f, 0.40f));
-                    p.windupEuler = new Vector3(68f, -30f, 0f);
-                    p.strikeEndEuler = new Vector3(-118f, 22f, 0f);
-                    p.followEuler = new Vector3(-134f, 26f, 0f);
-                    p.pivotOffset = new Vector3(0.20f, -0.32f, -0.10f);
-                    p.pivotOffsetEnd = new Vector3(-0.14f, 0.12f, 0.20f);
-                    p.hasOffsetEnd = true;
-                    p.windupTime = 0.34f; p.strikeTime = 0.15f; p.followTime = 0.10f; p.recoveryTime = 0.46f;
-                    p.bodyStep = 0.34f; p.strideDeg = 16f; p.crouchBoost = 0f; p.bodyYawMax = 60f;
+                    p.Hands(new Vector3(0.22f, -0.30f, 0.06f), new Vector3(-0.14f, 0.18f, 0.42f));
+                    p.windupEuler = new Vector3(40f, 120f, 0f);
+                    p.strikeEndEuler = new Vector3(-45f, -60f, 0f);
+                    p.followEuler = new Vector3(-58f, -75f, 0f);
+                    p.arcBulge = 0.22f;
+                    p.windupTime = 0.32f; p.strikeTime = 0.14f; p.followTime = 0.12f; p.recoveryTime = 0.44f;
+                    p.bodyStep = 0.42f; p.strideDeg = 6f; p.crouchBoost = 0f; p.bodyYawMax = 100f; p.twistMul = 1.2f;
                     break;
-                case AttackType.LegSweep:    // низкий рез по голеням: присед с клинком сбоку у земли, широкая дуга при развороте корпуса
+                case AttackType.LegSweep:    // нижний рез: глубокий присед, клинок у земли за правой ногой, широкая дуга по голеням
                     p.label = "ПО НОГАМ";
-                    p.Hands(new Vector3(0.26f, -0.40f, 0.08f), new Vector3(-0.26f, -0.42f, 0.40f));
-                    p.windupEuler = new Vector3(24f, 112f, 0f);
-                    p.strikeEndEuler = new Vector3(24f, -85f, 0f);
-                    p.followEuler = new Vector3(24f, -105f, 0f);
-                    p.arcBulge = 0.10f;
-                    p.pivotOffset = new Vector3(0.26f, -0.44f, -0.10f);
-                    p.pivotOffsetEnd = new Vector3(-0.26f, -0.46f, 0.24f);
-                    p.hasOffsetEnd = true;
-                    p.windupTime = 0.36f; p.strikeTime = 0.17f; p.followTime = 0.10f; p.recoveryTime = 0.50f;
-                    p.bodyStep = 0.36f; p.strideDeg = 22f; p.crouchBoost = 0.35f; p.bodyYawMax = 85f;
+                    p.Hands(new Vector3(0.24f, -0.30f, 0.04f), new Vector3(-0.22f, -0.36f, 0.44f));
+                    p.windupEuler = new Vector3(28f, 130f, 0f);
+                    p.strikeEndEuler = new Vector3(26f, -100f, 0f);
+                    p.followEuler = new Vector3(26f, -120f, 0f);
+                    p.arcBulge = 0.22f;
+                    p.windupTime = 0.34f; p.strikeTime = 0.15f; p.followTime = 0.12f; p.recoveryTime = 0.48f;
+                    p.bodyStep = 0.42f; p.strideDeg = 6f; p.crouchBoost = 0.15f; p.bodyYawMax = 100f; p.twistMul = 1.2f;
                     break;
                 case AttackType.JumpStrike:  // рубящий в воздухе, с броском вперёд
                     p.label = "В ПРЫЖКЕ";
-                    p.Hands(new Vector3(0.00f, 0.34f, 0.04f), new Vector3(0.00f, -0.12f, 0.40f));
-                    p.windupEuler = new Vector3(-100f, 20f, 0f);
-                    p.strikeEndEuler = new Vector3(70f, -20f, 0f);
-                    p.followEuler = new Vector3(95f, -25f, 0f);
-                    p.pivotOffset = new Vector3(0f, 0.10f, 0.05f);
-                    p.windupTime = 0.18f; p.strikeTime = 0.14f; p.followTime = 0.06f; p.recoveryTime = 0.30f;
+                    p.Hands(new Vector3(0.00f, 0.42f, 0.00f), new Vector3(0.00f, -0.14f, 0.42f));
+                    p.windupEuler = new Vector3(-150f, 10f, 0f);
+                    p.strikeEndEuler = new Vector3(55f, -10f, 0f);
+                    p.followEuler = new Vector3(70f, -12f, 0f);
+                    p.windupTime = 0.18f; p.strikeTime = 0.13f; p.followTime = 0.08f; p.recoveryTime = 0.30f;
                     p.lungeSpeed = 2.5f;
                     p.bodyStep = 0f; p.strideDeg = 0f;
                     break;
-                case AttackType.Energy:      // дальний энергетический шар
+                case AttackType.Energy:      // шар духа: клинок вскинут вверх остриём, энергия собирается и срывается вперёд
                     p.label = "ШАР";
-                    p.Hands(new Vector3(0.02f, 0.06f, 0.28f), new Vector3(0.02f, 0.06f, 0.28f));
+                    p.Hands(new Vector3(0.04f, 0.12f, 0.26f), new Vector3(0.02f, 0.02f, 0.40f));
                     p.ranged = true;
-                    p.windupEuler = new Vector3(-70f, 0f, 0f);
-                    p.strikeEndEuler = new Vector3(-70f, 0f, 0f);
-                    p.followEuler = new Vector3(-60f, 0f, 0f);
-                    p.windupTime = 0.35f; p.strikeTime = 0.05f; p.followTime = 0.10f; p.recoveryTime = 0.45f;
+                    p.windupEuler = new Vector3(-80f, 0f, 0f);
+                    p.strikeEndEuler = new Vector3(-10f, 0f, 0f);
+                    p.followEuler = new Vector3(-5f, 0f, 0f);
+                    p.windupTime = 0.35f; p.strikeTime = 0.08f; p.followTime = 0.12f; p.recoveryTime = 0.42f;
+                    p.bodyStep = 0.2f; p.strideDeg = 10f;
                     break;
-                default:                     // Overhead — по референс-видео: руки вытянуты высоко над головой, клинок завален назад, ноги сходятся; затем бросок вперёд-вниз в глубокий выпад
+                default:                     // кири-оросi (дзё-дан): руки высоко над головой, клинок заведён за спину → рубящий вниз с глубоким выпадом
                     p.label = "СВЕРХУ";
-                    p.Hands(new Vector3(0.00f, 0.40f, 0.02f), new Vector3(0.00f, -0.14f, 0.42f));
-                    p.windupEuler = new Vector3(-165f, 10f, 0f);
-                    p.strikeEndEuler = new Vector3(32f, -10f, 0f);
-                    p.followEuler = new Vector3(45f, -12f, 0f);
-                    p.pivotOffset = new Vector3(0f, 0.85f, -0.10f);
-                    p.pivotOffsetEnd = new Vector3(0f, -0.22f, 0.30f);
-                    p.hasOffsetEnd = true;
-                    p.windupTime = 0.42f; p.strikeTime = 0.15f; p.followTime = 0.12f; p.recoveryTime = 0.50f;
-                    p.bodyStep = 0.34f; p.strideDeg = 22f; p.crouchBoost = 0.50f; p.windupRise = 0.8f;
+                    p.Hands(new Vector3(0.02f, 0.46f, -0.02f), new Vector3(0.00f, -0.20f, 0.40f));
+                    p.windupEuler = new Vector3(-162f, 8f, 0f);
+                    p.strikeEndEuler = new Vector3(40f, -6f, 0f);
+                    p.followEuler = new Vector3(55f, -8f, 0f);
+                    p.windupTime = 0.40f; p.strikeTime = 0.14f; p.followTime = 0.12f; p.recoveryTime = 0.48f;
+                    p.bodyStep = 0.40f; p.strideDeg = 8f; p.crouchBoost = 0.08f; p.windupRise = 0.6f;
                     break;
             }
             return p;
