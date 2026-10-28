@@ -1,0 +1,122 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace BladePath
+{
+    /// <summary>
+    /// След клинка «во всю ширину»: лента между основанием и остриём за последние ~0,14 с удара.
+    /// Сэмплы сглаживаются сплайном Катмулла–Рома, поэтому дуга плавная даже при 30 кадрах/с.
+    /// Цвет: белое ядро у острия → цвет владельца → прозрачный хвост.
+    /// </summary>
+    [DefaultExecutionOrder(200)]   // после BladeTrajectorySampler (100) и позы рук
+    public class WeaponTrail : MonoBehaviour
+    {
+        public WeaponController weapon;
+        public Color color = new Color(0.6f, 0.85f, 1f);
+        public float life = 0.14f;
+        public float from = 0.25f;     // доля клинка, с которой начинается лента
+
+        struct S { public Vector3 a, b; public float t; }
+        readonly List<S> samples = new List<S>();
+        Mesh mesh;
+        readonly List<Vector3> verts = new List<Vector3>();
+        readonly List<Color> cols = new List<Color>();
+        readonly List<Vector2> uvs = new List<Vector2>();
+        readonly List<int> tris = new List<int>();
+        static Material mat;
+
+        public static WeaponTrail Attach(WeaponController w, Color c)
+        {
+            GameObject g = new GameObject("WeaponTrail");
+            WeaponTrail t = g.AddComponent<WeaponTrail>();
+            t.weapon = w; t.color = c;
+            g.AddComponent<MeshFilter>().sharedMesh = t.mesh = new Mesh { name = "trail" };
+            t.mesh.MarkDynamic();
+            MeshRenderer r = g.AddComponent<MeshRenderer>();
+            r.sharedMaterial = Mat();
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            r.receiveShadows = false;
+            return t;
+        }
+
+        static Material Mat()
+        {
+            if (mat != null) return mat;
+            Shader sh = Shader.Find("Legacy Shaders/Particles/Additive");
+            if (sh == null) sh = Shader.Find("Sprites/Default");
+            mat = new Material(sh);
+            // поперечный градиент: мягкие края, яркая кромка у острия
+            Texture2D t = new Texture2D(4, 64, TextureFormat.RGBA32, false);
+            t.wrapMode = TextureWrapMode.Clamp;
+            for (int y = 0; y < 64; y++)
+            {
+                float v = y / 63f;
+                float a = Mathf.SmoothStep(0f, 1f, v) * (v > 0.9f ? Mathf.Lerp(1f, 0.2f, (v - 0.9f) / 0.1f) : 1f);
+                for (int x = 0; x < 4; x++) t.SetPixel(x, y, new Color(1f, 1f, 1f, a));
+            }
+            t.Apply();
+            mat.mainTexture = t;
+            if (mat.HasProperty("_TintColor")) mat.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0.5f));
+            return mat;
+        }
+
+        void LateUpdate()
+        {
+            if (weapon == null || weapon.bladeRoot == null) return;
+            float now = Time.time;
+            bool live = weapon.Phase == SwingPhase.Strike || weapon.Phase == SwingPhase.FollowThrough;
+            if (live)
+            {
+                Transform br = weapon.bladeRoot;
+                S s; s.a = br.position + br.forward * (weapon.bladeLength * from); s.b = br.position + br.forward * weapon.bladeLength; s.t = now;
+                if (samples.Count == 0 || (samples[samples.Count - 1].b - s.b).sqrMagnitude > 1e-6f) samples.Add(s);
+            }
+            while (samples.Count > 0 && now - samples[0].t > life) samples.RemoveAt(0);
+            transform.position = Vector3.zero; transform.rotation = Quaternion.identity;
+            Build(now);
+        }
+
+        static Vector3 CR(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t)
+        {
+            float t2 = t * t, t3 = t2 * t;
+            return 0.5f * ((2f * p1) + (-p0 + p2) * t + (2f * p0 - 5f * p1 + 4f * p2 - p3) * t2 + (-p0 + 3f * p1 - 3f * p2 + p3) * t3);
+        }
+
+        void Build(float now)
+        {
+            mesh.Clear();
+            if (samples.Count < 2) return;
+            verts.Clear(); cols.Clear(); uvs.Clear(); tris.Clear();
+            const int sub = 4;
+            int n = samples.Count;
+            for (int i = 0; i < n - 1; i++)
+            {
+                S p0 = samples[Mathf.Max(0, i - 1)], p1 = samples[i], p2 = samples[i + 1], p3 = samples[Mathf.Min(n - 1, i + 2)];
+                int steps = (i == n - 2) ? sub + 1 : sub;
+                for (int k = 0; k < steps; k++)
+                {
+                    float u = k / (float)sub;
+                    Vector3 a = CR(p0.a, p1.a, p2.a, p3.a, u), b = CR(p0.b, p1.b, p2.b, p3.b, u);
+                    float t = Mathf.Lerp(p1.t, p2.t, u);
+                    float age = Mathf.Clamp01((now - t) / life);
+                    float alpha = (1f - age) * (1f - age);
+                    Color core = Color.Lerp(Color.white, color, age * 1.5f);
+                    core.a = alpha;
+                    Color edge = color; edge.a = alpha * 0.25f;
+                    verts.Add(a); cols.Add(edge); uvs.Add(new Vector2(age, 0f));
+                    verts.Add(b); cols.Add(core); uvs.Add(new Vector2(age, 1f));
+                }
+            }
+            for (int i = 0; i + 3 < verts.Count; i += 2)
+            {
+                tris.Add(i); tris.Add(i + 1); tris.Add(i + 2);
+                tris.Add(i + 2); tris.Add(i + 1); tris.Add(i + 3);
+                // обратная сторона (лента видна с обеих сторон)
+                tris.Add(i); tris.Add(i + 2); tris.Add(i + 1);
+                tris.Add(i + 2); tris.Add(i + 3); tris.Add(i + 1);
+            }
+            mesh.SetVertices(verts); mesh.SetColors(cols); mesh.SetUVs(0, uvs); mesh.SetTriangles(tris, 0);
+            mesh.RecalculateBounds();
+        }
+    }
+}

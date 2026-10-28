@@ -74,7 +74,13 @@ namespace BladePath
         {
             if (w == null) return;
             Tracked t = new Tracked(); t.w = w; t.last = SwingPhase.Idle;
-            if (fxMat != null && w.bladeRoot != null)
+            if (w.bladeRoot != null)
+            {
+                FighterController owner = w.GetComponentInParent<FighterController>();
+                bool isPlayer = DuelManager.Instance != null && DuelManager.Instance.player == owner;
+                WeaponTrail.Attach(w, isPlayer ? new Color(0.55f, 0.8f, 1f) : new Color(0.85f, 0.35f, 1f));
+            }
+            if (false && fxMat != null && w.bladeRoot != null)   // старый след только за остриём — заменён WeaponTrail
             {
                 GameObject g = new GameObject("BladeTrail");
                 g.transform.SetParent(w.bladeRoot, false);
