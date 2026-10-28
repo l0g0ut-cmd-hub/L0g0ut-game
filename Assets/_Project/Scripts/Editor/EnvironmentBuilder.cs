@@ -89,6 +89,7 @@ namespace BladePath.EditorTools
             AddBrazier(look, new Vector3(3.2f, 0f, 2.2f));
 
             BuildDetails(env, look);
+            MarkStatic(env);
             AddMist(look);
             AddFireflies(look);
             AddPetals(look);
@@ -185,6 +186,16 @@ namespace BladePath.EditorTools
         }
 
         /// <summary>Сад: бамбуковые рощи по углам двора, замшелые камни, дорожка из плоских камней к храму.</summary>
+        /// <summary>Неподвижные декорации — в статический батчинг: сотни объектов сада и храма сливаются в несколько draw call.</summary>
+        static void MarkStatic(Transform root)
+        {
+            foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.GetComponent<BladePath.GlowSprite>() != null || t.GetComponent<ParticleSystem>() != null) continue;
+                UnityEditor.GameObjectUtility.SetStaticEditorFlags(t.gameObject, UnityEditor.StaticEditorFlags.BatchingStatic);
+            }
+        }
+
         static void BuildGarden(Transform env, Look look)
         {
             Transform g = new GameObject("Garden").transform;
