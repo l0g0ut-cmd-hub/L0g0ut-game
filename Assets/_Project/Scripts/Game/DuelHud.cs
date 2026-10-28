@@ -112,6 +112,17 @@ namespace BladePath
                 }
             }
 
+            // объявления
+            if (!string.IsNullOrEmpty(duel.AnnounceText) && duel.AnnounceAge < 1.4f && duel.State == DuelState.Fighting)
+            {
+                float age = duel.AnnounceAge;
+                float aa = Mathf.Clamp01(age / 0.1f) * Mathf.Clamp01((1.4f - age) / 0.4f);
+                float sc = 1f + Mathf.Max(0f, 0.2f - age) * 2f;
+                Color ac = duel.AnnounceColor; ac.a = aa;
+                UiKit.Rect(new Rect(0f, 168f, W, 52f), new Color(0f, 0f, 0f, 0.35f * aa));
+                UiKit.Text(new Rect(0f, 166f, W, 56f), duel.AnnounceText, 40f * sc, ac);
+            }
+
             // серии ударов
             DrawCombo(duel.player, new Vector2(70f, 150f), TextAnchor.MiddleLeft);
             DrawCombo(duel.enemy, new Vector2(W - 70f, 150f), TextAnchor.MiddleRight);

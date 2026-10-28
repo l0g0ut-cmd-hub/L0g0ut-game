@@ -43,6 +43,14 @@ namespace BladePath
         public readonly List<Popup> Popups = new List<Popup>();
         public event Action<FighterController, float> Damaged;
 
+        /// <summary>Крупные объявления по центру экрана: «ПЕРВАЯ КРОВЬ», «10 СЕКУНД!» и т.п.</summary>
+        public string AnnounceText { get; private set; }
+        public Color AnnounceColor { get; private set; }
+        public float AnnounceAge { get { return Time.unscaledTime - announceAt; } }
+        float announceAt = -10f;
+        bool firstBlood, lastStandShown, tenSecShown;
+        public void Announce(string text, Color c) { AnnounceText = text; AnnounceColor = c; announceAt = Time.unscaledTime; }
+
         readonly Dictionary<FighterController, float> hp = new Dictionary<FighterController, float>();
         readonly Dictionary<FighterController, float> hpTrail = new Dictionary<FighterController, float>();
         readonly Dictionary<FighterController, int> lastSwing = new Dictionary<FighterController, int>();
@@ -165,6 +173,7 @@ namespace BladePath
         public void ResetMatch()
         {
             PlayerWins = 0; EnemyWins = 0; Round = 1; MatchOver = false;
+            firstBlood = false;
             stats.Clear();
             ApplyStage();
             if (Weather.Instance != null) Weather.Instance.Roll();
@@ -183,6 +192,7 @@ namespace BladePath
             combo.Clear(); comboTime.Clear(); counterUntil.Clear();
             SuperBy = null;
             if (Juice.Instance != null) Juice.Instance.CleanBlades();
+            lastStandShown = false; tenSecShown = false;
             TimeLeft = roundSeconds; TimedOut = false; LastDraw = false; Perfect = false;
             if (Juice.Instance != null)
             {
@@ -238,6 +248,8 @@ namespace BladePath
             {
                 if (!SuperActive) TimeLeft = Mathf.Max(0f, TimeLeft - Time.deltaTime);
                 if (TimeLeft <= 0f) TimeUp();
+                if (!tenSecShown && TimeLeft <= 10f) { tenSecShown = true; Announce("10 СЕКУНД!", new Color(1f, 0.4f, 0.25f)); }
+                if (!lastStandShown && player != null && Hp01(player) < 0.25f && Hp(player) > 0f) { lastStandShown = true; Announce("ПОСЛЕДНИЙ РУБЕЖ", new Color(0.5f, 0.85f, 1f)); }
                 // низкое здоровье игрока: стук сердца
                 if (player != null && Hp01(player) < 0.3f && Time.unscaledTime >= nextHeartAt)
                 {
@@ -519,6 +531,8 @@ namespace BladePath
                 combo[attacker] = c; comboTime[attacker] = Time.unscaledTime;
                 combo[target] = 0;
                 dmg = Mathf.Round(dmg * Mathf.Min(1.4f, 1f + 0.1f * (c - 1)));
+                if (!firstBlood) { firstBlood = true; Announce("ПЕРВАЯ КРОВЬ", new Color(0.95f, 0.15f, 0.1f)); }
+                if (c == 5) Announce(attacker == player ? "НЕУДЕРЖИМ!" : "БЕЗЖАЛОСТНЫЙ НАТИСК", new Color(1f, 0.8f, 0.25f));
                 Stats st = StatsOf(attacker);
                 st.hits++; st.damage += (int)Mathf.Min(dmg, Hp(target)); st.maxCombo = Mathf.Max(st.maxCombo, c);
                 bool heavy = dmg >= 20f || dmg >= Hp(target);
