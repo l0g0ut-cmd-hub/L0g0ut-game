@@ -18,7 +18,7 @@ SRC = os.environ['SAMURAI2_FBX']
 OUT_DIR = os.environ.get('HERO_OUT', '/tmp/hero'); os.makedirs(OUT_DIR, exist_ok=True)
 TEX_OUT = os.environ.get('TEX_OUT', os.path.join(OUT_DIR, 'Samurai2')); os.makedirs(TEX_OUT, exist_ok=True)
 FBX_PATH = os.path.join(OUT_DIR, 'Samurai2_Player.fbx'); BLEND_PATH = os.path.join(OUT_DIR, 'Samurai2_Player.blend')
-TARGET = int(os.environ.get('TARGET', '60000'))
+TARGET = int(os.environ.get('TARGET', '42000'))
 HEAD_TOP = float(os.environ.get('HEAD_TOP', '1.72'))
 CURL = [float(x) for x in os.environ.get('CURL', '80,95,60').split(',')]
 THUMB = [float(x) for x in os.environ.get('THUMB', '18,30,30').split(',')]

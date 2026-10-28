@@ -113,6 +113,11 @@ namespace BladePath.EditorTools
             SerializedProperty p = so.FindProperty("activeInputHandler");
             if (p == null) { Debug.LogWarning("BladePath: свойство activeInputHandler не найдено"); return; }
             p.intValue = 0; // 0 = Input Manager (Old), 1 = Input System Package, 2 = Both
+            // скиннинг на GPU: две модели по 40–75 тыс. вершин на CPU телефона съедали кадры (38–54 FPS)
+            SerializedProperty gs = so.FindProperty("gpuSkinning");
+            if (gs != null) gs.boolValue = true;
+            SerializedProperty md = so.FindProperty("meshDeformation");
+            if (md != null) { md.intValue = 2; Debug.Log("BladePath: meshDeformation = GPU (batched)"); }   // 0 CPU, 1 GPU, 2 GPU batched
             so.ApplyModifiedProperties();
             AssetDatabase.SaveAssets();
         }

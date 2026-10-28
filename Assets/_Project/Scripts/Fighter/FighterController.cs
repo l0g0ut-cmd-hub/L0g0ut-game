@@ -15,7 +15,7 @@ namespace BladePath
         public BodyZone[] zones;
 
         [Header("Movement")]
-        public float moveSpeed = 1.6f;
+        public float moveSpeed = 1.2f;   // размеренный шаг в стойке
         [Tooltip("Множитель скорости, пока идёт любая фаза удара. 1 = без штрафа.")]
         [Range(0f, 1f)] public float attackMoveMultiplier = 0.8f;
         public float minSeparation = 0.7f;      // ближе этого бойцы не сходятся (корпуса)

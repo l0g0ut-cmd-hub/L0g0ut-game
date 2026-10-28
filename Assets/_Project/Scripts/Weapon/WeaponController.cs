@@ -93,6 +93,9 @@ namespace BladePath
         void Awake()
         {
             if (pivot != null) pivotBasePos = pivot.localPosition;
+            float[] r = SwingProfile.ReadyPose;   // стойка одна для всего: и для ключевых ударов, и для старых
+            restHand = new Vector3(r[PoseCh.HX], r[PoseCh.HY], r[PoseCh.HZ]);
+            restEuler = new Vector3(r[PoseCh.EP], r[PoseCh.EY], r[PoseCh.ER]);
             ApplyRestPose();
         }
 
