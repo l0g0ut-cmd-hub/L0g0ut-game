@@ -24,6 +24,13 @@ namespace BladePath
         public int EnemyWins { get; private set; }
         public int Round { get; private set; }
         public bool MatchOver { get; private set; }
+        public float roundSeconds = 60f;
+        /// <summary>Сколько секунд осталось в раунде.</summary>
+        public float TimeLeft { get; private set; }
+        /// <summary>Как закончился последний раунд: по времени / ничья / без единой царапины.</summary>
+        public bool TimedOut { get; private set; }
+        public bool LastDraw { get; private set; }
+        public bool Perfect { get; private set; }
 
         public DuelState State { get; private set; }
         public bool Paused { get; private set; }
@@ -42,8 +49,19 @@ namespace BladePath
         float stateStart;
         float slowUntil, hitStopUntil;
         float nextRoundAt;
+        float nextHeartAt;
+        readonly Dictionary<FighterController, int> combo = new Dictionary<FighterController, int>();
+        readonly Dictionary<FighterController, float> comboTime = new Dictionary<FighterController, float>();
+        public int Combo(FighterController f) { int v; return combo.TryGetValue(f, out v) ? v : 0; }
+        public float ComboAge(FighterController f) { float v; return comboTime.TryGetValue(f, out v) ? Time.unscaledTime - v : 99f; }
 
-        void Awake() { Instance = this; }
+        void Awake()
+        {
+            Instance = this;
+            // Android по умолчанию держит 30 кадров/с — для файтинга нужно 60
+            QualitySettings.vSyncCount = 0;
+            Application.targetFrameRate = 60;
+        }
         void Start()
         {
             Juice j = GetComponent<Juice>();
@@ -76,6 +94,9 @@ namespace BladePath
             if (player != null) { player.ResetFighter(); hp[player] = maxHp; hpTrail[player] = maxHp; lastSwing[player] = -1; }
             if (enemy != null) { enemy.ResetFighter(); hp[enemy] = maxHp; hpTrail[enemy] = maxHp; lastSwing[enemy] = -1; }
             Popups.Clear();
+            combo.Clear(); comboTime.Clear();
+            TimeLeft = roundSeconds; TimedOut = false; LastDraw = false; Perfect = false;
+            if (Juice.Instance != null) Juice.Instance.Taiko(0.9f, 0.95f);
             SetState(DuelState.Intro);
             Freeze(true);
         }
@@ -115,7 +136,23 @@ namespace BladePath
                 hpTrail[f] = tr;
             }
 
-            if (State == DuelState.Intro && StateTime >= introSeconds) { SetState(DuelState.Fighting); Freeze(false); }
+            if (State == DuelState.Intro && StateTime >= introSeconds)
+            {
+                SetState(DuelState.Fighting); Freeze(false);
+                if (Juice.Instance != null) Juice.Instance.Taiko(1f, 1.1f);
+                Haptics.Pulse(40);
+            }
+            if (State == DuelState.Fighting && !Paused)
+            {
+                TimeLeft = Mathf.Max(0f, TimeLeft - Time.deltaTime);
+                if (TimeLeft <= 0f) TimeUp();
+                // низкое здоровье игрока: стук сердца
+                if (player != null && Hp01(player) < 0.3f && Time.unscaledTime >= nextHeartAt)
+                {
+                    nextHeartAt = Time.unscaledTime + Mathf.Lerp(0.6f, 1.1f, Hp01(player) / 0.3f);
+                    if (Juice.Instance != null) Juice.Instance.Heartbeat();
+                }
+            }
             if (Slowmo && Time.unscaledTime >= slowUntil) Slowmo = false;
             if (!MatchOver && !Paused && (State == DuelState.PlayerWon || State == DuelState.PlayerLost) && Time.unscaledTime >= nextRoundAt) { Round++; ResetDuel(); return; }
             ApplyTimeScale();
@@ -166,6 +203,8 @@ namespace BladePath
             if (r.target.Blocking)
             {
                 bool parry = r.target.BlockTime < 0.25f;
+                r.target.AddKi(parry ? 20f : 6f);
+                if (r.target == player) Haptics.Pulse(parry ? 35 : 15);
                 Popup bp = new Popup();
                 bp.world = r.contact.point + Vector3.up * 0.2f;
                 bp.text = parry ? "ПАРИРОВАНИЕ!" : "БЛОК";
@@ -186,8 +225,37 @@ namespace BladePath
             ApplyDamage(r.target, r.attacker, dmg, r.contact.point, r.zone == BodyZoneId.Head, false, r.contact.normal, r.contact.bladeVelocity, r.contact.zone != null ? r.contact.zone.transform : null);
         }
 
+        /// <summary>Время раунда вышло: побеждает тот, у кого больше здоровья; при равенстве — переигровка.</summary>
+        void TimeUp()
+        {
+            TimedOut = true;
+            float hpP = Hp(player), hpE = Hp(enemy);
+            Freeze(true);
+            if (player.weapon != null) player.weapon.ResetState();
+            if (enemy.weapon != null) enemy.weapon.ResetState();
+            nextRoundAt = Time.unscaledTime + nextRoundDelay;
+            if (Mathf.Approximately(hpP, hpE)) { LastDraw = true; SetState(DuelState.PlayerLost); return; }
+            bool playerLost = hpP < hpE;
+            SetState(playerLost ? DuelState.PlayerLost : DuelState.PlayerWon);
+            if (playerLost) EnemyWins++; else PlayerWins++;
+            Perfect = (playerLost ? hpE : hpP) >= maxHp;
+            MatchOver = PlayerWins >= winsToMatch || EnemyWins >= winsToMatch;
+            if (Juice.Instance != null) Juice.Instance.Taiko(1f, 0.8f);
+        }
+
         void ApplyDamage(FighterController target, FighterController attacker, float dmg, Vector3 point, bool crit, bool chip = false, Vector3 normal = default(Vector3), Vector3 hitDir = default(Vector3), Transform zoneT = null)
         {
+            if (!chip && attacker != null)
+            {
+                // серия: попадания подряд, пока соперник не ответил; каждое следующее чуть сильнее
+                int c = ComboAge(attacker) < 1.6f ? Combo(attacker) + 1 : 1;
+                combo[attacker] = c; comboTime[attacker] = Time.unscaledTime;
+                combo[target] = 0;
+                dmg = Mathf.Round(dmg * Mathf.Min(1.4f, 1f + 0.1f * (c - 1)));
+                attacker.AddKi(10f);
+                target.AddKi(7f);
+                Haptics.Pulse(target == player ? (dmg >= 20f ? 70 : 40) : 18);
+            }
             hp[target] = Mathf.Max(0f, Hp(target) - dmg);
             lastHitTime[target] = Time.unscaledTime;
             Popup p = new Popup();
@@ -215,6 +283,8 @@ namespace BladePath
                 target.Dead = true;
                 if (target.weapon != null) target.weapon.ResetState();
                 bool playerLost = target == player;
+                Haptics.Pulse(120);
+                Perfect = attacker != null && Hp(attacker) >= maxHp;
                 SetState(playerLost ? DuelState.PlayerLost : DuelState.PlayerWon);
                 if (playerLost) EnemyWins++; else PlayerWins++;
                 MatchOver = PlayerWins >= winsToMatch || EnemyWins >= winsToMatch;

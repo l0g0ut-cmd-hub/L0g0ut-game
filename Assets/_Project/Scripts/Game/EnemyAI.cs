@@ -3,27 +3,45 @@ using UnityEngine;
 namespace BladePath
 {
     /// <summary>
-    /// Простой противник: держит дистанцию, обходит игрока по кругу, периодически идёт в атаку случайным ударом,
-    /// после удара отступает. Вся «логика ударов» — те же SwingProfile, что и у игрока.
+    /// Противник: держит дистанцию, обходит по кругу, атакует случайным ударом, после удара отступает.
+    /// С каждым раундом злее: чаще бьёт и чаще ставит блок. Издалека кидает шар духа, после попадания дожимает серией.
+    /// Вся «логика ударов» — те же SwingProfile, что и у игрока.
     /// </summary>
     public class EnemyAI : MonoBehaviour
     {
         public FighterController self, target;
         public bool aiEnabled = true;
-        [Range(0f, 1f)] public float aggression = 0.55f;
+        [Range(0f, 1f)] public float aggression = 0.5f;
 
-        float nextAttackAt, strafeUntil, retreatUntil, dashAt, blockUntil;
+        float nextAttackAt, strafeUntil, retreatUntil, dashAt, blockUntil, energyAt;
         int lastSeenSwing = -1;
         float strafeDir = 1f;
+        bool hooked;
         static readonly AttackType[] Pool = { AttackType.Overhead, AttackType.Overhead, AttackType.Slash, AttackType.SlashBack, AttackType.Thrust, AttackType.Rising, AttackType.LegSweep };
+        static readonly AttackType[] Followups = { AttackType.Slash, AttackType.SlashBack, AttackType.Thrust, AttackType.Overhead };
 
         void Start() { nextAttackAt = Time.time + 2.2f; }
 
+        void OnDestroy() { if (hooked && DuelManager.Instance != null) DuelManager.Instance.Damaged -= OnDamaged; }
+
+        void OnDamaged(FighterController victim, float dmg)
+        {
+            // попал — дожимает серией; пропустил — чаще уходит в блок/отступление
+            if (victim == target && Random.value < 0.55f + 0.1f * Level) nextAttackAt = Time.time + Random.Range(0.18f, 0.35f);
+            if (victim == self && Random.value < 0.4f) retreatUntil = Time.time + 0.6f;
+        }
+
+        int Level { get { return DuelManager.Instance != null ? Mathf.Clamp(DuelManager.Instance.Round - 1, 0, 3) : 0; } }
+
+        static Vector2 XZ(Vector3 v) { return new Vector2(v.x, v.z); }
+
         void Update()
         {
+            if (!hooked && DuelManager.Instance != null) { DuelManager.Instance.Damaged += OnDamaged; hooked = true; }
             if (!aiEnabled || self == null || target == null || !self.CanAct) return;
             if (DuelManager.Instance != null && DuelManager.Instance.State != DuelState.Fighting) return;
 
+            float agg = Mathf.Clamp01(aggression + 0.15f * Level);
             Vector3 to = target.transform.position - self.transform.position; to.y = 0f;
             float dist = to.magnitude;
             Vector3 dir = dist > 1e-3f ? to / dist : Vector3.right;
@@ -32,13 +50,14 @@ namespace BladePath
 
             if (Time.time > strafeUntil) { strafeUntil = Time.time + Random.Range(0.8f, 1.8f); strafeDir = Random.value < 0.5f ? -1f : 1f; }
 
-            // реакция на атаку игрока: иногда ставит блок
+            // реакция на замах игрока: блок или уход рывком
             WeaponController pw = target.weapon;
             if (pw != null && pw.Phase == SwingPhase.Windup && pw.SwingId != lastSeenSwing && dist < 1.8f && !busy)
             {
                 lastSeenSwing = pw.SwingId;
-                if (Random.value < 0.4f) blockUntil = Time.time + Random.Range(0.5f, 0.8f);
-                else if (Random.value < 0.25f) { self.Dash(-dir + side * strafeDir); dashAt = Time.time + 1.5f; }
+                float r = Random.value;
+                if (r < 0.32f + 0.1f * Level) blockUntil = Time.time + Random.Range(0.45f, 0.75f);
+                else if (r < 0.5f + 0.08f * Level && Time.time > dashAt) { self.Dash(XZ(-dir + side * strafeDir)); dashAt = Time.time + 1.5f; }
             }
             if (Time.time < blockUntil && !busy) self.SetBlock(true);
 
@@ -53,16 +72,24 @@ namespace BladePath
             }
             self.SetMoveVector(new Vector2(mv.x, mv.z));
 
+            // шар духа издалека
+            if (!busy && dist > 2.2f && self.CanEnergy && Time.time >= energyAt && Time.time >= blockUntil)
+            {
+                energyAt = Time.time + Random.Range(2.5f, 5f);
+                if (Random.value < 0.6f && self.Attack(AttackType.Energy)) return;
+            }
+
             if (!busy && Time.time >= nextAttackAt && Time.time >= blockUntil && dist < 1.35f)
             {
-                AttackType t = Pool[Random.Range(0, Pool.Length)];
+                bool quick = Time.time - nextAttackAt < 0.4f && DuelManager.Instance != null && DuelManager.Instance.Combo(self) > 0 && DuelManager.Instance.ComboAge(self) < 1.2f;
+                AttackType t = quick ? Followups[Random.Range(0, Followups.Length)] : Pool[Random.Range(0, Pool.Length)];
                 if (self.Attack(t))
                 {
-                    nextAttackAt = Time.time + Mathf.Lerp(2.4f, 0.9f, aggression) + Random.Range(0f, 0.8f);
-                    if (Random.value < 0.45f) retreatUntil = Time.time + 0.9f;
+                    nextAttackAt = Time.time + Mathf.Lerp(2.4f, 0.8f, agg) + Random.Range(0f, 0.7f);
+                    if (Random.value < 0.45f - 0.08f * Level) retreatUntil = Time.time + 0.9f;
                 }
             }
-            if (!busy && dist < 1.0f && Time.time > dashAt && Random.value < 0.01f) { self.Dash(-dir * 1f + side * strafeDir); dashAt = Time.time + 2f; }
+            if (!busy && dist < 1.0f && Time.time > dashAt && Random.value < 0.01f) { self.Dash(XZ(-dir + side * strafeDir)); dashAt = Time.time + 2f; }
         }
     }
 }

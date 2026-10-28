@@ -39,6 +39,17 @@ namespace BladePath
         public float dashTime = 0.18f;
         public float dashCooldown = 0.9f;
 
+        [Header("Ki (дух)")]
+        public float kiMax = 100f;
+        public float energyCost = 35f;      // шар духа тратит ки
+        public float kiRegen = 2.5f;        // ед/с
+        public float kiStart = 25f;
+        /// <summary>Шкала духа: копится от попаданий и блоков, тратится на шар.</summary>
+        public float Ki { get; private set; }
+        public float Ki01 { get { return Mathf.Clamp01(Ki / Mathf.Max(1f, kiMax)); } }
+        public bool CanEnergy { get { return Ki >= energyCost; } }
+        public void AddKi(float v) { Ki = Mathf.Clamp(Ki + v, 0f, kiMax); }
+
         public bool Grounded { get; private set; }
         /// <summary>Боец повержен: не двигается и не бьёт, тело падает (HeroRigDriver).</summary>
         public bool Dead { get; set; }
@@ -67,7 +78,7 @@ namespace BladePath
         Vector3 startPosition;
         Quaternion startRotation;
 
-        void Awake() { startPosition = transform.position; startRotation = transform.rotation; Grounded = true; }
+        void Awake() { startPosition = transform.position; startRotation = transform.rotation; Grounded = true; Ki = kiStart; }
         void OnEnable() { if (weapon != null) weapon.Released += OnRelease; }
         void OnDisable() { if (weapon != null) weapon.Released -= OnRelease; }
 
@@ -93,6 +104,7 @@ namespace BladePath
             dashDir = d.normalized;
             dashLeft = dashTime;
             dashReadyAt = Time.time + dashCooldown;
+            if (Juice.Instance != null) Juice.Instance.DashSound();
             return true;
         }
 
@@ -118,12 +130,16 @@ namespace BladePath
                 if (type == AttackType.Overhead || type == AttackType.Rising) t = AttackType.JumpStrike;
             }
             else if (type == AttackType.JumpStrike) t = AttackType.Overhead;
-            return weapon.TryStartSwing(t);
+            if (t == AttackType.Energy && !CanEnergy) return false;
+            bool ok = weapon.TryStartSwing(t);
+            if (ok && t == AttackType.Energy) Ki -= energyCost;
+            return ok;
         }
 
         void Update()
         {
             float dt = Time.deltaTime;
+            if (!Dead && !Frozen) AddKi(kiRegen * dt);
 
             bool canBlock = CanAct && Grounded && weapon != null && weapon.Phase == SwingPhase.Idle && !GuardBroken;
             bool wasBlocking = Blocking;
@@ -225,6 +241,7 @@ namespace BladePath
             vy = 0f;
             Grounded = true;
             moveInput = Vector2.zero;
+            Ki = kiStart;
             Dead = false; Frozen = false; Blocking = false; BlockTime = 0f; guardBrokenUntil = 0f; stunUntil = 0f; dashLeft = 0f; dashReadyAt = 0f;
             if (weapon != null) weapon.ResetState();
             if (zones != null) for (int i = 0; i < zones.Length; i++) if (zones[i] != null) zones[i].ClearFlash();

@@ -18,6 +18,19 @@ namespace BladePath
             Matrix4x4 old = UiKit.Begin();
             float W = UiKit.Width;
 
+            // кинематографичная виньетка; при низком здоровье игрока она пульсирует красным
+            if (vignette == null) vignette = MakeVignette();
+            Color vc = new Color(0f, 0f, 0f, 0.55f);
+            float low = duel.Hp01(duel.player);
+            if (low < 0.3f && duel.State == DuelState.Fighting)
+            {
+                float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * Mathf.Lerp(9f, 5f, low / 0.3f));
+                vc = Color.Lerp(vc, new Color(0.55f, 0f, 0f, 0.85f), (1f - low / 0.3f) * 0.5f + pulse * 0.35f);
+            }
+            GUI.color = vc;
+            GUI.DrawTexture(new Rect(0f, 0f, W, 540f), vignette);
+            GUI.color = Color.white;
+
             float barW = Mathf.Min(W * 0.36f, 420f);
             float cx = W * 0.5f;
             DrawBar(new Rect(cx - 52f - barW, 16f, barW, 20f), duel.player, false, playerName, new Color(0.15f, 0.55f, 0.85f));
@@ -52,6 +65,23 @@ namespace BladePath
                 }
             }
 
+            // шкалы духа (ки) под полосками здоровья
+            DrawKi(new Rect(cx - 122f - barW * 0.6f, 61f, barW * 0.6f, 6f), duel.player, false);
+            DrawKi(new Rect(cx + 122f, 61f, barW * 0.6f, 6f), duel.enemy, true);
+
+            // таймер раунда
+            Vector2 tc = new Vector2(cx, 28f);
+            UiKit.Disc(tc, 30f, Frame);
+            UiKit.Ring(tc, 30f, Gold);
+            int secs = Mathf.CeilToInt(duel.TimeLeft);
+            bool hurry = secs <= 10 && duel.State == DuelState.Fighting;
+            float tp = hurry ? 1f + 0.12f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * 6f)) : 1f;
+            UiKit.Text(new Rect(tc.x - 30f, tc.y - 22f, 60f, 44f), secs.ToString(), 26f * tp, hurry ? new Color(1f, 0.3f, 0.2f) : Color.white, TextAnchor.MiddleCenter, false);
+
+            // серии ударов
+            DrawCombo(duel.player, new Vector2(70f, 150f), TextAnchor.MiddleLeft);
+            DrawCombo(duel.enemy, new Vector2(W - 70f, 150f), TextAnchor.MiddleRight);
+
             // счёт раундов: по два ромба под полосками
             DrawPips(new Vector2(cx - 52f - 26f, 62f), duel.PlayerWins, duel.winsToMatch, false);
             DrawPips(new Vector2(cx + 52f + 26f, 62f), duel.EnemyWins, duel.winsToMatch, true);
@@ -77,11 +107,63 @@ namespace BladePath
                 Color c = won ? Gold : new Color(0.85f, 0.15f, 0.12f);
                 c.a = t;
                 string title = duel.MatchOver ? (won ? "ПОБЕДА" : "ПОРАЖЕНИЕ") : (won ? "РАУНД ВЫИГРАН" : "РАУНД ПРОИГРАН");
+                if (duel.LastDraw) { title = "НИЧЬЯ"; c = new Color(0.85f, 0.85f, 0.9f, t); }
+                string sub = duel.TimedOut ? "ВРЕМЯ ВЫШЛО" : "";
+                if (duel.Perfect && !duel.LastDraw) sub = "ИДЕАЛЬНО";
+                if (sub.Length > 0) UiKit.Text(new Rect(cx - 300f, 70f, 600f, 44f), sub, 30f, new Color(1f, 0.85f, 0.35f, t));
                 UiKit.Text(new Rect(cx - 400f, 110f, 800f, 120f), title, duel.MatchOver ? 90f : 64f, c);
                 if (!duel.MatchOver) UiKit.Text(new Rect(cx - 300f, 250f, 600f, 40f), duel.PlayerWins + " : " + duel.EnemyWins, 34f, new Color(1f, 1f, 1f, t));
                 UiKit.Rect(new Rect(cx - 200f, 232f, 400f, 2f), new Color(c.r, c.g, c.b, 0.8f * t));
             }
             GUI.matrix = old;
+        }
+
+        static Texture2D vignette;
+        static Texture2D MakeVignette()
+        {
+            const int n = 128;
+            Texture2D t = new Texture2D(n, n, TextureFormat.RGBA32, false);
+            t.wrapMode = TextureWrapMode.Clamp;
+            Color[] px = new Color[n * n];
+            for (int y = 0; y < n; y++)
+                for (int x = 0; x < n; x++)
+                {
+                    float dx = (x / (n - 1f)) * 2f - 1f, dy = (y / (n - 1f)) * 2f - 1f;
+                    float d = Mathf.Sqrt(dx * dx * 0.8f + dy * dy * 1.1f);
+                    float a = Mathf.Clamp01((d - 0.62f) / 0.65f);
+                    px[y * n + x] = new Color(1f, 1f, 1f, a * a);
+                }
+            t.SetPixels(px); t.Apply();
+            return t;
+        }
+
+        void DrawKi(Rect r, FighterController f, bool mirror)
+        {
+            UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), Frame);
+            float k = f.Ki01;
+            float w = r.width * k;
+            bool full = f.CanEnergy;
+            Color c = full ? new Color(0.35f, 0.75f, 1f, 1f) : new Color(0.25f, 0.45f, 0.7f, 0.9f);
+            if (full) c = Color.Lerp(c, Color.white, 0.25f + 0.25f * Mathf.Sin(Time.unscaledTime * 6f));
+            UiKit.Rect(mirror ? new Rect(r.x, r.y, w, r.height) : new Rect(r.xMax - w, r.y, w, r.height), c);
+            // отметка стоимости шара
+            float m = r.width * (f.energyCost / Mathf.Max(1f, f.kiMax));
+            UiKit.Rect(new Rect(mirror ? r.x + m : r.xMax - m, r.y - 1f, 1.5f, r.height + 2f), new Color(1f, 1f, 1f, 0.6f));
+            UiKit.Text(new Rect(mirror ? r.xMax + 4f : r.x - 34f, r.y - 6f, 30f, 18f), "ДУХ", 9f, new Color(0.7f, 0.85f, 1f, 0.9f), mirror ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight, false);
+        }
+
+        void DrawCombo(FighterController f, Vector2 at, TextAnchor anchor)
+        {
+            int n = duel.Combo(f);
+            float age = duel.ComboAge(f);
+            if (n < 2 || age > 1.6f) return;
+            float a = Mathf.Clamp01((1.6f - age) * 2.5f);
+            float pop = 1f + Mathf.Max(0f, 0.2f - age) * 2.5f;
+            string word = (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14)) ? "УДАРА" : "УДАРОВ";
+            Rect r = anchor == TextAnchor.MiddleLeft ? new Rect(at.x, at.y - 40f, 300f, 80f) : new Rect(at.x - 300f, at.y - 40f, 300f, 80f);
+            UiKit.Text(r, n.ToString(), 64f * pop, new Color(1f, 0.82f, 0.3f, a), anchor);
+            Rect r2 = new Rect(r.x, r.y + 52f, r.width, 30f);
+            UiKit.Text(r2, word + " ПОДРЯД", 16f, new Color(1f, 0.95f, 0.85f, a), anchor);
         }
 
         void DrawPips(Vector2 c, int wins, int total, bool mirror)

@@ -183,7 +183,7 @@ namespace BladePath
             Circle(B.Jump, W - 214f, H - 296f, 34f);
             Circle(B.Dash, W - 412f, H - 66f, 32f);
             Circle(B.Block, W - 408f, H - 150f, 32f);
-            Circle(B.Pause, W * 0.5f, 34f, 20f);
+            Circle(B.Pause, W * 0.5f, 88f, 18f);   // под таймером раунда
 
             float cx = W * 0.5f;
             Box(B.Resume, cx - 150f, 150f, 300f, 44f);
@@ -320,7 +320,8 @@ namespace BladePath
             DrawAttack(B.Slash, slashFlip ? Icon.SlashBack : Icon.Slash, air ? "" : "РЕЗ", canAct && !air);
             DrawAttack(B.Rising, Icon.Up, air ? "В ПРЫЖКЕ" : "СНИЗУ", canAct);
             DrawAttack(B.Legs, Icon.Low, air ? "" : "ПО НОГАМ", canAct && !air);
-            DrawAttack(B.Energy, Icon.Orb, "ШАР", canAct);
+            DrawAttack(B.Energy, Icon.Orb, "ШАР", canAct && player.CanEnergy);
+            DrawKiRing(B.Energy, player != null ? Mathf.Clamp01(player.Ki / Mathf.Max(1f, player.energyCost)) : 0f);
             DrawAttack(B.Jump, Icon.Jump, "ПРЫЖОК", player != null && player.CanAct && player.Grounded);
             DrawAttack(B.Block, Icon.Shield, "БЛОК", player != null && player.CanAct && !player.GuardBroken && player.weapon != null && player.weapon.Phase == SwingPhase.Idle);
             DrawAttack(B.Dash, Icon.Dash, "РЫВОК", player != null && player.CanAct && player.DashReady01 >= 1f);
@@ -385,6 +386,22 @@ namespace BladePath
             DrawIcon(icon, c + new Vector2(0f, -r * 0.12f), r * 0.5f, new Color(1f, 1f, 1f, 0.95f * a), r >= 50f ? 4f : 3f);
             if (!string.IsNullOrEmpty(name))
                 UiKit.Text(new Rect(c.x - r, c.y + r * 0.45f, r * 2f, r * 0.45f), name, Mathf.Max(8f, r * 0.24f), new Color(0.95f, 0.88f, 0.7f, a), TextAnchor.MiddleCenter, false);
+        }
+
+        /// <summary>Кольцо из точек вокруг кнопки шара: заполненность = накопленный дух до стоимости шара.</summary>
+        void DrawKiRing(B b, float k)
+        {
+            int i = (int)b;
+            if (!active[i]) return;
+            Vector2 c = ctr[i]; float r = rad[i] + 6f;
+            const int N = 20;
+            for (int s = 0; s < N; s++)
+            {
+                float ang = -Mathf.PI * 0.5f + s / (float)N * Mathf.PI * 2f;
+                bool on = s < Mathf.FloorToInt(k * N + 0.001f);
+                Color col = on ? (k >= 1f ? new Color(0.5f, 0.85f, 1f, 1f) : new Color(0.35f, 0.6f, 0.95f, 0.95f)) : new Color(0f, 0f, 0f, 0.4f);
+                UiKit.Disc(c + new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * r, 2.4f, col);
+            }
         }
 
         static void Arrow(Vector2 from, Vector2 to, float s, float th, Color c)

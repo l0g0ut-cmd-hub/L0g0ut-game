@@ -13,7 +13,8 @@ namespace BladePath
 
         AudioSource[] voices;
         int voiceIdx;
-        AudioClip swish, hit, hitHeavy, clang, boom;
+        AudioClip swish, hit, hitHeavy, clang, boom, drum, heart, whoosh;
+        AudioSource ambient;
         Material fxMat, softMat, splatMat;
         const int MaxDecals = 220;
         readonly List<Decal> decals = new List<Decal>();
@@ -30,6 +31,9 @@ namespace BladePath
             voices = new AudioSource[6];
             for (int i = 0; i < voices.Length; i++) { voices[i] = gameObject.AddComponent<AudioSource>(); voices[i].spatialBlend = 0f; voices[i].playOnAwake = false; }
             swish = Swish(); hit = Thump(0.22f, 140f, 55f, 0.55f); hitHeavy = Thump(0.34f, 100f, 38f, 0.9f); clang = Clang(); boom = Thump(1.0f, 70f, 28f, 0.8f);
+            drum = Drum(); heart = Heart(); whoosh = Swish();
+            ambient = gameObject.AddComponent<AudioSource>();
+            ambient.clip = Wind(); ambient.loop = true; ambient.volume = 0.22f; ambient.spatialBlend = 0f; ambient.Play();
             Shader sh = Shader.Find("Sprites/Default");
             if (sh != null)
             {
@@ -81,6 +85,13 @@ namespace BladePath
                 }
             }
         }
+
+        /// <summary>Удар тайко: начало раунда, «БОЙ!».</summary>
+        public void Taiko(float vol = 1f, float pitch = 1f) { Play(drum, vol, pitch); }
+        /// <summary>Стук сердца на низком здоровье.</summary>
+        public void Heartbeat() { Play(heart, 0.7f, 1f); }
+        /// <summary>Рывок.</summary>
+        public void DashSound() { Play(whoosh, 0.45f, 0.6f); }
 
         void Play(AudioClip c, float vol, float pitch)
         {
@@ -320,6 +331,62 @@ namespace BladePath
             AudioClip c = AudioClip.Create(name, d.Length, 1, Rate, false);
             c.SetData(d, 0);
             return c;
+        }
+
+        static AudioClip Drum()
+        {
+            int n = (int)(Rate * 1.1f);
+            float[] d = new float[n];
+            System.Random rnd = new System.Random(5);
+            float ph = 0f, lp = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)Rate;
+                float f = 62f + 50f * Mathf.Exp(-t * 18f);
+                ph += 2f * Mathf.PI * f / Rate;
+                float body = Mathf.Sin(ph) * Mathf.Exp(-t * 3.2f) + 0.35f * Mathf.Sin(ph * 1.52f) * Mathf.Exp(-t * 6f);
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                lp += 0.12f * (noise - lp);
+                d[i] = Mathf.Clamp((body + lp * Mathf.Exp(-t * 30f) * 1.4f) * Mathf.Min(1f, t * 600f), -1f, 1f);
+            }
+            return Make("taiko", d);
+        }
+
+        static AudioClip Heart()
+        {
+            int n = (int)(Rate * 0.6f);
+            float[] d = new float[n];
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)Rate, v = 0f;
+                float t1 = t, t2 = t - 0.22f;
+                v += Mathf.Sin(2f * Mathf.PI * 55f * t1) * Mathf.Exp(-t1 * 22f);
+                if (t2 > 0f) v += 0.75f * Mathf.Sin(2f * Mathf.PI * 50f * t2) * Mathf.Exp(-t2 * 22f);
+                d[i] = v * Mathf.Min(1f, t * 300f);
+            }
+            return Make("heart", d);
+        }
+
+        /// <summary>Ночной ветер: бесшовная петля отфильтрованного шума с медленными порывами.</summary>
+        static AudioClip Wind()
+        {
+            int n = Rate * 8, m = Rate / 2;
+            float[] raw = new float[n + m];
+            System.Random rnd = new System.Random(3);
+            float lp1 = 0f, lp2 = 0f;
+            for (int i = 0; i < raw.Length; i++)
+            {
+                float t = i / (float)Rate;
+                float gust = 0.55f + 0.3f * Mathf.Sin(t * 0.7f) + 0.15f * Mathf.Sin(t * 1.9f + 1f);
+                float noise = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                lp1 += (0.02f + 0.03f * gust) * (noise - lp1);
+                lp2 += 0.004f * (noise - lp2);
+                raw[i] = (lp1 * 3.2f + lp2 * 6f) * gust;
+            }
+            float[] d = new float[n];
+            for (int i = 0; i < n; i++) d[i] = raw[i];
+            for (int i = 0; i < m; i++) { float k = i / (float)m; d[i] = raw[i] * k + raw[n + i] * (1f - k); }
+            return Make("wind", d);
         }
 
         static AudioClip Swish()

@@ -26,6 +26,7 @@ namespace BladePath
         [Range(0f, 1f)] public float followMidpoint = 0.5f;          // насколько камера следует за серединой между бойцами (X и Z)
 
         float shakeAmp;
+        float koK, cineYaw;   // кинематографичный облёт после KO
         public void Shake(float amount) { shakeAmp = Mathf.Max(shakeAmp, amount); }
 
         float yaw, pitch, dist;
@@ -142,9 +143,18 @@ namespace BladePath
             midX = Mathf.SmoothDamp(midX, targetX, ref midVx, 0.25f);
             midZ = Mathf.SmoothDamp(midZ, targetZ, ref midVz, 0.25f);
 
-            Vector3 focus = new Vector3(midX, 0f, midZ) + targetOffset;
-            Quaternion rot = Quaternion.Euler(pitch, yaw, 0f);
-            Vector3 pos = focus + rot * new Vector3(0f, 0f, -dist);
+            // KO: камера медленно облетает бойцов и подходит ближе
+            DuelManager dm = DuelManager.Instance;
+            bool ko = dm != null && (dm.State == DuelState.PlayerWon || dm.State == DuelState.PlayerLost);
+            float udt = Time.unscaledDeltaTime;
+            koK = Mathf.MoveTowards(koK, ko ? 1f : 0f, udt / (ko ? 0.9f : 0.5f));
+            if (ko) cineYaw += 14f * udt * koK;
+            else cineYaw = Mathf.Lerp(cineYaw, 0f, 1f - Mathf.Exp(-5f * udt));
+            float ck = koK * koK * (3f - 2f * koK);
+
+            Vector3 focus = new Vector3(midX, 0f, midZ) + targetOffset - Vector3.up * 0.25f * ck;
+            Quaternion rot = Quaternion.Euler(pitch + 4f * ck, yaw + cineYaw, 0f);
+            Vector3 pos = focus + rot * new Vector3(0f, 0f, -dist * (1f - 0.3f * ck));
             if (pos.y < 0.15f) pos.y = 0.15f;
             // камера не заходит в стены храма, ворота и сады за пределами арены
             pos.x = Mathf.Clamp(pos.x, -5.7f, 5.7f);
