@@ -25,7 +25,7 @@ namespace BladePath
         public int yawSign = 1;
         public Vector3 restEuler = new Vector3(-30f, 0f, 0f);
         [Tooltip("Положение рук в стойке относительно середины плеч в системе корпуса (x вправо, y вверх, z вперёд), м.")]
-        public Vector3 restHand = new Vector3(0.02f, -0.30f, 0.33f);
+        public Vector3 restHand = new Vector3(0.10f, -0.46f, 0.28f);   // руки опущены и вытянуты, клинок низко вперёд (как в референсе) — не «тираннозавр»
         [Tooltip("Блок: клинок почти вертикально перед лицом, руки у груди.")]
         public Vector3 guardEuler = new Vector3(-82f, 8f, 0f);
         public Vector3 guardHand = new Vector3(0.03f, 0.02f, 0.30f);

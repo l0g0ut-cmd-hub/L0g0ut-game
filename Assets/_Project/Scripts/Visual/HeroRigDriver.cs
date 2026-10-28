@@ -51,6 +51,7 @@ namespace BladePath
         public float stanceStagger = 36f;
         [Tooltip("Глубина боевой стойки (колени согнуты, таз ниже), 0…1; на ходьбе гасится.")]
         [Range(0f, 1f)] public float stanceCrouch = 0.05f;
+        public float postureBack = 10f;   // осанка: грудь назад/вверх, голова поднята (против сутулости модели), град.
         public float stanceSpread = 10f;   // ноги разведены в стороны (широкая стойка из референса), град.
         public float stFrontKnee = 0.9f, stRearHip = 0.75f, stRearKnee = 0.05f;   // доли угла шага для колена/бедра
 
@@ -232,8 +233,9 @@ namespace BladePath
             float pitchTotal = lean * 0.5f - kick * 8f + swayPitch * 0.5f;
             Rot(spine, pitchTotal, right);
             Rot(chest, lean * 0.5f - kick * 12f + swayPitch * 0.5f, right);
+            Rot(spine, -postureBack * 0.4f, right); Rot(chest, -postureBack * 0.6f, right);
             Rot(head, headYaw - yawS * 0.25f, up);              // голова частично «смотрит» на противника, а не вслед за клинком
-            Rot(head, -pitchTotal * 0.5f + kick * 6f, right);
+            Rot(head, -pitchTotal * 0.5f + kick * 6f + postureBack * 0.7f, right);
             if (kick > 0.01f)
             {
                 Vector3 fw = ft.forward;

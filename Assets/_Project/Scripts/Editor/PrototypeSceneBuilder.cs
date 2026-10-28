@@ -129,17 +129,14 @@ namespace BladePath.EditorTools
             GameObject bladeRoot = new GameObject("BladeRoot");
             bladeRoot.transform.SetParent(pivot.transform, false);
 
-            MakeBox("Blade",  bladeRoot.transform, new Vector3(0f, 0f, 0.40f),   new Vector3(0.008f, 0.032f, 0.80f), look.steel);
-            CharacterVisuals.Part(bladeRoot.transform, "Handle", PrimitiveType.Cylinder, new Vector3(0f, 0f, -0.125f), new Vector3(90f, 0f, 0f), new Vector3(0.030f, 0.125f, 0.030f), look.handle);
-            CharacterVisuals.Part(bladeRoot.transform, "HandleWrap", PrimitiveType.Cylinder, new Vector3(0f, 0f, -0.125f), new Vector3(90f, 0f, 0f), new Vector3(0.034f, 0.06f, 0.034f), look.lacquer);
-            CharacterVisuals.Part(bladeRoot.transform, "Tsuba", PrimitiveType.Cylinder, new Vector3(0f, 0f, 0.008f), new Vector3(90f, 0f, 0f), new Vector3(0.095f, 0.004f, 0.095f), look.bronze);
+            KatanaBuilder.Build(bladeRoot.transform, look, look.tsuka, look.iron, look.bronze);   // настоящая катана: изгиб, синоги, киссаки, цуба, оплётка
 
             WeaponController w = pivot.AddComponent<WeaponController>();
             w.owner = f;
             w.pivot = pivot.transform;
             w.bladeRoot = bladeRoot.transform;
             w.bladeLength = 0.80f;
-            w.restEuler = new Vector3(30f, 0f, 0f);   // чудан: клинок вперёд, остриё чуть выше рук, смотрит противнику в горло; хват в досягаемости рук
+            w.restEuler = new Vector3(35f, 0f, 0f);   // чудан: клинок вперёд, остриё чуть выше рук, смотрит противнику в горло; хват в досягаемости рук
             w.yawSign = handSide;   // зеркалит диагональ удара для руки с другой стороны
             pivot.AddComponent<BladeTrajectorySampler>();
             f.weapon = w;
