@@ -134,6 +134,12 @@ namespace BladePath
             return ps;
         }
 
+        public void SetAuraColor(FighterController f, Color c)
+        {
+            for (int i = 0; i < tracked.Count; i++)
+                if (tracked[i].f == f && tracked[i].aura != null) { var m = tracked[i].aura.main; c.a = 0.7f; m.startColor = c; }
+        }
+
         /// <summary>Клинок в крови: каждое попадание окрашивает лезвие, к новому раунду оно снова чистое.</summary>
         public void BloodyBlade(WeaponController w, float amount)
         {

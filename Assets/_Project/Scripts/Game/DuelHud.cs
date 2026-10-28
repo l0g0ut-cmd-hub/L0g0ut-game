@@ -34,7 +34,7 @@ namespace BladePath
             float barW = Mathf.Min(W * 0.36f, 420f);
             float cx = W * 0.5f;
             DrawBar(new Rect(cx - 52f - barW, 16f, barW, 20f), duel.player, false, playerName, new Color(0.15f, 0.55f, 0.85f));
-            DrawBar(new Rect(cx + 52f, 16f, barW, 20f), duel.enemy, true, enemyName, new Color(0.75f, 0.2f, 0.85f));
+            DrawBar(new Rect(cx + 52f, 16f, barW, 20f), duel.enemy, true, Ladder.Current.name, new Color(0.75f, 0.2f, 0.85f));
 
             // красная вспышка по краям, когда бьют игрока
             float since = duel.SinceHit(duel.player);
@@ -116,6 +116,11 @@ namespace BladePath
                 bool deciding = duel.PlayerWins == duel.winsToMatch - 1 && duel.EnemyWins == duel.winsToMatch - 1;
                 float ta = Mathf.Clamp01(1f - duel.StateTime / duel.introSeconds * 0.9f);
                 UiKit.Text(new Rect(cx - 300f, 110f, 600f, 40f), deciding ? "РЕШАЮЩИЙ РАУНД" : "РАУНД " + duel.Round, 26f, new Color(0.95f, 0.9f, 0.8f, ta));
+                if (duel.Round == 1)
+                {
+                    UiKit.Text(new Rect(cx - 400f, 262f, 800f, 34f), "ПУТЬ " + (Ladder.Index + 1) + " / " + Ladder.Count + "  ·  " + Ladder.Current.name, 22f, new Color(Gold.r, Gold.g, Gold.b, ta));
+                    UiKit.Text(new Rect(cx - 400f, 292f, 800f, 24f), Ladder.Current.title, 15f, new Color(0.9f, 0.88f, 0.82f, ta * 0.9f));
+                }
                 float t = duel.StateTime / duel.introSeconds;
                 float a = t < 0.75f ? 1f : Mathf.Clamp01((1f - t) * 4f);
                 float sc = 1f + (1f - Mathf.Clamp01(t * 3f)) * 0.8f;
@@ -130,7 +135,7 @@ namespace BladePath
                 UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, 0.55f * t));
                 Color c = won ? Gold : new Color(0.85f, 0.15f, 0.12f);
                 c.a = t;
-                string title = duel.MatchOver ? (won ? "ПОБЕДА" : "ПОРАЖЕНИЕ") : (won ? "РАУНД ВЫИГРАН" : "РАУНД ПРОИГРАН");
+                string title = duel.MatchOver ? (won ? (Ladder.IsLast ? "ПУТЬ ПРОЙДЕН" : "ПОБЕДА") : "ПОРАЖЕНИЕ") : (won ? "РАУНД ВЫИГРАН" : "РАУНД ПРОИГРАН");
                 if (duel.LastDraw) { title = "НИЧЬЯ"; c = new Color(0.85f, 0.85f, 0.9f, t); }
                 string sub = duel.TimedOut ? "ВРЕМЯ ВЫШЛО" : "";
                 if (duel.Perfect && !duel.LastDraw) sub = "ИДЕАЛЬНО";

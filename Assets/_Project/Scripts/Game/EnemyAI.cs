@@ -49,7 +49,7 @@ namespace BladePath
             if (!aiEnabled || self == null || target == null || !self.CanAct) return;
             if (DuelManager.Instance != null && DuelManager.Instance.State != DuelState.Fighting) return;
 
-            float agg = Mathf.Clamp01(aggression - 0.2f + 0.2f * Difficulty + 0.12f * Mathf.Max(0, Level));
+            float agg = Mathf.Clamp01(aggression - 0.2f + 0.2f * Difficulty + 0.12f * Mathf.Max(0, Level) + Ladder.Current.aggr);
             Vector3 to = target.transform.position - self.transform.position; to.y = 0f;
             float dist = to.magnitude;
             Vector3 dir = dist > 1e-3f ? to / dist : Vector3.right;

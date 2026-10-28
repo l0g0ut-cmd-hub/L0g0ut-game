@@ -91,21 +91,60 @@ namespace BladePath
             if (player != null) j.Track(player.weapon);
             if (enemy != null) j.Track(enemy.weapon);
             if (GetComponent<Weather>() == null) gameObject.AddComponent<Weather>();
+            ApplyStage();
             ResetDuel();
         }
 
         void OnDestroy() { Time.timeScale = 1f; if (resolver != null) resolver.HitRegistered -= OnHit; if (Instance == this) Instance = null; }
 
-        public float Hp(FighterController f) { float v; return hp.TryGetValue(f, out v) ? v : maxHp; }
-        public float Hp01(FighterController f) { return Mathf.Clamp01(Hp(f) / maxHp); }
-        public float Trail01(FighterController f) { float v; return hpTrail.TryGetValue(f, out v) ? Mathf.Clamp01(v / maxHp) : 1f; }
+        public float MaxHp(FighterController f) { return f != null && f == enemy ? maxHp * Ladder.Current.hpMul : maxHp; }
+        public float Hp(FighterController f) { float v; return hp.TryGetValue(f, out v) ? v : MaxHp(f); }
+        public float Hp01(FighterController f) { return Mathf.Clamp01(Hp(f) / MaxHp(f)); }
+        public float Trail01(FighterController f) { float v; return hpTrail.TryGetValue(f, out v) ? Mathf.Clamp01(v / MaxHp(f)) : 1f; }
+
+        /// <summary>Применить ступень «Пути»: скорость, окрас и аура противника.</summary>
+        float enemyBaseSpeed = -1f;
+        System.Collections.Generic.List<Material> enemyMats;
+        System.Collections.Generic.List<Color> enemyBaseColors;
+        public void ApplyStage()
+        {
+            if (enemy == null) return;
+            Ladder.Stage s = Ladder.Current;
+            if (enemyBaseSpeed < 0f) enemyBaseSpeed = enemy.moveSpeed;
+            enemy.moveSpeed = enemyBaseSpeed * s.speedMul;
+            if (enemyMats == null)
+            {
+                enemyMats = new System.Collections.Generic.List<Material>();
+                enemyBaseColors = new System.Collections.Generic.List<Color>();
+                foreach (Renderer r in enemy.GetComponentsInChildren<Renderer>(true))
+                {
+                    if (!(r is SkinnedMeshRenderer || r is MeshRenderer)) continue;
+                    if (enemy.weapon != null && enemy.weapon.bladeRoot != null && r.transform.IsChildOf(enemy.weapon.bladeRoot)) continue;
+                    if (r.GetComponentInParent<BodyZone>() != null && r.GetComponent<BodyZone>() == null && r.sharedMaterial != null && r.sharedMaterial.name.Contains("Flash")) continue;
+                    foreach (Material m in r.materials)
+                        if (m != null && m.HasProperty("_Color")) { enemyMats.Add(m); enemyBaseColors.Add(m.color); }
+                }
+            }
+            for (int i = 0; i < enemyMats.Count; i++) enemyMats[i].color = enemyBaseColors[i] * s.tint;
+            if (Juice.Instance != null) Juice.Instance.SetAuraColor(enemy, s.aura);
+        }
         public float SinceHit(FighterController f) { float v; return lastHitTime.TryGetValue(f, out v) ? Time.unscaledTime - v : 99f; }
 
         /// <summary>Новый матч: счёт раундов обнуляется.</summary>
+        /// <summary>Матч выигран — следующий противник «Пути» (после последнего — снова с первого).</summary>
+        public void NextStage()
+        {
+            Ladder.Index = Ladder.IsLast ? 0 : Ladder.Index + 1;
+            ResetMatch();
+        }
+
+        public bool PlayerWonMatch { get { return MatchOver && PlayerWins >= winsToMatch; } }
+
         public void ResetMatch()
         {
             PlayerWins = 0; EnemyWins = 0; Round = 1; MatchOver = false;
             stats.Clear();
+            ApplyStage();
             if (Weather.Instance != null) Weather.Instance.Roll();
             ResetDuel();
         }
@@ -117,7 +156,7 @@ namespace BladePath
             Time.timeScale = 1f;
             Paused = false; Slowmo = false; hitStopUntil = 0f;
             if (player != null) { player.ResetFighter(); hp[player] = maxHp; hpTrail[player] = maxHp; lastSwing[player] = -1; }
-            if (enemy != null) { enemy.ResetFighter(); hp[enemy] = maxHp; hpTrail[enemy] = maxHp; lastSwing[enemy] = -1; }
+            if (enemy != null) { enemy.ResetFighter(); hp[enemy] = MaxHp(enemy); hpTrail[enemy] = MaxHp(enemy); lastSwing[enemy] = -1; }
             Popups.Clear();
             combo.Clear(); comboTime.Clear();
             SuperBy = null;
@@ -158,7 +197,7 @@ namespace BladePath
             foreach (FighterController f in new List<FighterController>(hpTrail.Keys))
             {
                 float cur = hp[f], tr = hpTrail[f];
-                if (tr > cur && SinceHit(f) > 0.45f) tr = Mathf.MoveTowards(tr, cur, maxHp * 0.35f * dt);
+                if (tr > cur && SinceHit(f) > 0.45f) tr = Mathf.MoveTowards(tr, cur, MaxHp(f) * 0.35f * dt);
                 else if (tr < cur) tr = cur;
                 hpTrail[f] = tr;
             }
@@ -353,7 +392,7 @@ namespace BladePath
             lastSwing[r.attacker] = id;
 
             AttackType type = r.attacker.weapon != null && r.attacker.weapon.CurrentProfile != null ? r.attacker.weapon.CurrentProfile.type : AttackType.Overhead;
-            float dmg = BaseDamage(type) * ZoneMul(r.zone) * (r.glancing ? 0.5f : 1f);
+            float dmg = BaseDamage(type) * ZoneMul(r.zone) * (r.glancing ? 0.5f : 1f) * (r.attacker == enemy ? Ladder.Current.dmgMul : 1f);
             dmg = Mathf.Round(dmg);
             if (r.target.Blocking)
             {
@@ -396,7 +435,7 @@ namespace BladePath
             bool playerLost = hpP < hpE;
             SetState(playerLost ? DuelState.PlayerLost : DuelState.PlayerWon);
             if (playerLost) EnemyWins++; else PlayerWins++;
-            Perfect = (playerLost ? hpE : hpP) >= maxHp;
+            Perfect = playerLost ? hpE >= MaxHp(enemy) : hpP >= MaxHp(player);
             MatchOver = PlayerWins >= winsToMatch || EnemyWins >= winsToMatch;
             if (Juice.Instance != null) Juice.Instance.Taiko(1f, 0.8f);
         }
@@ -448,7 +487,7 @@ namespace BladePath
                 if (target.weapon != null) target.weapon.ResetState();
                 bool playerLost = target == player;
                 Haptics.Pulse(120);
-                Perfect = attacker != null && Hp(attacker) >= maxHp;
+                Perfect = attacker != null && Hp(attacker) >= MaxHp(attacker);
                 SetState(playerLost ? DuelState.PlayerLost : DuelState.PlayerWon);
                 if (playerLost) EnemyWins++; else PlayerWins++;
                 MatchOver = PlayerWins >= winsToMatch || EnemyWins >= winsToMatch;

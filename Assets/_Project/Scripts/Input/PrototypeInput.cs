@@ -124,7 +124,7 @@ namespace BladePath
             if (menu) { Time.timeScale = 1f; SceneManager.LoadScene(SceneNames.MainMenu); return; }
             if (reset)
             {
-                if (duel != null) duel.ResetMatch();
+                if (duel != null) { if (Over && down[(int)B.OverAgain] && duel.PlayerWonMatch) duel.NextStage(); else duel.ResetMatch(); }
                 else { if (player != null) player.ResetFighter(); if (enemy != null) enemy.ResetFighter(); }
                 return;
             }
@@ -220,7 +220,7 @@ namespace BladePath
             labels[(int)B.ToMenu] = "В МЕНЮ";
             labels[(int)B.Vibro] = "ВИБРАЦИЯ: " + (Haptics.Enabled ? "ВКЛ" : "ВЫКЛ");
             labels[(int)B.Difficulty] = "СЛОЖНОСТЬ: " + EnemyAI.DifficultyName;
-            labels[(int)B.OverAgain] = "ЕЩЁ РАЗ";
+            labels[(int)B.OverAgain] = duel != null && duel.PlayerWonMatch ? (Ladder.IsLast ? "С НАЧАЛА" : "ДАЛЕЕ") : "ЕЩЁ РАЗ";
             labels[(int)B.OverMenu] = "В МЕНЮ";
 
             if (!stickActive) { stickCenter = new Vector2(124f, H - 124f); stickKnob = stickCenter; }
