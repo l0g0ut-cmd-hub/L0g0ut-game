@@ -191,7 +191,7 @@ namespace BladePath
                 case 0: h = new Vector3(0.08f * yawSign, 0.22f, 0.30f); e = new Vector3(-14f, -80f * yawSign, 0f); break;   // над головой поперёк, остриё в сторону
                 case 1: h = new Vector3(0.15f * s, -0.02f, 0.32f); e = new Vector3(-78f, 16f * s, 0f); break;              // вертикально с той стороны
                 case 2: h = new Vector3(0.14f * s, -0.42f, 0.30f); e = new Vector3(72f, 18f * s, 0f); break;               // остриём вниз у колена
-                case 3: h = new Vector3(0.05f * yawSign, -0.12f, 0.42f); e = new Vector3(-58f, 14f * yawSign, 0f); break;  // укол: отвод вверх-вбок
+                case 3: h = new Vector3(0.06f * yawSign, -0.3f, 0.42f); e = new Vector3(8f, 28f * yawSign, 0f); break;    // укол: клинок вперёд-вниз наискось поперёк линии укола (на уровне живота)
             }
         }
 
