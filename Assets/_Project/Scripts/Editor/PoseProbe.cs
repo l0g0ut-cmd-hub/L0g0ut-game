@@ -203,7 +203,8 @@ namespace BladePath.EditorTools
             {
                 System.Type t = lk.GetType();
                 bool on = (bool)t.GetField("on", F).GetValue(lk); int idx = (int)t.GetField("idx", F).GetValue(lk); Vector3 off = (Vector3)t.GetField("off", F).GetValue(lk);
-                l = string.Format("{0}{1} off {2:F3}", on ? "LOCK" : "free", idx, off.magnitude);
+                FieldInfo lf = t.GetField("lift", F); float lift = lf != null ? (float)lf.GetValue(lk) : 0f;
+                l = string.Format("{0}{1} off {2:F3} lift {3:F3}", on ? "LOCK" : "free", idx, off.magnitude, lift);
             }
             return string.Format("p{0} h {1:F3} v {2:F2} {3}", j, cur[j].y - gy, dv.magnitude / dt, l);
         }
