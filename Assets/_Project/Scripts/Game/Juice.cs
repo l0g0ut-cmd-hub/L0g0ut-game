@@ -17,7 +17,7 @@ namespace BladePath
         AudioSource stepVoice;
         ParticleSystem footFx;
         ParticleSystem petals;
-        AudioSource ambient;
+        AudioSource ambient, crickets;
         Material fxMat, softMat, splatMat, fogMat;
         const int MaxDecals = 220;
         readonly List<Decal> decals = new List<Decal>();
@@ -43,6 +43,8 @@ namespace BladePath
             stepVoice = gameObject.AddComponent<AudioSource>(); stepVoice.spatialBlend = 0f; stepVoice.playOnAwake = false;   // шаги не отнимают голоса у ударов
             ambient = gameObject.AddComponent<AudioSource>();
             ambient.clip = Wind(); ambient.loop = true; ambient.volume = 0.22f; ambient.spatialBlend = 0f; ambient.Play();
+            crickets = gameObject.AddComponent<AudioSource>();   // ночные сверчки в саду храма; в дождь замолкают
+            crickets.clip = Crickets(); crickets.loop = true; crickets.volume = 0f; crickets.spatialBlend = 0f; crickets.Play();
             Shader sh = Shader.Find("Sprites/Default");
             if (sh != null)
             {
@@ -201,6 +203,11 @@ namespace BladePath
 
         void Update()
         {
+            if (crickets != null)
+            {
+                bool rain = Weather.Instance != null && Weather.Instance.Raining;
+                crickets.volume = Mathf.MoveTowards(crickets.volume, rain ? 0f : 0.09f, Time.unscaledDeltaTime * 0.05f);
+            }
             for (int i = 0; i < tracked.Count; i++)
             {
                 Tracked t = tracked[i];
@@ -978,6 +985,44 @@ namespace BladePath
             for (int i = 0; i < n; i++) d[i] = raw[i];
             for (int i = 0; i < m; i++) { float k = i / (float)m; d[i] = raw[i] * k + raw[n + i] * (1f - k); }
             return Make("wind", d);
+        }
+
+        /// <summary>
+        /// Сверчки (бесшовная петля 8 с): четыре сверчка на 3,9–5,1 кГц, у каждого свой ритм — трели из 3–4 импульсов по 12 мс,
+        /// паузы плавают; лёгкое дрожание амплитуды. Тихо, фоном.
+        /// </summary>
+        static AudioClip Crickets()
+        {
+            int n = Rate * 8, m = Rate / 2;
+            float[] raw = new float[n + m];
+            System.Random rnd = new System.Random(19);
+            float[] f0 = { 4300f, 4720f, 5080f, 3920f };
+            float[] amp = { 1f, 0.7f, 0.55f, 0.8f };
+            for (int c = 0; c < f0.Length; c++)
+            {
+                float t0 = (float)rnd.NextDouble() * 0.6f;
+                float total = (n + m) / (float)Rate;
+                while (t0 < total)
+                {
+                    int pulses = 3 + rnd.Next(2);
+                    for (int p = 0; p < pulses; p++)
+                    {
+                        float ps = t0 + p * 0.03f;
+                        int i0 = (int)(ps * Rate), len = (int)(0.012f * Rate);
+                        for (int k = 0; k < len && i0 + k < raw.Length; k++)
+                        {
+                            float tt = k / (float)Rate;
+                            float env = Mathf.Sin(Mathf.PI * k / len);
+                            raw[i0 + k] += Mathf.Sin(2f * Mathf.PI * f0[c] * (ps + tt)) * env * env * amp[c] * 0.25f;
+                        }
+                    }
+                    t0 += 0.42f + 0.35f * (float)rnd.NextDouble() + (rnd.NextDouble() < 0.12 ? 1.2f : 0f);   // иногда замолкает
+                }
+            }
+            float[] d = new float[n];
+            for (int i = 0; i < n; i++) d[i] = raw[i];
+            for (int i = 0; i < m; i++) { float k = i / (float)m; d[i] = raw[i] * k + raw[n + i] * (1f - k); }
+            return Make("crickets", d);
         }
 
         static AudioClip Swish()
