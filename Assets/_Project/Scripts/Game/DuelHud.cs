@@ -268,6 +268,12 @@ namespace BladePath
                 if (duel.LastDraw) { title = "НИЧЬЯ"; c = new Color(0.85f, 0.85f, 0.9f, t); }
                 string sub = duel.TimedOut ? "ВРЕМЯ ВЫШЛО" : "";
                 if (duel.Perfect && !duel.LastDraw) sub = "ИДЕАЛЬНО";
+                // знак кистью за заголовком: 死 — поражение (как экран смерти Sekiro), 勝 — победа; проявляется мазком слева направо
+                if (!duel.TimedOut && !duel.LastDraw)
+                {
+                    float gt = Mathf.Clamp01((duel.StateTime - 0.35f) / 0.5f);
+                    if (gt > 0f) DrawBrush(won ? "UI/sho" : "UI/shi", new Vector2(cx, 172f), 330f * (1.08f - 0.08f * gt), 0.62f * gt, Mathf.Clamp01(gt * 1.6f));
+                }
                 if (sub.Length > 0) UiKit.Text(new Rect(cx - 300f, 70f, 600f, 44f), sub, 30f, new Color(1f, 0.85f, 0.35f, t));
                 UiKit.Text(new Rect(cx - 400f, 110f, 800f, 120f), title, duel.MatchOver ? 90f : 64f, c);
                 if (duel.MatchOver) DrawStats(cx, 240f, t);
