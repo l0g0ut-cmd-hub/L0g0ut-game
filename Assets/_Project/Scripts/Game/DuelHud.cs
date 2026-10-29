@@ -150,6 +150,24 @@ namespace BladePath
                     float sz = 74f * (1f + 0.35f * Mathf.Max(0f, 0.15f - age) / 0.15f);
                     DrawGlyph("UI/kiken", new Vector2(g.x / UiKit.Scale, (Screen.height - g.y) / UiKit.Scale), sz, a);
                 }
+                // метка добивания (как красная точка Sekiro): красное энсо на груди «поплывшего» врага, пульсирует и медленно вращается
+                FighterController br = duel.enemy;
+                if (br != null && br.PostureBroken && !br.Dead && !duel.DeathblowActive)
+                {
+                    if (markSince < 0f) markSince = Time.unscaledTime;
+                    float ma = Time.unscaledTime - markSince;
+                    Vector3 g = cam.WorldToScreenPoint(br.transform.position + Vector3.up * 1.22f);
+                    if (g.z > 0f)
+                    {
+                        float pulse = 1f + 0.09f * Mathf.Sin(Time.unscaledTime * 7f) + 0.5f * Mathf.Max(0f, 0.18f - ma) / 0.18f;
+                        Vector2 c = new Vector2(g.x / UiKit.Scale, (Screen.height - g.y) / UiKit.Scale);
+                        Matrix4x4 m0 = GUI.matrix;
+                        GUIUtility.RotateAroundPivot(-Time.unscaledTime * 25f, c * UiKit.Scale);
+                        DrawGlyph("UI/deathblow_mark", c, 62f * pulse, Mathf.Clamp01(ma / 0.12f));
+                        GUI.matrix = m0;
+                    }
+                }
+                else markSince = -1f;
                 float da = Time.unscaledTime - duel.DeathblowAt;
                 if (da < 1.9f)
                 {
@@ -365,6 +383,8 @@ namespace BladePath
             GUI.DrawTextureWithTexCoords(new Rect(c.x - w * 0.5f, c.y - h * 0.5f, w * reveal, h), t, new Rect(0f, 0f, reveal, 1f));
             GUI.color = o;
         }
+
+        float markSince = -1f;
 
         static void DrawGlyph(string tex, Vector2 c, float size, float alpha)
         {

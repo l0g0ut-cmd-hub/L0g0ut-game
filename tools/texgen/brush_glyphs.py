@@ -111,3 +111,34 @@ os.makedirs(OUT, exist_ok=True)
 make("忍殺", 300, 70, "deathblow.png")
 make("斬", 300, 70, "zan.png", square=True)
 make("危", 300, 70, "kiken.png", square=True)
+
+
+def enso(name, S=256):
+    """Метка добивания (как красная точка Sekiro): энсо — жирный круг одним мазком кисти, сухой хвост, красное свечение."""
+    ss = 2; W = S * ss
+    yy, xx = np.mgrid[0:W, 0:W].astype(np.float32)
+    cx = cy = W / 2; R = W * 0.27
+    dx, dy = xx - cx, yy - cy
+    r = np.sqrt(dx * dx + dy * dy)
+    ang = (np.arctan2(dy, dx) + np.pi * 0.62) % (2 * np.pi)   # начало мазка — слева вверху
+    u = ang / (2 * np.pi)                                     # 0 … 1 вдоль мазка
+    width = (0.17 * (1 - u) ** 0.7 + 0.03) * W                # жирное начало → тонкий хвост
+    width *= 0.45 + 0.55 * np.sqrt(np.clip(u / 0.06, 0, 1))   # кисть касается бумаги — скруглённое начало
+    wob = (noise(W, W, 40 * ss) - 0.5) * 0.03 * W
+    d = np.abs(r - R - wob) / np.maximum(width * 0.5, 1.0)
+    edge_n = (noise(W, W, 5 * ss) - 0.5) * 0.35
+    body = (d < 1.0 + edge_n).astype(np.float32) * (u < 0.94)
+    # сухая кисть только к хвосту: полосы вдоль окружности (шум по радиусу)
+    lanes = np.interp(np.clip((r - R) / (0.2 * W) * 60 + 60, 0, 119), np.arange(120), ndimage.gaussian_filter1d(rng.random(120), 1.2))
+    lanes = (lanes - lanes.min()) / (lanes.max() - lanes.min() + 1e-6)
+    tail = np.clip((u - 0.55) / 0.35, 0, 1)
+    a = body * np.clip(1.0 - tail * (1.0 - np.clip((lanes - 0.25) * 2.5, 0, 1)) * 1.1, 0, 1)
+    a = ndimage.gaussian_filter(a, 0.7 * ss)
+    A = np.array(Image.fromarray((np.clip(a, 0, 1) * 255).astype(np.uint8)).resize((S, S), Image.LANCZOS), np.float32) / 255.0
+    inside = ndimage.distance_transform_edt(A > 0.5)
+    core = np.clip(inside / 5.0, 0, 1)
+    im = compose(A, core)
+    im.save(os.path.join(OUT, name)); print(name, im.size)
+
+
+enso("deathblow_mark.png")
