@@ -149,3 +149,32 @@ def enso(name, S=256):
 
 
 enso("deathblow_mark.png")
+
+
+def stroke(name, W=1024, H=256):
+    """Мазок кисти под титул (имя врага перед боем): широкий горизонтальный мазок туши, сухие рваные концы, без свечения."""
+    ss = 2; w, h = W * ss, H * ss
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    u = xx / w
+    # толщина: нажим в начале, ровно, кисть уходит к концу; верх/низ гуляют
+    thick = (0.30 + 0.12 * np.sin(u * 3.1) ** 2) * h * np.clip(u / 0.06, 0, 1) ** 0.5 * np.clip((1 - u) / 0.22, 0, 1) ** 0.8
+    cy = h * (0.52 + 0.04 * np.sin(u * 4.0 + 0.5))
+    def n1(cells, seed, amp):   # гладкий шум вдоль мазка
+        r_ = np.random.default_rng(seed).random(cells + 2)
+        return (np.interp(u * cells, np.arange(cells + 2), r_) - 0.5) * amp
+    top = cy - thick * 0.5 + n1(40, 5, 0.05 * h) + n1(160, 6, 0.018 * h)
+    bot = cy + thick * 0.5 + n1(40, 7, 0.05 * h) + n1(160, 8, 0.018 * h)
+    jit = (noise(h, w, 3 * ss) - 0.5) * 0.012 * h
+    body = np.clip((yy - top + jit) / (1.5 * ss), 0, 1) * np.clip((bot - yy + jit) / (1.5 * ss), 0, 1)
+    lanes = np.interp(np.clip((yy - cy) / (0.5 * h) * 60 + 60, 0, 119), np.arange(120), ndimage.gaussian_filter1d(rng.random(120), 1.0))
+    lanes = (lanes - lanes.min()) / (lanes.max() - lanes.min() + 1e-6)
+    dry = np.clip((u - 0.62) / 0.3, 0, 1) + np.clip((0.05 - u) / 0.05, 0, 1) * 0.6
+    a = body * np.clip(1.0 - dry * (1.0 - np.clip((lanes - 0.3) * 2.5, 0, 1)) * 1.15, 0, 1) * 0.92
+    A = np.array(Image.fromarray((np.clip(a, 0, 1) * 255).astype(np.uint8)).resize((W, H), Image.LANCZOS), np.float32) / 255.0
+    tone = noise(H, W, 20, octaves=3)
+    rgb = np.stack([0.10 + 0.05 * tone, 0.015 + 0.01 * tone, 0.015 + 0.01 * tone], -1)
+    im = Image.fromarray((np.concatenate([np.clip(rgb, 0, 1), A[..., None]], -1) * 255).astype(np.uint8), "RGBA")
+    im.save(os.path.join(OUT, name)); print(name, im.size)
+
+
+stroke("brush_stroke.png")
