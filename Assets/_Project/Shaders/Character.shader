@@ -33,11 +33,14 @@ Shader "BladePath/Character"
         sampler2D _MainTex, _BumpMap, _MetallicGlossMap, _EmissionMap;
         fixed4 _Color, _EmissionColor, _RimColor;
         half _BumpScale, _Metallic, _Glossiness, _GlossMapScale, _RimPower;
+        half _BP_Wetness;   // глобально из Weather: дождь 0…1
 
         struct Input
         {
             float2 uv_MainTex;
             float3 viewDir;
+            float3 worldNormal;
+            INTERNAL_DATA
         };
 
         void surf (Input IN, inout SurfaceOutputStandard o)
@@ -57,6 +60,14 @@ Shader "BladePath/Character"
             o.Metallic = _Metallic;
             o.Smoothness = _Glossiness;
         #endif
+            // мокрый под дождём: верх (плечи, шлем, руки) мокнет сильнее; ткань темнеет, всё блестит
+            if (_BP_Wetness > 0.001h)
+            {
+                half top = saturate(WorldNormalVector(IN, o.Normal).y * 0.5h + 0.5h);
+                half w = _BP_Wetness * lerp(0.5h, 1.0h, top);
+                o.Albedo *= lerp(1.0h, 0.7h, w * (1.0h - o.Metallic));
+                o.Smoothness = lerp(o.Smoothness, max(o.Smoothness, 0.8h), w * 0.85h);
+            }
             // контровой свет: сильнее у краёв силуэта (вид почти по касательной к поверхности)
             half rim = 1.0h - saturate(dot(normalize(IN.viewDir), o.Normal));
             rim = pow(rim, _RimPower);

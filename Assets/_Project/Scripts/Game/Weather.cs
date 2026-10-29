@@ -159,8 +159,14 @@ namespace BladePath
             thunder = ThunderClip(); thunderAudio.spatialBlend = 0f;
         }
 
+        float wetK;
+        static readonly int WetId = Shader.PropertyToID("_BP_Wetness");
+
         void Update()
         {
+            // бойцы промокают под дождём за несколько секунд (шейдер персонажей: ткань темнеет, доспех и кожа блестят)
+            wetK = Mathf.MoveTowards(wetK, Raining ? 1f : 0f, Time.deltaTime / (Raining ? 5f : 1f));
+            Shader.SetGlobalFloat(WetId, wetK);
             if (!Raining) { Restore(); return; }
 
             // молния: двойная вспышка, гром через 0,3…1,8 с

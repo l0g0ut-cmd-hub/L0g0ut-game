@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace BladePath.EditorTools
@@ -89,6 +90,7 @@ namespace BladePath.EditorTools
             AddTree(env, look, new Vector3(5.6f, 0f, -0.6f), 1.0f, 3);
             AddTree(env, look, new Vector3(-5.4f, 0f, -1.0f), 1.1f, 4);
             AddTree(env, look, new Vector3(4.6f, 0f, 8.2f), 1.6f, 5);
+            if (look.fallenLeaves != null) AddFallenLeaves(env, look.fallenLeaves);
 
             // луна
             GameObject moon = GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -381,6 +383,64 @@ namespace BladePath.EditorTools
             AddReflection(lp.transform, null, 1f, new Color(1f, 0.72f, 0.38f), 0.34f, 1.7f, 0.5f);
             EnvMesh.Pyramid(t, "Cap", new Vector3(0f, 1.07f, 0f), 0.3f, 0.22f, look.stoneBlock, 0.8f);
             CharacterVisuals.Part(t, "Jewel", PrimitiveType.Sphere, new Vector3(0f, 1.32f, 0f), Vector3.zero, new Vector3(0.09f, 0.09f, 0.09f), look.stoneBlock);
+        }
+
+        /// <summary>
+        /// Опавшие листья клёна (один меш, 1 вызов отрисовки): гуще под кронами на гравии и у бордюров, редко — на камне арены
+        /// (середину бойцы «вымели»). Каждый лист — карточка 7…13 см из атласа 2×2 (алый, оранжевый, намокший винный, сухой бурый),
+        /// лежит чуть наклонно, свет — как у земли (нормаль вверх).
+        /// </summary>
+        static void AddFallenLeaves(Transform env, Material mat)
+        {
+            System.Random r = new System.Random(77);
+            List<Vector3> v = new List<Vector3>(); List<Vector3> n = new List<Vector3>(); List<Vector2> uv = new List<Vector2>(); List<int> t = new List<int>();
+            Vector3[] trees = { new Vector3(5.4f, 0f, 3.4f), new Vector3(-5.5f, 0f, 4.4f), new Vector3(5.6f, 0f, -0.6f), new Vector3(-5.4f, 0f, -1.0f) };
+            System.Func<float> R = () => (float)r.NextDouble();
+            System.Action<Vector3> Leaf = (Vector3 p) =>
+            {
+                float size = 0.07f + 0.06f * R();
+                float a = R() * Mathf.PI * 2f;
+                Vector3 ex = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * size * 0.5f, ez = new Vector3(-Mathf.Sin(a), 0f, Mathf.Cos(a)) * size * 0.5f;
+                ex.y = (R() - 0.5f) * size * 0.25f; ez.y = (R() - 0.5f) * size * 0.25f;   // лист покороблен — чуть наклонён
+                int cell = r.Next(4); if (R() < 0.35f) cell = 2;                          // на мокром камне больше тёмных
+                Vector2 o = new Vector2((cell % 2) * 0.5f, (cell / 2) * 0.5f);
+                bool flip = R() < 0.5f;
+                int i0 = v.Count;
+                Vector3[] q = { p - ex - ez, p + ex - ez, p + ex + ez, p - ex + ez };
+                Vector2[] u = { new Vector2(0f, 0f), new Vector2(0.5f, 0f), new Vector2(0.5f, 0.5f), new Vector2(0f, 0.5f) };
+                for (int k = 0; k < 4; k++) { v.Add(q[k]); n.Add(Vector3.up); Vector2 uu = u[k]; if (flip) uu.x = 0.5f - uu.x; uv.Add(o + uu); }
+                t.Add(i0); t.Add(i0 + 2); t.Add(i0 + 1); t.Add(i0); t.Add(i0 + 3); t.Add(i0 + 2);
+            };
+            // под кронами (на гравии; верх гравия y = −0,07): плотнее к стволу
+            foreach (Vector3 tp in trees)
+                for (int i = 0; i < 70; i++)
+                {
+                    float d = 0.3f + 2.4f * Mathf.Pow(R(), 0.8f), a = R() * Mathf.PI * 2f;
+                    Vector3 p = tp + new Vector3(Mathf.Cos(a) * d, 0f, Mathf.Sin(a) * d);
+                    bool onArena = Mathf.Abs(p.x) < 3.9f && Mathf.Abs(p.z) < 3.0f;
+                    if (onArena) continue;
+                    p.y = -0.062f + 0.004f * R();
+                    Leaf(p);
+                }
+            // на камне арены: у бордюров, середина почти чистая
+            for (int i = 0; i < 200 && v.Count < 4 * 380; i++)
+            {
+                Vector3 p = new Vector3((R() - 0.5f) * 7.0f, 0f, (R() - 0.5f) * 5.2f);
+                float edge = Mathf.Max(Mathf.Abs(p.x) / 3.5f, Mathf.Abs(p.z) / 2.6f);   // 0 в центре … 1 у бордюра
+                if (R() > Mathf.Pow(edge, 3f) * 0.9f + 0.03f) continue;
+                p.y = 0.009f + 0.003f * R();
+                Leaf(p);
+            }
+            Mesh m = new Mesh { name = "FallenLeaves" };
+            m.SetVertices(v); m.SetNormals(n); m.SetUVs(0, uv); m.SetTriangles(t, 0);
+            m.RecalculateBounds(); m.RecalculateTangents();
+            GameObject g = new GameObject("FallenLeaves");
+            g.transform.SetParent(env, false);
+            g.AddComponent<MeshFilter>().sharedMesh = m;
+            MeshRenderer mr = g.AddComponent<MeshRenderer>();
+            mr.sharedMaterial = mat;
+            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            mr.receiveShadows = true;
         }
 
         static void AddTree(Transform env, Look look, Vector3 pos, float s, int seed)
