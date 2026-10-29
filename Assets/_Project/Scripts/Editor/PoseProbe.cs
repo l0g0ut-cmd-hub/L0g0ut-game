@@ -186,6 +186,28 @@ namespace BladePath.EditorTools
             all.Append(sb);
         }
 
+        static FighterController FindPlayer()
+        {
+            DuelManager dm = UnityEngine.Object.FindFirstObjectByType<DuelManager>();
+            return dm != null ? dm.player : null;
+        }
+
+        /// <summary>Опорная (нижняя) точка подошвы: высота над землёй, её скорость по земле, замок стопы (on, idx, |off|).</summary>
+        static string Foot(Vector3[] cur, Vector3[] prev, object lk, float gy, float dt)
+        {
+            int j = 0; float y = float.MaxValue;
+            for (int k = 0; k < cur.Length; k++) { float py = cur[k].y + (k == 2 ? 0.02f : 0f); if (py < y) { y = py; j = k; } }
+            Vector3 dv = cur[j] - prev[j]; dv.y = 0f;
+            string l = "-";
+            if (lk != null)
+            {
+                System.Type t = lk.GetType();
+                bool on = (bool)t.GetField("on", F).GetValue(lk); int idx = (int)t.GetField("idx", F).GetValue(lk); Vector3 off = (Vector3)t.GetField("off", F).GetValue(lk);
+                l = string.Format("{0}{1} off {2:F3}", on ? "LOCK" : "free", idx, off.magnitude);
+            }
+            return string.Format("p{0} h {1:F3} v {2:F2} {3}", j, cur[j].y - gy, dv.magnitude / dt, l);
+        }
+
         static void WalkSim(FighterController f, HeroRigDriver d, Animator anim, Transform model, string label, Vector3 dirLocal, float speed, StringBuilder sb, float yawDeg = 0f)
         {
             const float dt = 1f / 30f;
@@ -203,6 +225,10 @@ namespace BladePath.EditorTools
                 List<Vector3[]> SP = new List<Vector3[]>();
                 int frames = 90, stopAt = 70;
                 string st = "";
+                // покадровый след опорной точки (игрок, вперёд/назад/диагональ): высота, скорость, замок стопы
+                bool trace = f == FindPlayer() && (label == "F" || label == "B" || label == "FR");
+                FieldInfo lkL = typeof(HeroRigDriver).GetField("lockL", F), lkR = typeof(HeroRigDriver).GetField("lockR", F);
+                Vector3[] prevL = null, prevR = null;
                 for (int i = 0; i < frames; i++)
                 {
                     bool go = i < stopAt;
@@ -214,6 +240,15 @@ namespace BladePath.EditorTools
                     anim.Update(dt);
                     Call(d, "LateUpdate");
                     L.Add(fl.position); R.Add(fr.position); H.Add(hp.position.y - ft.position.y);
+                    if (trace && solL != null && solR != null && lkL != null)
+                    {
+                        Vector3[] cl = new Vector3[solL.Length], cr = new Vector3[solR.Length];
+                        for (int k = 0; k < solL.Length; k++) cl[k] = fl.TransformPoint(solL[k]);
+                        for (int k = 0; k < solR.Length; k++) cr[k] = fr.TransformPoint(solR[k]);
+                        if (i >= 30 && i < stopAt && prevL != null)
+                            sb.AppendFormat("PROBE|{0}|trace_{1}|{2}|L {3}|R {4}\n", f.name, label, i, Foot(cl, prevL, lkL.GetValue(d), ft.position.y, dt), Foot(cr, prevR, lkR.GetValue(d), ft.position.y, dt));
+                        prevL = cl; prevR = cr;
+                    }
                     if (solL != null && solR != null)
                     {
                         Vector3[] pp = new Vector3[solL.Length + solR.Length];
