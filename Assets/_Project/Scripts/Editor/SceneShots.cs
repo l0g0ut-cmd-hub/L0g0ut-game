@@ -45,15 +45,16 @@ namespace BladePath.EditorTools
                     if (d == null || d.animator == null) continue;
                     d.animator.Rebind(); d.animator.Update(0f);
                 }
+                // кожа пересчитывается на каждый рендер: иначе все кадры одного «редакторского кадра» рисуют тело в позе первого
+                foreach (SkinnedMeshRenderer smr in UnityEngine.Object.FindObjectsByType<SkinnedMeshRenderer>(FindObjectsSortMode.None))
+                { smr.forceMatrixRecalculationPerRender = true; smr.updateWhenOffscreen = true; }
                 for (int i = 0; i < 40; i++)
                     foreach (FighterController f in fs)
                     {
                         HeroRigDriver d = f.GetComponentInChildren<HeroRigDriver>(true);
                         if (d == null || d.animator == null) continue;
                         if (f.weapon != null) Call(f.weapon, "Update");
-                        Call(d, "Update");
-                        d.animator.Update(dt);
-                        Call(d, "LateUpdate");
+                        Tick(f, d, dt, dt);
                     }
 
                 // компоненты, которые в игре готовятся в Awake (текстуры листьев/лепестков, ореолы) — в редакторе вызываем сами
@@ -91,6 +92,12 @@ namespace BladePath.EditorTools
                     SwingStrip(cam, dir, "11_swing_thrust", player, AttackType.Thrust, log);
                 }
                 Shot(cam, dir, "4_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);
+                // походка: шаг вперёд и приставной вбок (мокап + замок стоп), камера едет рядом
+                if (player != null)
+                {
+                    WalkStrip(cam, dir, "12_walk_fwd", player, Vector3.forward, 1.2f, log);
+                    WalkStrip(cam, dir, "13_walk_side", player, Vector3.right, 0.72f, log);
+                }
 
                 // парирование: вспышка, блик, волна и искры через 50 мс после удара
                 Juice juice = UnityEngine.Object.FindFirstObjectByType<Juice>();
@@ -142,7 +149,8 @@ namespace BladePath.EditorTools
                     phase.GetSetMethod(true).Invoke(w, new object[] { ph });
                     pt.SetValue(w, rem); bl.SetValue(w, 0f);
                     Call(w, "ApplyPose");
-                    for (int i = 0; i < 6; i++) Call(d, "LateUpdate");
+                    // поза Animator заново на каждой итерации (драйвер крутит кости относительно неё), сглаживания драйвера сходятся
+                    for (int i = 0; i < 8; i++) Tick(f, d, 0f, 1f / 30f);
                     cam.transform.position = camPos; cam.transform.rotation = Quaternion.LookRotation(look - camPos, Vector3.up); cam.fieldOfView = 42f;
                     cam.targetTexture = rt; cam.Render();
                     RenderTexture.active = rt;
@@ -159,7 +167,70 @@ namespace BladePath.EditorTools
                 cam.transform.position = p0; cam.transform.rotation = r0; cam.fieldOfView = f0;
                 rt.Release(); UnityEngine.Object.DestroyImmediate(rt); UnityEngine.Object.DestroyImmediate(sheet);
                 w.ResetState();
-                for (int i = 0; i < 6; i++) Call(d, "LateUpdate");
+                for (int i = 0; i < 8; i++) Tick(f, d, 0f, 1f / 30f);
+            }
+        }
+
+        /// <summary>Один кадр бойца как в игре: Update драйвера → Animator → LateUpdate драйвера → полы плаща.</summary>
+        static void Tick(FighterController f, HeroRigDriver d, float animDt, float dt)
+        {
+            HeroRigDriver.DtOverride = dt;
+            Call(d, "Update");
+            if (d.animator != null) d.animator.Update(animDt);
+            Call(d, "LateUpdate");
+            CoatSpring cs = f.GetComponentInChildren<CoatSpring>(true);
+            if (cs != null) Call(cs, "LateUpdate");
+        }
+
+        /// <summary>Раскадровка походки: боец идёт dirLocal со скоростью speed (как PoseProbe.WalkSim), 8 кадров через 0,1 с после разгона.</summary>
+        static void WalkStrip(Camera cam, string dir, string name, FighterController f, Vector3 dirLocal, float speed, StringBuilder log)
+        {
+            HeroRigDriver d = f.GetComponentInChildren<HeroRigDriver>(true);
+            if (d == null || d.animator == null) return;
+            const float dt = 1f / 30f;
+            const int n = 8, cw = 480, chh = 420, warm = 30, every = 3;
+            Transform ft = f.transform; Vector3 start = ft.position; Quaternion startRot = ft.rotation;
+            MethodInfo fu = typeof(FighterController).GetMethod("Update", F);
+            Vector3 p0 = cam.transform.position; Quaternion r0 = cam.transform.rotation; float f0 = cam.fieldOfView;
+            Texture2D sheet = new Texture2D(cw * 4, chh * 2, TextureFormat.RGB24, false);
+            RenderTexture rt = new RenderTexture(cw, chh, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
+            RenderTexture prevT = cam.targetTexture, prevA = RenderTexture.active;
+            if (f.weapon != null) f.weapon.ResetState();
+            try
+            {
+                Vector3 wdir = ft.TransformDirection(dirLocal);
+                // камера стоит на месте (видно, едет ли стопа по земле), смотрит на середину пройденного пути
+                Vector3 midPath = start + wdir * speed * dt * (warm + n * every * 0.5f);
+                Vector3 camPos = midPath + new Vector3(0f, 1.0f, -3.6f), look = midPath + Vector3.up * 0.75f;
+                int k = 0;
+                for (int i = 0; i < warm + n * every && k < n; i++)
+                {
+                    f.SetMoveVector(new Vector2(wdir.x, wdir.z));
+                    if (fu != null) fu.Invoke(f, null);
+                    ft.position += wdir * (speed * dt);
+                    Tick(f, d, dt, dt);
+                    if (i >= warm && (i - warm) % every == 0)
+                    {
+                        cam.transform.position = camPos; cam.transform.rotation = Quaternion.LookRotation(look - camPos, Vector3.up); cam.fieldOfView = 40f;
+                        cam.targetTexture = rt; cam.Render();
+                        RenderTexture.active = rt;
+                        sheet.ReadPixels(new Rect(0, 0, cw, chh), (k % 4) * cw, (1 - k / 4) * chh);
+                        k++;
+                    }
+                }
+                sheet.Apply();
+                File.WriteAllBytes(Path.Combine(dir, name + ".jpg"), sheet.EncodeToJPG(85));
+                log.Append("PROBE|shots|" + name + "|" + k + " кадров\n");
+            }
+            catch (Exception e) { log.Append("PROBE|shots|" + name + "|error " + e.Message + "\n"); }
+            finally
+            {
+                cam.targetTexture = prevT; RenderTexture.active = prevA;
+                cam.transform.position = p0; cam.transform.rotation = r0; cam.fieldOfView = f0;
+                rt.Release(); UnityEngine.Object.DestroyImmediate(rt); UnityEngine.Object.DestroyImmediate(sheet);
+                f.SetMoveVector(Vector2.zero);
+                ft.position = start; ft.rotation = startRot;
+                for (int i = 0; i < 30; i++) { if (fu != null) fu.Invoke(f, null); Tick(f, d, dt, dt); }
             }
         }
 

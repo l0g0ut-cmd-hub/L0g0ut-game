@@ -94,8 +94,9 @@ namespace BladePath
             bool hi = Gfx == 1;
             QualitySettings.pixelLightCount = hi ? 4 : 1;
             QualitySettings.shadows = hi ? ShadowQuality.All : ShadowQuality.HardOnly;
-            QualitySettings.shadowResolution = hi ? ShadowResolution.Medium : ShadowResolution.Low;
-            QualitySettings.shadowDistance = hi ? 16f : 9f;
+            // арена ~10 м: короткая дистанция теней + высокое разрешение — чёткие контактные тени бойцов и кружево клёнов
+            QualitySettings.shadowResolution = hi ? ShadowResolution.High : ShadowResolution.Low;
+            QualitySettings.shadowDistance = hi ? 12f : 9f;
             QualitySettings.shadowCascades = 1;
             QualitySettings.antiAliasing = hi ? 2 : 0;
             QualitySettings.anisotropicFiltering = hi ? AnisotropicFiltering.Enable : AnisotropicFiltering.Disable;

@@ -240,6 +240,7 @@ namespace BladePath.EditorTools
 
             // поза по кадрам → локальные повороты всех костей
             Quaternion[][] LR = new Quaternion[K + 1][]; Vector3[][] LP = new Vector3[K + 1][];
+            float[] footLY = new float[K + 1];
             for (int k = 0; k <= K; k++)
             {
                 foreach (Transform t in bones) { t.localRotation = baseR[t]; t.localPosition = baseP[t]; }
@@ -252,6 +253,7 @@ namespace BladePath.EditorTools
                     if (i >= 5 && sp.legScale != 1f) delta = Quaternion.Slerp(Quaternion.identity, delta, sp.legScale);   // ноги (DstNames[5..10])
                     dst[i].rotation = Q * delta * Quaternion.Inverse(Q) * rest[i];
                 }
+                footLY[k] = dst[7].position.y;   // Foot.L — для выравнивания фазы цикла
                 LR[k] = new Quaternion[bones.Count]; LP[k] = new Vector3[bones.Count];
                 for (int j = 0; j < bones.Count; j++) { LR[k][j] = bones[j].localRotation; LP[k][j] = bones[j].localPosition; }
             }
@@ -265,6 +267,24 @@ namespace BladePath.EditorTools
             {
                 Vector3 perr = LP[0][j] - LP[K][j];
                 for (int k = 1; k <= K; k++) LP[k][j] += perr * ((float)k / K);
+            }
+
+            // фаза: цикл начинается с постановки левой стопы — у всех клипов смеси (вперёд, назад, вбок) одно и то же событие
+            // в одной и той же нормированной фазе, иначе в диагональной смеси стопы двух клипов «спорят» и едут
+            {
+                float mn = float.MaxValue, mx = float.MinValue;
+                for (int k = 0; k < K; k++) { mn = Mathf.Min(mn, footLY[k]); mx = Mathf.Max(mx, footLY[k]); }
+                float thr = mn + 0.15f * (mx - mn);
+                int k0 = 0;
+                for (int k = 0; k < K; k++) { int pk = (k - 1 + K) % K; if (footLY[k] <= thr && footLY[pk] > thr) { k0 = k; break; } }
+                if (k0 != 0)
+                {
+                    Quaternion[][] R2 = new Quaternion[K + 1][]; Vector3[][] P2 = new Vector3[K + 1][];
+                    for (int k = 0; k < K; k++) { R2[k] = LR[(k + k0) % K]; P2[k] = LP[(k + k0) % K]; }
+                    R2[K] = R2[0]; P2[K] = P2[0];
+                    LR = R2; LP = P2;
+                }
+                Debug.Log("MocapBaker: " + sp.name + " — фаза сдвинута на кадр " + k0 + " из " + K + " (левая стопа встаёт в начале цикла)");
             }
 
             // клип

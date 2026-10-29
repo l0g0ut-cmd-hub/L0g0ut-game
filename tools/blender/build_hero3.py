@@ -227,6 +227,32 @@ for sd_ in 'LR':
     tie = red & (V[:, 2] < 0.45) & (dsh < 0.17) & (np.sign(V[:, 0]) == (1 if sd_ == 'L' else -1))
     Wm[tie] = 0.0; Wm[tie, gix['LowerLeg.' + sd_]] = 1.0
     print('ШНУРЫ ГОЛЕНИ', sd_, int(tie.sum()))
+# полы плаща на своих костях (Coat.*: от пояса к подолу) — в игре их качает пружина CoatSpring (инерция, бёдра раздвигают)
+COAT = {'Coat.FL': ((0.09, -0.12, 0.90), (0.10, -0.15, 0.48)), 'Coat.FR': ((-0.09, -0.12, 0.90), (-0.10, -0.15, 0.48)),
+        'Coat.BL': ((0.08, 0.15, 0.90), (0.09, 0.20, 0.46)), 'Coat.BR': ((-0.08, 0.15, 0.90), (-0.09, 0.20, 0.46)),
+        'Coat.SL': ((0.20, 0.0, 0.92), (0.24, 0.02, 0.50)), 'Coat.SR': ((-0.20, 0.0, 0.92), (-0.24, 0.02, 0.50))}
+bpy.ops.object.select_all(action='DESELECT'); rig.select_set(True); bpy.context.view_layer.objects.active = rig
+bpy.ops.object.mode_set(mode='EDIT')
+for nm_, (h_, t_) in COAT.items():
+    eb = rig.data.edit_bones.new(nm_); eb.head = h_; eb.tail = t_; eb.parent = rig.data.edit_bones['Hips']; eb.use_deform = True
+bpy.ops.object.mode_set(mode='OBJECT')
+bpy.ops.object.select_all(action='DESELECT'); body.select_set(True); bpy.context.view_layer.objects.active = body
+coat_names = list(COAT)
+for nm_ in coat_names:
+    names_all.append(nm_); gix[nm_] = len(names_all) - 1
+Wm = np.concatenate([Wm, np.zeros((nv, len(coat_names)))], 1)
+dleg = np.minimum.reduce([seg_d(V, J['hip' + q], J['knee' + q]) for q in 'LR'] + [seg_d(V, J['knee' + q], J['ank' + q]) for q in 'LR'])
+coatness = np.clip((dleg - 0.115) / 0.045, 0, 1)
+hf = np.clip((0.88 - V[:, 2]) / 0.28, 0, 1); hf = hf * hf * (3 - 2 * hf)
+frac = coatness * hf * ((V[:, 2] > 0.40) & (V[:, 2] < 0.95)) * (np.array([i not in set(sw_idx) for i in range(nv)]) if sw_idx else 1.0)
+ang_v = np.arctan2(V[:, 0], -(V[:, 1] - 0.02))            # 0 — спереди, +π/2 — слева (+X)
+ang_b = {nm_: math.atan2(0.5 * (h_[0] + t_[0]), -(0.5 * (h_[1] + t_[1]) - 0.02)) for nm_, (h_, t_) in COAT.items()}
+aff_c = np.stack([np.maximum(0, np.cos(ang_v - ang_b[nm_])) ** 4 for nm_ in coat_names], 1)
+aff_c /= np.maximum(aff_c.sum(1, keepdims=True), 1e-6)
+mv = Wm[:, gix['Hips']] * frac
+Wm[:, gix['Hips']] -= mv
+for j_, nm_ in enumerate(coat_names): Wm[:, gix[nm_]] += mv * aff_c[:, j_]
+print('ПОЛЫ ПЛАЩА: вершин с долей костей Coat', int((mv > 0.05).sum()))
 E = np.empty(len(body.data.edges) * 2, dtype=np.int64); body.data.edges.foreach_get('vertices', E); E = E.reshape(-1, 2)
 deg = np.bincount(E.ravel(), minlength=nv).astype(float)
 lowbody = (V[:, 2] > 0.30) & (V[:, 2] < 1.08)

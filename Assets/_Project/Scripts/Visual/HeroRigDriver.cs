@@ -35,6 +35,11 @@ namespace BladePath
         public float palmOffset = 0.06f;
         [Tooltip("Насколько рукоять смещена от кости кисти к ладони, м (у сжатого кулака рукоять проходит внутри пальцев).")]
         public float palmLift = 0.015f;
+        [Tooltip("Точный хват: центр кулака задан в системе кости кисти (по позе покоя: вниз от запястья gripDown, к ладони gripIn, м). " +
+                 "Тогда рукоять проходит ровно через кулак при любом повороте кисти, без подгонки palmOffset/palmLift.")]
+        public bool gripFromBind;
+        public float gripDown = 0.111f, gripIn = 0.017f;
+        Vector3 gripLocalL, gripLocalR;
         [Tooltip("Высота глаз над костью головы, м (светящиеся глаза врага).")]
         public float eyeHeight = 0.045f;
         [Tooltip("Максимальный излом кисти относительно руки, град. (иначе хват поперёк клинка ломает запястье при вытянутых вперёд руках).")]
@@ -174,6 +179,13 @@ namespace BladePath
             }
             if (weapon != null && weapon.pivot != null) pivotRestY = weapon.pivot.localPosition.y;
             CacheHandFrame(handL, forearmL, out bindL, out sideL);
+            if (gripFromBind && fighter != null)
+            {
+                // в A-позе кисти висят пальцами вниз, ладонь к бедру: центр кулака — вниз от запястья и чуть внутрь
+                Transform ftr = fighter.transform;
+                if (handL != null) gripLocalL = handL.InverseTransformPoint(handL.position + Vector3.down * gripDown - sideL * ftr.right * gripIn);
+                if (handR != null) gripLocalR = handR.InverseTransformPoint(handR.position + Vector3.down * gripDown - sideR * ftr.right * gripIn);
+            }
             CacheHandFrame(handR, forearmR, out bindR, out sideR);
             if (useRagdoll && legsReady && fighter != null)
             {
@@ -618,9 +630,20 @@ namespace BladePath
             // кисть не ломается поперёк предплечья: пальцы отклоняются от направления руки (плечо → хват) не больше maxWristBend
             if (upperArmR != null) LimitWrist(gripR - upperArmR.position, maxWristBend, ref fR, ref nR);
             if (upperArmL != null) LimitWrist(gripL - upperArmL.position, maxWristBend, ref fL, ref nL);
-            SolveArm(upperArmR, forearmR, handR, l1R, l2R, gripR - fR * palmOffset - nR * palmLift, outward);
             Vector3 outwardL = -ft.right * 1.0f + Vector3.down * 0.5f + back * 0.2f;
-            SolveArm(upperArmL, forearmL, handL, l1L, l2L, gripL - fL * palmOffset - nL * palmLift, outwardL);
+            if (gripFromBind && framesReady && handR != null && handL != null)
+            {
+                // запястье ставим так, чтобы центр кулака (точка в системе кисти) лёг на рукоять после поворота кисти
+                Quaternion qR = Quaternion.LookRotation(fR, nR) * bindR, qL = Quaternion.LookRotation(fL, nL) * bindL;
+                Vector3 oR = qR * Vector3.Scale(gripLocalR, handR.lossyScale), oL = qL * Vector3.Scale(gripLocalL, handL.lossyScale);
+                SolveArm(upperArmR, forearmR, handR, l1R, l2R, gripR - oR, outward);
+                SolveArm(upperArmL, forearmL, handL, l1L, l2L, gripL - oL, outwardL);
+            }
+            else
+            {
+                SolveArm(upperArmR, forearmR, handR, l1R, l2R, gripR - fR * palmOffset - nR * palmLift, outward);
+                SolveArm(upperArmL, forearmL, handL, l1L, l2L, gripL - fL * palmOffset - nL * palmLift, outwardL);
+            }
             if (framesReady)
             {
                 OrientHand(handR, bindR, fR, nR);
