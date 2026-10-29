@@ -239,7 +239,7 @@ namespace BladePath
             combo.Clear(); comboTime.Clear(); counterUntil.Clear(); PerilAt.Clear(); perilSwing.Clear(); jumpedSweep.Clear(); DeathblowAt = -10f;
             Enraged = false;
             ApplyStage();   // скорость врага к базовой ступени (сброс ярости)
-            SuperBy = null;
+            SuperBy = null; DeathblowBy = null; DeathblowTarget = null;
             if (Juice.Instance != null) Juice.Instance.CleanBlades();
             lastStandShown = false; tenSecShown = false;
             TimeLeft = roundSeconds; TimedOut = false; LastDraw = false; Perfect = false;
@@ -305,7 +305,7 @@ namespace BladePath
             {
                 // равновесие восстанавливается, когда по бойцу не бьют: медленнее при низком здоровье, быстрее в блоке
                 RegenPosture(player); RegenPosture(enemy);
-                if (!SuperActive) TimeLeft = Mathf.Max(0f, TimeLeft - Time.deltaTime);
+                if (!SuperActive && !DeathblowActive) TimeLeft = Mathf.Max(0f, TimeLeft - Time.deltaTime);
                 if (TimeLeft <= 0f) TimeUp();
                 if (!tenSecShown && TimeLeft <= 10f) { tenSecShown = true; Announce("10 СЕКУНД!", new Color(1f, 0.4f, 0.25f)); }
                 if (!lastStandShown && player != null && Hp01(player) < 0.25f && Hp(player) > 0f) { lastStandShown = true; Announce("ПОСЛЕДНИЙ РУБЕЖ", new Color(0.5f, 0.85f, 1f)); }
@@ -322,6 +322,7 @@ namespace BladePath
 
             CheckClash();
             UpdateSuper();
+            UpdateDeathblow();
             UpdateBodyTint(player);
             UpdateBodyTint(enemy);
             Flourish();
@@ -342,7 +343,7 @@ namespace BladePath
         /// <summary>Супер-удар на полном духе: короткая заставка, рывок сквозь противника, сокрушительный разрез.</summary>
         public bool TrySuper(FighterController f)
         {
-            if (State != DuelState.Fighting || SuperActive || f == null || f.opponent == null) return false;
+            if (State != DuelState.Fighting || SuperActive || DeathblowActive || f == null || f.opponent == null) return false;
             if (!f.KiFull || !f.CanAct || !f.Grounded || f.opponent.Dead) return false;
             if (f.weapon != null && f.weapon.Phase != SwingPhase.Idle) return false;
             f.DrainKi();
@@ -398,6 +399,116 @@ namespace BladePath
             }
         }
 
+        // ---------------------------------------------------------------- добивание (忍殺, как в Sekiro)
+        /// <summary>Моменты приёма по времени удара Deathblow (с): укол в грудь, рывок клинка (смерть), тибури.</summary>
+        public const float DbStab = 0.44f, DbPull = 1.1f, DbFlick = 1.36f;
+        const float DbDistance = 1.38f;   // между бойцами к уколу: клинок входит в грудь на полдлины и выходит из спины
+        public FighterController DeathblowBy { get; private set; }
+        public FighterController DeathblowTarget { get; private set; }
+        public bool DeathblowActive { get { return DeathblowBy != null; } }
+        float dbStart; int dbStage;
+
+        /// <summary>
+        /// Удар по сломленному равновесию — не просто попадание, а постановка: оба замирают, атакующий подшагивает на дистанцию,
+        /// взводит клинок у бедра и всаживает его в грудь; замер; рывок клинка на себя — враг падает, кровь; тибури.
+        /// </summary>
+        bool TryDeathblow(FighterController a, FighterController t)
+        {
+            if (DeathblowActive || SuperActive || a == null || t == null || a.weapon == null) return false;
+            if (!a.Grounded || !t.Grounded || a.Dead || t.Dead) return false;
+            DeathblowBy = a; DeathblowTarget = t; dbStart = Time.unscaledTime; dbStage = 0;
+            Freeze(true);
+            a.TakeKnockback(); t.TakeKnockback(); a.StopDash(); t.StopDash();
+            t.HoldPostureBreak(3.5f);
+            EnergyProjectile.DestroyAll();
+            if (t.weapon != null) t.weapon.ResetState();
+            a.weapon.ResetState();
+            a.weapon.TryStartSwing(AttackType.Deathblow);
+            lastSwing[a] = a.weapon.SwingId;
+            flourishDone = true;   // тибури — часть приёма
+            Announce("СМЕРТЕЛЬНЫЙ УДАР", new Color(0.95f, 0.08f, 0.06f));
+            if (Juice.Instance != null) Juice.Instance.Taiko(1f, 0.72f);
+            hitStopUntil = Time.unscaledTime + 0.07f;
+            Haptics.Pulse(50);
+            return true;
+        }
+
+        static Transform TorsoOf(FighterController f)
+        {
+            if (f.zones != null) foreach (BodyZone z in f.zones) if (z != null && z.zoneId == BodyZoneId.Torso) return z.transform;
+            return f.transform;
+        }
+
+        void UpdateDeathblow()
+        {
+            if (!DeathblowActive) return;
+            FighterController a = DeathblowBy, t = DeathblowTarget;
+            WeaponController w = a.weapon;
+            bool on = w != null && w.Phase != SwingPhase.Idle && w.CurrentProfile != null && w.CurrentProfile.type == AttackType.Deathblow;
+            float st = on ? w.SwingTime : 99f;
+            Vector3 dir = t.transform.position - a.transform.position; dir.y = 0f;
+            dir = dir.sqrMagnitude > 1e-4f ? dir.normalized : a.transform.forward;
+            if (on && st < DbStab && !t.Dead)
+            {
+                // подшаг на дистанцию укола, лицом к лицу (до укола успевает: экспонента ~0,1 с)
+                Vector3 want = t.transform.position - dir * DbDistance; want.y = a.transform.position.y;
+                a.transform.position = Vector3.Lerp(a.transform.position, want, 1f - Mathf.Exp(-14f * Time.deltaTime));
+                a.transform.rotation = Quaternion.LookRotation(dir, Vector3.up);
+                t.transform.rotation = Quaternion.RotateTowards(t.transform.rotation, Quaternion.LookRotation(-dir, Vector3.up), 360f * Time.deltaTime);
+            }
+            Transform torso = TorsoOf(t);
+            Vector3 chest = torso.position;
+            if (w != null && w.bladeRoot != null)
+            {
+                // точка входа — на клинке напротив центра груди
+                Vector3 b0 = w.bladeRoot.position, ax = w.bladeRoot.forward;
+                chest = b0 + ax * Mathf.Clamp(Vector3.Dot(torso.position - b0, ax), 0f, w.bladeLength);
+            }
+            HeroRigDriver rig = t.GetComponentInChildren<HeroRigDriver>();
+            if (dbStage == 0 && st >= DbStab)
+            {
+                dbStage = 1;
+                DeathblowAt = Time.unscaledTime; DeathblowPos = chest;
+                if (rig != null) rig.Recoil(dir, chest, 1.15f);
+                if (Juice.Instance != null)
+                {
+                    Juice.Instance.OnHit(chest + dir * 0.16f, dir, dir, 0.85f, false, false, null);   // кровь из спины по ходу клинка
+                    Juice.Instance.BloodyBlade(w, 0.7f);
+                }
+                if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(0.06f); CameraOrbit.Instance.Punch(4f); }
+                hitStopUntil = Time.unscaledTime + 0.14f;
+                Haptics.Pulse(t == player ? 120 : 80);
+            }
+            if (dbStage == 1 && st >= DbPull)
+            {
+                dbStage = 2;
+                // падение: прочь от атакующего и вбок — от камеры, чтобы тело не легло между ней и победителем
+                Vector3 side = Vector3.Cross(Vector3.up, dir);
+                if (Camera.main != null && Vector3.Dot(side, Camera.main.transform.forward) < 0f) side = -side;
+                Vector3 fall = (dir * 0.7f + side * 0.6f).normalized;
+                lastHitHead = false;
+                if (!t.Dead) ApplyDamage(t, a, Mathf.Max(1f, Hp(t)), chest, true, false, -dir, -dir * 3f, torso != t.transform ? torso : null);   // кровь хлещет из груди за клинком
+                t.TakeKnockback(); t.Knockback(fall, 1.1f);
+                if (rig != null) rig.Recoil(fall, chest, 0.7f);
+                if (Juice.Instance != null) Juice.Instance.Dust(t.transform.position + Vector3.up * 0.05f, fall, 8);
+            }
+            if (dbStage == 2 && st >= DbFlick)
+            {
+                dbStage = 3;
+                if (Juice.Instance != null && w != null)
+                {
+                    Juice.Instance.ShakeBlood(w);
+                    Juice.Instance.DashSound();
+                    if (w.bladeRoot != null) Juice.Instance.Drip(w.bladeRoot.position + w.bladeRoot.forward * w.bladeLength * 0.7f);
+                }
+            }
+            if (!on || Time.unscaledTime - dbStart > 8f)
+            {
+                DeathblowBy = null; DeathblowTarget = null;
+                if (State == DuelState.Fighting) Freeze(false);
+            }
+        }
+
         /// <summary>Шар отбит клинком: дух за мастерство, надпись, стоп-кадр.</summary>
         public void OnDeflect(Vector3 pos, FighterController by)
         {
@@ -436,7 +547,7 @@ namespace BladePath
         /// <summary>Сшибка: оба бьют одновременно и клинки пересеклись — удары гасятся, бойцов отбрасывает.</summary>
         void CheckClash()
         {
-            if (State != DuelState.Fighting || player == null || enemy == null) return;
+            if (State != DuelState.Fighting || player == null || enemy == null || DeathblowActive) return;
             WeaponController a = player.weapon, b = enemy.weapon;
             if (a == null || b == null || a.bladeRoot == null || b.bladeRoot == null) return;
             if (a.Phase != SwingPhase.Strike || b.Phase != SwingPhase.Strike) return;
@@ -601,7 +712,7 @@ namespace BladePath
         void OnHit(HitResult r)
         {
             if (State != DuelState.Fighting || r.attacker == null || r.target == null) return;
-            if (r.attacker.Dead || r.target.Dead) return;
+            if (r.attacker.Dead || r.target.Dead || DeathblowActive) return;
             int id = r.contact.swingId;
             int last;
             if (lastSwing.TryGetValue(r.attacker, out last) && last == id) return;   // один удар — одно попадание
@@ -628,6 +739,8 @@ namespace BladePath
             // добивание: удар по сломленному равновесию смертелен (как deathblow в Sekiro)
             if (r.target.PostureBroken)
             {
+                bool rangedHit = r.attacker.weapon != null && r.attacker.weapon.CurrentProfile != null && r.attacker.weapon.CurrentProfile.ranged;
+                if (!rangedHit && TryDeathblow(r.attacker, r.target)) return;   // постановочное добивание
                 lastHitHead = r.zone == BodyZoneId.Head;
                 Announce("СМЕРТЕЛЬНЫЙ УДАР", new Color(0.95f, 0.08f, 0.06f));
                 DeathblowAt = Time.unscaledTime; DeathblowPos = r.contact.point;

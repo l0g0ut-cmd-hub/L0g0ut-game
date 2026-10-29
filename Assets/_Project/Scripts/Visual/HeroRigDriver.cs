@@ -335,6 +335,17 @@ namespace BladePath
 
         static float Smooth(float t) { return t * t * (3f - 2f * t); }
 
+        /// <summary>Постановочная отдача (добивание): толчок пружины без попадания клинка, направление и точка — для падения тела.</summary>
+        public void Recoil(Vector3 dir, Vector3 point, float imp, BodyZoneId zone = BodyZoneId.Torso)
+        {
+            if (animator != null && imp > 0.5f) animator.SetTrigger("Hit");
+            kickV += 26f * imp;
+            kickZone = zone;
+            kickSide = fighter != null ? Mathf.Sign(Vector3.Dot(dir, fighter.transform.right) + 1e-3f) * 0.3f : 0f;
+            if (dir.sqrMagnitude > 1e-4f) lastHitDir = dir.normalized;
+            lastHitPoint = point;
+        }
+
         /// <summary>
         /// Порядок: Animator (Update) → здесь: поза всего тела из WeaponController.Pose (ключевые позы удара или стойка) →
         /// таз (вынос, высота, поворот, наклон) → грудь → голова держит горизонт → ноги IK на стоящие стопы → руки IK на рукоять.

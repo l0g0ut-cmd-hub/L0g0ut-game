@@ -97,6 +97,7 @@ namespace BladePath.EditorTools
                 {
                     WalkStrip(cam, dir, "12_walk_fwd", player, Vector3.forward, 1.2f, log);
                     WalkStrip(cam, dir, "13_walk_side", player, Vector3.right, 0.72f, log);
+                    if (enemy != null) DeathblowStrip(cam, dir, "14_deathblow", player, enemy, log);
                 }
 
                 // парирование: вспышка, блик, волна и искры через 50 мс после удара
@@ -168,6 +169,63 @@ namespace BladePath.EditorTools
                 rt.Release(); UnityEngine.Object.DestroyImmediate(rt); UnityEngine.Object.DestroyImmediate(sheet);
                 w.SnapRest();
                 for (int i = 0; i < 8; i++) Tick(f, d, 0f, 1f / 30f);
+            }
+        }
+
+        /// <summary>Раскадровка добивания: враг «поплыл» (слом равновесия), игрок на дистанции укола, 8 моментов приёма.</summary>
+        static void DeathblowStrip(Camera cam, string dir, string name, FighterController a, FighterController t, StringBuilder log)
+        {
+            WeaponController w = a.weapon; HeroRigDriver da = a.GetComponentInChildren<HeroRigDriver>(true), dt_ = t.GetComponentInChildren<HeroRigDriver>(true);
+            if (w == null || da == null || dt_ == null || t.weapon == null) return;
+            Vector3 pa0 = a.transform.position, pt0 = t.transform.position; Quaternion ra0 = a.transform.rotation, rt0 = t.transform.rotation;
+            PropertyInfo phase = typeof(WeaponController).GetProperty("Phase", F);
+            FieldInfo pt = typeof(WeaponController).GetField("phaseTime", F), bl = typeof(WeaponController).GetField("blendLeft", F), sk = typeof(WeaponController).GetField("stagK", F);
+            const int n = 8, cw = 480, chh = 420;
+            float[] taus = { 0f, 0.32f, 0.4f, 0.46f, 0.8f, 1.1f, 1.26f, 1.36f };
+            Vector3 p0 = cam.transform.position; Quaternion r0 = cam.transform.rotation; float f0 = cam.fieldOfView;
+            Texture2D sheet = new Texture2D(cw * 4, chh * 2, TextureFormat.RGB24, false);
+            RenderTexture rt = new RenderTexture(cw, chh, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
+            RenderTexture prevT = cam.targetTexture, prevA = RenderTexture.active;
+            try
+            {
+                Vector3 d = pt0 - pa0; d.y = 0f; d.Normalize();
+                a.transform.position = pt0 - d * 1.38f;   // = DuelManager.DbDistance
+                a.transform.rotation = Quaternion.LookRotation(d, Vector3.up); t.transform.rotation = Quaternion.LookRotation(-d, Vector3.up);
+                t.AddPosture(10000f);   // слом равновесия: клинок повис, корпус осел
+                t.weapon.SnapRest(); if (sk != null) sk.SetValue(t.weapon, 1f); Call(t.weapon, "ApplyRestPose");
+                w.SnapRest();
+                if (!w.TryStartSwing(AttackType.Deathblow)) return;
+                SwingProfile p = w.CurrentProfile;
+                Vector3 mid = (a.transform.position + t.transform.position) * 0.5f;
+                Vector3 camPos = mid + Quaternion.Euler(0f, -20f * Mathf.Sign(d.x + 1e-4f), 0f) * new Vector3(0f, 0f, -3.3f) + Vector3.up * 1.15f, look = mid + Vector3.up * 1.05f;
+                for (int i = 0; i < 20; i++) Tick(t, dt_, 0f, 1f / 30f);
+                for (int k = 0; k < n; k++)
+                {
+                    float rem = taus[k]; SwingPhase ph = SwingPhase.Windup;
+                    if (rem >= p.windupTime) { rem -= p.windupTime; ph = SwingPhase.Strike; if (rem >= p.strikeTime) { rem -= p.strikeTime; ph = SwingPhase.FollowThrough; if (rem >= p.followTime) { rem -= p.followTime; ph = SwingPhase.Recovery; } } }
+                    phase.GetSetMethod(true).Invoke(w, new object[] { ph });
+                    pt.SetValue(w, rem); bl.SetValue(w, 0f);
+                    Call(w, "ApplyPose");
+                    for (int i = 0; i < 8; i++) { Tick(a, da, 0f, 1f / 30f); Tick(t, dt_, 0f, 1f / 30f); }
+                    cam.transform.position = camPos; cam.transform.rotation = Quaternion.LookRotation(look - camPos, Vector3.up); cam.fieldOfView = 40f;
+                    cam.targetTexture = rt; cam.Render();
+                    RenderTexture.active = rt;
+                    sheet.ReadPixels(new Rect(0, 0, cw, chh), (k % 4) * cw, (1 - k / 4) * chh);
+                }
+                sheet.Apply();
+                File.WriteAllBytes(Path.Combine(dir, name + ".jpg"), sheet.EncodeToJPG(85));
+                log.Append("PROBE|shots|" + name + "|" + n + " кадров\n");
+            }
+            catch (Exception e) { log.Append("PROBE|shots|" + name + "|error " + e.Message + "\n"); }
+            finally
+            {
+                cam.targetTexture = prevT; RenderTexture.active = prevA;
+                cam.transform.position = p0; cam.transform.rotation = r0; cam.fieldOfView = f0;
+                rt.Release(); UnityEngine.Object.DestroyImmediate(rt); UnityEngine.Object.DestroyImmediate(sheet);
+                a.ResetFighter(); t.ResetFighter();
+                a.transform.position = pa0; a.transform.rotation = ra0; t.transform.position = pt0; t.transform.rotation = rt0;
+                w.SnapRest(); t.weapon.SnapRest();
+                for (int i = 0; i < 20; i++) { Tick(a, da, 1f / 30f, 1f / 30f); Tick(t, dt_, 1f / 30f, 1f / 30f); }
             }
         }
 

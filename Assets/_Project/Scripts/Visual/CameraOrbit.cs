@@ -29,6 +29,7 @@ namespace BladePath
         float koK, cineYaw;   // кинематографичный облёт после KO
         bool introPlaying;
         float superK, autoD, autoV;
+        float dbK, dbYaw; Vector3 dbFocus;   // добивание: камера ближе, фокус на груди противника
         public void Shake(float amount) { shakeAmp = Mathf.Max(shakeAmp, amount); }
         /// <summary>Резкий «наезд» объективом на тяжёлом ударе (FOV уменьшается и возвращается).</summary>
         public void Punch(float degrees) { fovPunch = Mathf.Max(fovPunch, degrees); }
@@ -199,8 +200,20 @@ namespace BladePath
                 focus = Vector3.Lerp(focus, new Vector3(sp.x, 0f, sp.z) + targetOffset, sk * 0.8f);
             }
             superK = Mathf.MoveTowards(superK, sk, udt / 0.15f);
-            Quaternion rot = Quaternion.Euler(pitch + 4f * ck + 14f * ik - 4f * superK, yaw + cineYaw - 40f * ik + 22f * superK, 0f);
-            Vector3 pos = focus + rot * new Vector3(0f, 0f, -(dist + autoD) * (1f - 0.3f * ck + 0.5f * ik - 0.45f * superK));
+            // добивание: наезд на пару, камера чуть заходит со стороны жертвы — видно лицо атакующего и клинок, вышедший из спины
+            bool db = dm != null && dm.DeathblowActive && dm.DeathblowTarget != null;
+            if (db)
+            {
+                Vector3 a = dm.DeathblowBy.transform.position, t = dm.DeathblowTarget.transform.position;
+                Vector3 c = Vector3.Lerp(a, t, 0.55f);
+                dbFocus = new Vector3(c.x, 1.1f, c.z);
+                dbYaw = -20f * Mathf.Sign(t.x - a.x + 1e-4f);
+            }
+            dbK = Mathf.MoveTowards(dbK, db ? 1f : 0f, udt / (db ? 0.3f : 0.9f));
+            float dbs = dbK * dbK * (3f - 2f * dbK);
+            if (dbs > 0f) focus = Vector3.Lerp(focus, dbFocus, dbs);
+            Quaternion rot = Quaternion.Euler(pitch + 4f * ck + 14f * ik - 4f * superK - 3f * dbs, yaw + cineYaw - 40f * ik + 22f * superK + dbYaw * dbs, 0f);
+            Vector3 pos = focus + rot * new Vector3(0f, 0f, -(dist + autoD) * (1f - 0.3f * ck + 0.5f * ik - 0.45f * superK) * (1f - 0.33f * dbs));
             if (pos.y < 0.15f) pos.y = 0.15f;
             // лёгкое «дыхание» камеры с рук
             float tt = Time.unscaledTime;

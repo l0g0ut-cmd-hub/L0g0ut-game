@@ -42,7 +42,7 @@ namespace BladePath
         /// <summary>Клинок «жив» для проверки попаданий. Для дальней атаки всегда false.</summary>
         public bool ContactWindowOpen
         {
-            get { return CurrentProfile != null && !CurrentProfile.ranged && (Phase == SwingPhase.Strike || Phase == SwingPhase.FollowThrough); }
+            get { return CurrentProfile != null && !CurrentProfile.ranged && !CurrentProfile.scripted && (Phase == SwingPhase.Strike || Phase == SwingPhase.FollowThrough); }
         }
         public float CurrentLunge { get { return (CurrentProfile != null && Phase == SwingPhase.Strike) ? CurrentProfile.lungeSpeed : 0f; } }
 
@@ -222,14 +222,14 @@ namespace BladePath
                 case SwingPhase.Windup:
                     Phase = SwingPhase.Strike;
                     if (CurrentProfile.ranged) { if (Released != null) Released(this); }
-                    else if (ContactWindowOpened != null) ContactWindowOpened(this);
+                    else if (!CurrentProfile.scripted && ContactWindowOpened != null) ContactWindowOpened(this);
                     break;
                 case SwingPhase.Strike:
                     Phase = SwingPhase.FollowThrough;
                     break;
                 case SwingPhase.FollowThrough:
                     Phase = SwingPhase.Recovery;
-                    if (!CurrentProfile.ranged && ContactWindowClosed != null) ContactWindowClosed(this);
+                    if (!CurrentProfile.ranged && !CurrentProfile.scripted && ContactWindowClosed != null) ContactWindowClosed(this);
                     break;
                 case SwingPhase.Recovery:
                     Phase = SwingPhase.Idle; Perilous = false;

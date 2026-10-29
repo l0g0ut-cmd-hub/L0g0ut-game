@@ -145,6 +145,14 @@ namespace BladePath
             }
         }
 
+        /// <summary>Продлить слом равновесия (добивание идёт — противник не приходит в себя посреди приёма).</summary>
+        public void HoldPostureBreak(float seconds)
+        {
+            if (!PostureBroken) return;
+            postureBrokenUntil = Mathf.Max(postureBrokenUntil, Time.time + seconds);
+            Stun(seconds);
+        }
+
         /// <summary>Восстановление равновесия (скорость считает DuelManager: зависит от здоровья и блока).</summary>
         public void RecoverPosture(float v)
         {
