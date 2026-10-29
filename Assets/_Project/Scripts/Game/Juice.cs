@@ -13,7 +13,7 @@ namespace BladePath
 
         AudioSource[] voices;
         int voiceIdx;
-        AudioClip swish, hit, hitHeavy, clang, boom, drum, heart, whoosh, step, growl, stepWet, danger;
+        AudioClip swish, hit, hitHeavy, clang, boom, drum, heart, whoosh, step, growl, stepWet, danger, stab, squelch;
         AudioSource stepVoice;
         ParticleSystem footFx;
         ParticleSystem petals;
@@ -39,7 +39,7 @@ namespace BladePath
             voices = new AudioSource[6];
             for (int i = 0; i < voices.Length; i++) { voices[i] = gameObject.AddComponent<AudioSource>(); voices[i].spatialBlend = 0f; voices[i].playOnAwake = false; }
             swish = Swish(); hit = Thump(0.22f, 140f, 55f, 0.55f); hitHeavy = Thump(0.34f, 100f, 38f, 0.9f); clang = Clang(); boom = Thump(1.0f, 70f, 28f, 0.8f);
-            drum = Drum(); heart = Heart(); whoosh = Swish(); step = Step(); growl = Growl(); stepWet = StepWet(); danger = Danger_();
+            drum = Drum(); heart = Heart(); whoosh = Swish(); step = Step(); growl = Growl(); stepWet = StepWet(); danger = Danger_(); stab = Stab(); squelch = Squelch();
             stepVoice = gameObject.AddComponent<AudioSource>(); stepVoice.spatialBlend = 0f; stepVoice.playOnAwake = false;   // шаги не отнимают голоса у ударов
             ambient = gameObject.AddComponent<AudioSource>();
             ambient.clip = Wind(); ambient.loop = true; ambient.volume = 0.22f; ambient.spatialBlend = 0f; ambient.Play();
@@ -259,6 +259,10 @@ namespace BladePath
         public void Danger() { Play(danger, 0.9f, 1f); }
         /// <summary>Рывок.</summary>
         public void DashSound() { Play(whoosh, 0.45f, 0.6f); }
+        /// <summary>Добивание: клинок входит в грудь.</summary>
+        public void StabSound() { Play(stab, 1f, Random.Range(0.94f, 1.04f)); }
+        /// <summary>Добивание: клинок выдернут.</summary>
+        public void SquelchSound() { Play(squelch, 0.95f, Random.Range(0.95f, 1.05f)); }
 
         void Play(AudioClip c, float vol, float pitch)
         {
@@ -994,6 +998,59 @@ namespace BladePath
                 d[i] = band * env * 2.4f;
             }
             return Make("swish", d);
+        }
+
+        /// <summary>
+        /// Пронзание: рваная ткань и плоть (шум через резонансный полосовой фильтр, частота сползает 3,2 → 1,4 кГц, «треск» модуляцией)
+        /// и глухой удар в грудь (синус 100 → 55 Гц).
+        /// </summary>
+        static AudioClip Stab()
+        {
+            int n = (int)(Rate * 0.5f);
+            float[] d = new float[n];
+            System.Random rnd = new System.Random(31);
+            float low = 0f, band = 0f, ph = 0f, peak = 1e-4f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)Rate;
+                float x = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                float fc = 3200f - 1800f * Mathf.Clamp01(t / 0.08f);
+                float f = 2f * Mathf.Sin(Mathf.PI * fc / Rate);
+                low += f * band; float high = x - low - 0.55f * band; band += f * high;
+                float crackle = 0.55f + 0.45f * Mathf.Sign(Mathf.Sin(2f * Mathf.PI * (70f + 140f * t) * t + (float)rnd.NextDouble() * 0.6f));
+                float tear = band * Mathf.Exp(-t * 26f) * crackle * Mathf.Min(1f, t * 2500f);
+                ph += 2f * Mathf.PI * (55f + 45f * Mathf.Exp(-t * 20f)) / Rate;
+                float body = Mathf.Sin(ph) * Mathf.Exp(-t * 9f) * Mathf.Min(1f, t * 400f);
+                float v = tear * 0.9f + body;
+                d[i] = v; peak = Mathf.Max(peak, Mathf.Abs(v));
+            }
+            for (int i = 0; i < n; i++) d[i] *= 0.9f / peak;
+            return Make("stab", d);
+        }
+
+        /// <summary>Клинок выдернут: влажное скольжение (резонансный шум, частота уходит вниз) с бульканьем и короткий «туп».</summary>
+        static AudioClip Squelch()
+        {
+            int n = (int)(Rate * 0.5f);
+            float[] d = new float[n];
+            System.Random rnd = new System.Random(37);
+            float low = 0f, band = 0f, peak = 1e-4f, jitter = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)Rate;
+                float x = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                float fc = 500f + 2200f * Mathf.Exp(-t * 6f);
+                float f = 2f * Mathf.Sin(Mathf.PI * fc / Rate);
+                low += f * band; float high = x - low - 0.22f * band; band += f * high;
+                jitter += 0.002f * ((float)(rnd.NextDouble() * 2.0 - 1.0) - jitter * 0.1f);
+                float bub = 0.45f + 0.55f * Mathf.Max(0f, Mathf.Sin(2f * Mathf.PI * (19f + 30f * t) * t + jitter * 40f));
+                float env = Mathf.Min(1f, t * 90f) * Mathf.Exp(-t * 6.5f);
+                float thup = Mathf.Sin(2f * Mathf.PI * 72f * t) * Mathf.Exp(-t * 24f) * Mathf.Min(1f, t * 600f);
+                float v = band * bub * env * 0.8f + thup * 0.7f;
+                d[i] = v; peak = Mathf.Max(peak, Mathf.Abs(v));
+            }
+            for (int i = 0; i < n; i++) d[i] *= 0.85f / peak;
+            return Make("squelch", d);
         }
 
         static AudioClip Thump(float len, float f0, float f1, float noiseAmt)

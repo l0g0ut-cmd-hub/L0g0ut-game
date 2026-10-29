@@ -473,6 +473,7 @@ namespace BladePath
                 if (Juice.Instance != null)
                 {
                     Juice.Instance.OnHit(chest + dir * 0.16f, dir, dir, 0.85f, false, false, null);   // кровь из спины по ходу клинка
+                    Juice.Instance.StabSound();
                     Juice.Instance.BloodyBlade(w, 0.7f);
                 }
                 if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(0.06f); CameraOrbit.Instance.Punch(4f); }
@@ -490,7 +491,7 @@ namespace BladePath
                 if (!t.Dead) ApplyDamage(t, a, Mathf.Max(1f, Hp(t)), chest, true, false, -dir, -dir * 3f, torso != t.transform ? torso : null);   // кровь хлещет из груди за клинком
                 t.TakeKnockback(); t.Knockback(fall, 1.1f);
                 if (rig != null) rig.Recoil(fall, chest, 0.7f);
-                if (Juice.Instance != null) Juice.Instance.Dust(t.transform.position + Vector3.up * 0.05f, fall, 8);
+                if (Juice.Instance != null) { Juice.Instance.SquelchSound(); Juice.Instance.Dust(t.transform.position + Vector3.up * 0.05f, fall, 8); }
             }
             if (dbStage == 2 && st >= DbFlick)
             {
