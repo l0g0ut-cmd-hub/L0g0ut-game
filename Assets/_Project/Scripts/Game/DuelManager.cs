@@ -668,6 +668,9 @@ namespace BladePath
             if (!window || to.magnitude > 2.6f || Vector3.Dot(dir.normalized, to.normalized) < 0.35f) return;
             f.StopDash();
             o.weapon.ResetState();
+            o.weapon.Pin(1.1f);   // клинок врага прижат к земле
+            if (f.weapon != null) { f.weapon.ResetState(); f.weapon.TryStartSwing(AttackType.Mikiri); lastSwing[f] = f.weapon.SwingId; }   // наступил на клинок
+            if (Juice.Instance != null) { Juice.Instance.Footstep(f.transform.position + f.transform.forward * 0.45f, 1.6f); Juice.Instance.Dust(f.transform.position + f.transform.forward * 0.5f + Vector3.up * 0.05f, Vector3.up, 14); }
             o.Stun(1.3f);
             o.AddPosture(45f);
             f.AddKi(15f);

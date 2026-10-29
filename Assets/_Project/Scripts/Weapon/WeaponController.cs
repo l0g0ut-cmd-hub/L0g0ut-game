@@ -149,7 +149,11 @@ namespace BladePath
         /// Сразу в стойку, без перетекания из прежней позы. Для редактора (пробы и кадры CI): там Time.deltaTime не идёт,
         /// и после ResetState() смешивание навсегда застревает в позе прерванного удара (клинок остриём в землю).
         /// </summary>
-        public void SnapRest() { ResetState(); blendLeft = 0f; blockK = 0f; stagK = 0f; ApplyRestPose(); }
+        public void SnapRest() { ResetState(); blendLeft = 0f; blockK = 0f; stagK = 0f; pinUntil = 0f; ApplyRestPose(); }
+
+        float pinUntil;
+        /// <summary>Клинок прижат к земле (микири: на него наступили) — поза как при сломе равновесия, остриём вниз.</summary>
+        public void Pin(float seconds) { pinUntil = Time.time + seconds; stagK = Mathf.Max(stagK, 0.6f); }
 
         // ---- блок по направлению удара: клинок встаёт на пути чужого клинка, а не всегда вертикально перед лицом
         Vector3 gE, gH; bool gInit;
@@ -241,7 +245,7 @@ namespace BladePath
         {
             float bt = (owner != null && owner.Blocking) ? 1f : 0f;
             blockK = Mathf.MoveTowards(blockK, bt, Time.deltaTime / 0.12f);
-            bool stag = owner != null && owner.PostureBroken;
+            bool stag = (owner != null && owner.PostureBroken) || Time.time < pinUntil;
             stagK = Mathf.MoveTowards(stagK, stag ? 1f : 0f, Time.deltaTime / (stag ? 0.15f : 0.4f));
             blendLeft = Mathf.Max(0f, blendLeft - Time.deltaTime);
             if (Phase == SwingPhase.Idle && pivot != null) { ApplyRestPose(); return; }

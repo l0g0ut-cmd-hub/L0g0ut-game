@@ -174,6 +174,16 @@ namespace BladePath
                     p.K(1.62f, 0.35f, -0.42f, 0.28f, 38f, 64f, 0f, 0.06f, 0.12f, 22f, 8f, 14f, 9f, 0.1f, 0.04f, 0.1f);   // замер после тибури
                     p.KReady(2.0f);
                     break;
+                case AttackType.Mikiri:      // микири: рывок навстречу уколу — нога наступает на клинок врага, корпус навис, свой клинок низко вперёд
+                    p.label = "МИКИРИ"; p.scripted = true;
+                    p.windupTime = 0.06f; p.strikeTime = 0.03f; p.followTime = 0.26f; p.recoveryTime = 0.3f;
+                    p.leadFeet = 0.02f; p.leadPelvis = 0.02f; p.leadChest = 0.01f; p.bladeLag = 0.01f;
+                    //        t      руки x,y,z              клинок p,y,r      таз F,D        таз yaw,pitch  грудь yaw,pitch  стопы F,R,пятка
+                    p.KReady(0f);
+                    p.K(0.09f, 0.1f, -0.42f, 0.3f, 28f, -8f, 0f, 0.18f, 0.2f, 8f, 14f, 4f, 16f, 0.28f, 0.06f, 0.6f);    // топ: передняя нога на клинке врага, вес вниз
+                    p.K(0.35f, 0.1f, -0.4f, 0.32f, 24f, -8f, 0f, 0.17f, 0.18f, 8f, 13f, 4f, 15f, 0.28f, 0.06f, 0.55f);  // держит
+                    p.KReady(0.65f);
+                    break;
                 case AttackType.JumpStrike:  // рубящий в воздухе, с броском вперёд
                     p.label = "В ПРЫЖКЕ";
                     p.Hands(new Vector3(0.00f, 0.42f, 0.00f), new Vector3(0.00f, -0.14f, 0.42f));
