@@ -151,10 +151,15 @@ namespace BladePath
                     DrawGlyph("UI/kiken", new Vector2(g.x / UiKit.Scale, (Screen.height - g.y) / UiKit.Scale), sz, a);
                 }
                 float da = Time.unscaledTime - duel.DeathblowAt;
-                if (da < 1.4f)
+                if (da < 1.9f)
                 {
+                    // 忍殺: кисть проводит знак слева направо за 0,22 с, лёгкий «удар» масштабом, держится и гаснет
                     Vector3 g = cam.WorldToScreenPoint(duel.DeathblowPos);
-                    if (g.z > 0f) DrawGlyph("UI/zan", new Vector2(g.x / UiKit.Scale, (Screen.height - g.y) / UiKit.Scale - 30f), 150f * (1f + 0.6f * Mathf.Max(0f, 0.2f - da)), Mathf.Clamp01((1.4f - da) / 0.5f));
+                    if (g.z > 0f)
+                    {
+                        float pop = 1f + 0.18f * Mathf.Max(0f, 0.22f - da) / 0.22f;
+                        DrawBrush("UI/deathblow", new Vector2(g.x / UiKit.Scale, (Screen.height - g.y) / UiKit.Scale - 70f), 170f * pop, Mathf.Clamp01((1.9f - da) / 0.45f), Mathf.Clamp01(da / 0.22f));
+                    }
                 }
             }
 
@@ -347,6 +352,18 @@ namespace BladePath
                 }
             t.SetPixels(px); t.Apply();
             return t;
+        }
+
+        /// <summary>Знак кистью с проявлением слева направо (reveal 0…1), высота h, ширина — по пропорциям текстуры.</summary>
+        static void DrawBrush(string tex, Vector2 c, float h, float alpha, float reveal)
+        {
+            Texture2D t = UiKit.Tex(tex);
+            if (t == null || alpha <= 0.01f || reveal <= 0.001f) return;
+            float w = h * t.width / Mathf.Max(1f, t.height);
+            reveal = 1f - (1f - reveal) * (1f - reveal);   // кисть быстро входит и замедляется к концу
+            Color o = GUI.color; GUI.color = new Color(1f, 1f, 1f, alpha);
+            GUI.DrawTextureWithTexCoords(new Rect(c.x - w * 0.5f, c.y - h * 0.5f, w * reveal, h), t, new Rect(0f, 0f, reveal, 1f));
+            GUI.color = o;
         }
 
         static void DrawGlyph(string tex, Vector2 c, float size, float alpha)
