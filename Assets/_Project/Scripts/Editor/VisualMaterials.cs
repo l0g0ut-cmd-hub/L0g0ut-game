@@ -35,7 +35,7 @@ namespace BladePath.EditorTools
             l.hair = Solid("Hair", new Color(0.05f, 0.04f, 0.04f), 0f, 0.30f);
             l.lacquer = Textured("Lacquer_Red", "lacquer_albedo.png", null, Vector2.one, Color.white, 0.10f, 0.65f);
             l.bronze = Solid("Bronze", new Color(0.62f, 0.44f, 0.20f), 0.85f, 0.55f);
-            l.steel = Textured("Steel", "steel_albedo.png", null, Vector2.one, Color.white, 0.90f, 0.80f);
+            l.steel = KatanaBlade();
             l.handle = Solid("Handle", new Color(0.07f, 0.05f, 0.05f), 0f, 0.30f);
             l.flesh = Textured("Flesh", "flesh_albedo.png", "flesh_normal.png", new Vector2(1f, 3f), Color.white, 0f, 0.70f);
             l.tooth = Solid("Tooth", new Color(0.92f, 0.86f, 0.76f), 0f, 0.45f);
@@ -317,6 +317,29 @@ namespace BladePath.EditorTools
             if (m.shader != sh) m.shader = sh;
             m.SetColor("_RimColor", enemy ? new Color(0.15f, 0.09f, 0.22f) : new Color(0.17f, 0.21f, 0.30f));
             m.SetFloat("_RimPower", 3.6f);
+            EditorUtility.SetDirty(m);
+            return m;
+        }
+
+        /// <summary>
+        /// Клинок: хамон (матовая белая закалка у кромки с волнистой границей), зеркальная дзигане с узором хада, воронёные синоги-дзи
+        /// (tools/texgen/katana_blade.py под развёртку KatanaBuilder). Без текстур — прежняя ровная сталь.
+        /// </summary>
+        static Material KatanaBlade()
+        {
+            if (AssetDatabase.LoadAssetAtPath<Texture2D>(TexFolder + "katana_blade_albedo.png") == null)
+                return Textured("Steel", "steel_albedo.png", null, Vector2.one, Color.white, 0.90f, 0.80f);
+            Material m = Textured("Steel", "katana_blade_albedo.png", null, Vector2.one, Color.white, 0.9f, 0.8f);
+            foreach (string f in new[] { "katana_blade_albedo.png", "katana_blade_ms.png" })
+            {
+                TextureImporter ti = AssetImporter.GetAtPath(TexFolder + f) as TextureImporter;
+                if (ti != null && ti.wrapMode != TextureWrapMode.Clamp) { ti.wrapMode = TextureWrapMode.Clamp; ti.SaveAndReimport(); }
+            }
+            LoadTex(TexFolder + "katana_blade_albedo.png", false, true, 1024);
+            Texture2D ms = LoadTex(TexFolder + "katana_blade_ms.png", false, false, 1024);
+            if (ms != null) { m.SetTexture("_MetallicGlossMap", ms); m.EnableKeyword("_METALLICGLOSSMAP"); m.SetFloat("_GlossMapScale", 1f); }
+            Texture2D a = AssetDatabase.LoadAssetAtPath<Texture2D>(TexFolder + "katana_blade_albedo.png");
+            if (a != null) { m.mainTexture = a; m.mainTextureScale = Vector2.one; }
             EditorUtility.SetDirty(m);
             return m;
         }
