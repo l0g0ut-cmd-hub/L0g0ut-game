@@ -92,6 +92,7 @@ namespace BladePath.EditorTools
             AddTree(env, look, new Vector3(4.6f, 0f, 8.2f), 1.6f, 5);
             if (look.fallenLeaves != null) AddFallenLeaves(env, look.fallenLeaves);
             if (look.grass != null) AddGrass(env, look.grass);
+            AddShishiOdoshi(env, look, new Vector3(-3.25f, -0.07f, 3.55f));
 
             // луна
             GameObject moon = GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -503,6 +504,68 @@ namespace BladePath.EditorTools
             mr.sharedMaterial = mat;
             mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             mr.receiveShadows = true;
+        }
+
+        /// <summary>
+        /// Цукубаи с сиси-одоси: каменная чаша с водой, бамбуковый жёлоб льёт в трубку на оси, та перевешивает, выливает воду
+        /// в чашу и стучит закрытым концом о камень (ShishiOdoshi). Трубка вдоль X — камера боя видит её в профиль.
+        /// </summary>
+        static void AddShishiOdoshi(Transform env, Look look, Vector3 pos)
+        {
+            Transform root = new GameObject("ShishiOdoshi").transform;
+            root.SetParent(env, false); root.position = pos;
+            // чаша и вода
+            Object.DestroyImmediate(CharacterVisuals.Part(root, "Basin", PrimitiveType.Cylinder, new Vector3(-0.42f, 0.13f, 0f), Vector3.zero, new Vector3(0.56f, 0.13f, 0.56f), look.stoneBlock).GetComponent<Collider>());
+            Object.DestroyImmediate(CharacterVisuals.Part(root, "Water", PrimitiveType.Cylinder, new Vector3(-0.42f, 0.262f, 0f), Vector3.zero, new Vector3(0.44f, 0.004f, 0.44f), look.puddle).GetComponent<Collider>());
+            // камень, о который бьёт трубка, и пара камней сада
+            Object.DestroyImmediate(CharacterVisuals.Part(root, "KnockStone", PrimitiveType.Sphere, new Vector3(0.36f, 0.06f, 0f), new Vector3(0f, 20f, 0f), new Vector3(0.22f, 0.13f, 0.18f), look.stoneBlock).GetComponent<Collider>());
+            Object.DestroyImmediate(CharacterVisuals.Part(root, "Rock1", PrimitiveType.Sphere, new Vector3(-0.85f, 0.05f, 0.22f), new Vector3(0f, 40f, 0f), new Vector3(0.3f, 0.12f, 0.24f), look.stoneBlock).GetComponent<Collider>());
+            Object.DestroyImmediate(CharacterVisuals.Part(root, "Rock2", PrimitiveType.Sphere, new Vector3(0.05f, 0.04f, 0.3f), new Vector3(0f, -25f, 0f), new Vector3(0.22f, 0.09f, 0.2f), look.stoneBlock).GetComponent<Collider>());
+            // стойки оси
+            for (int z = -1; z <= 1; z += 2)
+                Object.DestroyImmediate(CharacterVisuals.Part(root, "Post" + z, PrimitiveType.Cylinder, new Vector3(0f, 0.24f, 0.07f * z), Vector3.zero, new Vector3(0.035f, 0.24f, 0.035f), look.bamboo).GetComponent<Collider>());
+            Object.DestroyImmediate(CharacterVisuals.Part(root, "Axle", PrimitiveType.Cylinder, new Vector3(0f, 0.42f, 0f), new Vector3(90f, 0f, 0f), new Vector3(0.016f, 0.09f, 0.016f), look.woodDark).GetComponent<Collider>());
+            // трубка на оси: открытый конец (−X) под жёлобом над чашей, закрытый (+X) над камнем
+            Transform pivot = new GameObject("TubePivot").transform;
+            pivot.SetParent(root, false); pivot.localPosition = new Vector3(0f, 0.42f, 0f);
+            Object.DestroyImmediate(CharacterVisuals.Part(pivot, "Tube", PrimitiveType.Cylinder, new Vector3(0.0f, 0f, 0f), new Vector3(0f, 0f, 90f), new Vector3(0.075f, 0.36f, 0.075f), look.bamboo).GetComponent<Collider>());
+            Object.DestroyImmediate(CharacterVisuals.Part(pivot, "Node", PrimitiveType.Cylinder, new Vector3(0.2f, 0f, 0f), new Vector3(0f, 0f, 90f), new Vector3(0.083f, 0.008f, 0.083f), look.bamboo).GetComponent<Collider>());
+            // жёлоб: столбик и короткий бамбук, из которого течёт вода
+            Object.DestroyImmediate(CharacterVisuals.Part(root, "SpoutPost", PrimitiveType.Cylinder, new Vector3(-0.62f, 0.38f, -0.02f), Vector3.zero, new Vector3(0.05f, 0.38f, 0.05f), look.bamboo).GetComponent<Collider>());
+            Object.DestroyImmediate(CharacterVisuals.Part(root, "Spout", PrimitiveType.Cylinder, new Vector3(-0.5f, 0.7f, -0.02f), new Vector3(0f, 0f, 75f), new Vector3(0.03f, 0.13f, 0.03f), look.bamboo).GetComponent<Collider>());
+            Material wm = look.mist;   // заглушка: материал капель (мягкий диск) ставит ShishiOdoshi при запуске
+            // тонкая струйка из жёлоба
+            {
+                GameObject g = new GameObject("Trickle"); g.transform.SetParent(root, false); g.transform.localPosition = new Vector3(-0.4f, 0.66f, -0.02f);
+                g.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+                ParticleSystem ps = g.AddComponent<ParticleSystem>();
+                var main = ps.main; main.loop = true; main.prewarm = true; main.startLifetime = 0.22f; main.startSpeed = 0.6f;
+                main.startSize = new ParticleSystem.MinMaxCurve(0.008f, 0.014f); main.startColor = new Color(0.75f, 0.85f, 1f, 0.55f);
+                main.gravityModifier = 1f; main.maxParticles = 40; main.simulationSpace = ParticleSystemSimulationSpace.World;
+                var em = ps.emission; em.rateOverTime = 50f;
+                var shp = ps.shape; shp.shapeType = ParticleSystemShapeType.Cone; shp.angle = 2f; shp.radius = 0.004f;
+                var r = g.GetComponent<ParticleSystemRenderer>(); r.sharedMaterial = wm; r.renderMode = ParticleSystemRenderMode.Stretch; r.velocityScale = 0.04f; r.lengthScale = 1.5f;
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
+            // всплеск: вода выливается из трубки в чашу
+            ParticleSystem spill;
+            {
+                GameObject g = new GameObject("Spill"); g.transform.SetParent(pivot, false); g.transform.localPosition = new Vector3(-0.36f, 0f, 0f);
+                g.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+                spill = g.AddComponent<ParticleSystem>();
+                spill.Stop();
+                var main = spill.main; main.loop = false; main.duration = 0.35f; main.playOnAwake = false; main.startLifetime = new ParticleSystem.MinMaxCurve(0.25f, 0.45f);
+                main.startSpeed = new ParticleSystem.MinMaxCurve(0.3f, 0.9f); main.startSize = new ParticleSystem.MinMaxCurve(0.012f, 0.026f);
+                main.startColor = new Color(0.75f, 0.85f, 1f, 0.6f); main.gravityModifier = 1.2f; main.maxParticles = 80;
+                main.simulationSpace = ParticleSystemSimulationSpace.World;
+                var em = spill.emission; em.rateOverTime = 160f;
+                var shp = spill.shape; shp.shapeType = ParticleSystemShapeType.Cone; shp.angle = 18f; shp.radius = 0.02f;
+                var r = g.GetComponent<ParticleSystemRenderer>(); r.sharedMaterial = wm; r.renderMode = ParticleSystemRenderMode.Stretch; r.velocityScale = 0.05f; r.lengthScale = 1.2f;
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
+            ShishiOdoshi so = pivot.gameObject.AddComponent<ShishiOdoshi>();
+            so.spill = spill;
+            so.trickle = root.Find("Trickle").GetComponent<ParticleSystem>();
         }
 
         static void AddTree(Transform env, Look look, Vector3 pos, float s, int seed)
