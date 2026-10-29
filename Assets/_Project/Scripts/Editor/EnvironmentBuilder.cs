@@ -121,7 +121,7 @@ namespace BladePath.EditorTools
                 float x = -0.8f - 2.8f + i * 1.4f + 0.7f;
                 EnvMesh.Box(d, "String" + i, new Vector3(x, 2.28f, 4.75f), Vector3.zero, new Vector3(0.012f, 0.16f, 0.012f), look.woodDark, 0.2f);
                 GameObject lamp = CharacterVisuals.Part(d, "PaperLamp" + i, PrimitiveType.Sphere, new Vector3(x, 2.05f, 4.75f), Vector3.zero, new Vector3(0.28f, 0.36f, 0.28f), look.paper);
-                AddReflection(lamp.transform, null, 1f, new Color(1f, 0.8f, 0.5f), 0.22f, 1.4f, 0.28f);
+                AddReflection(lamp.transform, null, 1f, new Color(1f, 0.8f, 0.5f), 0.24f, 1.5f, 0.36f);
                 EnvMesh.Glow(d, "LampHalo" + i, new Vector3(x, 2.05f, 4.6f), 1.0f, look.haloWarm, 0.06f);
                 CharacterVisuals.Part(d, "LampCapT" + i, PrimitiveType.Cylinder, new Vector3(x, 2.25f, 4.75f), Vector3.zero, new Vector3(0.12f, 0.012f, 0.12f), look.woodDark);
                 CharacterVisuals.Part(d, "LampCapB" + i, PrimitiveType.Cylinder, new Vector3(x, 1.86f, 4.75f), Vector3.zero, new Vector3(0.10f, 0.012f, 0.10f), look.woodDark);
@@ -308,7 +308,7 @@ namespace BladePath.EditorTools
                     GameObject sj = EnvMesh.Box(hall, "Shoji" + i, new Vector3(x + 0.7f, 1.3f, 5.24f), Vector3.zero, new Vector3(1.2f, 1.5f, 0.05f), look.shoji, 0f);
                     // светящиеся сёдзи отражаются в мокрой площадке широкими тёплыми полосами
                     GameObject sp = new GameObject("ShojiPoint"); sp.transform.SetParent(sj.transform.parent, false); sp.transform.localPosition = new Vector3(x + 0.7f, 1.15f, 5.2f);
-                    AddReflection(sp.transform, null, 1f, new Color(1f, 0.74f, 0.42f), 1.0f, 2.2f, 0.22f);
+                    AddReflection(sp.transform, null, 1f, new Color(1f, 0.74f, 0.42f), 1.0f, 2.4f, 0.36f);
                 }
             }
             EnvMesh.Box(hall, "Lintel", new Vector3(cx, 2.35f, 5.15f), Vector3.zero, new Vector3(7.8f, 0.2f, 0.24f), look.lacquer, 1f, true);
@@ -378,7 +378,7 @@ namespace BladePath.EditorTools
             EnvMesh.Box(t, "GlowB", new Vector3(0f, 0.9f, 0f), Vector3.zero, new Vector3(0.36f, 0.2f, 0.24f), look.glow, 1f);
             EnvMesh.Glow(t, "Halo", new Vector3(0f, 0.9f, 0f), 0.9f, look.haloWarm, 0.08f);
             GameObject lp = new GameObject("LampPoint"); lp.transform.SetParent(t, false); lp.transform.localPosition = new Vector3(0f, 0.9f, 0f);
-            AddReflection(lp.transform, null, 1f, new Color(1f, 0.72f, 0.38f), 0.32f, 1.6f, 0.35f);
+            AddReflection(lp.transform, null, 1f, new Color(1f, 0.72f, 0.38f), 0.34f, 1.7f, 0.5f);
             EnvMesh.Pyramid(t, "Cap", new Vector3(0f, 1.07f, 0f), 0.3f, 0.22f, look.stoneBlock, 0.8f);
             CharacterVisuals.Part(t, "Jewel", PrimitiveType.Sphere, new Vector3(0f, 1.32f, 0f), Vector3.zero, new Vector3(0.09f, 0.09f, 0.09f), look.stoneBlock);
         }
@@ -498,7 +498,7 @@ namespace BladePath.EditorTools
             fl.color = new Color(1f, 0.6f, 0.25f);
             fl.range = 5f;
             fl.intensity = 1.7f;
-            AddReflection(lightObj.transform, fl, 1.7f, new Color(1f, 0.52f, 0.18f), 0.55f, 2.8f, 0.7f);
+            AddReflection(lightObj.transform, fl, 1.7f, new Color(1f, 0.52f, 0.18f), 0.6f, 3.0f, 1.25f);
 
             BladePath.FlickerLight flicker = lightObj.AddComponent<BladePath.FlickerLight>();
             flicker.lightSource = fl;

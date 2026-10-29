@@ -17,6 +17,8 @@ namespace BladePath.EditorTools
         public const string FbxPath = "Assets/_Project/Models/Samurai_Hero.fbx";
         public const string RoninFbxPath = "Assets/_Project/Models/Ronin_Player.fbx";   // игрок из Meshy (tools/blender/build_ronin.py)
         const float RoninScale = 0.91f;                                                  // рост модели 1.90 м → как у зон поражения
+        public const string Hero3FbxPath = "Assets/_Project/Models/Hero3_Player.fbx";       // игрок: Meshy «Crimson Shadow Samurai» (пучок, чёрный доспех, красные шнуры), tools/blender/build_hero3.py
+        const float Hero3Scale = 0.985f;                                                     // с пучком 1,80 м, макушка ~1,72 м — как у остальных
         public const string Samurai2FbxPath = "Assets/_Project/Models/Samurai2_Player.fbx"; // игрок: самурай в красном доспехе с текстурами (tools/blender/build_samurai_m2.py)
         public const string ShadowFbxPath = "Assets/_Project/Models/Samurai_Shadow.fbx";    // враг: самурай в рогатом шлеме (CGTrader, Rigify → наш скелет, tools/blender/build_samurai_cg.py), тёмная раскраска
         const float SamuraiScale = 1f;                                                       // обе собраны в метрах: макушка 1.72 м
@@ -32,9 +34,10 @@ namespace BladePath.EditorTools
         {
             string fbx = undead
                 ? (Exists(ShadowFbxPath) ? ShadowFbxPath : UndeadFbxPath)
-                : (Exists(Samurai2FbxPath) ? Samurai2FbxPath : Exists(RoninFbxPath) ? RoninFbxPath : FbxPath);
+                : (Exists(Hero3FbxPath) ? Hero3FbxPath : Exists(Samurai2FbxPath) ? Samurai2FbxPath : Exists(RoninFbxPath) ? RoninFbxPath : FbxPath);
+            bool hero3 = fbx == Hero3FbxPath;
             bool ronin = fbx == RoninFbxPath;
-            bool samurai = fbx == Samurai2FbxPath || fbx == ShadowFbxPath;
+            bool samurai = fbx == Samurai2FbxPath || fbx == ShadowFbxPath || hero3;
             shadowLook = fbx == ShadowFbxPath;
             string ctrlPath = undead ? UndeadControllerPath : ControllerPath;
             GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(fbx);
@@ -64,7 +67,7 @@ namespace BladePath.EditorTools
                     model.transform.localRotation = Quaternion.Euler(0f, Vector3.SignedAngle(fwd, Vector3.forward, Vector3.up), 0f);
             }
             else Debug.LogWarning("HeroModelBuilder: не найден Hips/FrontMarker — ориентация модели не скорректирована");
-            model.transform.localScale = Vector3.one * (samurai ? SamuraiScale : ronin ? RoninScale : ModelScale);
+            model.transform.localScale = Vector3.one * (hero3 ? Hero3Scale : samurai ? SamuraiScale : ronin ? RoninScale : ModelScale);
 
             // Материалы: по имени из Blender → наши текстурированные
             foreach (SkinnedMeshRenderer smr in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
@@ -123,7 +126,8 @@ namespace BladePath.EditorTools
             d.mocapLoco = loco.Count >= 3;
             d.locoDirs = new Vector2[loco.Count]; d.locoSpeeds = new float[loco.Count];
             for (int i = 0; i < loco.Count; i++) { d.locoDirs[i] = loco[i].dir; d.locoSpeeds[i] = loco[i].speed; }
-            if (samurai) { d.palmOffset = fbx == Samurai2FbxPath ? 0.085f : 0.09f; d.palmLift = fbx == Samurai2FbxPath ? 0.03f : 0.035f; d.eyeHeight = 0.10f; }   // кулак сжат вокруг рукояти: рукоять внутри пальцев
+            if (samurai) { d.palmOffset = fbx == Samurai2FbxPath ? 0.085f : 0.09f; d.palmLift = fbx == Samurai2FbxPath ? 0.03f : 0.035f; d.eyeHeight = 0.10f; }
+            if (hero3) { d.palmOffset = 0.111f; d.palmLift = 0.017f; }   // кулак согнут в меше: центр хвата на 0,113 м от запястья по кисти, 1,7 см к ладони   // кулак сжат вокруг рукояти: рукоять внутри пальцев
 
             if (undead)
             {
@@ -146,6 +150,7 @@ namespace BladePath.EditorTools
         {
             if (name.StartsWith("SAM_")) return VisualMaterials.CharacterRim(VisualMaterials.Samurai(name.Substring(4), shadowLook), shadowLook);
             if (name == "M2_Body") return VisualMaterials.CharacterRim(VisualMaterials.Samurai2(), false);
+            if (name == "H3_Body") return VisualMaterials.CharacterRim(VisualMaterials.Hero3(), false);
             switch (name)
             {
                 case "Skin": return undead ? look.deadSkin : look.skin;

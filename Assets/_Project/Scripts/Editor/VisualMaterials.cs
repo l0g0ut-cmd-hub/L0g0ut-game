@@ -50,7 +50,7 @@ namespace BladePath.EditorTools
             l.ronin = Ronin();
             // мостовая из неправильных плит (исидатами, процедурная 1024²): квадратная плитка 2,4 м на площадке 7,2×5,4;
             // гладкость — по карте: мокрые плиты и лужицы блестят, швы с землёй и мхом матовые
-            l.stone = Textured("Stone_Floor", "flagstone_albedo.png", "flagstone_normal.png", new Vector2(4.2f, 3.15f), new Color(0.78f, 0.78f, 0.82f), 0f, 0.62f);
+            l.stone = Textured("Stone_Floor", "flagstone_albedo.png", "flagstone_normal.png", new Vector2(4.2f, 3.15f), new Color(0.62f, 0.62f, 0.66f), 0f, 0.62f);
             Gloss(l.stone, "flagstone_ms.png", 0.85f);   // в дождь Weather поднимает до 1
             Aniso("flagstone_albedo.png", 4); Aniso("flagstone_normal.png", 4);
             l.stoneDark = Solid("Stone_Dark", new Color(0.12f, 0.12f, 0.15f), 0f, 0.20f);
@@ -259,6 +259,28 @@ namespace BladePath.EditorTools
             { "LegProtection", new Color(0.10f, 0.05f, 0.12f) }, { "Eye", new Color(0.05f, 0.02f, 0.06f) }, { "Wakizashi", new Color(0.05f, 0.04f, 0.05f) },
             { "WakizashiSaya", new Color(0.05f, 0.04f, 0.05f) }, { "KatanaSaya", new Color(0.05f, 0.04f, 0.05f) } };
 
+        /// <summary>Игрок (Meshy «Crimson Shadow Samurai»): base color 2K, нормали 2K, металл (R) + гладкость (A).</summary>
+        public static Material Hero3()
+        {
+            const string dir = "Assets/_Project/Art/Hero3/";
+            Shader sh = Shader.Find("Standard");
+            string path = MatFolder + "Hero3_Body.mat";
+            Material m = AssetDatabase.LoadAssetAtPath<Material>(path);
+            bool isNew = m == null;
+            if (isNew) m = new Material(sh);
+            m.color = Color.white;
+            Texture2D a = LoadTex(dir + "hero3_albedo.jpg", false, true, 2048);   // главный герой: лицо и шнуры видны крупно
+            Texture2D n = LoadTex(dir + "hero3_normal.jpg", true, false, 2048);
+            Texture2D ms = LoadTex(dir + "hero3_metal_smooth.png", false, false);
+            if (a != null) m.mainTexture = a;
+            if (n != null) { m.SetTexture("_BumpMap", n); m.EnableKeyword("_NORMALMAP"); m.SetFloat("_BumpScale", 1f); }
+            if (ms != null) { m.SetTexture("_MetallicGlossMap", ms); m.EnableKeyword("_METALLICGLOSSMAP"); m.SetFloat("_GlossMapScale", 0.85f); }
+            else { m.SetFloat("_Metallic", 0.1f); m.SetFloat("_Glossiness", 0.4f); }
+            if (isNew) AssetDatabase.CreateAsset(m, path);
+            EnableRuntimeEmission(m);
+            return m;
+        }
+
         /// <summary>Игрок: один материал на весь доспех — base color, нормали, металл (R) + гладкость (A) из FBX модели.</summary>
         public static Material Samurai2()
         {
@@ -298,12 +320,12 @@ namespace BladePath.EditorTools
             return m;
         }
 
-        static Texture2D LoadTex(string tp, bool normal, bool srgb)
+        static Texture2D LoadTex(string tp, bool normal, bool srgb, int maxSize = 1024)
         {
             TextureImporter ti = AssetImporter.GetAtPath(tp) as TextureImporter;
-            if (ti != null && (ti.maxTextureSize != 1024 || ti.sRGBTexture != srgb || (normal && ti.textureType != TextureImporterType.NormalMap)))
+            if (ti != null && (ti.maxTextureSize != maxSize || ti.sRGBTexture != srgb || (normal && ti.textureType != TextureImporterType.NormalMap)))
             {
-                ti.maxTextureSize = 1024;
+                ti.maxTextureSize = maxSize;
                 if (normal) ti.textureType = TextureImporterType.NormalMap;
                 ti.sRGBTexture = srgb;
                 ti.SaveAndReimport();

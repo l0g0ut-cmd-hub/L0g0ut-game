@@ -83,6 +83,13 @@ namespace BladePath.EditorTools
                     Shot(cam, dir, "7_grip", hp + pt.forward * 0.75f - pt.right * 0.55f + Vector3.up * 0.15f, hp, 34f, log);
                     Shot(cam, dir, "8_grip_top", hp + pt.forward * 0.35f + pt.right * 0.45f + Vector3.up * 0.65f, hp, 34f, log);
                 }
+                // раскадровка ударов: 8 фаз сбоку (как камера боя) — видно замах, удар, проводку и возврат
+                if (player != null)
+                {
+                    SwingStrip(cam, dir, "9_swing_overhead", player, AttackType.Overhead, log);
+                    SwingStrip(cam, dir, "10_swing_slash", player, AttackType.Slash, log);
+                    SwingStrip(cam, dir, "11_swing_thrust", player, AttackType.Thrust, log);
+                }
                 Shot(cam, dir, "4_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);
 
                 // парирование: вспышка, блик, волна и искры через 50 мс после удара
@@ -105,6 +112,55 @@ namespace BladePath.EditorTools
             }
             catch (Exception e) { log.Append("PROBE|shots|error " + e + "\n"); }
             finally { HeroRigDriver.DtOverride = -1f; }
+        }
+
+        static void SwingStrip(Camera cam, string dir, string name, FighterController f, AttackType type, StringBuilder log)
+        {
+            WeaponController w = f.weapon; HeroRigDriver d = f.GetComponentInChildren<HeroRigDriver>(true);
+            if (w == null || d == null) return;
+            w.ResetState();
+            if (!w.TryStartSwing(type)) return;
+            SwingProfile p = w.CurrentProfile;
+            float total = p.windupTime + p.strikeTime + p.followTime + p.recoveryTime;
+            PropertyInfo phase = typeof(WeaponController).GetProperty("Phase", F);
+            FieldInfo pt = typeof(WeaponController).GetField("phaseTime", F);
+            FieldInfo bl = typeof(WeaponController).GetField("blendLeft", F);
+            const int n = 8, cw = 480, chh = 420;
+            Texture2D sheet = new Texture2D(cw * 4, chh * 2, TextureFormat.RGB24, false);
+            Vector3 fp = f.transform.position;
+            Vector3 camPos = fp + new Vector3(0f, 1.15f, -3.3f) + f.transform.forward * 0.45f, look = fp + Vector3.up * 1.0f + f.transform.forward * 0.45f;
+            Vector3 p0 = cam.transform.position; Quaternion r0 = cam.transform.rotation; float f0 = cam.fieldOfView;
+            RenderTexture rt = new RenderTexture(cw, chh, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
+            RenderTexture prevT = cam.targetTexture, prevA = RenderTexture.active;
+            try
+            {
+                for (int k = 0; k < n; k++)
+                {
+                    float tau = total * 0.98f * k / (n - 1);
+                    float rem = tau; SwingPhase ph = SwingPhase.Windup;
+                    if (rem >= p.windupTime) { rem -= p.windupTime; ph = SwingPhase.Strike; if (rem >= p.strikeTime) { rem -= p.strikeTime; ph = SwingPhase.FollowThrough; if (rem >= p.followTime) { rem -= p.followTime; ph = SwingPhase.Recovery; } } }
+                    phase.GetSetMethod(true).Invoke(w, new object[] { ph });
+                    pt.SetValue(w, rem); bl.SetValue(w, 0f);
+                    Call(w, "ApplyPose");
+                    for (int i = 0; i < 6; i++) Call(d, "LateUpdate");
+                    cam.transform.position = camPos; cam.transform.rotation = Quaternion.LookRotation(look - camPos, Vector3.up); cam.fieldOfView = 42f;
+                    cam.targetTexture = rt; cam.Render();
+                    RenderTexture.active = rt;
+                    sheet.ReadPixels(new Rect(0, 0, cw, chh), (k % 4) * cw, (1 - k / 4) * chh);
+                }
+                sheet.Apply();
+                File.WriteAllBytes(Path.Combine(dir, name + ".jpg"), sheet.EncodeToJPG(85));
+                log.Append("PROBE|shots|" + name + "|" + n + " кадров, " + total.ToString("F2") + " с\n");
+            }
+            catch (Exception e) { log.Append("PROBE|shots|" + name + "|error " + e.Message + "\n"); }
+            finally
+            {
+                cam.targetTexture = prevT; RenderTexture.active = prevA;
+                cam.transform.position = p0; cam.transform.rotation = r0; cam.fieldOfView = f0;
+                rt.Release(); UnityEngine.Object.DestroyImmediate(rt); UnityEngine.Object.DestroyImmediate(sheet);
+                w.ResetState();
+                for (int i = 0; i < 6; i++) Call(d, "LateUpdate");
+            }
         }
 
         static void Shot(Camera cam, string dir, string name, Vector3 pos, Vector3 look, float fov, StringBuilder log)
