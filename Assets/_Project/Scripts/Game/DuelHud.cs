@@ -419,7 +419,7 @@ namespace BladePath
             float ph = f.SincePostureHit;
             if (ph < 0.18f && !broken) UiKit.Rect(new Rect(c.x - fw * 0.5f, r.y, fw, h), new Color(1f, 1f, 0.9f, 0.7f * (1f - ph / 0.18f)));
             if (k > 0.75f || broken) UiKit.Rect(new Rect(c.x - fw * 0.5f, r.y - 1f, fw, 1.5f), new Color(1f, 1f, 0.8f, 0.6f));
-            if (broken)
+            if (broken && f != duel.enemy)   // у врага метка добивания — энсо на груди
             {
                 // знак добивания: красная точка, как в Sekiro
                 Vector2 m = new Vector2(c.x, r.y - 22f);
