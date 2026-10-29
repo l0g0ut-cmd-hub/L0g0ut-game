@@ -93,6 +93,9 @@ namespace BladePath.EditorTools
             if (look.fallenLeaves != null) AddFallenLeaves(env, look.fallenLeaves);
             if (look.grass != null) AddGrass(env, look.grass);
             AddShishiOdoshi(env, look, new Vector3(-3.25f, -0.07f, 3.55f));
+            AddIncense(env, look, new Vector3(1.7f, -0.07f, 3.32f));
+            AddWindChime(env, look, new Vector3(1.3f, 2.24f, 4.98f));
+            new GameObject("CrowFlock").AddComponent<CrowFlock>();
 
             // луна
             GameObject moon = GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -242,6 +245,8 @@ namespace BladePath.EditorTools
             foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
             {
                 if (t.GetComponent<BladePath.GlowSprite>() != null || t.GetComponent<ParticleSystem>() != null || t.GetComponentInParent<BladePath.BannerSway>() != null) continue;
+                // движущиеся части (трубка сиси-одоси, полоска фурина) — не в статический батч, иначе застынут
+                if (t.GetComponentInParent<BladePath.ShishiOdoshi>() != null || t.GetComponentInParent<BladePath.WindChime>() != null) continue;
                 UnityEditor.GameObjectUtility.SetStaticEditorFlags(t.gameObject, UnityEditor.StaticEditorFlags.BatchingStatic);
             }
         }
@@ -566,6 +571,64 @@ namespace BladePath.EditorTools
             ShishiOdoshi so = pivot.gameObject.AddComponent<ShishiOdoshi>();
             so.spill = spill;
             so.trickle = root.Find("Trickle").GetComponent<ParticleSystem>();
+        }
+
+        /// <summary>Бронзовая курильница под тории: три ножки, чаша, тлеющие палочки и тонкий вьющийся дым.</summary>
+        static void AddIncense(Transform env, Look look, Vector3 pos)
+        {
+            Transform root = new GameObject("Incense").transform;
+            root.SetParent(env, false); root.position = pos;
+            for (int i = 0; i < 3; i++)
+            {
+                float a = i * Mathf.PI * 2f / 3f + 0.4f;
+                Object.DestroyImmediate(CharacterVisuals.Part(root, "Leg" + i, PrimitiveType.Cylinder, new Vector3(Mathf.Cos(a) * 0.15f, 0.08f, Mathf.Sin(a) * 0.15f), new Vector3(Mathf.Sin(a) * 12f, 0f, -Mathf.Cos(a) * 12f), new Vector3(0.04f, 0.08f, 0.04f), look.bronze).GetComponent<Collider>());
+            }
+            Object.DestroyImmediate(CharacterVisuals.Part(root, "Bowl", PrimitiveType.Sphere, new Vector3(0f, 0.26f, 0f), Vector3.zero, new Vector3(0.44f, 0.24f, 0.44f), look.bronze).GetComponent<Collider>());
+            Object.DestroyImmediate(CharacterVisuals.Part(root, "Rim", PrimitiveType.Cylinder, new Vector3(0f, 0.34f, 0f), Vector3.zero, new Vector3(0.4f, 0.015f, 0.4f), look.bronze).GetComponent<Collider>());
+            Object.DestroyImmediate(CharacterVisuals.Part(root, "Ash", PrimitiveType.Cylinder, new Vector3(0f, 0.352f, 0f), Vector3.zero, new Vector3(0.34f, 0.004f, 0.34f), look.plaster).GetComponent<Collider>());
+            for (int i = 0; i < 3; i++)
+            {
+                Vector3 sp = new Vector3(-0.04f + i * 0.04f, 0.42f, (i - 1) * 0.02f);
+                Object.DestroyImmediate(CharacterVisuals.Part(root, "Stick" + i, PrimitiveType.Cylinder, sp, new Vector3((i - 1) * 6f, 0f, (i - 1) * 5f), new Vector3(0.006f, 0.07f, 0.006f), look.woodDark).GetComponent<Collider>());
+                Object.DestroyImmediate(CharacterVisuals.Part(root, "Ember" + i, PrimitiveType.Sphere, sp + Vector3.up * 0.072f, Vector3.zero, new Vector3(0.012f, 0.012f, 0.012f), look.glow).GetComponent<Collider>());
+            }
+            // дым: медленный, вьётся (шум), расплывается и тает
+            GameObject g = new GameObject("IncenseSmoke");
+            g.transform.SetParent(root, false); g.transform.localPosition = new Vector3(0f, 0.5f, 0f);
+            g.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
+            ParticleSystem ps = g.AddComponent<ParticleSystem>();
+            var main = ps.main; main.loop = true; main.prewarm = true;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(4f, 6f); main.startSpeed = new ParticleSystem.MinMaxCurve(0.18f, 0.28f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.06f, 0.1f); main.startColor = new Color(0.62f, 0.62f, 0.66f, 0.09f);
+            main.maxParticles = 60; main.simulationSpace = ParticleSystemSimulationSpace.World;
+            var em = ps.emission; em.rateOverTime = 9f;
+            var shp = ps.shape; shp.shapeType = ParticleSystemShapeType.Cone; shp.angle = 4f; shp.radius = 0.02f;
+            var sz = ps.sizeOverLifetime; sz.enabled = true; sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(1f, 6f)));
+            var noise = ps.noise; noise.enabled = true; noise.strength = 0.22f; noise.frequency = 0.6f; noise.scrollSpeed = 0.2f;
+            var vel = ps.velocityOverLifetime; vel.enabled = true; vel.x = new ParticleSystem.MinMaxCurve(0.05f); vel.y = new ParticleSystem.MinMaxCurve(0f); vel.z = new ParticleSystem.MinMaxCurve(0f);
+            var col = ps.colorOverLifetime; col.enabled = true;
+            Gradient gr = new Gradient();
+            gr.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                       new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.15f), new GradientAlphaKey(0.6f, 0.6f), new GradientAlphaKey(0f, 1f) });
+            col.color = gr;
+            ParticleSystemRenderer r = g.GetComponent<ParticleSystemRenderer>();
+            r.sharedMaterial = look.mist;
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            g.AddComponent<PetalTexture>().fog = true;   // мягкая текстура дымки (как у тумана)
+        }
+
+        /// <summary>Фурин: чугунный колокольчик на шнурке под карнизом и бумажная полоска, качается на ветру (WindChime).</summary>
+        static void AddWindChime(Transform env, Look look, Vector3 pos)
+        {
+            Transform root = new GameObject("WindChime").transform;
+            root.SetParent(env, false); root.position = pos;
+            Object.DestroyImmediate(CharacterVisuals.Part(root, "Cord", PrimitiveType.Cylinder, new Vector3(0f, -0.06f, 0f), Vector3.zero, new Vector3(0.004f, 0.06f, 0.004f), look.woodDark).GetComponent<Collider>());
+            Object.DestroyImmediate(CharacterVisuals.Part(root, "Bell", PrimitiveType.Sphere, new Vector3(0f, -0.15f, 0f), Vector3.zero, new Vector3(0.075f, 0.065f, 0.075f), look.iron).GetComponent<Collider>());
+            Transform sp = new GameObject("StripPivot").transform;
+            sp.SetParent(root, false); sp.localPosition = new Vector3(0f, -0.19f, 0f);
+            Object.DestroyImmediate(CharacterVisuals.Part(sp, "StripCord", PrimitiveType.Cylinder, new Vector3(0f, -0.05f, 0f), Vector3.zero, new Vector3(0.003f, 0.05f, 0.003f), look.woodDark).GetComponent<Collider>());
+            EnvMesh.Box(sp, "Strip", new Vector3(0f, -0.2f, 0f), Vector3.zero, new Vector3(0.05f, 0.18f, 0.003f), look.paper, 0f);
+            root.gameObject.AddComponent<WindChime>().strip = sp;
         }
 
         static void AddTree(Transform env, Look look, Vector3 pos, float s, int seed)
