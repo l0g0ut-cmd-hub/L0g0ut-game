@@ -292,8 +292,8 @@ namespace BladePath.EditorTools
             bool isNew = m == null;
             if (isNew) m = new Material(sh);
             m.color = Color.white;
-            Texture2D a = LoadTex(dir + "samurai2_albedo.jpg", false, true);
-            Texture2D n = LoadTex(dir + "samurai2_normal.jpg", true, false);
+            Texture2D a = LoadTex(dir + "samurai2_albedo.jpg", false, true, 2048);   // враг крупно в добивании и у камеры
+            Texture2D n = LoadTex(dir + "samurai2_normal.jpg", true, false, 2048);
             Texture2D ms = LoadTex(dir + "samurai2_metal_smooth.png", false, false);
             if (a != null) m.mainTexture = a;
             if (n != null) { m.SetTexture("_BumpMap", n); m.EnableKeyword("_NORMALMAP"); m.SetFloat("_BumpScale", 1f); }

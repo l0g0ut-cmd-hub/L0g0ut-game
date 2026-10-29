@@ -32,8 +32,10 @@ namespace BladePath.EditorTools
 
         public static bool TryAttach(FighterController fighter, Transform bladeRoot, Look look, bool undead = false)
         {
+            // враг — самурай в красном лакированном доспехе с золотом и полумесяцем на кабуто (текстуры 2K): рядом с чёрным героем
+            // читается сразу; прежний «теневой» самурай был без текстур (плоские цвета)
             string fbx = undead
-                ? (Exists(ShadowFbxPath) ? ShadowFbxPath : UndeadFbxPath)
+                ? (Exists(Samurai2FbxPath) ? Samurai2FbxPath : Exists(ShadowFbxPath) ? ShadowFbxPath : UndeadFbxPath)
                 : (Exists(Hero3FbxPath) ? Hero3FbxPath : Exists(Samurai2FbxPath) ? Samurai2FbxPath : Exists(RoninFbxPath) ? RoninFbxPath : FbxPath);
             bool hero3 = fbx == Hero3FbxPath;
             bool ronin = fbx == RoninFbxPath;
@@ -157,7 +159,7 @@ namespace BladePath.EditorTools
         static Material MapMaterial(string name, Look look, bool undead)
         {
             if (name.StartsWith("SAM_")) return VisualMaterials.CharacterRim(VisualMaterials.Samurai(name.Substring(4), shadowLook), shadowLook);
-            if (name == "M2_Body") return VisualMaterials.CharacterRim(VisualMaterials.Samurai2(), false);
+            if (name == "M2_Body") return VisualMaterials.CharacterRim(VisualMaterials.Samurai2(), undead);
             if (name == "H3_Body") return VisualMaterials.CharacterRim(VisualMaterials.Hero3(), false);
             switch (name)
             {
