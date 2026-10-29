@@ -151,12 +151,69 @@ namespace BladePath
         /// </summary>
         public void SnapRest() { ResetState(); blendLeft = 0f; blockK = 0f; stagK = 0f; ApplyRestPose(); }
 
+        // ---- блок по направлению удара: клинок встаёт на пути чужого клинка, а не всегда вертикально перед лицом
+        Vector3 gE, gH; bool gInit;
+        int threatSwing = -1, threatKind = -1; float threatSide = 1f;
+
+        /// <summary>
+        /// Поза блока под угрозу. Сторону и высоту читаем по замаху противника (где его руки и клинок) и держим до конца удара —
+        /// иначе блок «прыгает» за клинком через центр. Сверху — клинок поперёк над головой; рез — вертикально с той стороны;
+        /// по ногам — остриём вниз у колена; укол — отвод вверх-вбок.
+        /// </summary>
+        void GuardFor(out Vector3 e, out Vector3 h)
+        {
+            e = new Vector3(guardEuler.x, guardEuler.y * yawSign, guardEuler.z);
+            h = new Vector3(guardHand.x * yawSign, guardHand.y, guardHand.z);
+            FighterController op = owner != null ? owner.opponent : null;
+            WeaponController ow = op != null ? op.weapon : null;
+            if (ow == null || ow.bladeRoot == null || ow.pivot == null || ow.CurrentProfile == null || ow.CurrentProfile.ranged
+                || ow.Phase == SwingPhase.Idle || ow.Phase == SwingPhase.Recovery) { threatSwing = -1; threatKind = -1; return; }
+            if (ow.Phase == SwingPhase.Windup || threatSwing != ow.SwingId)
+            {
+                threatSwing = ow.SwingId;
+                Transform ft = owner.transform;
+                Vector3 mid = ft.InverseTransformPoint(ow.bladeRoot.position + ow.bladeRoot.forward * ow.bladeLength * 0.6f);
+                Vector3 hl = ft.InverseTransformPoint(ow.pivot.position);
+                threatSide = Mathf.Sign(hl.x + mid.x * 0.5f + 1e-4f);
+                AttackType t = ow.CurrentProfile.type;
+                if (t == AttackType.Thrust) threatKind = 3;
+                else if (t == AttackType.LegSweep) threatKind = 2;
+                else if (t == AttackType.Overhead || t == AttackType.JumpStrike) threatKind = 0;
+                else threatKind = mid.y > 1.75f ? 0 : 1;
+            }
+            float s = threatSide;
+            switch (threatKind)
+            {
+                case 0: h = new Vector3(0.08f * yawSign, 0.22f, 0.30f); e = new Vector3(-14f, -80f * yawSign, 0f); break;   // над головой поперёк, остриё в сторону
+                case 1: h = new Vector3(0.15f * s, -0.02f, 0.32f); e = new Vector3(-78f, 16f * s, 0f); break;              // вертикально с той стороны
+                case 2: h = new Vector3(0.14f * s, -0.42f, 0.30f); e = new Vector3(72f, 18f * s, 0f); break;               // остриём вниз у колена
+                case 3: h = new Vector3(0.05f * yawSign, -0.12f, 0.42f); e = new Vector3(-58f, 14f * yawSign, 0f); break;  // укол: отвод вверх-вбок
+            }
+        }
+
+        /// <summary>Удар принят в блок: клинок отскакивает от чужого клинка в восстановление (поза перетекает из текущей).</summary>
+        public void Rebound()
+        {
+            if (Phase != SwingPhase.Strike && Phase != SwingPhase.FollowThrough) return;
+            bool wasOpen = ContactWindowOpen;
+            SnapshotForBlend();
+            Phase = SwingPhase.Recovery;
+            phaseTime = CurrentProfile != null ? CurrentProfile.recoveryTime * 0.3f : 0f;
+            ApplyPose();
+            if (wasOpen && ContactWindowClosed != null) ContactWindowClosed(this);
+        }
+
         void ApplyRestPose()
         {
             if (pivot == null) return;
             float bk = Smooth(blockK);
-            Vector3 re = Vector3.Lerp(restEuler, new Vector3(guardEuler.x, guardEuler.y * yawSign, guardEuler.z), bk);
-            Vector3 rh = Vector3.Lerp(new Vector3(restHand.x * yawSign, restHand.y, restHand.z), new Vector3(guardHand.x * yawSign, guardHand.y, guardHand.z), bk);
+            Vector3 ge, gh; GuardFor(out ge, out gh);
+            if (!gInit) { gE = ge; gH = gh; gInit = true; }
+            float gk = Time.deltaTime > 0f ? 1f - Mathf.Exp(-Time.deltaTime / 0.05f) : 1f;   // в редакторе время стоит — сразу
+            if (bk < 0.01f) gk = 1f;   // блок не поднят — поза блока сразу под угрозу
+            gE = Vector3.Lerp(gE, ge, gk); gH = Vector3.Lerp(gH, gh, gk);
+            Vector3 re = Vector3.Lerp(restEuler, gE, bk);
+            Vector3 rh = Vector3.Lerp(new Vector3(restHand.x * yawSign, restHand.y, restHand.z), gH, bk);
             for (int c = PoseCh.PF; c < PoseCh.N; c++) Pose[c] = SwingProfile.ReadyPose[c];
             Pose[PoseCh.HYAW] *= yawSign; Pose[PoseCh.CYAW] *= yawSign;
             Pose[PoseCh.PF] -= 0.04f * bk; Pose[PoseCh.PD] += 0.03f * bk; Pose[PoseCh.CPIT] -= 3f * bk;   // блок: вес чуть назад, колени ниже

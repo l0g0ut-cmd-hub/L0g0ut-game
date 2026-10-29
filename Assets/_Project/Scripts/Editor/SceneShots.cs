@@ -95,9 +95,10 @@ namespace BladePath.EditorTools
                 // походка: шаг вперёд и приставной вбок (мокап + замок стоп), камера едет рядом
                 if (player != null)
                 {
-                    WalkStrip(cam, dir, "12_walk_fwd", player, Vector3.forward, 1.2f, log);
-                    WalkStrip(cam, dir, "13_walk_side", player, Vector3.right, 0.72f, log);
+                    WalkStrip(cam, dir, "12_walk_fwd", player, enemy, Vector3.forward, 1.2f, false, log);
+                    WalkStrip(cam, dir, "13_walk_side", player, enemy, Vector3.right, 0.72f, true, log);
                     if (enemy != null) DeathblowStrip(cam, dir, "14_deathblow", player, enemy, log);
+                    if (enemy != null) GuardStrip(cam, dir, "15_guard", player, enemy, log);
                 }
 
                 // парирование: вспышка, блик, волна и искры через 50 мс после удара
@@ -229,6 +230,67 @@ namespace BladePath.EditorTools
             }
         }
 
+        /// <summary>Блок по направлению удара: враг бьёт сверху / рез / укол / по ногам, игрок в блоке; момент встречи клинков сбоку и из-за спины.</summary>
+        static void GuardStrip(Camera cam, string dir, string name, FighterController def, FighterController att, StringBuilder log)
+        {
+            WeaponController wd = def.weapon, wa = att.weapon;
+            HeroRigDriver dd = def.GetComponentInChildren<HeroRigDriver>(true), da = att.GetComponentInChildren<HeroRigDriver>(true);
+            if (wd == null || wa == null || dd == null || da == null) return;
+            PropertyInfo phase = typeof(WeaponController).GetProperty("Phase", F), blocking = typeof(FighterController).GetProperty("Blocking", F);
+            FieldInfo pt = typeof(WeaponController).GetField("phaseTime", F), bl = typeof(WeaponController).GetField("blendLeft", F), bk = typeof(WeaponController).GetField("blockK", F);
+            AttackType[] types = { AttackType.Overhead, AttackType.Slash, AttackType.Thrust, AttackType.LegSweep };
+            const int cw = 480, chh = 420;
+            Vector3 p0 = cam.transform.position; Quaternion r0 = cam.transform.rotation; float f0 = cam.fieldOfView;
+            Texture2D sheet = new Texture2D(cw * 4, chh * 2, TextureFormat.RGB24, false);
+            RenderTexture rt = new RenderTexture(cw, chh, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
+            RenderTexture prevT = cam.targetTexture, prevA = RenderTexture.active;
+            try
+            {
+                Vector3 pd = def.transform.position, pa = att.transform.position, mid = (pd + pa) * 0.5f;
+                Vector3 fwd = pa - pd; fwd.y = 0f; fwd.Normalize();
+                for (int k = 0; k < types.Length; k++)
+                {
+                    wa.SnapRest(); wd.SnapRest();
+                    if (!wa.TryStartSwing(types[k])) continue;
+                    SwingProfile p = wa.CurrentProfile;
+                    blocking.GetSetMethod(true).Invoke(def, new object[] { true }); bk.SetValue(wd, 1f);
+                    // замах (60 %) — блок читает угрозу, затем середина удара — клинки встречаются
+                    float[] at = { p.windupTime * 0.6f, p.windupTime + p.strikeTime * 0.6f };
+                    foreach (float tau in at)
+                    {
+                        float rem = tau; SwingPhase ph = SwingPhase.Windup;
+                        if (rem >= p.windupTime) { rem -= p.windupTime; ph = SwingPhase.Strike; }
+                        phase.GetSetMethod(true).Invoke(wa, new object[] { ph });
+                        pt.SetValue(wa, rem); bl.SetValue(wa, 0f);
+                        Call(wa, "ApplyPose");
+                        for (int i = 0; i < 6; i++) { Tick(att, da, 0f, 1f / 30f); Call(wd, "ApplyRestPose"); Tick(def, dd, 0f, 1f / 30f); }
+                    }
+                    for (int v = 0; v < 2; v++)
+                    {
+                        Vector3 camPos = v == 0 ? mid + new Vector3(0f, 1.2f, -3.4f) : pd - fwd * 1.9f + Vector3.Cross(Vector3.up, fwd) * -0.9f + Vector3.up * 1.75f;
+                        Vector3 look = v == 0 ? mid + Vector3.up * 1.05f : pd + fwd * 0.9f + Vector3.up * 1.15f;
+                        cam.transform.position = camPos; cam.transform.rotation = Quaternion.LookRotation(look - camPos, Vector3.up); cam.fieldOfView = 40f;
+                        cam.targetTexture = rt; cam.Render();
+                        RenderTexture.active = rt;
+                        sheet.ReadPixels(new Rect(0, 0, cw, chh), k * cw, (1 - v) * chh);
+                    }
+                }
+                sheet.Apply();
+                File.WriteAllBytes(Path.Combine(dir, name + ".jpg"), sheet.EncodeToJPG(85));
+                log.Append("PROBE|shots|" + name + "|ok\n");
+            }
+            catch (Exception e) { log.Append("PROBE|shots|" + name + "|error " + e.Message + "\n"); }
+            finally
+            {
+                cam.targetTexture = prevT; RenderTexture.active = prevA;
+                cam.transform.position = p0; cam.transform.rotation = r0; cam.fieldOfView = f0;
+                rt.Release(); UnityEngine.Object.DestroyImmediate(rt); UnityEngine.Object.DestroyImmediate(sheet);
+                blocking.GetSetMethod(true).Invoke(def, new object[] { false }); bk.SetValue(wd, 0f);
+                wa.SnapRest(); wd.SnapRest();
+                for (int i = 0; i < 20; i++) { Tick(def, dd, 1f / 30f, 1f / 30f); Tick(att, da, 1f / 30f, 1f / 30f); }
+            }
+        }
+
         /// <summary>Один кадр бойца как в игре: Update драйвера → Animator → LateUpdate драйвера → полы плаща.</summary>
         static void Tick(FighterController f, HeroRigDriver d, float animDt, float dt)
         {
@@ -241,7 +303,7 @@ namespace BladePath.EditorTools
         }
 
         /// <summary>Раскадровка походки: боец идёт dirLocal со скоростью speed (как PoseProbe.WalkSim), 8 кадров через 0,1 с после разгона.</summary>
-        static void WalkStrip(Camera cam, string dir, string name, FighterController f, Vector3 dirLocal, float speed, StringBuilder log)
+        static void WalkStrip(Camera cam, string dir, string name, FighterController f, FighterController other, Vector3 dirLocal, float speed, bool camBehind, StringBuilder log)
         {
             HeroRigDriver d = f.GetComponentInChildren<HeroRigDriver>(true);
             if (d == null || d.animator == null) return;
@@ -254,12 +316,18 @@ namespace BladePath.EditorTools
             RenderTexture rt = new RenderTexture(cw, chh, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
             RenderTexture prevT = cam.targetTexture, prevA = RenderTexture.active;
             if (f.weapon != null) f.weapon.SnapRest();
+            Vector3 otherPos = other != null ? other.transform.position : Vector3.zero;
             try
             {
                 Vector3 wdir = ft.TransformDirection(dirLocal);
-                // камера стоит на месте (видно, едет ли стопа по земле), смотрит на середину пройденного пути
+                // противник отходит далеко вперёд по линии взгляда: боец смотрит туда же, но не упирается в него
+                Vector3 face = ft.forward; face.y = 0f; face.Normalize();
+                if (other != null) other.transform.position = start + face * 7f;
+                // камера стоит на месте (видно, едет ли стопа по земле), смотрит на середину пройденного пути:
+                // шаг вперёд — сбоку, приставной вбок — со спины (движение поперёк кадра)
                 Vector3 midPath = start + wdir * speed * dt * (warm + n * every * 0.5f);
-                Vector3 camPos = midPath + new Vector3(0f, 1.0f, -3.6f), look = midPath + Vector3.up * 0.75f;
+                Vector3 camPos = camBehind ? midPath - face * 3.4f + Vector3.up * 1.05f : midPath + new Vector3(0f, 1.0f, -3.6f);
+                Vector3 look = midPath + Vector3.up * 0.75f;
                 int k = 0;
                 for (int i = 0; i < warm + n * every && k < n; i++)
                 {
@@ -288,6 +356,7 @@ namespace BladePath.EditorTools
                 rt.Release(); UnityEngine.Object.DestroyImmediate(rt); UnityEngine.Object.DestroyImmediate(sheet);
                 f.SetMoveVector(Vector2.zero);
                 ft.position = start; ft.rotation = startRot;
+                if (other != null) other.transform.position = otherPos;
                 for (int i = 0; i < 30; i++) { if (fu != null) fu.Invoke(f, null); Tick(f, d, dt, dt); }
             }
         }

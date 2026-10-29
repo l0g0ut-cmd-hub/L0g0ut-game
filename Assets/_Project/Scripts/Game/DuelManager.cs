@@ -773,6 +773,15 @@ namespace BladePath
             }
             if (r.target.Blocking && !perilous)
             {
+                // искры там, где клинки встретились (блок встаёт на пути удара), а не в точке попадания по телу
+                Vector3 clashAt = r.contact.point;
+                WeaponController dw = r.target.weapon, aw = r.attacker.weapon;
+                if (dw != null && aw != null && dw.bladeRoot != null && aw.bladeRoot != null)
+                {
+                    Vector3 qa, qb;
+                    Vector3 a0 = aw.bladeRoot.position, b0 = dw.bladeRoot.position;
+                    if (SegDist(a0, a0 + aw.bladeRoot.forward * aw.bladeLength, b0, b0 + dw.bladeRoot.forward * dw.bladeLength, out qa, out qb) < 0.45f) clashAt = (qa + qb) * 0.5f;
+                }
                 bool parry = r.target.BlockTime < r.target.ParryWindow;
                 r.target.AddKi(parry ? 20f : 6f);
                 if (parry) StatsOf(r.target).parries++; else StatsOf(r.target).blocks++;
@@ -780,15 +789,15 @@ namespace BladePath
                 else r.attacker.Knockback(r.attacker.transform.position - r.target.transform.position, 1.6f);
                 if (r.target == player) Haptics.Pulse(parry ? 35 : 15);
                 Popup bp = new Popup();
-                bp.world = r.contact.point + Vector3.up * 0.2f;
+                bp.world = clashAt + Vector3.up * 0.2f;
                 bp.text = parry ? "ПАРИРОВАНИЕ!" : "БЛОК";
                 bp.color = parry ? new Color(0.4f, 0.9f, 1f) : new Color(0.75f, 0.85f, 1f);
                 bp.born = Time.unscaledTime; bp.size = parry ? 30f : 24f;
                 Popups.Add(bp);
                 if (Juice.Instance != null)
                 {
-                    if (parry) Juice.Instance.Parry(r.contact.point, r.contact.normal);
-                    else Juice.Instance.OnHit(r.contact.point, r.contact.normal, r.contact.bladeVelocity, 0.5f, true, false, null);
+                    if (parry) Juice.Instance.Parry(clashAt, r.contact.normal);
+                    else Juice.Instance.OnHit(clashAt, r.contact.normal, r.contact.bladeVelocity, 0.5f, true, false, null);
                 }
                 if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(parry ? 0.05f : 0.025f); if (parry) CameraOrbit.Instance.Punch(2.5f); }
                 // равновесие: блок копит урон защитнику, отражение (парирование) — атакующему
@@ -811,7 +820,11 @@ namespace BladePath
                         Slowmo = true; slowUntil = Time.unscaledTime + 0.35f;
                     }
                 }
-                else ApplyDamage(r.target, r.attacker, Mathf.Max(1f, Mathf.Round(dmg * 0.15f)), r.contact.point, false, true);
+                else
+                {
+                    if (r.attacker.weapon != null) r.attacker.weapon.Rebound();   // клинок отскочил от блока
+                    ApplyDamage(r.target, r.attacker, Mathf.Max(1f, Mathf.Round(dmg * 0.15f)), r.contact.point, false, true);
+                }
                 return;
             }
             lastHitHead = r.zone == BodyZoneId.Head;
