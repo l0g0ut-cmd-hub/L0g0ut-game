@@ -489,6 +489,7 @@ namespace BladePath
                 Vector3 fall = (dir * 0.7f + side * 0.6f).normalized;
                 lastHitHead = false;
                 if (!t.Dead) ApplyDamage(t, a, Mathf.Max(1f, Hp(t)), chest, true, false, -dir, -dir * 3f, torso != t.transform ? torso : null);   // кровь хлещет из груди за клинком
+                flourishDone = true;   // тибури победителя — уже часть приёма
                 t.TakeKnockback(); t.Knockback(fall, 1.1f);
                 if (rig != null) rig.Recoil(fall, chest, 0.7f);
                 if (Juice.Instance != null) { Juice.Instance.SquelchSound(); Juice.Instance.Dust(t.transform.position + Vector3.up * 0.05f, fall, 8); }
@@ -529,7 +530,7 @@ namespace BladePath
         void Flourish()
         {
             if (State == DuelState.Fighting || State == DuelState.Intro) { flourishDone = false; return; }
-            if (flourishDone || TimedOut || LastDraw || StateTime < 0.9f) return;
+            if (flourishDone || TimedOut || LastDraw || StateTime < 0.9f || DeathblowActive) return;
             flourishDone = true;
             FighterController w = State == DuelState.PlayerWon ? player : enemy;
             if (w == null || w.Dead || w.weapon == null) return;
