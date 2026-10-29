@@ -193,7 +193,7 @@ namespace BladePath.EditorTools
             MethodInfo fu = typeof(FighterController).GetMethod("Update", F);
             Transform fl = Find(model, "Foot.L"), fr = Find(model, "Foot.R"), hp = Find(model, "Hips");
             HeroRigDriver.DtOverride = dt;
-            if (f.weapon != null) f.weapon.ResetState();   // после кадров удара — снова стойка
+            if (f.weapon != null) f.weapon.SnapRest();   // после кадров удара — снова стойка
             try
             {
                 Vector3 wdir = ft.TransformDirection(dirLocal);

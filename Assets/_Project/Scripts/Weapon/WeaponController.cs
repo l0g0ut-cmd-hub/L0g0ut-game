@@ -145,6 +145,12 @@ namespace BladePath
             if (wasOpen && ContactWindowClosed != null) ContactWindowClosed(this);
         }
 
+        /// <summary>
+        /// Сразу в стойку, без перетекания из прежней позы. Для редактора (пробы и кадры CI): там Time.deltaTime не идёт,
+        /// и после ResetState() смешивание навсегда застревает в позе прерванного удара (клинок остриём в землю).
+        /// </summary>
+        public void SnapRest() { ResetState(); blendLeft = 0f; blockK = 0f; stagK = 0f; ApplyRestPose(); }
+
         void ApplyRestPose()
         {
             if (pivot == null) return;

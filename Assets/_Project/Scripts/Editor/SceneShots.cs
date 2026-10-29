@@ -41,7 +41,7 @@ namespace BladePath.EditorTools
                 foreach (FighterController f in fs)
                 {
                     HeroRigDriver d = f.GetComponentInChildren<HeroRigDriver>(true);
-                    if (f.weapon != null) f.weapon.ResetState();
+                    if (f.weapon != null) f.weapon.SnapRest();
                     if (d == null || d.animator == null) continue;
                     d.animator.Rebind(); d.animator.Update(0f);
                 }
@@ -125,7 +125,7 @@ namespace BladePath.EditorTools
         {
             WeaponController w = f.weapon; HeroRigDriver d = f.GetComponentInChildren<HeroRigDriver>(true);
             if (w == null || d == null) return;
-            w.ResetState();
+            w.SnapRest();
             if (!w.TryStartSwing(type)) return;
             SwingProfile p = w.CurrentProfile;
             float total = p.windupTime + p.strikeTime + p.followTime + p.recoveryTime;
@@ -166,7 +166,7 @@ namespace BladePath.EditorTools
                 cam.targetTexture = prevT; RenderTexture.active = prevA;
                 cam.transform.position = p0; cam.transform.rotation = r0; cam.fieldOfView = f0;
                 rt.Release(); UnityEngine.Object.DestroyImmediate(rt); UnityEngine.Object.DestroyImmediate(sheet);
-                w.ResetState();
+                w.SnapRest();
                 for (int i = 0; i < 8; i++) Tick(f, d, 0f, 1f / 30f);
             }
         }
@@ -195,7 +195,7 @@ namespace BladePath.EditorTools
             Texture2D sheet = new Texture2D(cw * 4, chh * 2, TextureFormat.RGB24, false);
             RenderTexture rt = new RenderTexture(cw, chh, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
             RenderTexture prevT = cam.targetTexture, prevA = RenderTexture.active;
-            if (f.weapon != null) f.weapon.ResetState();
+            if (f.weapon != null) f.weapon.SnapRest();
             try
             {
                 Vector3 wdir = ft.TransformDirection(dirLocal);
