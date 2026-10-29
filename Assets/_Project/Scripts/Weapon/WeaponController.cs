@@ -154,6 +154,10 @@ namespace BladePath
         float pinUntil, downUntil, downK;
         /// <summary>На колено (добит, но поднимается / пропустил сокрушающий удар): корпус осел, клинок упёрт остриём в землю.</summary>
         public void Down(float seconds) { downUntil = Time.time + seconds; }
+
+        float deflectAt = -10f, deflectStrength;
+        /// <summary>Отражение (парирование): клинок резко «бьёт» навстречу чужому и возвращается в блок — видимый щелчок, как в Sekiro.</summary>
+        public void Deflect(float strength = 1f) { deflectAt = Time.time; deflectStrength = strength; }
         /// <summary>Клинок прижат к земле (микири: на него наступили) — поза как при сломе равновесия, остриём вниз.</summary>
         public void Pin(float seconds) { pinUntil = Time.time + seconds; stagK = Mathf.Max(stagK, 0.6f); }
 
@@ -233,6 +237,15 @@ namespace BladePath
                 Pose[PoseCh.PD] += 0.15f * sk; Pose[PoseCh.PF] -= 0.08f * sk;
                 Pose[PoseCh.CPIT] += (24f + 3f * wob) * sk; Pose[PoseCh.HPIT] += 10f * sk;
                 Pose[PoseCh.CYAW] += 6f * wob * sk * yawSign;
+            }
+            // щелчок отражения: руки на миг вперёд-вверх, клинок наклоняется к удару и возвращается (0,2 с)
+            float da = Time.time - deflectAt;
+            if (da >= 0f && da < 0.2f)
+            {
+                float k = Mathf.Sin(Mathf.PI * da / 0.2f) * deflectStrength * Mathf.Max(bk, 0.5f);
+                rh += new Vector3(0f, 0.05f, 0.11f) * k;
+                re += new Vector3(-14f, 0f, 0f) * k;
+                Pose[PoseCh.CPIT] += 6f * k; Pose[PoseCh.PF] += 0.04f * k;
             }
             float dk = Smooth(downK);
             if (dk > 0.001f)

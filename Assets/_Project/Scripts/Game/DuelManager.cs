@@ -924,8 +924,8 @@ namespace BladePath
                 Popups.Add(bp);
                 if (Juice.Instance != null)
                 {
-                    if (parry) Juice.Instance.Parry(clashAt, r.contact.normal);
-                    else Juice.Instance.OnHit(clashAt, r.contact.normal, r.contact.bladeVelocity, 0.5f, true, false, null);
+                    if (parry) { Juice.Instance.Parry(clashAt, r.contact.normal); if (r.target.weapon != null) r.target.weapon.Deflect(1f); }
+                    else { Juice.Instance.OnHit(clashAt, r.contact.normal, r.contact.bladeVelocity, 0.5f, true, false, null); if (r.target.weapon != null) r.target.weapon.Deflect(-0.6f); }   // блок: клинок отдаёт к телу
                 }
                 if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(parry ? 0.05f : 0.025f); if (parry) CameraOrbit.Instance.Punch(2.5f); }
                 // равновесие: блок копит урон защитнику, отражение (парирование) — атакующему
