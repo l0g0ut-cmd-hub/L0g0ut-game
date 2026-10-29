@@ -38,6 +38,9 @@ namespace BladePath
         [Tooltip("Точный хват: центр кулака задан в системе кости кисти (по позе покоя: вниз от запястья gripDown, к ладони gripIn, м). " +
                  "Тогда рукоять проходит ровно через кулак при любом повороте кисти, без подгонки palmOffset/palmLift.")]
         public bool gripFromBind;
+        [Tooltip("Вынос рук вперёд/вниз сверх позы клинка (м, в системе бойца): у модели с короткими руками и узкими плечами стойка иначе «прижата к себе». В ударе — вполовину.")]
+        public float handForward = 0f, handLift = 0f;
+        float handBiasK = 1f;
         public float gripDown = 0.111f, gripIn = 0.017f;
         Vector3 gripLocalL, gripLocalR;
         [Tooltip("Высота глаз над костью головы, м (светящиеся глаза врага).")]
@@ -616,7 +619,8 @@ namespace BladePath
                 // старые профили — в системе скрученного корпуса, как раньше
                 float twist = (swinging && !keyed) ? yawS * (hipsYawK + spineYawK + chestYawK) : 0f;
                 Quaternion frame = Quaternion.AngleAxis(twist, up) * ft.rotation;
-                weapon.pivot.position = shMid + frame * weapon.HandOffset;
+                handBiasK = Mathf.MoveTowards(handBiasK, swinging ? 0.5f : 1f, dt / 0.15f);
+                weapon.pivot.position = shMid + frame * (weapon.HandOffset + new Vector3(0f, handLift, handForward) * handBiasK);
                 // на ходу руки гасят качание таза: клинок держится ровнее корпуса и смотрит на противника
                 if (hips != null)
                 {

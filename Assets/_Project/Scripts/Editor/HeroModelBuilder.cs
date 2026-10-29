@@ -129,7 +129,7 @@ namespace BladePath.EditorTools
             d.locoDirs = new Vector2[loco.Count]; d.locoSpeeds = new float[loco.Count];
             for (int i = 0; i < loco.Count; i++) { d.locoDirs[i] = loco[i].dir; d.locoSpeeds[i] = loco[i].speed; }
             if (samurai) { d.palmOffset = fbx == Samurai2FbxPath ? 0.085f : 0.09f; d.palmLift = fbx == Samurai2FbxPath ? 0.03f : 0.035f; d.eyeHeight = 0.10f; }
-            if (hero3) { d.palmOffset = 0.111f; d.palmLift = 0.017f; d.gripFromBind = true; d.gripDown = 0.113f * Hero3Scale; d.gripIn = 0.017f * Hero3Scale; }   // кулак согнут в меше: центр хвата 0,113 м ниже запястья, 1,7 см к ладони   // кулак сжат вокруг рукояти: рукоять внутри пальцев
+            if (hero3) { d.palmOffset = 0.111f; d.palmLift = 0.017f; d.gripFromBind = true; d.gripDown = 0.113f * Hero3Scale; d.gripIn = 0.017f * Hero3Scale; d.handForward = 0.15f; d.handLift = -0.03f; }   // кулак согнут в меше: центр хвата 0,113 м ниже запястья, 1,7 см к ладони   // кулак сжат вокруг рукояти: рукоять внутри пальцев
 
             // полы плаща (кости Coat.*) — на пружинах: инерция ткани, бёдра раздвигают полы
             {
