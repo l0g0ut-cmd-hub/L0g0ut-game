@@ -105,6 +105,7 @@ namespace BladePath.EditorTools
                         DeathblowStrip(cam, dir, "18_deathblow_rising", player, enemy, AttackType.DeathblowRising, 1.22f, new[] { 0f, 0.2f, 0.38f, 0.44f, 0.46f, 0.5f, 0.6f, 1.18f }, log);
                     }
                     if (enemy != null) GuardStrip(cam, dir, "15_guard", player, enemy, log);
+                    MoveStrip(cam, dir, "19_dash_jump", player, enemy, log);
                 }
 
                 // парирование: вспышка, блик, волна и искры через 50 мс после удара
@@ -293,6 +294,76 @@ namespace BladePath.EditorTools
                 blocking.GetSetMethod(true).Invoke(def, new object[] { false }); bk.SetValue(wd, 0f);
                 wa.SnapRest(); wd.SnapRest();
                 for (int i = 0; i < 20; i++) { Tick(def, dd, 1f / 30f, 1f / 30f); Tick(att, da, 1f / 30f, 1f / 30f); }
+            }
+        }
+
+        /// <summary>Рывок вперёд (верхний ряд, 4 кадра через 0,05 с) и прыжок (нижний ряд, через 0,12 с) — сбоку.</summary>
+        static void MoveStrip(Camera cam, string dir, string name, FighterController f, FighterController other, StringBuilder log)
+        {
+            HeroRigDriver d = f.GetComponentInChildren<HeroRigDriver>(true);
+            if (d == null) return;
+            const float dt = 1f / 30f;
+            const int cw = 480, chh = 420;
+            Transform ft = f.transform; Vector3 start = ft.position; Quaternion startRot = ft.rotation;
+            Vector3 otherPos = other != null ? other.transform.position : Vector3.zero;
+            FieldInfo dl = typeof(FighterController).GetField("dashLeft", F), dd = typeof(FighterController).GetField("dashDir", F), vyF = typeof(FighterController).GetField("vy", F);
+            PropertyInfo gr = typeof(FighterController).GetProperty("Grounded", F);
+            Vector3 p0 = cam.transform.position; Quaternion r0 = cam.transform.rotation; float f0 = cam.fieldOfView;
+            Texture2D sheet = new Texture2D(cw * 4, chh * 2, TextureFormat.RGB24, false);
+            RenderTexture rt = new RenderTexture(cw, chh, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
+            RenderTexture prevT = cam.targetTexture, prevA = RenderTexture.active;
+            if (f.weapon != null) f.weapon.SnapRest();
+            try
+            {
+                Vector3 face = ft.forward; face.y = 0f; face.Normalize();
+                if (other != null) other.transform.position = start + face * 7f;
+                for (int row = 0; row < 2; row++)
+                {
+                    ft.position = start;
+                    for (int i = 0; i < 20; i++) Tick(f, d, dt, dt);
+                    Vector3 camPos = start + face * 0.7f + new Vector3(0f, 1.05f, -3.4f), look = start + face * 0.7f + Vector3.up * 0.9f;
+                    if (row == 0) { dl.SetValue(f, f.dashTime); dd.SetValue(f, face); }
+                    else { vyF.SetValue(f, f.jumpVelocity); gr.GetSetMethod(true).Invoke(f, new object[] { false }); }
+                    int every = row == 0 ? 2 : 4, k = 0;
+                    for (int i = 0; i < 4 * every && k < 4; i++)
+                    {
+                        if (row == 0)
+                        {
+                            float left = (float)dl.GetValue(f);
+                            if (left > 0f) { ft.position += face * (f.dashSpeed * dt); dl.SetValue(f, left - dt); }
+                        }
+                        else
+                        {
+                            float vy = (float)vyF.GetValue(f) - f.gravity * dt;
+                            Vector3 p = ft.position; p.y += vy * dt;
+                            if (p.y <= 0f) { p.y = 0f; vy = 0f; gr.GetSetMethod(true).Invoke(f, new object[] { true }); }
+                            ft.position = p; vyF.SetValue(f, vy);
+                        }
+                        Tick(f, d, dt, dt);
+                        if (i % every == every - 1)
+                        {
+                            cam.transform.position = camPos; cam.transform.rotation = Quaternion.LookRotation(look - camPos, Vector3.up); cam.fieldOfView = 40f;
+                            cam.targetTexture = rt; cam.Render();
+                            RenderTexture.active = rt;
+                            sheet.ReadPixels(new Rect(0, 0, cw, chh), k * cw, (1 - row) * chh);
+                            k++;
+                        }
+                    }
+                    dl.SetValue(f, 0f); vyF.SetValue(f, 0f); gr.GetSetMethod(true).Invoke(f, new object[] { true });
+                }
+                sheet.Apply();
+                File.WriteAllBytes(Path.Combine(dir, name + ".jpg"), sheet.EncodeToJPG(85));
+                log.Append("PROBE|shots|" + name + "|ok\n");
+            }
+            catch (Exception e) { log.Append("PROBE|shots|" + name + "|error " + e.Message + "\n"); }
+            finally
+            {
+                cam.targetTexture = prevT; RenderTexture.active = prevA;
+                cam.transform.position = p0; cam.transform.rotation = r0; cam.fieldOfView = f0;
+                rt.Release(); UnityEngine.Object.DestroyImmediate(rt); UnityEngine.Object.DestroyImmediate(sheet);
+                ft.position = start; ft.rotation = startRot;
+                if (other != null) other.transform.position = otherPos;
+                for (int i = 0; i < 20; i++) Tick(f, d, dt, dt);
             }
         }
 
