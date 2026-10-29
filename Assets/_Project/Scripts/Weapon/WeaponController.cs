@@ -149,9 +149,11 @@ namespace BladePath
         /// Сразу в стойку, без перетекания из прежней позы. Для редактора (пробы и кадры CI): там Time.deltaTime не идёт,
         /// и после ResetState() смешивание навсегда застревает в позе прерванного удара (клинок остриём в землю).
         /// </summary>
-        public void SnapRest() { ResetState(); blendLeft = 0f; blockK = 0f; stagK = 0f; pinUntil = 0f; ApplyRestPose(); }
+        public void SnapRest() { ResetState(); blendLeft = 0f; blockK = 0f; stagK = 0f; pinUntil = 0f; downUntil = 0f; downK = 0f; ApplyRestPose(); }
 
-        float pinUntil;
+        float pinUntil, downUntil, downK;
+        /// <summary>На колено (добит, но поднимается / пропустил сокрушающий удар): корпус осел, клинок упёрт остриём в землю.</summary>
+        public void Down(float seconds) { downUntil = Time.time + seconds; }
         /// <summary>Клинок прижат к земле (микири: на него наступили) — поза как при сломе равновесия, остриём вниз.</summary>
         public void Pin(float seconds) { pinUntil = Time.time + seconds; stagK = Mathf.Max(stagK, 0.6f); }
 
@@ -232,6 +234,15 @@ namespace BladePath
                 Pose[PoseCh.CPIT] += (24f + 3f * wob) * sk; Pose[PoseCh.HPIT] += 10f * sk;
                 Pose[PoseCh.CYAW] += 6f * wob * sk * yawSign;
             }
+            float dk = Smooth(downK);
+            if (dk > 0.001f)
+            {
+                // на колене: таз низко, корпус согнут, клинок упёрт в землю перед собой
+                re = Vector3.Lerp(re, new Vector3(68f, 12f * yawSign, 0f), dk);
+                rh = Vector3.Lerp(rh, new Vector3(0.12f * yawSign, -0.66f, 0.34f), dk);
+                Pose[PoseCh.PD] += 0.3f * dk; Pose[PoseCh.PF] -= 0.04f * dk;
+                Pose[PoseCh.CPIT] += 26f * dk; Pose[PoseCh.HPIT] += 14f * dk;
+            }
             SetHandEuler(rh, re);
             FootSpeedF = FootSpeedR = 0f;
             ApplyBlend();
@@ -246,6 +257,7 @@ namespace BladePath
             float bt = (owner != null && owner.Blocking) ? 1f : 0f;
             blockK = Mathf.MoveTowards(blockK, bt, Time.deltaTime / 0.12f);
             bool stag = (owner != null && owner.PostureBroken) || Time.time < pinUntil;
+            downK = Mathf.MoveTowards(downK, Time.time < downUntil ? 1f : 0f, Time.deltaTime / (Time.time < downUntil ? 0.18f : 0.5f));
             stagK = Mathf.MoveTowards(stagK, stag ? 1f : 0f, Time.deltaTime / (stag ? 0.15f : 0.4f));
             blendLeft = Mathf.Max(0f, blendLeft - Time.deltaTime);
             if (Phase == SwingPhase.Idle && pivot != null) { ApplyRestPose(); return; }

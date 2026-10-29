@@ -94,6 +94,21 @@ namespace BladePath
             float cx = W * 0.5f;
             DrawBar(new Rect(cx - 80f - barW, 22f, barW, 14f), duel.player, false, playerName, new Color(0.15f, 0.55f, 0.85f));
             DrawBar(new Rect(cx + 80f, 22f, barW, 14f), duel.enemy, true, Ladder.Current.name, new Color(0.75f, 0.2f, 0.85f));
+            // метки жизни врага (как у боссов Sekiro): энсо под полосой — сколько ещё добиваний; снятая метка гаснет
+            int mm = duel.MaxMarks(duel.enemy);
+            if (mm > 1)
+            {
+                int left = duel.Marks(duel.enemy);
+                for (int i = 0; i < mm; i++)
+                {
+                    Vector2 mc = new Vector2(cx + 80f + barW - 12f - i * 26f, 50f);
+                    bool alive = i < left;
+                    Color o = GUI.color; GUI.color = alive ? Color.white : new Color(0.35f, 0.3f, 0.3f, 0.45f);
+                    Texture2D mt = UiKit.Tex("UI/deathblow_mark");
+                    if (mt != null) GUI.DrawTexture(new Rect(mc.x - 13f, mc.y - 13f, 26f, 26f), mt);
+                    GUI.color = o;
+                }
+            }
 
             // красная вспышка по краям, когда бьют игрока
             float since = duel.SinceHit(duel.player);

@@ -239,10 +239,13 @@ namespace BladePath
             combo.Clear(); comboTime.Clear(); counterUntil.Clear(); PerilAt.Clear(); perilSwing.Clear(); jumpedSweep.Clear(); DeathblowAt = -10f;
             Enraged = false;
             ApplyStage();   // скорость врага к базовой ступени (сброс ярости)
-            SuperBy = null; DeathblowBy = null; DeathblowTarget = null;
+            SuperBy = null; DeathblowBy = null; DeathblowTarget = null; executing = false;
+            marks.Clear(); exhaustedUntil.Clear(); reviveUntil.Clear();
+            if (player != null) marks[player] = 1;
+            if (enemy != null) marks[enemy] = MaxMarks(enemy);
             if (Juice.Instance != null) Juice.Instance.CleanBlades();
             lastStandShown = false; tenSecShown = false;
-            TimeLeft = roundSeconds; TimedOut = false; LastDraw = false; Perfect = false;
+            TimeLeft = roundSeconds + 30f * (MaxMarks(enemy) - 1); TimedOut = false;   // больше жизней у врага — больше времени LastDraw = false; Perfect = false;
             if (Juice.Instance != null)
             {
                 Juice.Instance.Taiko(0.9f, 0.95f);
@@ -305,6 +308,7 @@ namespace BladePath
             {
                 // равновесие восстанавливается, когда по бойцу не бьют: медленнее при низком здоровье, быстрее в блоке
                 RegenPosture(player); RegenPosture(enemy);
+                UpdateLives(Time.unscaledDeltaTime);
                 if (!SuperActive && !DeathblowActive) TimeLeft = Mathf.Max(0f, TimeLeft - Time.deltaTime);
                 if (TimeLeft <= 0f) TimeUp();
                 if (!tenSecShown && TimeLeft <= 10f) { tenSecShown = true; Announce("10 СЕКУНД!", new Color(1f, 0.4f, 0.25f)); }
@@ -400,22 +404,58 @@ namespace BladePath
         }
 
         // ---------------------------------------------------------------- добивание (忍殺, как в Sekiro)
-        /// <summary>Моменты приёма по времени удара Deathblow (с): укол в грудь, рывок клинка (смерть), тибури.</summary>
-        public const float DbStab = 0.44f, DbPull = 1.1f, DbFlick = 1.36f;
-        const float DbDistance = 1.38f;   // между бойцами к уколу: клинок входит в грудь на полдлины и выходит из спины
+        /// <summary>
+        /// Постановка добивания: приём, дистанция между бойцами и моменты по времени удара (с): контакт клинка с телом,
+        /// развязка (смерть или падение на колено, если у врага остались метки жизни), тибури.
+        /// </summary>
+        struct DbKind { public AttackType type; public float distance, contact, outcome, flick; public bool cut, neck; }
+        static readonly DbKind[] DbKinds =
+        {
+            new DbKind { type = AttackType.Deathblow, distance = 1.38f, contact = 0.44f, outcome = 1.10f, flick = 1.36f },                       // укол в грудь
+            new DbKind { type = AttackType.DeathblowKesa, distance = 1.22f, contact = 0.45f, outcome = 0.72f, flick = 1.22f, cut = true },       // кэса-гири
+            new DbKind { type = AttackType.DeathblowNeck, distance = 1.20f, contact = 0.46f, outcome = 0.52f, flick = 1.22f, cut = true, neck = true },   // по шее
+            new DbKind { type = AttackType.DeathblowRising, distance = 1.22f, contact = 0.45f, outcome = 0.72f, flick = 1.18f, cut = true },     // снизу вверх
+        };
         public FighterController DeathblowBy { get; private set; }
         public FighterController DeathblowTarget { get; private set; }
         public bool DeathblowActive { get { return DeathblowBy != null; } }
-        float dbStart; int dbStage;
+        /// <summary>Идущее добивание последнее (снимает последнюю метку) — жертва падает замертво.</summary>
+        public bool DeathblowLethal { get; private set; }
+        float dbStart; int dbStage, lastDbKind = -1; DbKind db;
+        bool executing;   // урон приёма: здоровье в ноль убивает, а не открывает новое добивание
+
+        // метки жизни (как у боссов Sekiro): добивание снимает одну, пока метки есть — враг поднимается с полным здоровьем
+        readonly Dictionary<FighterController, int> marks = new Dictionary<FighterController, int>();
+        readonly Dictionary<FighterController, float> exhaustedUntil = new Dictionary<FighterController, float>();
+        readonly Dictionary<FighterController, float> reviveUntil = new Dictionary<FighterController, float>();
+        public int Marks(FighterController f) { int m; return f != null && marks.TryGetValue(f, out m) ? m : 1; }
+        public int MaxMarks(FighterController f) { return f != null && f == enemy ? Mathf.Max(1, Ladder.Current.marks) : 1; }
+        /// <summary>Поднимается после добивания (здоровье наполняется, удары не проходят).</summary>
+        public bool Reviving(FighterController f) { float u; return f != null && reviveUntil.TryGetValue(f, out u) && Time.unscaledTime < u; }
+        /// <summary>Доля здоровья игрока, которую снимает сокрушающий удар по сломленному равновесию (казнь — только если это добьёт).</summary>
+        const float CrushFrac = 0.35f;
 
         /// <summary>
-        /// Удар по сломленному равновесию — не просто попадание, а постановка: оба замирают, атакующий подшагивает на дистанцию,
-        /// взводит клинок у бедра и всаживает его в грудь; замер; рывок клинка на себя — враг падает, кровь; тибури.
+        /// Удар по сломленному равновесию — постановка: оба замирают, атакующий подшагивает на дистанцию и проводит один из приёмов
+        /// (укол, кэса-гири, по шее, снизу; подряд один и тот же не повторяется). Последняя метка — смерть (по шее — голова с плеч),
+        /// иначе враг падает на колено и поднимается с полным здоровьем.
         /// </summary>
         bool TryDeathblow(FighterController a, FighterController t)
         {
             if (DeathblowActive || SuperActive || a == null || t == null || a.weapon == null) return false;
-            if (!a.Grounded || !t.Grounded || a.Dead || t.Dead) return false;
+            if (!a.Grounded || !t.Grounded || a.Dead || t.Dead || Reviving(t)) return false;
+            DeathblowLethal = Marks(t) <= 1;
+            // выбор приёма: голову рубим только последним добиванием
+            int pick = -1;
+            for (int tries = 0; tries < 8; tries++)
+            {
+                int k = UnityEngine.Random.Range(0, DbKinds.Length);
+                if (DbKinds[k].neck && !DeathblowLethal) continue;
+                if (k == lastDbKind && tries < 7) continue;
+                pick = k; break;
+            }
+            if (pick < 0) pick = 0;
+            lastDbKind = pick; db = DbKinds[pick];
             DeathblowBy = a; DeathblowTarget = t; dbStart = Time.unscaledTime; dbStage = 0;
             Freeze(true);
             a.TakeKnockback(); t.TakeKnockback(); a.StopDash(); t.StopDash();
@@ -423,10 +463,10 @@ namespace BladePath
             EnergyProjectile.DestroyAll();
             if (t.weapon != null) t.weapon.ResetState();
             a.weapon.ResetState();
-            a.weapon.TryStartSwing(AttackType.Deathblow);
+            a.weapon.TryStartSwing(db.type);
             lastSwing[a] = a.weapon.SwingId;
-            flourishDone = true;   // тибури — часть приёма
-            Announce("СМЕРТЕЛЬНЫЙ УДАР", new Color(0.95f, 0.08f, 0.06f));
+            if (DeathblowLethal) flourishDone = true;   // тибури — часть приёма
+            Announce(DeathblowLethal ? "СМЕРТЕЛЬНЫЙ УДАР" : "ДОБИВАНИЕ", new Color(0.95f, 0.08f, 0.06f));
             if (Juice.Instance != null) Juice.Instance.Taiko(1f, 0.72f);
             hitStopUntil = Time.unscaledTime + 0.07f;
             Haptics.Pulse(50);
@@ -438,63 +478,109 @@ namespace BladePath
             if (f.zones != null) foreach (BodyZone z in f.zones) if (z != null && z.zoneId == BodyZoneId.Torso) return z.transform;
             return f.transform;
         }
+        static Transform HeadOf(FighterController f)
+        {
+            if (f.zones != null) foreach (BodyZone z in f.zones) if (z != null && z.zoneId == BodyZoneId.Head) return z.transform;
+            return null;
+        }
 
         void UpdateDeathblow()
         {
             if (!DeathblowActive) return;
             FighterController a = DeathblowBy, t = DeathblowTarget;
             WeaponController w = a.weapon;
-            bool on = w != null && w.Phase != SwingPhase.Idle && w.CurrentProfile != null && w.CurrentProfile.type == AttackType.Deathblow;
+            bool on = w != null && w.Phase != SwingPhase.Idle && w.CurrentProfile != null && w.CurrentProfile.type == db.type;
             float st = on ? w.SwingTime : 99f;
             Vector3 dir = t.transform.position - a.transform.position; dir.y = 0f;
             dir = dir.sqrMagnitude > 1e-4f ? dir.normalized : a.transform.forward;
-            if (on && st < DbStab && !t.Dead)
+            if (on && st < db.contact && !t.Dead)
             {
-                // подшаг на дистанцию укола, лицом к лицу (до укола успевает: экспонента ~0,1 с)
-                Vector3 want = t.transform.position - dir * DbDistance; want.y = a.transform.position.y;
+                // подшаг на дистанцию приёма, лицом к лицу (до контакта успевает: экспонента ~0,1 с)
+                Vector3 want = t.transform.position - dir * db.distance; want.y = a.transform.position.y;
                 a.transform.position = Vector3.Lerp(a.transform.position, want, 1f - Mathf.Exp(-14f * Time.deltaTime));
                 a.transform.rotation = Quaternion.LookRotation(dir, Vector3.up);
                 t.transform.rotation = Quaternion.RotateTowards(t.transform.rotation, Quaternion.LookRotation(-dir, Vector3.up), 360f * Time.deltaTime);
             }
-            Transform torso = TorsoOf(t);
-            Vector3 chest = torso.position;
+            Transform torso = TorsoOf(t), head = HeadOf(t);
+            Vector3 aim = db.neck && head != null ? head.position - Vector3.up * 0.14f : torso.position;
+            Vector3 hit = aim;
             if (w != null && w.bladeRoot != null)
             {
-                // точка входа — на клинке напротив центра груди
+                // точка контакта — на клинке напротив груди (шеи)
                 Vector3 b0 = w.bladeRoot.position, ax = w.bladeRoot.forward;
-                chest = b0 + ax * Mathf.Clamp(Vector3.Dot(torso.position - b0, ax), 0f, w.bladeLength);
+                hit = b0 + ax * Mathf.Clamp(Vector3.Dot(aim - b0, ax), 0f, w.bladeLength);
             }
             HeroRigDriver rig = t.GetComponentInChildren<HeroRigDriver>();
-            if (dbStage == 0 && st >= DbStab)
+            Vector3 side = Vector3.Cross(Vector3.up, dir);
+            if (dbStage == 0 && st >= db.contact)
             {
                 dbStage = 1;
-                DeathblowAt = Time.unscaledTime; DeathblowPos = chest;
-                if (rig != null) rig.Recoil(dir, chest, 1.15f);
+                DeathblowAt = Time.unscaledTime; DeathblowPos = hit;
                 if (Juice.Instance != null)
                 {
-                    Juice.Instance.OnHit(chest + dir * 0.16f, dir, dir, 0.85f, false, false, null);   // кровь из спины по ходу клинка
-                    Juice.Instance.StabSound();
+                    if (!db.cut)
+                    {
+                        Juice.Instance.OnHit(hit + dir * 0.16f, dir, dir, 0.85f, false, false, null);   // кровь из спины по ходу клинка
+                        Juice.Instance.StabSound();
+                    }
+                    else
+                    {
+                        // рез: веер крови по ходу клинка (рез справа налево — влево от атакующего)
+                        Vector3 cutDir = (-side * 0.8f + (db.type == AttackType.DeathblowRising ? Vector3.up * 0.5f : Vector3.down * (db.neck ? 0.05f : 0.5f))).normalized;
+                        Juice.Instance.OnHit(hit, -dir, cutDir * 6f, 1.5f, false, false, db.neck ? null : torso);
+                    }
                     Juice.Instance.BloodyBlade(w, 0.7f);
                 }
+                if (rig != null) rig.Recoil(db.cut ? (dir - side * 0.6f).normalized : dir, hit, 1.15f, db.neck ? BodyZoneId.Head : BodyZoneId.Torso);
                 if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(0.06f); CameraOrbit.Instance.Punch(4f); }
-                hitStopUntil = Time.unscaledTime + 0.14f;
+                hitStopUntil = Time.unscaledTime + (db.cut ? 0.12f : 0.14f);
                 Haptics.Pulse(t == player ? 120 : 80);
             }
-            if (dbStage == 1 && st >= DbPull)
+            if (dbStage == 1 && st >= db.outcome)
             {
                 dbStage = 2;
-                // падение: прочь от атакующего и вбок — от камеры, чтобы тело не легло между ней и победителем
-                Vector3 side = Vector3.Cross(Vector3.up, dir);
                 if (Camera.main != null && Vector3.Dot(side, Camera.main.transform.forward) < 0f) side = -side;
-                Vector3 fall = (dir * 0.7f + side * 0.6f).normalized;
-                lastHitHead = false;
-                if (!t.Dead) ApplyDamage(t, a, Mathf.Max(1f, Hp(t)), chest, true, false, -dir, -dir * 3f, torso != t.transform ? torso : null);   // кровь хлещет из груди за клинком
-                flourishDone = true;   // тибури победителя — уже часть приёма
-                t.TakeKnockback(); t.Knockback(fall, 1.1f);
-                if (rig != null) rig.Recoil(fall, chest, 0.7f);
-                if (Juice.Instance != null) { Juice.Instance.SquelchSound(); Juice.Instance.Dust(t.transform.position + Vector3.up * 0.05f, fall, 8); }
+                if (DeathblowLethal)
+                {
+                    // падение: прочь от атакующего и вбок — от камеры, чтобы тело не легло между ней и победителем
+                    Vector3 fall = (dir * 0.7f + side * 0.6f).normalized;
+                    lastHitHead = db.neck;   // по шее — голова с плеч (Decapitate в ApplyDamage)
+                    marks[t] = 0;
+                    executing = true;
+                    if (!t.Dead) ApplyDamage(t, a, Mathf.Max(1f, Hp(t)), hit, true, false, -dir, db.cut ? -side * 3f : -dir * 3f, torso != t.transform ? torso : null);
+                    executing = false;
+                    flourishDone = true;   // тибури победителя — уже часть приёма
+                    t.TakeKnockback(); t.Knockback(fall, 1.1f);
+                    if (rig != null) rig.Recoil(fall, hit, 0.7f);
+                    if (Juice.Instance != null) { if (!db.cut) Juice.Instance.SquelchSound(); Juice.Instance.Dust(t.transform.position + Vector3.up * 0.05f, fall, 8); }
+                }
+                else
+                {
+                    // метка снята, но враг жив: отшатнулся, рухнул на колено, поднимается с полным здоровьем
+                    marks[t] = Marks(t) - 1;
+                    t.ResetPosture();
+                    t.TakeKnockback(); t.Knockback(dir, 1.3f);
+                    t.Stun(1.7f);
+                    if (t.weapon != null) { t.weapon.ResetState(); t.weapon.Down(1.5f); }
+                    reviveUntil[t] = Time.unscaledTime + 1.7f;
+                    exhaustedUntil.Remove(t);
+                    if (rig != null) rig.Recoil(dir, hit, 0.9f);
+                    if (Juice.Instance != null)
+                    {
+                        if (!db.cut) Juice.Instance.SquelchSound();
+                        Juice.Instance.OnHit(hit, -dir, -dir * 3f, 1.0f, false, false, torso != t.transform ? torso : null);
+                        Juice.Instance.Growl(0.8f);
+                        Juice.Instance.Dust(t.transform.position + Vector3.up * 0.05f, dir, 12);
+                    }
+                    StatsOf(a).hits++;
+                    int left = Marks(t);
+                    Announce(left > 1 ? "ВРАГ ПОДНИМАЕТСЯ — ЕЩЁ " + left + " ДОБИВАНИЯ" : "ВРАГ ПОДНИМАЕТСЯ — ПОСЛЕДНЯЯ ЖИЗНЬ", new Color(1f, 0.5f, 0.2f));
+                    if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.05f);
+                    // с каждой снятой меткой враг злее
+                    if (t == enemy) { enemy.moveSpeed *= 1.06f; enemy.AddKi(30f); }
+                }
             }
-            if (dbStage == 2 && st >= DbFlick)
+            if (dbStage == 2 && st >= db.flick)
             {
                 dbStage = 3;
                 if (Juice.Instance != null && w != null)
@@ -508,6 +594,25 @@ namespace BladePath
             {
                 DeathblowBy = null; DeathblowTarget = null;
                 if (State == DuelState.Fighting) Freeze(false);
+            }
+        }
+
+        /// <summary>Подъём после добивания (здоровье наполняется за 1,2 с) и выход из «пустого» здоровья без добивания.</summary>
+        void UpdateLives(float dt)
+        {
+            foreach (FighterController f in new[] { player, enemy })
+            {
+                if (f == null || f.Dead) continue;
+                if (Reviving(f)) { hp[f] = Mathf.MoveTowards(Hp(f), MaxHp(f), MaxHp(f) * dt / 1.2f); hpTrail[f] = Mathf.Max(hpTrail[f], hp[f]); }
+                float eu;
+                if (exhaustedUntil.TryGetValue(f, out eu) && Time.time > eu && !DeathblowActive)
+                {
+                    // не успел добить — враг пришёл в себя с частью здоровья
+                    exhaustedUntil.Remove(f);
+                    if (Hp(f) <= 0f) { hp[f] = Mathf.Round(MaxHp(f) * 0.3f); hpTrail[f] = hp[f]; }
+                    f.ResetPosture();
+                    Announce("ВРАГ ОПРАВИЛСЯ", new Color(1f, 0.6f, 0.3f));
+                }
             }
         }
 
@@ -741,19 +846,35 @@ namespace BladePath
             }
             lastSwing[r.attacker] = id;
 
-            // добивание: удар по сломленному равновесию смертелен (как deathblow в Sekiro)
+            if (Reviving(r.target)) return;   // поднимается после добивания — клинок проходит мимо
+
+            // сломленное равновесие (как в Sekiro): по врагу — добивание (снимает метку жизни);
+            // по игроку — сокрушающий удар, казнь только если он добьёт
             if (r.target.PostureBroken)
             {
                 bool rangedHit = r.attacker.weapon != null && r.attacker.weapon.CurrentProfile != null && r.attacker.weapon.CurrentProfile.ranged;
-                if (!rangedHit && TryDeathblow(r.attacker, r.target)) return;   // постановочное добивание
-                lastHitHead = r.zone == BodyZoneId.Head;
-                Announce("СМЕРТЕЛЬНЫЙ УДАР", new Color(0.95f, 0.08f, 0.06f));
-                DeathblowAt = Time.unscaledTime; DeathblowPos = r.contact.point;
-                if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Punch(6f); CameraOrbit.Instance.Shake(0.08f); }
-                if (Juice.Instance != null) Juice.Instance.Taiko(1f, 0.8f);
-                Haptics.Pulse(90);
-                ApplyDamage(r.target, r.attacker, Mathf.Max(1f, Hp(r.target)), r.contact.point, true, false, r.contact.normal, r.contact.bladeVelocity, r.contact.zone != null ? r.contact.zone.transform : null);
-                return;
+                if (!rangedHit)
+                {
+                    bool lethalCrush = r.target == player && Hp(player) <= MaxHp(player) * CrushFrac + 0.5f;
+                    if ((r.target == enemy || lethalCrush) && TryDeathblow(r.attacker, r.target)) return;
+                    if (r.target == player)
+                    {
+                        float cd = Mathf.Round(MaxHp(player) * CrushFrac);
+                        Announce("СОКРУШАЮЩИЙ УДАР", new Color(1f, 0.3f, 0.15f));
+                        if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Punch(4f); CameraOrbit.Instance.Shake(0.09f); }
+                        if (Juice.Instance != null) Juice.Instance.Taiko(0.9f, 0.85f);
+                        Haptics.Pulse(110);
+                        ApplyDamage(player, r.attacker, cd, r.contact.point, true, false, r.contact.normal, r.contact.bladeVelocity, r.contact.zone != null ? r.contact.zone.transform : null);
+                        if (!player.Dead)
+                        {
+                            player.ResetPosture();   // слом исчерпан ударом — не два раза подряд
+                            if (player.weapon != null) player.weapon.Down(0.8f);   // сбит на колено
+                            player.Stun(0.8f);
+                        }
+                        hitStopUntil = Time.unscaledTime + 0.14f;
+                        return;
+                    }
+                }
             }
             float dmg = BaseDamage(type) * ZoneMul(r.zone) * (r.glancing ? 0.5f : 1f) * (r.attacker == enemy ? Ladder.Current.dmgMul * Records.Assist : 1f);
             bool iai = r.attacker.SinceDash < 0.6f;   // удар прямо из рывка
@@ -841,7 +962,8 @@ namespace BladePath
         void TimeUp()
         {
             TimedOut = true;
-            float hpP = Hp(player), hpE = Hp(enemy);
+            // по времени сравниваем «запас жизни»: оставшиеся метки врага считаются полными полосами здоровья (в долях)
+            float hpP = Hp01(player), hpE = Hp01(enemy) + (Marks(enemy) - 1);
             Freeze(true);
             if (player.weapon != null) player.weapon.ResetState();
             if (enemy.weapon != null) enemy.weapon.ResetState();
@@ -850,7 +972,7 @@ namespace BladePath
             bool playerLost = hpP < hpE;
             SetState(playerLost ? DuelState.PlayerLost : DuelState.PlayerWon);
             if (playerLost) EnemyWins++; else PlayerWins++;
-            Perfect = playerLost ? hpE >= MaxHp(enemy) : hpP >= MaxHp(player);
+            Perfect = playerLost ? hpE >= MaxMarks(enemy) - 0.001f : hpP >= 0.999f;
             MatchOver = PlayerWins >= winsToMatch || EnemyWins >= winsToMatch;
             if (MatchOver) Records.OnMatch(PlayerWins >= winsToMatch, Ladder.Index);
             if (Juice.Instance != null) Juice.Instance.Taiko(1f, 0.8f);
@@ -892,7 +1014,7 @@ namespace BladePath
             float before01 = Hp01(target);
             hp[target] = Mathf.Max(0f, Hp(target) - dmg);
             // финальный противник «Пути» на половине здоровья впадает в ярость
-            if (target == enemy && Ladder.IsLast && !Enraged && before01 > 0.5f && Hp01(target) <= 0.5f && Hp(target) > 0f)
+            if (target == enemy && Ladder.IsLast && !Enraged && Marks(enemy) <= 1 && before01 > 0.5f && Hp01(target) <= 0.5f && Hp(target) > 0f)
             {
                 Enraged = true;
                 enemy.moveSpeed *= 1.18f;
@@ -923,6 +1045,14 @@ namespace BladePath
             if (!chip && target.weapon != null && target.weapon.Phase == SwingPhase.Windup) target.weapon.ResetState();
             if (!chip) target.Stun(dmg >= 20f ? 0.55f : 0.38f);
 
+            // здоровье врага в ноль: он не падает сам — равновесие ломается, открыто добивание (как в Sekiro)
+            if (Hp(target) <= 0f && target == enemy && !executing && !target.Dead)
+            {
+                hp[target] = 0f;
+                target.ForceBreak(3.2f);
+                exhaustedUntil[target] = Time.time + 3.2f;
+                return;
+            }
             if (Hp(target) <= 0f)
             {
                 target.Dead = true;

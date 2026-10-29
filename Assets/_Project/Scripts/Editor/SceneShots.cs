@@ -97,7 +97,13 @@ namespace BladePath.EditorTools
                 {
                     WalkStrip(cam, dir, "12_walk_fwd", player, enemy, Vector3.forward, 1.2f, false, log);
                     WalkStrip(cam, dir, "13_walk_side", player, enemy, Vector3.right, 0.72f, true, log);
-                    if (enemy != null) DeathblowStrip(cam, dir, "14_deathblow", player, enemy, log);
+                    if (enemy != null)
+                    {
+                        DeathblowStrip(cam, dir, "14_deathblow", player, enemy, AttackType.Deathblow, 1.38f, new[] { 0f, 0.32f, 0.4f, 0.46f, 0.8f, 1.1f, 1.26f, 1.36f }, log);
+                        DeathblowStrip(cam, dir, "16_deathblow_kesa", player, enemy, AttackType.DeathblowKesa, 1.22f, new[] { 0f, 0.2f, 0.36f, 0.42f, 0.45f, 0.48f, 0.9f, 1.22f }, log);
+                        DeathblowStrip(cam, dir, "17_deathblow_neck", player, enemy, AttackType.DeathblowNeck, 1.2f, new[] { 0f, 0.2f, 0.38f, 0.44f, 0.46f, 0.5f, 0.6f, 1.22f }, log);
+                        DeathblowStrip(cam, dir, "18_deathblow_rising", player, enemy, AttackType.DeathblowRising, 1.22f, new[] { 0f, 0.2f, 0.38f, 0.44f, 0.46f, 0.5f, 0.6f, 1.18f }, log);
+                    }
                     if (enemy != null) GuardStrip(cam, dir, "15_guard", player, enemy, log);
                 }
 
@@ -174,7 +180,7 @@ namespace BladePath.EditorTools
         }
 
         /// <summary>Раскадровка добивания: враг «поплыл» (слом равновесия), игрок на дистанции укола, 8 моментов приёма.</summary>
-        static void DeathblowStrip(Camera cam, string dir, string name, FighterController a, FighterController t, StringBuilder log)
+        static void DeathblowStrip(Camera cam, string dir, string name, FighterController a, FighterController t, AttackType type, float distance, float[] taus, StringBuilder log)
         {
             WeaponController w = a.weapon; HeroRigDriver da = a.GetComponentInChildren<HeroRigDriver>(true), dt_ = t.GetComponentInChildren<HeroRigDriver>(true);
             if (w == null || da == null || dt_ == null || t.weapon == null) return;
@@ -182,7 +188,6 @@ namespace BladePath.EditorTools
             PropertyInfo phase = typeof(WeaponController).GetProperty("Phase", F);
             FieldInfo pt = typeof(WeaponController).GetField("phaseTime", F), bl = typeof(WeaponController).GetField("blendLeft", F), sk = typeof(WeaponController).GetField("stagK", F);
             const int n = 8, cw = 480, chh = 420;
-            float[] taus = { 0f, 0.32f, 0.4f, 0.46f, 0.8f, 1.1f, 1.26f, 1.36f };
             Vector3 p0 = cam.transform.position; Quaternion r0 = cam.transform.rotation; float f0 = cam.fieldOfView;
             Texture2D sheet = new Texture2D(cw * 4, chh * 2, TextureFormat.RGB24, false);
             RenderTexture rt = new RenderTexture(cw, chh, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
@@ -190,12 +195,12 @@ namespace BladePath.EditorTools
             try
             {
                 Vector3 d = pt0 - pa0; d.y = 0f; d.Normalize();
-                a.transform.position = pt0 - d * 1.38f;   // = DuelManager.DbDistance
+                a.transform.position = pt0 - d * distance;   // дистанция приёма (DuelManager.DbKinds)
                 a.transform.rotation = Quaternion.LookRotation(d, Vector3.up); t.transform.rotation = Quaternion.LookRotation(-d, Vector3.up);
                 t.AddPosture(10000f);   // слом равновесия: клинок повис, корпус осел
                 t.weapon.SnapRest(); if (sk != null) sk.SetValue(t.weapon, 1f); Call(t.weapon, "ApplyRestPose");
                 w.SnapRest();
-                if (!w.TryStartSwing(AttackType.Deathblow)) return;
+                if (!w.TryStartSwing(type)) return;
                 SwingProfile p = w.CurrentProfile;
                 Vector3 mid = (a.transform.position + t.transform.position) * 0.5f;
                 Vector3 camPos = mid + Quaternion.Euler(0f, -20f * Mathf.Sign(d.x + 1e-4f), 0f) * new Vector3(0f, 0f, -3.3f) + Vector3.up * 1.15f, look = mid + Vector3.up * 1.05f;

@@ -145,6 +145,21 @@ namespace BladePath
             }
         }
 
+        /// <summary>Здоровье в ноль: равновесие ломается само (открыто добивание), на seconds.</summary>
+        public void ForceBreak(float seconds)
+        {
+            if (Dead) return;
+            Posture = maxPosture;
+            postureBrokenUntil = Time.time + seconds;
+            Blocking = false; BlockTime = 0f;
+            Stun(seconds);
+            if (weapon != null) weapon.ResetState();
+            if (PostureBreak != null) PostureBreak(this);
+        }
+
+        /// <summary>Равновесие снова целое (поднялся после добивания / сокрушающего удара).</summary>
+        public void ResetPosture() { Posture = 0f; postureBrokenUntil = 0f; }
+
         /// <summary>Продлить слом равновесия (добивание идёт — противник не приходит в себя посреди приёма).</summary>
         public void HoldPostureBreak(float seconds)
         {

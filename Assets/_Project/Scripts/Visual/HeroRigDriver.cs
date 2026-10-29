@@ -630,11 +630,22 @@ namespace BladePath
             if (upperArmR != null && upperArmL != null && weapon != null && weapon.pivot != null)
             {
                 float reachR = (l1R + l2R) * 0.96f, reachL = (l1L + l2L) * 0.96f;
+                // досягаемость считаем до запястья: при хвате по центру кулака запястье стоит на вынос кулака ближе к плечу,
+                // чем рукоять (у героя ~11 см) — иначе меч зря подтягивался к груди и локти зажимались
+                Vector3 oR0 = Vector3.zero, oL0 = Vector3.zero;
+                if (gripFromBind && framesReady && handR != null && handL != null)
+                {
+                    Vector3 fR0, nR0, fL0, nL0;
+                    GripFrame(bladeRoot.forward, sideR, ft, out fR0, out nR0);
+                    GripFrame(bladeRoot.forward, sideL, ft, out fL0, out nL0);
+                    oR0 = Quaternion.LookRotation(fR0, nR0) * bindR * Vector3.Scale(gripLocalR, handR.lossyScale);
+                    oL0 = Quaternion.LookRotation(fL0, nL0) * bindL * Vector3.Scale(gripLocalL, handL.lossyScale);
+                }
                 for (int it = 0; it < 5; it++)
                 {
                     Vector3 ax = bladeRoot.forward;
-                    Vector3 dr = bladeRoot.position - ax * gripFront - upperArmR.position;
-                    Vector3 dl = bladeRoot.position - ax * gripRear - upperArmL.position;
+                    Vector3 dr = bladeRoot.position - ax * gripFront - oR0 - upperArmR.position;
+                    Vector3 dl = bladeRoot.position - ax * gripRear - oL0 - upperArmL.position;
                     float mr = dr.magnitude, ml = dl.magnitude;
                     Vector3 shift = Vector3.zero;
                     if (mr > reachR) shift -= dr / mr * (mr - reachR);
