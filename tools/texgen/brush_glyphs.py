@@ -83,9 +83,13 @@ def compose(A, core):
     shadow = np.array(Image.fromarray((A * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(w / 90)), np.float32) / 255.0
     glow = np.array(Image.fromarray((A * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(w / 28)), np.float32) / 255.0
     sa = np.clip(shadow * 0.75, 0, 1); ga = np.clip(glow * 0.55, 0, 1)
-    # слои снизу вверх: свечение (красное) → тень (почти чёрная) → тушь
+    # обводка: плотный тёмный контур вокруг туши — знак не сливается с кровью и красным светом
+    t = max(2.0, 0.02 * min(h, w))
+    dist = ndimage.distance_transform_edt(~((A > 0.5) & (core > 0.02)))   # контур по штрихам, брызги без обводки
+    oa = np.clip((t - dist) / 1.2 + 0.5, 0, 1) * 0.96
+    # слои снизу вверх: свечение (красное) → тень (почти чёрная) → обводка → тушь
     out_c = np.zeros((h, w, 3)); out_a = np.zeros((h, w))
-    for c_, a_ in ((np.array([0.85, 0.08, 0.04]), ga), (np.array([0.05, 0.0, 0.0]), sa)):
+    for c_, a_ in ((np.array([0.85, 0.08, 0.04]), ga), (np.array([0.05, 0.0, 0.0]), sa), (np.array([0.04, 0.01, 0.01]), oa)):
         out_c = c_ * a_[..., None] + out_c * (1 - a_[..., None]); out_a = a_ + out_a * (1 - a_)
     out_c = col * A[..., None] + out_c * (1 - A[..., None]); out_a = A + out_a * (1 - A)
     # прямая альфа: цвет делим обратно
