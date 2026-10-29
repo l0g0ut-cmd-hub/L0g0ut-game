@@ -117,6 +117,7 @@ make("斬", 300, 70, "zan.png", square=True)
 make("危", 300, 70, "kiken.png", square=True)
 make("死", 300, 70, "shi.png", square=True)    # поражение (как экран смерти Sekiro)
 make("勝", 300, 70, "sho.png", square=True)    # победа
+make("回生", 300, 70, "kaisei.png")             # воскрешение
 
 
 def enso(name, S=256):

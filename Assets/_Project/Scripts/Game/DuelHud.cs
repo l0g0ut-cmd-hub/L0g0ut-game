@@ -258,6 +258,8 @@ namespace BladePath
                 {
                     UiKit.Text(new Rect(cx - 400f, 262f, 800f, 34f), "ПУТЬ " + (Ladder.Index + 1) + " / " + Ladder.Count + "  ·  " + Ladder.Current.name, 22f, new Color(Gold.r, Gold.g, Gold.b, ta));
                     UiKit.Text(new Rect(cx - 400f, 292f, 800f, 24f), Ladder.Current.title, 15f, new Color(0.9f, 0.88f, 0.82f, ta * 0.9f));
+                    int mk = duel.MaxMarks(duel.enemy);
+                    if (mk > 1) UiKit.Text(new Rect(cx - 400f, 316f, 800f, 24f), "ЖИЗНЕЙ: " + mk + " — СЛОМИ И ДОБЕЙ " + mk + " РАЗА", 15f, new Color(1f, 0.45f, 0.3f, ta * 0.95f));
                 }
                 float t = duel.StateTime / duel.IntroLength;
                 float a = t < 0.75f ? 1f : Mathf.Clamp01((1f - t) * 4f);
@@ -295,6 +297,37 @@ namespace BladePath
                 if (!duel.MatchOver) UiKit.Text(new Rect(cx - 300f, 250f, 600f, 40f), duel.PlayerWins + " : " + duel.EnemyWins, 34f, new Color(1f, 1f, 1f, t));
                 UiKit.Rect(new Rect(cx - 200f, 232f, 400f, 2f), new Color(c.r, c.g, c.b, 0.8f * t));
             }
+            // 回生: павший игрок может подняться (раз за матч) — 死, кнопка воскрешения и тающий отсчёт
+            if (duel.ResurrectOffered)
+            {
+                float oa = duel.ResurrectOfferAge;
+                float k = Mathf.Clamp01(oa / 0.6f);
+                UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0.05f, 0f, 0f, 0.55f * k));
+                DrawBrush("UI/shi", new Vector2(cx, 175f), 300f, 0.85f * k, Mathf.Clamp01(oa / 0.5f));
+                if (oa > 0.6f)
+                {
+                    float left = Mathf.Clamp01(1f - oa / DuelManager.ResurrectWindow);
+                    float pulse = 1f + 0.05f * Mathf.Sin(Time.unscaledTime * 6f);
+                    Rect br = new Rect(cx - 170f, 330f, 340f, 120f);
+                    UiKit.Rect(new Rect(br.x, br.y, br.width, br.height), new Color(0f, 0f, 0f, 0.5f));
+                    DrawBrush("UI/kaisei", new Vector2(cx, br.y + 48f), 92f * pulse, 1f, 1f);
+                    UiKit.Text(new Rect(br.x, br.y + 86f, br.width, 28f), "ВОСКРЕСНУТЬ", 22f, new Color(0.95f, 0.9f, 0.8f, 1f));
+                    UiKit.Rect(new Rect(br.x, br.yMax + 6f, br.width * left, 4f), new Color(0.9f, 0.15f, 0.1f, 0.9f));
+                    if (GUI.Button(br, GUIContent.none, GUIStyle.none)) duel.Resurrect();
+                }
+            }
+            float ra = Time.unscaledTime - duel.ResurrectedAt;
+            if (ra < 1.6f)
+            {
+                // вспышка (прячет подъём тела) и знак 回生 над героем
+                if (ra < 0.3f) UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(1f, 0.95f, 0.9f, 0.85f * (1f - ra / 0.3f)));
+                if (cam != null && duel.player != null)
+                {
+                    Vector3 g = cam.WorldToScreenPoint(duel.player.transform.position + Vector3.up * 2.2f);
+                    if (g.z > 0f) DrawBrush("UI/kaisei", new Vector2(g.x / UiKit.Scale, (Screen.height - g.y) / UiKit.Scale), 120f, Mathf.Clamp01((1.6f - ra) / 0.5f), Mathf.Clamp01(ra / 0.2f));
+                }
+            }
+
             // затемнение между раундами
             float fade = 0f;
             float nr = duel.NextRoundIn;

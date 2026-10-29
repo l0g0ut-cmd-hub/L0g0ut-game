@@ -220,6 +220,7 @@ namespace BladePath
         public void ResetMatch()
         {
             PlayerWins = 0; EnemyWins = 0; Round = 1; MatchOver = false;
+            Resurrections = 1;   // 回生 — раз за матч
             firstBlood = false;
             stats.Clear();
             ApplyStage();
@@ -239,7 +240,7 @@ namespace BladePath
             combo.Clear(); comboTime.Clear(); counterUntil.Clear(); PerilAt.Clear(); perilSwing.Clear(); jumpedSweep.Clear(); DeathblowAt = -10f;
             Enraged = false;
             ApplyStage();   // скорость врага к базовой ступени (сброс ярости)
-            SuperBy = null; DeathblowBy = null; DeathblowTarget = null; executing = false;
+            SuperBy = null; DeathblowBy = null; DeathblowTarget = null; executing = false; ResurrectOffered = false;
             marks.Clear(); exhaustedUntil.Clear(); reviveUntil.Clear();
             if (player != null) marks[player] = 1;
             if (enemy != null) marks[enemy] = MaxMarks(enemy);
@@ -309,7 +310,7 @@ namespace BladePath
                 // равновесие восстанавливается, когда по бойцу не бьют: медленнее при низком здоровье, быстрее в блоке
                 RegenPosture(player); RegenPosture(enemy);
                 UpdateLives(Time.unscaledDeltaTime);
-                if (!SuperActive && !DeathblowActive) TimeLeft = Mathf.Max(0f, TimeLeft - Time.deltaTime);
+                if (!SuperActive && !DeathblowActive && !ResurrectOffered) TimeLeft = Mathf.Max(0f, TimeLeft - Time.deltaTime);
                 if (TimeLeft <= 0f) TimeUp();
                 if (!tenSecShown && TimeLeft <= 10f) { tenSecShown = true; Announce("10 СЕКУНД!", new Color(1f, 0.4f, 0.25f)); }
                 if (!lastStandShown && player != null && Hp01(player) < 0.25f && Hp(player) > 0f) { lastStandShown = true; Announce("ПОСЛЕДНИЙ РУБЕЖ", new Color(0.5f, 0.85f, 1f)); }
@@ -327,6 +328,7 @@ namespace BladePath
             CheckClash();
             UpdateSuper();
             UpdateDeathblow();
+            UpdateResurrectOffer();
             UpdateBodyTint(player);
             UpdateBodyTint(enemy);
             Flourish();
@@ -399,7 +401,7 @@ namespace BladePath
             if (st >= SuperEnd)
             {
                 SuperBy = null;
-                if (State == DuelState.Fighting) Freeze(false);
+                if (State == DuelState.Fighting && !ResurrectOffered) Freeze(false);
             }
         }
 
@@ -593,7 +595,7 @@ namespace BladePath
             if (!on || Time.unscaledTime - dbStart > 8f)
             {
                 DeathblowBy = null; DeathblowTarget = null;
-                if (State == DuelState.Fighting) Freeze(false);
+                if (State == DuelState.Fighting && !ResurrectOffered) Freeze(false);
             }
         }
 
@@ -1063,17 +1065,76 @@ namespace BladePath
                     Announce("ОБЕЗГЛАВЛЕН", new Color(0.9f, 0.1f, 0.08f));
                 }
                 if (target.weapon != null) target.weapon.ResetState();
-                bool playerLost = target == player;
                 Haptics.Pulse(120);
-                Perfect = attacker != null && Hp(attacker) >= MaxHp(attacker);
-                SetState(playerLost ? DuelState.PlayerLost : DuelState.PlayerWon);
-                if (playerLost) EnemyWins++; else PlayerWins++;
-                MatchOver = PlayerWins >= winsToMatch || EnemyWins >= winsToMatch;
-                if (MatchOver) Records.OnMatch(PlayerWins >= winsToMatch, Ladder.Index);
-                nextRoundAt = Time.unscaledTime + nextRoundDelay;
-                if (attacker != null) attacker.Frozen = true;
-                Slowmo = true; slowUntil = Time.unscaledTime + 1.1f;
+                // 回生 (как в Sekiro): павший игрок может один раз за матч подняться — пока решает, бой замер
+                bool decap = lastHitHead && !chip;
+                if (target == player && Resurrections > 0 && !decap)
+                {
+                    ResurrectOffered = true; offerAt = Time.unscaledTime; offerKiller = attacker;
+                    Freeze(true); if (attacker != null) attacker.Frozen = true;
+                    Slowmo = true; slowUntil = Time.unscaledTime + 1.1f;
+                    if (Juice.Instance != null) Juice.Instance.Heartbeat();
+                    return;
+                }
+                EndRound(target, attacker);
             }
+        }
+
+        // ---------------------------------------------------------------- 回生: воскрешение игрока (раз за матч)
+        public const float ResurrectWindow = 5f;
+        public int Resurrections { get; private set; } = 1;
+        public bool ResurrectOffered { get; private set; }
+        public float ResurrectOfferAge { get { return Time.unscaledTime - offerAt; } }
+        public float ResurrectedAt { get; private set; } = -10f;
+        float offerAt; FighterController offerKiller;
+
+        /// <summary>Боец пал: раунд за его противником.</summary>
+        void EndRound(FighterController target, FighterController attacker)
+        {
+            bool playerLost = target == player;
+            Perfect = attacker != null && Hp(attacker) >= MaxHp(attacker);
+            SetState(playerLost ? DuelState.PlayerLost : DuelState.PlayerWon);
+            if (playerLost) EnemyWins++; else PlayerWins++;
+            MatchOver = PlayerWins >= winsToMatch || EnemyWins >= winsToMatch;
+            if (MatchOver) Records.OnMatch(PlayerWins >= winsToMatch, Ladder.Index);
+            nextRoundAt = Time.unscaledTime + nextRoundDelay;
+            if (attacker != null) attacker.Frozen = true;
+            Slowmo = true; slowUntil = Time.unscaledTime + 1.1f;
+        }
+
+        /// <summary>Игрок встаёт (кнопка 回生): половина здоровья, равновесие целое, миг неуязвимости; враг отпрянул от неожиданности.</summary>
+        public void Resurrect()
+        {
+            if (!ResurrectOffered || player == null) return;
+            ResurrectOffered = false; Resurrections--;
+            ResurrectedAt = Time.unscaledTime;
+            player.Dead = false;
+            hp[player] = Mathf.Round(MaxHp(player) * 0.5f); hpTrail[player] = hp[player];
+            player.ResetPosture();
+            reviveUntil[player] = Time.unscaledTime + 1.2f;
+            Freeze(false);
+            if (enemy != null)
+            {
+                Vector3 away = enemy.transform.position - player.transform.position; away.y = 0f;
+                enemy.Knockback(away, 2.6f); enemy.Stun(1.0f);
+                if (enemy.weapon != null) enemy.weapon.ResetState();
+            }
+            if (Juice.Instance != null)
+            {
+                Juice.Instance.Taiko(1f, 1.15f);
+                Juice.Instance.Dust(player.transform.position + Vector3.up * 0.05f, Vector3.up, 30);
+                Juice.Instance.PetalBurst(40);
+            }
+            if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(0.08f); CameraOrbit.Instance.Punch(4f); }
+            Haptics.Pulse(80);
+            hitStopUntil = 0f; Slowmo = false;
+            Announce("ВОСКРЕШЕНИЕ", new Color(0.75f, 0.9f, 1f));
+        }
+
+        void UpdateResurrectOffer()
+        {
+            if (!ResurrectOffered) return;
+            if (ResurrectOfferAge > ResurrectWindow) { ResurrectOffered = false; EndRound(player, offerKiller); }
         }
     }
 }

@@ -164,7 +164,7 @@ namespace BladePath
 
             // KO: камера медленно облетает бойцов и подходит ближе
             DuelManager dm = DuelManager.Instance;
-            bool ko = dm != null && (dm.State == DuelState.PlayerWon || dm.State == DuelState.PlayerLost);
+            bool ko = dm != null && (dm.State == DuelState.PlayerWon || dm.State == DuelState.PlayerLost || dm.ResurrectOffered);
             float udt = Time.unscaledDeltaTime;
             koK = Mathf.MoveTowards(koK, ko ? 1f : 0f, udt / (ko ? 0.9f : 0.5f));
             if (ko) cineYaw += 14f * udt * koK;
