@@ -112,7 +112,9 @@ namespace BladePath
         Vector3[] solL, solR;
         // фиксация опорной стопы на мокап-ходьбе: точка подошвы, вставшая на землю, держится на месте (поворот к противнику,
         // смесь клипов, неточный темп — стопа не едет), IK ноги дотягивает голеностоп; на отрыве поправка тает
-        struct FootLock { public bool on; public int idx; public Vector3 pos, off; }
+        struct FootLock { public bool on, hasPrev; public int idx; public Vector3 pos, off, prev0, prev1, prev2; public float lift; }
+        // темп мокапа под настоящую скорость: снос опорной стопы клипа вдоль хода (м/с) → множитель темпа
+        float driftAcc, tempoMul = 1f; int driftN;
         FootLock lockL, lockR;
         /// <summary>Нижняя точка подошвы (мир) — после постановки на землю в этом кадре (для пыли/шагов и проб).</summary>
         public Vector3 SoleL { get; private set; }
@@ -249,7 +251,15 @@ namespace BladePath
                     Vector3 lv = ft.InverseTransformDirection(velUS / spd);
                     animator.SetFloat("MoveX", lv.x, 0.1f, dt);
                     animator.SetFloat("MoveZ", lv.z, 0.1f, dt);
-                    animator.SetFloat("LocoSpeed", Mathf.Clamp(spd / ExpectedLocoSpeed(new Vector2(lv.x, lv.z)), 0.6f, 1.8f));
+                    // подстройка темпа: опорная стопа клипа едет по земле вперёд по ходу — клип отстаёт (темп выше), назад — спешит
+                    if (driftN > 0 && locoMoving)
+                    {
+                        float drift = driftAcc / driftN;
+                        tempoMul = Mathf.Clamp(tempoMul + 0.9f * drift / Mathf.Max(0.35f, spd) * dt, 0.8f, 1.3f);
+                    }
+                    else if (!locoMoving) tempoMul = Mathf.MoveTowards(tempoMul, 1f, 0.3f * dt);
+                    driftAcc = 0f; driftN = 0;
+                    animator.SetFloat("LocoSpeed", Mathf.Clamp(spd / ExpectedLocoSpeed(new Vector2(lv.x, lv.z)) * tempoMul, 0.6f, 1.8f));
                 }
             }
         }
@@ -263,6 +273,12 @@ namespace BladePath
         }
 
         // кончик носка может уйти в землю на 2 см: пальцы гнутся, а кость стопы одна
+        // Замок опоры по замеру CI (покадровый след): клип касается земли пяткой ещё на ходу (до 3,7 м/с) и доезжает 15–18 см —
+        // ранний замок держал стопу позади клипа всю опору, а в конце рвался скачком. Теперь:
+        //  • замок — только когда точка подошвы в клипе почти остановилась (< 1,2 м/с); пока она скользит у земли быстро —
+        //    стопа идёт чуть над землёй (касается, когда остановилась: ставится, а не едет);
+        //  • отпускание — когда клип повёл стопу (толчок, > 1,4 м/с) или снос > 15 см; поправка тает за ~0,1 с,
+        //    стопа при этом отрывается от земли, а не скользит по камню.
         void LockFoot(ref FootLock lk, Transform up, Transform lo, Transform foot, float l1, float l2, Vector3[] sol, bool use, Transform ft, float dt)
         {
             // нижняя точка подошвы (пятка → подушечка при перекате): держим ту, что сейчас опора
@@ -270,23 +286,34 @@ namespace BladePath
             for (int i = 0; i < sol.Length; i++) { float py = foot.TransformPoint(sol[i]).y + (i == 2 ? 0.02f : 0f); if (py < y) { y = py; j = i; } }
             Vector3 pj = foot.TransformPoint(sol[j]);
             float h = pj.y - ft.position.y;
+            // скорость этой точки в клипе (до IK) по земле: та же точка подошвы прошлого кадра
+            Vector3 vel = Vector3.zero;
+            if (lk.hasPrev && dt > 1e-5f) { vel = (pj - (j == 0 ? lk.prev0 : j == 1 ? lk.prev1 : lk.prev2)) / dt; vel.y = 0f; }
+            float v = vel.magnitude;
+            if (sol.Length >= 3) { lk.prev0 = foot.TransformPoint(sol[0]); lk.prev1 = foot.TransformPoint(sol[1]); lk.prev2 = foot.TransformPoint(sol[2]); lk.hasPrev = true; }
             if (!use) lk.on = false;
-            else if (!lk.on && h < 0.012f) { lk.on = true; lk.idx = j; lk.pos = pj; lk.off = Vector3.zero; }
-            else if (lk.on && h > 0.03f) lk.on = false;
+            else if (!lk.on && h < 0.012f && v < 1.2f) { lk.on = true; lk.idx = j; lk.pos = pj; lk.off = Vector3.zero; }
+            else if (lk.on && (h > 0.03f || v > 1.4f)) lk.on = false;
             Vector3 want = Vector3.zero;
             if (lk.on)
             {
                 // перекат на другую точку подошвы: новая опора там, где она окажется с текущей поправкой — без скачка
                 if (j != lk.idx) { lk.idx = j; lk.pos = pj + lk.off; }
                 want = lk.pos - pj; want.y = 0f;
-                if (want.sqrMagnitude > 0.2f * 0.2f) { lk.on = false; want = Vector3.zero; }   // ушло слишком далеко — пусть шагает
+                if (want.sqrMagnitude > 0.15f * 0.15f) { lk.on = false; want = lk.off; }   // ушло слишком далеко — пусть шагает (плавно)
+                else if (v < 1.0f && velUS.sqrMagnitude > 0.01f) { driftAcc += Vector3.Dot(vel, velUS.normalized); driftN++; }
             }
-            lk.off = lk.on ? want : Vector3.Lerp(lk.off, Vector3.zero, 1f - Mathf.Exp(-dt / 0.06f));
-            if (lk.off.sqrMagnitude < 1e-8f) return;
+            lk.off = lk.on ? want : Vector3.Lerp(lk.off, Vector3.zero, 1f - Mathf.Exp(-dt / 0.07f));
+            // подъём над землёй: скользящая у земли стопа (замок не взят) и отпущенная стопа (поправка тает) — не едут по камню
+            float lift = 0f;
+            if (use && !lk.on)
+                lift = Mathf.Max(Mathf.Clamp01((v - 1.0f) / 2f) * 0.045f * Mathf.Clamp01(1f - h / 0.06f), Mathf.Min(0.06f, lk.off.magnitude * 0.5f));
+            lk.lift = Mathf.Lerp(lk.lift, lift, 1f - Mathf.Exp(-dt / 0.03f));
+            if (lk.off.sqrMagnitude < 1e-8f && lk.lift < 1e-4f) return;
             Quaternion fr = foot.rotation;
             // колено — куда его согнул клип; у почти прямой ноги направление шумное — подталкиваем вперёд (колени смотрят вперёд всегда)
             Vector3 pole = lo.position - (up.position + foot.position) * 0.5f + ft.forward * 0.05f;
-            SolveArm(up, lo, foot, l1, l2, foot.position + lk.off, pole);
+            SolveArm(up, lo, foot, l1, l2, foot.position + lk.off + Vector3.up * lk.lift, pole);
             foot.rotation = fr;
         }
 
@@ -567,7 +594,7 @@ namespace BladePath
                     LockFoot(ref lockR, upperLegR, lowerLegR, footR, lgR1, lgR2, solR, use, ft, dt);
                 }
             }
-            else { lockL.on = lockR.on = false; lockL.off = lockR.off = Vector3.zero; }
+            else { lockL.on = lockR.on = false; lockL.off = lockR.off = Vector3.zero; lockL.hasPrev = lockR.hasPrev = false; lockL.lift = lockR.lift = 0f; }
             if (solL != null && footL != null && footR != null) { SoleL = SolePoint(footL, solL); SoleR = SolePoint(footR, solR); }
 
             // шаги мокапа: стопа опустилась на землю — звук и брызги
