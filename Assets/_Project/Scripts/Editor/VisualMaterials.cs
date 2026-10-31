@@ -127,7 +127,7 @@ namespace BladePath.EditorTools
             {
                 m.SetTexture("_MetallicGlossMap", mt);
                 m.EnableKeyword("_METALLICGLOSSMAP");
-                m.SetFloat("_GlossMapScale", 1f);
+                m.SetFloat("_GlossMapScale", 0.68f);   // доспех ронина на телефоне блестел «мокрым пластиком» — сталь и лак матовее
             }
             EnableRuntimeEmission(m);
             EditorUtility.SetDirty(m);
