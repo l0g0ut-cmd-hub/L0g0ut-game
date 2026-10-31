@@ -37,6 +37,7 @@ namespace BladePath
         static int startle; int seenStartle; bool startled;
         /// <summary>Громкое во дворе (добивание, сломанная стойка, раскат грома): сидящие птицы разом срываются.</summary>
         public static void Startle() { startle++; }
+        public static int StartleCount { get { return startle; } }
 
         static readonly Vector3[] Perches =
         {

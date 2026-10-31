@@ -16,6 +16,8 @@ namespace BladePath
         float z, targetZ, timer, groom, walkPh, face = 90f, tailPh;
         bool walking, hidden;
         FighterController[] fighters;
+        // голос: тихое «мя-у» изредка, испуганное — когда во дворе громыхнуло (Birds.Startle); тогда же кот убегает вдоль веранды
+        AudioSource voice; static AudioClip meow, meowShort; float meowAt; int seenStartle; float rush = 1f;
 
         void Start()
         {
@@ -49,6 +51,49 @@ namespace BladePath
             z = targetZ = Random.Range(0f, 1f);
             timer = Random.Range(8f, 20f);
             fighters = FindObjectsByType<FighterController>(FindObjectsSortMode.None);
+            voice = gameObject.AddComponent<AudioSource>(); voice.playOnAwake = false; voice.spatialBlend = 0.75f; voice.minDistance = 2f; voice.maxDistance = 25f;
+            if (meow == null) { meow = Meow(51, 0.62f, 1f); meowShort = Meow(52, 0.3f, 1.25f); }
+            meowAt = Time.time + Random.Range(30f, 70f);
+            seenStartle = Birds.StartleCount;
+        }
+
+        /// <summary>
+        /// Мяуканье: голос ~600 Гц взлетает к 820 и опадает к 480 («ми-я-у»), форманты скользят от «и» к «а» и к «у»,
+        /// лёгкий придых. pitchK — выше для короткого испуганного «мя!».
+        /// </summary>
+        static AudioClip Meow(int seed, float T, float pitchK)
+        {
+            const int rate = 22050;
+            int n = (int)(rate * T);
+            float[] d = new float[n];
+            System.Random rnd = new System.Random(seed);
+            float ph = 0f, prev = 0f, peak = 1e-4f;
+            float[] y1 = new float[3], y2 = new float[3], bw = { 160f, 200f, 260f }, gk = { 1f, 0.7f, 0.3f };
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)n;   // 0…1
+                float f0 = (t < 0.35f ? Mathf.Lerp(600f, 820f, t / 0.35f) : Mathf.Lerp(820f, 480f, (t - 0.35f) / 0.65f)) * pitchK;
+                ph += f0 / rate; if (ph >= 1f) ph -= 1f;
+                float g = ph < 0.55f ? 0.5f * (1f - Mathf.Cos(Mathf.PI * ph / 0.55f)) : Mathf.Max(0f, Mathf.Cos(Mathf.PI * (ph - 0.55f) / 0.5f));
+                float exc = (g - prev) * 20f + ((float)rnd.NextDouble() * 2f - 1f) * 0.08f; prev = g;
+                // «и» (F1 400, F2 2400) → «а» (1000, 1600) → «у» (500, 900)
+                float a = Mathf.Clamp01(t / 0.4f), u = Mathf.Clamp01((t - 0.5f) / 0.5f);
+                float F1 = Mathf.Lerp(Mathf.Lerp(400f, 1000f, a), 500f, u), F2 = Mathf.Lerp(Mathf.Lerp(2400f, 1600f, a), 900f, u), F3 = 3200f;
+                float v = 0f;
+                for (int k = 0; k < 3; k++)
+                {
+                    float fk = k == 0 ? F1 : k == 1 ? F2 : F3;
+                    float r = Mathf.Exp(-Mathf.PI * bw[k] / rate), w = 2f * Mathf.PI * fk / rate;
+                    float y = (1f - r) * exc + 2f * r * Mathf.Cos(w) * y1[k] - r * r * y2[k];
+                    y2[k] = y1[k]; y1[k] = y; v += y * gk[k];
+                }
+                v *= Mathf.SmoothStep(0f, 1f, t / 0.08f) * Mathf.SmoothStep(0f, 1f, (1f - t) / 0.3f);
+                d[i] = v; peak = Mathf.Max(peak, Mathf.Abs(v));
+            }
+            for (int i = 0; i < n; i++) d[i] *= 0.8f / peak;
+            AudioClip c = AudioClip.Create("meow_" + seed, n, 1, rate, false);
+            c.SetData(d, 0);
+            return c;
         }
 
         static Transform Prim(Transform parent, PrimitiveType t, Vector3 pos, Vector3 scale, Material m)
@@ -69,6 +114,18 @@ namespace BladePath
             if (hide != hidden) { hidden = hide; root.gameObject.SetActive(!hide); }
             if (hide) return;
             timer -= dt;
+            // во дворе громыхнуло — испуганное «мя!» и бегом на другой конец веранды
+            if (Birds.StartleCount != seenStartle)
+            {
+                seenStartle = Birds.StartleCount;
+                walking = true; rush = 3f; targetZ = z < 0.5f ? Random.Range(0.85f, 1f) : Random.Range(0f, 0.15f);
+                if (voice != null && meowShort != null) { voice.pitch = Random.Range(0.95f, 1.1f); voice.PlayOneShot(meowShort, 0.35f); }
+            }
+            if (!walking && t >= meowAt)
+            {
+                meowAt = t + Random.Range(50f, 120f);
+                if (voice != null && meow != null) { voice.pitch = Random.Range(0.92f, 1.08f); voice.PlayOneShot(meow, 0.22f); }
+            }
             if (!walking && timer <= 0f)
             {
                 if (Random.value < 0.45f) { walking = true; targetZ = Mathf.Clamp01(z + Random.Range(-0.6f, 0.6f)); }
@@ -80,11 +137,11 @@ namespace BladePath
             {
                 float dir = Mathf.Sign(targetZ - z);
                 float len = Mathf.Max(0.1f, Vector3.Distance(a, b));
-                z += dir * 0.5f / len * dt;
-                walkPh += dt * 9f;
+                z += dir * 0.5f * rush / len * dt;
+                walkPh += dt * 9f * Mathf.Sqrt(rush);
                 Vector3 ab = (b - a) * dir;
                 face = Mathf.MoveTowardsAngle(face, Mathf.Atan2(ab.x, ab.z) * Mathf.Rad2Deg, dt * 360f);
-                if (Mathf.Abs(targetZ - z) < 0.01f) walking = false;
+                if (Mathf.Abs(targetZ - z) < 0.01f * rush) { walking = false; rush = 1f; }
                 sitK = 0f;
             }
             else { face = Mathf.MoveTowardsAngle(face, sitYaw, dt * 200f); sitK = 1f; }
