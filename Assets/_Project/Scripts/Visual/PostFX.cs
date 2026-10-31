@@ -23,7 +23,7 @@ namespace BladePath
         [Range(0f, 1f)] public float vignette = 0.38f;
         [Range(0f, 0.1f)] public float grain = 0.025f;
 
-        static float aberr, desatTarget, desat;
+        static float aberr, desatTarget, desat, edgeBlur;
         /// <summary>Импульс хроматической аберрации (тяжёлый удар, отражение, добивание): сила 0.004…0.015, гаснет за ~0,3 с.</summary>
         public static void Kick(float amount) { aberr = Mathf.Max(aberr, amount); }
         /// <summary>Обесцвечивание кадра 0…1 (смерть игрока, предложение воскрешения).</summary>
@@ -34,6 +34,15 @@ namespace BladePath
             float dt = Application.isPlaying ? Time.unscaledDeltaTime : 0.016f;
             aberr = Mathf.MoveTowards(aberr, 0f, dt * 0.05f);
             desat = Mathf.MoveTowards(desat, desatTarget, dt * 1.5f);
+            // фокус на паре: добивание — края кадра размыты; гибель игрока — сильнее
+            DuelManager dm = DuelManager.Instance;
+            float eb = 0f;
+            if (dm != null && Application.isPlaying)
+            {
+                if (dm.DeathblowActive) eb = 1f;
+                else if (dm.State == DuelState.PlayerLost || dm.ResurrectOffered) eb = 1.3f;
+            }
+            edgeBlur = Mathf.MoveTowards(edgeBlur, eb, dt * (eb > edgeBlur ? 2.5f : 1.2f));
         }
 
         readonly RenderTexture[] chain = new RenderTexture[8];
@@ -53,6 +62,7 @@ namespace BladePath
             material.SetFloat("_Grain", DuelManager.Gfx == 1 ? grain : 0f);
             material.SetFloat("_Aberr", aberr);
             material.SetFloat("_Desat", desat);
+            material.SetFloat("_EdgeBlur", edgeBlur);
             if (DuelManager.Gfx != 1) { Graphics.Blit(src, dst, material, 4); return; }
 
             int w = src.width / 2, h = src.height / 2;

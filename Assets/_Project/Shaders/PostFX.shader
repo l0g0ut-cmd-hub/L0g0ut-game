@@ -10,7 +10,7 @@ Shader "Hidden/BladePath/PostFX"
     float4 _MainTex_TexelSize;
     half4 _Filter;          // x порог, y x−колено, z 2·колено, w 0.25/колено
     half _Intensity, _Exposure, _Contrast, _Saturation, _Delta;
-    half _Vignette, _Aberr, _Grain, _Desat;
+    half _Vignette, _Aberr, _Grain, _Desat, _EdgeBlur;
     half3 _Shadows, _Highlights;
 
     struct v2f { float4 pos : SV_POSITION; float2 uv : TEXCOORD0; };
@@ -44,12 +44,29 @@ Shader "Hidden/BladePath/PostFX"
     half3 SampleLens (float2 uv)
     {
         float2 d = uv - 0.5;
+        half3 c;
         if (_Aberr > 0.0001)
         {
             float2 o = d * _Aberr;
-            return half3(tex2D(_MainTex, uv + o).r, tex2D(_MainTex, uv).g, tex2D(_MainTex, uv - o).b);
+            c = half3(tex2D(_MainTex, uv + o).r, tex2D(_MainTex, uv).g, tex2D(_MainTex, uv - o).b);
         }
-        return tex2D(_MainTex, uv).rgb;
+        else c = tex2D(_MainTex, uv).rgb;
+        // кинематографический фокус (добивание, гибель): края кадра мягко размыты, пара в центре резкая — 8 отсчётов в два кольца
+        if (_EdgeBlur > 0.001)
+        {
+            float2 dd = d * float2(1.0, 0.75);
+            half r = saturate(dot(dd, dd) * 5.0 - 0.12);
+            if (r > 0.001)
+            {
+                float2 o1 = _MainTex_TexelSize.xy * (r * _EdgeBlur * 5.0), o2 = o1 * 2.2;
+                half3 b = tex2D(_MainTex, uv + float2(o1.x, 0)).rgb + tex2D(_MainTex, uv - float2(o1.x, 0)).rgb
+                        + tex2D(_MainTex, uv + float2(0, o1.y)).rgb + tex2D(_MainTex, uv - float2(0, o1.y)).rgb
+                        + tex2D(_MainTex, uv + o2 * 0.7071).rgb + tex2D(_MainTex, uv - o2 * 0.7071).rgb
+                        + tex2D(_MainTex, uv + float2(o2.x, -o2.y) * 0.7071).rgb + tex2D(_MainTex, uv + float2(-o2.x, o2.y) * 0.7071).rgb;
+                c = lerp(c, b * 0.125h, saturate(r * 1.4h) * saturate(_EdgeBlur));
+            }
+        }
+        return c;
     }
     half3 Lens (half3 c, float2 uv)
     {
