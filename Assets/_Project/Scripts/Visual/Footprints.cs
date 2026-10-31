@@ -85,7 +85,7 @@ namespace BladePath
                 float fade = 1f - Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((age - p.life * 0.55f) / (p.life * 0.45f)));
                 float a = p.alpha * fade * (p.blood ? 1f : Mathf.Clamp01(snow / 0.5f));
                 if (p.blood) a *= Mathf.Lerp(1f, 0.7f, Mathf.Clamp01(age / 8f));   // подсыхает — темнеет и тускнеет
-                Color c = p.blood ? new Color(0.36f, 0.025f, 0.02f, a * 0.85f) : new Color(0.62f, 0.68f, 0.8f, a * 0.9f);
+                Color c = p.blood ? new Color(0.36f, 0.025f, 0.02f, a * 0.85f) : new Color(0.7f, 0.76f, 0.88f, a * 0.55f);   // на телефоне в полную силу следы читались чёрными кляксами
                 p.r.GetPropertyBlock(mpb);
                 mpb.SetColor("_Color", c);
                 p.r.SetPropertyBlock(mpb);
