@@ -783,8 +783,8 @@ namespace BladePath
             float sc = transform.lossyScale.y;
             // голова запрокидывается на глотке
             head.rotation = Quaternion.AngleAxis(-28f * pourW, right) * head.rotation;
-            // рот: кость головы — у основания черепа, рот выше и впереди
-            Vector3 mouth = head.position + up * (0.05f * sc) + fwd * (0.1f * sc);
+            // рот: по кадрам CI кость головы у этой модели — на уровне ушей; рот чуть ниже и впереди
+            Vector3 mouth = head.position - up * (0.045f * sc) + fwd * (0.11f * sc);
             // тыква: сперва поднята к подбородку стоймя, на глотке — дном вверх-вперёд, горлышко у губ
             Vector3 axUp = (up + fwd * 0.15f).normalized, axPour = (-fwd * 0.75f + Vector3.down * 0.66f).normalized;
             Vector3 axis = Vector3.Slerp(axUp, axPour, pourW);
