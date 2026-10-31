@@ -329,6 +329,27 @@ namespace BladePath
         /// <summary>Рывок.</summary>
         public void DashSound() { Play(whoosh, 0.45f, 0.6f); }
 
+        /// <summary>Боец врезался в жаровню: глухой бронзовый удар, жаровня качается, из чаши взметается сноп искр.</summary>
+        public void ObstacleBump(ArenaObstacle o, Vector3 vel)
+        {
+            if (o == null) return;
+            Play(hitHeavy, 0.55f, 0.7f); Play(clang, 0.28f, 0.5f);
+            Wobble wb = o.GetComponent<Wobble>(); if (wb == null) wb = o.gameObject.AddComponent<Wobble>();
+            wb.Kick(vel, Mathf.Clamp(vel.magnitude * 2.2f, 4f, 10f));
+            foreach (ParticleSystem ps in o.GetComponentsInChildren<ParticleSystem>())
+            {
+                if (ps.name != "Embers") continue;
+                ParticleSystem.EmitParams e = new ParticleSystem.EmitParams();
+                for (int i = 0; i < 28; i++)
+                {
+                    e.position = ps.transform.position + Random.insideUnitSphere * 0.12f;
+                    e.velocity = new Vector3(Random.Range(-1f, 1f), Random.Range(1.6f, 3.6f), Random.Range(-1f, 1f)) + vel.normalized * 0.8f;
+                    e.startLifetime = Random.Range(0.8f, 1.8f);
+                    ps.Emit(e, 1);
+                }
+            }
+        }
+
         /// <summary>Киай на тяжёлых ударах: сверху и в прыжке — через раз, добивание и натиск — всегда; не чаще раза в 1,5 с у бойца.</summary>
         void KiaiFor(int who, SwingProfile p)
         {

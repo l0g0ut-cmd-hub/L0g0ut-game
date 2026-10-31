@@ -52,6 +52,7 @@ namespace BladePath
         public float Ki01 { get { return Mathf.Clamp01(Ki / Mathf.Max(1f, kiMax)); } }
         public bool CanEnergy { get { return Ki >= energyCost; } }
         Vector3 knockVel;
+        float bumpAt;
         float lastDashAt = -10f;
         /// <summary>Секунд с начала последнего рывка (удар из рывка — «иай»).</summary>
         public float SinceDash { get { return Time.time - lastDashAt; } }
@@ -384,7 +385,12 @@ namespace BladePath
                 Vector3 d = np - o.transform.position; d.y = 0f;
                 float r = o.radius + 0.25f;
                 float m = d.magnitude;
-                if (m < r) np = o.transform.position + (m > 1e-4f ? d / m : Vector3.right) * r + Vector3.up * np.y;
+                if (m < r)
+                {
+                    np = o.transform.position + (m > 1e-4f ? d / m : Vector3.right) * r + Vector3.up * np.y;
+                    // отброшенный ударом врезался в жаровню: она качается, из чаши взлетает сноп искр
+                    if (knockVel.sqrMagnitude > 4f && Time.time > bumpAt && Juice.Instance != null) { bumpAt = Time.time + 0.7f; Juice.Instance.ObstacleBump(o, knockVel); }
+                }
             }
 
             if (opponent != null)
