@@ -25,7 +25,9 @@ namespace BladePath
             set { freeCached = value ? 1 : 0; PlayerPrefs.SetInt("freecam", freeCached); PlayerPrefs.Save(); if (Instance != null) Instance.ResetView(); }
         }
         static int freeCached = -1;
-        Vector3 pan, panT, panV;   // смещение точки обзора (только в свободном режиме)
+        Vector3 pan, panT, panV;
+        /// <summary>Точка, на которую смотрит камера (для пряток предметов, заслоняющих бойцов).</summary>
+        public Vector3 Focus { get; private set; } = new Vector3(0f, 1.1f, 0f);   // смещение точки обзора (только в свободном режиме)
 
         public Vector3 targetOffset = new Vector3(0f, 1.15f, 0f);   // точка, на которую смотрим (над центром арены)
         public float defaultDistance = 5.2f;
@@ -267,6 +269,7 @@ namespace BladePath
             }
             transform.position = pos;
             transform.rotation = Quaternion.LookRotation(focus - pos, Vector3.up);
+            Focus = focus;
             if (cam == null) cam = GetComponent<Camera>();
             if (cam != null)
             {

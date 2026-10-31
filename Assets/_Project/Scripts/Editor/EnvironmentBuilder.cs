@@ -146,11 +146,32 @@ namespace BladePath.EditorTools
             AddBackCourt(env, look);
             AddKaresansui(env, look);
             AddShojiShadows(look);
+            AddCameraOccluders(env);
             MarkStatic(env);
             AddMist(look);
             AddFireflies(look);
             AddDragonflies(look);
             AddPetals(look);
+        }
+
+        /// <summary>
+        /// Что прятать, когда оно встаёт между камерой и бойцами: некрупные предметы вне площадки и перед храмом (камни сада,
+        /// фонари, стойки знамён, мостик), выше колена. Стены, деревья, земля, храм — не трогаем.
+        /// </summary>
+        static void AddCameraOccluders(Transform env)
+        {
+            var list = new System.Collections.Generic.List<Renderer>();
+            foreach (MeshRenderer r in env.GetComponentsInChildren<MeshRenderer>(true))
+            {
+                Bounds b = r.bounds;
+                bool outside = Mathf.Abs(b.center.x) > 3.85f || b.center.z < -2.95f;
+                if (!outside || b.center.z > 3.3f) continue;
+                if (b.max.y < 0.35f) continue;                                         // низкое — не заслоняет
+                if (Mathf.Max(b.size.x, Mathf.Max(b.size.y, b.size.z)) > 2.6f) continue;   // стены, кроны, земля
+                if (r.sharedMaterial != null && r.sharedMaterial.renderQueue >= 2900) continue;   // ореолы, вода, наклейки
+                list.Add(r);
+            }
+            env.gameObject.AddComponent<BladePath.CameraOccluders>().items = list.ToArray();
         }
 
         /// <summary>
