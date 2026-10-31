@@ -31,6 +31,8 @@ namespace BladePath
         public static int LeafMode { get; private set; } = 1;
         /// <summary>Счётчик бросков погоды (новый раунд/бой) — чтобы декор мог заново выбрать своё (монахи за сёдзи и т.п.).</summary>
         public static int RollId { get; private set; }
+        /// <summary>Изредка ясной ночью — кровавая луна: диск и лунный свет багровые, туман и тени тёплые.</summary>
+        public bool BloodMoon { get; private set; }
         /// <summary>Множитель лунного света (облако на луне — MoonClouds).</summary>
         public static float MoonDim = 1f;
         [Range(0f, 1f)] public float fogChance = 0.3f;
@@ -110,10 +112,38 @@ namespace BladePath
             // листопад: ясным днём (с рассветом и закатом) иногда сакура; в снег — смотря по силе снега
             sakuraRoll = Random.value < 0.4f; lightSnowLeaves = Random.value < 0.5f;
             Leaves();
+            BloodMoon = !Daytime && !Raining && !Snowing && !Foggy && changeAt < 0f && Random.value < 0.12f;
+            Blood(BloodMoon);
             RollId++;
         }
 
         bool sakuraRoll, lightSnowLeaves;
+        Renderer[] moonRends; Color[] moonCols;
+        void Blood(bool on)
+        {
+            if (!Application.isPlaying) return;
+            if (moonRends == null)
+            {
+                var list = new System.Collections.Generic.List<Renderer>();
+                foreach (string nm in new[] { "Moon", "MoonHalo" }) { GameObject g = GameObject.Find(nm); if (g != null) list.AddRange(g.GetComponentsInChildren<Renderer>()); }
+                moonRends = list.ToArray(); moonCols = new Color[moonRends.Length];
+                for (int i = 0; i < moonRends.Length; i++) { Material m = moonRends[i].material; moonCols[i] = m.HasProperty("_TintColor") ? m.GetColor("_TintColor") : m.HasProperty("_Color") ? m.color : Color.white; }
+            }
+            Color blood = new Color(1f, 0.36f, 0.24f);
+            for (int i = 0; i < moonRends.Length; i++)
+            {
+                if (moonRends[i] == null) continue;
+                Material m = moonRends[i].material;
+                Color c = on ? new Color(moonCols[i].r * blood.r, moonCols[i].g * blood.g, moonCols[i].b * blood.b, moonCols[i].a) : moonCols[i];
+                if (m.HasProperty("_TintColor")) m.SetColor("_TintColor", c); else if (m.HasProperty("_Color")) m.color = c;
+            }
+            if (!on) return;
+            // лунный свет и воздух — в багровый (база для Restore и смены погоды тоже)
+            if (moon != null) moon.color = Color.Lerp(moon.color, new Color(1f, 0.42f, 0.32f), 0.65f);
+            ambBase = new Color(ambBase.r * 1.25f, ambBase.g * 0.78f, ambBase.b * 0.78f);
+            fogBase = new Color(fogBase.r * 1.35f, fogBase.g * 0.72f, fogBase.b * 0.72f);
+            RenderSettings.fogColor = fogBase; RenderSettings.ambientLight = ambBase;
+        }
         Material crownMat; Texture crownTex0; Color crownEm0; Texture sakuraTex; bool crownInit;
         /// <summary>
         /// Весна: когда падает сакура, кроны клёнов во дворе цветут — карточки крон получают текстуру соцветий сакуры

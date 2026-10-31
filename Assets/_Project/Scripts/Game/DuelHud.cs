@@ -293,7 +293,8 @@ namespace BladePath
                     Weather wz = Weather.Instance;
                     if (wz != null)
                     {
-                        string wt = wz.Raining ? "НОЧЬ · ЛИВЕНЬ" : wz.Snowing ? "НОЧЬ · ПЕРВЫЙ СНЕГ" : wz.Foggy ? "НОЧЬ · ТУМАН" : wz.Dawn ? "РАССВЕТ В ТУМАНЕ" : wz.Dusk ? "ЗАКАТ" : wz.Daytime ? "СОЛНЕЧНЫЙ ДЕНЬ" : "ЯСНАЯ НОЧЬ";
+                        bool sak = Weather.LeafMode == 2;
+                        string wt = wz.Raining ? "НОЧЬ · ЛИВЕНЬ" : wz.Snowing ? (wz.HeavySnow ? "НОЧЬ · СНЕГОПАД" : "НОЧЬ · ПЕРВЫЙ СНЕГ") : wz.Foggy ? "НОЧЬ · ТУМАН" : wz.Dawn ? (sak ? "РАССВЕТ · ЦВЕТЁТ САКУРА" : "РАССВЕТ В ТУМАНЕ") : wz.Dusk ? (sak ? "ЗАКАТ · ЦВЕТЁТ САКУРА" : "ЗАКАТ") : wz.Daytime ? (sak ? "ВЕСНА · ЦВЕТЁТ САКУРА" : "СОЛНЕЧНЫЙ ДЕНЬ") : wz.BloodMoon ? "НОЧЬ · КРОВАВАЯ ЛУНА" : "ЯСНАЯ НОЧЬ";
                         UiKit.Text(new Rect(cx - 400f, mk > 1 ? 340f : 316f, 800f, 22f), wt, 13f, new Color(0.8f, 0.82f, 0.86f, ta * 0.8f));
                     }
                 }
