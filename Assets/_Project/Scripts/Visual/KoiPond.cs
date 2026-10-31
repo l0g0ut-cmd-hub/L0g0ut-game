@@ -11,7 +11,10 @@ namespace BladePath
     public class KoiPond : MonoBehaviour
     {
         public Transform[] fish;
-        public Vector2 radii = new Vector2(1.15f, 0.62f);
+        public Vector2 radii = new Vector2(1.0f, 0.5f);
+        // берег пруда — та же формула, что в EnvironmentBuilder.AddPond (бобовидный контур), и запас под камни бордюра
+        public Vector2 pondR = new Vector2(1.45f, 0.85f);
+        public float margin = 0.68f;
         float[] ang, spd, wob, pause;
         ParticleSystem rings; AudioSource plopSrc; static AudioClip plop; float nextRise;
 
@@ -99,6 +102,15 @@ namespace BladePath
             if (plopSrc != null && plop != null && Ambience.Claim(0.3f, 3f, 7f)) { plopSrc.transform.position = head; plopSrc.pitch = Random.Range(0.85f, 1.2f); plopSrc.PlayOneShot(plop, 0.25f); }
         }
 
+        /// <summary>Точка (локально от центра пруда) внутри контура воды с запасом margin.</summary>
+        bool Inside(Vector3 q)
+        {
+            float x = q.x / pondR.x, z = q.z / pondR.y;
+            float a = Mathf.Atan2(z, x);
+            float k = 1f + 0.12f * Mathf.Sin(a * 3f + 0.7f) + 0.07f * Mathf.Sin(a * 5f + 2.1f);
+            return Mathf.Sqrt(x * x + z * z) <= k * margin;
+        }
+
         void Update()
         {
             if (fish == null) return;
@@ -125,6 +137,10 @@ namespace BladePath
                 Vector3 tangent = new Vector3(-Mathf.Sin(ang[i]) * radii.x, 0f, Mathf.Cos(ang[i]) * radii.y) * Mathf.Sign(spd[i]);
                 wob[i] += dt * (s > 0.5f ? 7f : 2.5f);
                 float yaw = Mathf.Atan2(tangent.x, tangent.z) * Mathf.Rad2Deg + Mathf.Sin(wob[i]) * 9f;
+                // рыба целиком (голова и хвост) остаётся в воде: если край выходит за берег под камнями — ближе к центру
+                float half = f.localScale.z * 0.5f;
+                Vector3 fwd = Quaternion.Euler(0f, yaw, 0f) * Vector3.forward;
+                for (int it = 0; it < 12 && (!Inside(p + fwd * half) || !Inside(p - fwd * half)); it++) p *= 0.9f;
                 f.localPosition = new Vector3(p.x, f.localPosition.y, p.z);
                 f.localRotation = Quaternion.Euler(0f, yaw, 0f);
             }
