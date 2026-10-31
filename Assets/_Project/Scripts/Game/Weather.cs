@@ -140,6 +140,7 @@ namespace BladePath
             Eaves(true);
             Wet(true);
             RenderSettings.fogColor = fogBase * 0.85f;
+            if (!Foggy) Dome(0.35f);
         }
 
         void StopRain()
@@ -151,6 +152,7 @@ namespace BladePath
             Eaves(false);
             Wet(false);
             RenderSettings.fogColor = fogBase;
+            Dome(Foggy ? 0.9f : Snowing ? 0.45f : 0f);
         }
 
         void StartSnow()
@@ -162,6 +164,7 @@ namespace BladePath
             RenderSettings.fogColor = Color.Lerp(fogBase, new Color(0.42f, 0.46f, 0.56f), 0.6f);
             Snowy(true);
             EnsureBreaths();
+            if (!Foggy) Dome(0.45f);
         }
 
         /// <summary>Пар дыхания у голов бойцов (в снег и холодным туманным рассветом).</summary>
@@ -193,12 +196,14 @@ namespace BladePath
             RenderSettings.fogDensity = fogDensBase * 3.2f;
             RenderSettings.fogColor = Color.Lerp(fogBase, new Color(0.26f, 0.29f, 0.35f), 0.7f);
             Mist(3.5f, 2.6f);
+            Dome(0.9f);
         }
 
         void StopFog()
         {
             if (!Raining && !Snowing) { RenderSettings.fogDensity = fogDensBase; RenderSettings.fogColor = fogBase; }
             Mist(1f, 1f);
+            Dome(Raining ? 0.35f : Snowing ? 0.45f : 0f);
         }
 
         void StopSnow()
@@ -206,6 +211,33 @@ namespace BladePath
             if (snow != null) snow.Stop();
             Snowy(false);
             if (!Raining) { RenderSettings.fogDensity = fogDensBase; RenderSettings.fogColor = fogBase; }
+            Dome(Foggy ? 0.9f : Raining ? 0.35f : 0f);
+        }
+
+        Renderer dome; Material domeMat;
+        /// <summary>
+        /// Туманный купол: туман Unity не трогает небо, и в густом тумане тёмное небо зияло дырами между светлыми от тумана
+        /// кронами. Большая сфера вокруг двора цвета тумана (полупрозрачная) прячет небо: в тумане почти целиком, в дождь и
+        /// снегопад — слегка размывает. a = 0 — купол убран.
+        /// </summary>
+        void Dome(float a)
+        {
+            if (a <= 0.001f) { if (dome != null) dome.enabled = false; return; }
+            if (dome == null)
+            {
+                GameObject g = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                g.name = "FogDome";
+                Collider c = g.GetComponent<Collider>(); if (c != null) { if (Application.isPlaying) Destroy(c); else DestroyImmediate(c); }
+                g.transform.SetParent(transform, false);
+                g.transform.position = new Vector3(0f, 0f, 2f); g.transform.localScale = Vector3.one * 90f;
+                dome = g.GetComponent<Renderer>();
+                domeMat = new Material(Shader.Find("Sprites/Default")) { name = "FogDome", renderQueue = 2501 };   // Cull Off — видно изнутри; сразу после неба, до прозрачных частиц (иначе вуалит искры и лепестки)
+                dome.sharedMaterial = domeMat;
+                dome.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; dome.receiveShadows = false;
+            }
+            Color fc = RenderSettings.fogColor; fc.a = a;
+            domeMat.color = fc;
+            dome.enabled = true;
         }
 
         Color floorColor0 = Color.white;
