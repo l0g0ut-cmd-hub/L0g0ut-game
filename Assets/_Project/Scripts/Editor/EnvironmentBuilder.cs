@@ -270,6 +270,24 @@ namespace BladePath.EditorTools
             EnvMesh.Box(kura, "Window", new Vector3(-0.5f, 1.75f, -0.77f), Vector3.zero, new Vector3(0.36f, 0.3f, 0.04f), look.woodDark, 1f);
             EnvMesh.Gable(kura, "Roof", new Vector3(0f, 2.2f, 0f), 2.6f, 2.0f, 0.75f, look.roof, look.plaster, 1.2f);
 
+            // ---- быт: поленница вдоль задней стены, бочки для воды у амбара, ведро
+            Transform wood = new GameObject("Woodpile").transform; wood.SetParent(g, false); wood.localPosition = new Vector3(-3.6f, 0f, 11.45f);
+            EnvMesh.Box(wood, "Rack", new Vector3(0f, 0.04f, 0f), Vector3.zero, new Vector3(1.8f, 0.08f, 0.5f), look.woodDark, 1f, true);
+            for (int row = 0; row < 4; row++)
+                for (int k = 0; k < 11 - row; k++)
+                    CharacterVisuals.Part(wood, "Log" + row + "_" + k, PrimitiveType.Cylinder, new Vector3(-0.78f + k * 0.155f + row * 0.077f, 0.15f + row * 0.13f, (k % 2) * 0.03f), new Vector3(90f, 0f, 0f), new Vector3(0.075f + 0.02f * ((k * 7 + row) % 3) * 0.3f, 0.22f, 0.075f), look.wood);
+            EnvMesh.Box(wood, "Roof", new Vector3(0f, 0.82f, -0.05f), new Vector3(-12f, 0f, 0f), new Vector3(2.0f, 0.04f, 0.75f), look.roof, 1.2f, true);
+            for (int i = 0; i < 2; i++)
+            {
+                Vector3 bp = new Vector3(0.95f + i * 0.02f, 0f, 9.15f + i * 0.62f);
+                CharacterVisuals.Part(g, "Barrel" + i, PrimitiveType.Cylinder, bp + new Vector3(0f, 0.36f, 0f), Vector3.zero, new Vector3(0.5f, 0.36f, 0.5f), look.wood);
+                for (int h = 0; h < 2; h++)
+                    CharacterVisuals.Part(g, "Hoop" + i + h, PrimitiveType.Cylinder, bp + new Vector3(0f, 0.16f + h * 0.4f, 0f), Vector3.zero, new Vector3(0.515f, 0.02f, 0.515f), look.woodDark);
+                CharacterVisuals.Part(g, "BarrelWater" + i, PrimitiveType.Cylinder, bp + new Vector3(0f, 0.68f, 0f), Vector3.zero, new Vector3(0.44f, 0.005f, 0.44f), look.pondWater != null ? look.pondWater : look.puddle);
+            }
+            CharacterVisuals.Part(g, "Bucket", PrimitiveType.Cylinder, new Vector3(1.55f, 0.13f, 8.95f), Vector3.zero, new Vector3(0.26f, 0.13f, 0.26f), look.wood);
+            CharacterVisuals.Part(g, "Ladle", PrimitiveType.Cylinder, new Vector3(1.55f, 0.36f, 8.95f), new Vector3(0f, 0f, 35f), new Vector3(0.015f, 0.2f, 0.015f), look.bamboo);
+
             // ---- фонари и тени у оснований
             AddLantern(env, look, new Vector3(5.2f, 0f, 9.2f));
             AddLantern(env, look, new Vector3(-5.5f, 0f, 11.0f));
