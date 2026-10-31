@@ -369,9 +369,70 @@ namespace BladePath
             Play(strength > 1f ? hitHeavy : hit, 0.95f, Random.Range(0.92f, 1.08f));
             SlashFlash(point, dir, strength);
             Blood(point, normal, dir, strength, kill);
+            if (strength > 0.6f) Shreds(point, dir, strength);
             if (bleedAt != null) Bleed(bleedAt, Mathf.Lerp(1.2f, 3.5f, Mathf.Clamp01(strength - 0.4f)), strength);
             if (kill) { Play(boom, 1f, 1f); PetalBurst(60); }
             else if (strength > 1.2f) PetalBurst(12);
+        }
+
+        // ---------------------------------------------------------------- лоскуты
+
+        ParticleSystem shreds;
+        /// <summary>
+        /// Клинок рассёк ткань: несколько тёмных лоскутков одежды вылетают по ходу удара, кувыркаясь, медленно планируют
+        /// (сопротивление воздуха, трепет) и ложатся на камень. Одна общая система — без мусора на каждый удар.
+        /// </summary>
+        void Shreds(Vector3 pos, Vector3 dir, float strength)
+        {
+            if (shreds == null) shreds = BuildShreds();
+            if (shreds == null) return;
+            if (dir.sqrMagnitude < 1e-4f) dir = Vector3.forward;
+            dir.Normalize();
+            int n = Mathf.RoundToInt(2f + strength * 2.5f);
+            ParticleSystem.EmitParams e = new ParticleSystem.EmitParams();
+            for (int i = 0; i < n; i++)
+            {
+                e.position = pos + Random.insideUnitSphere * 0.05f;
+                e.velocity = (dir * Random.Range(1.2f, 2.6f) + Random.insideUnitSphere * 0.9f + Vector3.up * Random.Range(0.4f, 1.4f)) * Mathf.Lerp(0.8f, 1.2f, Mathf.Clamp01(strength - 0.6f));
+                e.startSize3D = new Vector3(Random.Range(0.025f, 0.05f), Random.Range(0.05f, 0.1f), 1f);
+                e.startLifetime = Random.Range(3.5f, 5f);
+                float c = Random.Range(0.06f, 0.15f);
+                e.startColor = new Color(c * 1.1f, c * 0.95f, c * 1.05f, 1f);
+                e.rotation3D = new Vector3(Random.Range(0f, 360f), Random.Range(0f, 360f), Random.Range(0f, 360f));
+                e.angularVelocity3D = new Vector3(Random.Range(-600f, 600f), Random.Range(-300f, 300f), Random.Range(-600f, 600f));
+                shreds.Emit(e, 1);
+            }
+        }
+
+        ParticleSystem BuildShreds()
+        {
+            GameObject g = new GameObject("ClothShreds");
+            ParticleSystem ps = g.AddComponent<ParticleSystem>();
+            ps.Stop();
+            var main = ps.main;
+            main.loop = true; main.playOnAwake = false; main.startSpeed = 0f; main.maxParticles = 60;
+            main.gravityModifier = 0.22f; main.startRotation3D = true; main.startSize3D = true;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            var em = ps.emission; em.enabled = false;
+            var sh = ps.shape; sh.enabled = false;
+            // ткань тормозит о воздух и трепещет; у земли — ложится (плоскость столкновений)
+            var lim = ps.limitVelocityOverLifetime; lim.enabled = true; lim.limit = new ParticleSystem.MinMaxCurve(0.9f); lim.dampen = 0.06f;
+            var noise = ps.noise; noise.enabled = true; noise.strength = 0.5f; noise.frequency = 1.6f;
+            var col = ps.collision; col.enabled = true; col.type = ParticleSystemCollisionType.Planes; col.dampen = 0.9f; col.bounce = 0.05f;
+            GameObject floor = new GameObject("ShredFloor"); floor.transform.SetParent(g.transform, false); floor.transform.position = new Vector3(0f, 0.012f, 0f);
+            col.SetPlane(0, floor.transform);
+            var colLife = ps.colorOverLifetime; colLife.enabled = true;
+            Gradient gr = new Gradient();
+            gr.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                       new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 0.8f), new GradientAlphaKey(0f, 1f) });
+            colLife.color = gr;
+            ParticleSystemRenderer r = g.GetComponent<ParticleSystemRenderer>();
+            r.renderMode = ParticleSystemRenderMode.Billboard;
+            r.alignment = ParticleSystemRenderSpace.World;   // плоский лоскут кувыркается в 3D
+            r.material = new Material(Shader.Find("Sprites/Default")) { name = "Shred" };
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; r.receiveShadows = false;
+            ps.Play();
+            return ps;
         }
 
         // ---------------------------------------------------------------- кровь
