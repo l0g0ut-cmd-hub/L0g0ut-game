@@ -1696,7 +1696,8 @@ namespace BladePath.EditorTools
                 Rod(b, "Bar" + k, new Vector3(Mathf.Cos(ang) * 0.17f, 0.93f, Mathf.Sin(ang) * 0.17f), new Vector3(Mathf.Cos(ang) * 0.265f, 1.15f, Mathf.Sin(ang) * 0.265f), 0.014f, iron);
             }
             CombineByMaterial(b, iron, "Kagaribi");   // два десятка железных деталей — одним мешем (один вызов отрисовки)
-            CharacterVisuals.Part(b, "Coals", PrimitiveType.Sphere, new Vector3(0f, 0.99f, 0f), Vector3.zero, new Vector3(0.36f, 0.08f, 0.36f), look.ember);
+            CharacterVisuals.Part(b, "Coals", PrimitiveType.Sphere, new Vector3(0f, 0.965f, 0f), Vector3.zero, new Vector3(0.34f, 0.07f, 0.34f), look.woodDark);   // угли — тёмные, светится только сердцевина
+            CharacterVisuals.Part(b, "CoalsHot", PrimitiveType.Sphere, new Vector3(0f, 0.985f, 0f), Vector3.zero, new Vector3(0.16f, 0.04f, 0.16f), look.ember);
             // поленья в чаше (тёмные, крест-накрест) — огонь растёт из дров, а не из шара
             for (int k = 0; k < 3; k++)
                 CharacterVisuals.Part(b, "Log" + k, PrimitiveType.Cylinder, new Vector3(0f, 1.03f, 0f), new Vector3(78f, k * 60f, 0f), new Vector3(0.05f, 0.17f, 0.05f), look.woodDark);

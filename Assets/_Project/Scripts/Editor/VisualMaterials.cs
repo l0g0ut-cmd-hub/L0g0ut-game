@@ -70,7 +70,7 @@ namespace BladePath.EditorTools
             l.mapleCrown = Cutout("Env_MapleCrown", "maple_cluster.png", new Color(0.92f, 0.92f, 0.92f), 0.42f, new Color(0.05f, 0.006f, 0.004f), 0f, 0.03f);
             l.cedarFoliage = Cutout("Env_CedarFoliage", "cedar_cluster.png", new Color(0.52f, 0.6f, 0.54f), 0.4f, new Color(0.002f, 0.005f, 0.003f), 0f, 0.035f);   // хвоя криптомерии — фото-карточка (атлас 3)   // хвоя криптомерии: те же листья-карточки, темнее и холоднее
             l.fallenLeaves = Cutout("Env_FallenLeaves", "fallen_leaves.png", new Color(1f, 1f, 1f), 0.5f, new Color(0.03f, 0.004f, 0.003f));
-            l.grass = Cutout("Env_Grass", "grass_tuft.png", new Color(0.9f, 0.95f, 0.9f), 0.45f, new Color(0.004f, 0.007f, 0.003f), 1f, 0.05f);
+            l.grass = Cutout("Env_Grass", "grass_tuft.png", new Color(0.6f, 0.66f, 0.54f), 0.45f, new Color(0.004f, 0.007f, 0.003f), 1f, 0.05f);   // фото-трава сочнее прежней — приглушаем
             l.blossom = Textured("Env_Blossom", "blossom_albedo.png", null, new Vector2(3f, 3f), new Color(0.95f, 0.85f, 0.85f), 0f, 0.1f);   // кроны — текстура красного клёна (лист 2)
             l.shoji = Textured("Env_Shoji", "shoji_albedo.png", null, Vector2.one, new Color(0.9f, 0.85f, 0.75f), 0f, 0.2f);
             Texture2D se = Tex("shoji_emission.png", false);
