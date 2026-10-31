@@ -94,8 +94,14 @@ namespace BladePath.EditorTools
                 {
                     Vector3 hp = player.weapon.pivot.position;
                     Transform pt = player.transform;
+                    // лунный блик на середине пробега по клинку (в игре его ставит Juice)
+                    BladeGlint glint = player.weapon.gameObject.AddComponent<BladeGlint>(); glint.weapon = player.weapon;
+                    Call(glint, "Start");
+                    FieldInfo grt = typeof(BladeGlint).GetField("runT", F), grd = typeof(BladeGlint).GetField("runDur", F), grp = typeof(BladeGlint).GetField("runPow", F);
+                    if (grt != null) { grt.SetValue(glint, 0.2f); grd.SetValue(glint, 0.45f); grp.SetValue(glint, 1f); }
                     Shot(cam, dir, "7_grip", hp + pt.forward * 0.75f - pt.right * 0.55f + Vector3.up * 0.15f, hp, 34f, log);
                     Shot(cam, dir, "8_grip_top", hp + pt.forward * 0.35f + pt.right * 0.45f + Vector3.up * 0.65f, hp, 34f, log);
+                    UnityEngine.Object.DestroyImmediate(glint);
                     BladeBloodShot(cam, dir, player, log);
                 }
                 // раскадровка ударов: 8 фаз сбоку (как камера боя) — видно замах, удар, проводку и возврат
@@ -602,6 +608,7 @@ namespace BladePath.EditorTools
                 foreach (GlowSprite gs in UnityEngine.Object.FindObjectsByType<GlowSprite>(FindObjectsSortMode.None)) Call(gs, "LateUpdate");   // ореолы — лицом к камере
                 foreach (FloorReflection fr in UnityEngine.Object.FindObjectsByType<FloorReflection>(FindObjectsSortMode.None)) Call(fr, "LateUpdate");   // отражения — под эту камеру
                 foreach (LightShaft ls in UnityEngine.Object.FindObjectsByType<LightShaft>(FindObjectsSortMode.None)) Call(ls, "LateUpdate");          // лучи — лицом к этой камере
+                foreach (BladeGlint bg in UnityEngine.Object.FindObjectsByType<BladeGlint>(FindObjectsSortMode.None)) Call(bg, "LateUpdate");          // блик — лицом к этой камере
                 cam.targetTexture = rt;
                 cam.Render();
                 RenderTexture.active = rt;

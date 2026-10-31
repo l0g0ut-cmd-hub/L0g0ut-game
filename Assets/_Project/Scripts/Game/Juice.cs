@@ -67,6 +67,7 @@ namespace BladePath
                 bool isPlayer = DuelManager.Instance != null && DuelManager.Instance.player == owner;
                 WeaponTrail.Attach(w, isPlayer ? new Color(0.55f, 0.8f, 1f) : new Color(0.85f, 0.35f, 1f));
                 if (!isPlayer && owner != null) MakeEyes(owner);
+                if (w.GetComponent<BladeGlint>() == null) w.gameObject.AddComponent<BladeGlint>().weapon = w;   // лунный блик по клинку
             }
             if (false && fxMat != null && w.bladeRoot != null)   // старый след только за остриём — заменён WeaponTrail
             {
@@ -184,6 +185,13 @@ namespace BladePath
         public void BloodyBlade(WeaponController w, float amount)
         {
             for (int i = 0; i < tracked.Count; i++) if (tracked[i].w == w) { tracked[i].blood = Mathf.Clamp01(tracked[i].blood + amount); tracked[i].bloodAge *= 0.25f; }   // свежая кровь поверх подсохшей
+        }
+
+        /// <summary>Сколько крови на клинке (0…1).</summary>
+        public float BladeBlood(WeaponController w)
+        {
+            for (int i = 0; i < tracked.Count; i++) if (tracked[i].w == w) return tracked[i].blood;
+            return 0f;
         }
 
         public void ShakeBlood(WeaponController w)
