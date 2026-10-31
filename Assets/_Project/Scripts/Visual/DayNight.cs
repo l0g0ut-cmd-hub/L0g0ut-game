@@ -122,6 +122,7 @@ namespace BladePath
                 post.shadows = Dawn ? new Color(0.94f, 0.96f, 1.06f) : day ? new Color(0.97f, 0.99f, 1.04f) : pSh;
                 post.highlights = Dawn ? new Color(1.08f, 0.98f, 0.9f) : day ? new Color(1.04f, 1.0f, 0.95f) : pHi;
             }
+            Shader.SetGlobalFloat("_BP_Day", day ? (Dawn ? 0.6f : 1f) : 0f);
             DynamicGI.UpdateEnvironment();
         }
         readonly Dictionary<FlickerLight, float> flBase = new Dictionary<FlickerLight, float>();

@@ -38,6 +38,7 @@ Shader "BladePath/Character"
         half _BumpScale, _Metallic, _Glossiness, _GlossMapScale, _RimPower;
         half _BP_Wetness;   // глобально из Weather: дождь 0…1
         half _BP_Snow;      // глобально из Weather: снег на верхних поверхностях 0…1
+        half _BP_Day;       // глобально из DayNight: днём лунный контур почти не нужен (и выглядел бы синей каймой)
 
         struct Input
         {
@@ -93,7 +94,7 @@ Shader "BladePath/Character"
             }
             // контровой свет: сильнее у краёв силуэта (вид почти по касательной к поверхности)
             half rim = 1.0h - saturate(dot(normalize(IN.viewDir), o.Normal));
-            rim = pow(rim, _RimPower);
+            rim = pow(rim, _RimPower) * (1.0h - 0.65h * _BP_Day);
             o.Emission = tex2D(_EmissionMap, IN.uv_MainTex).rgb * _EmissionColor.rgb + _RimColor.rgb * rim;
             o.Alpha = 1;
         }
