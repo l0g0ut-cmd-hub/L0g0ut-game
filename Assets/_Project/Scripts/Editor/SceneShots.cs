@@ -72,6 +72,7 @@ namespace BladePath.EditorTools
                 // компоненты, которые в игре готовятся в Awake (текстуры листьев/лепестков, ореолы) — в редакторе вызываем сами
                 foreach (MonoBehaviour mb in UnityEngine.Object.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
                     if (mb is PetalTexture || mb is GlowSprite || mb is FlickerLight || mb is FloorReflection || mb is LightShaft) Call(mb, "Awake");
+                foreach (ContactShadow cs in UnityEngine.Object.FindObjectsByType<ContactShadow>(FindObjectsSortMode.None)) { Call(cs, "Start"); Call(cs, "LateUpdate"); }
                 // окружение: огонь, туман, светлячки, лепестки — уже «живут» несколько секунд
                 foreach (ParticleSystem ps in UnityEngine.Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None))
                     if (ps.transform.parent == null || ps.GetComponentInParent<FighterController>() == null) ps.Simulate(4f, true, true);
@@ -441,6 +442,8 @@ namespace BladePath.EditorTools
             Call(d, "LateUpdate");
             CoatSpring cs = f.GetComponentInChildren<CoatSpring>(true);
             if (cs != null) Call(cs, "LateUpdate");
+            ContactShadow sh = f.GetComponentInChildren<ContactShadow>(true);
+            if (sh != null) Call(sh, "LateUpdate");
         }
 
         /// <summary>Раскадровка походки: боец идёт dirLocal со скоростью speed (как PoseProbe.WalkSim), 8 кадров через 0,1 с после разгона.</summary>

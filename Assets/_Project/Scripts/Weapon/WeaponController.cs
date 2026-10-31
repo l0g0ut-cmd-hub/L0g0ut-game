@@ -158,6 +158,7 @@ namespace BladePath
         public void Down(float seconds) { downUntil = Time.time + seconds; }
 
         float deflectAt = -10f, deflectStrength;
+        float idleT;   // сколько стоит в стойке без движения — для «живых» мелочей (перехват рукояти, покачивание острия)
         /// <summary>Отражение (парирование): клинок резко «бьёт» навстречу чужому и возвращается в блок — видимый щелчок, как в Sekiro.</summary>
         public void Deflect(float strength = 1f) { deflectAt = Time.time; deflectStrength = strength; }
         /// <summary>Клинок прижат к земле (микири: на него наступили) — поза как при сломе равновесия, остриём вниз.</summary>
@@ -240,6 +241,18 @@ namespace BladePath
                 Pose[PoseCh.CPIT] += (24f + 3f * wob) * sk; Pose[PoseCh.HPIT] += 10f * sk;
                 Pose[PoseCh.CYAW] += 6f * wob * sk * yawSign;
             }
+            // стойка без движения: остриё чуть дышит, раз в 7 с — перехват рукояти (кисти проворачиваются, клинок на миг опускается)
+            if (idleT > 2.5f)
+            {
+                float cyc = (idleT - 2.5f) % 7f;
+                if (cyc < 0.9f)
+                {
+                    float k = Mathf.Sin(Mathf.PI * cyc / 0.9f);
+                    rh += new Vector3(0.015f * yawSign, -0.025f, -0.03f) * k;
+                    re += new Vector3(7f, 3f * yawSign, -5f * yawSign) * k;
+                }
+                re.x += Mathf.Sin(idleT * 1.3f) * 1.2f * Mathf.Clamp01(idleT - 2.5f);
+            }
             // щелчок отражения: руки на миг вперёд-вверх, клинок наклоняется к удару и возвращается (0,2 с)
             float da = Time.time - deflectAt;
             if (da >= 0f && da < 0.2f)
@@ -275,6 +288,8 @@ namespace BladePath
             downK = Mathf.MoveTowards(downK, Time.time < downUntil ? 1f : 0f, Time.deltaTime / (Time.time < downUntil ? 0.18f : 0.5f));
             stagK = Mathf.MoveTowards(stagK, stag ? 1f : 0f, Time.deltaTime / (stag ? 0.15f : 0.4f));
             blendLeft = Mathf.Max(0f, blendLeft - Time.deltaTime);
+            bool still = Phase == SwingPhase.Idle && blockK < 0.01f && stagK < 0.01f && owner != null && Mathf.Abs(owner.MoveAxis) < 0.1f && !owner.Dead;
+            idleT = still ? idleT + Time.deltaTime : 0f;
             if (Phase == SwingPhase.Idle && pivot != null) { ApplyRestPose(); return; }
             if (Phase == SwingPhase.Idle || pivot == null || CurrentProfile == null) return;
 
