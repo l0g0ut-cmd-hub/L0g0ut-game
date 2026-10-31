@@ -31,6 +31,7 @@ namespace BladePath
             public FighterController f; public ParticleSystem aura; public Renderer[] blade; public float blood, bloodAge;
             public float stepT; public bool wasGrounded = true;
             public int bloodSteps;   // наступил в лужу крови — столько ещё кровавых отпечатков
+            public float dripAt;     // тяжело ранен — капает кровь
         }
         readonly List<Tracked> tracked = new List<Tracked>();
 
@@ -252,6 +253,17 @@ namespace BladePath
                         Dust(t.f.transform.position + Vector3.up * 0.05f, Vector3.up, 12);
                     }
                     t.wasGrounded = t.f.Grounded;
+                }
+                // тяжело ранен: кровь капает на камень (чем меньше здоровья, тем чаще) — след раненого на арене
+                if (t.f != null && !t.f.Dead && DuelManager.Instance != null && DuelManager.Instance.State == DuelState.Fighting)
+                {
+                    float h = DuelManager.Instance.Hp01(t.f);
+                    if (h < 0.4f && Time.time >= t.dripAt)
+                    {
+                        t.dripAt = Time.time + Mathf.Lerp(0.5f, 1.8f, h / 0.4f) * Random.Range(0.7f, 1.3f);
+                        Vector3 p0 = t.f.transform.position + t.f.transform.right * Random.Range(-0.18f, 0.18f) + t.f.transform.forward * Random.Range(-0.1f, 0.15f);
+                        AddDecal(new Vector3(p0.x, 0.012f, p0.z), Random.Range(0.035f, 0.07f), Vector2.zero, 30f, 0.25f);
+                    }
                 }
                 if (t.aura != null && t.f != null)
                 {
