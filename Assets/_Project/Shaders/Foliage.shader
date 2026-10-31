@@ -28,9 +28,11 @@ Shader "BladePath/Foliage"
         half _Glossiness, _Sway, _Flutter;
         float _BP_Wind;          // 0…1 — сила порыва (WindGusts)
         float _BP_Wetness, _BP_Snow;
+        float _BP_Dew;           // рассвет (DayNight): роса на траве искрится
         float4 _BP_WindDir;      // xz — направление ветра
 
-        struct Input { float2 uv_MainTex; float3 worldNormal; };
+        struct Input { float2 uv_MainTex; float3 worldNormal; float3 worldPos; };
+        float DewHash (float2 p) { p = frac(p * float2(123.34, 456.21)); p += dot(p, p + 45.32); return frac(p.x * p.y); }
 
         void vert (inout appdata_full v)
         {
@@ -60,6 +62,16 @@ Shader "BladePath/Foliage"
             o.Metallic = 0;
             o.Smoothness = lerp(_Glossiness, 0.3, wet);   // выше — отражение неба на мокрых листьях читалось розово-белыми пятнами
             o.Emission = t.rgb * _EmissionColor.rgb;   // как у Standard с _EmissionMap = альбедо
+            // роса на рассвете: редкие капли на травинках вспыхивают и гаснут (мерцают по своей фазе), трава чуть влажно блестит
+            if (_BP_Dew > 0.01 && _Sway > 0.5)
+            {
+                float3 cell = floor(IN.worldPos * 70.0);
+                float h = DewHash(cell.xz + cell.y * 17.31);
+                float tw = 0.5 + 0.5 * sin(_Time.y * 2.6 + h * 80.0);
+                float dew = _BP_Dew * (1.0 - saturate(_BP_Snow * 2.0));
+                o.Emission += step(0.992, h) * tw * tw * dew * fixed3(1.0, 0.95, 0.86) * 1.1;
+                o.Smoothness = max(o.Smoothness, 0.32 * dew);
+            }
             o.Alpha = c.a;
         }
         ENDCG

@@ -140,6 +140,7 @@ namespace BladePath
                 post.highlights = Dawn ? new Color(1.08f, 0.98f, 0.9f) : K ? new Color(1.12f, 0.96f, 0.84f) : day ? new Color(1.04f, 1.0f, 0.95f) : pHi;
             }
             Shader.SetGlobalFloat("_BP_Day", day ? (Dawn ? 0.6f : K ? 0.5f : 1f) : 0f);
+            Shader.SetGlobalFloat("_BP_Dew", day && Dawn ? 1f : 0f);   // роса искрится на траве (Foliage)
             Cubemap cube = Dawn ? dawnRefl : K ? (duskRefl != null ? duskRefl : dawnRefl) : day ? dayRefl : nightRefl;
             if (cube != null) SetReflection(cube);
             DynamicGI.UpdateEnvironment();
