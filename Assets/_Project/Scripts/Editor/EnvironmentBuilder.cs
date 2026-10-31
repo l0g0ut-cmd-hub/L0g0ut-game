@@ -77,6 +77,7 @@ namespace BladePath.EditorTools
             BuildGarden(env, look);
             BuildPagoda(env, look);
             BuildWalls(env, look);
+            BuildCedarForest(env, look);
 
             // каменные фонари у бордюра
             AddLantern(env, look, new Vector3(-4.5f, 0f, -1.6f));
@@ -458,6 +459,50 @@ namespace BladePath.EditorTools
                 EnvMesh.CurvedHip(pagoda, "Roof" + i, c + new Vector3(0f, y0 + 0.8f, 0f), hw, hw, 0.55f, 0.2f, look.roof, look.woodDark, 1.2f);
             }
             CharacterVisuals.Part(pagoda, "Finial", PrimitiveType.Cylinder, c + new Vector3(0f, 0.4f + 1.3f * 5 + 0.35f, 0f), Vector3.zero, new Vector3(0.05f, 0.45f, 0.05f), look.bronze);
+        }
+
+        /// <summary>
+        /// Роща криптомерий (суги) за стенами двора и позади храма — как в лесу у настоящих святилищ: высокие стволы,
+        /// хвоя ярусами сужается к вершине. Ночью — тёмные силуэты на фоне неба (глубина), днём закрывают пустую равнину за стеной.
+        /// Дёшево: ствол-цилиндр и 5–7 ярусов карточек хвои на дерево, всё статично (батчинг).
+        /// </summary>
+        static void BuildCedarForest(Transform env, Look look)
+        {
+            if (look.cedarFoliage == null) return;
+            Transform f = new GameObject("CedarForest").transform;
+            f.SetParent(env, false);
+            System.Random r = new System.Random(101);
+            System.Func<float> R = () => (float)r.NextDouble();
+            int n = 0;
+            System.Action<Vector3, float> Tree = (Vector3 p, float h) =>
+            {
+                Transform t = new GameObject("Cedar" + n).transform;
+                t.SetParent(f, false); t.localPosition = p;
+                float th = 0.12f + 0.05f * R();
+                CharacterVisuals.Part(t, "Trunk", PrimitiveType.Cylinder, new Vector3(0f, h * 0.5f, 0f), Vector3.zero, new Vector3(th, h * 0.5f, th), look.bark);
+                int tiers = 5 + r.Next(3);
+                for (int k = 0; k < tiers; k++)
+                {
+                    float u = (k + 0.5f) / tiers;                       // 0 внизу кроны … 1 у вершины
+                    float y = Mathf.Lerp(h * 0.35f, h * 0.97f, u);
+                    float rad = Mathf.Lerp(1.5f, 0.35f, u) * (0.85f + 0.3f * R());
+                    TreeBuilder.Foliage(t, "Needles" + k, new Vector3(0f, y, 0f), rad, 7, Mathf.Lerp(1.6f, 0.8f, u), look.cedarFoliage, n * 53 + k * 7);
+                }
+                n++;
+            };
+            // по бокам за стенами (стены на x = ±6,4)
+            for (int side = -1; side <= 1; side += 2)
+                for (float z = -4.5f; z < 13f; z += 2.1f + R() * 0.8f)
+                {
+                    Tree(new Vector3(side * (8.2f + R() * 1.6f), -0.07f, z + (R() - 0.5f) * 0.8f), 7.5f + R() * 3f);
+                    if (R() < 0.6f) Tree(new Vector3(side * (10.6f + R() * 2f), -0.07f, z + 1f + (R() - 0.5f)), 8.5f + R() * 3f);   // второй ряд, выше
+                }
+            // позади храма и пагоды
+            for (float x = -10f; x <= 10f; x += 2.3f + R() * 0.8f)
+            {
+                if (x > 1.5f && x < 7.5f) continue;   // луна (4,8; 6,4; 16) с камеры боя — не заслоняем
+                Tree(new Vector3(x + (R() - 0.5f) * 0.8f, -0.07f, 12.5f + R() * 2.5f), 9f + R() * 3.5f);
+            }
         }
 
         static void BuildWalls(Transform env, Look look)
