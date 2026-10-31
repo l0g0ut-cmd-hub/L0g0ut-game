@@ -21,12 +21,34 @@ namespace BladePath
             if (flame != null) flameBaseScale = flame.localScale;
         }
 
+        ParticleSystem[] fires;
+        bool firesFound;
+
         void Update()
         {
-            float n = Mathf.PerlinNoise(seed, Time.time * speed);
-            float k = 1f - amount * 0.5f + amount * n;
+            // порыв ветра (WindGusts): огонь бьётся чаще и глубже, языки пламени и искры сносит по ветру
+            float g = WindGusts.Strength;
+            float n = Mathf.PerlinNoise(seed, Time.time * speed * (1f + 1.5f * g));
+            float am = Mathf.Min(1f, amount * (1f + 0.8f * g));
+            float k = 1f - am * 0.5f + am * n;
             if (lightSource != null) lightSource.intensity = baseIntensity * k;
             if (flame != null) flame.localScale = flameBaseScale * (0.9f + 0.2f * n);
+            if (!firesFound)
+            {
+                firesFound = true;
+                Transform root = transform.parent != null ? transform.parent : transform;
+                fires = root.GetComponentsInChildren<ParticleSystem>(true);
+            }
+            if (fires != null)
+                foreach (ParticleSystem ps in fires)
+                {
+                    if (ps == null) continue;
+                    var f = ps.forceOverLifetime;
+                    if (g < 0.01f) { if (f.enabled) f.enabled = false; continue; }
+                    f.enabled = true; f.space = ParticleSystemSimulationSpace.World;
+                    Vector3 w = WindGusts.Dir * (g * 2.4f);
+                    f.x = new ParticleSystem.MinMaxCurve(w.x); f.y = new ParticleSystem.MinMaxCurve(0f); f.z = new ParticleSystem.MinMaxCurve(w.z);
+                }
         }
     }
 }
