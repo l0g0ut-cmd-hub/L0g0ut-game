@@ -50,18 +50,18 @@ namespace BladePath.EditorTools
             l.ronin = Ronin();
             // мостовая из неправильных плит (исидатами, процедурная 1024²): квадратная плитка 2,4 м на площадке 7,2×5,4;
             // гладкость — по карте: мокрые плиты и лужицы блестят, швы с землёй и мхом матовые
-            l.stone = Textured("Stone_Floor", "flagstone_albedo.png", "flagstone_normal.png", new Vector2(4.2f, 3.15f), new Color(0.62f, 0.62f, 0.66f), 0f, 0.62f);
+            l.stone = Textured("Stone_Floor", "flagstone_albedo.png", "flagstone_normal.png", new Vector2(4.2f, 3.15f), new Color(0.54f, 0.54f, 0.57f), 0f, 0.62f);
             Gloss(l.stone, "flagstone_ms.png", 0.85f);   // в дождь Weather поднимает до 1
             Aniso("flagstone_albedo.png", 4); Aniso("flagstone_normal.png", 4);
             l.stoneDark = Solid("Stone_Dark", new Color(0.12f, 0.12f, 0.15f), 0f, 0.20f);
             // окружение v2: UV боксов в мировом масштабе (EnvMesh), поэтому tiling материалов = 1
-            l.wood = Textured("Env_Wood", "wood_albedo.png", "wood_normal.png", Vector2.one, new Color(0.95f, 0.92f, 0.9f), 0f, 0.25f);
-            l.woodDark = Textured("Env_WoodDark", "wood_albedo.png", "wood_normal.png", Vector2.one, new Color(0.42f, 0.38f, 0.36f), 0f, 0.3f);
-            l.roof = Textured("Env_Roof", "roof_albedo.png", "roof_normal.png", Vector2.one, Color.white, 0.05f, 0.45f);
-            l.plaster = Textured("Env_Plaster", "plaster_albedo.png", "plaster_normal.png", Vector2.one, new Color(0.9f, 0.9f, 0.92f), 0f, 0.1f);
+            l.wood = Textured("Env_Wood", "wood_albedo.png", "wood_normal.png", Vector2.one, new Color(0.64f, 0.61f, 0.59f), 0f, 0.25f);
+            l.woodDark = Textured("Env_WoodDark", "wood_albedo.png", "wood_normal.png", Vector2.one, new Color(0.3f, 0.27f, 0.26f), 0f, 0.3f);
+            l.roof = Textured("Env_Roof", "roof_albedo.png", "roof_normal.png", Vector2.one, new Color(0.58f, 0.58f, 0.6f), 0.05f, 0.45f);
+            l.plaster = Textured("Env_Plaster", "plaster_albedo.png", "plaster_normal.png", Vector2.one, new Color(0.66f, 0.65f, 0.64f), 0f, 0.1f);
             l.stoneBlock = Textured("Env_StoneBlock", "stoneblock_albedo.png", "stoneblock_normal.png", Vector2.one, Color.white, 0f, 0.25f);
             Gloss(l.stoneBlock, "stoneblock_ms.png", 1f);   // тёсаный гранит: следы зубила, фаски, лишайник (tools: texgen/stoneblock.py)
-            l.gravel = Textured("Env_Gravel", "gravel_albedo.png", "gravel_normal.png", Vector2.one, Color.white, 0f, 0.15f);
+            l.gravel = Textured("Env_Gravel", "gravel_albedo.png", "gravel_normal.png", Vector2.one, new Color(0.56f, 0.56f, 0.57f), 0f, 0.15f);
             l.forestFloor = Textured("Env_ForestFloor", "forest_floor_albedo.png", "forest_floor_normal.png", Vector2.one, Color.white, 0f, 0.1f);   // мох, земля и хвоя за стенами
             l.bark = Textured("Env_Bark", "bark_albedo.png", "bark_normal.png", new Vector2(2f, 2f), Color.white, 0f, 0.1f);
             // крона клёна: карточки гроздей листьев с альфа-срезом (tools/texgen/maple_cluster.py)
@@ -141,7 +141,7 @@ namespace BladePath.EditorTools
             Texture2D koiT = Tex("koi.png", false);
             if (koiT != null) { l.koi = AlphaParticle("Koi", koiT, new Color(0.5f, 0.5f, 0.5f, 0.5f)); l.koi.renderQueue = 2990; }
             l.lotus = Solid("Env_Lotus", new Color(0.12f, 0.24f, 0.09f), 0f, 0.55f);
-            l.rock = Textured("Env_Rock", "stoneblock_albedo.png", "stoneblock_normal.png", new Vector2(0.45f, 0.45f), new Color(0.46f, 0.46f, 0.44f), 0f, 0.18f);   // садовые валуны: тёмный гранит
+            l.rock = Textured("Env_Rock", "rock_albedo.png", "rock_normal.png", new Vector2(0.6f, 0.6f), new Color(0.56f, 0.56f, 0.55f), 0f, 0.2f);   // садовые валуны: тёмный гранит
             l.bellBronze = Solid("Env_BellBronze", new Color(0.2f, 0.19f, 0.13f), 0.75f, 0.42f);   // старая бронза с патиной
             // окружение — на шейдере с погодой: снег ложится на крыши, колпаки стен, камень и землю, в дождь всё мокнет и блестит
             foreach (Material em in new[] { l.rock, l.wood, l.woodDark, l.roof, l.plaster, l.stoneBlock, l.gravel, l.forestFloor, l.bark, l.stone, l.moss, l.stoneDark })
