@@ -203,7 +203,7 @@ namespace BladePath
             for (int i = 0; i < tail.Length; i++)
             {
                 float k = i / (float)(tail.Length - 1);
-                float upW = i == 0 ? 38f : i < 4 ? 14f : 7f;                                      // поднят трубой и загнут вперёд «вопросом»
+                float upW = i == 0 ? 22f : i < 3 ? 12f : i < 5 ? 4f : 20f;   // дугой назад-вверх, кончик загнут                                      // поднят трубой и загнут вперёд «вопросом»
                 float sideW = Mathf.Sin(tph * 2f + i * 0.6f) * 7f;
                 float upS = i == 0 ? 8f : 0f;                                                      // лежит на полу
                 float sideS = (i == 0 ? 80f : 27f) + Mathf.Sin(tph * (1f + k) + i) * 14f * k * k;  // огибает круп и обвивает лапы, кончик дёргается
