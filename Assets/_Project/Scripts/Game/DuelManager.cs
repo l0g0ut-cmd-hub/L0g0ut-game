@@ -250,7 +250,7 @@ namespace BladePath
             if (player != null) { player.ResetFighter(); hp[player] = maxHp; hpTrail[player] = maxHp; lastSwing[player] = -1; }
             if (enemy != null) { enemy.ResetFighter(); hp[enemy] = MaxHp(enemy); hpTrail[enemy] = MaxHp(enemy); lastSwing[enemy] = -1; }
             Popups.Clear();
-            combo.Clear(); comboTime.Clear(); counterUntil.Clear(); PerilAt.Clear(); perilSwing.Clear(); jumpedSweep.Clear(); DeathblowAt = -10f;
+            combo.Clear(); comboTime.Clear(); counterUntil.Clear(); PerilAt.Clear(); perilSwing.Clear(); jumpedSweep.Clear(); sweepJumpAt.Clear(); DeathblowAt = -10f;
             Enraged = false;
             ApplyStage();   // скорость врага к базовой ступени (сброс ярости)
             SuperBy = null; DeathblowBy = null; DeathblowTarget = null; executing = false; ResurrectOffered = false;
@@ -891,6 +891,20 @@ namespace BladePath
         public readonly Dictionary<FighterController, float> PerilAt = new Dictionary<FighterController, float>();
         readonly Dictionary<FighterController, int> perilSwing = new Dictionary<FighterController, int>();
         readonly Dictionary<FighterController, int> jumpedSweep = new Dictionary<FighterController, int>();
+        readonly Dictionary<FighterController, float> sweepJumpAt = new Dictionary<FighterController, float>();
+        /// <summary>Перепрыгнул опасную подсечку и рубит сверху из того же прыжка (как прыжок на голову в Sekiro): множитель урона по равновесию.</summary>
+        float HeadJumpMul(FighterController a, AttackType type)
+        {
+            float t;
+            if (type != AttackType.JumpStrike || !sweepJumpAt.TryGetValue(a, out t) || Time.time - t > 1.1f) return 1f;
+            sweepJumpAt.Remove(a);
+            Popup p = new Popup();
+            p.world = a.transform.position + Vector3.up * 2.1f; p.text = "С ВЫСОТЫ!"; p.color = new Color(1f, 0.8f, 0.35f);
+            p.born = Time.unscaledTime; p.size = 26f;
+            Popups.Add(p);
+            if (CameraOrbit.Instance != null) CameraOrbit.Instance.Punch(3f);
+            return 2.2f;
+        }
         static int perilTips;
 
         void WatchPeril(FighterController f)
@@ -992,7 +1006,7 @@ namespace BladePath
                     jp.world = r.target.transform.position + Vector3.up * 1.9f; jp.text = pr ? "ПЕРЕПРЫГНУЛ!" : "МИМО"; jp.color = new Color(0.5f, 0.95f, 1f);
                     jp.born = Time.unscaledTime; jp.size = pr ? 28f : 20f;
                     Popups.Add(jp);
-                    if (pr) { r.attacker.AddPosture(25f); r.target.AddKi(10f); }
+                    if (pr) { r.attacker.AddPosture(25f); r.target.AddKi(10f); sweepJumpAt[r.target] = Time.time; }   // из этого прыжка удар сверху бьёт по равновесию вдвое
                 }
                 return;
             }
@@ -1080,7 +1094,7 @@ namespace BladePath
                 if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(parry ? 0.05f : 0.025f); if (parry) CameraOrbit.Instance.Punch(2.5f); }
                 // равновесие: блок копит урон защитнику, отражение (парирование) — атакующему
                 if (parry) { r.target.AddPosture(4f); r.attacker.AddPosture(PostureDamage(type) * 0.9f); }
-                else r.target.AddPosture(PostureDamage(type));
+                else r.target.AddPosture(PostureDamage(type) * HeadJumpMul(r.attacker, type));
                 if (r.target.PostureBroken) return;
                 if (parry)
                 {
@@ -1107,7 +1121,7 @@ namespace BladePath
             }
             lastHitHead = r.zone == BodyZoneId.Head;
             ApplyDamage(r.target, r.attacker, dmg, r.contact.point, r.zone == BodyZoneId.Head, false, r.contact.normal, r.contact.bladeVelocity, r.contact.zone != null ? r.contact.zone.transform : null);
-            if (!r.target.Dead) r.target.AddPosture(dmg * 0.6f);   // пропущенный удар тоже сбивает равновесие
+            if (!r.target.Dead) r.target.AddPosture(dmg * 0.6f * HeadJumpMul(r.attacker, type));   // пропущенный удар тоже сбивает равновесие
         }
 
         /// <summary>Время раунда вышло: побеждает тот, у кого больше здоровья; при равенстве — переигровка.</summary>
