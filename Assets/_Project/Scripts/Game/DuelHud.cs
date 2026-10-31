@@ -165,6 +165,26 @@ namespace BladePath
                     float sz = 74f * (1f + 0.35f * Mathf.Max(0f, 0.15f - age) / 0.15f);
                     DrawGlyph("UI/kiken", new Vector2(g.x / UiKit.Scale, (Screen.height - g.y) / UiKit.Scale), sz, a);
                 }
+                // стойка врага сменилась: 八相 (хассо) / 脇構 (вакигамаэ) над головой на 1,6 с — по стойке читается удар;
+                // первые разы за запуск — ещё и подпись, чем он из неё бьёт
+                WeaponController ew = duel.enemy != null ? duel.enemy.weapon : null;
+                if (ew != null && duel.State == DuelState.Fighting)
+                {
+                    if (ew.stance != lastStance) { lastStance = ew.stance; stanceAt = Time.unscaledTime; if (ew.stance != 0) stanceShown++; }
+                    float sa = Time.unscaledTime - stanceAt;
+                    if (ew.stance != 0 && sa < 1.6f)
+                    {
+                        Vector3 sgp = cam.WorldToScreenPoint(duel.enemy.transform.position + Vector3.up * 2.5f);
+                        if (sgp.z > 0f)
+                        {
+                            float sal = Mathf.Clamp01(sa / 0.15f) * Mathf.Clamp01((1.6f - sa) / 0.4f);
+                            Vector2 sc2 = new Vector2(sgp.x / UiKit.Scale, (Screen.height - sgp.y) / UiKit.Scale);
+                            DrawGlyphWide(ew.stance == 1 ? "UI/hasso" : "UI/waki", sc2, 92f, sal * 0.92f);
+                            if (stanceShown <= 3)
+                                UiKit.Text(new Rect(sc2.x - 160f, sc2.y + 18f, 320f, 22f), ew.stance == 1 ? "ХАССО — ЖДИ УДАР СВЕРХУ" : "ВАКИГАМАЭ — СНИЗУ И ПО НОГАМ", 14f, new Color(1f, 0.85f, 0.7f, sal));
+                        }
+                    }
+                }
                 // метка добивания (как красная точка Sekiro): красное энсо на груди «поплывшего» врага, пульсирует и медленно вращается
                 FighterController br = duel.enemy;
                 if (br != null && br.PostureBroken && !br.Dead && !duel.DeathblowActive)
@@ -444,6 +464,18 @@ namespace BladePath
         }
 
         float markSince = -1f;
+
+        int lastStance; float stanceAt = -10f; static int stanceShown;
+
+        /// <summary>Широкий знак (два кандзи, текстура 2:1): ширина w, высота w/2.</summary>
+        static void DrawGlyphWide(string tex, Vector2 c, float w, float alpha)
+        {
+            Texture2D t = UiKit.Tex(tex);
+            if (t == null || alpha <= 0.01f) return;
+            Color o = GUI.color; GUI.color = new Color(1f, 1f, 1f, alpha);
+            GUI.DrawTexture(new Rect(c.x - w * 0.5f, c.y - w * 0.25f, w, w * 0.5f), t);
+            GUI.color = o;
+        }
 
         static void DrawGlyph(string tex, Vector2 c, float size, float alpha)
         {
