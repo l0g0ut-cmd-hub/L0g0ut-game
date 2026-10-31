@@ -22,6 +22,7 @@ namespace BladePath
         }
 
         ParticleSystem[] fires;
+        bool wasRain;
         bool firesFound;
 
         void Update()
@@ -39,6 +40,19 @@ namespace BladePath
                 Transform root = transform.parent != null ? transform.parent : transform;
                 fires = root.GetComponentsInChildren<ParticleSystem>(true);
             }
+            // дождь: над огнём вместо дыма — светлый пар, гуще; огонь чуть никнет
+            bool rain = Weather.Instance != null && Weather.Instance.Raining;
+            if (rain != wasRain && fires != null)
+            {
+                wasRain = rain;
+                foreach (ParticleSystem ps in fires)
+                {
+                    if (ps == null || ps.name != "Smoke") continue;
+                    var m = ps.main; m.startColor = rain ? new Color(0.55f, 0.56f, 0.6f, 0.38f) : new Color(0.16f, 0.14f, 0.13f, 0.32f);
+                    var e = ps.emission; e.rateOverTime = rain ? 9f : 3.5f;
+                }
+            }
+            if (lightSource != null && rain) lightSource.intensity *= 0.85f;
             if (fires != null)
                 foreach (ParticleSystem ps in fires)
                 {
