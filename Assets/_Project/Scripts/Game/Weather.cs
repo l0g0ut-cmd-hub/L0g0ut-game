@@ -23,6 +23,14 @@ namespace BladePath
         [Range(0f, 1f)] public float duskShare = 0.4f;   // доля закатов среди не-рассветных дней
         /// <summary>Ночной туман (из ясных ночей): густая холодная дымка, огни в ореолах, по земле стелется молоко.</summary>
         public bool Foggy { get; private set; }
+        /// <summary>Снегопад сильный (крупно и густо, листья не летят) или слабый (редкий снег, иногда кружат последние листья).</summary>
+        public bool HeavySnow { get; private set; }
+        /// <summary>Ветреность боя: 0,35 — тихо (редкие слабые порывы), 1 — обычно, 1,6 — ветрено (WindGusts).</summary>
+        public float Windiness { get; private set; } = 1f;
+        /// <summary>Что падает с деревьев: 0 — ничего, 1 — листья клёна, 2 — лепестки сакуры, 3 — редкие листья клёна.</summary>
+        public static int LeafMode { get; private set; } = 1;
+        /// <summary>Счётчик бросков погоды (новый раунд/бой) — чтобы декор мог заново выбрать своё (монахи за сёдзи и т.п.).</summary>
+        public static int RollId { get; private set; }
         /// <summary>Множитель лунного света (облако на луне — MoonClouds).</summary>
         public static float MoonDim = 1f;
         [Range(0f, 1f)] public float fogChance = 0.3f;
@@ -96,6 +104,47 @@ namespace BladePath
             Critters(!Raining && !Snowing && !Daytime);
             DayCritters(Daytime);
             nextFlashAt = Time.time + Random.Range(5f, 12f);
+            // ветер — не каждый бой: тихо, обычно или ветрено (в сильный снег — метёт)
+            float wr = Random.value;
+            Windiness = Snowing && HeavySnow ? 1.6f : wr < 0.4f ? 0.35f : wr < 0.8f ? 1f : 1.6f;
+            // листопад: ясным днём (с рассветом и закатом) иногда сакура; в снег — смотря по силе снега
+            sakuraRoll = Random.value < 0.4f; lightSnowLeaves = Random.value < 0.5f;
+            Leaves();
+            RollId++;
+        }
+
+        bool sakuraRoll, lightSnowLeaves;
+        ParticleSystem petalsPs; Texture mapleTex; bool petalsInit;
+        static readonly Color MapleA = new Color(0.75f, 0.55f, 0.5f, 0.95f), MapleB = new Color(1f, 0.85f, 0.8f, 0.95f);
+        /// <summary>
+        /// Что падает с деревьев сейчас: сильный снег — ничего; слабый — то редкие листья клёна, то ничего; ясный день —
+        /// иногда лепестки сакуры (мельче, розовые, кружат дольше); иначе — листья клёна.
+        /// </summary>
+        void Leaves()
+        {
+            int mode = 1;
+            if (Snowing) mode = HeavySnow ? 0 : (lightSnowLeaves ? 3 : 0);
+            else if (Daytime && !Raining && sakuraRoll) mode = 2;
+            LeafMode = mode;
+            if (!petalsInit)
+            {
+                petalsInit = true;
+                GameObject g = GameObject.Find("Petals");
+                if (g != null) petalsPs = g.GetComponent<ParticleSystem>();
+                if (petalsPs != null) { Renderer pr = petalsPs.GetComponent<Renderer>(); if (pr != null && pr.sharedMaterial != null) mapleTex = pr.sharedMaterial.mainTexture; }
+            }
+            if (petalsPs == null) return;
+            var main = petalsPs.main; var em = petalsPs.emission; var noise = petalsPs.noise;
+            Renderer r = petalsPs.GetComponent<Renderer>();
+            bool sakura = mode == 2;
+            if (r != null && r.sharedMaterial != null) r.sharedMaterial.mainTexture = sakura ? SoftSprites.Petal : mapleTex;
+            main.startColor = sakura ? new ParticleSystem.MinMaxGradient(new Color(1f, 0.78f, 0.86f, 0.95f), new Color(1f, 0.93f, 0.96f, 0.95f))
+                                     : new ParticleSystem.MinMaxGradient(MapleA, MapleB);
+            main.startSize = sakura ? new ParticleSystem.MinMaxCurve(0.035f, 0.065f) : new ParticleSystem.MinMaxCurve(0.07f, 0.13f);
+            main.gravityModifier = sakura ? 0.03f : 0.05f;
+            noise.strength = sakura ? 0.38f : 0.25f;
+            em.rateOverTime = mode == 0 ? 0f : mode == 2 ? 24f : mode == 3 ? 3.5f : 14f;
+            if (mode == 0) petalsPs.Clear();
         }
 
         /// <summary>Капель с карниза храма (EnvironmentBuilder.AddEaveDrips) — только в дождь.</summary>
@@ -158,9 +207,10 @@ namespace BladePath
         void StartSnow()
         {
             if (snow == null) BuildSnow();
-            var em = snow.emission; em.rateOverTime = DuelManager.Gfx == 1 ? 140f : 70f;
+            HeavySnow = Random.value < 0.5f;
+            var em = snow.emission; em.rateOverTime = (DuelManager.Gfx == 1 ? 140f : 70f) * (HeavySnow ? 1.3f : 0.45f);
             snow.Play();
-            RenderSettings.fogDensity = fogDensBase * 1.2f;
+            RenderSettings.fogDensity = fogDensBase * (HeavySnow ? 1.45f : 1.1f);
             RenderSettings.fogColor = Color.Lerp(fogBase, new Color(0.42f, 0.46f, 0.56f), 0.6f);
             Snowy(true);
             EnsureBreaths();
@@ -451,7 +501,7 @@ namespace BladePath
             wetK = Mathf.MoveTowards(wetK, Raining ? 1f : 0f, Time.deltaTime / (Raining ? 5f : 1f));
             Shader.SetGlobalFloat(WetId, wetK);
             // снег оседает на плечах и шлемах за полминуты боя; пар дыхания раз в пару секунд
-            snowK = Mathf.MoveTowards(snowK, Snowing ? 0.85f : 0f, Time.deltaTime / (Snowing ? 30f : 1f));
+            snowK = Mathf.MoveTowards(snowK, Snowing ? (HeavySnow ? 0.85f : 0.55f) : 0f, Time.deltaTime / (Snowing ? (HeavySnow ? 26f : 45f) : 1f));   // слабый снег ложится тоньше и дольше
             Shader.SetGlobalFloat(SnowId, snowK);
             // за ~9 с до ливня — далёкий раскат: гроза идёт
             if (changeAt > 0f && !changeToSnow && !rumbled && Time.time >= changeAt - 9f)
@@ -467,7 +517,7 @@ namespace BladePath
                 changeAt = -1f;
                 if (Foggy) { Foggy = false; StopFog(); }
                 Critters(false);
-                if (changeToSnow) { Snowing = true; StartSnow(); }
+                if (changeToSnow) { Snowing = true; StartSnow(); Leaves(); if (HeavySnow) Windiness = 1.6f; }
                 else { Raining = true; StartRain(); nextFlashAt = Time.time + Random.Range(0.5f, 2f); }
             }
             if ((Snowing || Dawn) && Time.time >= nextBreathAt)

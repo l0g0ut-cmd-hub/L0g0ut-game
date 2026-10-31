@@ -320,6 +320,8 @@ namespace BladePath
         public void PetalBurst(int n)
         {
             if (petals == null) { GameObject g = GameObject.Find("Petals"); if (g != null) petals = g.GetComponent<ParticleSystem>(); }
+            if (Weather.LeafMode == 0) return;   // сильный снег — листьев нет
+            if (Weather.LeafMode == 3) n = Mathf.Max(1, n / 4);   // последние листья
             if (petals != null) petals.Emit(n);
         }
         /// <summary>Стук сердца на низком здоровье.</summary>

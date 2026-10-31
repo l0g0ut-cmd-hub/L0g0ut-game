@@ -15,6 +15,9 @@ namespace BladePath
         public float dir = 1f;
         MaterialPropertyBlock mpb;
         float nextAt, t = -1f, monkSy = 1f, walkStr = 0.66f;
+        // в каждом бою по-своему: идущий монах бывает не всегда (иногда только сидящий); идёт то вправо, то влево и
+        // иногда останавливается у сидящего (поклон-задержка), потом идёт дальше
+        int seenRoll = -1; bool walkerOn = true; float pauseU = -1f, pauseLeft;
         // «соловьиный пол» (угуисубари): доски галереи храма поскрипывают-чирикают под шагами идущего
         AudioSource floor;
         static AudioClip[] chirps;
@@ -77,14 +80,31 @@ namespace BladePath
                 Vector3 s = monk.transform.localScale; s.z = monkSy * (1f + 0.008f * Mathf.Sin(Time.time * 1.25f)); monk.transform.localScale = s;   // дыхание
             }
             if (walker == null) return;
+            if (Weather.RollId != seenRoll)
+            {
+                seenRoll = Weather.RollId;
+                walkerOn = Random.value < 0.65f;
+                if (t >= 0f && !walkerOn) { t = -1f; walker.enabled = false; }
+            }
             if (t < 0f)
             {
                 walker.enabled = false;
-                if (!night || Time.time < nextAt) return;
+                if (!night || !walkerOn || Time.time < nextAt) return;
                 t = 0f; dir = Random.value < 0.5f ? 1f : -1f;
+                // остановка у сидящего: в точке, где стопы вместе (кадр 0), — чтобы замер не на полушаге
+                pauseU = -1f;
+                if (monk != null && Random.value < 0.35f)
+                {
+                    float len0 = xMax - xMin, mx = monk.transform.localPosition.x - 0.45f * dir;   // чуть не доходя, лицом к нему
+                    float u0 = dir > 0f ? (mx - xMin) / len0 : (xMax - mx) / len0;
+                    float cyc = frames * stride / len0;
+                    pauseU = Mathf.Round(u0 / cyc) * cyc + 1e-4f;
+                    pauseLeft = Random.Range(2f, 3.5f);
+                }
             }
-            t += Time.deltaTime;
             float dur = (xMax - xMin) / speed;
+            if (pauseU > 0f && pauseLeft > 0f && t / dur >= pauseU) { pauseLeft -= Time.deltaTime; t = pauseU * dur; Pose(pauseU); return; }
+            t += Time.deltaTime;
             if (t > dur || !night) { t = -1f; lastStep = -1; walker.enabled = false; nextAt = Time.time + Random.Range(25f, 55f); return; }
             Pose(t / dur);
         }

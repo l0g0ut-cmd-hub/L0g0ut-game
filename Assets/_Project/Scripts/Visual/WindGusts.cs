@@ -42,6 +42,9 @@ namespace BladePath
             fireBits = bits.ToArray();
         }
 
+        /// <summary>Ветреность боя (Weather): тихо — порывы редко (раз в ~40–70 с) и слабо, ветрено — часто.</summary>
+        static float Wind() { return Weather.Instance != null ? Mathf.Max(0.25f, Weather.Instance.Windiness) : 1f; }
+
         static readonly int WindId = Shader.PropertyToID("_BP_Wind"), WindDirId = Shader.PropertyToID("_BP_WindDir");
         void OnDisable() { Strength = 0f; Shader.SetGlobalFloat(WindId, 0f); }
 
@@ -50,7 +53,7 @@ namespace BladePath
             if (t < 0f && Time.time >= nextAt)
             {
                 t = 0f; fired = false;
-                rise = Random.Range(0.8f, 1.3f); fall = Random.Range(2.8f, 4.2f); peak = Random.Range(0.7f, 1f);
+                rise = Random.Range(0.8f, 1.3f); fall = Random.Range(2.8f, 4.2f); peak = Random.Range(0.7f, 1f) * Mathf.Lerp(0.55f, 1f, Mathf.Clamp01(Wind()));   // в тихий день порывы слабее
                 Dir = (Random.value < 0.5f ? Vector3.right : Vector3.left) + new Vector3(0f, 0f, Random.Range(-0.3f, 0.3f));
                 Dir = Dir.normalized;
                 if (src != null && whoosh != null) { src.pitch = Random.Range(0.85f, 1.1f); src.PlayOneShot(whoosh, 0.6f + 0.4f * peak); }
@@ -66,7 +69,7 @@ namespace BladePath
                 s = t < rise ? Mathf.SmoothStep(0f, 1f, t / rise) : 1f - Mathf.SmoothStep(0f, 1f, (t - rise) / fall);
                 s *= peak;
                 if (!fired && t > rise * 0.6f) { fired = true; Skitter(); if (peak > 0.82f && Random.value < 0.45f) Whirl(); }
-                if (t > rise + fall) { t = -1f; s = 0f; nextAt = Time.time + Random.Range(minGap, maxGap); }
+                if (t > rise + fall) { t = -1f; s = 0f; nextAt = Time.time + Random.Range(minGap, maxGap) / Wind(); }
             }
             Strength = s;
             // бамбуковая роща на порыве: глухие полые «ток-ток» — стволы раскачиваются и бьются друг о друга
@@ -108,15 +111,17 @@ namespace BladePath
         /// <summary>Горсть опавших листьев срывается с камня с наветренной стороны арены и пробегает по ней, кувыркаясь.</summary>
         void Skitter()
         {
-            if (skitter == null) return;
+            if (skitter == null || Weather.LeafMode == 0) return;   // нечему лететь
             bool snowy = Weather.Instance != null && Weather.Instance.Snowing;
+            bool sakura = Weather.LeafMode == 2;
             int n = Random.Range(6, 11) / (snowy ? 2 : 1);
             ParticleSystem.EmitParams e = new ParticleSystem.EmitParams();
             for (int i = 0; i < n; i++)
             {
                 e.position = new Vector3(-Dir.x * Random.Range(3.4f, 4.6f), Random.Range(0.02f, 0.12f), Random.Range(-2.4f, 2.4f));
                 e.velocity = Dir * Random.Range(2.2f, 3.6f) * peak + Vector3.up * Random.Range(0.2f, 1.1f);
-                e.startSize = Random.Range(0.07f, 0.12f);
+                e.startSize = sakura ? Random.Range(0.035f, 0.06f) : Random.Range(0.07f, 0.12f);
+                e.startColor = sakura ? Color.Lerp(new Color(1f, 0.78f, 0.86f), new Color(1f, 0.93f, 0.96f), Random.value) : Color.Lerp(new Color(0.75f, 0.5f, 0.45f), new Color(1f, 0.82f, 0.75f), Random.value);
                 e.startLifetime = Random.Range(2.6f, 3.6f);
                 e.rotation3D = new Vector3(Random.Range(0f, 360f), Random.Range(0f, 360f), Random.Range(0f, 360f));
                 e.angularVelocity3D = new Vector3(Random.Range(-500f, 500f), Random.Range(-200f, 200f), Random.Range(-500f, 500f));
@@ -131,8 +136,9 @@ namespace BladePath
         void Whirl()
         {
             Weather w = Weather.Instance;
-            if (w != null && (w.Raining || w.Snowing)) return;
+            if (w != null && (w.Raining || w.Snowing) || Weather.LeafMode == 0) return;
             if (whirl == null) whirl = BuildWhirl();
+            bool sakura = Weather.LeafMode == 2;
             if (whirl == null) return;
             float side = Random.value < 0.5f ? -1f : 1f;
             whirl.transform.position = new Vector3(side * Random.Range(4.3f, 5.4f), 0.02f, Random.Range(-2.5f, 3f));
@@ -143,7 +149,8 @@ namespace BladePath
                 float a = Random.Range(0f, Mathf.PI * 2f), r = Random.Range(0.15f, 0.55f);
                 e.position = new Vector3(Mathf.Cos(a) * r, Random.Range(0f, 0.15f), Mathf.Sin(a) * r);
                 e.velocity = new Vector3(0f, Random.Range(0.5f, 1.2f), 0f);
-                e.startSize = Random.Range(0.06f, 0.11f);
+                e.startSize = sakura ? Random.Range(0.035f, 0.06f) : Random.Range(0.06f, 0.11f);
+                e.startColor = sakura ? Color.Lerp(new Color(1f, 0.78f, 0.86f), new Color(1f, 0.93f, 0.96f), Random.value) : Color.Lerp(new Color(0.75f, 0.5f, 0.45f), new Color(1f, 0.82f, 0.75f), Random.value);
                 e.startLifetime = Random.Range(2.2f, 3.4f);
                 e.rotation3D = new Vector3(Random.Range(0f, 360f), Random.Range(0f, 360f), Random.Range(0f, 360f));
                 e.angularVelocity3D = new Vector3(Random.Range(-400f, 400f), Random.Range(-300f, 300f), Random.Range(-400f, 400f));
