@@ -17,6 +17,10 @@ namespace BladePath
         public Material[] glowMats = new Material[0];   // ореолы, огни фонарей, бумажные фонари, сёдзи — днём тусклее
         public Vector3 sunDir = new Vector3(-0.55f, 0.8f, 0.25f);   // на солнце (совпадает с tools/gen_sky_day.py)
         public bool Day { get; private set; }
+        /// <summary>Рассвет в тумане: солнце низко, свет тёплый, густая розоватая дымка, огни ещё горят вполсилы.</summary>
+        public bool Dawn { get; private set; }
+        public Vector3 dawnSunDir = new Vector3(-0.8f, 0.2f, 0.55f);   // низко слева впереди — контровой свет, длинные тени к камере
+        Color skyTint; float skyExp; bool skyCaptured;
 
         bool captured;
         Material nightSky;
@@ -34,7 +38,7 @@ namespace BladePath
         static readonly int EmisId = Shader.PropertyToID("_EmissionColor"), TintId = Shader.PropertyToID("_TintColor"), ColorId = Shader.PropertyToID("_Color");
 
         void Awake() { Instance = this; }
-        void OnDestroy() { if (Day) Apply(false); if (Instance == this) Instance = null; }
+        void OnDestroy() { if (Day) Apply(false); if (Instance == this) Instance = null; }   // вернуть ночь (в редакторе — и материалы-ассеты)
 
         void Capture()
         {
@@ -61,28 +65,35 @@ namespace BladePath
             if (post != null) { pExp = post.exposure; pThr = post.threshold; pInt = post.intensity; pVig = post.vignette; pCon = post.contrast; pSat = post.saturation; pSh = post.shadows; pHi = post.highlights; }
         }
 
-        /// <summary>Переключить время суток (вызывает Weather до того, как запомнит свою базу света и тумана).</summary>
-        public void Apply(bool day)
+        /// <summary>Переключить время суток (вызывает Weather до того, как запомнит свою базу света и тумана). dawn — рассвет (при day).</summary>
+        public void Apply(bool day, bool dawn = false)
         {
             Capture();
-            Day = day;
+            Day = day; Dawn = day && dawn;
+            if (daySky != null && !skyCaptured) { skyCaptured = true; skyTint = daySky.HasProperty("_Tint") ? daySky.GetColor("_Tint") : Color.gray; skyExp = daySky.HasProperty("_Exposure") ? daySky.GetFloat("_Exposure") : 1f; }
+            if (daySky != null)
+            {
+                // рассвет: то же небо, но в тёплой дымке (скайбокс туман не берёт — тонируем сам)
+                if (daySky.HasProperty("_Tint")) daySky.SetColor("_Tint", Dawn ? new Color(0.62f, 0.5f, 0.48f, 1f) : skyTint);
+                if (daySky.HasProperty("_Exposure")) daySky.SetFloat("_Exposure", Dawn ? skyExp * 0.82f : skyExp);
+            }
             if (sun != null)
             {
-                sun.transform.rotation = day ? Quaternion.LookRotation(-sunDir.normalized, Vector3.up) : moonRot;
-                sun.color = day ? new Color(1f, 0.95f, 0.86f) : moonCol;
-                sun.intensity = day ? 1.3f : moonI;
-                sun.shadowStrength = day ? 0.72f : moonShadow;
+                sun.transform.rotation = day ? Quaternion.LookRotation(-(Dawn ? dawnSunDir : sunDir).normalized, Vector3.up) : moonRot;
+                sun.color = Dawn ? new Color(1f, 0.68f, 0.45f) : day ? new Color(1f, 0.95f, 0.86f) : moonCol;
+                sun.intensity = Dawn ? 1.05f : day ? 1.3f : moonI;
+                sun.shadowStrength = Dawn ? 0.6f : day ? 0.72f : moonShadow;
             }
-            RenderSettings.ambientLight = day ? new Color(0.5f, 0.52f, 0.58f) : amb;
-            RenderSettings.fogColor = day ? new Color(0.64f, 0.71f, 0.8f) : fogC;
-            RenderSettings.fogDensity = day ? 0.02f : fogD;
+            RenderSettings.ambientLight = Dawn ? new Color(0.38f, 0.37f, 0.45f) : day ? new Color(0.5f, 0.52f, 0.58f) : amb;
+            RenderSettings.fogColor = Dawn ? new Color(0.68f, 0.6f, 0.62f) : day ? new Color(0.64f, 0.71f, 0.8f) : fogC;
+            RenderSettings.fogDensity = Dawn ? 0.045f : day ? 0.02f : fogD;
             if (daySky != null) RenderSettings.skybox = day ? daySky : nightSky;
             if (moonObj != null) moonObj.SetActive(!day);
             if (moonHalo != null) moonHalo.SetActive(!day);
             foreach (LightBase b in lights)
             {
                 if (b.l == null) continue;
-                float k = day ? 0.3f : 1f;
+                float k = Dawn ? 0.55f : day ? 0.3f : 1f;
                 if (b.fl != null) { if (!flBase.ContainsKey(b.fl)) flBase[b.fl] = b.fl.baseIntensity; b.fl.baseIntensity = flBase[b.fl] * k; }
                 else b.l.intensity = b.i * k;
             }
@@ -90,22 +101,26 @@ namespace BladePath
             {
                 if (mb.m == null) continue;
                 Color c = mb.c;
-                if (day) { if (mb.prop == ColorId) c = Color.Lerp(c, new Color(0.85f, 0.8f, 0.7f, c.a), 0.5f); else { c.r *= 0.25f; c.g *= 0.25f; c.b *= 0.25f; } }
+                if (day)
+                {
+                    float gk = Dawn ? 0.55f : 0.25f;
+                    if (mb.prop == ColorId) c = Color.Lerp(c, new Color(0.85f, 0.8f, 0.7f, c.a), Dawn ? 0.25f : 0.5f); else { c.r *= gk; c.g *= gk; c.b *= gk; }
+                }
                 mb.m.SetColor(mb.prop, c);
             }
             for (int i = 0; i < refl.Count; i++) if (refl[i] != null) refl[i].strength = reflS[i] * (day ? 0.2f : 1f);
             for (int i = 0; i < shafts.Count; i++)
-                if (shafts[i] != null) { shafts[i].color = day ? new Color(1f, 0.86f, 0.62f) : shaftC[i]; shafts[i].strength = shaftS[i] * (day ? 0.8f : 1f); }
+                if (shafts[i] != null) { shafts[i].color = Dawn ? new Color(1f, 0.74f, 0.58f) : day ? new Color(1f, 0.86f, 0.62f) : shaftC[i]; shafts[i].strength = shaftS[i] * (Dawn ? 1.4f : day ? 0.8f : 1f); }
             if (post != null)
             {
-                post.exposure = day ? 1.0f : pExp;
-                post.threshold = day ? 1.15f : pThr;
-                post.intensity = day ? 0.38f : pInt;
-                post.vignette = day ? 0.26f : pVig;
-                post.contrast = day ? 1.06f : pCon;
-                post.saturation = day ? 1.08f : pSat;
-                post.shadows = day ? new Color(0.97f, 0.99f, 1.04f) : pSh;
-                post.highlights = day ? new Color(1.04f, 1.0f, 0.95f) : pHi;
+                post.exposure = Dawn ? 1.02f : day ? 1.0f : pExp;
+                post.threshold = Dawn ? 0.95f : day ? 1.15f : pThr;
+                post.intensity = Dawn ? 0.55f : day ? 0.38f : pInt;
+                post.vignette = Dawn ? 0.34f : day ? 0.26f : pVig;
+                post.contrast = Dawn ? 1.04f : day ? 1.06f : pCon;
+                post.saturation = Dawn ? 0.98f : day ? 1.08f : pSat;
+                post.shadows = Dawn ? new Color(0.94f, 0.96f, 1.06f) : day ? new Color(0.97f, 0.99f, 1.04f) : pSh;
+                post.highlights = Dawn ? new Color(1.08f, 0.98f, 0.9f) : day ? new Color(1.04f, 1.0f, 0.95f) : pHi;
             }
             DynamicGI.UpdateEnvironment();
         }

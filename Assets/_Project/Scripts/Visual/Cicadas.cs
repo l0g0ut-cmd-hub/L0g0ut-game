@@ -12,7 +12,7 @@ namespace BladePath
     {
         public float minGap = 22f, maxGap = 50f;
         AudioSource[] voices;
-        static AudioClip abura, minmin;
+        static AudioClip abura, minmin, higurashi;
         float nextAt = -1f;
         bool wasDay;
 
@@ -26,6 +26,7 @@ namespace BladePath
             }
             if (abura == null) abura = Abura();
             if (minmin == null) minmin = Minmin();
+            if (higurashi == null) higurashi = Higurashi();
         }
 
         bool Allowed { get { Weather w = Weather.Instance; return w != null && w.Daytime && !w.Raining && !w.Snowing; } }
@@ -38,16 +39,23 @@ namespace BladePath
             wasDay = ok;
             if (!ok || voices == null || Time.time < nextAt) return;
             nextAt = Time.time + Random.Range(minGap, maxGap);
+            if (Weather.Instance.Dawn)
+            {
+                // рассвет: хигураси — «кана-кана-кана», печально, по одной, иногда отвечает вторая издалека
+                Sing(voices[0], higurashi, Random.Range(-0.8f, 0.8f), 0f);
+                if (Random.value < 0.4f) Sing(voices[1], higurashi, Random.Range(-0.8f, 0.8f), Random.Range(2.5f, 5f), 0.6f);
+                return;
+            }
             bool first = Random.value < 0.6f;
             Sing(voices[0], first ? abura : minmin, Random.Range(-0.7f, 0.7f), 0f);
             if (Random.value < 0.3f) Sing(voices[1], first ? minmin : abura, Random.Range(-0.7f, 0.7f), Random.Range(1.5f, 4f));   // подхватила вторая
         }
 
-        void Sing(AudioSource v, AudioClip c, float pan, float delay)
+        void Sing(AudioSource v, AudioClip c, float pan, float delay, float vol = 1f)
         {
             if (v == null || c == null) return;
             v.clip = c; v.panStereo = pan; v.pitch = Random.Range(0.95f, 1.05f);
-            v.volume = Random.Range(0.05f, 0.1f);
+            v.volume = Random.Range(0.05f, 0.1f) * vol;
             v.PlayDelayed(delay);
         }
 
@@ -76,6 +84,37 @@ namespace BladePath
             }
             for (int i = 0; i < n; i++) d[i] *= 0.85f / peak;
             AudioClip c = AudioClip.Create("cicada_abura", n, 1, Rate, false);
+            c.SetData(d, 0);
+            return c;
+        }
+
+        /// <summary>
+        /// Хигураси (вечерняя/рассветная цикада): серия звонких «ка-на» ~4,5 кГц, трель ~12 в секунду с мягкой атакой;
+        /// за 4 с тон медленно сползает вниз, громкость тает — характерная печальная «кана-кана-кана».
+        /// </summary>
+        static AudioClip Higurashi()
+        {
+            const float T = 4.6f;
+            int n = (int)(Rate * T);
+            float[] d = new float[n];
+            float ph = 0f, peak = 1e-4f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)Rate;
+                float u = t / T;
+                float f = Mathf.Lerp(4700f, 3900f, Mathf.Pow(u, 0.8f)) * (1f + 0.01f * Mathf.Sin(t * 2f * Mathf.PI * 6f));
+                ph += 2f * Mathf.PI * f / Rate;
+                float rate = Mathf.Lerp(13f, 10.5f, u);   // трель чуть замедляется
+                float cyc = (t * rate) % 1f;
+                float syl = cyc < 0.62f ? Mathf.Sin(Mathf.PI * cyc / 0.62f) : 0f;
+                syl = Mathf.Pow(syl, 0.7f) * ((int)(t * rate) % 2 == 0 ? 1f : 0.82f);   // «ка» громче «на»
+                float env = Mathf.SmoothStep(0f, 1f, t / 0.25f) * Mathf.Pow(1f - u, 1.4f);
+                float tone = Mathf.Sin(ph) + 0.2f * Mathf.Sin(2f * ph);
+                float v = tone * syl * env;
+                d[i] = v; peak = Mathf.Max(peak, Mathf.Abs(v));
+            }
+            for (int i = 0; i < n; i++) d[i] *= 0.8f / peak;
+            AudioClip c = AudioClip.Create("cicada_higurashi", n, 1, Rate, false);
             c.SetData(d, 0);
             return c;
         }

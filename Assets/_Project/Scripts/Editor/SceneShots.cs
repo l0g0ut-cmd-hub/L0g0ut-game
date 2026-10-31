@@ -448,6 +448,11 @@ namespace BladePath.EditorTools
                 if (dps != null) { Call(dfly.GetComponent<PetalTexture>(), "Awake"); var dem = dps.emission; dem.enabled = true; dps.Simulate(8f, true, true); }
                 Shot(cam, dir, "33_day", pos, look, cam.fieldOfView, log);
                 Shot(cam, dir, "33b_day_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);
+                dn.Apply(true, true);   // рассвет в тумане
+                foreach (FlickerLight fl in UnityEngine.Object.FindObjectsByType<FlickerLight>(FindObjectsSortMode.None)) Call(fl, "Update");
+                Shot(cam, dir, "34_dawn", pos, look, cam.fieldOfView, log);
+                Shot(cam, dir, "34b_dawn_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);
+                dn.Apply(true);
                 if (dps != null)
                 {
                     // стрекоза крупно: ближайшая частица
