@@ -25,6 +25,9 @@ namespace BladePath
         public bool Foggy { get; private set; }
         [Range(0f, 1f)] public float fogChance = 0.3f;
         ParticleSystem mistPs; float mistRate0 = -1f; Color mistCol0;
+        /// <summary>Погода меняется по ходу боя: ясной ночью иногда через полминуты-минуту накрывает дождь (с громом) или начинается снег.</summary>
+        [Range(0f, 1f)] public float changeChance = 0.3f;
+        float changeAt = -1f; bool changeToSnow;
         [Range(0f, 1f)] public float dawnShare = 0.35f;
         float fogDensBase = 0.05f;
         ParticleSystem snow;
@@ -84,6 +87,8 @@ namespace BladePath
             if (Snowing) StartSnow(); else StopSnow();
             Foggy = !Daytime && !Raining && !Snowing && Random.value < fogChance;
             if (Foggy) StartFog(); else StopFog();
+            changeAt = !Daytime && !Raining && !Snowing && Random.value < changeChance ? Time.time + Random.Range(25f, 55f) : -1f;
+            changeToSnow = Random.value < 0.4f;
             if (Dawn) EnsureBreaths();   // утро холодное — изо рта пар
             Critters(!Raining && !Snowing && !Daytime);
             DayCritters(Daytime);
@@ -379,6 +384,15 @@ namespace BladePath
             // снег оседает на плечах и шлемах за полминуты боя; пар дыхания раз в пару секунд
             snowK = Mathf.MoveTowards(snowK, Snowing ? 0.85f : 0f, Time.deltaTime / (Snowing ? 30f : 1f));
             Shader.SetGlobalFloat(SnowId, snowK);
+            if (changeAt > 0f && Time.time >= changeAt && !Raining && !Snowing && !Daytime)
+            {
+                // смена погоды посреди боя: туман рассеивается, светлячки прячутся, дальше — дождь с громом или первый снег
+                changeAt = -1f;
+                if (Foggy) { Foggy = false; StopFog(); }
+                Critters(false);
+                if (changeToSnow) { Snowing = true; StartSnow(); }
+                else { Raining = true; StartRain(); nextFlashAt = Time.time + Random.Range(0.5f, 2f); }
+            }
             if ((Snowing || Dawn) && Time.time >= nextBreathAt)
             {
                 nextBreathAt = Time.time + Random.Range(1.6f, 2.6f);
