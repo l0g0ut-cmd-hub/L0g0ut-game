@@ -12,6 +12,8 @@ namespace BladePath
     {
         struct Drift { public Transform t; public Vector3 full; }
         readonly List<Drift> drifts = new List<Drift>();
+        readonly List<Drift> icicles = new List<Drift>();   // сосульки со свеса крыши храма и колпаков стен
+        static Mesh cone;
         Transform root;
         float shown = -1f;
         static readonly int SnowId = Shader.PropertyToID("_BP_Snow");
@@ -31,6 +33,43 @@ namespace BladePath
                 Vector3 f = drifts[i].full;
                 drifts[i].t.localScale = new Vector3(f.x * (0.5f + 0.5f * w), Mathf.Max(0.001f, f.y * h), f.z * (0.4f + 0.6f * w));
             }
+            // сосульки нарастают позже — когда снег уже лёг и подтаивает у тёплой крыши
+            float ic = Mathf.SmoothStep(0f, 1f, (k - 0.45f) / 0.55f);
+            for (int i = 0; i < icicles.Count; i++)
+            {
+                Vector3 f = icicles[i].full;
+                icicles[i].t.gameObject.SetActive(ic > 0.02f);
+                icicles[i].t.localScale = new Vector3(f.x * (0.6f + 0.4f * ic), Mathf.Max(0.001f, f.y * ic), f.z * (0.6f + 0.4f * ic));
+            }
+        }
+
+        /// <summary>Конус-сосулька: основание вверху (y = 0), остриё внизу (y = −1), 6 граней.</summary>
+        static Mesh Cone()
+        {
+            const int sides = 6;
+            Vector3[] v = new Vector3[sides + 2]; int[] t = new int[sides * 6];
+            for (int i = 0; i < sides; i++) { float a = i * Mathf.PI * 2f / sides; v[i] = new Vector3(Mathf.Cos(a) * 0.5f, 0f, Mathf.Sin(a) * 0.5f); }
+            v[sides] = new Vector3(0f, -1f, 0f); v[sides + 1] = Vector3.zero;
+            for (int i = 0; i < sides; i++)
+            {
+                int j = (i + 1) % sides;
+                t[i * 6] = i; t[i * 6 + 1] = j; t[i * 6 + 2] = sides;            // бок
+                t[i * 6 + 3] = j; t[i * 6 + 4] = i; t[i * 6 + 5] = sides + 1;    // крышка
+            }
+            Mesh m = new Mesh { name = "Icicle", vertices = v, triangles = t };
+            m.RecalculateNormals(); m.RecalculateBounds();
+            return m;
+        }
+
+        void Icicle(Material m, Vector3 top, float len, float thick)
+        {
+            GameObject g = new GameObject("Icicle");
+            g.transform.SetParent(root, false); g.transform.position = top;
+            g.transform.rotation = Quaternion.Euler(0f, Random.Range(0f, 60f), 0f);
+            g.AddComponent<MeshFilter>().sharedMesh = cone;
+            MeshRenderer mr = g.AddComponent<MeshRenderer>(); mr.sharedMaterial = m;
+            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            icicles.Add(new Drift { t = g.transform, full = new Vector3(thick, len, thick) });
         }
 
         void Build()
@@ -48,6 +87,15 @@ namespace BladePath
             for (int side = -1; side <= 1; side += 2)
                 for (float x = 1.7f; x < 6.1f; x += 0.7f + 0.35f * R())
                     Add(m, new Vector3(side * x, -7.32f + 0.06f * R()), 0.85f + 0.5f * R(), 0.14f + 0.08f * R() + (x > 5.3f ? 0.06f : 0f), 0.5f + 0.2f * R(), 90f);
+            // сосульки: свес крыши храма (кромка y ≈ 2,44, z ≈ 3,92; углы загнуты — только прямой участок) и колпаки боковых стен
+            if (cone == null) cone = Cone();
+            Material ice = new Material(Shader.Find("Standard")) { name = "Ice", color = new Color(0.72f, 0.8f, 0.9f) };
+            ice.SetFloat("_Glossiness", 0.9f);
+            for (float x = -4.5f; x < 2.9f; x += 0.16f + 0.3f * R())
+                if (R() < 0.75f) Icicle(ice, new Vector3(x, 2.45f, 3.93f), 0.08f + 0.32f * R() * R() + (R() < 0.12f ? 0.25f : 0f), 0.025f + 0.025f * R());
+            for (int side = -1; side <= 1; side += 2)
+                for (float z = -3.2f; z < 8.2f; z += 0.25f + 0.4f * R())
+                    if (R() < 0.6f) Icicle(ice, new Vector3(side * (6.4f - 0.29f), 1.1f, z), 0.05f + 0.16f * R() * R(), 0.02f + 0.015f * R());
             // к ногам жаровен ветер наметает с наветренной стороны
             foreach (float bx in new[] { -3.2f, 3.2f })
                 for (int i = 0; i < 3; i++)
