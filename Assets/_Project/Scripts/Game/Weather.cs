@@ -48,7 +48,7 @@ namespace BladePath
         Material skyMat;
         float skyExpBase;
 
-        void Awake() { Instance = this; if (GetComponent<SnowDrifts>() == null) gameObject.AddComponent<SnowDrifts>(); }   // сугробы растут по _BP_Snow
+        void Awake() { Instance = this; GlowSprite.Haze = 1f; if (GetComponent<SnowDrifts>() == null) gameObject.AddComponent<SnowDrifts>(); }   // сугробы растут по _BP_Snow
 
         void Start()
         {
@@ -443,6 +443,8 @@ namespace BladePath
                 nextBreathAt = Time.time + Random.Range(1.6f, 2.6f);
                 foreach (ParticleSystem b in breaths) if (b != null && b.transform.parent != null && b.transform.parent.gameObject.activeInHierarchy) b.Play();
             }
+            float haze = Foggy ? 1.55f : Raining ? 1.3f : Snowing ? 1.2f : 1f;
+            GlowSprite.Haze = Mathf.MoveTowards(GlowSprite.Haze, haze, Time.deltaTime * 0.2f);
             for (int i = 0; i < steams.Count; i++)
                 if (steams[i] != null) { var em = steams[i].emission; bool on = Snowing && snowK > 0.25f; if (em.enabled != on) em.enabled = on; }
             if (!Raining) { Restore(); return; }

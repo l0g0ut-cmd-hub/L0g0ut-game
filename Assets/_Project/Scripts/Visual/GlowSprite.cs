@@ -7,6 +7,8 @@ namespace BladePath
     /// </summary>
     public class GlowSprite : MonoBehaviour
     {
+        /// <summary>Влажность воздуха (Weather): в тумане, дождь и снегопад ореолы фонарей и огня шире — свет рассеивается.</summary>
+        public static float Haze = 1f;
         public float flicker = 0.12f;
         public float speed = 9f;
         Vector3 baseScale;
@@ -19,12 +21,13 @@ namespace BladePath
             Camera c = Camera.main;
             if (c == null) return;
             transform.rotation = Quaternion.LookRotation(transform.position - c.transform.position, c.transform.up);
+            float k = 1f;
             if (flicker > 0f)
             {
                 float t = Time.time * speed + seed;
-                float k = 1f + flicker * (Mathf.PerlinNoise(t, seed) - 0.5f) * 2f;
-                transform.localScale = baseScale * k;
+                k = 1f + flicker * (Mathf.PerlinNoise(t, seed) - 0.5f) * 2f;
             }
+            if (flicker > 0f || Haze != 1f) transform.localScale = baseScale * (k * Haze);
         }
     }
 }
