@@ -137,6 +137,7 @@ namespace BladePath.EditorTools
                     if (shoji.walker != null) shoji.walker.enabled = false;
                 }
                 ReflectShot(cam, dir, "37_reflect_night", log);
+                Shot(cam, dir, "46_rainchain", new Vector3(-3.4f, 1.5f, 2.6f), new Vector3(-4.3f, 1.25f, 3.96f), 45f, log);   // цепь-водосток и основания колонн
                 // храмовый кот на веранде: сидит, вылизывает лапу, трёт морду, идёт (строится в игре при запуске — здесь вручную)
                 TempleCat cat = UnityEngine.Object.FindFirstObjectByType<TempleCat>();
                 if (cat != null)
