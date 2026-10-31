@@ -420,7 +420,7 @@ namespace BladePath
             if (thunderAt > 0f && Time.unscaledTime >= thunderAt)
             {
                 thunderAt = -1f;
-                if (thunderAudio != null) { thunderAudio.pitch = Random.Range(0.8f, 1.1f); thunderAudio.PlayOneShot(thunder, 0.9f); }
+                if (thunderAudio != null) { thunderAudio.pitch = Random.Range(0.8f, 1.1f); thunderAudio.PlayOneShot(thunder, 0.9f); Birds.Startle(); }
                 Haptics.Pulse(30);
             }
             float t = Time.unscaledTime - flashT;

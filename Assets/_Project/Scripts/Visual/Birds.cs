@@ -34,6 +34,9 @@ namespace BladePath
         Bird crow, heron;
         readonly List<Bird> sparrows = new List<Bird>(), geese = new List<Bird>(), bats = new List<Bird>();
         float crowNext, geeseNext, heronNext, sparrowBack, chirpNext;
+        static int startle; int seenStartle; bool startled;
+        /// <summary>Громкое во дворе (добивание, сломанная стойка, раскат грома): сидящие птицы разом срываются.</summary>
+        public static void Startle() { startle++; }
 
         static readonly Vector3[] Perches =
         {
@@ -128,6 +131,7 @@ namespace BladePath
         void Update()
         {
             float dt = Time.deltaTime, now = Time.time;
+            startled = startle != seenStartle; seenStartle = startle;
             UpdateCrow(dt, now);
             UpdateSparrows(dt, now);
             UpdateGeese(dt, now);
@@ -216,8 +220,9 @@ namespace BladePath
                     Pose(b, dt, 0f, true);
                     b.root.position = b.pos; b.body.localPosition = Vector3.zero;
                     if (Random.value < dt * 0.08f) Play(caw, b.pos, 0.3f, Random.Range(0.9f, 1.05f));
-                    if (b.timer <= 0f || NearestFighter(b.perch) < 2.2f || Wet)
+                    if (b.timer <= 0f || NearestFighter(b.perch) < 2.2f || Wet || startled)
                     {
+                        if (startled) Play(caw, b.pos, 0.4f, 1.12f);   // испуганное «кар!»
                         b.state = State.Takeoff; b.t = 0f; b.from = b.pos;
                         float side = Random.value < 0.5f ? -1f : 1f;
                         b.to = new Vector3(side * 18f, b.pos.y + Random.Range(6f, 10f), b.pos.z + Random.Range(6f, 14f));
@@ -276,7 +281,7 @@ namespace BladePath
                         b.root.position = b.pos;
                         b.root.rotation = Quaternion.Euler(-10f + 40f * peck, b.heading, 0f);
                         Pose(b, dt, 0f, true); b.root.position = b.pos; b.body.localPosition = Vector3.zero;
-                        if (NearestFighter(b.pos) < 2.0f || !day)
+                        if (NearestFighter(b.pos) < 2.0f || !day || startled)
                         {
                             // вспорхнули от шагов
                             b.state = State.Takeoff; b.t = 0f; b.from = b.pos;

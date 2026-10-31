@@ -350,7 +350,7 @@ namespace BladePath
                 if (!EnemyEnraged && enemy != null && !enemy.Dead && Hp01(enemy) < 0.33f && Hp(enemy) > 0f && EnemyAI.Difficulty > 0)
                 {
                     // враг впадает в ярость: рёв, багровая аура и глаза, удары чаще (EnemyAI)
-                    EnemyEnraged = true;
+                    EnemyEnraged = true; Birds.Startle();
                     Announce("ЯРОСТЬ", new Color(1f, 0.22f, 0.15f));
                     if (Juice.Instance != null) { Juice.Instance.Growl(0.8f); Juice.Instance.SetAuraColor(enemy, new Color(1f, 0.12f, 0.06f)); Juice.Instance.Taiko(1f, 0.8f); }
                     if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.05f);
@@ -510,6 +510,7 @@ namespace BladePath
             bool plunge = !a.Grounded;   // удар в прыжке — добивание с прыжка
             if (!t.Grounded || a.Dead || t.Dead || Reviving(t)) return false;
             DeathblowLethal = Marks(t) <= 1;
+            Birds.Startle();   // птицы срываются с тории и крыши
             if (plunge) { db = PlungeKind; dbFrom = a.transform.position; }
             else
             {
