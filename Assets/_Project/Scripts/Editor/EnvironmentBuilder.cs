@@ -493,7 +493,8 @@ namespace BladePath.EditorTools
                 CharacterVisuals.Part(d, "BannerPole" + side, PrimitiveType.Cylinder, new Vector3(x, 1.5f, 0.5f), Vector3.zero, new Vector3(0.05f, 1.5f, 0.05f), look.woodDark);
                 EnvMesh.Box(d, "BannerCross" + side, new Vector3(x - 0.2f * side, 2.88f, 0.5f), Vector3.zero, new Vector3(0.5f, 0.04f, 0.04f), look.woodDark, 0.5f, true);
                 Transform bp = SwayPivot(d, "BannerPivot" + side, new Vector3(x - 0.22f * side, 2.86f, 0.5f), 6f);
-                EnvMesh.Box(bp, "Banner" + side, new Vector3(0f, -0.76f, 0f), Vector3.zero, new Vector3(0.42f, 1.5f, 0.01f), look.banner, 0f);
+                Material nb = side < 0 ? (look.nobori1 != null ? look.nobori1 : look.banner) : (look.nobori2 != null ? look.nobori2 : look.banner);
+                EnvMesh.Box(bp, "Banner" + side, new Vector3(0f, -0.76f, 0f), Vector3.zero, new Vector3(0.42f, 1.5f, 0.01f), nb, 0f);
             }
         }
 
@@ -913,6 +914,16 @@ namespace BladePath.EditorTools
             EnvMesh.Box(g, "Plaque", new Vector3(0f, 2.33f, zf + 0.17f), Vector3.zero, new Vector3(0.6f, 0.18f, 0.04f), look.woodDark, 1f);
             EnvMesh.CurvedHip(g, "GateRoof", new Vector3(0f, 2.6f, zf - 0.38f), gate + 0.75f, 0.85f, 0.75f, 0.18f, look.roof, look.woodDark, 1.2f);
             EnvMesh.Box(g, "Threshold", new Vector3(0f, 0.05f, zf), Vector3.zero, new Vector3(gate * 2f, 0.1f, 0.34f), look.stoneBlock, 1f);
+            // пара нобори у ворот изнутри двора (колышутся на ветру)
+            for (int side = -1; side <= 1; side += 2)
+            {
+                float nx = 2.35f * side;
+                CharacterVisuals.Part(g, "NoboriPole" + side, PrimitiveType.Cylinder, new Vector3(nx, 1.6f, zf + 0.55f), Vector3.zero, new Vector3(0.05f, 1.6f, 0.05f), look.woodDark);
+                EnvMesh.Box(g, "NoboriCross" + side, new Vector3(nx - 0.22f * side, 3.08f, zf + 0.55f), Vector3.zero, new Vector3(0.52f, 0.04f, 0.04f), look.woodDark, 0.5f, true);
+                Transform np = SwayPivot(g, "NoboriPivot" + side, new Vector3(nx - 0.24f * side, 3.06f, zf + 0.55f), 6f);
+                Material nm2 = side < 0 ? (look.nobori2 != null ? look.nobori2 : look.banner) : (look.nobori1 != null ? look.nobori1 : look.banner);
+                EnvMesh.Box(np, "Nobori" + side, new Vector3(0f, -0.82f, 0f), Vector3.zero, new Vector3(0.44f, 1.62f, 0.01f), nm2, 0f);
+            }
             // бумажные фонари-тётин под балкой ворот (изнутри двора): ворота читаются ночью тёплым светом, без лишних источников
             for (int side = -1; side <= 1; side += 2)
             {

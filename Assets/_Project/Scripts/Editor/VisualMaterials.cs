@@ -11,7 +11,7 @@ namespace BladePath.EditorTools
         public Material heroArmor, enemyArmor, cloth, skin, hair, lacquer, bronze, steel, handle;
         public Material flesh, tooth, maw, voidBlack, deadSkin, ember, tentacle, ronin;
         public Material stone, stoneDark, flame, moon, petal;
-        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, skyDusk, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage, forestFloor, aoStrip, aoBlob, shojiMonk, shojiWalker, karesansui, pondWater, lotus, bellBronze, rock, flameSheet, smoke, koi;
+        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, skyDusk, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage, forestFloor, aoStrip, aoBlob, shojiMonk, shojiWalker, karesansui, pondWater, lotus, bellBronze, rock, flameSheet, smoke, koi, nobori1, nobori2;
     }
 
     /// <summary>
@@ -100,6 +100,9 @@ namespace BladePath.EditorTools
             }
             l.smoke = AlphaParticle("Fire_Smoke", halo, new Color(0.5f, 0.5f, 0.5f, 0.5f));
             l.banner = Cutout("Env_Banner", "banner.png");
+            // нобори с кандзи (tools/texgen/nobori.py): «武運長久» и «八幡大菩薩»
+            if (AssetDatabase.LoadAssetAtPath<Texture2D>(TexFolder + "nobori_buun.png") != null) l.nobori1 = Cutout("Env_Nobori1", "nobori_buun.png");
+            if (AssetDatabase.LoadAssetAtPath<Texture2D>(TexFolder + "nobori_hachiman.png") != null) l.nobori2 = Cutout("Env_Nobori2", "nobori_hachiman.png");
             l.puddle = Puddle();
             l.tsuka = Textured("Katana_Tsuka", "tsuka_albedo.png", null, Vector2.one, Color.white, 0f, 0.3f);
             l.iron = Solid("Katana_Iron", new Color(0.09f, 0.08f, 0.08f), 0.7f, 0.45f);
