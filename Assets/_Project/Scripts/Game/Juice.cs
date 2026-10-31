@@ -750,7 +750,7 @@ namespace BladePath
             Play(clang, 1f, Random.Range(0.75f, 0.9f));
             Sparks(pos, Vector3.up, 34, 1.1f);
             Sparks(pos, Random.onUnitSphere, 22, 1f);
-            Flash(pos, 0.32f, new Color(1f, 0.85f, 0.55f, 0.85f), 0.10f, true);
+            Flash(pos, 0.22f, new Color(1f, 0.8f, 0.5f, 0.85f), 0.09f, true);   // компактная: ядро не заливает полкадра белым (bloom и так расширит)
         }
 
         /// <summary>Отражение (парирование): самая яркая вспышка в игре — блик, кольцо волны, веер искр от клинка.</summary>
@@ -760,7 +760,7 @@ namespace BladePath
             Play(clang, 0.6f, Random.Range(1.6f, 1.75f));   // высокий призвук «дзинь»
             Sparks(pos, normal.sqrMagnitude > 1e-4f ? normal : Vector3.up, 46, 1.35f);
             Sparks(pos, Vector3.up, 20, 0.9f);
-            Flash(pos, 0.42f, new Color(0.85f, 0.95f, 1f, 0.9f), 0.13f, true);
+            Flash(pos, 0.28f, new Color(1f, 0.92f, 0.78f, 0.9f), 0.12f, true);   // искра, а не белое пятно: мельче ядро, лучи-блик остаются
             Shockwave(pos, 0.7f, new Color(0.6f, 0.85f, 1f, 0.22f), 0.16f);   // едва заметная волна воздуха, не «магическое кольцо»
         }
 
