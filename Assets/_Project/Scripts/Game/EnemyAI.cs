@@ -74,7 +74,9 @@ namespace BladePath
                 float pH = 0.16f + Ladder.Current.heavyBias * 0.5f, pW = 0.12f + Ladder.Current.dashBias * 0.5f;
                 if (Level < 1) { pH *= 0.4f; pW *= 0.4f; }
                 float r = Random.value;
-                self.weapon.stance = r < pH ? 1 : (r < pH + pW ? 2 : 0);
+                int ns = r < pH ? 1 : (r < pH + pW ? 2 : 0);
+                if (ns != self.weapon.stance && Juice.Instance != null) Juice.Instance.Regrip();
+                self.weapon.stance = ns;
             }
 
             if (feintSwing >= 0 && self.weapon != null)

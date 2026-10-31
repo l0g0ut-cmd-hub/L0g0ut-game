@@ -1212,6 +1212,34 @@ namespace BladePath
             return Make("gulp", d);
         }
 
+        AudioClip regrip;
+        /// <summary>Враг перехватил меч (смена стойки): шорох рукава и сухой щелчок цубы — тихо, но слышно, что он что-то задумал.</summary>
+        public void Regrip()
+        {
+            if (regrip == null) regrip = Regrip_();
+            Play(regrip, 0.35f, Random.Range(0.92f, 1.08f));
+        }
+        static AudioClip Regrip_()
+        {
+            int n = (int)(Rate * 0.45f);
+            float[] d = new float[n];
+            System.Random rnd = new System.Random(61);
+            float lp = 0f, bp = 0f, lo = 0f, peak = 1e-4f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)Rate;
+                float x = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                lp += 0.25f * (x - lp);
+                float swish = (x - lp) * Mathf.Sin(Mathf.PI * Mathf.Clamp01(t / 0.28f)) * 0.35f;   // рукав
+                float c = t - 0.24f, click = 0f;
+                if (c > 0f) click = (Mathf.Sin(2f * Mathf.PI * 2350f * c) + 0.6f * Mathf.Sin(2f * Mathf.PI * 3720f * c)) * Mathf.Exp(-c * 140f) + x * Mathf.Exp(-c * 900f) * 0.8f;
+                float v = swish + click;
+                d[i] = v; peak = Mathf.Max(peak, Mathf.Abs(v));
+            }
+            for (int i = 0; i < n; i++) d[i] *= 0.85f / peak;
+            return Make("regrip", d);
+        }
+
         AudioClip gulp;
         /// <summary>Тыква подействовала: тёплые искры поднимаются от тела, мягкое золотое сияние, глоток и звон.</summary>
         public void HealFx(FighterController f)
