@@ -68,7 +68,7 @@ ms_m = np.where(is_hira, 0.95 - 0.22 * ham, np.where(face == 0, 0.9, 0.95))
 ms_s = np.where(is_hira, 0.88 - 0.30 * ham + 0.04 * hada, np.where(face == 0, 0.7, 0.72 + 0.08 * scratch))
 
 os.makedirs(OUT, exist_ok=True)
-Image.fromarray((albedo * 255).astype(np.uint8), "RGB").save(os.path.join(OUT, "katana_blade_albedo.png"))
-ms = np.stack([ms_m, ms_m, ms_m, ms_s], -1)
+Image.fromarray((albedo[::-1] * 255).astype(np.uint8), "RGB").save(os.path.join(OUT, "katana_blade_albedo.png"))
+ms = np.stack([ms_m, ms_m, ms_m, ms_s], -1)[::-1]   # строка 0 PNG — верх текстуры = v=1 (остриё) в Unity
 Image.fromarray((np.clip(ms, 0, 1) * 255).astype(np.uint8), "RGBA").save(os.path.join(OUT, "katana_blade_ms.png"))
 print("ok")

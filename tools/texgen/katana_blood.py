@@ -51,7 +51,8 @@ for i in range(46):
 m -= np.clip((V - 0.93) / 0.07, 0, 1) * 0.22
 
 m = ((m - m.min()) / (m.max() - m.min())) ** 1.4   # первые попадания уже видны: «низких» мест больше
-img = Image.fromarray((m * 255).astype(np.uint8), "L").filter(ImageFilter.GaussianBlur(0.6))
+# строка 0 PNG = v=1 (остриё) в Unity — переворачиваем, чтобы «острие» маски легло на остриё клинка
+img = Image.fromarray((m[::-1] * 255).astype(np.uint8), "L").filter(ImageFilter.GaussianBlur(0.6))
 os.makedirs(OUT, exist_ok=True)
 img.save(os.path.join(OUT, "katana_blood_mask.png"))
 print("katana_blood_mask.png", img.size, "mean", round(float(m.mean()), 3))

@@ -109,6 +109,7 @@ namespace BladePath.EditorTools
                     Shot(cam, dir, "7_grip", hp + pt.forward * 0.75f - pt.right * 0.55f + Vector3.up * 0.15f, hp, 34f, log);
                     Shot(cam, dir, "8_grip_top", hp + pt.forward * 0.35f + pt.right * 0.45f + Vector3.up * 0.65f, hp, 34f, log);
                     UnityEngine.Object.DestroyImmediate(glint);
+                    GameObject gq = GameObject.Find("BladeGlint"); if (gq != null) UnityEngine.Object.DestroyImmediate(gq);   // квад блика (в редакторе OnDestroy не зовётся)
                     BladeBloodShot(cam, dir, player, log);
                 }
                 // раскадровка ударов: 8 фаз сбоку (как камера боя) — видно замах, удар, проводку и возврат
