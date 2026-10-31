@@ -3,95 +3,88 @@ using UnityEngine;
 namespace BladePath
 {
     /// <summary>
-    /// Летний хор цикад (как в «Евангелионе»): в солнечный день над двором стоит сплошное стереофоническое «дзи-и-и»
-    /// абурадзэми, сквозь которое волнами пробиваются ритмичные «ми-ин, мин-мин-мин» минминдзэми; громкость хора
-    /// медленно дышит. Раз в 25–45 с поверх — ближняя минминдзэми с одной стороны. На рассвете — только хигураси
-    /// («кана-кана-кана»), в дождь, снег и ночью цикады молчат (ночью — сверчки, Juice).
-    /// Синтез по устройству насекомого, а не тоном (тон звучал птицей): цикада трещит пластинками-тимбалами — сотни
-    /// знакопеременных щелчков в секунду, каждый звенит в резонаторе брюшка 3,5–6 кГц. Хор — 10 абурадзэми и 6 минминдзэми
-    /// с разной высотой, громкостью (дальностью) и панорамой, петля 12 с без шва.
+    /// Цикады солнечного дня (как в «Евангелионе»), но живыми периодами: одна запела — «дзи-и-и» абурадзэми или
+    /// «ми-ин, мин-мин-мин… ми-и-и» минминдзэми, — иногда подхватила вторая, потом смолкли, пауза, снова. Изредка —
+    /// долгое затишье. Одновременно не больше двух-трёх голосов, ближние громче, дальние тише, с разных сторон.
+    /// На рассвете — хигураси («кана-кана-кана»); в дождь, снег и ночью цикады молчат (ночью — сверчки, Juice).
+    /// Синтез по устройству насекомого (тон звучал птицей): цикада трещит пластинками-тимбалами — сотни знакопеременных
+    /// щелчков в секунду, каждый звенит в резонаторе брюшка 3,5–6 кГц; у каждой песни — нарастание, дрожь и спад.
     /// Дальний план (раз в 40–75 с, в ясную погоду): днём над рощей кричит коршун тоби, ночью — неясыть; тихо, с эхом.
     /// </summary>
     public class Cicadas : MonoBehaviour
     {
-        public float minGap = 25f, maxGap = 45f;
-        public float chorusVolume = 0.3f;
-        AudioSource chorus, near, dawnSrc, far;
-        static AudioClip chorusClip, nearClip, higurashi, tobi, owl;
-        static float[] chorusData;            // хор считается в фоновом потоке (~0,5 с) — без рывка при загрузке арены
-        static volatile bool chorusReady;
-        static bool chorusStarted;
-        float nextAt = -1f, farAt, chorusK, swellSeed;
+        AudioSource[] voices;
+        AudioSource far;
+        static AudioClip[] abura, minmin;
+        static AudioClip higurashi, tobi, owl;
+        float nextAt = -1f, farAt;
         bool wasOn;
+        int last = -1;
 
         void Start()
         {
-            chorus = Src(true); near = Src(false); dawnSrc = Src(false); far = Src(false);
-            if (chorusClip == null && !chorusStarted)
-            {
-                chorusStarted = true;
-                System.Threading.ThreadPool.QueueUserWorkItem(_ => { chorusData = ChorusData(); chorusReady = true; });
-            }
-            if (nearClip == null) nearClip = NearMinmin();
+            voices = new AudioSource[3];
+            for (int i = 0; i < voices.Length; i++) voices[i] = Src();
+            far = Src();
+            if (abura == null) abura = new[] { AburaCall(71, 7.5f, 4700f, 185f), AburaCall(72, 10f, 5100f, 205f), AburaCall(73, 5.5f, 4400f, 170f) };
+            if (minmin == null) minmin = new[] { MinminCall(57, 9, 1f), MinminCall(58, 6, 1.04f), MinminCall(59, 11, 0.96f) };
             if (higurashi == null) higurashi = Higurashi();
             if (tobi == null) tobi = Tobi();
             if (owl == null) owl = Owl();
-            chorus.clip = chorusClip; chorus.volume = 0f;
-            swellSeed = Random.Range(0f, 100f);
             farAt = Time.time + Random.Range(10f, 22f);
         }
 
-        AudioSource Src(bool loop)
+        AudioSource Src()
         {
             AudioSource s = gameObject.AddComponent<AudioSource>();
-            s.playOnAwake = false; s.spatialBlend = 0f; s.loop = loop;
+            s.playOnAwake = false; s.spatialBlend = 0f; s.loop = false;
             return s;
+        }
+
+        AudioSource FreeVoice()
+        {
+            foreach (AudioSource v in voices) if (v != null && !v.isPlaying) return v;
+            return null;
         }
 
         void Update()
         {
             Far();
-            if (chorusClip == null && chorusReady && chorusData != null)
-            {
-                chorusClip = AudioClip.Create("cicada_chorus", chorusData.Length / 2, 2, Rate, false);
-                chorusClip.SetData(chorusData, 0);
-                chorusData = null;
-            }
-            if (chorus != null && chorus.clip == null && chorusClip != null) chorus.clip = chorusClip;
             Weather w = Weather.Instance;
-            bool clear = w != null && w.Daytime && !w.Raining && !w.Snowing;
-            bool summer = clear && !w.Dawn;   // хор — только в солнечный день
-            // хор: плавно вступает с новым днём (ещё в заставке) и стихает в непогоду; громкость медленно «дышит»
-            chorusK = Mathf.MoveTowards(chorusK, summer ? 1f : 0f, Time.unscaledDeltaTime / (summer ? 2.5f : 1f));
-            if (chorus != null)
-            {
-                if (chorusK > 0.001f && !chorus.isPlaying && chorus.clip != null) { chorus.time = Random.Range(0f, 11f); chorus.Play(); }
-                if (chorusK <= 0.001f && chorus.isPlaying) chorus.Stop();
-                float swell = 0.62f + 0.38f * Mathf.PerlinNoise(swellSeed, Time.time * 0.11f);
-                chorus.volume = chorusVolume * chorusK * swell;
-            }
-            bool on = clear;
-            if (on && !wasOn) nextAt = Time.time + Random.Range(4f, 9f);
-            if (!on && wasOn) { if (near != null) near.Stop(); if (dawnSrc != null) dawnSrc.Stop(); }
+            bool on = w != null && w.Daytime && !w.Raining && !w.Snowing;
+            if (on && !wasOn) nextAt = Time.time + Random.Range(1.5f, 4f);   // наступил день — первая запоёт почти сразу
+            if (!on && wasOn) foreach (AudioSource v in voices) if (v != null) v.Stop();
             wasOn = on;
-            if (!on || Time.time < nextAt) return;
+            if (!on || voices == null || Time.time < nextAt) return;
+            AudioSource src = FreeVoice();
+            if (src == null) { nextAt = Time.time + 1f; return; }
             if (w.Dawn)
             {
                 // рассвет: хигураси — по одной, печально; иногда отвечает вторая издалека
-                nextAt = Time.time + Random.Range(10f, 22f);
-                Play(dawnSrc, higurashi, Random.Range(-0.8f, 0.8f), Random.Range(0.3f, 0.42f), 0f);
-                if (Random.value < 0.4f) Play(near, higurashi, Random.Range(-0.8f, 0.8f), Random.Range(0.14f, 0.2f), Random.Range(2.5f, 5f));
+                bool farOne = Random.value < 0.45f;
+                Play(src, higurashi, Random.Range(-0.8f, 0.8f), farOne ? Random.Range(0.14f, 0.2f) : Random.Range(0.3f, 0.4f));
+                nextAt = Time.time + (Random.value < 0.35f ? Random.Range(2.5f, 5f) : higurashi.length + Random.Range(5f, 14f));
                 return;
             }
-            nextAt = Time.time + Random.Range(minGap, maxGap);
-            Play(near, nearClip, Random.Range(-0.75f, 0.75f), Random.Range(0.3f, 0.42f), 0f);   // ближняя минминдзэми
+            // кто поёт: чередуем виды, чтобы не тянулось одно и то же
+            bool ab = last == 1 ? Random.value < 0.7f : last == 0 ? Random.value < 0.35f : Random.value < 0.55f;
+            last = ab ? 0 : 1;
+            AudioClip[] set = ab ? abura : minmin;
+            AudioClip c = set[Random.Range(0, set.Length)];
+            bool near = Random.value < 0.35f;   // ближняя — громко и ярко, дальние — тише
+            Play(src, c, Random.Range(-0.85f, 0.85f), near ? Random.Range(0.32f, 0.42f) : Random.Range(0.12f, 0.22f));
+            // дальше: иногда подхватывает вторая, обычно — дослушали и пауза, изредка — долгое затишье
+            float r = Random.value;
+            if (r < 0.3f) nextAt = Time.time + Random.Range(1.5f, 4f);
+            else if (r < 0.82f) nextAt = Time.time + c.length * Random.Range(0.85f, 1f) + Random.Range(3f, 9f);
+            else nextAt = Time.time + c.length + Random.Range(12f, 22f);
         }
 
-        static void Play(AudioSource s, AudioClip c, float pan, float vol, float delay)
+        static void Play(AudioSource s, AudioClip c, float pan, float vol)
         {
             if (s == null || c == null) return;
             s.clip = c; s.panStereo = pan; s.pitch = Random.Range(0.96f, 1.04f); s.volume = vol;
-            s.PlayDelayed(delay);
+            s.Play();
         }
 
         /// <summary>Дальний голос: коршун днём (не на рассвете), неясыть ночью; в дождь и снег — тишина.</summary>
@@ -109,34 +102,8 @@ namespace BladePath
         }
 
         const int Rate = 22050;
-        const float Loop = 12f;
 
         // ---------- синтез цикад: щелчки тимбала → резонатор ----------
-
-        /// <summary>
-        /// Гладкая периодическая (период — петля) кривая 0…1: сумма гармоник со случайными фазами. Фазы — из общего генератора
-        /// (System.Random с соседними зёрнами выдаёт почти одинаковые первые числа — все голоса вступали разом). Считается
-        /// раз в 32 сэмпла с линейной интерполяцией: огибающая медленная, а синусов на весь хор иначе — десятки миллионов.
-        /// </summary>
-        static float[] Periodic(int n, System.Random r, int kmax)
-        {
-            float[] ph = new float[kmax];
-            for (int k = 0; k < kmax; k++) ph[k] = (float)r.NextDouble() * 6.2832f;
-            float tot = 0f;
-            for (int k = 1; k <= kmax; k++) tot += 1f / k;
-            const int step = 32;
-            int cn = n / step + 2;
-            float[] coarse = new float[cn];
-            for (int j = 0; j < cn; j++)
-            {
-                float a = 0f, t = j * step / (float)Rate;
-                for (int k = 1; k <= kmax; k++) a += Mathf.Sin(6.2832f * k * t / Loop + ph[k - 1]) / k;
-                coarse[j] = a / tot * 0.5f + 0.5f;
-            }
-            float[] o = new float[n];
-            for (int i = 0; i < n; i++) { int j = i / step; float f = (i - j * step) / (float)step; o[i] = coarse[j] + (coarse[j + 1] - coarse[j]) * f; }
-            return o;
-        }
 
         /// <summary>
         /// Щелчки тимбала: знакопеременные импульсы (выгиб — прогиб пластинки) с частотой rate ± jitter, сила — огибающая env
@@ -173,19 +140,17 @@ namespace BladePath
         }
 
         /// <summary>
-        /// Фраза минминдзэми с начала t0: «ми-и-ин» (0,9 с, высота резонанса растёт), 9 пульсов «мин» по 0,27 с
-        /// (в каждом высота взлетает и чуть оседает), протяжное «ми-и-и» на спаде (1,3 с). loop — время по кругу петли.
-        /// Пишет максимум огибающей в env и частоту резонанса в f.
+        /// Фраза минминдзэми с момента t0: «ми-и-ин» (0,9 с, высота резонанса растёт), pulses пульсов «мин» по 0,27 с
+        /// (в каждом высота взлетает и чуть оседает), протяжное «ми-и-и» на спаде (1,3 с). Пишет огибающую и частоту резонанса.
         /// </summary>
-        static void MinminPhrase(float t0, float[] env, float[] f, bool loop, float pitch)
+        static void MinminPhrase(float t0, float[] env, float[] f, int pulses, float pitch)
         {
-            const float intro = 0.9f, tp = 0.27f, outro = 1.3f; const int pulses = 9;
+            const float intro = 0.9f, tp = 0.27f, outro = 1.3f;
             for (int i = 0; i < env.Length; i++)
             {
                 float u = i / (float)Rate - t0;
-                if (loop) { u %= Loop; if (u < 0f) u += Loop; }
                 float e = 0f, fr = 3400f;
-                if (u < 0f) continue;
+                if (u < 0f) { f[i] = fr * pitch; continue; }
                 if (u < intro) { e = Mathf.Pow(u / intro, 0.7f); fr = 3000f + 800f * u / intro; }
                 else if (u < intro + pulses * tp)
                 {
@@ -198,7 +163,8 @@ namespace BladePath
                     float q = (u - intro - pulses * tp) / outro;
                     e = (1f - q) * (1f - q); fr = 3800f - 700f * q;
                 }
-                if (e > env[i]) { env[i] = e; f[i] = fr * pitch; }
+                else fr = 3100f;
+                env[i] = e; f[i] = fr * pitch;
             }
         }
 
@@ -212,74 +178,52 @@ namespace BladePath
             for (int i = 0; i < d.Length; i++) d[i] = 0.9f * (float)System.Math.Tanh(d[i] * k * drive) / th;
         }
 
-        /// <summary>Стереохор (чередование L/R): 10 абурадзэми (сплошной треск с провалами и дрожью) + 6 минминдзэми (по две фразы за петлю).</summary>
-        static float[] ChorusData()
+        /// <summary>
+        /// Песня одной абурадзэми «дзи-и-и-и»: щелчки тимбала rate Гц через резонатор f0 (и слабый обертон), нарастание ~1 с,
+        /// ровный треск с медленными волнами громкости и быстрой дрожью, спад ~1,8 с — как будто выдохлась.
+        /// </summary>
+        static AudioClip AburaCall(int seed, float dur, float f0, float rate)
         {
-            int n = (int)(Rate * Loop), tail = 2000, m = n + tail;
-            float[] L = new float[m], R = new float[m], x = new float[m], y = new float[m];
-            System.Random r = new System.Random(7);
-            System.Action<float, float> Mix = (pan, g) =>
+            int n = (int)(Rate * dur), m = n + 2000;
+            System.Random r = new System.Random(seed * 7919 + 13);
+            float[] env = new float[n], x = new float[m], y = new float[m];
+            float p1 = (float)r.NextDouble() * 6.28f, p2 = (float)r.NextDouble() * 6.28f, fm = 6f + 2.5f * (float)r.NextDouble();
+            for (int i = 0; i < n; i++)
             {
-                float a = (pan + 1f) * Mathf.PI * 0.25f, gl = Mathf.Cos(a) * g, gr = Mathf.Sin(a) * g;
-                for (int i = 0; i < m; i++) { L[i] += y[i] * gl; R[i] += y[i] * gr; }
-            };
-            // абурадзэми
-            for (int v = 0; v < 10; v++)
-            {
-                float f0 = Mathf.Lerp(4000f, 5600f, (float)r.NextDouble()), bw = Mathf.Lerp(350f, 700f, (float)r.NextDouble());
-                float rate = Mathf.Lerp(150f, 230f, (float)r.NextDouble());
-                float[] env = Periodic(n, r, 5);
-                float fm = Mathf.Round(Mathf.Lerp(5f, 9f, (float)r.NextDouble()) * Loop) / Loop, fph = (float)r.NextDouble() * 6.28f;
-                for (int i = 0; i < n; i++)
-                {
-                    float on = Mathf.Clamp01((env[i] - 0.28f) / 0.18f); on = on * on * (3f - 2f * on);
-                    env[i] = on * (1f - 0.3f * (0.5f + 0.5f * Mathf.Sin(6.2832f * fm * i / Rate + fph)));
-                }
-                System.Array.Clear(x, 0, m); System.Array.Clear(y, 0, m);
-                Clicks(x, env, rate, 0.06f, true, r);
-                for (int i = 0; i < m; i++) x[i] += ((float)r.NextDouble() * 2f - 1f) * 0.05f * env[i % n];   // шорох между щелчками
-                Resonate(x, y, f0, null, bw, 1f);
-                Resonate(x, y, f0 * 1.55f, null, bw * 1.4f, 0.2f);
-                Mix(Mathf.Lerp(-0.9f, 0.9f, (float)r.NextDouble()), Mathf.Pow(Mathf.Lerp(0.25f, 1f, (float)r.NextDouble()), 1.5f));
+                float t = i / (float)Rate;
+                float att = Mathf.SmoothStep(0f, 1f, t / 1.1f), rel = Mathf.SmoothStep(0f, 1f, (dur - t) / 1.8f);
+                float wave = 0.78f + 0.22f * Mathf.Sin(t * 1.3f + p1) * Mathf.Sin(t * 0.47f + p2);
+                float trem = 1f - 0.28f * (0.5f + 0.5f * Mathf.Sin(6.2832f * fm * t));
+                env[i] = att * rel * wave * trem;
             }
-            // минминдзэми
-            float[] me = new float[n], mf = new float[n];
-            for (int v = 0; v < 6; v++)
-            {
-                System.Array.Clear(me, 0, n);
-                float t0 = (float)r.NextDouble() * Loop, pitch = Mathf.Lerp(0.95f, 1.05f, (float)r.NextDouble());
-                MinminPhrase(t0, me, mf, true, pitch);
-                MinminPhrase((t0 + Mathf.Lerp(5.2f, 6.8f, (float)r.NextDouble())) % Loop, me, mf, true, pitch);
-                float[] fv = new float[m];
-                for (int i = 0; i < m; i++) fv[i] = mf[i % n];
-                System.Array.Clear(x, 0, m); System.Array.Clear(y, 0, m);
-                Clicks(x, me, 290f, 0.03f, true, r);
-                Resonate(x, y, 0f, fv, 200f, 1f);
-                Mix(Mathf.Lerp(-0.8f, 0.8f, (float)r.NextDouble()), Mathf.Lerp(0.5f, 0.9f, (float)r.NextDouble()));
-            }
-            // шов петли: звон за концом — в начало
-            for (int i = 0; i < tail; i++) { L[i] += L[n + i]; R[i] += R[n + i]; }
-            float[] st = new float[n * 2];
-            for (int i = 0; i < n; i++) { st[2 * i] = L[i]; st[2 * i + 1] = R[i]; }
-            Finish(st, 0.2f, 1.6f);
-            return st;
+            Clicks(x, env, rate, 0.06f, false, r);
+            for (int i = 0; i < n; i++) x[i] += ((float)r.NextDouble() * 2f - 1f) * 0.05f * env[i];   // шорох между щелчками
+            Resonate(x, y, f0, null, 480f, 1f);
+            Resonate(x, y, f0 * 1.55f, null, 650f, 0.2f);
+            float[] d = new float[n];
+            System.Array.Copy(y, d, n);
+            Finish(d, 0.2f, 1.6f);
+            AudioClip c = AudioClip.Create("cicada_abura_" + seed, n, 1, Rate, false);
+            c.SetData(d, 0);
+            return c;
         }
 
-        /// <summary>Ближняя минминдзэми: одна фраза громко и чётко (уже полоса резонанса — звонче), с жужжащим треском.</summary>
-        static AudioClip NearMinmin()
+        /// <summary>Песня минминдзэми: одна фраза («ми-ин», pulses × «мин», «ми-и-и»), жужжащий треск через звонкий резонатор.</summary>
+        static AudioClip MinminCall(int seed, int pulses, float pitch)
         {
-            int n = (int)(Rate * 5.2f), m = n + 2000;
+            float dur = 0.9f + pulses * 0.27f + 1.4f;
+            int n = (int)(Rate * dur), m = n + 2000;
             float[] env = new float[n], f = new float[n], x = new float[m], y = new float[m], fv = new float[m];
-            MinminPhrase(0.05f, env, f, false, 1f);
-            for (int i = 0; i < m; i++) fv[i] = i < n ? f[i] : 3100f;
-            System.Random r = new System.Random(57);
+            MinminPhrase(0.05f, env, f, pulses, pitch);
+            for (int i = 0; i < m; i++) fv[i] = i < n ? f[i] : 3100f * pitch;
+            System.Random r = new System.Random(seed * 7919 + 29);
             Clicks(x, env, 300f, 0.03f, false, r);
             Resonate(x, y, 0f, fv, 170f, 1f);
             float[] d = new float[n];
             System.Array.Copy(y, d, n);
             for (int i = 0; i < n; i++) d[i] *= Mathf.Min(1f, (n - i) / (Rate * 0.05f));
             Finish(d, 0.22f, 1.4f);
-            AudioClip c = AudioClip.Create("cicada_minmin_near", n, 1, Rate, false);
+            AudioClip c = AudioClip.Create("cicada_minmin_" + seed, n, 1, Rate, false);
             c.SetData(d, 0);
             return c;
         }

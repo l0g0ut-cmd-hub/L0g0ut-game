@@ -124,8 +124,8 @@ namespace BladePath
                 post.highlights = Dawn ? new Color(1.08f, 0.98f, 0.9f) : day ? new Color(1.04f, 1.0f, 0.95f) : pHi;
             }
             Shader.SetGlobalFloat("_BP_Day", day ? (Dawn ? 0.6f : 1f) : 0f);
-            Cubemap refl = Dawn ? dawnRefl : day ? dayRefl : nightRefl;
-            if (refl != null) SetReflection(refl);
+            Cubemap cube = Dawn ? dawnRefl : day ? dayRefl : nightRefl;
+            if (cube != null) SetReflection(cube);
             DynamicGI.UpdateEnvironment();
         }
         readonly Dictionary<FlickerLight, float> flBase = new Dictionary<FlickerLight, float>();
