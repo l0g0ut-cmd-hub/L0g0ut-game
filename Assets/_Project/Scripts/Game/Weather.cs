@@ -34,6 +34,7 @@ namespace BladePath
         float fogDensBase = 0.05f;
         ParticleSystem snow;
         readonly System.Collections.Generic.List<ParticleSystem> breaths = new System.Collections.Generic.List<ParticleSystem>();
+        readonly System.Collections.Generic.List<ParticleSystem> steams = new System.Collections.Generic.List<ParticleSystem>();   // пар от разгорячённых тел на морозе
         float snowK, nextBreathAt;
         static readonly int SnowId = Shader.PropertyToID("_BP_Snow");
 
@@ -172,6 +173,7 @@ namespace BladePath
                 bool has = false;
                 foreach (ParticleSystem b in breaths) if (b != null && b.transform.parent == d.head) has = true;
                 if (!has) breaths.Add(BuildBreath(d.head, d.fighter != null ? d.fighter.transform : d.transform));
+                if (d.chest != null && !has) steams.Add(BuildSteam(d.chest));
             }
         }
 
@@ -250,6 +252,39 @@ namespace BladePath
         {
             if (floorPlane == null) { floorPlane = new GameObject("SnowFloor").transform; floorPlane.position = new Vector3(0f, 0.01f, 0f); }
             return floorPlane;
+        }
+
+        /// <summary>
+        /// Пар от тела на морозе: над плечами и спиной разгорячённого бойца медленно поднимаются едва заметные струйки
+        /// (эмиссия включается только в снег — см. Update).
+        /// </summary>
+        static ParticleSystem BuildSteam(Transform chest)
+        {
+            GameObject g = new GameObject("BodySteam");
+            g.transform.SetParent(chest, false);
+            g.transform.localPosition = Vector3.zero;
+            ParticleSystem ps = g.AddComponent<ParticleSystem>();
+            ps.Stop();
+            var main = ps.main; main.loop = true; main.playOnAwake = false;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(1.6f, 2.4f); main.startSpeed = 0f;
+            main.startSize = new ParticleSystem.MinMaxCurve(0.1f, 0.18f); main.startColor = new Color(0.85f, 0.88f, 0.95f, 0.05f);
+            main.startRotation = new ParticleSystem.MinMaxCurve(0f, 6.28f);
+            main.maxParticles = 16; main.simulationSpace = ParticleSystemSimulationSpace.World;
+            var em = ps.emission; em.rateOverTime = 4f; em.enabled = false;
+            var shp = ps.shape; shp.shapeType = ParticleSystemShapeType.Sphere; shp.radius = 0.2f;
+            var vel = ps.velocityOverLifetime; vel.enabled = true; vel.space = ParticleSystemSimulationSpace.World;
+            vel.x = new ParticleSystem.MinMaxCurve(-0.04f, 0.04f); vel.y = new ParticleSystem.MinMaxCurve(0.14f, 0.26f); vel.z = new ParticleSystem.MinMaxCurve(-0.04f, 0.04f);
+            var noise = ps.noise; noise.enabled = true; noise.strength = 0.08f; noise.frequency = 0.8f;
+            var sz = ps.sizeOverLifetime; sz.enabled = true; sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.6f), new Keyframe(1f, 2.6f)));
+            var colm = ps.colorOverLifetime; colm.enabled = true;
+            Gradient gr = new Gradient();
+            gr.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) }, new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.25f), new GradientAlphaKey(0f, 1f) });
+            colm.color = gr;
+            var r = g.GetComponent<ParticleSystemRenderer>();
+            Material m = new Material(Shader.Find("Sprites/Default")); m.mainTexture = SoftSprites.Disc; r.material = m;
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            ps.Play();
+            return ps;
         }
 
         static ParticleSystem BuildBreath(Transform head, Transform fighter)
@@ -408,6 +443,8 @@ namespace BladePath
                 nextBreathAt = Time.time + Random.Range(1.6f, 2.6f);
                 foreach (ParticleSystem b in breaths) if (b != null && b.transform.parent != null && b.transform.parent.gameObject.activeInHierarchy) b.Play();
             }
+            for (int i = 0; i < steams.Count; i++)
+                if (steams[i] != null) { var em = steams[i].emission; bool on = Snowing && snowK > 0.25f; if (em.enabled != on) em.enabled = on; }
             if (!Raining) { Restore(); return; }
 
             // молния: двойная вспышка, гром через 0,3…1,8 с

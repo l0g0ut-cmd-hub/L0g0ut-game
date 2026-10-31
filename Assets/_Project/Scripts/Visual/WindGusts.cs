@@ -17,7 +17,8 @@ namespace BladePath
         ParticleSystem petals, snow, skitter, whirl;
         ParticleSystem[] fireBits = new ParticleSystem[0];   // искры и дым жаровен — сносит порывом
         AudioSource src, rustle;
-        static AudioClip whoosh, rustleClip;
+        static AudioClip whoosh, rustleClip; static AudioClip[] knocks;
+        AudioSource knockSrc; float knockAt;   // стволы бамбука стучат друг о друга на порыве
         bool fired;
         float snowLookAt;
 
@@ -33,6 +34,8 @@ namespace BladePath
             rustle = gameObject.AddComponent<AudioSource>(); rustle.playOnAwake = false; rustle.spatialBlend = 0f; rustle.loop = true;
             rustle.clip = rustleClip; rustle.volume = 0f; rustle.Play();
             skitter = BuildSkitter();
+            if (knocks == null) knocks = new[] { Knock(3, 520f), Knock(4, 690f), Knock(5, 880f) };
+            knockSrc = gameObject.AddComponent<AudioSource>(); knockSrc.playOnAwake = false; knockSrc.spatialBlend = 0f;
             var bits = new System.Collections.Generic.List<ParticleSystem>();
             foreach (ParticleSystem ps in FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None))
                 if (ps.name == "Embers" || ps.name == "Smoke" || ps.name == "IncenseSmoke") bits.Add(ps);
@@ -62,6 +65,13 @@ namespace BladePath
                 if (t > rise + fall) { t = -1f; s = 0f; nextAt = Time.time + Random.Range(minGap, maxGap); }
             }
             Strength = s;
+            // бамбуковая роща на порыве: глухие полые «ток-ток» — стволы раскачиваются и бьются друг о друга
+            if (s > 0.45f && Time.time >= knockAt && knockSrc != null && knocks != null)
+            {
+                knockAt = Time.time + Random.Range(0.12f, 0.6f) / s;
+                knockSrc.panStereo = Random.Range(-0.7f, 0.7f); knockSrc.pitch = Random.Range(0.9f, 1.12f);
+                knockSrc.PlayOneShot(knocks[Random.Range(0, knocks.Length)], Random.Range(0.12f, 0.3f) * s);
+            }
             if (rustle != null)
             {
                 bool snowy = Weather.Instance != null && Weather.Instance.Snowing;
@@ -243,6 +253,29 @@ namespace BladePath
             for (int i = 0; i < n; i++) o[i] *= 0.8f / peak;
             AudioClip c = AudioClip.Create("leaf_rustle", n, 1, rate, false);
             c.SetData(o, 0);
+            return c;
+        }
+
+        /// <summary>Стук бамбука: полый ствол — две затухающие моды (f и 2,7f), щелчок удара в начале, 0,25 с.</summary>
+        static AudioClip Knock(int seed, float f)
+        {
+            const int rate = 22050;
+            int n = (int)(rate * 0.25f);
+            float[] d = new float[n];
+            System.Random r = new System.Random(seed);
+            float peak = 1e-4f;
+            for (int i = 0; i < n; i++)
+            {
+                float tt = i / (float)rate;
+                float x = (float)(r.NextDouble() * 2.0 - 1.0);
+                float v = Mathf.Sin(2f * Mathf.PI * f * tt) * Mathf.Exp(-tt * 38f) + 0.45f * Mathf.Sin(2f * Mathf.PI * f * 2.7f * tt + 1f) * Mathf.Exp(-tt * 70f)
+                        + x * Mathf.Exp(-tt * 600f) * 0.8f;
+                v *= Mathf.Min(1f, tt * 3000f);
+                d[i] = v; peak = Mathf.Max(peak, Mathf.Abs(v));
+            }
+            for (int i = 0; i < n; i++) d[i] *= 0.8f / peak;
+            AudioClip c = AudioClip.Create("bamboo_knock_" + seed, n, 1, rate, false);
+            c.SetData(d, 0);
             return c;
         }
 
