@@ -103,6 +103,9 @@ namespace BladePath.EditorTools
                     SwingStrip(cam, dir, "9_swing_overhead", player, AttackType.Overhead, log);
                     SwingStrip(cam, dir, "10_swing_slash", player, AttackType.Slash, log);
                     SwingStrip(cam, dir, "11_swing_thrust", player, AttackType.Thrust, log);
+                    SwingStrip(cam, dir, "24_swing_rising", player, AttackType.Rising, log);
+                    SwingStrip(cam, dir, "25_swing_legs", player, AttackType.LegSweep, log);
+                    if (enemy != null) SwingStrip(cam, dir, "26_enemy_charge", enemy, AttackType.Charge, log);
                 }
                 Shot(cam, dir, "4_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);
                 WeatherShots(cam, dir, focus + new Vector3(0f, 0f, -dist), focus, log);
