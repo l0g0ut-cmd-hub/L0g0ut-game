@@ -40,10 +40,22 @@ namespace BladePath
                  "Тогда рукоять проходит ровно через кулак при любом повороте кисти, без подгонки palmOffset/palmLift.")]
         public bool gripFromBind;
         /// <summary>
-        /// Снять разворот таза/груди, заложенный в клип покоя модели (у ронина из Meshy idle уже развёрнут ~40° к камере, а стойка
-        /// добавляла свой разворот сверху — грудь смотрела прямо в камеру). В стойке поза Animator приводится к прямой, дальше — стойка.
+        /// Снять разворот таза/груди, заложенный в клип покоя модели (если у клипа корпус уже развёрнут, а стойка добавляет свой
+        /// сверху). В стойке поза Animator приводится к прямой, дальше — стойка. По умолчанию выключено.
         /// </summary>
         public bool neutralAnimYaw;
+        /// <summary>
+        /// Насколько стойка этого облика закрыта от камеры (градусы, вычитаются из разворота таза/груди оружия). У моделей
+        /// с широкими плечами и короткими руками полный разворот тянул дальнее плечо к цубе — корпус смотрел в камеру.
+        /// Отрицательное — не трогать.
+        /// </summary>
+        public float stanceOpenHips = -1f, stanceOpenChest = -1f;
+
+        public void ApplyStanceOpen()
+        {
+            if (weapon == null || stanceOpenHips < 0f) return;
+            weapon.openHips = stanceOpenHips; weapon.openChest = stanceOpenChest;
+        }
         float animHipCal, animChestCal; bool animCalInit;
         [Tooltip("Вынос рук вперёд/вниз сверх позы клинка (м, в системе бойца): у модели с короткими руками и узкими плечами стойка иначе «прижата к себе». В ударе — вполовину.")]
         public float handForward = 0f, handLift = 0f;
@@ -186,6 +198,7 @@ namespace BladePath
 
         void Start()
         {
+            if (gameObject.activeInHierarchy) ApplyStanceOpen();
             Cache(upperArmL, forearmL, handL, out l1L, out l2L);
             Cache(upperArmR, forearmR, handR, out l1R, out l2R);
             Cache(upperLegL, lowerLegL, footL, out lgL1, out lgL2);

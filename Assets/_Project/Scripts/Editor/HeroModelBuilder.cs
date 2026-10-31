@@ -156,7 +156,9 @@ namespace BladePath.EditorTools
             if (samurai) { d.palmOffset = fbx == Samurai2FbxPath ? 0.085f : 0.09f; d.palmLift = fbx == Samurai2FbxPath ? 0.03f : 0.035f; d.eyeHeight = 0.10f; }
             if (hero3) { d.palmOffset = 0.111f; d.palmLift = 0.017f; d.gripFromBind = true; d.gripDown = 0.113f * Hero3Scale; d.gripIn = 0.017f * Hero3Scale; d.handForward = 0.04f; d.handLift = -0.05f; if (fighter.weapon != null) { fighter.weapon.openHips = 24f; fighter.weapon.openChest = 10f; } }   // кулак согнут в меше: центр хвата 0,113 м ниже запястья, 1,7 см к ладони   // кулак сжат вокруг рукояти: рукоять внутри пальцев
 
-            if (ronin && undead) d.neutralAnimYaw = true;   // клип покоя ронина уже развёрнут — стойка разворачивает сама
+            // разворот корпуса в стойке по облику: у героя и ронина (широкие плечи, короткие руки) — закрытее, у самурая — как в профиле
+            if (hero3) { d.stanceOpenHips = 24f; d.stanceOpenChest = 10f; }
+            else if (undead) { d.stanceOpenHips = ronin ? 20f : 0f; d.stanceOpenChest = ronin ? 12f : 0f; }
             model.AddComponent<ContactShadow>().rig = d;   // мягкая тень под стопами
 
             // полы плаща (кости Coat.*) — на пружинах: инерция ткани, бёдра раздвигают полы

@@ -17,6 +17,9 @@ namespace BladePath
             index = Mathf.Clamp(index, 0, models.Length - 1);
             for (int i = 0; i < models.Length; i++) if (models[i] != null) models[i].SetActive(i == index);
             Active = index;
+            // у облика — свой разворот корпуса в стойке (оружие у бойца общее)
+            HeroRigDriver d = models[index] != null ? models[index].GetComponent<HeroRigDriver>() : null;
+            if (d != null) d.ApplyStanceOpen();
         }
     }
 }
