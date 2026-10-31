@@ -27,7 +27,7 @@ namespace BladePath
         ParticleSystem mistPs; float mistRate0 = -1f; Color mistCol0;
         /// <summary>Погода меняется по ходу боя: ясной ночью иногда через полминуты-минуту накрывает дождь (с громом) или начинается снег.</summary>
         [Range(0f, 1f)] public float changeChance = 0.3f;
-        float changeAt = -1f; bool changeToSnow;
+        float changeAt = -1f; bool changeToSnow, rumbled;
         [Range(0f, 1f)] public float dawnShare = 0.35f;
         float fogDensBase = 0.05f;
         ParticleSystem snow;
@@ -88,7 +88,7 @@ namespace BladePath
             Foggy = !Daytime && !Raining && !Snowing && Random.value < fogChance;
             if (Foggy) StartFog(); else StopFog();
             changeAt = !Daytime && !Raining && !Snowing && Random.value < changeChance ? Time.time + Random.Range(25f, 55f) : -1f;
-            changeToSnow = Random.value < 0.4f;
+            changeToSnow = Random.value < 0.4f; rumbled = false;
             if (Dawn) EnsureBreaths();   // утро холодное — изо рта пар
             Critters(!Raining && !Snowing && !Daytime);
             DayCritters(Daytime);
@@ -384,6 +384,14 @@ namespace BladePath
             // снег оседает на плечах и шлемах за полминуты боя; пар дыхания раз в пару секунд
             snowK = Mathf.MoveTowards(snowK, Snowing ? 0.85f : 0f, Time.deltaTime / (Snowing ? 30f : 1f));
             Shader.SetGlobalFloat(SnowId, snowK);
+            // за ~9 с до ливня — далёкий раскат: гроза идёт
+            if (changeAt > 0f && !changeToSnow && !rumbled && Time.time >= changeAt - 9f)
+            {
+                rumbled = true;
+                if (thunderAudio == null) { thunderAudio = gameObject.AddComponent<AudioSource>(); thunderAudio.spatialBlend = 0f; }
+                if (thunder == null) thunder = ThunderClip();
+                thunderAudio.pitch = 0.7f; thunderAudio.PlayOneShot(thunder, 0.35f);
+            }
             if (changeAt > 0f && Time.time >= changeAt && !Raining && !Snowing && !Daytime)
             {
                 // смена погоды посреди боя: туман рассеивается, светлячки прячутся, дальше — дождь с громом или первый снег

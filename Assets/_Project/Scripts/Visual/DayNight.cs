@@ -43,6 +43,16 @@ namespace BladePath
         static readonly int EmisId = Shader.PropertyToID("_EmissionColor"), TintId = Shader.PropertyToID("_TintColor"), ColorId = Shader.PropertyToID("_Color");
 
         void Awake() { Instance = this; }
+
+        // свечи за сёдзи: свет бумаги чуть дышит и вздрагивает (огонёк лампады за ней)
+        Material shojiMat; Color shojiC;
+        void Update()
+        {
+            if (shojiMat == null) return;
+            float t = Time.time;
+            float k = 1f + 0.05f * (Mathf.PerlinNoise(t * 1.7f, 0.3f) - 0.5f) * 2f + 0.025f * (Mathf.PerlinNoise(t * 7f, 5.1f) - 0.5f) * 2f;
+            shojiMat.SetColor(EmisId, shojiC * k);
+        }
         void OnDestroy() { if (Day) Apply(false); if (Instance == this) Instance = null; }   // вернуть ночь (в редакторе — и материалы-ассеты)
 
         void Capture()
@@ -113,6 +123,7 @@ namespace BladePath
                     if (mb.prop == ColorId) c = Color.Lerp(c, new Color(0.85f, 0.8f, 0.7f, c.a), Dawn || K ? 0.25f : 0.5f); else { c.r *= gk; c.g *= gk; c.b *= gk; }
                 }
                 mb.m.SetColor(mb.prop, c);
+                if (mb.m.name.Contains("Shoji") && mb.prop == EmisId) { shojiMat = mb.m; shojiC = c; }
             }
             for (int i = 0; i < refl.Count; i++) if (refl[i] != null) refl[i].strength = reflS[i] * (K ? 0.6f : day ? 0.2f : 1f);
             for (int i = 0; i < shafts.Count; i++)
