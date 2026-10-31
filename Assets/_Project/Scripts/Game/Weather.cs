@@ -126,6 +126,7 @@ namespace BladePath
             if (Snowing) mode = HeavySnow ? 0 : (lightSnowLeaves ? 3 : 0);
             else if (Daytime && !Raining && sakuraRoll) mode = 2;
             LeafMode = mode;
+            if (!Application.isPlaying) return;   // кадры CI в редакторе: не трогать ассет материала и частицы сцены
             if (!petalsInit)
             {
                 petalsInit = true;
