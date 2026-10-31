@@ -1308,59 +1308,93 @@ namespace BladePath.EditorTools
         }
 
         /// <summary>Живой огонь: языки пламени и искры, аддитивные частицы.</summary>
-        static void AddFire(Transform parent, Look look)
+        /// <summary>
+        /// Огонь жаровни: языки пламени — флипбук 4×4 (каждая частица проживает язык от рождения до отрыва), под ними —
+        /// яркое низкое ядро; искры-росчерки вылетают вверх и гаснут; над огнём вьётся дым. Мировое пространство — ветер
+        /// (FlickerLight) клонит пламя и сносит дым.
+        /// </summary>
+        static ParticleSystem FireLayer(Transform parent, string name, Vector3 pos, Material mat, float life0, float life1, float spd0, float spd1, float size0, float size1, float rate, int max, Color c0, float radius, bool sheet)
         {
-            GameObject go = new GameObject("Fire");
+            GameObject go = new GameObject(name);
             go.transform.SetParent(parent, false);
-            go.transform.localPosition = new Vector3(0f, 1.0f, 0f);
+            go.transform.localPosition = pos;
             go.transform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
             ParticleSystem ps = go.AddComponent<ParticleSystem>();
             var main = ps.main;
             main.loop = true; main.prewarm = true;
-            main.startLifetime = new ParticleSystem.MinMaxCurve(0.35f, 0.7f);
-            main.startSpeed = new ParticleSystem.MinMaxCurve(0.5f, 1.1f);
-            main.startSize = new ParticleSystem.MinMaxCurve(0.3f, 0.5f);
-            main.startRotation = new ParticleSystem.MinMaxCurve(-0.35f, 0.35f);
-            main.startColor = new Color(1f, 0.85f, 0.7f, 1f);
-            main.maxParticles = 60;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(life0, life1);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(spd0, spd1);
+            main.startSize = new ParticleSystem.MinMaxCurve(size0, size1);
+            main.startRotation = new ParticleSystem.MinMaxCurve(-0.22f, 0.22f);
+            main.startColor = c0;
+            main.maxParticles = max;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
-            var em = ps.emission; em.rateOverTime = 26f;
-            var sh = ps.shape; sh.shapeType = ParticleSystemShapeType.Circle; sh.radius = 0.12f;
-            var col = ps.colorOverLifetime; col.enabled = true;
-            Gradient g = new Gradient();
-            g.SetKeys(new[] { new GradientColorKey(new Color(1f, 0.95f, 0.6f), 0f), new GradientColorKey(new Color(1f, 0.5f, 0.12f), 0.4f), new GradientColorKey(new Color(0.6f, 0.08f, 0.02f), 1f) },
-                      new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.15f), new GradientAlphaKey(0.6f, 0.6f), new GradientAlphaKey(0f, 1f) });
-            col.color = g;
-            var sz = ps.sizeOverLifetime; sz.enabled = true;
-            sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.8f), new Keyframe(0.3f, 1f), new Keyframe(1f, 0.2f)));
-            var noise = ps.noise; noise.enabled = true; noise.strength = 0.35f; noise.frequency = 1.5f;
+            var em = ps.emission; em.rateOverTime = rate;
+            var sh = ps.shape; sh.shapeType = ParticleSystemShapeType.Cone; sh.angle = 6f; sh.radius = radius;
+            if (sheet)
+            {
+                var ts = ps.textureSheetAnimation; ts.enabled = true; ts.numTilesX = 4; ts.numTilesY = 4;
+                ts.animation = ParticleSystemAnimationType.WholeSheet;
+                ts.frameOverTime = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.Linear(0f, 0f, 1f, 1f));
+            }
             ParticleSystemRenderer r = go.GetComponent<ParticleSystemRenderer>();
-            r.sharedMaterial = look.fireSprite;
-            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            r.sharedMaterial = mat;
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; r.receiveShadows = false;
+            return ps;
+        }
 
-            // искры
-            GameObject sp = new GameObject("Embers");
-            sp.transform.SetParent(go.transform, false);
-            ParticleSystem es = sp.AddComponent<ParticleSystem>();
-            var em2 = es.main;
-            em2.loop = true; em2.prewarm = true;
-            em2.startLifetime = new ParticleSystem.MinMaxCurve(1.2f, 2.4f);
-            em2.startSpeed = new ParticleSystem.MinMaxCurve(0.6f, 1.6f);
-            em2.startSize = new ParticleSystem.MinMaxCurve(0.02f, 0.04f);
-            em2.startColor = new Color(1f, 0.6f, 0.2f, 1f);
-            em2.maxParticles = 40;
-            em2.simulationSpace = ParticleSystemSimulationSpace.World;
-            var ee = es.emission; ee.rateOverTime = 7f;
-            var esh = es.shape; esh.shapeType = ParticleSystemShapeType.Cone; esh.angle = 20f; esh.radius = 0.1f;
-            var en = es.noise; en.enabled = true; en.strength = 0.6f; en.frequency = 0.8f;
-            var ec = es.colorOverLifetime; ec.enabled = true;
-            Gradient g2 = new Gradient();
-            g2.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
-                       new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 0.6f), new GradientAlphaKey(0f, 1f) });
-            ec.color = g2;
-            ParticleSystemRenderer r2 = sp.GetComponent<ParticleSystemRenderer>();
-            r2.sharedMaterial = look.haloFire;
-            r2.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        static void AddFire(Transform parent, Look look)
+        {
+            Material fm = look.flameSheet != null ? look.flameSheet : look.fireSprite;
+            bool sheet = look.flameSheet != null;
+            // языки пламени
+            ParticleSystem tongues = FireLayer(parent, "Fire", new Vector3(0f, 0.98f, 0f), fm, 0.55f, 0.85f, 0.32f, 0.55f, 0.34f, 0.52f, 22f, 40, new Color(1f, 0.92f, 0.82f, 1f), 0.13f, sheet);
+            {
+                var col = tongues.colorOverLifetime; col.enabled = true;
+                Gradient g = new Gradient();
+                g.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(new Color(1f, 0.85f, 0.7f), 1f) },
+                          new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.08f), new GradientAlphaKey(0.9f, 0.65f), new GradientAlphaKey(0f, 1f) });
+                col.color = g;
+                var sz = tongues.sizeOverLifetime; sz.enabled = true;
+                sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.7f), new Keyframe(0.35f, 1f), new Keyframe(1f, 0.85f)));
+                var noise = tongues.noise; noise.enabled = true; noise.strength = 0.14f; noise.frequency = 1.3f; noise.scrollSpeed = 0.6f;
+            }
+            // низкое яркое ядро над углями
+            ParticleSystem core = FireLayer(parent, "FireCore", new Vector3(0f, 0.98f, 0f), fm, 0.35f, 0.5f, 0.12f, 0.25f, 0.2f, 0.3f, 16f, 20, new Color(1f, 1f, 0.95f, 0.9f), 0.1f, sheet);
+            {
+                var col = core.colorOverLifetime; col.enabled = true;
+                Gradient g = new Gradient();
+                g.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                          new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.1f), new GradientAlphaKey(0f, 1f) });
+                col.color = g;
+            }
+            // искры: короткие росчерки вверх, гаснут оранжево-красными
+            ParticleSystem es = FireLayer(parent, "Embers", new Vector3(0f, 1.05f, 0f), look.haloFire, 1.0f, 2.2f, 0.8f, 1.9f, 0.012f, 0.026f, 9f, 40, new Color(1f, 0.75f, 0.35f, 1f), 0.1f, false);
+            {
+                var esh = es.shape; esh.angle = 22f;
+                var en = es.noise; en.enabled = true; en.strength = 0.7f; en.frequency = 0.9f;
+                var ec = es.colorOverLifetime; ec.enabled = true;
+                Gradient g2 = new Gradient();
+                g2.SetKeys(new[] { new GradientColorKey(new Color(1f, 0.9f, 0.6f), 0f), new GradientColorKey(new Color(1f, 0.35f, 0.08f), 1f) },
+                           new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 0.5f), new GradientAlphaKey(0f, 1f) });
+                ec.color = g2;
+                var er = es.GetComponent<ParticleSystemRenderer>(); er.renderMode = ParticleSystemRenderMode.Stretch; er.velocityScale = 0.04f; er.lengthScale = 1.5f;
+                var em = es.emission; em.SetBursts(new[] { new ParticleSystem.Burst(0.4f, 2, 5, -1, 1.7f) });   // иногда треск — пучок искр
+            }
+            // дым над огнём: тёмный, медленно растёт и тает
+            if (look.smoke != null)
+            {
+                ParticleSystem sm = FireLayer(parent, "Smoke", new Vector3(0f, 1.45f, 0f), look.smoke, 2.6f, 4.0f, 0.25f, 0.45f, 0.25f, 0.45f, 3.5f, 20, new Color(0.16f, 0.14f, 0.13f, 0.32f), 0.08f, false);
+                var col = sm.colorOverLifetime; col.enabled = true;
+                Gradient g = new Gradient();
+                g.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                          new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.2f), new GradientAlphaKey(0f, 1f) });
+                col.color = g;
+                var sz = sm.sizeOverLifetime; sz.enabled = true;
+                sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.6f), new Keyframe(1f, 2.6f)));
+                var noise = sm.noise; noise.enabled = true; noise.strength = 0.25f; noise.frequency = 0.5f;
+                var rot = sm.rotationOverLifetime; rot.enabled = true; rot.z = new ParticleSystem.MinMaxCurve(-0.6f, 0.6f);
+            }
         }
 
         static void AddBrazier(Look look, Vector3 pos)
@@ -1373,9 +1407,11 @@ namespace BladePath.EditorTools
             CharacterVisuals.Part(b, "Bowl", PrimitiveType.Cylinder, new Vector3(0f, 0.93f, 0f), Vector3.zero, new Vector3(0.52f, 0.05f, 0.52f), look.bronze);
             CharacterVisuals.Part(b, "BowlRim", PrimitiveType.Cylinder, new Vector3(0f, 0.99f, 0f), Vector3.zero, new Vector3(0.56f, 0.02f, 0.56f), look.bronze);
             CharacterVisuals.Part(b, "Coals", PrimitiveType.Sphere, new Vector3(0f, 0.99f, 0f), Vector3.zero, new Vector3(0.42f, 0.08f, 0.42f), look.ember);
-            GameObject flame = CharacterVisuals.Part(b, "Flame", PrimitiveType.Sphere, new Vector3(0f, 1.1f, 0f), Vector3.zero, new Vector3(0.12f, 0.16f, 0.12f), look.flame);
+            // поленья в чаше (тёмные, крест-накрест) — огонь растёт из дров, а не из шара
+            for (int k = 0; k < 3; k++)
+                CharacterVisuals.Part(b, "Log" + k, PrimitiveType.Cylinder, new Vector3(0f, 1.03f, 0f), new Vector3(78f, k * 60f, 0f), new Vector3(0.05f, 0.17f, 0.05f), look.woodDark);
             AddFire(b, look);
-            EnvMesh.Glow(b, "Halo", new Vector3(0f, 1.2f, 0f), 1.6f, look.haloFire, 0.18f);
+            EnvMesh.Glow(b, "Halo", new Vector3(0f, 1.18f, 0f), 0.95f, look.haloFire, 0.18f);   // ореол меньше: был жёлтым шаром во всю жаровню
 
             GameObject lightObj = new GameObject("FireLight");
             lightObj.transform.SetParent(b, false);
@@ -1389,7 +1425,6 @@ namespace BladePath.EditorTools
 
             BladePath.FlickerLight flicker = lightObj.AddComponent<BladePath.FlickerLight>();
             flicker.lightSource = fl;
-            flicker.flame = flame.transform;
             flicker.baseIntensity = 1.7f;
         }
 

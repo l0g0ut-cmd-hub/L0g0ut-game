@@ -136,6 +136,9 @@ namespace BladePath.EditorTools
                     if (shoji.walker != null) shoji.walker.enabled = false;
                 }
                 ReflectShot(cam, dir, "37_reflect_night", log);
+                foreach (ParticleSystem ps in UnityEngine.Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None))
+                    if (ps.name == "Fire" || ps.name == "FireCore" || ps.name == "Embers" || ps.name == "Smoke") ps.Simulate(3f, false, true);
+                Shot(cam, dir, "43_brazier", new Vector3(-2.3f, 1.35f, 0.9f), new Vector3(-3.2f, 1.2f, 2.2f), 40f, log);   // огонь жаровни крупно
                 Shot(cam, dir, "38_gate", new Vector3(0.4f, 2.0f, 3.4f), new Vector3(0f, 1.1f, -8f), 55f, log);   // назад: передняя стена, ворота, дорожка, лес
                 Shot(cam, dir, "39_garden", new Vector3(0f, 3.0f, -2.0f), new Vector3(0f, 0f, -5.8f), 62f, log);   // пруд слева, карэсансуй справа
                 Shot(cam, dir, "40_backcourt", new Vector3(2.4f, 8.0f, 15.5f), new Vector3(0.8f, 1.0f, 9.4f), 58f, log);   // за храмом: колокольня, кура, задняя стена

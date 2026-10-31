@@ -11,7 +11,7 @@ namespace BladePath.EditorTools
         public Material heroArmor, enemyArmor, cloth, skin, hair, lacquer, bronze, steel, handle;
         public Material flesh, tooth, maw, voidBlack, deadSkin, ember, tentacle, ronin;
         public Material stone, stoneDark, flame, moon, petal;
-        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, skyDusk, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage, forestFloor, aoStrip, aoBlob, shojiMonk, shojiWalker, karesansui, pondWater, lotus, bellBronze, rock;
+        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, skyDusk, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage, forestFloor, aoStrip, aoBlob, shojiMonk, shojiWalker, karesansui, pondWater, lotus, bellBronze, rock, flameSheet, smoke;
     }
 
     /// <summary>
@@ -90,6 +90,15 @@ namespace BladePath.EditorTools
             Texture2D halo = HaloTexture();
             Texture2D fireTex = Tex("fire_sprite.png", false);
             l.fireSprite = Additive("Fire_Sprite", fireTex != null ? fireTex : halo, new Color(0.6f, 0.55f, 0.5f, 0.7f));
+            // пламя жаровен — флипбук языков огня 4×4 (tools/texgen/flame_sheet.py), дым — мягкое пятно с альфа-смешением
+            Texture2D fs = Tex("flame_sheet.png", false);
+            if (fs != null)
+            {
+                TextureImporter fti = AssetImporter.GetAtPath(TexFolder + "flame_sheet.png") as TextureImporter;
+                if (fti != null && (fti.wrapMode != TextureWrapMode.Clamp || !fti.alphaIsTransparency)) { fti.wrapMode = TextureWrapMode.Clamp; fti.alphaIsTransparency = true; fti.SaveAndReimport(); }
+                l.flameSheet = Additive("Fire_Flipbook", fs, new Color(0.62f, 0.56f, 0.5f, 0.9f));
+            }
+            l.smoke = AlphaParticle("Fire_Smoke", halo, new Color(0.5f, 0.5f, 0.5f, 0.5f));
             l.banner = Cutout("Env_Banner", "banner.png");
             l.puddle = Puddle();
             l.tsuka = Textured("Katana_Tsuka", "tsuka_albedo.png", null, Vector2.one, Color.white, 0f, 0.3f);
@@ -352,6 +361,20 @@ namespace BladePath.EditorTools
             m.DisableKeyword("_ALPHAPREMULTIPLY_ON");
             m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent - 10;
             EditorUtility.SetDirty(m);
+            return m;
+        }
+
+        static Material AlphaParticle(string name, Texture2D tex, Color tint)
+        {
+            Shader sh = Shader.Find("Legacy Shaders/Particles/Alpha Blended");
+            if (sh == null) sh = Shader.Find("Sprites/Default");
+            string path = MatFolder + name + ".mat";
+            Material m = AssetDatabase.LoadAssetAtPath<Material>(path);
+            bool isNew = m == null;
+            if (isNew) m = new Material(sh);
+            m.mainTexture = tex;
+            if (m.HasProperty("_TintColor")) m.SetColor("_TintColor", tint); else m.color = tint;
+            if (isNew) AssetDatabase.CreateAsset(m, path); else EditorUtility.SetDirty(m);
             return m;
         }
 
