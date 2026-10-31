@@ -30,7 +30,8 @@ namespace BladePath
             skitter = BuildSkitter();
         }
 
-        void OnDisable() { Strength = 0f; }
+        static readonly int WindId = Shader.PropertyToID("_BP_Wind"), WindDirId = Shader.PropertyToID("_BP_WindDir");
+        void OnDisable() { Strength = 0f; Shader.SetGlobalFloat(WindId, 0f); }
 
         void Update()
         {
@@ -52,6 +53,9 @@ namespace BladePath
                 if (t > rise + fall) { t = -1f; s = 0f; nextAt = Time.time + Random.Range(minGap, maxGap); }
             }
             Strength = s;
+            // трава и листва (шейдер BladePath/Foliage) гнутся по ветру
+            Shader.SetGlobalFloat(WindId, s);
+            Shader.SetGlobalVector(WindDirId, new Vector4(Dir.x, 0f, Dir.z, 0f));
             // листья в воздухе и снег сносит по ветру
             Push(petals, 2.2f);
             if (snow == null && Time.time >= snowLookAt) { snowLookAt = Time.time + 2f; GameObject g = GameObject.Find("Snow"); if (g != null) snow = g.GetComponent<ParticleSystem>(); }   // снег появляется с погодой — ищем редко

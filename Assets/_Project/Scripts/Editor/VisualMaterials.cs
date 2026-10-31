@@ -64,11 +64,12 @@ namespace BladePath.EditorTools
             l.gravel = Textured("Env_Gravel", "gravel_albedo.png", "gravel_normal.png", Vector2.one, Color.white, 0f, 0.15f);
             l.bark = Textured("Env_Bark", "bark_albedo.png", "bark_normal.png", new Vector2(2f, 2f), Color.white, 0f, 0.1f);
             // крона клёна: карточки гроздей листьев с альфа-срезом (tools/texgen/maple_cluster.py)
-            l.bambooFoliage = Cutout("Env_BambooFoliage", "bamboo_leaves.png", Color.white, 0.42f, new Color(0.006f, 0.012f, 0.004f));
-            l.mapleCrown = Cutout("Env_MapleCrown", "maple_cluster.png", new Color(0.92f, 0.92f, 0.92f), 0.42f, new Color(0.05f, 0.006f, 0.004f));
-            l.cedarFoliage = Cutout("Env_CedarFoliage", "bamboo_leaves.png", new Color(0.26f, 0.36f, 0.3f), 0.35f, new Color(0.002f, 0.005f, 0.003f));   // хвоя криптомерии: те же листья-карточки, темнее и холоднее
+            // листва и трава качаются на ветру (BladePath/Foliage): sway 0 — карточки кроны трепещут по месту, 1 — трава гнётся верхушкой
+            l.bambooFoliage = Cutout("Env_BambooFoliage", "bamboo_leaves.png", Color.white, 0.42f, new Color(0.006f, 0.012f, 0.004f), 0f, 0.05f);
+            l.mapleCrown = Cutout("Env_MapleCrown", "maple_cluster.png", new Color(0.92f, 0.92f, 0.92f), 0.42f, new Color(0.05f, 0.006f, 0.004f), 0f, 0.03f);
+            l.cedarFoliage = Cutout("Env_CedarFoliage", "bamboo_leaves.png", new Color(0.26f, 0.36f, 0.3f), 0.35f, new Color(0.002f, 0.005f, 0.003f), 0f, 0.035f);   // хвоя криптомерии: те же листья-карточки, темнее и холоднее
             l.fallenLeaves = Cutout("Env_FallenLeaves", "fallen_leaves.png", new Color(1f, 1f, 1f), 0.5f, new Color(0.03f, 0.004f, 0.003f));
-            l.grass = Cutout("Env_Grass", "grass_tuft.png", new Color(0.9f, 0.95f, 0.9f), 0.45f, new Color(0.004f, 0.007f, 0.003f));
+            l.grass = Cutout("Env_Grass", "grass_tuft.png", new Color(0.9f, 0.95f, 0.9f), 0.45f, new Color(0.004f, 0.007f, 0.003f), 1f, 0.05f);
             l.blossom = Textured("Env_Blossom", "blossom_albedo.png", null, new Vector2(3f, 3f), new Color(0.95f, 0.85f, 0.85f), 0f, 0.1f);   // кроны — текстура красного клёна (лист 2)
             l.shoji = Textured("Env_Shoji", "shoji_albedo.png", null, Vector2.one, new Color(0.9f, 0.85f, 0.75f), 0f, 0.2f);
             Texture2D se = Tex("shoji_emission.png", false);
@@ -472,9 +473,11 @@ namespace BladePath.EditorTools
         /// Листва/гроздья: Standard в режиме Cutout (альфа-срез, тень по альфе). Мип-уровни сохраняют покрытие —
         /// издалека крона не «лысеет». Лёгкое свечение — листва просвечивает в свете фонарей и не тонет в ночи.
         /// </summary>
-        static Material Cutout(string name, string file, Color tint, float cutoff, Color emission)
+        static Material Cutout(string name, string file, Color tint, float cutoff, Color emission, float sway = -1f, float flutter = 0.035f)
         {
-            Shader sh = Shader.Find("Standard");
+            // sway ≥ 0 — шейдер листвы с ветром (те же свойства, что у Standard: _Color, _MainTex, _Cutoff, _Glossiness, _EmissionColor)
+            Shader sh = sway >= 0f ? Shader.Find("BladePath/Foliage") : null;
+            if (sh == null) { sh = Shader.Find("Standard"); sway = -1f; }
             string tp = TexFolder + file;
             TextureImporter ti = AssetImporter.GetAtPath(tp) as TextureImporter;
             if (ti != null && (!ti.mipMapsPreserveCoverage || !ti.alphaIsTransparency))
@@ -489,8 +492,9 @@ namespace BladePath.EditorTools
             string path = MatFolder + name + ".mat";
             Material m = AssetDatabase.LoadAssetAtPath<Material>(path);
             bool isNew = m == null;
-            if (isNew) m = new Material(sh);
+            if (isNew) m = new Material(sh); else if (m.shader != sh) m.shader = sh;
             m.mainTexture = tex; m.color = tint;
+            if (sway >= 0f) { m.SetFloat("_Sway", sway); m.SetFloat("_Flutter", flutter); }
             m.SetFloat("_Mode", 1f);
             m.SetOverrideTag("RenderType", "TransparentCutout");
             m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
