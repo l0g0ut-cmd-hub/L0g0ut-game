@@ -69,7 +69,7 @@ namespace BladePath.EditorTools
 
         static void Probe(FighterController f)
         {
-            HeroRigDriver d = f.GetComponentInChildren<HeroRigDriver>(true);
+            HeroRigDriver d = HeroRigDriver.Of(f);
             if (d == null) { Debug.Log("PROBE|" + f.name + "|no driver"); return; }
             Animator anim = d.animator;
             WeaponController w = f.weapon;

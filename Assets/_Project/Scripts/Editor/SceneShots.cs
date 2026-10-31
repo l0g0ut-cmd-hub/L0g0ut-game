@@ -40,7 +40,7 @@ namespace BladePath.EditorTools
                 // стойка: 40 кадров «как в игре»
                 foreach (FighterController f in fs)
                 {
-                    HeroRigDriver d = f.GetComponentInChildren<HeroRigDriver>(true);
+                    HeroRigDriver d = HeroRigDriver.Of(f);
                     if (f.weapon != null) f.weapon.SnapRest();
                     if (d == null || d.animator == null) continue;
                     d.animator.Rebind(); d.animator.Update(0f);
@@ -51,7 +51,7 @@ namespace BladePath.EditorTools
                 for (int i = 0; i < 40; i++)
                     foreach (FighterController f in fs)
                     {
-                        HeroRigDriver d = f.GetComponentInChildren<HeroRigDriver>(true);
+                        HeroRigDriver d = HeroRigDriver.Of(f);
                         if (d == null || d.animator == null) continue;
                         if (f.weapon != null) Call(f.weapon, "Update");
                         Tick(f, d, dt, dt);
@@ -60,7 +60,7 @@ namespace BladePath.EditorTools
                 // стойка в цифрах: угол в локтях (180 — прямая рука) и вынос кистей вперёд от плеч (в системе бойца)
                 foreach (FighterController f in fs)
                 {
-                    HeroRigDriver d = f.GetComponentInChildren<HeroRigDriver>(true);
+                    HeroRigDriver d = HeroRigDriver.Of(f);
                     if (d == null || d.upperArmR == null || d.forearmR == null || d.handR == null || d.upperArmL == null) continue;
                     float eR = Vector3.Angle(d.upperArmR.position - d.forearmR.position, d.handR.position - d.forearmR.position);
                     float eL = Vector3.Angle(d.upperArmL.position - d.forearmL.position, d.handL.position - d.forearmL.position);
@@ -170,7 +170,7 @@ namespace BladePath.EditorTools
 
         static void SwingStrip(Camera cam, string dir, string name, FighterController f, AttackType type, StringBuilder log)
         {
-            WeaponController w = f.weapon; HeroRigDriver d = f.GetComponentInChildren<HeroRigDriver>(true);
+            WeaponController w = f.weapon; HeroRigDriver d = HeroRigDriver.Of(f);
             if (w == null || d == null) return;
             w.SnapRest();
             if (!w.TryStartSwing(type)) return;
@@ -221,7 +221,7 @@ namespace BladePath.EditorTools
         /// <summary>Раскадровка добивания: враг «поплыл» (слом равновесия), игрок на дистанции укола, 8 моментов приёма.</summary>
         static void DeathblowStrip(Camera cam, string dir, string name, FighterController a, FighterController t, AttackType type, float distance, float[] taus, StringBuilder log)
         {
-            WeaponController w = a.weapon; HeroRigDriver da = a.GetComponentInChildren<HeroRigDriver>(true), dt_ = t.GetComponentInChildren<HeroRigDriver>(true);
+            WeaponController w = a.weapon; HeroRigDriver da = HeroRigDriver.Of(a), dt_ = HeroRigDriver.Of(t);
             if (w == null || da == null || dt_ == null || t.weapon == null) return;
             Vector3 pa0 = a.transform.position, pt0 = t.transform.position; Quaternion ra0 = a.transform.rotation, rt0 = t.transform.rotation;
             PropertyInfo phase = typeof(WeaponController).GetProperty("Phase", F);
@@ -278,7 +278,7 @@ namespace BladePath.EditorTools
         static void GuardStrip(Camera cam, string dir, string name, FighterController def, FighterController att, StringBuilder log)
         {
             WeaponController wd = def.weapon, wa = att.weapon;
-            HeroRigDriver dd = def.GetComponentInChildren<HeroRigDriver>(true), da = att.GetComponentInChildren<HeroRigDriver>(true);
+            HeroRigDriver dd = HeroRigDriver.Of(def), da = HeroRigDriver.Of(att);
             if (wd == null || wa == null || dd == null || da == null) return;
             PropertyInfo phase = typeof(WeaponController).GetProperty("Phase", F), blocking = typeof(FighterController).GetProperty("Blocking", F);
             FieldInfo pt = typeof(WeaponController).GetField("phaseTime", F), bl = typeof(WeaponController).GetField("blendLeft", F), bk = typeof(WeaponController).GetField("blockK", F);
@@ -338,7 +338,7 @@ namespace BladePath.EditorTools
         /// <summary>Рывок вперёд (верхний ряд, 4 кадра через 0,05 с) и прыжок (нижний ряд, через 0,12 с) — сбоку.</summary>
         static void MoveStrip(Camera cam, string dir, string name, FighterController f, FighterController other, StringBuilder log)
         {
-            HeroRigDriver d = f.GetComponentInChildren<HeroRigDriver>(true);
+            HeroRigDriver d = HeroRigDriver.Of(f);
             if (d == null) return;
             const float dt = 1f / 30f;
             const int cw = 480, chh = 420;
@@ -473,7 +473,7 @@ namespace BladePath.EditorTools
         /// <summary>Раскадровка походки: боец идёт dirLocal со скоростью speed (как PoseProbe.WalkSim), 8 кадров через 0,1 с после разгона.</summary>
         static void WalkStrip(Camera cam, string dir, string name, FighterController f, FighterController other, Vector3 dirLocal, float speed, bool camBehind, StringBuilder log)
         {
-            HeroRigDriver d = f.GetComponentInChildren<HeroRigDriver>(true);
+            HeroRigDriver d = HeroRigDriver.Of(f);
             if (d == null || d.animator == null) return;
             const float dt = 1f / 30f;
             const int n = 8, cw = 480, chh = 420, warm = 30, every = 3;

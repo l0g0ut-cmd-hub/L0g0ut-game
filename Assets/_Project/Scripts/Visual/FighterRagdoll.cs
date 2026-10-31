@@ -18,6 +18,7 @@ namespace BladePath
         readonly List<Part> parts = new List<Part>();
         readonly Transform model, modelParent;
         readonly Vector3 modelLocalPos; readonly Quaternion modelLocalRot;
+        int sibling;   // место модели среди детей бойца: у врага несколько обликов, порядок не должен меняться после падения
         public bool Active { get; private set; }
         public bool Ready { get { return parts.Count >= 11; } }
 
@@ -223,6 +224,7 @@ namespace BladePath
             if (!Ready || Active) return;
             EnsureGround();
             Active = true;
+            sibling = model.GetSiblingIndex();
             model.SetParent(null, true);
             SetPhysics(true);
             Part best = parts[0]; float bd = float.MaxValue;
@@ -244,6 +246,7 @@ namespace BladePath
             SetPhysics(false);
             foreach (Part p in parts) { p.t.localRotation = p.bindRot; p.t.localPosition = p.bindPos; }
             model.SetParent(modelParent, false);
+            if (modelParent != null) model.SetSiblingIndex(Mathf.Min(sibling, modelParent.childCount - 1));
             model.localPosition = modelLocalPos; model.localRotation = modelLocalRot;
         }
 

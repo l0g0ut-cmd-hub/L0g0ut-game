@@ -83,6 +83,10 @@ namespace BladePath
             rend.SetPropertyBlock(mpb);
         }
 
+        // облик врага выключен (другая ступень «Пути») — его пятно не должно висеть на полу
+        void OnEnable() { if (q != null) q.gameObject.SetActive(true); }
+        void OnDisable() { if (q != null) q.gameObject.SetActive(false); }
+
         void OnDestroy() { if (q == null) return; if (Application.isPlaying) Destroy(q.gameObject); else DestroyImmediate(q.gameObject); }
     }
 }

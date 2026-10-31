@@ -144,6 +144,19 @@ namespace BladePath
         Vector3 lastPosU, velUS;
         /// <summary>Шаг времени для диагностики в редакторе (PoseProbe: в edit mode Time.deltaTime = 0). Меньше нуля — обычный Time.deltaTime.</summary>
         public static float DtOverride = -1f;
+
+        /// <summary>Драйвер активного облика бойца (у врага их несколько, выключенные пропускаются); если активных нет — первый любой.</summary>
+        public static HeroRigDriver Of(Component c)
+        {
+            if (c == null) return null;
+            HeroRigDriver any = null;
+            foreach (HeroRigDriver d in c.GetComponentsInChildren<HeroRigDriver>(true))
+            {
+                if (d.gameObject.activeInHierarchy) return d;
+                if (any == null) any = d;
+            }
+            return any;
+        }
         static float Dt { get { return DtOverride >= 0f ? DtOverride : Time.deltaTime; } }
         bool fallDust;
         bool decapitated;
