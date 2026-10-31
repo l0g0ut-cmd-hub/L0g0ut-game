@@ -15,8 +15,8 @@ namespace BladePath
         public float minGap = 12f, maxGap = 25f;
         float nextAt, t = -1f, rise = 1f, fall = 3.5f, peak = 1f;
         ParticleSystem petals, snow, skitter;
-        AudioSource src;
-        static AudioClip whoosh;
+        AudioSource src, rustle;
+        static AudioClip whoosh, rustleClip;
         bool fired;
         float snowLookAt;
 
@@ -27,6 +27,10 @@ namespace BladePath
             if (p != null) petals = p.GetComponent<ParticleSystem>();
             src = gameObject.AddComponent<AudioSource>(); src.playOnAwake = false; src.spatialBlend = 0f; src.volume = 0.22f;
             if (whoosh == null) whoosh = Whoosh();
+            // шелест листвы клёнов и хвои: петля, громкость идёт за силой порыва (в снег и без листвы — тише)
+            if (rustleClip == null) rustleClip = Rustle();
+            rustle = gameObject.AddComponent<AudioSource>(); rustle.playOnAwake = false; rustle.spatialBlend = 0f; rustle.loop = true;
+            rustle.clip = rustleClip; rustle.volume = 0f; rustle.Play();
             skitter = BuildSkitter();
         }
 
@@ -53,6 +57,13 @@ namespace BladePath
                 if (t > rise + fall) { t = -1f; s = 0f; nextAt = Time.time + Random.Range(minGap, maxGap); }
             }
             Strength = s;
+            if (rustle != null)
+            {
+                bool snowy = Weather.Instance != null && Weather.Instance.Snowing;
+                float target = (0.03f + 0.3f * s) * (snowy ? 0.5f : 1f);   // лёгкий шорох всегда, на порыве — шумит роща
+                rustle.volume = Mathf.MoveTowards(rustle.volume, target, Time.deltaTime * 0.6f);
+                rustle.panStereo = Mathf.Clamp(Dir.x * 0.4f * s, -0.4f, 0.4f);
+            }
             // трава и листва (шейдер BladePath/Foliage) гнутся по ветру
             Shader.SetGlobalFloat(WindId, s);
             Shader.SetGlobalVector(WindDirId, new Vector4(Dir.x, 0f, Dir.z, 0f));
@@ -129,6 +140,43 @@ namespace BladePath
         }
 
         /// <summary>Порыв: шум, отфильтрованный полосой, которая медленно уходит вверх и вниз; нарастание ~1 с, хвост ~3 с.</summary>
+        /// <summary>
+        /// Шелест листвы (петля 6 с без шва): шум в полосе 2–6 кГц с медленной «дышащей» огибающей и россыпью
+        /// коротких сухих тиков — листья задевают друг друга. Начало и конец сшиты перекрёстным затуханием.
+        /// </summary>
+        static AudioClip Rustle()
+        {
+            const int rate = 22050;
+            int n = (int)(rate * 6f), fade = rate / 2;
+            float[] d = new float[n + fade];
+            System.Random r = new System.Random(23);
+            float lp = 0f, hp = 0f, prev = 0f, tick = 0f;
+            for (int i = 0; i < d.Length; i++)
+            {
+                float tt = i / (float)rate;
+                float x = (float)(r.NextDouble() * 2.0 - 1.0);
+                hp = 0.86f * (hp + x - prev); prev = x;   // срез низов
+                lp += 0.55f * (hp - lp);                   // и верхов: полоса ~2–6 кГц
+                if (r.NextDouble() < 0.0016) tick = 0.6f + 0.6f * (float)r.NextDouble();   // сухой тик листа
+                tick *= 0.985f;
+                float breathe = 0.55f + 0.45f * Mathf.Sin(tt * 1.7f + Mathf.Sin(tt * 0.63f) * 2f);
+                d[i] = lp * breathe + x * tick * 0.5f;
+            }
+            float[] o = new float[n];
+            for (int i = 0; i < n; i++)
+            {
+                float v = d[i];
+                if (i < fade) { float k = i / (float)fade; v = d[i] * k + d[n + i] * (1f - k); }   // шов петли
+                o[i] = v;
+            }
+            float peak = 1e-4f;
+            for (int i = 0; i < n; i++) peak = Mathf.Max(peak, Mathf.Abs(o[i]));
+            for (int i = 0; i < n; i++) o[i] *= 0.8f / peak;
+            AudioClip c = AudioClip.Create("leaf_rustle", n, 1, rate, false);
+            c.SetData(o, 0);
+            return c;
+        }
+
         static AudioClip Whoosh()
         {
             const int rate = 22050;
