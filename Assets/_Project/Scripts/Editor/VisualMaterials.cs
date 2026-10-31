@@ -66,7 +66,7 @@ namespace BladePath.EditorTools
             // крона клёна: карточки гроздей листьев с альфа-срезом (tools/texgen/maple_cluster.py)
             l.bambooFoliage = Cutout("Env_BambooFoliage", "bamboo_leaves.png", Color.white, 0.42f, new Color(0.006f, 0.012f, 0.004f));
             l.mapleCrown = Cutout("Env_MapleCrown", "maple_cluster.png", new Color(0.92f, 0.92f, 0.92f), 0.42f, new Color(0.05f, 0.006f, 0.004f));
-            l.cedarFoliage = Cutout("Env_CedarFoliage", "bamboo_leaves.png", new Color(0.36f, 0.46f, 0.38f), 0.4f, new Color(0.002f, 0.005f, 0.003f));   // хвоя криптомерии: те же листья-карточки, темнее и холоднее
+            l.cedarFoliage = Cutout("Env_CedarFoliage", "bamboo_leaves.png", new Color(0.26f, 0.36f, 0.3f), 0.35f, new Color(0.002f, 0.005f, 0.003f));   // хвоя криптомерии: те же листья-карточки, темнее и холоднее
             l.fallenLeaves = Cutout("Env_FallenLeaves", "fallen_leaves.png", new Color(1f, 1f, 1f), 0.5f, new Color(0.03f, 0.004f, 0.003f));
             l.grass = Cutout("Env_Grass", "grass_tuft.png", new Color(0.9f, 0.95f, 0.9f), 0.45f, new Color(0.004f, 0.007f, 0.003f));
             l.blossom = Textured("Env_Blossom", "blossom_albedo.png", null, new Vector2(3f, 3f), new Color(0.95f, 0.85f, 0.85f), 0f, 0.1f);   // кроны — текстура красного клёна (лист 2)

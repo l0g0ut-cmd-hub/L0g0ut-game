@@ -481,14 +481,17 @@ namespace BladePath.EditorTools
                 t.SetParent(f, false); t.localPosition = p;
                 float th = 0.12f + 0.05f * R();
                 CharacterVisuals.Part(t, "Trunk", PrimitiveType.Cylinder, new Vector3(0f, h * 0.5f, 0f), Vector3.zero, new Vector3(th, h * 0.5f, th), look.bark);
-                int tiers = 5 + r.Next(3);
+                // крона от самой земли — плотная тёмная стена хвои (по кадрам CI голые стволы читались как частокол)
+                int tiers = 7 + r.Next(3);
                 for (int k = 0; k < tiers; k++)
                 {
                     float u = (k + 0.5f) / tiers;                       // 0 внизу кроны … 1 у вершины
-                    float y = Mathf.Lerp(h * 0.35f, h * 0.97f, u);
-                    float rad = Mathf.Lerp(1.5f, 0.35f, u) * (0.85f + 0.3f * R());
-                    TreeBuilder.Foliage(t, "Needles" + k, new Vector3(0f, y, 0f), rad, 7, Mathf.Lerp(1.6f, 0.8f, u), look.cedarFoliage, n * 53 + k * 7);
+                    float y = Mathf.Lerp(h * 0.12f, h * 0.97f, u);
+                    float rad = Mathf.Lerp(1.9f, 0.35f, Mathf.Pow(u, 0.85f)) * (0.85f + 0.3f * R());
+                    TreeBuilder.Foliage(t, "Needles" + k, new Vector3(0f, y, 0f), rad, 9, Mathf.Lerp(1.9f, 0.8f, u), look.cedarFoliage, n * 53 + k * 7);
                 }
+                // подлесок у корней
+                TreeBuilder.Foliage(t, "Brush", new Vector3((R() - 0.5f) * 0.8f, 0.45f, (R() - 0.5f) * 0.8f), 1.0f, 9, 1.2f, look.cedarFoliage, n * 97 + 3);
                 n++;
             };
             // по бокам за стенами (стены на x = ±6,4)
