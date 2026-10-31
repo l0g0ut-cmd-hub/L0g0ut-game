@@ -234,13 +234,13 @@ namespace BladePath
                 {
                     float k = Mathf.Clamp01(st / 0.15f);
                     UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0.03f, 0.5f * k));
-                    float slide = 1f - Mathf.Clamp01(st / 0.18f);
-                    float bx = (mine ? -1f : 1f) * slide * W;
-                    Color band = mine ? new Color(0.1f, 0.35f, 0.6f, 0.85f) : new Color(0.4f, 0.1f, 0.5f, 0.85f);
-                    UiKit.Rect(new Rect(bx, 220f, W, 90f), band);
-                    UiKit.Rect(new Rect(bx, 218f, W, 2f), Gold);
-                    UiKit.Rect(new Rect(bx, 310f, W, 2f), Gold);
-                    UiKit.Text(new Rect(bx, 222f, W, 86f), "УДАР ДУХА", 64f, Color.white);
+                    // мазок туши кистью через экран (вместо плоской цветной плашки) и надпись цветом владельца
+                    float reveal = Mathf.Clamp01(st / 0.22f);
+                    Color glow = mine ? new Color(0.45f, 0.8f, 1f) : new Color(0.85f, 0.45f, 1f);
+                    UiKit.Rect(new Rect(0f, 228f, W, 74f), new Color(glow.r * 0.12f, glow.g * 0.08f, glow.b * 0.15f, 0.45f * k));
+                    DrawBrush("UI/brush_stroke", new Vector2(W * 0.5f, 265f), 150f, 0.95f * k, reveal);
+                    float ta = Mathf.Clamp01((st - 0.12f) / 0.12f);
+                    UiKit.Text(new Rect(0f, 222f, W, 86f), "УДАР ДУХА", 60f * (1f + 0.25f * (1f - ta)), new Color(Mathf.Lerp(1f, glow.r, 0.35f), Mathf.Lerp(1f, glow.g, 0.35f), Mathf.Lerp(1f, glow.b, 0.35f), ta));
                 }
                 else
                 {
