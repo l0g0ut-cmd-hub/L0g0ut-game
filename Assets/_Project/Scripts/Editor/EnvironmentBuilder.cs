@@ -98,7 +98,8 @@ namespace BladePath.EditorTools
             AddIncense(env, look, new Vector3(1.7f, -0.07f, 3.32f));
             AddWindChime(env, look, new Vector3(1.3f, 2.24f, 4.98f));
             new GameObject("CrowFlock").AddComponent<CrowFlock>();
-            new GameObject("Birds").AddComponent<BladePath.Birds>();   // ворона на тории/коньке, воробьи, клин гусей, цапля, летучие мыши
+            new GameObject("Birds").AddComponent<BladePath.Birds>();
+            new GameObject("ShootingStars").AddComponent<BladePath.ShootingStars>();   // метеоры ясной ночью   // ворона на тории/коньке, воробьи, клин гусей, цапля, летучие мыши
             AddLightShafts(moonLight.transform.forward);
 
             // луна
