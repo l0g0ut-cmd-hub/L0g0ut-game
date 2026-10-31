@@ -62,6 +62,17 @@ namespace BladePath
             GUI.color = o;
         }
 
+        static Texture2D paperTex; static bool paperTried;
+        /// <summary>Панель из старой рисовой бумаги (Resources/UI/paper_ui), тонированная; без текстуры — обычный прямоугольник.</summary>
+        public static void Paper(Rect r, Color tint)
+        {
+            Init();
+            if (!paperTried) { paperTried = true; paperTex = Resources.Load<Texture2D>("UI/paper_ui"); }
+            Color o = GUI.color; GUI.color = tint;
+            GUI.DrawTexture(r, paperTex != null ? paperTex : white, ScaleMode.StretchToFill);
+            GUI.color = o;
+        }
+
         public static void Rect(Rect r, Color c) { Init(); Color o = GUI.color; GUI.color = c; GUI.DrawTexture(r, white); GUI.color = o; }
 
         public static void Disc(Vector2 center, float radius, Color c)

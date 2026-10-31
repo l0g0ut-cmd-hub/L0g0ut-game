@@ -130,7 +130,7 @@ namespace BladePath.EditorTools
             BladePath.DayNight dn = new GameObject("DayNight").AddComponent<BladePath.DayNight>();
             dn.daySky = look.skyDay;
             dn.duskSky = look.skyDusk;
-            dn.glowMats = new[] { look.haloWarm, look.haloFire, look.haloMoon, look.glow, look.paper, look.shoji };
+            dn.glowMats = new[] { look.haloWarm, look.haloFire, look.haloMoon, look.glow, look.paper, look.shoji, look.chochin };
             // отражения неба в мокром камне, доспехе, крови: свои кубкарты на ночь, день и рассвет (иначе отражалось то небо,
             // что было при последнем обновлении окружения, — на телефоне и после дневных кадров CI серые «дыры» на глянце)
             dn.nightRefl = SkyCube("sky_night.png", new Color(0.5f, 0.5f, 0.5f), 1.3f, "Refl_Night", new Color(0.025f, 0.028f, 0.04f));
@@ -630,7 +630,7 @@ namespace BladePath.EditorTools
             {
                 float x = -0.8f - 2.8f + i * 1.4f + 0.7f;
                 EnvMesh.Box(d, "String" + i, new Vector3(x, 2.28f, 4.75f), Vector3.zero, new Vector3(0.012f, 0.16f, 0.012f), look.woodDark, 0.2f);
-                GameObject lamp = CharacterVisuals.Part(d, "PaperLamp" + i, PrimitiveType.Sphere, new Vector3(x, 2.05f, 4.75f), Vector3.zero, new Vector3(0.28f, 0.36f, 0.28f), look.paper);
+                GameObject lamp = CharacterVisuals.Part(d, "PaperLamp" + i, PrimitiveType.Sphere, new Vector3(x, 2.05f, 4.75f), new Vector3(0f, 90f, 0f), new Vector3(0.28f, 0.36f, 0.28f), look.chochin != null ? look.chochin : look.paper);
                 AddReflection(lamp.transform, null, 1f, new Color(1f, 0.8f, 0.5f), 0.24f, 1.5f, 0.36f);
                 EnvMesh.Glow(d, "LampHalo" + i, new Vector3(x, 2.05f, 4.6f), 1.0f, look.haloWarm, 0.06f);
                 CharacterVisuals.Part(d, "LampCapT" + i, PrimitiveType.Cylinder, new Vector3(x, 2.25f, 4.75f), Vector3.zero, new Vector3(0.12f, 0.012f, 0.12f), look.woodDark);
@@ -645,7 +645,7 @@ namespace BladePath.EditorTools
                 EnvMesh.Box(hp, "HallBanner" + i, new Vector3(0f, -0.65f, 0f), Vector3.zero, new Vector3(0.36f, 1.3f, 0.01f), look.banner, 0f);
             }
             // симэнава между столбами тории и бумажные зигзаги
-            CharacterVisuals.Part(d, "Shimenawa", PrimitiveType.Cylinder, new Vector3(1.7f, 2.05f, 3.52f), new Vector3(0f, 0f, 90f), new Vector3(0.07f, 1.0f, 0.07f), look.bark);
+            CharacterVisuals.Part(d, "Shimenawa", PrimitiveType.Cylinder, new Vector3(1.7f, 2.05f, 3.52f), new Vector3(0f, 0f, 90f), new Vector3(0.07f, 1.0f, 0.07f), look.rope != null ? look.rope : look.bark);
             // сидэ — бумажные молнии-зигзаги: лёгкие, трепещут на ветру часто и мелко
             for (int i = 0; i < 4; i++)
             {
@@ -995,7 +995,7 @@ namespace BladePath.EditorTools
                 Transform t = new GameObject("Cedar" + n).transform;
                 t.SetParent(f, false); t.localPosition = p;
                 float th = 0.12f + 0.05f * R();
-                CharacterVisuals.Part(t, "Trunk", PrimitiveType.Cylinder, new Vector3(0f, h * 0.5f, 0f), Vector3.zero, new Vector3(th, h * 0.5f, th), look.bark);
+                CharacterVisuals.Part(t, "Trunk", PrimitiveType.Cylinder, new Vector3(0f, h * 0.5f, 0f), Vector3.zero, new Vector3(th, h * 0.5f, th), look.cedarBark != null ? look.cedarBark : look.bark);
                 // крона от самой земли — плотная тёмная стена хвои (по кадрам CI голые стволы читались как частокол)
                 int tiers = 7 + r.Next(3);
                 for (int k = 0; k < tiers; k++)
@@ -1075,9 +1075,9 @@ namespace BladePath.EditorTools
                 Transform leaf = new GameObject("Leaf" + side).transform; leaf.SetParent(g, false);
                 leaf.localPosition = new Vector3((gate - 0.16f) * side, 0f, zf - 0.08f);
                 leaf.localRotation = Quaternion.Euler(0f, side * -72f, 0f);
-                EnvMesh.Box(leaf, "Door", new Vector3(-side * 0.6f, 1.05f, 0f), Vector3.zero, new Vector3(1.15f, 2.0f, 0.07f), look.woodDark, 1f);
+                EnvMesh.Box(leaf, "Door", new Vector3(-side * 0.6f, 1.05f, 0f), Vector3.zero, new Vector3(1.15f, 2.0f, 0.07f), look.gateDoor != null ? look.gateDoor : look.woodDark, look.gateDoor != null ? 0f : 1f);   // фото створки растянуто на грань
                 for (int k = 0; k < 4; k++)
-                    EnvMesh.Box(leaf, "Rib" + k, new Vector3(-side * 0.6f, 0.35f + k * 0.48f, -0.045f), Vector3.zero, new Vector3(1.15f, 0.06f, 0.03f), look.iron != null ? look.iron : look.woodDark, 1f);
+                    if (look.gateDoor == null) EnvMesh.Box(leaf, "Rib" + k, new Vector3(-side * 0.6f, 0.35f + k * 0.48f, -0.045f), Vector3.zero, new Vector3(1.15f, 0.06f, 0.03f), look.iron != null ? look.iron : look.woodDark, 1f);   // на фото створки полосы уже есть
             }
             EnvMesh.Box(g, "Lintel", new Vector3(0f, 2.45f, zf), Vector3.zero, new Vector3(gate * 2f + 0.6f, 0.2f, 0.3f), look.lacquer, 1f, true);
             EnvMesh.Box(g, "Lintel2", new Vector3(0f, 2.2f, zf), Vector3.zero, new Vector3(gate * 2f + 0.3f, 0.1f, 0.22f), look.woodDark, 1f, true);
@@ -1101,7 +1101,7 @@ namespace BladePath.EditorTools
                 EnvMesh.Box(g, "LanternCord" + side, lp + new Vector3(0f, 0.27f, 0f), Vector3.zero, new Vector3(0.012f, 0.2f, 0.012f), look.woodDark, 0.2f);
                 EnvMesh.Box(g, "LanternCap" + side, lp + new Vector3(0f, 0.19f, 0f), Vector3.zero, new Vector3(0.17f, 0.035f, 0.17f), look.woodDark, 1f);
                 EnvMesh.Box(g, "LanternBase" + side, lp - new Vector3(0f, 0.19f, 0f), Vector3.zero, new Vector3(0.17f, 0.035f, 0.17f), look.woodDark, 1f);
-                CharacterVisuals.Part(g, "Lantern" + side, PrimitiveType.Sphere, lp, Vector3.zero, new Vector3(0.24f, 0.36f, 0.24f), look.paper);
+                CharacterVisuals.Part(g, "Lantern" + side, PrimitiveType.Sphere, lp, new Vector3(0f, 90f, 0f), new Vector3(0.24f, 0.36f, 0.24f), look.chochin != null ? look.chochin : look.paper);
                 EnvMesh.Glow(null, "LanternHalo" + side, lp, 1.1f, look.haloWarm, 0.1f);
             }
             // за воротами дорожку в рощу провожают каменные фонари (ночью — огоньки, уходящие в лес)
@@ -1427,7 +1427,7 @@ namespace BladePath.EditorTools
             // курильница-коро: пузатая бронзовая чаша с шейкой и отогнутой губой (тело вращения), внутри — пепел
             Mesh koro = EnvMesh.Lathe("koro", new[] { new Vector2(0f, 0.12f), new Vector2(0.1f, 0.122f), new Vector2(0.18f, 0.16f), new Vector2(0.225f, 0.23f), new Vector2(0.222f, 0.28f),
                 new Vector2(0.2f, 0.325f), new Vector2(0.185f, 0.34f), new Vector2(0.215f, 0.355f), new Vector2(0.222f, 0.366f), new Vector2(0.19f, 0.364f), new Vector2(0.172f, 0.345f), new Vector2(0.16f, 0.33f) }, 24);
-            EnvMesh.MeshObj(root, "Bowl", koro, Vector3.zero, Vector3.zero, Vector3.one, look.bronze);
+            EnvMesh.MeshObj(root, "Bowl", koro, Vector3.zero, Vector3.zero, Vector3.one, look.bellBronze != null ? look.bellBronze : look.bronze);
             Object.DestroyImmediate(CharacterVisuals.Part(root, "Ash", PrimitiveType.Cylinder, new Vector3(0f, 0.336f, 0f), Vector3.zero, new Vector3(0.33f, 0.004f, 0.33f), look.plaster).GetComponent<Collider>());
             for (int i = 0; i < 3; i++)
             {
@@ -1674,7 +1674,7 @@ namespace BladePath.EditorTools
             b.position = pos;
             b.gameObject.AddComponent<ArenaObstacle>().radius = 0.32f;
             // кагарибi — железная корзина-жаровня на расставленной треноге (вместо каменного столба с чашей)
-            Material iron = look.iron != null ? look.iron : look.woodDark;
+            Material iron = look.ironOld != null ? look.ironOld : (look.iron != null ? look.iron : look.woodDark);
             for (int k = 0; k < 3; k++)
             {
                 float ang = k * Mathf.PI * 2f / 3f + 0.4f;

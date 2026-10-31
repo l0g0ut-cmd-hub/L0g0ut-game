@@ -389,6 +389,10 @@ namespace BladePath
             if (paused)
             {
                 UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, 0.65f));
+                Rect pr = new Rect(W * 0.5f - 340f, 54f, 680f, 422f);   // свиток-подложка под кнопками паузы
+                UiKit.Rect(new Rect(pr.x - 2f, pr.y - 2f, pr.width + 4f, pr.height + 4f), Gold * 0.6f);
+                UiKit.Rect(pr, new Color(0.05f, 0.04f, 0.04f, 0.9f));
+                UiKit.Paper(pr, new Color(0.22f, 0.17f, 0.12f, 0.5f));
                 UiKit.Text(new Rect(W * 0.5f - 200f, 62f, 400f, 50f), "ПАУЗА", 40f, Gold);
                 for (int b = (int)B.Resume; b <= (int)B.ToMenu; b++) DrawRectButton(b);
                 DrawRectButton((int)B.Vibro); DrawRectButton((int)B.Difficulty); DrawRectButton((int)B.Gfx);
