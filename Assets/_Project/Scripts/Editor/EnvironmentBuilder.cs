@@ -115,11 +115,14 @@ namespace BladePath.EditorTools
             AddLightShafts(moonLight.transform.forward);
 
             // луна
-            GameObject moon = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            // луна — фотография диска (атлас) на квадрате, всегда лицом к камере; без текстуры — старая светящаяся сфера
+            bool moonTex = look.moon != null && look.moon.mainTexture != null;
+            GameObject moon = GameObject.CreatePrimitive(moonTex ? PrimitiveType.Quad : PrimitiveType.Sphere);
             moon.name = "Moon";
             Object.DestroyImmediate(moon.GetComponent<Collider>());
             moon.transform.position = new Vector3(4.8f, 6.4f, 16f);
-            moon.transform.localScale = Vector3.one * 2.8f;
+            moon.transform.localScale = Vector3.one * (moonTex ? 3.25f : 2.8f);
+            if (moonTex) { BladePath.GlowSprite mg = moon.AddComponent<BladePath.GlowSprite>(); mg.flicker = 0f; mg.noHaze = true; moon.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; }
             EnvMesh.Glow(null, "MoonHalo", moon.transform.position + new Vector3(0f, 0f, 0.5f), 11f, look.haloMoon, 0f);
             moon.GetComponent<Renderer>().sharedMaterial = look.moon;
 
@@ -488,7 +491,7 @@ namespace BladePath.EditorTools
             Transform root = new GameObject("ShojiShadows").transform;
             const float z = 5.211f;
             // монах — в средней створке (входной): на остальных висят знамёна и закрывали его
-            GameObject monk = EnvMesh.Decal(root, "Monk", new Vector3(-1.1f, 0.6f + 0.7f, z), 0f, 0.7f, 1.4f, look.shojiMonk);
+            GameObject monk = EnvMesh.Decal(root, "Monk", new Vector3(-1.0f, 0.6f + 0.7f, z), 0f, 1.4f, 1.4f, look.shojiMonk);   // квадрат: сидящий в профиль (силуэт из атласа) шире, чем высок
             monk.transform.localEulerAngles = new Vector3(-90f, 0f, 0f);
             // идущий: рост тени ~1,38 м — макушка под верхней рамой створки, ступни на полу веранды
             GameObject walker = EnvMesh.Decal(root, "Walker", new Vector3(-0.8f, 0.54f + 0.775f, z), 0f, 0.775f, 1.55f, look.shojiWalker);

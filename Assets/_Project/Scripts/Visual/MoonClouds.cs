@@ -15,7 +15,7 @@ namespace BladePath
 
         void Start()
         {
-            if (tex == null) tex = MakeTex();
+            if (tex == null) { tex = Resources.Load<Texture2D>("FX/cloud"); if (tex == null) tex = MakeTex(); }   // фото облака (атлас), иначе процедурное
             Shader sh = Shader.Find("Legacy Shaders/Particles/Alpha Blended");
             if (sh == null) sh = Shader.Find("Sprites/Default");
             mat = new Material(sh) { name = "MoonCloud", mainTexture = tex };

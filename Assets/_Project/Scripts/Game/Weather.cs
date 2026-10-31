@@ -338,7 +338,7 @@ namespace BladePath
                 g.transform.SetParent(transform, false);
                 g.transform.position = new Vector3(0f, 0f, 2f); g.transform.localScale = Vector3.one * 90f;
                 dome = g.GetComponent<Renderer>();
-                domeMat = new Material(Shader.Find("Sprites/Default")) { name = "FogDome", renderQueue = 2501 };   // Cull Off — видно изнутри; сразу после неба, до прозрачных частиц (иначе вуалит искры и лепестки)
+                domeMat = new Material(Shader.Find("Sprites/Default")) { name = "FogDome", renderQueue = 2502 };   // Cull Off — видно изнутри; сразу после неба, до прозрачных частиц (иначе вуалит искры и лепестки)
                 dome.sharedMaterial = domeMat;
                 dome.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; dome.receiveShadows = false;
             }

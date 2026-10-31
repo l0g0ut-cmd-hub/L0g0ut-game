@@ -63,7 +63,7 @@ namespace BladePath.EditorTools
             Gloss(l.stoneBlock, "stoneblock_ms.png", 1f);   // тёсаный гранит: следы зубила, фаски, лишайник (tools: texgen/stoneblock.py)
             l.gravel = Textured("Env_Gravel", "gravel_albedo.png", "gravel_normal.png", Vector2.one, new Color(0.56f, 0.56f, 0.57f), 0f, 0.15f);
             l.forestFloor = Textured("Env_ForestFloor", "forest_floor_albedo.png", "forest_floor_normal.png", Vector2.one, Color.white, 0f, 0.1f);   // мох, земля и хвоя за стенами
-            l.bark = Textured("Env_Bark", "bark_albedo.png", "bark_normal.png", new Vector2(2f, 2f), Color.white, 0f, 0.1f);
+            l.bark = Textured("Env_Bark", "bark_albedo.png", "bark_normal.png", new Vector2(2f, 2f), new Color(0.62f, 0.6f, 0.58f), 0f, 0.1f);   // фото коры светлее прежней
             // крона клёна: карточки гроздей листьев с альфа-срезом (tools/texgen/maple_cluster.py)
             // листва и трава качаются на ветру (BladePath/Foliage): sway 0 — карточки кроны трепещут по месту, 1 — трава гнётся верхушкой
             l.bambooFoliage = Cutout("Env_BambooFoliage", "bamboo_leaves.png", Color.white, 0.42f, new Color(0.006f, 0.012f, 0.004f), 0f, 0.05f);
@@ -113,7 +113,9 @@ namespace BladePath.EditorTools
             l.haloFire = Additive("Halo_Fire", halo, new Color(1f, 0.45f, 0.12f, 0.75f));
             l.haloMoon = Additive("Halo_Moon", halo, new Color(0.55f, 0.65f, 1f, 0.35f));
             l.flame = Unlit("Flame", new Color(1f, 0.55f, 0.12f));
-            l.moon = Unlit("Moon", new Color(0.86f, 0.90f, 1f));
+            Texture2D moonT = Tex("moon.png", false);
+            if (moonT != null) { l.moon = AlphaParticle("MoonDisc", moonT, new Color(0.56f, 0.56f, 0.6f, 0.5f)); l.moon.renderQueue = 2501; }   // сразу после неба (туманный купол — 2502)
+            else l.moon = Unlit("Moon", new Color(0.86f, 0.90f, 1f));
             l.petal = SpriteLike("Petal", new Color(1f, 0.72f, 0.82f));
             l.aoStrip = AO("AO_Strip", false, 0.62f);
             l.aoBlob = AO("AO_Blob", true, 0.6f);

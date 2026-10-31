@@ -27,6 +27,16 @@ namespace BladePath
             ang = new float[n]; spd = new float[n]; wob = new float[n]; pause = new float[n];
             for (int i = 0; i < n; i++) { ang[i] = Random.value * 6.28f; spd[i] = Random.Range(0.12f, 0.22f) * (Random.value < 0.5f ? 1f : -1f); wob[i] = Random.value * 6.28f; }
             nextRise = Time.time + Random.Range(5f, 12f);
+            // атлас карпов: кохаку, сёва, ямабуки — каждой рыбе свой окрас
+            MaterialPropertyBlock mp = new MaterialPropertyBlock();
+            for (int i = 0; i < n; i++)
+            {
+                Renderer fr = fish[i] != null ? fish[i].GetComponent<Renderer>() : null;
+                if (fr == null || fr.sharedMaterial == null || fr.sharedMaterial.mainTexture == null || fr.sharedMaterial.mainTexture.width < fr.sharedMaterial.mainTexture.height * 1.4f) continue;   // старая текстура — одна рыба
+                fr.GetPropertyBlock(mp);
+                mp.SetVector("_MainTex_ST", new Vector4(1f / 3f, 1f, (i % 3) / 3f, 0f));
+                fr.SetPropertyBlock(mp);
+            }
             rings = BuildRings();
             plopSrc = gameObject.AddComponent<AudioSource>(); plopSrc.playOnAwake = false; plopSrc.spatialBlend = 0.7f; plopSrc.minDistance = 2f; plopSrc.maxDistance = 22f;
             if (plop == null) plop = Plop();
