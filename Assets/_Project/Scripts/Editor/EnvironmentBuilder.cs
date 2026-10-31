@@ -101,7 +101,17 @@ namespace BladePath.EditorTools
             new GameObject("Birds").AddComponent<BladePath.Birds>();
             new GameObject("ShootingStars").AddComponent<BladePath.ShootingStars>();   // метеоры ясной ночью
             new GameObject("TempleCat").AddComponent<BladePath.TempleCat>();           // кот на веранде храма
-            new GameObject("MoonClouds").AddComponent<BladePath.MoonClouds>();         // облака бегут по луне   // ворона на тории/коньке, воробьи, клин гусей, цапля, летучие мыши
+            new GameObject("MoonClouds").AddComponent<BladePath.MoonClouds>();         // облака бегут по луне
+            // эхо каменного двора: звон клинков и шаги отражаются от стен и храма (короткий хвост, без гула)
+            {
+                AudioReverbZone rz = new GameObject("CourtyardReverb").AddComponent<AudioReverbZone>();
+                rz.transform.position = new Vector3(0f, 1.5f, 1.5f);
+                rz.minDistance = 9f; rz.maxDistance = 16f;
+                rz.reverbPreset = AudioReverbPreset.User;
+                rz.room = -1400; rz.roomHF = -600; rz.decayTime = 1.25f; rz.decayHFRatio = 0.6f;
+                rz.reflections = -900; rz.reflectionsDelay = 0.012f; rz.reverb = -700; rz.reverbDelay = 0.03f;
+                rz.diffusion = 80f; rz.density = 90f;
+            }   // ворона на тории/коньке, воробьи, клин гусей, цапля, летучие мыши
             AddLightShafts(moonLight.transform.forward);
 
             // луна

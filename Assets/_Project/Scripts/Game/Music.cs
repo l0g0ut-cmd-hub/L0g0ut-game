@@ -18,6 +18,7 @@ namespace BladePath
             koto.clip = KotoLoop(); koto.loop = true; koto.volume = 0.32f; koto.spatialBlend = 0f; koto.Play();
             drums = gameObject.AddComponent<AudioSource>();
             drums.clip = DrumLoop(); drums.loop = true; drums.volume = 0f; drums.spatialBlend = 0f; drums.Play();
+            koto.reverbZoneMix = 0.25f; drums.reverbZoneMix = 0.35f;   // музыка почти сухая, эхо двора — для звуков боя
         }
 
         void Update()
