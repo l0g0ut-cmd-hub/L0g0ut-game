@@ -265,6 +265,48 @@ namespace BladePath.EditorTools
             return g;
         }
 
+        /// <summary>
+        /// Тело вращения: профиль (x — радиус, y — высота) вокруг оси Y, sides граней, сглаженные нормали. Кэшируется по ключу.
+        /// </summary>
+        public static Mesh Lathe(string key, Vector2[] profile, int sides)
+        {
+            Mesh m;
+            if (cache.TryGetValue("lathe" + key, out m) && m != null) return m;
+            int np = profile.Length;
+            Vector3[] v = new Vector3[np * (sides + 1)];
+            Vector2[] uv = new Vector2[v.Length];
+            for (int i = 0; i <= sides; i++)
+            {
+                float a = Mathf.PI * 2f * i / sides;
+                for (int j = 0; j < np; j++)
+                {
+                    v[i * np + j] = new Vector3(Mathf.Cos(a) * profile[j].x, profile[j].y, Mathf.Sin(a) * profile[j].x);
+                    uv[i * np + j] = new Vector2(i / (float)sides, j / (float)(np - 1));
+                }
+            }
+            List<int> t = new List<int>();
+            for (int i = 0; i < sides; i++)
+                for (int j = 0; j < np - 1; j++)
+                {
+                    int a0 = i * np + j, a1 = a0 + 1, b0 = (i + 1) * np + j, b1 = b0 + 1;
+                    t.Add(a0); t.Add(a1); t.Add(b1); t.Add(a0); t.Add(b1); t.Add(b0);
+                }
+            m = new Mesh { name = "lathe_" + key, vertices = v, uv = uv };
+            m.SetTriangles(t, 0);
+            m.RecalculateNormals(); m.RecalculateBounds(); m.RecalculateTangents();
+            if (!AssetDatabase.IsValidFolder(Folder)) AssetDatabase.CreateFolder("Assets/_Project/Models", "Env");
+            AssetDatabase.CreateAsset(m, Folder + "/env_" + (counter++) + ".asset");
+            cache["lathe" + key] = m;
+            return m;
+        }
+
+        public static GameObject MeshObj(Transform parent, string name, Mesh m, Vector3 pos, Vector3 euler, Vector3 scale, Material mat)
+        {
+            GameObject g = Make(parent, name, m, pos, euler, mat);
+            g.transform.localScale = scale;
+            return g;
+        }
+
         /// <summary>Неровный почти эллиптический контур камня: n точек, полуоси rx, rz, разброс радиуса jitter.</summary>
         public static Vector2[] StoneOutline(System.Random r, int n, float rx, float rz, float jitter)
         {

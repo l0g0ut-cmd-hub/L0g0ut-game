@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace BladePath
@@ -17,6 +18,8 @@ namespace BladePath
 
         class Leg { public Transform hip, knee, hock; public float l1, l2, l3; }
         Transform root, chest, haunch, neck, head, tailRoot;
+        // туловище — одна гладкая «колбаса» вдоль хребта (кольца по сплайну от крупа к шее), а не два шара
+        Mesh bodyMesh; Vector3[] bodyV; const int Rings = 16, Sides = 12;
         Leg[] legs = new Leg[4];             // 0, 1 — передние (Л, П); 2, 3 — задние
         Transform[] tail = new Transform[8];
         float z, targetZ, timer, groomT = -1f, walkPh, face = 90f, tailPh, sitK = 1f;
@@ -54,6 +57,8 @@ namespace BladePath
             chest = Ell(root, "Chest", Vector3.zero, new Vector3(0.12f, 0.15f, 0.16f), fur);
             Ell(chest, "Bib", new Vector3(0f, -0.12f, 0.32f), new Vector3(0.75f, 0.7f, 0.45f), white);   // белая грудка (в долях груди)
             haunch = Ell(root, "Haunch", Vector3.zero, new Vector3(0.14f, 0.14f, 0.19f), fur);
+            chest.GetComponent<Renderer>().enabled = false; haunch.GetComponent<Renderer>().enabled = false;   // опоры для грудки и лап; видимое тело — bodyMesh
+            BuildBody(fur);
             neck = Ell(root, "Neck", Vector3.zero, new Vector3(0.075f, 0.085f, 0.09f), fur);
             head = new GameObject("Head").transform; head.SetParent(root, false);
             Ell(head, "Skull", Vector3.zero, new Vector3(0.1f, 0.085f, 0.092f), fur);
@@ -105,6 +110,78 @@ namespace BladePath
             Pose(1f, -1f, 0f, 0f, 0f, 0f);
         }
 
+        void BuildBody(Material fur)
+        {
+            bodyV = new Vector3[Rings * Sides + 2];
+            List<int> t = new List<int>();
+            for (int r = 0; r < Rings - 1; r++)
+                for (int k = 0; k < Sides; k++)
+                {
+                    int a0 = r * Sides + k, a1 = r * Sides + (k + 1) % Sides, b0 = a0 + Sides, b1 = a1 + Sides;
+                    t.Add(a0); t.Add(b1); t.Add(b0); t.Add(a0); t.Add(a1); t.Add(b1);   // по часовой снаружи
+                }
+            int capA = Rings * Sides, capB = capA + 1;
+            for (int k = 0; k < Sides; k++)
+            {
+                int k2 = (k + 1) % Sides, last = (Rings - 1) * Sides;
+                t.Add(capA); t.Add(k2); t.Add(k);
+                t.Add(capB); t.Add(last + k); t.Add(last + k2);
+            }
+            bodyMesh = new Mesh { name = "CatBody" };
+            bodyMesh.MarkDynamic();
+            bodyMesh.vertices = bodyV;
+            bodyMesh.SetTriangles(t, 0);
+            GameObject g = new GameObject("Body");
+            g.transform.SetParent(root, false);
+            g.AddComponent<MeshFilter>().sharedMesh = bodyMesh;
+            g.AddComponent<MeshRenderer>().sharedMaterial = fur;
+        }
+
+        static Vector3 CR(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t)
+        {
+            float t2 = t * t, t3 = t2 * t;
+            return 0.5f * (2f * p1 + (p2 - p0) * t + (2f * p0 - 5f * p1 + 4f * p2 - p3) * t2 + (3f * p1 - p0 - 3f * p2 + p3) * t3);
+        }
+
+        /// <summary>Хребет по 4 точкам (круп → бёдра → грудь → основание шеи) и радиусы (ширина x, высота y) в них.</summary>
+        void UpdateBody(Vector3[] c, Vector2[] rad)
+        {
+            if (bodyMesh == null) return;
+            Vector3[] p = { c[0] * 2f - c[1], c[0], c[1], c[2], c[3], c[3] * 2f - c[2] };
+            Vector3 prev = c[0];
+            for (int r = 0; r < Rings; r++)
+            {
+                float u = r / (float)(Rings - 1) * 3f;   // 0…3 по трём отрезкам
+                int seg = Mathf.Min(2, (int)u); float f = u - seg;
+                Vector3 pos = CR(p[seg], p[seg + 1], p[seg + 2], p[seg + 3], f);
+                Vector3 nxt = CR(p[seg], p[seg + 1], p[seg + 2], p[seg + 3], Mathf.Min(1f, f + 0.05f));
+                Vector3 tan = (seg == 2 && f > 0.95f ? pos - prev : nxt - pos);
+                if (tan.sqrMagnitude < 1e-8f) tan = Vector3.forward;
+                tan.Normalize();
+                Vector2 rr = Vector2.Lerp(rad[seg], rad[seg + 1], Mathf.SmoothStep(0f, 1f, f));
+                float end = Mathf.Min(u, 3f - u);   // скругление концов
+                float taper = end < 0.35f ? Mathf.Sqrt(Mathf.Max(0.05f, end / 0.35f)) : 1f;
+                rr *= Mathf.Lerp(0.55f, 1f, taper);
+                Vector3 side = Vector3.right, nrm = Vector3.Cross(tan, side).normalized;   // «вверх» поперёк хребта
+                if (nrm.y < 0f) nrm = -nrm;
+                for (int k = 0; k < Sides; k++)
+                {
+                    float a = Mathf.PI * 2f * k / Sides;
+                    float ca = Mathf.Cos(a), sa = Mathf.Sin(a);
+                    // живот чуть площе спины
+                    float down = sa < 0f ? 0.85f : 1f;
+                    bodyV[r * Sides + k] = pos + side * (ca * rr.x) + nrm * (sa * rr.y * down);
+                }
+                prev = pos;
+            }
+            Vector3 t0 = (c[0] - c[1]).normalized, t1 = (c[3] - c[2]).normalized;
+            bodyV[Rings * Sides] = c[0] + t0 * rad[0].y * 0.35f;
+            bodyV[Rings * Sides + 1] = c[3] + t1 * rad[3].y * 0.35f;
+            bodyMesh.vertices = bodyV;
+            bodyMesh.RecalculateNormals();
+            bodyMesh.RecalculateBounds();
+        }
+
         static Transform Ell(Transform parent, string name, Vector3 pos, Vector3 scale, Material m) { return Prim(parent, PrimitiveType.Sphere, name, pos, scale, m); }
         static Transform Box(Transform parent, string name, Vector3 pos, Vector3 scale, Material m) { return Prim(parent, PrimitiveType.Cube, name, pos, scale, m); }
 
@@ -122,6 +199,7 @@ namespace BladePath
 
         static float L(float x, float y, float k) { return x + (y - x) * k; }
         static Vector3 L(Vector3 x, Vector3 y, float k) { return x + (y - x) * k; }
+        static Vector2 L(Vector2 x, Vector2 y, float k) { return x + (y - x) * k; }
 
         /// <summary>
         /// Поза: sit 0 — идёт, 1 — сидит; groom — время умывания (−1 — не умывается); ph — фаза шага;
@@ -139,6 +217,18 @@ namespace BladePath
             haunch.localScale = L(new Vector3(0.13f, 0.135f, 0.19f), new Vector3(0.15f, 0.14f, 0.18f), sit);
             float bob = Mathf.Abs(Mathf.Sin(ph)) * 0.008f * w;
             chest.localPosition += Vector3.up * bob; haunch.localPosition += Vector3.up * bob;
+            Vector3 lift = Vector3.up * bob;
+            Vector3[] spine = {
+                L(new Vector3(0f, 0.165f, -0.165f), new Vector3(0f, 0.045f, -0.13f), sit) + lift,   // круп
+                L(new Vector3(0f, 0.168f, -0.07f), new Vector3(0f, 0.085f, -0.06f), sit) + lift,    // бёдра
+                L(new Vector3(0f, 0.168f, 0.05f), new Vector3(0f, 0.175f, 0.025f), sit) + lift,     // грудь
+                L(new Vector3(0f, 0.19f, 0.135f), new Vector3(0f, 0.245f, 0.055f), sit) + lift };   // основание шеи
+            Vector2[] rad = {
+                L(new Vector2(0.045f, 0.045f), new Vector2(0.065f, 0.045f), sit),
+                L(new Vector2(0.066f, 0.07f), new Vector2(0.078f, 0.075f), sit),
+                L(new Vector2(0.06f, 0.072f), new Vector2(0.062f, 0.07f), sit),
+                L(new Vector2(0.044f, 0.048f), new Vector2(0.045f, 0.05f), sit) };
+            UpdateBody(spine, rad);
             neck.localPosition = L(new Vector3(0f, 0.205f, 0.165f), new Vector3(0f, 0.255f, 0.06f), sit);
             neck.localRotation = Quaternion.Euler(L(-40f, -15f, sit), 0f, 0f);
             Vector3 headPos = L(new Vector3(0f, 0.235f, 0.215f), new Vector3(0f, 0.3f, 0.085f), sit);
@@ -199,7 +289,7 @@ namespace BladePath
             head.localRotation = Quaternion.Euler(L(-8f, 0f, sit) + hp, hy, hr);
 
             // хвост: сидя — лежит на полу и обвивает передние лапы, кончик подёргивается; на ходу — трубой с изгибом
-            tailRoot.localPosition = L(new Vector3(0f, 0.19f, -0.2f), new Vector3(0f, 0.03f, -0.17f), sit);   // из крупа, без зазора
+            tailRoot.localPosition = spine[0] + (spine[0] - spine[1]).normalized * 0.01f + Vector3.up * L(0.01f, -0.005f, sit);   // растёт из конца крупа
             for (int i = 0; i < tail.Length; i++)
             {
                 float k = i / (float)(tail.Length - 1);

@@ -322,10 +322,17 @@ namespace BladePath.EditorTools
             Material bronze = look.bellBronze != null ? look.bellBronze : look.bronze;
             Transform root = new GameObject("RainChain").transform; root.position = top;
             Transform chain = new GameObject("Chain").transform; chain.SetParent(root, false);
+            // кусари-тои: колокольчики-чашечки (тело вращения с отогнутой кромкой), нанизанные вплотную одна под другой на
+            // тонкую цепь — сплошная бронзовая гирлянда до чаши (раньше — плоские цилиндры с просветами: «цепь из квадратов»)
             float len = top.y - 0.25f;
-            int links = Mathf.RoundToInt(len / 0.16f);
+            const float step = 0.085f;
+            int links = Mathf.RoundToInt(len / step);
+            Mesh cup = EnvMesh.Lathe("raincup", new[] {
+                new Vector2(0.004f, 0f), new Vector2(0.016f, 0.004f), new Vector2(0.026f, 0.022f), new Vector2(0.036f, 0.05f), new Vector2(0.046f, 0.07f),
+                new Vector2(0.05f, 0.078f), new Vector2(0.044f, 0.08f), new Vector2(0.036f, 0.074f), new Vector2(0.02f, 0.04f), new Vector2(0.008f, 0.02f) }, 12);
             for (int i = 0; i < links; i++)
-                CharacterVisuals.Part(chain, "Cup" + i, PrimitiveType.Cylinder, new Vector3(0f, -0.08f - i * 0.16f, 0f), new Vector3(0f, i * 45f, 0f), new Vector3(0.07f, 0.045f, 0.07f), bronze);
+                EnvMesh.MeshObj(chain, "Cup" + i, cup, new Vector3(0f, -0.085f - i * step, 0f), new Vector3(0f, i * 30f, 0f), Vector3.one, bronze);
+            CharacterVisuals.Part(chain, "Rod", PrimitiveType.Cylinder, new Vector3(0f, -len * 0.5f, 0f), Vector3.zero, new Vector3(0.008f, len * 0.5f + 0.03f, 0.008f), bronze);
             CharacterVisuals.Part(chain, "Hook", PrimitiveType.Cylinder, new Vector3(0f, 0.02f, 0f), Vector3.zero, new Vector3(0.02f, 0.05f, 0.02f), bronze);
             // каменная чаша и галька
             Material rockM = look.rock != null ? look.rock : look.stoneBlock;
@@ -835,7 +842,7 @@ namespace BladePath.EditorTools
             {
                 float x = cx - 3.5f + i * 1.4f;
                 CharacterVisuals.Part(hall, "Column" + i, PrimitiveType.Cylinder, new Vector3(x, 1.5f, 5.15f), Vector3.zero, new Vector3(0.2f, 1.0f, 0.2f), look.lacquer);
-                EnvMesh.Box(hall, "ColBase" + i, new Vector3(x, 0.55f, 5.15f), Vector3.zero, new Vector3(0.3f, 0.1f, 0.3f), look.stoneBlock, 1f);
+                EnvMesh.Box(hall, "ColBase" + i, new Vector3(x, 0.585f, 5.15f), Vector3.zero, new Vector3(0.3f, 0.13f, 0.3f), look.stoneBlock, 1f);   // выше настила веранды (раньше грани совпадали — мерцало)
                 if (i < 5)
                 {
                     GameObject sj = EnvMesh.Box(hall, "Shoji" + i, new Vector3(x + 0.7f, 1.3f, 5.24f), Vector3.zero, new Vector3(1.2f, 1.5f, 0.05f), look.shoji, 0f);
