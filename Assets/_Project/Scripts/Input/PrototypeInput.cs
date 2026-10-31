@@ -194,18 +194,23 @@ namespace BladePath
             bool paused = Paused, over = Over, play = !paused && !over;
 
             Box(B.Stick, 0f, H - 330f, 360f, 330f);
-            // правый кластер: большая кнопка «сверху», вокруг неё остальные удары
-            Circle(B.Overhead, W - 100f, H - 112f, 56f);
-            Circle(B.Thrust, W - 108f, H - 236f, 42f);
-            Circle(B.Slash, W - 212f, H - 190f, 42f);
-            Circle(B.Rising, W - 216f, H - 84f, 40f);
-            Circle(B.Legs, W - 316f, H - 124f, 38f);
-            Circle(B.Energy, W - 322f, H - 226f, 36f);
-            Circle(B.Jump, W - 214f, H - 296f, 34f);
-            Circle(B.Dash, W - 412f, H - 66f, 32f);
-            Circle(B.Block, W - 408f, H - 150f, 32f);
-            Circle(B.Super, W - 92f, H - 330f, 40f);
-            Circle(B.Heal, W - 410f, H - 236f, 30f);   // тыква-горлянка — над блоком
+            // правый кластер — компактная дуга (по жалобе «интерфейс атак закрывает пол-экрана»): в углу главная «сверху»,
+            // по дуге вплотную — укол, рез, снизу, по ногам; вторым поясом — блок, рывок, прыжок, шар, тыква; «дух» — над дугой.
+            // Занимает ~300×320 вместо ~450×370, кнопки полупрозрачные, пока их не жмут.
+            Vector2 C = new Vector2(W - 82f, H - 82f);
+            System.Func<float, float, Vector2> At = (deg, d) => C + new Vector2(Mathf.Cos(deg * Mathf.Deg2Rad), Mathf.Sin(deg * Mathf.Deg2Rad)) * d;
+            Vector2 p;
+            Circle(B.Overhead, C.x, C.y, 47f);
+            p = At(180f, 118f); Circle(B.Legs, p.x, p.y, 27f);
+            p = At(211.7f, 118f); Circle(B.Rising, p.x, p.y, 27f);
+            p = At(243.3f, 118f); Circle(B.Slash, p.x, p.y, 27f);
+            p = At(275f, 118f); Circle(B.Thrust, p.x, p.y, 27f);
+            p = At(193f, 200f); Circle(B.Block, p.x, p.y, 33f);
+            p = At(224f, 198f); Circle(B.Dash, p.x, p.y, 26f);
+            p = At(252f, 200f); Circle(B.Jump, p.x, p.y, 24f);
+            p = At(281f, 198f); Circle(B.Energy, p.x, p.y, 22f);
+            p = At(166f, 198f); Circle(B.Heal, p.x, p.y, 22f);
+            p = At(238f, 286f); Circle(B.Super, p.x, p.y, 30f);
             Circle(B.Pause, W * 0.5f, 88f, 18f);   // под таймером раунда
 
             float cx = W * 0.5f;
@@ -320,8 +325,9 @@ namespace BladePath
             for (int b = 1; b < Count; b++)
             {
                 if (!active[b]) continue;
-                for (int i = 0; i < pointersHeld.Count; i++) if (Hit(b, pointersHeld[i], 0f)) { held[b] = true; break; }
-                for (int i = 0; i < pointersDown.Count; i++) if (Hit(b, pointersDown[i], 0f)) { down[b] = true; break; }
+                float mg = round[b] ? 5f : 0f;   // кнопки стали меньше — палец попадает с небольшим запасом
+                for (int i = 0; i < pointersHeld.Count; i++) if (Hit(b, pointersHeld[i], mg)) { held[b] = true; break; }
+                for (int i = 0; i < pointersDown.Count; i++) if (Hit(b, pointersDown[i], mg)) { down[b] = true; break; }
             }
         }
 
@@ -362,8 +368,8 @@ namespace BladePath
                 Vector2 hc = ctr[(int)B.Heal]; float hr = rad[(int)B.Heal];
                 for (int g = 0; g < player.gourdMax; g++)
                 {
-                    Vector2 p = hc + new Vector2((g - (player.gourdMax - 1) * 0.5f) * 13f, hr + 9f);
-                    UiKit.Disc(p, 4.5f, g < player.Gourds ? new Color(1f, 0.72f, 0.3f, 0.95f) : new Color(0.3f, 0.3f, 0.32f, 0.6f));
+                    Vector2 p = hc + new Vector2((g - (player.gourdMax - 1) * 0.5f) * 11f, -hr - 8f);
+                    UiKit.Disc(p, 3.8f, g < player.Gourds ? new Color(1f, 0.72f, 0.3f, 0.95f) : new Color(0.3f, 0.3f, 0.32f, 0.6f));
                 }
             }
             // запас блока: точки вокруг щита тают, пока держишь блок; красные — блок выбит
@@ -454,9 +460,11 @@ namespace BladePath
             Texture2D bt = ft != null ? ft : UiKit.Tex("UI/btn_base");
             if (bt != null)
             {
-                Color tint = h ? new Color(1f, 0.7f, 0.55f, 1f) : new Color(1f, 1f, 1f, Mathf.Lerp(0.55f, 0.95f, a));
+                // в покое кнопки полупрозрачные (сквозь них видно бой), нажатая — яркая; главная «сверху» чуть плотнее
+                float idle = b == B.Overhead ? 0.78f : 0.6f;
+                Color tint = h ? new Color(1f, 0.7f, 0.55f, 1f) : new Color(1f, 1f, 1f, ready ? idle : idle * 0.5f);
                 float rr = r * (h ? 0.94f : 1f);
-                UiKit.Disc(c + new Vector2(0f, 4f), r * 0.98f, new Color(0f, 0f, 0f, 0.4f * a));
+                UiKit.Disc(c + new Vector2(0f, 3f), r * 0.98f, new Color(0f, 0f, 0f, 0.16f * a));
                 UiKit.Image(c, rr * 1.08f, bt, tint);
                 if (h) UiKit.Disc(c, rr * 0.86f, new Color(1f, 0.45f, 0.15f, 0.22f));
                 if (ft == null) DrawIcon(icon, c + new Vector2(0f, -r * 0.08f), r * 0.46f, new Color(0.85f, 0.85f, 0.85f, 0.95f * a), r >= 50f ? 4.5f : 3.5f);

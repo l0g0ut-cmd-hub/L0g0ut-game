@@ -127,6 +127,7 @@ namespace BladePath.EditorTools
             BuildDetails(env, look);
             AddGroundAO(env, look);
             AddPond(env, look);
+            AddBackCourt(env, look);
             AddKaresansui(env, look);
             AddShojiShadows(look);
             MarkStatic(env);
@@ -161,8 +162,8 @@ namespace BladePath.EditorTools
             // боковые стены: внутри двора (гравий) и снаружи (лес)
             for (int side = -1; side <= 1; side += 2)
             {
-                Strip(new Vector3(side * 6.21f, 0f, -7.41f), new Vector3(side * 6.21f, 0f, 8.55f), new Vector3(side, 0f, 0f), 0.85f, yGravel);
-                Strip(new Vector3(side * 6.59f, 0f, -7.79f), new Vector3(side * 6.59f, 0f, 8.55f), new Vector3(-side, 0f, 0f), 0.85f, yForest);
+                Strip(new Vector3(side * 6.21f, 0f, -7.41f), new Vector3(side * 6.21f, 0f, 11.8f), new Vector3(side, 0f, 0f), 0.85f, yGravel);
+                Strip(new Vector3(side * 6.59f, 0f, -7.79f), new Vector3(side * 6.59f, 0f, 12.2f), new Vector3(-side, 0f, 0f), 0.85f, yForest);
                 // передняя стена по сторонам ворот
                 Strip(new Vector3(side * 1.56f, 0f, -7.41f), new Vector3(side * 6.21f, 0f, -7.41f), new Vector3(0f, 0f, -1f), 0.75f, yGravel);
                 Strip(new Vector3(side * 1.56f, 0f, -7.79f), new Vector3(side * 6.59f, 0f, -7.79f), new Vector3(0f, 0f, 1f), 0.75f, yForest);
@@ -187,6 +188,95 @@ namespace BladePath.EditorTools
             Blob(-1.35f, -7.6f, 0.9f, yGravel); Blob(1.35f, -7.6f, 0.9f, yGravel);
             Blob(5.4f, 3.4f, 1.6f, yGravel); Blob(-5.5f, 4.4f, 1.7f, yGravel); Blob(5.6f, -0.6f, 1.4f, yGravel); Blob(-5.4f, -1.0f, 1.45f, yGravel); Blob(4.6f, 8.2f, 1.9f, yGravel);
             Blob(-3.4f, 9.6f, 4.2f, yGravel);
+        }
+
+        /// <summary>
+        /// Задний двор за храмом (был пустой гравий до леса): боковые стены доведены до задней, задняя стена с калиткой,
+        /// колокольня-сёро справа (столбы, загнутая крыша, бронзовый колокол и бревно-било — BellTower бьёт и звонит),
+        /// белый амбар-кура слева от неё, каменные фонари, тени у оснований. Колокольня ниже линии взгляда на луну.
+        /// </summary>
+        static void AddBackCourt(Transform env, Look look)
+        {
+            Transform g = new GameObject("BackCourt").transform; g.SetParent(env, false);
+            const float zb = 12f;
+            System.Action<string, Vector3, Vector3> Wall = (nm, c, size) =>
+            {
+                bool alongX = size.x > size.z;
+                EnvMesh.Box(g, nm, new Vector3(c.x, 0.55f, c.z), Vector3.zero, new Vector3(alongX ? size.x : 0.3f, 1.1f, alongX ? 0.3f : size.z), look.plaster, 2f);
+                EnvMesh.Box(g, nm + "Cap", new Vector3(c.x, 1.16f, c.z), Vector3.zero, new Vector3(alongX ? size.x + 0.4f : 0.6f, 0.12f, alongX ? 0.6f : size.z + 0.4f), look.roof, 1.2f, true);
+                EnvMesh.Box(g, nm + "Base", new Vector3(c.x, 0.17f, c.z), Vector3.zero, new Vector3(alongX ? size.x + 0.05f : 0.38f, 0.34f, alongX ? 0.38f : size.z + 0.05f), look.stoneBlock, 1.1f);
+                EnvMesh.Box(g, nm + "Beam", new Vector3(c.x, 0.98f, c.z), Vector3.zero, new Vector3(alongX ? size.x + 0.02f : 0.33f, 0.07f, alongX ? 0.33f : size.z + 0.02f), look.woodDark, 1f, true);
+                Vector3 thin = alongX ? new Vector3(size.x, 0f, 0f) : new Vector3(0f, 0f, size.z);
+                int posts = Mathf.Max(1, Mathf.RoundToInt(thin.magnitude / 2.9f));
+                for (int i = 0; i <= posts; i++)
+                {
+                    Vector3 pp = c - thin * 0.5f + thin * (i / (float)posts);
+                    EnvMesh.Box(g, nm + "Post" + i, new Vector3(pp.x, 0.55f, pp.z), Vector3.zero, alongX ? new Vector3(0.18f, 1.1f, 0.36f) : new Vector3(0.36f, 1.1f, 0.18f), look.woodDark, 1f);
+                }
+            };
+            for (int side = -1; side <= 1; side += 2)
+                Wall("SideBack" + side, new Vector3(6.4f * side, 0f, (8.5f + zb) * 0.5f), new Vector3(0.3f, 1.1f, zb - 8.5f + 0.3f));
+            Wall("BackL", new Vector3(-3.7f, 0f, zb), new Vector3(5.4f, 1.1f, 0.3f));
+            Wall("BackR", new Vector3(3.7f, 0f, zb), new Vector3(5.4f, 1.1f, 0.3f));
+            // калитка: два столба, перекладина, маленькая крыша, закрытые створки
+            EnvMesh.Box(g, "GatePostL", new Vector3(-0.95f, 0.9f, zb), Vector3.zero, new Vector3(0.2f, 1.8f, 0.2f), look.woodDark, 1f);
+            EnvMesh.Box(g, "GatePostR", new Vector3(0.95f, 0.9f, zb), Vector3.zero, new Vector3(0.2f, 1.8f, 0.2f), look.woodDark, 1f);
+            EnvMesh.Box(g, "GateDoor", new Vector3(0f, 0.8f, zb + 0.02f), Vector3.zero, new Vector3(1.7f, 1.5f, 0.06f), look.wood, 1f);
+            EnvMesh.Box(g, "GateLintel", new Vector3(0f, 1.82f, zb), Vector3.zero, new Vector3(2.3f, 0.12f, 0.24f), look.woodDark, 1f, true);
+            EnvMesh.CurvedHip(g, "GateRoof", new Vector3(0f, 1.9f, zb), 1.35f, 0.45f, 0.4f, 0.1f, look.roof, look.woodDark, 1.2f);
+
+            // ---- колокольня
+            Transform bt = new GameObject("BellTower").transform; bt.SetParent(g, false); bt.localPosition = new Vector3(2.6f, 0f, 10.4f);
+            EnvMesh.Box(bt, "Base", new Vector3(0f, 0.22f, 0f), Vector3.zero, new Vector3(2.4f, 0.44f, 2.4f), look.stoneBlock, 1.2f);
+            for (int ix = -1; ix <= 1; ix += 2)
+                for (int iz = -1; iz <= 1; iz += 2)
+                    EnvMesh.Box(bt, "Post" + ix + iz, new Vector3(ix * 0.85f, 0.44f + 1.35f, iz * 0.85f), Vector3.zero, new Vector3(0.18f, 2.7f, 0.18f), look.lacquer, 1f);
+            for (int iz = -1; iz <= 1; iz += 2)
+            {
+                EnvMesh.Box(bt, "TieX" + iz, new Vector3(0f, 2.95f, iz * 0.85f), Vector3.zero, new Vector3(1.95f, 0.14f, 0.16f), look.woodDark, 1f, true);
+                EnvMesh.Box(bt, "TieZ" + iz, new Vector3(iz * 0.85f, 2.95f, 0f), Vector3.zero, new Vector3(0.16f, 0.14f, 1.95f), look.woodDark, 1f);
+                EnvMesh.Box(bt, "Rail" + iz, new Vector3(0f, 0.75f, iz * 0.85f), Vector3.zero, new Vector3(1.75f, 0.06f, 0.06f), look.woodDark, 1f, true);
+            }
+            EnvMesh.Box(bt, "BellBeam", new Vector3(0f, 2.98f, 0f), Vector3.zero, new Vector3(1.9f, 0.16f, 0.2f), look.woodDark, 1f, true);
+            EnvMesh.CurvedHip(bt, "Roof", new Vector3(0f, 3.1f, 0f), 1.5f, 1.5f, 1.0f, 0.3f, look.roof, look.woodDark, 1.2f);
+            Material bronze = look.bellBronze != null ? look.bellBronze : look.bronze;
+            Transform bell = new GameObject("Bell").transform; bell.SetParent(bt, false); bell.localPosition = new Vector3(0f, 2.9f, 0f);
+            CharacterVisuals.Part(bell, "Loop", PrimitiveType.Cube, new Vector3(0f, -0.04f, 0f), Vector3.zero, new Vector3(0.05f, 0.12f, 0.16f), bronze);
+            CharacterVisuals.Part(bell, "Dome", PrimitiveType.Sphere, new Vector3(0f, -0.2f, 0f), Vector3.zero, new Vector3(0.58f, 0.3f, 0.58f), bronze);
+            CharacterVisuals.Part(bell, "Body", PrimitiveType.Cylinder, new Vector3(0f, -0.62f, 0f), Vector3.zero, new Vector3(0.6f, 0.42f, 0.6f), bronze);
+            CharacterVisuals.Part(bell, "Band1", PrimitiveType.Cylinder, new Vector3(0f, -0.48f, 0f), Vector3.zero, new Vector3(0.615f, 0.012f, 0.615f), bronze);
+            CharacterVisuals.Part(bell, "Band2", PrimitiveType.Cylinder, new Vector3(0f, -0.82f, 0f), Vector3.zero, new Vector3(0.615f, 0.012f, 0.615f), bronze);
+            CharacterVisuals.Part(bell, "Lip", PrimitiveType.Cylinder, new Vector3(0f, -1.03f, 0f), Vector3.zero, new Vector3(0.66f, 0.025f, 0.66f), bronze);
+            CharacterVisuals.Part(bell, "Boss", PrimitiveType.Sphere, new Vector3(-0.3f, -0.85f, 0f), Vector3.zero, new Vector3(0.07f, 0.07f, 0.07f), bronze);   // место удара (цуки-за)
+            // бревно-било на двух верёвках: точка подвеса над центром бревна, конец бревна у колокола
+            Transform log = new GameObject("Shumoku").transform; log.SetParent(bt, false); log.localPosition = new Vector3(-0.92f, 2.88f, 0f);
+            CharacterVisuals.Part(log, "Log", PrimitiveType.Cylinder, new Vector3(0f, -0.9f, 0f), new Vector3(0f, 0f, 90f), new Vector3(0.13f, 0.5f, 0.13f), look.wood);
+            EnvMesh.Box(log, "RopeA", new Vector3(-0.3f, -0.45f, 0f), Vector3.zero, new Vector3(0.015f, 0.9f, 0.015f), look.woodDark, 0.2f);
+            EnvMesh.Box(log, "RopeB", new Vector3(0.3f, -0.45f, 0f), Vector3.zero, new Vector3(0.015f, 0.9f, 0.015f), look.woodDark, 0.2f);
+            BladePath.BellTower tower = bt.gameObject.AddComponent<BladePath.BellTower>();
+            tower.bell = bell; tower.log = log;
+
+            // ---- амбар-кура: белые стены, тёмный цоколь-намако, двускатная крыша, окошко и дверь
+            Transform kura = new GameObject("Kura").transform; kura.SetParent(g, false); kura.localPosition = new Vector3(-0.6f, 0f, 10.4f);
+            EnvMesh.Box(kura, "Plinth", new Vector3(0f, 0.15f, 0f), Vector3.zero, new Vector3(2.3f, 0.3f, 1.7f), look.stoneBlock, 1.1f);
+            EnvMesh.Box(kura, "Skirt", new Vector3(0f, 0.6f, 0f), Vector3.zero, new Vector3(2.16f, 0.6f, 1.56f), look.woodDark, 1f);
+            EnvMesh.Box(kura, "Walls", new Vector3(0f, 1.55f, 0f), Vector3.zero, new Vector3(2.1f, 1.3f, 1.5f), look.plaster, 2f);
+            EnvMesh.Box(kura, "Door", new Vector3(0.35f, 1.0f, -0.79f), Vector3.zero, new Vector3(0.6f, 1.2f, 0.05f), look.woodDark, 1f);
+            EnvMesh.Box(kura, "Window", new Vector3(-0.5f, 1.75f, -0.77f), Vector3.zero, new Vector3(0.36f, 0.3f, 0.04f), look.woodDark, 1f);
+            EnvMesh.Gable(kura, "Roof", new Vector3(0f, 2.2f, 0f), 2.6f, 2.0f, 0.75f, look.roof, look.plaster, 1.2f);
+
+            // ---- фонари и тени у оснований
+            AddLantern(env, look, new Vector3(5.2f, 0f, 9.2f));
+            AddLantern(env, look, new Vector3(-5.5f, 0f, 11.0f));
+            if (look.aoStrip != null && look.aoBlob != null)
+            {
+                EnvMesh.Decal(g, "AOBackWallL", new Vector3(-3.7f, -0.068f, zb - 0.6f), 180f, 5.6f, 0.8f, look.aoStrip);
+                EnvMesh.Decal(g, "AOBackWallR", new Vector3(3.7f, -0.068f, zb - 0.6f), 180f, 5.6f, 0.8f, look.aoStrip);
+                EnvMesh.Decal(g, "AOTower", bt.localPosition + new Vector3(0f, -0.067f, 0f), 0f, 3.6f, 3.6f, look.aoBlob);
+                EnvMesh.Decal(g, "AOKura", kura.localPosition + new Vector3(0f, -0.067f, 0f), 0f, 3.4f, 2.8f, look.aoBlob);
+                EnvMesh.Decal(g, "AOLantern1", new Vector3(5.2f, -0.068f, 9.2f), 0f, 1.15f, 1.15f, look.aoBlob);
+                EnvMesh.Decal(g, "AOLantern2", new Vector3(-5.5f, -0.068f, 11.0f), 0f, 1.15f, 1.15f, look.aoBlob);
+            }
         }
 
         /// <summary>
@@ -510,7 +600,8 @@ namespace BladePath.EditorTools
                 if (t.GetComponent<BladePath.GlowSprite>() != null || t.GetComponent<ParticleSystem>() != null || t.GetComponentInParent<BladePath.BannerSway>() != null) continue;
                 // движущиеся части (трубка сиси-одоси, полоска фурина) — не в статический батч, иначе застынут
                 if (t.GetComponentInParent<BladePath.ShishiOdoshi>() != null || t.GetComponentInParent<BladePath.WindChime>() != null) continue;
-                if (t.GetComponent<BladePath.WaterRipple>() != null) continue;   // у пруда свой экземпляр материала (рябь плывёт)
+                if (t.GetComponent<BladePath.WaterRipple>() != null) continue;
+                if (t.GetComponentInParent<BladePath.BellTower>() != null) continue;   // колокол и било качаются   // у пруда свой экземпляр материала (рябь плывёт)
                 UnityEditor.GameObjectUtility.SetStaticEditorFlags(t.gameObject, UnityEditor.StaticEditorFlags.BatchingStatic);
             }
         }
