@@ -259,7 +259,7 @@ namespace BladePath
                 if (Round <= 1) Juice.Instance.Growl(1f / Mathf.Sqrt(Ladder.Current.hpMul));   // чем крепче враг, тем ниже рык
             }
             SetState(DuelState.Intro);
-            saluted = false;
+            saluted = false; answered = false;
             Freeze(true);
         }
 
@@ -304,6 +304,12 @@ namespace BladePath
             {
                 saluted = true;
                 enemy.weapon.TryStartSwing(AttackType.Salute);
+            }
+            // герой отвечает тем же — чуть позже, как ответный поклон
+            if (State == DuelState.Intro && Round == 1 && saluted && !answered && StateTime > 0.9f && player != null && player.weapon != null && player.weapon.Phase == SwingPhase.Idle)
+            {
+                answered = true;
+                player.weapon.TryStartSwing(AttackType.Salute);
             }
             if (State == DuelState.Intro && StateTime >= IntroLength)
             {
@@ -656,7 +662,7 @@ namespace BladePath
 
         // замедление времени — и звук «под водой»: фильтр низких частот на слушателе (как в кино на рапиде), смерть — глуше
         AudioLowPassFilter muffle;
-        bool saluted;
+        bool saluted, answered;
         void UpdateMuffle()
         {
             if (muffle == null)
