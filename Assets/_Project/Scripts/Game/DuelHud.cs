@@ -285,6 +285,13 @@ namespace BladePath
                     UiKit.Text(new Rect(cx - 400f, 292f, 800f, 24f), Ladder.Current.title, 15f, new Color(0.9f, 0.88f, 0.82f, ta * 0.9f));
                     int mk = duel.MaxMarks(duel.enemy);
                     if (mk > 1) UiKit.Text(new Rect(cx - 400f, 316f, 800f, 24f), "ЖИЗНЕЙ: " + mk + " — СЛОМИ И ДОБЕЙ " + mk + " РАЗА", 15f, new Color(1f, 0.45f, 0.3f, ta * 0.95f));
+                    // время суток и погода матча — строкой под титулом
+                    Weather wz = Weather.Instance;
+                    if (wz != null)
+                    {
+                        string wt = wz.Raining ? "НОЧЬ · ЛИВЕНЬ" : wz.Snowing ? "НОЧЬ · ПЕРВЫЙ СНЕГ" : wz.Dawn ? "РАССВЕТ В ТУМАНЕ" : wz.Daytime ? "СОЛНЕЧНЫЙ ДЕНЬ" : "ЯСНАЯ НОЧЬ";
+                        UiKit.Text(new Rect(cx - 400f, mk > 1 ? 340f : 316f, 800f, 22f), wt, 13f, new Color(0.8f, 0.82f, 0.86f, ta * 0.8f));
+                    }
                 }
                 float t = duel.StateTime / duel.IntroLength;
                 float a = t < 0.75f ? 1f : Mathf.Clamp01((1f - t) * 4f);
