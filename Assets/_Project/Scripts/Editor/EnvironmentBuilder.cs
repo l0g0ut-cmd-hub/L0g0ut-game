@@ -460,6 +460,9 @@ namespace BladePath.EditorTools
             GameObject walker = EnvMesh.Decal(root, "Walker", new Vector3(-0.8f, 0.54f + 0.775f, z), 0f, 0.775f, 1.55f, look.shojiWalker);
             walker.transform.localEulerAngles = new Vector3(-90f, 0f, 0f);
             BladePath.ShojiShadows ss = root.gameObject.AddComponent<BladePath.ShojiShadows>();
+            // сидящий монах читает сутру под стук мокугё — звук из глубины зала
+            GameObject chant = new GameObject("MonkChant"); chant.transform.SetParent(root, false); chant.transform.localPosition = new Vector3(-1.1f, 1.0f, 6.2f);
+            chant.AddComponent<BladePath.MonkChant>();
             ss.monk = monk.GetComponent<Renderer>(); ss.walker = walker.GetComponent<Renderer>();
             walker.GetComponent<Renderer>().enabled = false;   // появляется сам, когда пойдёт
         }
