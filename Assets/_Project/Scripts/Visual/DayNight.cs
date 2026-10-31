@@ -14,6 +14,7 @@ namespace BladePath
     {
         public static DayNight Instance { get; private set; }
         public Material daySky;
+        public Cubemap nightRefl, dayRefl, dawnRefl;   // отражения неба (EnvironmentBuilder.SkyCube)
         public Material[] glowMats = new Material[0];   // ореолы, огни фонарей, бумажные фонари, сёдзи — днём тусклее
         public Vector3 sunDir = new Vector3(-0.55f, 0.8f, 0.25f);   // на солнце (совпадает с tools/gen_sky_day.py)
         public bool Day { get; private set; }
@@ -123,8 +124,19 @@ namespace BladePath
                 post.highlights = Dawn ? new Color(1.08f, 0.98f, 0.9f) : day ? new Color(1.04f, 1.0f, 0.95f) : pHi;
             }
             Shader.SetGlobalFloat("_BP_Day", day ? (Dawn ? 0.6f : 1f) : 0f);
+            Cubemap refl = Dawn ? dawnRefl : day ? dayRefl : nightRefl;
+            if (refl != null) SetReflection(refl);
             DynamicGI.UpdateEnvironment();
         }
         readonly Dictionary<FlickerLight, float> flBase = new Dictionary<FlickerLight, float>();
+
+        /// <summary>Своя кубкарта отражений окружения (свойство называется по-разному в версиях Unity — ищем отражением).</summary>
+        public static void SetReflection(Texture t)
+        {
+            RenderSettings.defaultReflectionMode = UnityEngine.Rendering.DefaultReflectionMode.Custom;
+            System.Type rs = typeof(RenderSettings);
+            System.Reflection.PropertyInfo p = rs.GetProperty("customReflectionTexture") ?? rs.GetProperty("customReflection");
+            if (p != null && p.PropertyType.IsAssignableFrom(t.GetType())) p.SetValue(null, t, null);
+        }
     }
 }

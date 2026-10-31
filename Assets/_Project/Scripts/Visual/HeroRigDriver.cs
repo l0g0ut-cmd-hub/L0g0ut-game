@@ -784,7 +784,7 @@ namespace BladePath
             // голова запрокидывается на глотке
             head.rotation = Quaternion.AngleAxis(-28f * pourW, right) * head.rotation;
             // рот: по кадрам CI кость головы у этой модели — на уровне ушей; рот чуть ниже и впереди
-            Vector3 mouth = head.position - up * (0.045f * sc) + fwd * (0.11f * sc);
+            Vector3 mouth = head.position - up * (0.07f * sc) + fwd * (0.095f * sc);   // по кадру 32: горлышко было у носа — ниже и ближе к губам
             // тыква: сперва поднята к подбородку стоймя, на глотке — дном вверх-вперёд, горлышко у губ
             Vector3 axUp = (up + fwd * 0.15f).normalized, axPour = (-fwd * 0.75f + Vector3.down * 0.66f).normalized;
             Vector3 axis = Vector3.Slerp(axUp, axPour, pourW);

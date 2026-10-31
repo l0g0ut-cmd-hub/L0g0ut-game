@@ -81,16 +81,19 @@ Shader "BladePath/Character"
                 if (_WoundTri > 0.5h)
                 {
                     // три проекции маски по точке позы покоя; минимум — непрерывен по телу (нет швов), пятна — объединение трёх узоров
-                    float3 p = IN.bindPos * 2.6;
+                    float3 p = IN.bindPos * 1.9;   // крупнее брызги: мелкие тёмные крапины издали читались как дыры в сетке
                     wm = min(tex2D(_WoundMask, p.xy).r, min(tex2D(_WoundMask, p.zy + 0.37).r, tex2D(_WoundMask, p.xz + 0.71).r));
                     thr = _Wound * 0.38h;   // P(min < t) ≈ 3t — та же доля тела, что и раньше
+                    thr *= lerp(1.0h, 0.35h, smoothstep(1.45h, 1.6h, IN.bindPos.y));   // лицо и голова — лишь редкие брызги
                 }
                 else { wm = tex2D(_WoundMask, IN.uv_MainTex * 5.0).r; thr = _Wound; }
-                half wt = saturate((thr - wm) / 0.025h);
-                half fresh = saturate((thr - wm) / 0.08h);   // в середине пятна — гуще и темнее
-                o.Albedo = lerp(o.Albedo, lerp(half3(0.26h, 0.02h, 0.018h), half3(0.1h, 0.006h, 0.006h), fresh), wt * 0.9h);
-                o.Smoothness = lerp(o.Smoothness, 0.45h, wt);   // влажная, но без зеркального отблеска неба (на доспехе он читался как разрывы)
+                half wt = saturate((thr - wm) / 0.05h);      // мягкий край — кровь впитывается в ткань, а не вырезана
+                half fresh = saturate((thr - wm) / 0.12h);   // в середине пятна — гуще и темнее
+                // кровь — насыщенно-красная (не чёрная: чёрные пятна на тёмном доспехе выглядели как разрывы модели)
+                o.Albedo = lerp(o.Albedo, lerp(half3(0.42h, 0.035h, 0.028h), half3(0.2h, 0.01h, 0.01h), fresh), wt * 0.88h);
+                o.Smoothness = lerp(o.Smoothness, 0.5h, wt);   // влажный блик от огня…
                 o.Metallic = lerp(o.Metallic, 0.0h, wt);
+                o.Occlusion = lerp(1.0h, 0.45h, wt);           // …но без серого отражения неба (оно делало пятна «дырами»)
             }
             // мокрый под дождём: верх (плечи, шлем, руки) мокнет сильнее; ткань темнеет, всё блестит
             if (_BP_Wetness > 0.001h)

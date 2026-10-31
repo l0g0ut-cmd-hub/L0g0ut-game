@@ -113,6 +113,12 @@ namespace BladePath.EditorTools
             BladePath.DayNight dn = new GameObject("DayNight").AddComponent<BladePath.DayNight>();
             dn.daySky = look.skyDay;
             dn.glowMats = new[] { look.haloWarm, look.haloFire, look.haloMoon, look.glow, look.paper, look.shoji };
+            // отражения неба в мокром камне, доспехе, крови: свои кубкарты на ночь, день и рассвет (иначе отражалось то небо,
+            // что было при последнем обновлении окружения, — на телефоне и после дневных кадров CI серые «дыры» на глянце)
+            dn.nightRefl = SkyCube("sky_night.png", new Color(0.5f, 0.5f, 0.5f), 1.3f, "Refl_Night");
+            dn.dayRefl = SkyCube("sky_day.png", new Color(0.5f, 0.5f, 0.5f), 1.0f, "Refl_Day");
+            dn.dawnRefl = SkyCube("sky_day.png", new Color(0.62f, 0.5f, 0.48f), 0.82f, "Refl_Dawn");
+            if (dn.nightRefl != null) { BladePath.DayNight.SetReflection(dn.nightRefl); RenderSettings.reflectionIntensity = 1f; }
 
             // жаровни с мерцающим огнём
             AddBrazier(look, new Vector3(-3.2f, 0f, 2.2f));
@@ -197,6 +203,77 @@ namespace BladePath.EditorTools
             BladePath.ShojiShadows ss = root.gameObject.AddComponent<BladePath.ShojiShadows>();
             ss.monk = monk.GetComponent<Renderer>(); ss.walker = walker.GetComponent<Renderer>();
             walker.GetComponent<Renderer>().enabled = false;   // появляется сам, когда пойдёт
+        }
+
+        /// <summary>
+        /// Кубкарта отражений из панорамы неба (та же раскладка, что у Skybox/Panoramic: u = 0,5 − atan2(z, x)/2π,
+        /// v = 1 − acos(y)/π; цвет = текстура × оттенок × 2 × экспозиция). Панорама сперва ужимается до 256×128 (звёзды не
+        /// мерцают шумом), грани 64² с мип-уровнями — по ним Standard размывает отражение на шершавом.
+        /// </summary>
+        static Cubemap SkyCube(string file, Color tint, float exposure, string name)
+        {
+            string src = "Assets/_Project/Art/Textures/" + file;
+            if (!System.IO.File.Exists(src)) return null;
+            Texture2D big = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            if (!big.LoadImage(System.IO.File.ReadAllBytes(src))) return null;
+            const int SW = 256, SH = 128, N = 64;
+            Color32[] bp = big.GetPixels32();
+            int bw = big.width, bh = big.height, fx = bw / SW, fy = bh / SH;
+            Color[] sp = new Color[SW * SH];
+            for (int y = 0; y < SH; y++)
+                for (int x = 0; x < SW; x++)
+                {
+                    float r = 0f, g = 0f, b = 0f;
+                    for (int j = 0; j < fy; j += 2)
+                        for (int i = 0; i < fx; i += 2)
+                        {
+                            Color32 c = bp[(y * fy + j) * bw + x * fx + i];
+                            r += c.r; g += c.g; b += c.b;
+                        }
+                    float k = 1f / (255f * ((fx + 1) / 2) * ((fy + 1) / 2));
+                    sp[y * SW + x] = new Color(r * k, g * k, b * k, 1f);
+                }
+            Object.DestroyImmediate(big);
+            Texture2D small = new Texture2D(SW, SH, TextureFormat.RGBAFloat, false, true);
+            small.wrapModeU = TextureWrapMode.Repeat; small.wrapModeV = TextureWrapMode.Clamp; small.filterMode = FilterMode.Bilinear;
+            small.SetPixels(sp); small.Apply(false);
+            Color mul = new Color(tint.r * 2f * exposure, tint.g * 2f * exposure, tint.b * 2f * exposure, 1f);
+            Cubemap cm = new Cubemap(N, TextureFormat.RGBA32, true);
+            CubemapFace[] faces = { CubemapFace.PositiveX, CubemapFace.NegativeX, CubemapFace.PositiveY, CubemapFace.NegativeY, CubemapFace.PositiveZ, CubemapFace.NegativeZ };
+            Color[] px = new Color[N * N];
+            for (int f = 0; f < 6; f++)
+            {
+                for (int y = 0; y < N; y++)
+                    for (int x = 0; x < N; x++)
+                    {
+                        // строка 0 — верх грани (раскладка кубкарт GL/D3D)
+                        float sc = 2f * (x + 0.5f) / N - 1f, tc = 2f * (y + 0.5f) / N - 1f;
+                        Vector3 d;
+                        switch (f)
+                        {
+                            case 0: d = new Vector3(1f, -tc, -sc); break;
+                            case 1: d = new Vector3(-1f, -tc, sc); break;
+                            case 2: d = new Vector3(sc, 1f, tc); break;
+                            case 3: d = new Vector3(sc, -1f, -tc); break;
+                            case 4: d = new Vector3(sc, -tc, 1f); break;
+                            default: d = new Vector3(-sc, -tc, -1f); break;
+                        }
+                        d.Normalize();
+                        float u = 0.5f - Mathf.Atan2(d.z, d.x) / (2f * Mathf.PI);
+                        float v = 1f - Mathf.Acos(Mathf.Clamp(d.y, -1f, 1f)) / Mathf.PI;
+                        Color c = small.GetPixelBilinear(u, v) * mul;
+                        c.r = Mathf.Clamp01(c.r); c.g = Mathf.Clamp01(c.g); c.b = Mathf.Clamp01(c.b); c.a = 1f;
+                        px[y * N + x] = c;
+                    }
+                cm.SetPixels(px, faces[f]);
+            }
+            Object.DestroyImmediate(small);
+            cm.SmoothEdges(1);
+            cm.Apply(true);
+            string path = "Assets/_Project/Materials/" + name + ".asset";
+            if (UnityEditor.AssetDatabase.LoadAssetAtPath<Cubemap>(path) != null) UnityEditor.AssetDatabase.DeleteAsset(path);
+            UnityEditor.AssetDatabase.CreateAsset(cm, path);
+            return cm;
         }
 
         /// <summary>Мелочи, оживляющие кадр: бумажные фонари на веранде, верёвка симэнава на тории, знамёна.</summary>

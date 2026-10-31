@@ -134,6 +134,7 @@ namespace BladePath.EditorTools
                     Shot(cam, dir, "36_shoji", new Vector3(-0.8f, 1.5f, 0.6f), new Vector3(-0.8f, 1.3f, 5.2f), 50f, log);
                     if (shoji.walker != null) shoji.walker.enabled = false;
                 }
+                ReflectShot(cam, dir, "37_reflect_night", log);
                 WeatherShots(cam, dir, focus + new Vector3(0f, 0f, -dist), focus, log);
                 DayShots(cam, dir, focus + new Vector3(0f, 0f, -dist), focus, log);
                 // второй облик врага (ронин) — как 3_enemy
@@ -465,6 +466,7 @@ namespace BladePath.EditorTools
                 if (dps != null) { Call(dfly.GetComponent<PetalTexture>(), "Awake"); var dem = dps.emission; dem.enabled = true; dps.Simulate(8f, true, true); }
                 Shot(cam, dir, "33_day", pos, look, cam.fieldOfView, log);
                 Shot(cam, dir, "33b_day_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);
+                ReflectShot(cam, dir, "37b_reflect_day", log);
                 dn.Apply(true, true);   // рассвет в тумане
                 foreach (FlickerLight fl in UnityEngine.Object.FindObjectsByType<FlickerLight>(FindObjectsSortMode.None)) Call(fl, "Update");
                 Shot(cam, dir, "34_dawn", pos, look, cam.fieldOfView, log);
@@ -745,6 +747,21 @@ namespace BladePath.EditorTools
             File.WriteAllBytes(Path.Combine(dir, "27_blade_blood.jpg"), sheet.EncodeToJPG(88));
             UnityEngine.Object.DestroyImmediate(sheet); rt.Release(); UnityEngine.Object.DestroyImmediate(rt);
             log.Append("PROBE|shots|27_blade_blood|4 уровня\n");
+        }
+
+        /// <summary>Зеркальный шар перед бойцами — проверка кубкарты отражений: небо сверху, земля и дымка снизу, без перевёрнутых граней.</summary>
+        static void ReflectShot(Camera cam, string dir, string name, StringBuilder log)
+        {
+            GameObject s = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            s.name = "ReflectProbeBall";
+            UnityEngine.Object.DestroyImmediate(s.GetComponent<Collider>());
+            s.transform.position = new Vector3(0f, 1.1f, -1.7f);
+            s.transform.localScale = Vector3.one * 0.7f;
+            Material m = new Material(Shader.Find("Standard"));
+            m.SetFloat("_Metallic", 1f); m.SetFloat("_Glossiness", 0.96f); m.color = Color.white;
+            s.GetComponent<Renderer>().sharedMaterial = m;
+            try { Shot(cam, dir, name, new Vector3(0f, 1.25f, -2.75f), new Vector3(0f, 1.1f, -1.7f), 40f, log); }
+            finally { UnityEngine.Object.DestroyImmediate(s); UnityEngine.Object.DestroyImmediate(m); }
         }
 
         static void SetWound(FighterController f, float w)
