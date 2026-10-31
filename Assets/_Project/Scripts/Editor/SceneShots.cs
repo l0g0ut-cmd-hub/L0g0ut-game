@@ -57,6 +57,18 @@ namespace BladePath.EditorTools
                         Tick(f, d, dt, dt);
                     }
 
+                // стойка в цифрах: угол в локтях (180 — прямая рука) и вынос кистей вперёд от плеч (в системе бойца)
+                foreach (FighterController f in fs)
+                {
+                    HeroRigDriver d = f.GetComponentInChildren<HeroRigDriver>(true);
+                    if (d == null || d.upperArmR == null || d.forearmR == null || d.handR == null || d.upperArmL == null) continue;
+                    float eR = Vector3.Angle(d.upperArmR.position - d.forearmR.position, d.handR.position - d.forearmR.position);
+                    float eL = Vector3.Angle(d.upperArmL.position - d.forearmL.position, d.handL.position - d.forearmL.position);
+                    Vector3 sh = (d.upperArmR.position + d.upperArmL.position) * 0.5f, hm = (d.handR.position + d.handL.position) * 0.5f;
+                    Vector3 rel = f.transform.InverseTransformDirection(hm - sh);
+                    log.Append(string.Format("PROBE|shots|stance|{0}|elbow R {1:F0} L {2:F0}|hands from shoulders x {3:F2} y {4:F2} z {5:F2}\n", f.name, eR, eL, rel.x, rel.y, rel.z));
+                }
+
                 // компоненты, которые в игре готовятся в Awake (текстуры листьев/лепестков, ореолы) — в редакторе вызываем сами
                 foreach (MonoBehaviour mb in UnityEngine.Object.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
                     if (mb is PetalTexture || mb is GlowSprite || mb is FlickerLight || mb is FloorReflection || mb is LightShaft) Call(mb, "Awake");
