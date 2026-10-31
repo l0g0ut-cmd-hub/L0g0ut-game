@@ -51,6 +51,8 @@ namespace BladePath
         public float AnnounceAge { get { return Time.unscaledTime - announceAt; } }
         float announceAt = -10f;
         bool firstBlood, lastStandShown, tenSecShown;
+        /// <summary>Ярость врага: на последней трети здоровья — рёв, багровая аура, атакует чаще (EnemyAI читает).</summary>
+        public bool EnemyEnraged { get; private set; }
         public void Announce(string text, Color c) { Announce(text, c, null); }
         /// <summary>Объявление с подсказкой мелкой строкой ниже.</summary>
         public void Announce(string text, Color c, string sub) { AnnounceText = text; AnnounceColor = c; AnnounceSub = sub; announceAt = Time.unscaledTime; }
@@ -262,6 +264,8 @@ namespace BladePath
             if (enemy != null) marks[enemy] = MaxMarks(enemy);
             if (Juice.Instance != null) Juice.Instance.CleanBlades();
             lastStandShown = false; tenSecShown = false;
+            if (EnemyEnraged && Juice.Instance != null && enemy != null) Juice.Instance.SetAuraColor(enemy, Ladder.Current.aura);
+            EnemyEnraged = false;
             TimeLeft = roundSeconds + 30f * (MaxMarks(enemy) - 1); TimedOut = false;   // больше жизней у врага — больше времени LastDraw = false; Perfect = false;
             if (Juice.Instance != null)
             {
@@ -343,6 +347,14 @@ namespace BladePath
                 if (TimeLeft <= 0f) TimeUp();
                 if (!tenSecShown && TimeLeft <= 10f) { tenSecShown = true; Announce("10 СЕКУНД!", new Color(1f, 0.4f, 0.25f)); }
                 if (!lastStandShown && player != null && Hp01(player) < 0.25f && Hp(player) > 0f) { lastStandShown = true; Announce("ПОСЛЕДНИЙ РУБЕЖ", new Color(0.5f, 0.85f, 1f)); }
+                if (!EnemyEnraged && enemy != null && !enemy.Dead && Hp01(enemy) < 0.33f && Hp(enemy) > 0f && EnemyAI.Difficulty > 0)
+                {
+                    // враг впадает в ярость: рёв, багровая аура и глаза, удары чаще (EnemyAI)
+                    EnemyEnraged = true;
+                    Announce("ЯРОСТЬ", new Color(1f, 0.22f, 0.15f));
+                    if (Juice.Instance != null) { Juice.Instance.Growl(0.8f); Juice.Instance.SetAuraColor(enemy, new Color(1f, 0.12f, 0.06f)); Juice.Instance.Taiko(1f, 0.8f); }
+                    if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.05f);
+                }
                 // низкое здоровье игрока: стук сердца
                 if (player != null && Hp01(player) < 0.3f && Time.unscaledTime >= nextHeartAt)
                 {
