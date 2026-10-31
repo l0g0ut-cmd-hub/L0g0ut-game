@@ -13,7 +13,7 @@ namespace BladePath
 
         AudioSource[] voices;
         int voiceIdx;
-        AudioClip kiaiA, kiaiB; float[] kiaiAt = new float[4];
+        AudioClip kiaiA, kiaiB, gruntA, gruntB, dieA, dieB; float[] kiaiAt = new float[4];
         AudioClip swish, hit, hitHeavy, clang, boom, drum, heart, whoosh, step, growl, stepWet, stepSnow, danger, stab, squelch;
         AudioSource stepVoice;
         ParticleSystem footFx;
@@ -45,6 +45,9 @@ namespace BladePath
             swish = Swish(); hit = Thump(0.22f, 140f, 55f, 0.55f); hitHeavy = Thump(0.34f, 100f, 38f, 0.9f); clang = Clang(); boom = Thump(1.0f, 70f, 28f, 0.8f);
             drum = Drum(); heart = Heart(); whoosh = Swish(); step = Step(); growl = Growl(); stepWet = StepWet(); stepSnow = StepSnow(); danger = Danger_(); stab = Stab(); squelch = Squelch();
             kiaiA = Kiai(31, 1f, 1150f); kiaiB = Kiai(32, 0.86f, 1500f);
+            // боль: короткое глухое «ых» (гласная «у/о»); смерть — долгий выдох с падающим тоном
+            gruntA = Kiai(41, 0.82f, 880f, 470f, 0.24f); gruntB = Kiai(42, 0.72f, 920f, 500f, 0.24f);
+            dieA = Kiai(43, 0.78f, 1000f, 620f, 0.75f); dieB = Kiai(44, 0.68f, 1050f, 640f, 0.75f);
             stepVoice = gameObject.AddComponent<AudioSource>(); stepVoice.spatialBlend = 0f; stepVoice.playOnAwake = false;   // шаги не отнимают голоса у ударов
             ambient = gameObject.AddComponent<AudioSource>();
             ambient.clip = Wind(); ambient.loop = true; ambient.volume = 0.22f; ambient.spatialBlend = 0f; ambient.Play();
@@ -338,6 +341,19 @@ namespace BladePath
             Play(who == 0 ? kiaiA : kiaiB, db ? 0.42f : 0.32f, Random.Range(0.96f, 1.04f));
         }
 
+        /// <summary>Голос раненого: на заметном попадании — глухое «ых» (через раз), на смертельном — долгий выдох. Голос — по бойцу.</summary>
+        void HurtVoice(Transform at, float strength, bool kill)
+        {
+            if (at == null) return;
+            FighterController f = at.GetComponentInParent<FighterController>();
+            int who = -1;
+            for (int i = 0; i < tracked.Count; i++) if (tracked[i].f == f && f != null) { who = i; break; }
+            if (who < 0) return;
+            if (kill) { Play(who == 0 ? dieA : dieB, 0.45f, Random.Range(0.97f, 1.03f)); return; }
+            if (strength < 0.5f || Random.value > 0.6f) return;
+            Play(who == 0 ? gruntA : gruntB, 0.36f, Random.Range(0.94f, 1.06f));
+        }
+
         /// <summary>
         /// Свист клинка по характеру удара: укол — короткое тонкое «сс» (высоко и тихо), горизонтальный — ровный свист,
         /// рубящий сверху — тяжёлое низкое «вжух» с гулким подголоском; чем быстрее рабочая фаза удара, тем выше тон.
@@ -383,6 +399,7 @@ namespace BladePath
             SlashFlash(point, dir, strength);
             Blood(point, normal, dir, strength, kill);
             if (strength > 0.6f) Shreds(point, dir, strength);
+            HurtVoice(bleedAt, strength, kill);
             if (bleedAt != null) Bleed(bleedAt, Mathf.Lerp(1.2f, 3.5f, Mathf.Clamp01(strength - 0.4f)), strength);
             if (kill) { Play(boom, 1f, 1f); PetalBurst(60); }
             else if (strength > 1.2f) PetalBurst(12);
@@ -1127,14 +1144,13 @@ namespace BladePath
         /// (субгармоника — напряжённые связки), придыхание «х» в начале, гласная «а» тремя формантами (750/1150/2500 Гц),
         /// мягкое насыщение. variant меняет высоту и окраску (у второго — ближе к «эй»).
         /// </summary>
-        static AudioClip Kiai(int seed, float pitchK, float f2)
+        static AudioClip Kiai(int seed, float pitchK, float f2, float f1 = 760f, float T = 0.46f)
         {
-            float T = 0.46f;
             int n = (int)(Rate * T);
             float[] d = new float[n];
             System.Random rnd = new System.Random(seed);
             float ph = 0f, jit = 0f, peak = 1e-4f;
-            float[] fF = { 760f, f2, 2550f }, bw = { 110f, 140f, 220f }, gF = { 1f, 0.55f, 0.22f };
+            float[] fF = { f1, f2, 2550f }, bw = { 110f, 140f, 220f }, gF = { 1f, 0.55f, 0.22f };
             float[] y1 = new float[3], y2 = new float[3];
             int pulse = 0; float prevPh = 0f;
             for (int i = 0; i < n; i++)
