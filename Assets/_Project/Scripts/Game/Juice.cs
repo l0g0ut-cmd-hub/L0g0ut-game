@@ -216,6 +216,7 @@ namespace BladePath
         {
             Sparks(point, normal, 14, 0.55f);
             Play(clang, 0.35f, Random.Range(1.5f, 1.8f));
+            SparkLight(point, new Color(1f, 0.7f, 0.38f), 1.3f, 2f, 0.08f);
         }
 
         /// <summary>Лужа крови под павшим телом: медленно растекается (несколько пятен разного размера с задержкой).</summary>
@@ -228,6 +229,7 @@ namespace BladePath
 
         void Update()
         {
+            UpdateSparkLight();
             if (crickets != null)
             {
                 bool rain = Weather.Instance != null && (Weather.Instance.Raining || Weather.Instance.Snowing);
@@ -744,6 +746,31 @@ namespace BladePath
                 if (e.owner == by) { trs = e.GetComponents<TrailRenderer>(); foreach (TrailRenderer tr in trs) tr.Clear(); }
         }
 
+        // вспышка света от искр: на миг освещает лица и доспехи бойцов, камень под ними (один источник, переиспользуется)
+        Light sparkLight; float sparkLightAt = -10f, sparkLightDur = 0.1f, sparkLightI;
+        void SparkLight(Vector3 pos, Color c, float intensity, float range, float dur)
+        {
+            if (sparkLight == null)
+            {
+                GameObject g = new GameObject("SparkLight");
+                g.transform.SetParent(transform, false);
+                sparkLight = g.AddComponent<Light>();
+                sparkLight.type = LightType.Point; sparkLight.shadows = LightShadows.None;
+                sparkLight.renderMode = LightRenderMode.ForcePixel;   // короткая — пусть будет попиксельной, не отнимая место у фонарей надолго
+            }
+            sparkLight.transform.position = pos;
+            sparkLight.color = c; sparkLight.range = range;
+            sparkLightI = intensity; sparkLightDur = dur; sparkLightAt = Time.unscaledTime;
+            sparkLight.intensity = intensity; sparkLight.enabled = true;
+        }
+        void UpdateSparkLight()
+        {
+            if (sparkLight == null || !sparkLight.enabled) return;
+            float u = (Time.unscaledTime - sparkLightAt) / sparkLightDur;
+            if (u >= 1f) { sparkLight.enabled = false; return; }
+            sparkLight.intensity = sparkLightI * (1f - u) * (1f - u);
+        }
+
         /// <summary>Клинки столкнулись: вспышка с бликом, сноп раскалённых искр (отскакивают от земли) и звонкий лязг.</summary>
         public void Clash(Vector3 pos)
         {
@@ -751,6 +778,7 @@ namespace BladePath
             Sparks(pos, Vector3.up, 34, 1.1f);
             Sparks(pos, Random.onUnitSphere, 22, 1f);
             Flash(pos, 0.22f, new Color(1f, 0.8f, 0.5f, 0.85f), 0.09f, true);   // компактная: ядро не заливает полкадра белым (bloom и так расширит)
+            SparkLight(pos, new Color(1f, 0.72f, 0.4f), 2.6f, 3.2f, 0.12f);
         }
 
         /// <summary>Отражение (парирование): самая яркая вспышка в игре — блик, кольцо волны, веер искр от клинка.</summary>
@@ -761,6 +789,7 @@ namespace BladePath
             Sparks(pos, normal.sqrMagnitude > 1e-4f ? normal : Vector3.up, 46, 1.35f);
             Sparks(pos, Vector3.up, 20, 0.9f);
             Flash(pos, 0.28f, new Color(1f, 0.92f, 0.78f, 0.9f), 0.12f, true);   // искра, а не белое пятно: мельче ядро, лучи-блик остаются
+            SparkLight(pos, new Color(1f, 0.86f, 0.62f), 3.6f, 3.8f, 0.16f);
             Shockwave(pos, 0.7f, new Color(0.6f, 0.85f, 1f, 0.22f), 0.16f);   // едва заметная волна воздуха, не «магическое кольцо»
         }
 
