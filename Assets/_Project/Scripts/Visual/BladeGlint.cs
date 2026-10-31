@@ -17,6 +17,7 @@ namespace BladePath
         MaterialPropertyBlock mpb;
         float nextAt, runT = -1f, runDur = 0.45f, runPow = 1f;
         int saluteId = -1;
+        FighterController owner;
         static readonly int TintId = Shader.PropertyToID("_TintColor");
 
         void Start()
@@ -44,7 +45,8 @@ namespace BladePath
             Camera cam = Camera.main;
             if (cam == null) return;
             Transform b = weapon.bladeRoot;
-            FighterController f = weapon.GetComponentInParent<FighterController>();
+            if (owner == null) owner = weapon.GetComponentInParent<FighterController>();
+            FighterController f = owner;
             bool alive = f == null || !f.Dead;
 
             // салют: клинок перед лицом — блик снизу вверх
