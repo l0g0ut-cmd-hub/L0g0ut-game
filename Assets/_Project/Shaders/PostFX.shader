@@ -13,6 +13,7 @@ Shader "Hidden/BladePath/PostFX"
     half _Vignette, _Aberr, _Grain, _Desat, _EdgeBlur;
     half3 _Shadows, _Highlights;
     half _BP_Snow;          // глобально из Weather: в снег по краям кадра нарастает иней
+    half _BP_Wetness;       // глобально из Weather: 1 под дождём — на «объективе» капли
     float Hash21 (float2 p) { p = frac(p * float2(123.34, 456.21)); p += dot(p, p + 45.32); return frac(p.x * p.y); }
     float VNoise (float2 p) { float2 i = floor(p), f = frac(p); f = f * f * (3.0 - 2.0 * f);
         return lerp(lerp(Hash21(i), Hash21(i + float2(1, 0)), f.x), lerp(Hash21(i + float2(0, 1)), Hash21(i + float2(1, 1)), f.x), f.y); }
@@ -44,11 +45,40 @@ Shader "Hidden/BladePath/PostFX"
         c *= lerp(_Shadows, _Highlights, t);
         return saturate(c);
     }
+    // капли дождя на «объективе»: редкие, каждая — маленькая линза (картинка за ней перевёрнута и сжата), садится
+    // быстро и медленно высыхает; два слоя — крупные редкие и мелкие чаще. Возвращает смещение uv, в mask — сила капли.
+    float2 RainDrops (float2 uv, float scale, float speed, float density, float seed, inout half mask)
+    {
+        float aspect = _MainTex_TexelSize.z * _MainTex_TexelSize.y;
+        float2 p = uv * float2(aspect, 1.0) * scale;
+        float2 id = floor(p), f = frac(p) - 0.5;
+        float r = Hash21(id + seed);
+        if (Hash21(id + seed + 7.7) > density) return 0;
+        float ph = frac(_Time.y * speed + r);
+        half a = smoothstep(0.0, 0.03, ph) * (1.0 - smoothstep(0.35, 1.0, ph));
+        float2 c = (float2(Hash21(id + seed + 3.1), Hash21(id + seed + 5.3)) - 0.5) * 0.55;
+        float rad = 0.1 + 0.14 * Hash21(id + seed + 9.4);
+        float2 q = (f - c) / rad;
+        q.y *= 0.85 + 0.15 * r;                 // чуть вытянута вниз
+        float d = length(q);
+        if (d >= 1.0) return 0;
+        half edge = smoothstep(1.0, 0.8, d) * a;
+        mask = max(mask, edge);
+        return -q * rad * 1.8 * edge / (float2(aspect, 1.0) * scale);
+    }
+
     // объектив: виньетка, хроматическая аберрация (импульс на тяжёлых ударах), зерно плёнки, обесцвечивание (смерть)
     half3 SampleLens (float2 uv)
     {
         float2 d = uv - 0.5;
         half3 c;
+        half drop = 0;
+        if (_BP_Wetness > 0.01)
+        {
+            float2 off = RainDrops(uv, 5.0, 0.07, 0.22, 1.7, drop) + RainDrops(uv, 11.0, 0.11, 0.18, 13.3, drop);
+            uv += off * saturate(_BP_Wetness);
+            drop *= saturate(_BP_Wetness);
+        }
         if (_Aberr > 0.0001)
         {
             float2 o = d * _Aberr;
@@ -70,6 +100,8 @@ Shader "Hidden/BladePath/PostFX"
                 c = lerp(c, b * 0.125h, saturate(r * 1.4h) * saturate(_EdgeBlur));
             }
         }
+        // в капле картинка светлее в середине и темнеет к краю (полное отражение у кромки)
+        if (drop > 0.001) c *= lerp(1.0h, 1.12h - 0.3h * (1.0h - drop), drop);
         return c;
     }
     half3 Lens (half3 c, float2 uv)

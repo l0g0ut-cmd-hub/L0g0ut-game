@@ -546,8 +546,14 @@ namespace BladePath.EditorTools
             }
             // симэнава между столбами тории и бумажные зигзаги
             CharacterVisuals.Part(d, "Shimenawa", PrimitiveType.Cylinder, new Vector3(1.7f, 2.05f, 3.52f), new Vector3(0f, 0f, 90f), new Vector3(0.07f, 1.0f, 0.07f), look.bark);
+            // сидэ — бумажные молнии-зигзаги: лёгкие, трепещут на ветру часто и мелко
             for (int i = 0; i < 4; i++)
-                EnvMesh.Box(d, "Shide" + i, new Vector3(1.2f + i * 0.34f, 1.88f, 3.52f), new Vector3(0f, 0f, i % 2 == 0 ? 8f : -8f), new Vector3(0.1f, 0.22f, 0.012f), look.plaster, 0.3f);
+            {
+                Transform sp = SwayPivot(d, "ShidePivot" + i, new Vector3(1.2f + i * 0.34f, 2.0f, 3.52f), 14f);
+                sp.GetComponent<BladePath.BannerSway>().speed = 3.4f + i * 0.37f;
+                for (int k = 0; k < 4; k++)
+                    EnvMesh.Box(sp, "Shide" + i + "_" + k, new Vector3(k % 2 == 0 ? 0f : 0.032f, -0.045f - k * 0.058f, 0f), new Vector3(0f, 0f, k % 2 == 0 ? 6f : -6f), new Vector3(0.062f, 0.062f, 0.008f), look.plaster, 0.3f);
+            }
             // знамёна-нобори по краям площадки
             for (int side = -1; side <= 1; side += 2)
             {

@@ -242,7 +242,7 @@ namespace BladePath
                 SwingPhase ph = t.w.Phase;
                 if (ph != t.last)
                 {
-                    if (ph == SwingPhase.Strike) { Play(swish, 0.55f, Random.Range(0.9f, 1.15f)); if (t.trail != null) { t.trail.Clear(); t.trail.emitting = true; } }
+                    if (ph == SwingPhase.Strike) { SwingSound(t.w.CurrentProfile); if (t.trail != null) { t.trail.Clear(); t.trail.emitting = true; } }
                     if ((ph == SwingPhase.Recovery || ph == SwingPhase.Idle) && t.trail != null) t.trail.emitting = false;
                     t.last = ph;
                 }
@@ -310,6 +310,32 @@ namespace BladePath
         public void Danger() { Play(danger, 0.9f, 1f); }
         /// <summary>Рывок.</summary>
         public void DashSound() { Play(whoosh, 0.45f, 0.6f); }
+
+        /// <summary>
+        /// Свист клинка по характеру удара: укол — короткое тонкое «сс» (высоко и тихо), горизонтальный — ровный свист,
+        /// рубящий сверху — тяжёлое низкое «вжух» с гулким подголоском; чем быстрее рабочая фаза удара, тем выше тон.
+        /// Приветствие и шар духа не свистят.
+        /// </summary>
+        void SwingSound(SwingProfile p)
+        {
+            if (p == null) { Play(swish, 0.55f, Random.Range(0.9f, 1.15f)); return; }
+            if (p.ranged || p.type == AttackType.Salute) return;
+            float pitch = 1f, vol = 0.55f, low = 0f;
+            switch (p.type)
+            {
+                case AttackType.Thrust: pitch = 1.38f; vol = 0.36f; break;
+                case AttackType.Overhead: case AttackType.JumpStrike: pitch = 0.82f; vol = 0.62f; low = 0.3f; break;
+                case AttackType.LegSweep: pitch = 0.9f; vol = 0.5f; break;
+                case AttackType.Rising: pitch = 1.06f; break;
+                case AttackType.Charge: pitch = 0.7f; vol = 0.4f; break;
+                case AttackType.Mikiri: pitch = 1.25f; vol = 0.4f; break;
+                default: if (p.type.ToString().StartsWith("Deathblow")) { pitch = 0.9f; vol = 0.6f; low = 0.25f; } break;
+            }
+            // быстрее рабочая фаза — выше и резче (0,14 с — обычный удар)
+            pitch *= Mathf.Clamp(Mathf.Pow(0.14f / Mathf.Max(0.03f, p.strikeTime), 0.18f), 0.9f, 1.2f);
+            Play(swish, vol, pitch * Random.Range(0.95f, 1.05f));
+            if (low > 0f) Play(whoosh, low, pitch * 0.5f);
+        }
         /// <summary>Добивание: клинок входит в грудь.</summary>
         public void StabSound() { Play(stab, 1f, Random.Range(0.94f, 1.04f)); }
         /// <summary>Добивание: клинок выдернут.</summary>
