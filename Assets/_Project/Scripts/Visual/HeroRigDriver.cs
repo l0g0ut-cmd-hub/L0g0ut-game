@@ -118,6 +118,8 @@ namespace BladePath
         struct FootLock { public bool on, hasPrev; public int idx; public Vector3 pos, off, prev0, prev1, prev2; public float lift; }
         // темп мокапа под настоящую скорость: снос опорной стопы клипа вдоль хода (м/с) → множитель темпа
         float driftAcc, tempoMul = 1f; int driftN;
+        // прыжок: ноги поджаты в воздухе; приземление — короткое проседание
+        float airK, landK; bool wasGrounded = true;
         FootLock lockL, lockR;
         /// <summary>Нижняя точка подошвы (мир) — после постановки на землю в этом кадре (для пыли/шагов и проб).</summary>
         public Vector3 SoleL { get; private set; }
@@ -456,6 +458,14 @@ namespace BladePath
                 crouchTarget = Mathf.Clamp01((weapon.restHand.y - weapon.HandOffset.y) / 0.45f);
             }
             if (fighter.Dashing) { crouchTarget = Mathf.Max(crouchTarget, 0.35f); pitchTarget = Mathf.Max(pitchTarget, 10f); }
+            // приземление: таз проседает и пружинит (0,3 с), в воздухе — поджатые ноги
+            bool gnd = fighter.Grounded;
+            if (gnd && !wasGrounded && deadK < 0.01f) { landK = 1f; if (Juice.Instance != null) Juice.Instance.Footstep(fighter.transform.position, 1.4f); }
+            wasGrounded = gnd;
+            landK = Mathf.MoveTowards(landK, 0f, dt / 0.3f);
+            // рывок — короткий прыжок-шаг: стопы над землёй, ноги подобраны наполовину
+            float airT = !gnd ? 1f : (fighter.Dashing ? 0.45f : 0f);
+            airK = Mathf.MoveTowards(airK, airT, dt / (airT < airK ? 0.06f : 0.08f));
             lean = Mathf.MoveTowards(lean, pitchTarget, 140f * dt);
             yawS = Mathf.SmoothDampAngle(yawS, yawTarget, ref yawV, 0.05f);
             bS = Mathf.SmoothDamp(bS, bTarget, ref bV, 0.04f);
@@ -528,6 +538,7 @@ namespace BladePath
 
             // ---------- 2) таз: вынос вперёд и высота (вся модель) — визуально; зоны поражения едут следом (FollowZones)
             float drop = (stanceDrop * (1f - 0.5f * postK) + pd + walkCrouch * moveK) * wSt * procW;   // на мокапе высоту таза задаёт клип
+            drop += 0.11f * Mathf.Sin(Mathf.PI * Mathf.Min(1f, (1f - landK) * 1.6f)) * (landK > 0f ? 1f : 0f) * wSt;   // проседание при приземлении
             Vector3 off = new Vector3(walkSx * wLeg, -drop, pf);
             transform.localPosition = baseLocalPos + off;
             deadK = Mathf.MoveTowards(deadK, fighter.Dead ? 1f : 0f, dt / 0.8f);
@@ -598,6 +609,26 @@ namespace BladePath
                 }
             }
             else { lockL.on = lockR.on = false; lockL.off = lockR.off = Vector3.zero; lockL.hasPrev = lockR.hasPrev = false; lockL.lift = lockR.lift = 0f; }
+            // в воздухе: колени к груди — передняя стопа вверх-вперёд, задняя вверх-назад (по вертикальной скорости сильнее на взлёте)
+            if (airK > 0.001f && deadK < 0.01f && footL != null && footR != null && legsReady && wLeg <= 0.001f + (fighter.Dashing ? 1f : 0f))
+            {
+                float tuck = Smooth(airK);
+                bool frontIsL = footFrontX * ys < 0f;
+                Vector3 fwdF = ft.forward;
+                for (int s = 0; s < 2; s++)
+                {
+                    bool isL = s == 0;
+                    Transform up_ = isL ? upperLegL : upperLegR, lo_ = isL ? lowerLegL : lowerLegR, fo_ = isL ? footL : footR;
+                    float l1 = isL ? lgL1 : lgR1, l2 = isL ? lgL2 : lgR2;
+                    bool front = isL == frontIsL;
+                    Vector3 hipP = up_.position;
+                    Vector3 target = hipP + Vector3.down * Mathf.Lerp(l1 + l2 * 0.98f, (l1 + l2) * 0.55f, tuck) + fwdF * (front ? 0.18f : -0.08f) * tuck + ft.right * (isL ? -0.06f : 0.06f) * tuck;
+                    Vector3 cur = fo_.position;
+                    Quaternion fr0 = fo_.rotation;
+                    SolveArm(up_, lo_, fo_, l1, l2, Vector3.Lerp(cur, target, tuck), lo_.position - hipP + fwdF * 0.25f);
+                    fo_.rotation = Quaternion.Slerp(fr0, Quaternion.AngleAxis(-25f * tuck, ft.right) * fr0, 0.6f);   // носок вниз
+                }
+            }
             if (solL != null && footL != null && footR != null) { SoleL = SolePoint(footL, solL); SoleR = SolePoint(footR, solR); }
 
             // шаги мокапа: стопа опустилась на землю — звук и брызги

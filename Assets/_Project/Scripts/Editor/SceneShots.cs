@@ -321,7 +321,7 @@ namespace BladePath.EditorTools
                 {
                     ft.position = start;
                     for (int i = 0; i < 20; i++) Tick(f, d, dt, dt);
-                    Vector3 camPos = start + face * 0.7f + new Vector3(0f, 1.05f, -3.4f), look = start + face * 0.7f + Vector3.up * 0.9f;
+                    Vector3 camPos = start + face * 0.7f + new Vector3(0f, row == 0 ? 1.05f : 1.55f, row == 0 ? -3.4f : -4.0f), look = start + face * 0.7f + Vector3.up * (row == 0 ? 0.9f : 1.35f);
                     if (row == 0) { dl.SetValue(f, f.dashTime); dd.SetValue(f, face); }
                     else { vyF.SetValue(f, f.jumpVelocity); gr.GetSetMethod(true).Invoke(f, new object[] { false }); }
                     int every = row == 0 ? 2 : 4, k = 0;

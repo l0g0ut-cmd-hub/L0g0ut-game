@@ -19,6 +19,22 @@ namespace BladePath
         [Header("Цвет")]
         public float exposure = 1.04f, contrast = 1.10f, saturation = 1.06f;
         public Color shadows = new Color(0.93f, 0.98f, 1.10f), highlights = new Color(1.07f, 1.0f, 0.92f);
+        [Header("Объектив")]
+        [Range(0f, 1f)] public float vignette = 0.38f;
+        [Range(0f, 0.1f)] public float grain = 0.025f;
+
+        static float aberr, desatTarget, desat;
+        /// <summary>Импульс хроматической аберрации (тяжёлый удар, отражение, добивание): сила 0.004…0.015, гаснет за ~0,3 с.</summary>
+        public static void Kick(float amount) { aberr = Mathf.Max(aberr, amount); }
+        /// <summary>Обесцвечивание кадра 0…1 (смерть игрока, предложение воскрешения).</summary>
+        public static void Desaturate(float k) { desatTarget = Mathf.Clamp01(k); }
+
+        void Update()
+        {
+            float dt = Application.isPlaying ? Time.unscaledDeltaTime : 0.016f;
+            aberr = Mathf.MoveTowards(aberr, 0f, dt * 0.05f);
+            desat = Mathf.MoveTowards(desat, desatTarget, dt * 1.5f);
+        }
 
         readonly RenderTexture[] chain = new RenderTexture[8];
 
@@ -33,6 +49,10 @@ namespace BladePath
             material.SetFloat("_Saturation", saturation);
             material.SetVector("_Shadows", shadows);
             material.SetVector("_Highlights", highlights);
+            material.SetFloat("_Vignette", vignette);
+            material.SetFloat("_Grain", DuelManager.Gfx == 1 ? grain : 0f);
+            material.SetFloat("_Aberr", aberr);
+            material.SetFloat("_Desat", desat);
             if (DuelManager.Gfx != 1) { Graphics.Blit(src, dst, material, 4); return; }
 
             int w = src.width / 2, h = src.height / 2;

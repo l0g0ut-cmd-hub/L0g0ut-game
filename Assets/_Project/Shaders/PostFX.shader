@@ -10,6 +10,7 @@ Shader "Hidden/BladePath/PostFX"
     float4 _MainTex_TexelSize;
     half4 _Filter;          // x порог, y x−колено, z 2·колено, w 0.25/колено
     half _Intensity, _Exposure, _Contrast, _Saturation, _Delta;
+    half _Vignette, _Aberr, _Grain, _Desat;
     half3 _Shadows, _Highlights;
 
     struct v2f { float4 pos : SV_POSITION; float2 uv : TEXCOORD0; };
@@ -37,6 +38,28 @@ Shader "Hidden/BladePath/PostFX"
         c = (c - 0.5h) * _Contrast + 0.5h;
         half t = saturate(l * 1.6h);
         c *= lerp(_Shadows, _Highlights, t);
+        return saturate(c);
+    }
+    // объектив: виньетка, хроматическая аберрация (импульс на тяжёлых ударах), зерно плёнки, обесцвечивание (смерть)
+    half3 SampleLens (float2 uv)
+    {
+        float2 d = uv - 0.5;
+        if (_Aberr > 0.0001)
+        {
+            float2 o = d * _Aberr;
+            return half3(tex2D(_MainTex, uv + o).r, tex2D(_MainTex, uv).g, tex2D(_MainTex, uv - o).b);
+        }
+        return tex2D(_MainTex, uv).rgb;
+    }
+    half3 Lens (half3 c, float2 uv)
+    {
+        float2 d = (uv - 0.5) * float2(1.0, 0.8);
+        half v = saturate(1.0 - dot(d, d) * 2.2);
+        c *= lerp(1.0h, v * v * (3.0h - 2.0h * v), _Vignette);
+        half l = dot(c, half3(0.2126h, 0.7152h, 0.0722h));
+        c = lerp(c, l.xxx * half3(1.05h, 0.92h, 0.9h), _Desat);
+        float n = frac(sin(dot(uv * 431.7 + frac(_Time.y * 7.13), float2(12.9898, 78.233))) * 43758.5453);
+        c += (n - 0.5) * _Grain;
         return saturate(c);
     }
     ENDCG
@@ -76,9 +99,9 @@ Shader "Hidden/BladePath/PostFX"
             #pragma fragment frag
             half4 frag (v2f i) : SV_Target
             {
-                half3 c = tex2D(_MainTex, i.uv).rgb;
+                half3 c = SampleLens(i.uv);
                 c += tex2D(_BloomTex, i.uv).rgb * _Intensity;
-                return half4(Grade(c), 1);
+                return half4(Lens(Grade(c), i.uv), 1);
             }
             ENDCG
         }
@@ -87,7 +110,7 @@ Shader "Hidden/BladePath/PostFX"
             CGPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            half4 frag (v2f i) : SV_Target { return half4(Grade(tex2D(_MainTex, i.uv).rgb), 1); }
+            half4 frag (v2f i) : SV_Target { return half4(Lens(Grade(SampleLens(i.uv)), i.uv), 1); }
             ENDCG
         }
     }

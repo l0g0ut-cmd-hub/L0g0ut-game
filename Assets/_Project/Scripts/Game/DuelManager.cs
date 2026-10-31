@@ -535,6 +535,7 @@ namespace BladePath
                 }
                 if (rig != null) rig.Recoil(db.cut ? (dir - side * 0.6f).normalized : dir, hit, 1.15f, db.neck ? BodyZoneId.Head : BodyZoneId.Torso);
                 if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(0.06f); CameraOrbit.Instance.Punch(4f); }
+                PostFX.Kick(0.014f);
                 hitStopUntil = Time.unscaledTime + (db.cut ? 0.12f : 0.14f);
                 Haptics.Pulse(t == player ? 120 : 80);
             }
@@ -924,7 +925,7 @@ namespace BladePath
                 Popups.Add(bp);
                 if (Juice.Instance != null)
                 {
-                    if (parry) { Juice.Instance.Parry(clashAt, r.contact.normal); if (r.target.weapon != null) r.target.weapon.Deflect(1f); }
+                    if (parry) { Juice.Instance.Parry(clashAt, r.contact.normal); if (r.target.weapon != null) r.target.weapon.Deflect(1f); PostFX.Kick(0.006f); }
                     else { Juice.Instance.OnHit(clashAt, r.contact.normal, r.contact.bladeVelocity, 0.5f, true, false, null); if (r.target.weapon != null) r.target.weapon.Deflect(-0.6f); }   // блок: клинок отдаёт к телу
                 }
                 if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(parry ? 0.05f : 0.025f); if (parry) CameraOrbit.Instance.Punch(2.5f); }
@@ -1041,6 +1042,7 @@ namespace BladePath
                 if (Juice.Instance != null) Juice.Instance.OnHit(point, normal, hitDir, Mathf.Clamp(dmg / 16f + (crit ? 0.4f : 0f) + (kill ? 0.5f : 0f), 0.4f, 2.2f), false, kill, zoneT);
                 if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(kill ? 0.12f : (dmg >= 20f ? 0.07f : 0.04f)); CameraOrbit.Instance.Punch(kill ? 5f : (dmg >= 20f ? 2.5f : 1f)); }
                 hitStopUntil = Time.unscaledTime + (kill ? 0.16f : (dmg >= 20f ? 0.08f : 0.05f));
+                if (kill || dmg >= 20f) PostFX.Kick(kill ? 0.012f : 0.006f);
             }
 
             // оглушение: рубящие выбивают из замаха сильнее
@@ -1133,6 +1135,7 @@ namespace BladePath
 
         void UpdateResurrectOffer()
         {
+            PostFX.Desaturate(ResurrectOffered ? 0.85f : (State == DuelState.PlayerLost && !TimedOut ? 0.6f : 0f));
             if (!ResurrectOffered) return;
             if (ResurrectOfferAge > ResurrectWindow) { ResurrectOffered = false; EndRound(player, offerKiller); }
         }
