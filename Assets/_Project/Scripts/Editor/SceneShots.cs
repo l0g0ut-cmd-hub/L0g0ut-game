@@ -148,6 +148,7 @@ namespace BladePath.EditorTools
                         DeathblowStrip(cam, dir, "16_deathblow_kesa", player, enemy, AttackType.DeathblowKesa, 1.22f, new[] { 0f, 0.2f, 0.36f, 0.42f, 0.45f, 0.48f, 0.9f, 1.22f }, log);
                         DeathblowStrip(cam, dir, "17_deathblow_neck", player, enemy, AttackType.DeathblowNeck, 1.2f, new[] { 0f, 0.2f, 0.38f, 0.44f, 0.46f, 0.5f, 0.6f, 1.22f }, log);
                         DeathblowStrip(cam, dir, "18_deathblow_rising", player, enemy, AttackType.DeathblowRising, 1.22f, new[] { 0f, 0.2f, 0.38f, 0.44f, 0.46f, 0.5f, 0.6f, 1.18f }, log);
+                        DeathblowStrip(cam, dir, "30_deathblow_cross", player, enemy, AttackType.DeathblowCross, 1.22f, new[] { 0.16f, 0.36f, 0.45f, 0.6f, 0.68f, 0.77f, 1.1f, 1.4f }, log);
                         DeathblowStrip(cam, dir, "28_deathblow_plunge", player, enemy, AttackType.DeathblowPlunge, 1.0f, new[] { 0.06f, 0.18f, 0.3f, 0.38f, 0.44f, 0.8f, 1.12f, 1.32f }, log, 0.44f);
                     }
                     if (enemy != null) GuardStrip(cam, dir, "15_guard", player, enemy, log);

@@ -431,7 +431,7 @@ namespace BladePath
         /// Постановка добивания: приём, дистанция между бойцами и моменты по времени удара (с): контакт клинка с телом,
         /// развязка (смерть или падение на колено, если у врага остались метки жизни), тибури.
         /// </summary>
-        struct DbKind { public AttackType type; public float distance, contact, outcome, flick, camYaw; public bool cut, neck, plunge; }
+        struct DbKind { public AttackType type; public float distance, contact, contact2, outcome, flick, camYaw; public bool cut, neck, plunge; }
         // с прыжка: удар в прыжке по сломленному — приземление с клинком в ключицу (только этим приёмом, выбор не случайный)
         static readonly DbKind PlungeKind = new DbKind { type = AttackType.DeathblowPlunge, distance = 1.0f, contact = 0.44f, outcome = 0.98f, flick = 1.32f, camYaw = 26f, plunge = true };
         Vector3 dbFrom;
@@ -452,6 +452,7 @@ namespace BladePath
             new DbKind { type = AttackType.DeathblowKesa, distance = 1.22f, contact = 0.45f, outcome = 0.72f, flick = 1.22f, camYaw = -28f, cut = true },      // кэса-гири
             new DbKind { type = AttackType.DeathblowNeck, distance = 1.20f, contact = 0.46f, outcome = 0.52f, flick = 1.22f, camYaw = 34f, cut = true, neck = true },   // по шее
             new DbKind { type = AttackType.DeathblowRising, distance = 1.22f, contact = 0.45f, outcome = 0.72f, flick = 1.18f, camYaw = -16f, cut = true },    // снизу вверх
+            new DbKind { type = AttackType.DeathblowCross, distance = 1.22f, contact = 0.45f, contact2 = 0.77f, outcome = 0.95f, flick = 1.4f, camYaw = -22f, cut = true },   // дзюмондзи: крест из двух резов
         };
         public FighterController DeathblowBy { get; private set; }
         public FighterController DeathblowTarget { get; private set; }
@@ -461,7 +462,7 @@ namespace BladePath
         /// <summary>Ракурс камеры добивания (град): свой у каждого приёма.</summary>
         public float DeathblowCamYaw { get { return db.camYaw; } }
         public float DeathblowAge { get { return Time.unscaledTime - dbStart; } }
-        float dbStart; int dbStage, lastDbKind = -1; DbKind db;
+        float dbStart; int dbStage, lastDbKind = -1; DbKind db; bool dbSecond;
         bool executing;   // урон приёма: здоровье в ноль убивает, а не открывает новое добивание
 
         // метки жизни (как у боссов Sekiro): добивание снимает одну, пока метки есть — враг поднимается с полным здоровьем
@@ -501,7 +502,7 @@ namespace BladePath
                 if (pick < 0) pick = 0;
                 lastDbKind = pick; db = DbKinds[pick];
             }
-            DeathblowBy = a; DeathblowTarget = t; dbStart = Time.unscaledTime; dbStage = 0;
+            DeathblowBy = a; DeathblowTarget = t; dbStart = Time.unscaledTime; dbStage = 0; dbSecond = false;
             Freeze(true);
             a.TakeKnockback(); t.TakeKnockback(); a.StopDash(); t.StopDash();
             t.HoldPostureBreak(3.5f);
@@ -598,6 +599,22 @@ namespace BladePath
                 PostFX.Kick(0.014f);
                 hitStopUntil = Time.unscaledTime + (db.cut ? 0.12f : 0.14f);
                 Haptics.Pulse(t == player ? 120 : 80);
+            }
+            // дзюмондзи: второй, встречный рез — веер крови в другую сторону, жертву разворачивает обратно
+            if (dbStage == 1 && db.contact2 > 0f && !dbSecond && st >= db.contact2)
+            {
+                dbSecond = true;
+                if (Juice.Instance != null)
+                {
+                    Vector3 cutDir2 = (side * 0.8f + Vector3.down * 0.5f).normalized;
+                    Juice.Instance.OnHit(hit, -dir, cutDir2 * 6f, 1.5f, false, false, torso);
+                    Juice.Instance.BloodyBlade(w, 0.3f);
+                }
+                if (rig != null) rig.Recoil((dir + side * 0.6f).normalized, hit, 1.0f, BodyZoneId.Torso);
+                if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(0.05f); CameraOrbit.Instance.Punch(3f); }
+                PostFX.Kick(0.01f);
+                hitStopUntil = Time.unscaledTime + 0.1f;
+                Haptics.Pulse(t == player ? 100 : 70);
             }
             if (dbStage == 1 && st >= db.outcome)
             {
