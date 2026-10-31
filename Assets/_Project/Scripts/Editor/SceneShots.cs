@@ -151,6 +151,7 @@ namespace BladePath.EditorTools
                         DeathblowStrip(cam, dir, "28_deathblow_plunge", player, enemy, AttackType.DeathblowPlunge, 0.78f, new[] { 0.06f, 0.18f, 0.3f, 0.38f, 0.44f, 0.8f, 1.12f, 1.32f }, log, 0.44f);
                     }
                     if (enemy != null) GuardStrip(cam, dir, "15_guard", player, enemy, log);
+                    if (enemy != null) StanceShots(cam, dir, enemy, log);
                     MoveStrip(cam, dir, "19_dash_jump", player, enemy, log);
                 }
 
@@ -488,6 +489,41 @@ namespace BladePath.EditorTools
         }
 
         /// <summary>Один кадр бойца как в игре: Update драйвера → Animator → LateUpdate драйвера → полы плаща.</summary>
+        /// <summary>Стойки врага: тюдан, хассо, вакигамаэ — спереди-сбоку, склейка в один кадр.</summary>
+        static void StanceShots(Camera cam, string dir, FighterController f, StringBuilder log)
+        {
+            WeaponController w = f.weapon; HeroRigDriver d = HeroRigDriver.Of(f);
+            if (w == null || d == null) return;
+            const int cw = 480, chh = 600;
+            Texture2D sheet = new Texture2D(cw * 3, chh, TextureFormat.RGB24, false);
+            RenderTexture rt = new RenderTexture(cw, chh, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
+            RenderTexture prevT = cam.targetTexture; Vector3 p0 = cam.transform.position; Quaternion r0 = cam.transform.rotation; float f0 = cam.fieldOfView;
+            try
+            {
+                Transform ft = f.transform;
+                Vector3 eye = ft.position + ft.forward * 2.6f - ft.right * 1.3f + Vector3.up * 1.35f, look = ft.position + Vector3.up * 1.05f;
+                for (int i = 0; i < 3; i++)
+                {
+                    w.stance = i; w.SnapRest();
+                    for (int k = 0; k < 12; k++) { Call(w, "Update"); Tick(f, d, 1f / 30f, 1f / 30f); }
+                    cam.transform.position = eye; cam.transform.rotation = Quaternion.LookRotation(look - eye, Vector3.up); cam.fieldOfView = 38f;
+                    cam.targetTexture = rt; cam.Render();
+                    RenderTexture.active = rt; sheet.ReadPixels(new Rect(0, 0, cw, chh), cw * i, 0); RenderTexture.active = null;
+                }
+                sheet.Apply();
+                File.WriteAllBytes(Path.Combine(dir, "29_enemy_stances.jpg"), sheet.EncodeToJPG(86));
+                log.Append("PROBE|shots|29_enemy_stances|3 стойки\n");
+            }
+            catch (Exception e) { log.Append("PROBE|shots|29_enemy_stances|error " + e.Message + "\n"); }
+            finally
+            {
+                w.stance = 0; w.SnapRest();
+                cam.targetTexture = prevT; cam.transform.SetPositionAndRotation(p0, r0); cam.fieldOfView = f0;
+                rt.Release(); UnityEngine.Object.DestroyImmediate(rt); UnityEngine.Object.DestroyImmediate(sheet);
+                for (int k = 0; k < 12; k++) Tick(f, d, 1f / 30f, 1f / 30f);
+            }
+        }
+
         /// <summary>Кровь на клинке крупно: три уровня (после удара, после трёх, после добивания) и подсохшая — склейка в один кадр.</summary>
         static void BladeBloodShot(Camera cam, string dir, FighterController f, StringBuilder log)
         {

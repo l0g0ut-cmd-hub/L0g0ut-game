@@ -15,7 +15,7 @@ namespace BladePath
 
         float nextAttackAt, strafeUntil, retreatUntil, dashAt, blockUntil, energyAt;
         int lastSeenSwing = -1, parrySwing = -1;
-        float punishAt, ballCheckAt;
+        float punishAt, ballCheckAt, stanceAt;
         int lastBall;
         float strafeDir = 1f;
         bool hooked;
@@ -65,6 +65,17 @@ namespace BladePath
             bool busy = self.weapon != null && self.weapon.Phase != SwingPhase.Idle;
 
             if (Time.time > strafeUntil) { strafeUntil = Time.time + Random.Range(0.8f, 1.8f); strafeDir = Random.value < 0.5f ? -1f : 1f; }
+
+            // стойки (камаэ): между схватками враг перехватывает меч — хассо (рубит сверху и наискось), вакигамаэ (снизу, по ногам, укол);
+            // Они любит хассо, Тень — вакигамаэ; ученик почти всегда в тюдан
+            if (!busy && self.weapon != null && Time.time >= stanceAt && stringLeft <= 0)
+            {
+                stanceAt = Time.time + Random.Range(4f, 8f);
+                float pH = 0.16f + Ladder.Current.heavyBias * 0.5f, pW = 0.12f + Ladder.Current.dashBias * 0.5f;
+                if (Level < 1) { pH *= 0.4f; pW *= 0.4f; }
+                float r = Random.value;
+                self.weapon.stance = r < pH ? 1 : (r < pH + pW ? 2 : 0);
+            }
 
             if (feintSwing >= 0 && self.weapon != null)
             {
@@ -184,11 +195,16 @@ namespace BladePath
                 bool quick = Time.time - nextAttackAt < 0.4f && DuelManager.Instance != null && DuelManager.Instance.Combo(self) > 0 && DuelManager.Instance.ComboAge(self) < 1.2f;
                 AttackType t = quick ? Followups[Random.Range(0, Followups.Length)] : Pool[Random.Range(0, Pool.Length)];
                 if (!quick && Random.value < Ladder.Current.heavyBias) t = AttackType.Overhead;   // Они любит рубить сверху
+                // из стойки — её удары (по стойке их можно прочитать заранее)
+                int stc = self.weapon != null ? self.weapon.stance : 0;
+                if (!quick && stc == 1 && Random.value < 0.75f) t = Random.value < 0.6f ? AttackType.Overhead : AttackType.Slash;
+                else if (!quick && stc == 2 && Random.value < 0.75f) { float q = Random.value; t = q < 0.4f ? AttackType.Rising : (q < 0.7f ? AttackType.LegSweep : AttackType.Thrust); }
                 // опасная атака (危): с уровня «воин», не в серии
                 bool peril = !quick && Level >= 1 && Random.value < 0.10f + 0.04f * Level;
                 if (peril) { float pr = Random.value; t = pr < 0.45f ? AttackType.Thrust : (pr < 0.75f || Level < 2 ? AttackType.LegSweep : AttackType.Charge); }   // натиск — с уровня 2
                 if (self.Attack(t, peril))
                 {
+                    if (self.weapon != null && Random.value < 0.65f) { self.weapon.stance = 0; stanceAt = Time.time + Random.Range(2f, 5f); }   // после удара — обычно назад в тюдан
                     nextAttackAt = Time.time + Mathf.Lerp(2.4f, 0.8f, agg) + Random.Range(0f, 0.7f);
                     // серия: с уровня «воин», не после опасной атаки и не шаром
                     if (!peril && !quick && Level >= 1 && t != AttackType.Energy && Random.value < 0.18f + 0.08f * Level)

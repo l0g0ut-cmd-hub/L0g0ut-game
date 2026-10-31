@@ -35,6 +35,11 @@ namespace BladePath
         public Vector3 staggerHand = new Vector3(0.16f, -0.70f, 0.22f);
         [Tooltip("Насколько меньше раскрыт корпус в стойке, град (таз, грудь): переднюю руку на цубе держит дальнее плечо — при сильном развороте к камере руки прижаты к груди. Вычитается из всех поз (и ударов), динамика удара сохраняется.")]
         public float openHips, openChest;
+        [Tooltip("Стойка (камаэ): 0 — тюдан (остриё на противника), 1 — хассо (клинок вертикально у правого плеча), 2 — вакигамаэ (клинок у бедра остриём назад, спрятан за телом). Враг меняет стойки — по ней читается, чем он ударит.")]
+        public int stance;
+        float stanceK1, stanceK2;
+        /// <summary>Насколько боец сейчас в стойке хассо / вакигамаэ (0…1, плавно).</summary>
+        public float StanceK(int s) { return s == 1 ? stanceK1 : s == 2 ? stanceK2 : 1f - Mathf.Max(stanceK1, stanceK2); }
 
         public SwingProfile CurrentProfile { get; private set; }
         public SwingPhase Phase { get; private set; }
@@ -151,7 +156,7 @@ namespace BladePath
         /// Сразу в стойку, без перетекания из прежней позы. Для редактора (пробы и кадры CI): там Time.deltaTime не идёт,
         /// и после ResetState() смешивание навсегда застревает в позе прерванного удара (клинок остриём в землю).
         /// </summary>
-        public void SnapRest() { ResetState(); blendLeft = 0f; blockK = 0f; stagK = 0f; pinUntil = 0f; downUntil = 0f; downK = 0f; ApplyRestPose(); }
+        public void SnapRest() { ResetState(); blendLeft = 0f; blockK = 0f; stagK = 0f; pinUntil = 0f; downUntil = 0f; downK = 0f; stanceK1 = stance == 1 ? 1f : 0f; stanceK2 = stance == 2 ? 1f : 0f; ApplyRestPose(); }
 
         float pinUntil, downUntil, downK;
         /// <summary>На колено (добит, но поднимается / пропустил сокрушающий удар): корпус осел, клинок упёрт остриём в землю.</summary>
@@ -225,10 +230,18 @@ namespace BladePath
             float gk = Time.deltaTime > 0f ? 1f - Mathf.Exp(-Time.deltaTime / 0.05f) : 1f;   // в редакторе время стоит — сразу
             if (bk < 0.01f) gk = 1f;   // блок не поднят — поза блока сразу под угрозу
             gE = Vector3.Lerp(gE, ge, gk); gH = Vector3.Lerp(gH, gh, gk);
-            Vector3 re = Vector3.Lerp(restEuler, gE, bk);
-            Vector3 rh = Vector3.Lerp(new Vector3(restHand.x * yawSign, restHand.y, restHand.z), gH, bk);
+            // стойка (камаэ): тюдан / хассо / вакигамаэ — плавно, блок поднимается из любой
+            float k1 = Smooth(stanceK1), k2 = Smooth(stanceK2);
+            Vector3 sE = restEuler, sH = new Vector3(restHand.x * yawSign, restHand.y, restHand.z);
+            if (k1 > 0.001f) { sE = Vector3.Lerp(sE, new Vector3(-75f, -12f * yawSign, 0f), k1); sH = Vector3.Lerp(sH, new Vector3(0.17f * yawSign, -0.12f, 0.16f), k1); }    // хассо: клинок вертикально у правого плеча
+            if (k2 > 0.001f) { sE = Vector3.Lerp(sE, new Vector3(20f, 155f * yawSign, 0f), k2); sH = Vector3.Lerp(sH, new Vector3(0.24f * yawSign, -0.46f, 0.06f), k2); }   // вакигамаэ: у бедра, остриё назад-вниз
+            Vector3 re = Vector3.Lerp(sE, gE, bk);
+            Vector3 rh = Vector3.Lerp(sH, gH, bk);
             for (int c = PoseCh.PF; c < PoseCh.N; c++) Pose[c] = SwingProfile.ReadyPose[c];
             Pose[PoseCh.HYAW] = (Pose[PoseCh.HYAW] - openHips) * yawSign; Pose[PoseCh.CYAW] = (Pose[PoseCh.CYAW] - openChest) * yawSign;
+            float nb = 1f - bk;
+            Pose[PoseCh.HYAW] += (6f * k1 + 16f * k2) * yawSign * nb; Pose[PoseCh.CYAW] += (6f * k1 + 8f * k2) * yawSign * nb;
+            Pose[PoseCh.PD] += (0.01f * k1 + 0.04f * k2) * nb; Pose[PoseCh.CPIT] += (-2f * k1 + 4f * k2) * nb;
             Pose[PoseCh.PF] -= 0.04f * bk; Pose[PoseCh.PD] += 0.03f * bk; Pose[PoseCh.CPIT] -= 3f * bk;   // блок: вес чуть назад, колени ниже
             float sk = Smooth(stagK);
             if (sk > 0.001f)
@@ -287,6 +300,8 @@ namespace BladePath
             bool stag = (owner != null && owner.PostureBroken) || Time.time < pinUntil;
             downK = Mathf.MoveTowards(downK, Time.time < downUntil ? 1f : 0f, Time.deltaTime / (Time.time < downUntil ? 0.18f : 0.5f));
             stagK = Mathf.MoveTowards(stagK, stag ? 1f : 0f, Time.deltaTime / (stag ? 0.15f : 0.4f));
+            stanceK1 = Mathf.MoveTowards(stanceK1, stance == 1 ? 1f : 0f, Time.deltaTime / 0.4f);
+            stanceK2 = Mathf.MoveTowards(stanceK2, stance == 2 ? 1f : 0f, Time.deltaTime / 0.4f);
             blendLeft = Mathf.Max(0f, blendLeft - Time.deltaTime);
             bool still = Phase == SwingPhase.Idle && blockK < 0.01f && stagK < 0.01f && owner != null && Mathf.Abs(owner.MoveAxis) < 0.1f && !owner.Dead;
             idleT = still ? idleT + Time.deltaTime : 0f;
