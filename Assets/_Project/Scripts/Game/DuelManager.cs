@@ -51,7 +51,10 @@ namespace BladePath
         public float AnnounceAge { get { return Time.unscaledTime - announceAt; } }
         float announceAt = -10f;
         bool firstBlood, lastStandShown, tenSecShown;
-        public void Announce(string text, Color c) { AnnounceText = text; AnnounceColor = c; announceAt = Time.unscaledTime; }
+        public void Announce(string text, Color c) { Announce(text, c, null); }
+        /// <summary>Объявление с подсказкой мелкой строкой ниже.</summary>
+        public void Announce(string text, Color c, string sub) { AnnounceText = text; AnnounceColor = c; AnnounceSub = sub; announceAt = Time.unscaledTime; }
+        public string AnnounceSub { get; private set; }
 
         readonly Dictionary<FighterController, float> hp = new Dictionary<FighterController, float>();
         readonly Dictionary<FighterController, float> hpTrail = new Dictionary<FighterController, float>();
@@ -421,7 +424,20 @@ namespace BladePath
         /// Постановка добивания: приём, дистанция между бойцами и моменты по времени удара (с): контакт клинка с телом,
         /// развязка (смерть или падение на колено, если у врага остались метки жизни), тибури.
         /// </summary>
-        struct DbKind { public AttackType type; public float distance, contact, outcome, flick, camYaw; public bool cut, neck; }
+        struct DbKind { public AttackType type; public float distance, contact, outcome, flick, camYaw; public bool cut, neck, plunge; }
+        // с прыжка: удар в прыжке по сломленному — приземление с клинком в ключицу (только этим приёмом, выбор не случайный)
+        static readonly DbKind PlungeKind = new DbKind { type = AttackType.DeathblowPlunge, distance = 0.78f, contact = 0.44f, outcome = 0.98f, flick = 1.32f, camYaw = 26f, plunge = true };
+        Vector3 dbFrom;
+
+        /// <summary>Траектория добивания с прыжка: s 0…1 от точки начала (в воздухе) к месту приёма на земле — подлёт с небольшим подъёмом.</summary>
+        public static Vector3 PlungePos(Vector3 from, Vector3 to, float s)
+        {
+            s = Mathf.Clamp01(s);
+            float h = s * s * (3f - 2f * s);
+            Vector3 p = Vector3.Lerp(from, to, h);
+            p.y = Mathf.Lerp(from.y, to.y, s * s) + 0.32f * Mathf.Sin(Mathf.PI * Mathf.Min(1f, s * 1.5f)) * (1f - s);
+            return p;
+        }
         static readonly DbKind[] DbKinds =
         {
             // camYaw: камера добивания — + заходит со стороны жертвы (лицо атакующего), − из-за спины атакующего (лицо жертвы)
@@ -460,19 +476,24 @@ namespace BladePath
         bool TryDeathblow(FighterController a, FighterController t)
         {
             if (DeathblowActive || SuperActive || a == null || t == null || a.weapon == null) return false;
-            if (!a.Grounded || !t.Grounded || a.Dead || t.Dead || Reviving(t)) return false;
+            bool plunge = !a.Grounded;   // удар в прыжке — добивание с прыжка
+            if (!t.Grounded || a.Dead || t.Dead || Reviving(t)) return false;
             DeathblowLethal = Marks(t) <= 1;
-            // выбор приёма: голову рубим только последним добиванием
-            int pick = -1;
-            for (int tries = 0; tries < 8; tries++)
+            if (plunge) { db = PlungeKind; dbFrom = a.transform.position; }
+            else
             {
-                int k = UnityEngine.Random.Range(0, DbKinds.Length);
-                if (DbKinds[k].neck && !DeathblowLethal) continue;
-                if (k == lastDbKind && tries < 7) continue;
-                pick = k; break;
+                // выбор приёма: голову рубим только последним добиванием
+                int pick = -1;
+                for (int tries = 0; tries < 8; tries++)
+                {
+                    int k = UnityEngine.Random.Range(0, DbKinds.Length);
+                    if (DbKinds[k].neck && !DeathblowLethal) continue;
+                    if (k == lastDbKind && tries < 7) continue;
+                    pick = k; break;
+                }
+                if (pick < 0) pick = 0;
+                lastDbKind = pick; db = DbKinds[pick];
             }
-            if (pick < 0) pick = 0;
-            lastDbKind = pick; db = DbKinds[pick];
             DeathblowBy = a; DeathblowTarget = t; dbStart = Time.unscaledTime; dbStage = 0;
             Freeze(true);
             a.TakeKnockback(); t.TakeKnockback(); a.StopDash(); t.StopDash();
@@ -510,7 +531,17 @@ namespace BladePath
             float st = on ? w.SwingTime : 99f;
             Vector3 dir = t.transform.position - a.transform.position; dir.y = 0f;
             dir = dir.sqrMagnitude > 1e-4f ? dir.normalized : a.transform.forward;
-            if (on && st < db.contact && !t.Dead)
+            if (db.plunge && !a.Grounded)
+            {
+                // с прыжка: подлёт к месту приёма и приземление ровно в момент удара
+                Vector3 to = t.transform.position - dir * db.distance;
+                float s = on ? Mathf.Clamp01(st / db.contact) : 1f;
+                a.Carry(PlungePos(dbFrom, to, s), s >= 1f);
+                a.transform.rotation = Quaternion.LookRotation(dir, Vector3.up);
+                t.transform.rotation = Quaternion.RotateTowards(t.transform.rotation, Quaternion.LookRotation(-dir, Vector3.up), 360f * Time.deltaTime);
+                if (s >= 1f && Juice.Instance != null) { Juice.Instance.Dust(to + Vector3.up * 0.05f, dir, 16); }
+            }
+            else if (on && st < db.contact && !t.Dead && !db.plunge)
             {
                 // подшаг на дистанцию приёма, лицом к лицу (до контакта успевает: экспонента ~0,1 с)
                 Vector3 want = t.transform.position - dir * db.distance; want.y = a.transform.position.y;
@@ -519,7 +550,7 @@ namespace BladePath
                 t.transform.rotation = Quaternion.RotateTowards(t.transform.rotation, Quaternion.LookRotation(-dir, Vector3.up), 360f * Time.deltaTime);
             }
             Transform torso = TorsoOf(t), head = HeadOf(t);
-            Vector3 aim = db.neck && head != null ? head.position - Vector3.up * 0.14f : torso.position;
+            Vector3 aim = db.neck && head != null ? head.position - Vector3.up * 0.14f : db.plunge ? torso.position + Vector3.up * 0.18f : torso.position;
             Vector3 hit = aim;
             if (w != null && w.bladeRoot != null)
             {
@@ -535,7 +566,14 @@ namespace BladePath
                 DeathblowAt = Time.unscaledTime; DeathblowPos = hit;
                 if (Juice.Instance != null)
                 {
-                    if (!db.cut)
+                    if (db.plunge)
+                    {
+                        // клинок сверху в ключицу: кровь бьёт вверх из раны, к атакующему
+                        Juice.Instance.OnHit(hit, Vector3.up, (Vector3.up * 0.8f - dir * 0.45f).normalized * 4.5f, 1.2f, false, false, torso);
+                        Juice.Instance.StabSound();
+                        Juice.Instance.Footstep(a.transform.position, 1.6f);
+                    }
+                    else if (!db.cut)
                     {
                         Juice.Instance.OnHit(hit + dir * 0.16f, dir, dir, 0.85f, false, false, null);   // кровь из спины по ходу клинка
                         Juice.Instance.StabSound();
@@ -548,7 +586,7 @@ namespace BladePath
                     }
                     Juice.Instance.BloodyBlade(w, 0.7f);
                 }
-                if (rig != null) rig.Recoil(db.cut ? (dir - side * 0.6f).normalized : dir, hit, 1.15f, db.neck ? BodyZoneId.Head : BodyZoneId.Torso);
+                if (rig != null) rig.Recoil(db.plunge ? (Vector3.down * 0.7f + dir * 0.5f).normalized : db.cut ? (dir - side * 0.6f).normalized : dir, hit, 1.15f, db.neck ? BodyZoneId.Head : BodyZoneId.Torso);
                 if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(0.06f); CameraOrbit.Instance.Punch(4f); }
                 PostFX.Kick(0.014f);
                 hitStopUntil = Time.unscaledTime + (db.cut ? 0.12f : 0.14f);
@@ -878,13 +916,17 @@ namespace BladePath
         {
             if (State != DuelState.Fighting) return;
             bool isPlayer = f == player;
-            Announce(isPlayer ? "РАВНОВЕСИЕ СЛОМЛЕНО!" : "РАВНОВЕСИЕ СЛОМЛЕНО — ДОБЕЙ!", isPlayer ? new Color(1f, 0.45f, 0.2f) : new Color(1f, 0.2f, 0.12f));
+            // подсказка (пару раз за запуск): добить можно и с прыжка
+            string sub = null;
+            if (!isPlayer && plungeHints < 2) { plungeHints++; sub = "удар в прыжке — добивание с высоты"; }
+            Announce(isPlayer ? "РАВНОВЕСИЕ СЛОМЛЕНО!" : "РАВНОВЕСИЕ СЛОМЛЕНО — ДОБЕЙ!", isPlayer ? new Color(1f, 0.45f, 0.2f) : new Color(1f, 0.2f, 0.12f), sub);
             if (Juice.Instance != null) Juice.Instance.Clash(f.transform.position + Vector3.up * 1.2f + f.transform.forward * 0.3f);
             if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.07f);
             Haptics.Pulse(isPlayer ? 80 : 50);
             hitStopUntil = Time.unscaledTime + 0.1f;
             Slowmo = true; slowUntil = Time.unscaledTime + 0.45f;
         }
+        static int plungeHints;
 
         static float ZoneMul(BodyZoneId z)
         {

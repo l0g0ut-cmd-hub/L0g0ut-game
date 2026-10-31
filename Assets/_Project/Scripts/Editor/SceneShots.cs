@@ -142,6 +142,7 @@ namespace BladePath.EditorTools
                         DeathblowStrip(cam, dir, "16_deathblow_kesa", player, enemy, AttackType.DeathblowKesa, 1.22f, new[] { 0f, 0.2f, 0.36f, 0.42f, 0.45f, 0.48f, 0.9f, 1.22f }, log);
                         DeathblowStrip(cam, dir, "17_deathblow_neck", player, enemy, AttackType.DeathblowNeck, 1.2f, new[] { 0f, 0.2f, 0.38f, 0.44f, 0.46f, 0.5f, 0.6f, 1.22f }, log);
                         DeathblowStrip(cam, dir, "18_deathblow_rising", player, enemy, AttackType.DeathblowRising, 1.22f, new[] { 0f, 0.2f, 0.38f, 0.44f, 0.46f, 0.5f, 0.6f, 1.18f }, log);
+                        DeathblowStrip(cam, dir, "28_deathblow_plunge", player, enemy, AttackType.DeathblowPlunge, 0.78f, new[] { 0.06f, 0.18f, 0.3f, 0.38f, 0.44f, 0.8f, 1.12f, 1.32f }, log, 0.44f);
                     }
                     if (enemy != null) GuardStrip(cam, dir, "15_guard", player, enemy, log);
                     MoveStrip(cam, dir, "19_dash_jump", player, enemy, log);
@@ -220,7 +221,7 @@ namespace BladePath.EditorTools
         }
 
         /// <summary>Раскадровка добивания: враг «поплыл» (слом равновесия), игрок на дистанции укола, 8 моментов приёма.</summary>
-        static void DeathblowStrip(Camera cam, string dir, string name, FighterController a, FighterController t, AttackType type, float distance, float[] taus, StringBuilder log)
+        static void DeathblowStrip(Camera cam, string dir, string name, FighterController a, FighterController t, AttackType type, float distance, float[] taus, StringBuilder log, float plungeContact = -1f)
         {
             WeaponController w = a.weapon; HeroRigDriver da = HeroRigDriver.Of(a), dt_ = HeroRigDriver.Of(t);
             if (w == null || da == null || dt_ == null || t.weapon == null) return;
@@ -252,6 +253,13 @@ namespace BladePath.EditorTools
                     phase.GetSetMethod(true).Invoke(w, new object[] { ph });
                     pt.SetValue(w, rem); bl.SetValue(w, 0f);
                     Call(w, "ApplyPose");
+                    if (plungeContact > 0f)
+                    {
+                        // с прыжка: траектория DuelManager.PlungePos от точки прыжка (1,3 м до приёма, на высоте 0,9 м) к месту приёма
+                        Vector3 to = pt0 - d * distance, from = to - d * 1.3f + Vector3.up * 0.9f;
+                        float s = Mathf.Clamp01(taus[k] / plungeContact);
+                        a.Carry(DuelManager.PlungePos(from, to, s), s >= 1f);
+                    }
                     for (int i = 0; i < 8; i++) { Tick(a, da, 0f, 1f / 30f); Tick(t, dt_, 0f, 1f / 30f); }
                     cam.transform.position = camPos; cam.transform.rotation = Quaternion.LookRotation(look - camPos, Vector3.up); cam.fieldOfView = 40f;
                     cam.targetTexture = rt; cam.Render();
@@ -515,9 +523,9 @@ namespace BladePath.EditorTools
             Call(d, "Update");
             if (d.animator != null) d.animator.Update(animDt);
             Call(d, "LateUpdate");
-            CoatSpring cs = f.GetComponentInChildren<CoatSpring>(true);
+            CoatSpring cs = d.GetComponent<CoatSpring>();   // на модели облика (у врага их несколько)
             if (cs != null) Call(cs, "LateUpdate");
-            ContactShadow sh = f.GetComponentInChildren<ContactShadow>(true);
+            ContactShadow sh = d.GetComponent<ContactShadow>();
             if (sh != null) Call(sh, "LateUpdate");
         }
 

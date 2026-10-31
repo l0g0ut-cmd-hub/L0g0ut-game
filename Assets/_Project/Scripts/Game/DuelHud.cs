@@ -230,14 +230,17 @@ namespace BladePath
             }
 
             // объявления
-            if (!string.IsNullOrEmpty(duel.AnnounceText) && duel.AnnounceAge < 1.4f && duel.State != DuelState.Intro)
+            bool hasSub = !string.IsNullOrEmpty(duel.AnnounceSub);
+            float annLife = hasSub ? 2.6f : 1.4f;   // с подсказкой — дольше, чтобы успеть прочесть
+            if (!string.IsNullOrEmpty(duel.AnnounceText) && duel.AnnounceAge < annLife && duel.State != DuelState.Intro)
             {
                 float age = duel.AnnounceAge;
-                float aa = Mathf.Clamp01(age / 0.1f) * Mathf.Clamp01((1.4f - age) / 0.4f);
+                float aa = Mathf.Clamp01(age / 0.1f) * Mathf.Clamp01((annLife - age) / 0.4f);
                 float sc = 1f + Mathf.Max(0f, 0.2f - age) * 2f;
                 Color ac = duel.AnnounceColor; ac.a = aa;
-                UiKit.Rect(new Rect(0f, 168f, W, 52f), new Color(0f, 0f, 0f, 0.35f * aa));
+                UiKit.Rect(new Rect(0f, 168f, W, hasSub ? 78f : 52f), new Color(0f, 0f, 0f, 0.35f * aa));
                 UiKit.Text(new Rect(0f, 166f, W, 56f), duel.AnnounceText, 40f * sc, ac);
+                if (hasSub) UiKit.Text(new Rect(0f, 214f, W, 28f), duel.AnnounceSub, 18f, new Color(1f, 0.88f, 0.75f, aa * Mathf.Clamp01((age - 0.25f) / 0.2f)));
             }
 
             // серии ударов

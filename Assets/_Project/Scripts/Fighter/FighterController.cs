@@ -57,6 +57,9 @@ namespace BladePath
         public float SinceDash { get { return Time.time - lastDashAt; } }
         /// <summary>Отбрасывание от удара: скорость гасится за ~0,3 с, стены арены и препятствия учитываются.</summary>
         /// <summary>Забрать скорость отброса (её подхватывает физическое падение тела) — корень бойца дальше не скользит.</summary>
+        /// <summary>Постановка (добивание с прыжка): боец несётся по заданной траектории; grounded — приземлился.</summary>
+        public void Carry(Vector3 pos, bool grounded) { transform.position = pos; vy = 0f; Grounded = grounded; }
+
         public Vector3 TakeKnockback() { Vector3 v = knockVel; knockVel = Vector3.zero; return v; }
 
         public void Knockback(Vector3 dir, float speed)
