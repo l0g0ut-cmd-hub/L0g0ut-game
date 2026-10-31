@@ -216,14 +216,18 @@ namespace BladePath
                 }
             }
 
-            // таймер раунда
+            // таймер раунда (выключен в настройках — в медальоне знак бесконечности из двух колечек)
             Vector2 tc = new Vector2(cx, 28f);
             UiKit.Disc(tc, 30f, Frame);
             UiKit.Ring(tc, 30f, Gold);
-            int secs = Mathf.CeilToInt(duel.TimeLeft);
-            bool hurry = secs <= 10 && duel.State == DuelState.Fighting;
-            float tp = hurry ? 1f + 0.12f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * 6f)) : 1f;
-            UiKit.Text(new Rect(tc.x - 30f, tc.y - 22f, 60f, 44f), secs.ToString(), 26f * tp, hurry ? new Color(1f, 0.3f, 0.2f) : Color.white, TextAnchor.MiddleCenter, false);
+            if (DuelManager.TimerOn)
+            {
+                int secs = Mathf.CeilToInt(duel.TimeLeft);
+                bool hurry = secs <= 10 && duel.State == DuelState.Fighting;
+                float tp = hurry ? 1f + 0.12f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * 6f)) : 1f;
+                UiKit.Text(new Rect(tc.x - 30f, tc.y - 22f, 60f, 44f), secs.ToString(), 26f * tp, hurry ? new Color(1f, 0.3f, 0.2f) : Color.white, TextAnchor.MiddleCenter, false);
+            }
+            else { UiKit.Ring(tc + new Vector2(-6.5f, 0f), 7.5f, Gold, true); UiKit.Ring(tc + new Vector2(6.5f, 0f), 7.5f, Gold, true); }
 
             // супер-удар: затемнение, плашка с названием, вспышка при ударе
             if (duel.SuperActive)

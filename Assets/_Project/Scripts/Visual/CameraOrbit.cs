@@ -11,10 +11,21 @@ namespace BladePath
     /// Касания, начатые на экранных кнопках, камеру не двигают (можно ходить и бить, не задевая её).
     /// ПК/редактор: левая или правая кнопка мыши — вращение, колесо — зум.
     /// Камера только смотрит: на бой и попадания не влияет; джойстик ходьбы считает направления относительно неё.
+    /// Режим «свободная камера» (настройки): шире пределы наклона и зума, два пальца ещё и двигают точку обзора, нет
+    /// автоматических наездов (вход в раунд, добивание, супер, облёт после KO, автоотъезд) и ограды двором — можно
+    /// рассмотреть храм, сад и задний двор. Сброс — двойной тап или кнопка в паузе.
     /// </summary>
     public class CameraOrbit : MonoBehaviour
     {
         public static CameraOrbit Instance { get; private set; }
+        /// <summary>Свободная камера (настройка, хранится в PlayerPrefs «freecam»).</summary>
+        public static bool FreeMode
+        {
+            get { if (freeCached < 0) freeCached = PlayerPrefs.GetInt("freecam", 0); return freeCached == 1; }   // кэш: не дёргать PlayerPrefs каждый кадр
+            set { freeCached = value ? 1 : 0; PlayerPrefs.SetInt("freecam", freeCached); PlayerPrefs.Save(); if (Instance != null) Instance.ResetView(); }
+        }
+        static int freeCached = -1;
+        Vector3 pan, panT, panV;   // смещение точки обзора (только в свободном режиме)
 
         public Vector3 targetOffset = new Vector3(0f, 1.15f, 0f);   // точка, на которую смотрим (над центром арены)
         public float defaultDistance = 5.2f;
@@ -59,8 +70,8 @@ namespace BladePath
 
         public void ResetView(bool instant = false)
         {
-            yawT = 0f; pitchT = 0f; distT = defaultDistance;
-            if (instant) { yaw = yawT; pitch = pitchT; dist = distT; }
+            yawT = 0f; pitchT = 0f; distT = defaultDistance; panT = Vector3.zero;
+            if (instant) { yaw = yawT; pitch = pitchT; dist = distT; pan = panT; }
         }
 
         void Update()
@@ -69,8 +80,11 @@ namespace BladePath
             ReadTouches();
             ReadMouse();
 #endif
-            pitchT = Mathf.Clamp(pitchT, minPitch, maxPitch);
-            distT = Mathf.Clamp(distT, minDistance, maxDistance);
+            bool free = FreeMode;
+            pitchT = Mathf.Clamp(pitchT, free ? -10f : minPitch, free ? 85f : maxPitch);
+            distT = Mathf.Clamp(distT, free ? 1.2f : minDistance, free ? 18f : maxDistance);
+            if (!free) panT = Vector3.zero;
+            panT.x = Mathf.Clamp(panT.x, -12f, 12f); panT.z = Mathf.Clamp(panT.z, -12f, 14f); panT.y = 0f;
         }
 
 #if ENABLE_LEGACY_INPUT_MANAGER
@@ -114,6 +128,7 @@ namespace BladePath
                 float prev = ((a.position - a.deltaPosition) - (b.position - b.deltaPosition)).magnitude;
                 float cur = (a.position - b.position).magnitude;
                 distT -= (cur - prev) / h * (maxDistance - minDistance) * 1.2f;
+                if (FreeMode) PanBy((a.deltaPosition + b.deltaPosition) * 0.5f, h);   // два пальца вместе — сдвиг точки обзора
             }
         }
 
@@ -131,8 +146,18 @@ namespace BladePath
                 yawT -= d.x / h * yawPerScreen;
                 pitchT -= d.y / h * pitchPerScreen;
             }
+            if (Input.GetMouseButton(2) && FreeMode && !press) PanBy(m - lastMouse, Mathf.Max(1f, Screen.height));   // средняя кнопка — сдвиг
             lastMouse = m;
             distT -= Input.mouseScrollDelta.y * 0.4f;
+        }
+
+        /// <summary>Сдвиг точки обзора по земле вслед за пальцами (в плоскости экрана, без подъёма).</summary>
+        void PanBy(Vector2 d, float h)
+        {
+            Vector3 right = transform.right; right.y = 0f; right.Normalize();
+            Vector3 fwd = transform.forward; fwd.y = 0f;
+            if (fwd.sqrMagnitude < 1e-4f) fwd = transform.up; fwd.y = 0f; fwd.Normalize();
+            panT -= (right * d.x + fwd * d.y) / h * Mathf.Max(2f, dist) * 1.1f;
         }
 #endif
 
@@ -148,7 +173,9 @@ namespace BladePath
 
         void LateUpdate()
         {
+            bool free = FreeMode;
             yaw = Mathf.SmoothDamp(yaw, yawT, ref yawV, smoothTime);
+            pan = Vector3.SmoothDamp(pan, panT, ref panV, smoothTime * 1.5f, Mathf.Infinity, Time.unscaledDeltaTime);
             pitch = Mathf.SmoothDamp(pitch, pitchT, ref pitchV, smoothTime);
             dist = Mathf.SmoothDamp(dist, distT, ref distV, smoothTime);
 
@@ -164,7 +191,7 @@ namespace BladePath
 
             // KO: камера медленно облетает бойцов и подходит ближе
             DuelManager dm = DuelManager.Instance;
-            bool ko = dm != null && (dm.State == DuelState.PlayerWon || dm.State == DuelState.PlayerLost || dm.ResurrectOffered);
+            bool ko = !free && dm != null && (dm.State == DuelState.PlayerWon || dm.State == DuelState.PlayerLost || dm.ResurrectOffered);
             float udt = Time.unscaledDeltaTime;
             koK = Mathf.MoveTowards(koK, ko ? 1f : 0f, udt / (ko ? 0.9f : 0.5f));
             if (ko) cineYaw += 14f * udt * koK;
@@ -172,7 +199,7 @@ namespace BladePath
             float ck = koK * koK * (3f - 2f * koK);
             // начало раунда: камера «влетает» сверху-сбоку к обычному виду
             float ik = 0f;
-            if (dm != null && dm.State == DuelState.Intro)
+            if (!free && dm != null && dm.State == DuelState.Intro)
             {
                 float u = Mathf.Clamp01(dm.StateTime / Mathf.Max(0.1f, dm.IntroLength * 0.9f));
                 ik = 1f - u * u * (3f - 2f * u);
@@ -180,7 +207,7 @@ namespace BladePath
             }
             else introPlaying = false;
 
-            Vector3 focus = new Vector3(midX, 0f, midZ) + targetOffset - Vector3.up * 0.25f * ck;
+            Vector3 focus = new Vector3(midX, 0f, midZ) + targetOffset - Vector3.up * 0.25f * ck + pan;
 
             // автокадрирование: бойцы разошлись — камера отъезжает, чтобы оба были в кадре
             float sep = 0f;
@@ -189,11 +216,11 @@ namespace BladePath
                 Vector3 dd = fighters[0].transform.position - fighters[1].transform.position; dd.y = 0f;
                 sep = dd.magnitude;
             }
-            float want = Mathf.Max(0f, 2.4f + sep * 1.35f - dist);
+            float want = free ? 0f : Mathf.Max(0f, 2.4f + sep * 1.35f - dist);
             autoD = Mathf.SmoothDamp(autoD, want, ref autoV, 0.35f, Mathf.Infinity, udt);
             // супер-удар: наезд на атакующего
             float sk = 0f;
-            if (dm != null && dm.SuperActive && dm.SuperTime < DuelManager.SuperWindup)
+            if (!free && dm != null && dm.SuperActive && dm.SuperTime < DuelManager.SuperWindup)
             {
                 sk = Mathf.Clamp01(dm.SuperTime / 0.25f);
                 Vector3 sp = dm.SuperBy.transform.position;
@@ -201,7 +228,7 @@ namespace BladePath
             }
             superK = Mathf.MoveTowards(superK, sk, udt / 0.15f);
             // добивание: наезд на пару, камера чуть заходит со стороны жертвы — видно лицо атакующего и клинок, вышедший из спины
-            bool db = dm != null && dm.DeathblowActive && dm.DeathblowTarget != null;
+            bool db = !free && dm != null && dm.DeathblowActive && dm.DeathblowTarget != null;
             if (db)
             {
                 Vector3 a = dm.DeathblowBy.transform.position, t = dm.DeathblowTarget.transform.position;
@@ -220,9 +247,19 @@ namespace BladePath
             float tt = Time.unscaledTime;
             pos += new Vector3(Mathf.PerlinNoise(tt * 0.35f, 0.3f) - 0.5f, Mathf.PerlinNoise(0.7f, tt * 0.3f) - 0.5f, 0f) * 0.03f;
             // камера не заходит в стены храма, ворота и сады за пределами арены
-            pos.x = Mathf.Clamp(pos.x, -5.7f, 5.7f);
-            pos.z = Mathf.Clamp(pos.z, -6.5f, 3.2f);
-            pos.y = Mathf.Min(pos.y, 6f);
+            if (free)
+            {
+                // свободная: только внутри мира (лес вокруг двора), не выше 14 м
+                pos.x = Mathf.Clamp(pos.x, -18f, 18f);
+                pos.z = Mathf.Clamp(pos.z, -16f, 18f);
+                pos.y = Mathf.Min(pos.y, 14f);
+            }
+            else
+            {
+                pos.x = Mathf.Clamp(pos.x, -5.7f, 5.7f);
+                pos.z = Mathf.Clamp(pos.z, -6.5f, 3.2f);
+                pos.y = Mathf.Min(pos.y, 6f);
+            }
             if (shakeAmp > 0.0005f)
             {
                 pos += Random.insideUnitSphere * shakeAmp;

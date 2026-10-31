@@ -253,7 +253,7 @@ namespace BladePath
                     t.last = ph;
                 }
                 // остриё чиркает по камню арены на низкой дуге: искры и скрежет
-                if (t.w.bladeRoot != null && (ph == SwingPhase.Strike || ph == SwingPhase.FollowThrough) && Time.time >= t.scrapeAt)
+                if (t.w.bladeRoot != null && t.w.CurrentProfile != null && !t.w.CurrentProfile.scripted && (ph == SwingPhase.Strike || ph == SwingPhase.FollowThrough) && Time.time >= t.scrapeAt)   // не в добиваниях
                 {
                     Vector3 tip = t.w.bladeRoot.position + t.w.bladeRoot.forward * t.w.bladeLength;
                     if (tip.y < 0.05f && tip.y > -0.3f)

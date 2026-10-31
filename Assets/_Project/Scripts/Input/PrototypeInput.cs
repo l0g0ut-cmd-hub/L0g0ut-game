@@ -18,8 +18,8 @@ namespace BladePath
         public FighterController enemy;
 
         enum B { Stick, Jump, Dash, Overhead, Rising, Legs, Energy, Thrust, Slash, Pause,
-                 Resume, Restart, CamReset, AiToggle, DebugToggle, ToMenu, OverAgain, OverMenu, Block, Vibro, Difficulty, Super, Gfx, Heal }
-        const int Count = 24;
+                 Resume, Restart, CamReset, AiToggle, DebugToggle, ToMenu, OverAgain, OverMenu, Block, Vibro, Difficulty, Super, Gfx, Heal, CamMode, TimerToggle }
+        const int Count = 26;
 
         const float StickRadius = 84f;
 
@@ -109,6 +109,8 @@ namespace BladePath
             if (down[(int)B.Vibro]) { Haptics.Enabled = !Haptics.Enabled; PlayerPrefs.SetInt("haptics", Haptics.Enabled ? 1 : 0); Haptics.Pulse(40); }
             if (down[(int)B.Difficulty]) EnemyAI.Difficulty = (EnemyAI.Difficulty + 1) % 3;
             if (down[(int)B.Gfx]) DuelManager.Gfx = 1 - DuelManager.Gfx;
+            if (down[(int)B.CamMode]) CameraOrbit.FreeMode = !CameraOrbit.FreeMode;
+            if (down[(int)B.TimerToggle]) DuelManager.TimerOn = !DuelManager.TimerOn;
 
 #if ENABLE_LEGACY_INPUT_MANAGER
             if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) kb.x += 1f;
@@ -214,15 +216,19 @@ namespace BladePath
             Circle(B.Pause, W * 0.5f, 88f, 18f);   // под таймером раунда
 
             float cx = W * 0.5f;
-            Box(B.Resume, cx - 150f, 116f, 300f, 38f);
-            Box(B.Restart, cx - 150f, 160f, 300f, 38f);
-            Box(B.Difficulty, cx - 150f, 204f, 300f, 38f);
-            Box(B.Gfx, cx - 150f, 248f, 300f, 38f);
-            Box(B.Vibro, cx - 150f, 292f, 300f, 38f);
-            Box(B.CamReset, cx - 150f, 336f, 300f, 38f);
-            Box(B.AiToggle, cx - 150f, 380f, 300f, 38f);
-            Box(B.DebugToggle, cx - 150f, 424f, 300f, 38f);
-            Box(B.ToMenu, cx - 150f, 468f, 300f, 38f);
+            // пауза в две колонки: слева — бой и выход, справа — камера, таймер и отладка
+            float lx = cx - 316f, rx = cx + 16f;
+            Box(B.Resume, lx, 120f, 300f, 40f);
+            Box(B.Restart, lx, 170f, 300f, 40f);
+            Box(B.Difficulty, lx, 220f, 300f, 40f);
+            Box(B.Gfx, lx, 270f, 300f, 40f);
+            Box(B.Vibro, lx, 320f, 300f, 40f);
+            Box(B.ToMenu, lx, 420f, 300f, 40f);
+            Box(B.CamMode, rx, 120f, 300f, 40f);
+            Box(B.CamReset, rx, 170f, 300f, 40f);
+            Box(B.TimerToggle, rx, 220f, 300f, 40f);
+            Box(B.AiToggle, rx, 270f, 300f, 40f);
+            Box(B.DebugToggle, rx, 320f, 300f, 40f);
             Box(B.OverAgain, cx - 210f, 300f, 200f, 56f);
             Box(B.OverMenu, cx + 10f, 300f, 200f, 56f);
 
@@ -231,7 +237,7 @@ namespace BladePath
                 foreach (B b in new[] { B.Stick, B.Jump, B.Dash, B.Block, B.Overhead, B.Rising, B.Legs, B.Energy, B.Thrust, B.Slash, B.Pause, B.Heal }) active[(int)b] = true;
             if (play && player != null && player.KiFull) active[(int)B.Super] = true;
             if (paused)
-                foreach (B b in new[] { B.Resume, B.Restart, B.Difficulty, B.Gfx, B.Vibro, B.CamReset, B.AiToggle, B.DebugToggle, B.ToMenu }) active[(int)b] = true;
+                foreach (B b in new[] { B.Resume, B.Restart, B.Difficulty, B.Gfx, B.Vibro, B.CamReset, B.AiToggle, B.DebugToggle, B.ToMenu, B.CamMode, B.TimerToggle }) active[(int)b] = true;
             if (over) { active[(int)B.OverAgain] = true; active[(int)B.OverMenu] = true; }
 
             labels[(int)B.Resume] = "ПРОДОЛЖИТЬ";
@@ -243,6 +249,8 @@ namespace BladePath
             labels[(int)B.Gfx] = "ГРАФИКА: " + (DuelManager.Gfx == 1 ? "ВЫСОКАЯ" : "ЭКОНОМ");
             labels[(int)B.Vibro] = "ВИБРАЦИЯ: " + (Haptics.Enabled ? "ВКЛ" : "ВЫКЛ");
             labels[(int)B.Difficulty] = "СЛОЖНОСТЬ: " + EnemyAI.DifficultyName;
+            labels[(int)B.CamMode] = "КАМЕРА: " + (CameraOrbit.FreeMode ? "СВОБОДНАЯ" : "БОЕВАЯ");
+            labels[(int)B.TimerToggle] = "ТАЙМЕР БОЯ: " + (DuelManager.TimerOn ? "ВКЛ" : "ВЫКЛ");
             labels[(int)B.OverAgain] = duel != null && duel.PlayerWonMatch ? (Ladder.IsLast ? "С НАЧАЛА" : "ДАЛЕЕ") : "ЕЩЁ РАЗ";
             labels[(int)B.OverMenu] = "В МЕНЮ";
 
@@ -384,6 +392,7 @@ namespace BladePath
                 UiKit.Text(new Rect(W * 0.5f - 200f, 62f, 400f, 50f), "ПАУЗА", 40f, Gold);
                 for (int b = (int)B.Resume; b <= (int)B.ToMenu; b++) DrawRectButton(b);
                 DrawRectButton((int)B.Vibro); DrawRectButton((int)B.Difficulty); DrawRectButton((int)B.Gfx);
+                DrawRectButton((int)B.CamMode); DrawRectButton((int)B.TimerToggle);
                 UiKit.Text(new Rect(W * 0.5f - 400f, 510f, 800f, 24f),
                     "ПУТЬ " + (Ladder.Index + 1) + "/" + Ladder.Count + "  ·  ПОБЕД " + Records.Wins + "  ·  ПОРАЖЕНИЙ " + Records.Losses + "  ·  ЛУЧШЕЕ " + Records.BestStage + "/" + Ladder.Count + (Records.Cleared > 0 ? "  ·  ПРОЙДЕН ×" + Records.Cleared : ""),
                     13f, new Color(0.85f, 0.8f, 0.7f, 0.9f));

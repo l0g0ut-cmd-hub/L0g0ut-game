@@ -231,7 +231,7 @@ namespace BladePath
             Matrix4x4 old = UiKit.Begin();
             float W = UiKit.Width, cx = W * 0.5f;
             UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, 0.6f));
-            Rect box = new Rect(cx - 220f, 90f, 440f, 380f);
+            Rect box = new Rect(cx - 220f, 46f, 440f, 452f);
             Color gold = new Color(0.86f, 0.70f, 0.38f, 1f);
             UiKit.Rect(new Rect(box.x - 2f, box.y - 2f, box.width + 4f, box.height + 4f), gold * 0.8f);
             UiKit.Rect(box, new Color(0.06f, 0.05f, 0.05f, 0.97f));
@@ -243,13 +243,15 @@ namespace BladePath
                 "СЛОЖНОСТЬ: " + EnemyAI.DifficultyName,
                 "ГРАФИКА: " + (DuelManager.Gfx == 1 ? "ВЫСОКАЯ" : "ЭКОНОМ"),
                 "ВИБРАЦИЯ: " + (PlayerPrefs.GetInt("haptics", 1) == 1 ? "ВКЛ" : "ВЫКЛ"),
+                "КАМЕРА: " + (CameraOrbit.FreeMode ? "СВОБОДНАЯ" : "БОЕВАЯ"),
+                "ТАЙМЕР БОЯ: " + (DuelManager.TimerOn ? "ВКЛ" : "ВЫКЛ"),
                 "ГОТОВО"
             };
             Color oldBg = GUI.backgroundColor;
             GUI.backgroundColor = new Color(1f, 1f, 1f, 0.2f);
             for (int i = 0; i < labels.Length; i++)
             {
-                Rect r = new Rect(box.x + 40f, box.y + 66f + i * 60f, box.width - 80f, 48f);
+                Rect r = new Rect(box.x + 40f, box.y + 62f + i * 54f, box.width - 80f, 44f);
                 UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), gold * 0.7f);
                 UiKit.Rect(r, i == labels.Length - 1 ? new Color(0.35f, 0.08f, 0.06f, 1f) : new Color(0.1f, 0.08f, 0.08f, 1f));
                 UiKit.Text(r, labels[i], 18f, new Color(0.95f, 0.9f, 0.78f));
@@ -261,6 +263,8 @@ namespace BladePath
                         case 1: EnemyAI.Difficulty = (EnemyAI.Difficulty + 1) % 3; break;
                         case 2: DuelManager.Gfx = 1 - DuelManager.Gfx; break;
                         case 3: PlayerPrefs.SetInt("haptics", PlayerPrefs.GetInt("haptics", 1) == 1 ? 0 : 1); Haptics.Enabled = PlayerPrefs.GetInt("haptics", 1) == 1; Haptics.Pulse(40); break;
+                        case 4: CameraOrbit.FreeMode = !CameraOrbit.FreeMode; break;
+                        case 5: DuelManager.TimerOn = !DuelManager.TimerOn; break;
                         default: settingsOpen = false; break;
                     }
                 }

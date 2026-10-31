@@ -88,6 +88,14 @@ namespace BladePath
         public float ComboAge(FighterController f) { float v; return comboTime.TryGetValue(f, out v) ? Time.unscaledTime - v : 99f; }
 
         /// <summary>Графика: 1 — высокая (мягкие тени, MSAA, 4 источника света), 0 — экономная для слабых телефонов.</summary>
+        /// <summary>Таймер раунда (настройка «timer»): выключен — время не идёт, ничьей по времени нет, на экране его нет.</summary>
+        public static bool TimerOn
+        {
+            get { if (timerCached < 0) timerCached = PlayerPrefs.GetInt("timer", 1); return timerCached == 1; }
+            set { timerCached = value ? 1 : 0; PlayerPrefs.SetInt("timer", timerCached); PlayerPrefs.Save(); }
+        }
+        static int timerCached = -1;
+
         public static int Gfx
         {
             get { return PlayerPrefs.GetInt("gfx", 1); }
@@ -343,9 +351,9 @@ namespace BladePath
                 // равновесие восстанавливается, когда по бойцу не бьют: медленнее при низком здоровье, быстрее в блоке
                 RegenPosture(player); RegenPosture(enemy);
                 UpdateLives(Time.unscaledDeltaTime);
-                if (!SuperActive && !DeathblowActive && !ResurrectOffered) TimeLeft = Mathf.Max(0f, TimeLeft - Time.deltaTime);
-                if (TimeLeft <= 0f) TimeUp();
-                if (!tenSecShown && TimeLeft <= 10f) { tenSecShown = true; Announce("10 СЕКУНД!", new Color(1f, 0.4f, 0.25f)); }
+                if (TimerOn && !SuperActive && !DeathblowActive && !ResurrectOffered) TimeLeft = Mathf.Max(0f, TimeLeft - Time.deltaTime);
+                if (TimerOn && TimeLeft <= 0f) TimeUp();
+                if (TimerOn && !tenSecShown && TimeLeft <= 10f) { tenSecShown = true; Announce("10 СЕКУНД!", new Color(1f, 0.4f, 0.25f)); }
                 if (!lastStandShown && player != null && Hp01(player) < 0.25f && Hp(player) > 0f) { lastStandShown = true; Announce("ПОСЛЕДНИЙ РУБЕЖ", new Color(0.5f, 0.85f, 1f)); }
                 if (!EnemyEnraged && enemy != null && !enemy.Dead && Hp01(enemy) < 0.33f && Hp(enemy) > 0f && EnemyAI.Difficulty > 0)
                 {

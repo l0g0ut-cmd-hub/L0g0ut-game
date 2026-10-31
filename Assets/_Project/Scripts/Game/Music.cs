@@ -29,7 +29,7 @@ namespace BladePath
             {
                 bool deciding = dm.PlayerWins == dm.winsToMatch - 1 && dm.EnemyWins == dm.winsToMatch - 1;
                 want = deciding ? 0.5f : 0.3f;
-                if (dm.TimeLeft < 10f) want = 0.6f;
+                if (DuelManager.TimerOn && dm.TimeLeft < 10f) want = 0.6f;
             }
             drumVol = Mathf.MoveTowards(drumVol, want, Time.unscaledDeltaTime * 0.4f);
             drums.volume = drumVol;
