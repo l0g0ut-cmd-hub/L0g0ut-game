@@ -414,19 +414,23 @@ namespace BladePath
         /// Постановка добивания: приём, дистанция между бойцами и моменты по времени удара (с): контакт клинка с телом,
         /// развязка (смерть или падение на колено, если у врага остались метки жизни), тибури.
         /// </summary>
-        struct DbKind { public AttackType type; public float distance, contact, outcome, flick; public bool cut, neck; }
+        struct DbKind { public AttackType type; public float distance, contact, outcome, flick, camYaw; public bool cut, neck; }
         static readonly DbKind[] DbKinds =
         {
-            new DbKind { type = AttackType.Deathblow, distance = 1.38f, contact = 0.44f, outcome = 1.10f, flick = 1.36f },                       // укол в грудь
-            new DbKind { type = AttackType.DeathblowKesa, distance = 1.22f, contact = 0.45f, outcome = 0.72f, flick = 1.22f, cut = true },       // кэса-гири
-            new DbKind { type = AttackType.DeathblowNeck, distance = 1.20f, contact = 0.46f, outcome = 0.52f, flick = 1.22f, cut = true, neck = true },   // по шее
-            new DbKind { type = AttackType.DeathblowRising, distance = 1.22f, contact = 0.45f, outcome = 0.72f, flick = 1.18f, cut = true },     // снизу вверх
+            // camYaw: камера добивания — + заходит со стороны жертвы (лицо атакующего), − из-за спины атакующего (лицо жертвы)
+            new DbKind { type = AttackType.Deathblow, distance = 1.38f, contact = 0.44f, outcome = 1.10f, flick = 1.36f, camYaw = 20f },                       // укол в грудь
+            new DbKind { type = AttackType.DeathblowKesa, distance = 1.22f, contact = 0.45f, outcome = 0.72f, flick = 1.22f, camYaw = -28f, cut = true },      // кэса-гири
+            new DbKind { type = AttackType.DeathblowNeck, distance = 1.20f, contact = 0.46f, outcome = 0.52f, flick = 1.22f, camYaw = 34f, cut = true, neck = true },   // по шее
+            new DbKind { type = AttackType.DeathblowRising, distance = 1.22f, contact = 0.45f, outcome = 0.72f, flick = 1.18f, camYaw = -16f, cut = true },    // снизу вверх
         };
         public FighterController DeathblowBy { get; private set; }
         public FighterController DeathblowTarget { get; private set; }
         public bool DeathblowActive { get { return DeathblowBy != null; } }
         /// <summary>Идущее добивание последнее (снимает последнюю метку) — жертва падает замертво.</summary>
         public bool DeathblowLethal { get; private set; }
+        /// <summary>Ракурс камеры добивания (град): свой у каждого приёма.</summary>
+        public float DeathblowCamYaw { get { return db.camYaw; } }
+        public float DeathblowAge { get { return Time.unscaledTime - dbStart; } }
         float dbStart; int dbStage, lastDbKind = -1; DbKind db;
         bool executing;   // урон приёма: здоровье в ноль убивает, а не открывает новое добивание
 
