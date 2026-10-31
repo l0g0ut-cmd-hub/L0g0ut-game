@@ -925,7 +925,7 @@ namespace BladePath
             bool isPlayer = f == player;
             // подсказка (пару раз за запуск): добить можно и с прыжка
             string sub = null;
-            if (!isPlayer && plungeHints < 2) { plungeHints++; sub = "удар в прыжке — добивание с высоты"; }
+            if (!isPlayer && plungeHints < 2) { plungeHints++; sub = "УДАР В ПРЫЖКЕ — ДОБИВАНИЕ С ВЫСОТЫ"; }
             Announce(isPlayer ? "РАВНОВЕСИЕ СЛОМЛЕНО!" : "РАВНОВЕСИЕ СЛОМЛЕНО — ДОБЕЙ!", isPlayer ? new Color(1f, 0.45f, 0.2f) : new Color(1f, 0.2f, 0.12f), sub);
             if (Juice.Instance != null) Juice.Instance.Clash(f.transform.position + Vector3.up * 1.2f + f.transform.forward * 0.3f);
             if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.07f);
