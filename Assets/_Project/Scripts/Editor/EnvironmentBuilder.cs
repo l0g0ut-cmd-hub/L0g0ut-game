@@ -1370,7 +1370,7 @@ namespace BladePath.EditorTools
             Material fm = look.flameSheet != null ? look.flameSheet : look.fireSprite;
             bool sheet = look.flameSheet != null;
             // языки пламени
-            ParticleSystem tongues = FireLayer(parent, "Fire", new Vector3(0f, 0.98f, 0f), fm, 0.55f, 0.85f, 0.32f, 0.55f, 0.34f, 0.52f, 22f, 40, new Color(1f, 0.92f, 0.82f, 1f), 0.13f, sheet);
+            ParticleSystem tongues = FireLayer(parent, "Fire", new Vector3(0f, 0.98f, 0f), fm, 0.55f, 0.85f, 0.34f, 0.58f, 0.28f, 0.46f, 26f, 44, new Color(1f, 0.85f, 0.72f, 1f), 0.14f, sheet);
             {
                 var col = tongues.colorOverLifetime; col.enabled = true;
                 Gradient g = new Gradient();
@@ -1382,7 +1382,7 @@ namespace BladePath.EditorTools
                 var noise = tongues.noise; noise.enabled = true; noise.strength = 0.14f; noise.frequency = 1.3f; noise.scrollSpeed = 0.6f;
             }
             // низкое яркое ядро над углями
-            ParticleSystem core = FireLayer(parent, "FireCore", new Vector3(0f, 0.98f, 0f), fm, 0.35f, 0.5f, 0.12f, 0.25f, 0.2f, 0.3f, 16f, 20, new Color(1f, 1f, 0.95f, 0.9f), 0.1f, sheet);
+            ParticleSystem core = FireLayer(parent, "FireCore", new Vector3(0f, 0.98f, 0f), fm, 0.35f, 0.5f, 0.12f, 0.25f, 0.18f, 0.26f, 14f, 20, new Color(1f, 0.95f, 0.85f, 0.65f), 0.1f, sheet);
             {
                 var col = core.colorOverLifetime; col.enabled = true;
                 Gradient g = new Gradient();

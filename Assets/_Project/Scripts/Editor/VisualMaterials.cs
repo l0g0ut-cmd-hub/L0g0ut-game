@@ -45,7 +45,7 @@ namespace BladePath.EditorTools
             l.tentacle = Solid("Tentacle", new Color(0.16f, 0.06f, 0.20f), 0f, 0.55f);
             l.ember = Solid("Ember", new Color(1f, 0.40f, 0.08f), 0f, 0.30f);
             l.ember.EnableKeyword("_EMISSION");
-            l.ember.SetColor("_EmissionColor", new Color(2.4f, 0.8f, 0.1f));
+            l.ember.SetColor("_EmissionColor", new Color(1.25f, 0.3f, 0.04f));   // угли тлеют красным, а не горят жёлтым блином
             l.ember.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
             l.ronin = Ronin();
             // мостовая из неправильных плит (исидатами, процедурная 1024²): квадратная плитка 2,4 м на площадке 7,2×5,4;
@@ -96,7 +96,7 @@ namespace BladePath.EditorTools
             {
                 TextureImporter fti = AssetImporter.GetAtPath(TexFolder + "flame_sheet.png") as TextureImporter;
                 if (fti != null && (fti.wrapMode != TextureWrapMode.Clamp || !fti.alphaIsTransparency)) { fti.wrapMode = TextureWrapMode.Clamp; fti.alphaIsTransparency = true; fti.SaveAndReimport(); }
-                l.flameSheet = Additive("Fire_Flipbook", fs, new Color(0.62f, 0.56f, 0.5f, 0.9f));
+                l.flameSheet = Additive("Fire_Flipbook", fs, new Color(0.5f, 0.4f, 0.33f, 0.85f));   // не пересвечивать в белое пятно
             }
             l.smoke = AlphaParticle("Fire_Smoke", halo, new Color(0.5f, 0.5f, 0.5f, 0.5f));
             l.banner = Cutout("Env_Banner", "banner.png");
