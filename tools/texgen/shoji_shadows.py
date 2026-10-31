@@ -32,21 +32,6 @@ def E(d, cx, cy, rx, ry):
     d.ellipse([(cx - rx) * S, (cy - ry) * S, (cx + rx) * S, (cy + ry) * S], fill=255)
 
 
-# --- монах в сэйдза (лицом влево). Низ кадра (y = 512) — пол за сёдзи.
-im, d = canvas()
-base = 500
-# колени/подол: широкая пологая основа
-d.polygon(P([(40, base), (52, base - 46), (96, base - 70), (180, base - 74), (214, base - 40), (220, base)]), fill=255)
-# спина и грудь: чуть сутулая, наклон вперёд
-d.polygon(P([(88, base - 66), (92, base - 170), (112, base - 236), (150, base - 252), (182, base - 238), (198, base - 180), (206, base - 70)]), fill=255)
-# рукав и руки на коленях
-d.polygon(P([(96, base - 150), (70, base - 110), (66, base - 84), (110, base - 78), (126, base - 120)]), fill=255)
-# шея и склонённая голова
-d.polygon(P([(118, base - 240), (124, base - 268), (150, base - 272), (160, base - 246)]), fill=255)
-E(d, 128, base - 294, 30, 33)
-d.polygon(P([(98, base - 300), (90, base - 288), (100, base - 282)]), fill=255)   # нос
-Image.fromarray((finish(im) * 255).astype(np.uint8)).save(os.path.join(out, 'shoji_monk.png'))
-
 # --- идущий монах: 8 кадров цикла шага (вправо), 2048×512. Фигура по скелету: таз → бёдра/голени по фазе шага,
 # корпус с лёгким наклоном и подъёмом на опорной ноге, руки сложены впереди в широких рукавах (монах идёт чинно, не машет),
 # одеяние до щиколоток — подол следует за ногами (передняя нога выносит полу вперёд), видны ступни в дзори.
@@ -136,4 +121,24 @@ for f in range(NF):
     frames.append(finish(im, 5))
 sheet = np.concatenate(frames, axis=1)
 Image.fromarray((sheet * 255).astype(np.uint8)).save(os.path.join(out, 'shoji_walker.png'))
+
+# --- монах в сэйдза (лицом влево), гладкие контуры: колени и голени на полу, прямая спина, чуть склонённая бритая голова,
+# руки на бёдрах, широкий рукав свисает. Низ кадра — пол за сёдзи.
+im, d = canvas()
+base = 496
+body = [(36, base), (40, base - 30), (62, base - 58), (110, base - 72),          # колени и бёдра
+        (118, base - 120), (114, base - 190), (122, base - 236), (146, base - 254),   # живот, грудь
+        (176, base - 250), (196, base - 226), (204, base - 170), (210, base - 100),   # плечи, спина
+        (222, base - 44), (216, base)]                                              # поясница, пятки под собой
+d.polygon(P(spline(body, 10)), fill=255)
+sleeve = [(124, base - 222), (104, base - 168), (84, base - 118), (70, base - 86), (92, base - 74), (128, base - 92), (150, base - 150)]
+d.polygon(P(spline(sleeve, 8)), fill=255)
+E(d, 76, base - 84, 11, 9)                                                          # кисти на коленях
+# шея и голова (склонена вперёд), нос, подбородок
+d.polygon(P([(140, base - 246), (132, base - 272), (156, base - 278), (170, base - 252)]), fill=255)
+hx, hy = 138, base - 300
+head = spline([(hx + 26, hy + 4), (hx + 24, hy - 20), (hx + 4, hy - 32), (hx - 18, hy - 26), (hx - 27, hy - 8),
+               (hx - 33, hy + 2), (hx - 29, hy + 8), (hx - 30, hy + 15), (hx - 22, hy + 27), (hx - 4, hy + 31), (hx + 18, hy + 22)], 8)
+d.polygon(P(head), fill=255)
+Image.fromarray((finish(im, 6) * 255).astype(np.uint8)).save(os.path.join(out, 'shoji_monk.png'))
 print('ok')
