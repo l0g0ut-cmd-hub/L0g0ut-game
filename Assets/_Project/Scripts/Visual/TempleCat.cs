@@ -132,9 +132,9 @@ namespace BladePath
             if (root == null) return;
             float w = 1f - sit;
             // туловище: идёт — горизонтально, сидит — грудь поднята, круп на полу
-            chest.localPosition = L(new Vector3(0f, 0.165f, 0.085f), new Vector3(0f, 0.165f, 0.035f), sit);
+            chest.localPosition = L(new Vector3(0f, 0.165f, 0.06f), new Vector3(0f, 0.165f, 0.035f), sit);
             chest.localRotation = Quaternion.Euler(L(-4f, -58f, sit), 0f, 0f);
-            haunch.localPosition = L(new Vector3(0f, 0.165f, -0.085f), new Vector3(0f, 0.075f, -0.06f), sit);
+            haunch.localPosition = L(new Vector3(0f, 0.165f, -0.07f), new Vector3(0f, 0.075f, -0.06f), sit);   // грудь и круп внахлёст — без «седловины»
             haunch.localRotation = Quaternion.Euler(L(4f, -18f, sit), 0f, 0f);
             haunch.localScale = L(new Vector3(0.13f, 0.135f, 0.19f), new Vector3(0.15f, 0.14f, 0.18f), sit);
             float bob = Mathf.Abs(Mathf.Sin(ph)) * 0.008f * w;
@@ -199,14 +199,14 @@ namespace BladePath
             head.localRotation = Quaternion.Euler(L(-8f, 0f, sit) + hp, hy, hr);
 
             // хвост: сидя — лежит на полу и обвивает передние лапы, кончик подёргивается; на ходу — трубой с изгибом
-            tailRoot.localPosition = L(new Vector3(0f, 0.19f, -0.255f), new Vector3(0f, 0.03f, -0.19f), sit);
+            tailRoot.localPosition = L(new Vector3(0f, 0.19f, -0.2f), new Vector3(0f, 0.03f, -0.17f), sit);   // из крупа, без зазора
             for (int i = 0; i < tail.Length; i++)
             {
                 float k = i / (float)(tail.Length - 1);
-                float upW = i == 0 ? 55f : i < 3 ? 12f : 9f;                                      // поднят трубой и загнут вперёд «вопросом»
+                float upW = i == 0 ? 38f : i < 4 ? 14f : 7f;                                      // поднят трубой и загнут вперёд «вопросом»
                 float sideW = Mathf.Sin(tph * 2f + i * 0.6f) * 7f;
                 float upS = i == 0 ? 8f : 0f;                                                      // лежит на полу
-                float sideS = (i == 0 ? 70f : 16f) + Mathf.Sin(tph * (1f + k) + i) * 14f * k * k;  // огибает круп и обвивает лапы, кончик дёргается
+                float sideS = (i == 0 ? 80f : 27f) + Mathf.Sin(tph * (1f + k) + i) * 14f * k * k;  // огибает круп и обвивает лапы, кончик дёргается
                 tail[i].localRotation = Quaternion.Euler(L(upW, upS, sit), L(sideW, sideS, sit), 0f);
             }
         }
