@@ -195,6 +195,47 @@ namespace BladePath.EditorTools
             return Make(parent, name, m, pos, Vector3.zero, mat);
         }
 
+        /// <summary>
+        /// Каменная плита неровного контура (outline — выпуклый многоугольник в метрах, xz): боковины от y = 0, скошенная
+        /// кромка и чуть уменьшенный верх на высоте h — плоский природный камень, а не плитка.
+        /// </summary>
+        public static GameObject Slab(Transform parent, string name, Vector3 pos, float yaw, Vector2[] outline, float h, Material mat, float tile)
+        {
+            MB mb = new MB();
+            Vector3 c = new Vector3(0f, h * 0.4f, 0f);
+            int n = outline.Length;
+            float hb = h * 0.62f, inset = 0.86f;
+            Vector3[] top = new Vector3[n];
+            for (int i = 0; i < n; i++) top[i] = new Vector3(outline[i].x * inset, h, outline[i].y * inset);
+            mb.Poly((Vector3[])top.Clone(), tile, c, false, false);
+            for (int i = 0; i < n; i++)
+            {
+                int j = (i + 1) % n;
+                Vector2 a = outline[i], b = outline[j];
+                Vector3 a0 = new Vector3(a.x, 0f, a.y), b0 = new Vector3(b.x, 0f, b.y), a1 = new Vector3(a.x, hb, a.y), b1 = new Vector3(b.x, hb, b.y);
+                mb.Poly(new[] { a0, b0, b1, a1 }, tile, c, false, false);
+                mb.Poly(new[] { a1, b1, top[j], top[i] }, tile, c, false, false);
+            }
+            Mesh m = mb.Build("env_slab_" + name);
+            if (!AssetDatabase.IsValidFolder(Folder)) AssetDatabase.CreateFolder("Assets/_Project/Models", "Env");
+            AssetDatabase.CreateAsset(m, Folder + "/env_" + (counter++) + ".asset");
+            return Make(parent, name, m, pos, new Vector3(0f, yaw, 0f), mat);
+        }
+
+        /// <summary>Неровный почти эллиптический контур камня: n точек, полуоси rx, rz, разброс радиуса jitter.</summary>
+        public static Vector2[] StoneOutline(System.Random r, int n, float rx, float rz, float jitter)
+        {
+            Vector2[] o = new Vector2[n];
+            float a0 = (float)r.NextDouble() * Mathf.PI * 2f;
+            for (int i = 0; i < n; i++)
+            {
+                float a = a0 + (i + ((float)r.NextDouble() - 0.5f) * 0.5f) * Mathf.PI * 2f / n;
+                float k = 1f + ((float)r.NextDouble() - 0.5f) * 2f * jitter;
+                o[i] = new Vector2(Mathf.Cos(a) * rx * k, Mathf.Sin(a) * rz * k);
+            }
+            return o;
+        }
+
         /// <summary>Ореол-биллборд: аддитивный квад с мягким диском, разворачивается к камере (GlowSprite).</summary>
         public static GameObject Glow(Transform parent, string name, Vector3 pos, float size, Material mat, float flicker = 0.12f)
         {

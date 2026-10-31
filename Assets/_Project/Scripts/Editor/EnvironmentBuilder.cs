@@ -1032,8 +1032,10 @@ namespace BladePath.EditorTools
             for (float z = -3.2f; z > -12.5f; z -= 0.62f)
             {
                 if (z < zf + 0.3f && z > zf - 0.3f) continue;
+                // плоские природные камни неровного контура (тоби-иси), а не квадратная плитка
                 float sx = 0.5f + (float)r.NextDouble() * 0.2f;
-                EnvMesh.Box(g, "Step" + z.ToString("F1"), new Vector3(((float)r.NextDouble() - 0.5f) * 0.25f, -0.045f, z), new Vector3(0f, (float)r.NextDouble() * 20f - 10f, 0f), new Vector3(sx, 0.06f, 0.42f), look.stoneBlock, 0.6f);
+                Vector2[] ol = EnvMesh.StoneOutline(r, 8, sx * 0.5f, 0.21f + (float)r.NextDouble() * 0.04f, 0.12f);
+                EnvMesh.Slab(g, "Step" + z.ToString("F1"), new Vector3(((float)r.NextDouble() - 0.5f) * 0.25f, -0.078f, z), (float)r.NextDouble() * 40f - 20f, ol, 0.065f, look.rock != null ? look.rock : look.stoneBlock, 0.6f);
             }
         }
 
