@@ -75,18 +75,18 @@ namespace BladePath
         void Build()
         {
             root = new GameObject("SnowDrifts").transform;
-            Material m = new Material(Shader.Find("Standard")) { name = "SnowDrift", color = new Color(0.78f, 0.81f, 0.87f) };
-            m.SetFloat("_Glossiness", 0.28f);
+            Material m = new Material(Shader.Find("Standard")) { name = "SnowDrift", color = new Color(0.66f, 0.7f, 0.78f) };   // тон снега Env под луной (белее — «подушки»)
+            m.SetFloat("_Glossiness", 0.2f);
             System.Random r = new System.Random(19);
             System.Func<float> R = () => (float)r.NextDouble();
             // вдоль боковых стен (внутренняя грань цоколя x = ±6,21), от ворот до храма
             for (int side = -1; side <= 1; side += 2)
                 for (float z = -3.2f; z < 4.3f; z += 0.75f + 0.35f * R())
-                    Add(m, new Vector3(side * (6.16f - 0.08f * R()), z), 0.9f + 0.6f * R(), 0.16f + 0.08f * R(), 0.5f + 0.25f * R(), 0f);
+                    Add(m, new Vector3(side * (6.18f - 0.05f * R()), z), 0.9f + 0.6f * R(), 0.07f + 0.05f * R(), 0.34f + 0.16f * R(), 0f);
             // вдоль передней стены по обе стороны ворот, гуще в углах
             for (int side = -1; side <= 1; side += 2)
                 for (float x = 1.7f; x < 6.1f; x += 0.7f + 0.35f * R())
-                    Add(m, new Vector3(side * x, -7.32f + 0.06f * R()), 0.85f + 0.5f * R(), 0.14f + 0.08f * R() + (x > 5.3f ? 0.06f : 0f), 0.5f + 0.2f * R(), 90f);
+                    Add(m, new Vector3(side * x, -7.34f + 0.04f * R()), 0.85f + 0.5f * R(), 0.07f + 0.05f * R() + (x > 5.3f ? 0.04f : 0f), 0.34f + 0.14f * R(), 90f);
             // сосульки: свес крыши храма (кромка y ≈ 2,44, z ≈ 3,92; углы загнуты — только прямой участок) и колпаки боковых стен
             if (cone == null) cone = Cone();
             Material ice = new Material(Shader.Find("Standard")) { name = "Ice", color = new Color(0.72f, 0.8f, 0.9f) };

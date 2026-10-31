@@ -1528,7 +1528,7 @@ namespace BladePath.EditorTools
             for (int k = 0; k < 3; k++)
                 CharacterVisuals.Part(b, "Log" + k, PrimitiveType.Cylinder, new Vector3(0f, 1.03f, 0f), new Vector3(78f, k * 60f, 0f), new Vector3(0.05f, 0.17f, 0.05f), look.woodDark);
             AddFire(b, look);
-            EnvMesh.Glow(b, "Halo", new Vector3(0f, 1.18f, 0f), 0.95f, look.haloFire, 0.18f);   // ореол меньше: был жёлтым шаром во всю жаровню
+            EnvMesh.Glow(b, "Halo", new Vector3(0f, 1.15f, 0f), 0.6f, look.haloFire, 0.1f);   // крупным планом ореол читался жёлтым шаром поверх языков   // ореол меньше: был жёлтым шаром во всю жаровню
 
             GameObject lightObj = new GameObject("FireLight");
             lightObj.transform.SetParent(b, false);

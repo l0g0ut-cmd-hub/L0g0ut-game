@@ -75,7 +75,7 @@ Shader "Hidden/BladePath/PostFX"
         half drop = 0;
         if (_BP_Wetness > 0.01)
         {
-            float2 off = RainDrops(uv, 5.0, 0.07, 0.22, 1.7, drop) + RainDrops(uv, 11.0, 0.11, 0.18, 13.3, drop);
+            float2 off = RainDrops(uv, 8.0, 0.07, 0.1, 1.7, drop) + RainDrops(uv, 15.0, 0.11, 0.1, 13.3, drop);
             uv += off * saturate(_BP_Wetness);
             drop *= saturate(_BP_Wetness);
         }
@@ -101,7 +101,7 @@ Shader "Hidden/BladePath/PostFX"
             }
         }
         // в капле картинка светлее в середине и темнеет к краю (полное отражение у кромки)
-        if (drop > 0.001) c *= lerp(1.0h, 1.12h - 0.3h * (1.0h - drop), drop);
+        if (drop > 0.001) c *= lerp(1.0h, 1.08h - 0.12h * (1.0h - drop), drop);
         return c;
     }
     half3 Lens (half3 c, float2 uv)
@@ -119,8 +119,8 @@ Shader "Hidden/BladePath/PostFX"
             float2 e = abs(uv - 0.5) * 2.0;
             float edge = max(e.x * 0.92, e.y) + 0.25 * e.x * e.y;
             float cr = VNoise(uv * float2(38.0, 22.0)) * 0.6 + VNoise(uv * float2(130.0, 75.0)) * 0.4;   // кристаллы
-            half frost = saturate((edge - 0.78 + cr * 0.3) / 0.2) * saturate(_BP_Snow * 1.2);
-            c = lerp(c, half3(0.78h, 0.85h, 0.95h) * (0.75h + 0.35h * cr), frost * 0.42h);
+            half frost = saturate((edge - 0.84 + cr * 0.3) / 0.18) * saturate(_BP_Snow * 1.2);
+            c = lerp(c, half3(0.78h, 0.85h, 0.95h) * (0.75h + 0.35h * cr), frost * 0.3h);
         }
         return saturate(c);
     }
