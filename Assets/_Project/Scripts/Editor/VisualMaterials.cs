@@ -11,7 +11,7 @@ namespace BladePath.EditorTools
         public Material heroArmor, enemyArmor, cloth, skin, hair, lacquer, bronze, steel, handle;
         public Material flesh, tooth, maw, voidBlack, deadSkin, ember, tentacle, ronin;
         public Material stone, stoneDark, flame, moon, petal;
-        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, skyDusk, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage, forestFloor, aoStrip, aoBlob, shojiMonk, shojiWalker, karesansui, pondWater, lotus, bellBronze, rock, flameSheet, smoke;
+        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, skyDusk, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage, forestFloor, aoStrip, aoBlob, shojiMonk, shojiWalker, karesansui, pondWater, lotus, bellBronze, rock, flameSheet, smoke, koi;
     }
 
     /// <summary>
@@ -121,7 +121,22 @@ namespace BladePath.EditorTools
             l.karesansui = MaskMat("Karesansui", "karesansui_mask.png", 0.75f);
             // рябь — только в нормалях: альбедо ровное тёмное (без текстуры), отражает небо и огни
             l.pondWater = Textured("Env_PondWater", null, "water_normal.png", Vector2.one, new Color(0.02f, 0.03f, 0.034f), 0f, 0.95f);
-            if (l.pondWater != null) { l.pondWater.SetFloat("_BumpScale", 0.35f); l.pondWater.mainTextureScale = new Vector2(1.5f, 1.5f); EditorUtility.SetDirty(l.pondWater); }
+            if (l.pondWater != null)
+            {
+                l.pondWater.SetFloat("_BumpScale", 0.35f); l.pondWater.mainTextureScale = new Vector2(1.5f, 1.5f);
+                // полупрозрачная: сквозь тёмную воду видны карпы (рисуются раньше воды)
+                l.pondWater.color = new Color(0.02f, 0.03f, 0.034f, 0.84f);
+                l.pondWater.SetFloat("_Mode", 3f);
+                l.pondWater.SetOverrideTag("RenderType", "Transparent");
+                l.pondWater.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+                l.pondWater.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+                l.pondWater.SetInt("_ZWrite", 0);
+                l.pondWater.DisableKeyword("_ALPHATEST_ON"); l.pondWater.DisableKeyword("_ALPHABLEND_ON"); l.pondWater.EnableKeyword("_ALPHAPREMULTIPLY_ON");
+                l.pondWater.renderQueue = 3000;
+                EditorUtility.SetDirty(l.pondWater);
+            }
+            Texture2D koiT = Tex("koi.png", false);
+            if (koiT != null) { l.koi = AlphaParticle("Koi", koiT, new Color(0.5f, 0.5f, 0.5f, 0.5f)); l.koi.renderQueue = 2990; }
             l.lotus = Solid("Env_Lotus", new Color(0.12f, 0.24f, 0.09f), 0f, 0.55f);
             l.rock = Textured("Env_Rock", "stoneblock_albedo.png", "stoneblock_normal.png", new Vector2(0.45f, 0.45f), new Color(0.46f, 0.46f, 0.44f), 0f, 0.18f);   // садовые валуны: тёмный гранит
             l.bellBronze = Solid("Env_BellBronze", new Color(0.2f, 0.19f, 0.13f), 0.75f, 0.42f);   // старая бронза с патиной

@@ -316,6 +316,14 @@ namespace BladePath.EditorTools
                 CharacterVisuals.Part(g, "RimStone" + i, PrimitiveType.Sphere, c + new Vector3(o.x, -0.06f + s * 0.2f, o.y),
                     new Vector3((float)r.NextDouble() * 18f - 9f, (float)r.NextDouble() * 180f, (float)r.NextDouble() * 18f - 9f), new Vector3(s * 1.9f, s * 0.8f, s * 1.3f), m);
             }
+            // карпы кои под водой (тонкий слой между дном-гравием и гладью)
+            if (look.koi != null)
+            {
+                Transform kp = new GameObject("Koi").transform; kp.SetParent(g, false); kp.localPosition = c + new Vector3(0f, -0.066f, 0f);
+                Transform[] fish = new Transform[4];
+                for (int i = 0; i < 4; i++) { float s = 0.32f + 0.08f * i; fish[i] = EnvMesh.Decal(kp, "Fish" + i, Vector3.zero, 0f, s * 0.5f, s, look.koi).transform; }
+                BladePath.KoiPond kpond = kp.gameObject.AddComponent<BladePath.KoiPond>(); kpond.fish = fish;
+            }
             // каменный фонарь у берега — ночью сад у ворот не тонет во тьме, огонь дрожит в воде
             AddLantern(env, look, c + new Vector3(1.75f, 0f, 0.75f));
             if (look.aoBlob != null) EnvMesh.Decal(g, "LanternAO", c + new Vector3(1.75f, -0.067f, 0.75f), 0f, 1.15f, 1.15f, look.aoBlob);
@@ -617,6 +625,7 @@ namespace BladePath.EditorTools
                 // движущиеся части (трубка сиси-одоси, полоска фурина) — не в статический батч, иначе застынут
                 if (t.GetComponentInParent<BladePath.ShishiOdoshi>() != null || t.GetComponentInParent<BladePath.WindChime>() != null) continue;
                 if (t.GetComponent<BladePath.WaterRipple>() != null) continue;
+                if (t.GetComponentInParent<BladePath.KoiPond>() != null) continue;   // карпы плавают
                 if (t.GetComponentInParent<BladePath.BellTower>() != null) continue;   // колокол и било качаются   // у пруда свой экземпляр материала (рябь плывёт)
                 UnityEditor.GameObjectUtility.SetStaticEditorFlags(t.gameObject, UnityEditor.StaticEditorFlags.BatchingStatic);
             }
