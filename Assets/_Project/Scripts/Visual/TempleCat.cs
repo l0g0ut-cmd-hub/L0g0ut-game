@@ -6,7 +6,7 @@ namespace BladePath
     /// Храмовый кот на веранде храма (за спинами бойцов, на свету сёдзи): рыжий с белой грудкой и лапками. Сидит, обвив
     /// лапы хвостом, кончик хвоста подёргивается, голова следит за бойцами; время от времени умывается — поднимает лапу
     /// ко рту, вылизывает её, проводит ею по морде и за ухом; иногда встаёт и неспешно переходит по веранде. Когда во дворе
-    /// громыхнуло — испуганное «мя!» и бегом на другой конец. В дождь и снег прячется.
+    /// громыхнуло — испуганное «мя!» и бегом на другой конец. В дождь и снег жмётся к сёдзи под свесом крыши.
     /// Тело — сцепленные эллипсоиды на суставах (грудь, круп, шея, голова; передние лапы из двух звеньев, задние — из трёх:
     /// бедро, голень, стопа), позы «сидит» и «идёт» плавно перетекают; звенья заходят друг в друга — без щелей.
     /// </summary>
@@ -20,7 +20,7 @@ namespace BladePath
         Leg[] legs = new Leg[4];             // 0, 1 — передние (Л, П); 2, 3 — задние
         Transform[] tail = new Transform[8];
         float z, targetZ, timer, groomT = -1f, walkPh, face = 90f, tailPh, sitK = 1f;
-        bool walking, hidden;
+        bool walking;
         FighterController[] fighters;
         AudioSource voice; static AudioClip meow, meowShort; float meowAt; int seenStartle; float rush = 1f;
         const float GroomLen = 7f;
@@ -217,10 +217,10 @@ namespace BladePath
         {
             if (root == null) return;
             float dt = Time.deltaTime, t = Time.time;
+            // в дождь и снег не исчезает, а жмётся к сёдзи под свесом крыши — там сухо
             Weather wth = Weather.Instance;
-            bool hide = wth != null && (wth.Raining || wth.Snowing);
-            if (hide != hidden) { hidden = hide; root.gameObject.SetActive(!hide); }
-            if (hide) return;
+            bool wet = wth != null && (wth.Raining || wth.Snowing);
+            shelter = Mathf.MoveTowards(shelter, wet ? 0.24f : 0f, dt * 0.15f);
             timer -= dt;
             // во дворе громыхнуло — испуганное «мя!» и бегом на другой конец веранды
             if (Birds.StartleCount != seenStartle)
@@ -254,7 +254,7 @@ namespace BladePath
             else face = Mathf.MoveTowardsAngle(face, sitYaw, dt * 200f);
             // встаёт и садится не мгновенно
             sitK = Mathf.MoveTowards(sitK, walking ? 0f : (Mathf.Abs(Mathf.DeltaAngle(face, sitYaw)) < 20f ? 1f : 0f), dt * 2.2f);
-            root.position = Vector3.Lerp(a, b, z);
+            root.position = Vector3.Lerp(a, b, z) + Vector3.forward * shelter;
             root.rotation = Quaternion.Euler(0f, face, 0f);
             // голова: следит за одним из бойцов (по очереди), не выворачиваясь
             float yaw = 0f, pitch = 0f;
@@ -273,7 +273,7 @@ namespace BladePath
             tailPh += dt * (walking ? 3f : 1.3f);
             Pose(Mathf.SmoothStep(0f, 1f, sitK), groomT, walkPh, lookYaw, lookPitch, tailPh);
         }
-        float lookYaw, lookPitch;
+        float lookYaw, lookPitch, shelter;
 
         /// <summary>
         /// Мяуканье: голос ~600 Гц взлетает к 820 и опадает к 480 («ми-я-у»), форманты скользят от «и» к «а» и к «у»,
