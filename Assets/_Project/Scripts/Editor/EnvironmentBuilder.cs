@@ -394,7 +394,7 @@ namespace BladePath.EditorTools
                 for (int s = -1; s <= 1; s += 2)
                     EnvMesh.Box(g, "BridgeSlab" + s, bc + new Vector3(0f, -0.005f, s * 0.52f), new Vector3(s * 3.5f, 6f, 0f), new Vector3(0.36f, 0.075f, 1.06f), slab, 0.6f);
                 for (int s = -1; s <= 1; s += 2)
-                    CharacterVisuals.Part(g, "BridgeFoot" + s, PrimitiveType.Sphere, bc + new Vector3(0.02f * s, -0.06f, s * 1.02f), new Vector3(0f, 30f * s, 0f), new Vector3(0.5f, 0.14f, 0.36f), rockM);
+                    EnvMesh.Boulder(g, "BridgeFoot" + s, bc + new Vector3(0.02f * s, -0.06f, s * 1.02f), new Vector3(0f, 30f * s, 0f), new Vector3(0.5f, 0.14f, 0.36f), rockM, 360 + s);
                 if (look.aoBlob != null) EnvMesh.Decal(g, "BridgeAO", bc + new Vector3(0f, -0.065f, 0f), 6f, 0.8f, 2.4f, look.aoBlob);
             }
             // каменный фонарь у берега — ночью сад у ворот не тонет во тьме, огонь дрожит в воде
@@ -751,8 +751,8 @@ namespace BladePath.EditorTools
                 for (int k = 0; k < 3; k++)
                 {
                     float s = 0.25f + (float)r.NextDouble() * 0.35f;
-                    CharacterVisuals.Part(g, "Rock", PrimitiveType.Sphere, c + new Vector3((float)(r.NextDouble() - 0.5) * 2.2f, s * 0.25f, (float)(r.NextDouble() - 0.5) * 2.2f),
-                        new Vector3(0f, (float)r.NextDouble() * 360f, 0f), new Vector3(s * 1.4f, s * 0.7f, s), look.moss);
+                    EnvMesh.Boulder(g, "Rock", c + new Vector3((float)(r.NextDouble() - 0.5) * 2.2f, s * 0.25f, (float)(r.NextDouble() - 0.5) * 2.2f),
+                        new Vector3(0f, (float)r.NextDouble() * 360f, 0f), new Vector3(s * 1.4f, s * 0.7f, s), k == 0 ? look.moss : (look.rock != null ? look.rock : look.moss), 350 + k);   // гранёные валуны, один замшелый
                 }
             }
             // дорожка к ступеням храма
