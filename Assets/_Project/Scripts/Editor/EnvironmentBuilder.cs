@@ -427,12 +427,17 @@ namespace BladePath.EditorTools
             for (int i = 0; i < 3; i++)
             {
                 float rx = rocks[i, 0], rz = rocks[i, 1], rr = rocks[i, 2];
-                Material m = i == 1 || look.moss == null ? (look.rock != null ? look.rock : look.stoneBlock) : look.moss;
+                Material rockMat = look.rock != null ? look.rock : look.stoneBlock;
+                Material m = i == 2 && look.moss != null ? look.moss : rockMat;   // зелёный мох — только на низком камне (стоячий-кубоид в мху читался упавшим ящиком)
                 // главный камень — стоячий (татэ-иси), остальные — пологие; из двух сфер, чтобы не было «яиц»
                 float hgt = i == 0 ? rr * 3.0f : rr * 1.4f;
                 // стоячий — гранёный (кубоид с наклоном), пологие — округлые
                 CharacterVisuals.Part(g, "Rock" + i, i == 0 ? PrimitiveType.Cube : PrimitiveType.Sphere, c + new Vector3(rx, -0.07f + hgt * (i == 0 ? 0.4f : 0.42f), rz),
-                    i == 0 ? new Vector3(7f, 28f, -9f) : new Vector3(8f * i - 4f, 37f * i, -6f * i + 5f), i == 0 ? new Vector3(rr * 1.5f, hgt, rr * 1.1f) : new Vector3(rr * 2.0f, hgt, rr * 1.7f), m);
+                    i == 0 ? new Vector3(3f, 28f, -4f) : new Vector3(8f * i - 4f, 37f * i, -6f * i + 5f), i == 0 ? new Vector3(rr * 1.5f, hgt, rr * 1.1f) : new Vector3(rr * 2.0f, hgt, rr * 1.7f), m);
+                // стоячий камень гранёный: второй кубоид, повёрнутый и чуть ниже, ломает силуэт «ящика»
+                if (i == 0)
+                    CharacterVisuals.Part(g, "Rock0c", PrimitiveType.Cube, c + new Vector3(rx - rr * 0.18f, -0.07f + hgt * 0.32f, rz + rr * 0.12f),
+                        new Vector3(-6f, 71f, 11f), new Vector3(rr * 1.25f, hgt * 0.8f, rr * 1.0f), rockMat);
                 CharacterVisuals.Part(g, "Rock" + i + "b", PrimitiveType.Sphere, c + new Vector3(rx + rr * 0.45f, -0.07f + hgt * 0.22f, rz - rr * 0.3f),
                     new Vector3(-12f, 60f * i + 20f, 9f), new Vector3(rr * 1.3f, hgt * 0.55f, rr * 1.2f), m);
                 if (look.aoBlob != null) EnvMesh.Decal(g, "RockAO" + i, c + new Vector3(rx, -0.067f, rz), 0f, rr * 3.4f, rr * 3.4f, look.aoBlob);
