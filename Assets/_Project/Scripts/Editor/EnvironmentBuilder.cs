@@ -417,7 +417,7 @@ namespace BladePath.EditorTools
             // мостик-плита (исибаси) через узкое место пруда: длинный гранитный брус чуть изогнут (две плиты под углом),
             // концы лежат на опорных камнях
             {
-                Material slab = look.stoneBlock != null ? look.stoneBlock : rockM;
+                Material slab = rockM;   // цельный гранит (кладка stoneBlock читалась плиткой)
                 Vector3 bc = c + new Vector3(-0.55f, 0f, 0f);
                 for (int s = -1; s <= 1; s += 2)
                     EnvMesh.Box(g, "BridgeSlab" + s, bc + new Vector3(0f, -0.005f, s * 0.52f), new Vector3(s * 3.5f, 6f, 0f), new Vector3(0.36f, 0.075f, 1.06f), slab, 0.6f);
@@ -434,8 +434,16 @@ namespace BladePath.EditorTools
                 {
                     float a = 1.2f + (float)r.NextDouble() * 2.6f, rr = 0.35f + (float)r.NextDouble() * 0.45f;
                     float s = 0.14f + 0.12f * (float)r.NextDouble();
-                    CharacterVisuals.Part(g, "Lotus" + i, PrimitiveType.Cylinder, c + new Vector3(Mathf.Cos(a) * rr * 1.45f, -0.058f, Mathf.Sin(a) * rr * 0.85f),
-                        Vector3.zero, new Vector3(s, 0.003f, s), look.lotus);
+                {
+                    // лист лотоса: круг с клиновидным вырезом к центру (как у настоящего), развёрнут как попало
+                    Vector2[] pad = new Vector2[15];
+                    float cut = 0.35f;   // ширина выреза, рад
+                    for (int k = 0; k < 14; k++) { float ang = cut * 0.5f + (Mathf.PI * 2f - cut) * k / 13f; float rk = s * 0.5f * (0.96f + 0.04f * Mathf.Sin(k * 2.3f)); pad[k] = new Vector2(Mathf.Cos(ang) * rk, Mathf.Sin(ang) * rk); }
+                    pad[14] = new Vector2(s * 0.04f, 0f);   // вершина выреза у центра
+                    GameObject lp = EnvMesh.Flat(g, "Lotus" + i, c + new Vector3(Mathf.Cos(a) * rr * 1.45f, -0.0585f, Mathf.Sin(a) * rr * 0.85f), pad, look.lotus, 0.3f);
+                    lp.transform.localRotation = Quaternion.Euler(0f, (float)r.NextDouble() * 360f, 0f);
+                    lp.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                }
                 }
         }
 

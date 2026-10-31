@@ -228,37 +228,45 @@ namespace BladePath.EditorTools
         /// </summary>
         public static GameObject Boulder(Transform parent, string name, Vector3 pos, Vector3 euler, Vector3 size, Material mat, int seed)
         {
-            string key = "boulder" + seed;
+            string key = "boulder2_" + seed;
             Mesh m;
             if (!cache.TryGetValue(key, out m) || m == null)
             {
+                // общие вершины и сглаженные нормали (гранёные треугольники читались «полигональным» камнем), шум двух масштабов
                 System.Random r = new System.Random(seed);
-                const int seg = 10, ring = 7;
-                Vector3[,] p = new Vector3[seg, ring + 1];
-                float[] ph = new float[6];
-                for (int i = 0; i < 6; i++) ph[i] = (float)r.NextDouble() * 6.28f;
+                const int seg = 16, ring = 11;
+                float[] ph = new float[8];
+                for (int i = 0; i < ph.Length; i++) ph[i] = (float)r.NextDouble() * 6.28f;
+                List<Vector3> v = new List<Vector3>(); List<Vector2> uv = new List<Vector2>(); List<int> t = new List<int>();
                 for (int j = 0; j <= ring; j++)
-                    for (int i = 0; i < seg; i++)
+                    for (int i = 0; i <= seg; i++)
                     {
-                        float th = Mathf.PI * j / ring, fi = Mathf.PI * 2f * i / seg;
+                        float th = Mathf.PI * j / ring, fi = Mathf.PI * 2f * (i % seg) / seg;
                         Vector3 d = new Vector3(Mathf.Sin(th) * Mathf.Cos(fi), Mathf.Cos(th), Mathf.Sin(th) * Mathf.Sin(fi));
-                        float k = 1f + 0.16f * Mathf.Sin(d.x * 3.1f + ph[0]) * Mathf.Cos(d.z * 2.7f + ph[1]) + 0.1f * Mathf.Sin(d.y * 4.3f + d.x * 2f + ph[2])
-                                + 0.06f * ((float)r.NextDouble() - 0.5f);
+                        float k = 1f + 0.15f * Mathf.Sin(d.x * 3.1f + ph[0]) * Mathf.Cos(d.z * 2.7f + ph[1]) + 0.09f * Mathf.Sin(d.y * 4.3f + d.x * 2f + ph[2])
+                                + 0.05f * Mathf.Sin(d.x * 9f + ph[3]) * Mathf.Sin(d.z * 8f + ph[4]) + 0.03f * Mathf.Sin(d.y * 11f + d.z * 7f + ph[5]);
                         if (d.y < -0.2f) k *= Mathf.Lerp(1f, 0.75f, (-d.y - 0.2f) / 0.8f);   // плоское дно
-                        p[i, j] = d * 0.5f * k;
+                        if (d.y > 0.55f) k *= Mathf.Lerp(1f, 0.9f, (d.y - 0.55f) / 0.45f);    // приплюснутая макушка
+                        v.Add(d * 0.5f * k);
+                        uv.Add(new Vector2(i / (float)seg * 2f, j / (float)ring));
                     }
-                MB mb = new MB();
-                Vector3 c = Vector3.zero;
                 for (int j = 0; j < ring; j++)
                     for (int i = 0; i < seg; i++)
                     {
-                        int i2 = (i + 1) % seg;
-                        Vector3 a = p[i, j], b = p[i2, j], cc = p[i2, j + 1], dd = p[i, j + 1];
-                        if (j == 0) mb.Poly(new[] { a, cc, dd }, 0.5f, c, false, false);
-                        else if (j == ring - 1) mb.Poly(new[] { a, b, dd }, 0.5f, c, false, false);
-                        else { mb.Poly(new[] { a, b, cc }, 0.5f, c, false, false); mb.Poly(new[] { a, cc, dd }, 0.5f, c, false, false); }
+                        int a0 = j * (seg + 1) + i, a1 = a0 + 1, b0 = a0 + seg + 1, b1 = b0 + 1;
+                        t.Add(a0); t.Add(a1); t.Add(b1); t.Add(a0); t.Add(b1); t.Add(b0);
                     }
-                m = Save(key, mb);
+                m = new Mesh { name = "env_boulder_" + seed };
+                m.SetVertices(v); m.SetUVs(0, uv); m.SetTriangles(t, 0);
+                m.RecalculateNormals();
+                // шов по долготе: нормали на краях (i = 0 и i = seg) — общие
+                Vector3[] n = m.normals;
+                for (int j = 0; j <= ring; j++) { int a0 = j * (seg + 1), a1 = a0 + seg; Vector3 nn = (n[a0] + n[a1]).normalized; n[a0] = nn; n[a1] = nn; }
+                m.normals = n;
+                m.RecalculateBounds(); m.RecalculateTangents();
+                if (!AssetDatabase.IsValidFolder(Folder)) AssetDatabase.CreateFolder("Assets/_Project/Models", "Env");
+                AssetDatabase.CreateAsset(m, Folder + "/env_" + (counter++) + ".asset");
+                cache[key] = m;
             }
             GameObject g = Make(parent, name, m, pos, euler, mat);
             g.transform.localScale = size;
