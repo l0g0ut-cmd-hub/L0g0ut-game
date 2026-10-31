@@ -1377,9 +1377,11 @@ namespace BladePath.EditorTools
                 float a = i * Mathf.PI * 2f / 3f + 0.4f;
                 Object.DestroyImmediate(CharacterVisuals.Part(root, "Leg" + i, PrimitiveType.Cylinder, new Vector3(Mathf.Cos(a) * 0.15f, 0.08f, Mathf.Sin(a) * 0.15f), new Vector3(Mathf.Sin(a) * 12f, 0f, -Mathf.Cos(a) * 12f), new Vector3(0.04f, 0.08f, 0.04f), look.bronze).GetComponent<Collider>());
             }
-            Object.DestroyImmediate(CharacterVisuals.Part(root, "Bowl", PrimitiveType.Sphere, new Vector3(0f, 0.26f, 0f), Vector3.zero, new Vector3(0.44f, 0.24f, 0.44f), look.bronze).GetComponent<Collider>());
-            Object.DestroyImmediate(CharacterVisuals.Part(root, "Rim", PrimitiveType.Cylinder, new Vector3(0f, 0.34f, 0f), Vector3.zero, new Vector3(0.4f, 0.015f, 0.4f), look.bronze).GetComponent<Collider>());
-            Object.DestroyImmediate(CharacterVisuals.Part(root, "Ash", PrimitiveType.Cylinder, new Vector3(0f, 0.352f, 0f), Vector3.zero, new Vector3(0.34f, 0.004f, 0.34f), look.plaster).GetComponent<Collider>());
+            // курильница-коро: пузатая бронзовая чаша с шейкой и отогнутой губой (тело вращения), внутри — пепел
+            Mesh koro = EnvMesh.Lathe("koro", new[] { new Vector2(0f, 0.12f), new Vector2(0.1f, 0.122f), new Vector2(0.18f, 0.16f), new Vector2(0.225f, 0.23f), new Vector2(0.222f, 0.28f),
+                new Vector2(0.2f, 0.325f), new Vector2(0.185f, 0.34f), new Vector2(0.215f, 0.355f), new Vector2(0.222f, 0.366f), new Vector2(0.19f, 0.364f), new Vector2(0.172f, 0.345f), new Vector2(0.16f, 0.33f) }, 24);
+            EnvMesh.MeshObj(root, "Bowl", koro, Vector3.zero, Vector3.zero, Vector3.one, look.bronze);
+            Object.DestroyImmediate(CharacterVisuals.Part(root, "Ash", PrimitiveType.Cylinder, new Vector3(0f, 0.336f, 0f), Vector3.zero, new Vector3(0.33f, 0.004f, 0.33f), look.plaster).GetComponent<Collider>());
             for (int i = 0; i < 3; i++)
             {
                 Vector3 sp = new Vector3(-0.04f + i * 0.04f, 0.42f, (i - 1) * 0.02f);
