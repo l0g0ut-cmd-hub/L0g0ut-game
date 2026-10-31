@@ -341,6 +341,19 @@ namespace BladePath.EditorTools
             if (ms != null) { m.SetTexture("_MetallicGlossMap", ms); m.EnableKeyword("_METALLICGLOSSMAP"); m.SetFloat("_GlossMapScale", 1f); }
             Texture2D a = AssetDatabase.LoadAssetAtPath<Texture2D>(TexFolder + "katana_blade_albedo.png");
             if (a != null) { m.mainTexture = a; m.mainTextureScale = Vector2.one; }
+            // кровь на клинке по маске (BladePath/Blade): растёт от острия потёками, подсыхает, стряхивается тибури
+            Shader bs = Shader.Find("BladePath/Blade");
+            Texture2D bm = LoadTex(TexFolder + "katana_blood_mask.png", false, false, 1024);
+            if (bs != null && bm != null)
+            {
+                TextureImporter bi = AssetImporter.GetAtPath(TexFolder + "katana_blood_mask.png") as TextureImporter;
+                if (bi != null && bi.wrapMode != TextureWrapMode.Clamp) { bi.wrapMode = TextureWrapMode.Clamp; bi.SaveAndReimport(); }
+                bm = AssetDatabase.LoadAssetAtPath<Texture2D>(TexFolder + "katana_blood_mask.png");
+                m.shader = bs;
+                m.SetTexture("_BloodMask", bm);
+                m.SetFloat("_Blood", 0f); m.SetFloat("_BloodDry", 0f);
+                if (ms != null) m.EnableKeyword("_METALLICGLOSSMAP");
+            }
             EditorUtility.SetDirty(m);
             return m;
         }

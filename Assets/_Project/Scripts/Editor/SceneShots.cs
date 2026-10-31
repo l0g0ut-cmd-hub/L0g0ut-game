@@ -96,6 +96,7 @@ namespace BladePath.EditorTools
                     Transform pt = player.transform;
                     Shot(cam, dir, "7_grip", hp + pt.forward * 0.75f - pt.right * 0.55f + Vector3.up * 0.15f, hp, 34f, log);
                     Shot(cam, dir, "8_grip_top", hp + pt.forward * 0.35f + pt.right * 0.45f + Vector3.up * 0.65f, hp, 34f, log);
+                    BladeBloodShot(cam, dir, player, log);
                 }
                 // раскадровка ударов: 8 фаз сбоку (как камера боя) — видно замах, удар, проводку и возврат
                 if (player != null)
@@ -423,7 +424,22 @@ namespace BladePath.EditorTools
                 Call(w, "StartSnow");
                 Shader.SetGlobalFloat("_BP_Snow", 0.85f); Shader.SetGlobalFloat("_BP_Wetness", 0f);
                 foreach (ParticleSystem ps in UnityEngine.Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None)) if (ps.name == "Snow") ps.Simulate(8f, true, true);
+                // следы в снегу: бойцы пришли к месту поединка — цепочка отпечатков за каждым (и пара кровавых у врага)
+                Footprints fp = Footprints.Ensure();
+                foreach (FighterController f in UnityEngine.Object.FindObjectsByType<FighterController>(FindObjectsSortMode.None))
+                {
+                    Transform ft = f.transform;
+                    for (int i = 0; i < 9; i++)
+                    {
+                        bool left = (i & 1) == 0;
+                        Vector3 p = ft.position - ft.forward * (0.45f + i * 0.4f) + ft.right * (left ? -0.13f : 0.13f) + ft.right * Mathf.Sin(i * 0.7f) * 0.05f;
+                        fp.Add(p, Quaternion.AngleAxis(left ? -8f : 8f, Vector3.up) * ft.forward, left, false, 1f);
+                    }
+                }
+                Call(fp, "LateUpdate");
                 Shot(cam, dir, "20_snow", pos, look, cam.fieldOfView, log);
+                Shot(cam, dir, "20b_snow_prints", look + new Vector3(0f, 2.4f, -3.2f), look - Vector3.up * 1.0f, 46f, log);
+                UnityEngine.Object.DestroyImmediate(fp.gameObject);
                 Call(w, "StopSnow");
                 snowP.GetSetMethod(true).Invoke(w, new object[] { false });
                 Shader.SetGlobalFloat("_BP_Snow", 0f);
@@ -458,6 +474,41 @@ namespace BladePath.EditorTools
         }
 
         /// <summary>Один кадр бойца как в игре: Update драйвера → Animator → LateUpdate драйвера → полы плаща.</summary>
+        /// <summary>Кровь на клинке крупно: три уровня (после удара, после трёх, после добивания) и подсохшая — склейка в один кадр.</summary>
+        static void BladeBloodShot(Camera cam, string dir, FighterController f, StringBuilder log)
+        {
+            WeaponController w = f.weapon;
+            if (w == null || w.bladeRoot == null) return;
+            List<Renderer> steel = new List<Renderer>();
+            foreach (Renderer r in w.bladeRoot.GetComponentsInChildren<Renderer>(true))
+                if (r is MeshRenderer && r.sharedMaterial != null && r.sharedMaterial.HasProperty("_Blood")) steel.Add(r);
+            if (steel.Count == 0) { log.Append("PROBE|shots|27_blade_blood|нет шейдера крови\n"); return; }
+            MaterialPropertyBlock mpb = new MaterialPropertyBlock();
+            Vector3 b0 = w.bladeRoot.position, tip = b0 + w.bladeRoot.forward * w.bladeLength;
+            Vector3 mid = Vector3.Lerp(b0, tip, 0.55f);
+            Vector3 side = Vector3.Cross(w.bladeRoot.forward, Vector3.up).normalized;
+            if (Vector3.Dot(side, cam.transform.position - mid) < 0f) side = -side;
+            Vector3 eye = mid + side * 0.85f + Vector3.up * 0.25f - f.transform.forward * 0.1f;
+            float[] lv = { 0.22f, 0.6f, 0.95f, 0.6f }, dry = { 0f, 0f, 0f, 1f };
+            int W = 480, H = 540;
+            Texture2D sheet = new Texture2D(W * lv.Length, H, TextureFormat.RGB24, false);
+            RenderTexture rt = new RenderTexture(W, H, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
+            RenderTexture prevT = cam.targetTexture; Vector3 pp = cam.transform.position; Quaternion pr = cam.transform.rotation; float pf = cam.fieldOfView;
+            for (int i = 0; i < lv.Length; i++)
+            {
+                foreach (Renderer r in steel) { r.GetPropertyBlock(mpb); mpb.SetFloat("_Blood", lv[i]); mpb.SetFloat("_BloodDry", dry[i]); r.SetPropertyBlock(mpb); }
+                cam.transform.position = eye; cam.transform.LookAt(mid); cam.fieldOfView = 34f;
+                cam.targetTexture = rt; cam.Render();
+                RenderTexture.active = rt; sheet.ReadPixels(new Rect(0, 0, W, H), W * i, 0); RenderTexture.active = null;
+            }
+            foreach (Renderer r in steel) { r.GetPropertyBlock(mpb); mpb.SetFloat("_Blood", 0f); mpb.SetFloat("_BloodDry", 0f); r.SetPropertyBlock(mpb); }
+            cam.targetTexture = prevT; cam.transform.SetPositionAndRotation(pp, pr); cam.fieldOfView = pf;
+            sheet.Apply();
+            File.WriteAllBytes(Path.Combine(dir, "27_blade_blood.jpg"), sheet.EncodeToJPG(88));
+            UnityEngine.Object.DestroyImmediate(sheet); rt.Release(); UnityEngine.Object.DestroyImmediate(rt);
+            log.Append("PROBE|shots|27_blade_blood|4 уровня\n");
+        }
+
         static void Tick(FighterController f, HeroRigDriver d, float animDt, float dt)
         {
             HeroRigDriver.DtOverride = dt;

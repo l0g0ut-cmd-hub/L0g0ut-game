@@ -28,8 +28,9 @@ namespace BladePath
         class Tracked
         {
             public WeaponController w; public SwingPhase last; public TrailRenderer trail;
-            public FighterController f; public ParticleSystem aura; public Renderer[] blade; public float blood;
+            public FighterController f; public ParticleSystem aura; public Renderer[] blade; public float blood, bloodAge;
             public float stepT; public bool wasGrounded = true;
+            public int bloodSteps;   // наступил в лужу крови — столько ещё кровавых отпечатков
         }
         readonly List<Tracked> tracked = new List<Tracked>();
 
@@ -182,7 +183,7 @@ namespace BladePath
         /// <summary>Клинок в крови: каждое попадание окрашивает лезвие, к новому раунду оно снова чистое.</summary>
         public void BloodyBlade(WeaponController w, float amount)
         {
-            for (int i = 0; i < tracked.Count; i++) if (tracked[i].w == w) tracked[i].blood = Mathf.Clamp01(tracked[i].blood + amount);
+            for (int i = 0; i < tracked.Count; i++) if (tracked[i].w == w) { tracked[i].blood = Mathf.Clamp01(tracked[i].blood + amount); tracked[i].bloodAge *= 0.25f; }   // свежая кровь поверх подсохшей
         }
 
         public void ShakeBlood(WeaponController w)
@@ -252,13 +253,19 @@ namespace BladePath
                 }
                 if (t.blade != null && mpb != null)
                 {
+                    // кровь на клинке (шейдер BladePath/Blade — по маске от острия; старый Standard — оттенок всего клинка):
+                    // подсыхает за ~25 с, под дождём медленно смывается
+                    t.bloodAge += Time.deltaTime;
+                    if (t.blood > 0f && Weather.Instance != null && Weather.Instance.Raining) t.blood = Mathf.Max(0f, t.blood - Time.deltaTime * 0.012f);
+                    float dry = Mathf.Clamp01(t.bloodAge / 25f);
                     Color c = Color.Lerp(Color.white, new Color(0.5f, 0.06f, 0.06f), t.blood * 0.85f);
                     for (int k = 0; k < t.blade.Length; k++)
                     {
                         Renderer r = t.blade[k];
                         if (r == null) continue;
                         r.GetPropertyBlock(mpb);
-                        mpb.SetColor("_Color", c);
+                        if (r.sharedMaterial != null && r.sharedMaterial.HasProperty("_Blood")) { mpb.SetFloat("_Blood", t.blood); mpb.SetFloat("_BloodDry", dry * dry * (3f - 2f * dry)); }
+                        else mpb.SetColor("_Color", c);
                         r.SetPropertyBlock(mpb);
                     }
                 }
@@ -369,9 +376,10 @@ namespace BladePath
         /// Стопа встала на землю (из походки HeroRigDriver): глухой шаг по камню, в дождь — шлепок и брызги из-под подошвы,
         /// на сухом — лёгкая пыль. k ~0.3…1.5: длина шага / притоп в ударе. Частицы из одной общей системы (без мусора на шаг).
         /// </summary>
-        public void Footstep(Vector3 pos, float k)
+        public void Footstep(Vector3 pos, float k, Vector3 toe = default(Vector3), int side = 0)
         {
             bool wet = Weather.Instance != null && Weather.Instance.Raining;
+            Prints(pos, toe, side);
             if (stepVoice != null)
             {
                 stepVoice.pitch = Random.Range(0.85f, 1.12f);
@@ -401,6 +409,43 @@ namespace BladePath
                 }
                 footFx.Emit(ep, 1);
             }
+        }
+
+        static readonly int SnowId = Shader.PropertyToID("_BP_Snow");
+
+        /// <summary>Следы: в снегу — каждый шаг; после лужи крови — 6 кровавых отпечатков, всё бледнее.</summary>
+        void Prints(Vector3 pos, Vector3 toe, int side)
+        {
+            Tracked tf = null; float best = 1.2f * 1.2f;
+            for (int i = 0; i < tracked.Count; i++)
+            {
+                if (tracked[i].f == null) continue;
+                Vector3 d = tracked[i].f.transform.position - pos; d.y = 0f;
+                if (d.sqrMagnitude < best) { best = d.sqrMagnitude; tf = tracked[i]; }
+            }
+            if (tf == null) return;
+            Transform ft = tf.f.transform;
+            if (toe.sqrMagnitude < 1e-6f) toe = ft.forward;
+            bool left = side != 0 ? side < 0 : Vector3.Dot(pos - ft.position, ft.right) < 0f;
+            bool inBlood = InBlood(pos);
+            if (inBlood) { tf.bloodSteps = 6; return; }
+            if (tf.bloodSteps > 0) { Footprints.Ensure().Add(pos, toe, left, true, tf.bloodSteps / 6f); tf.bloodSteps--; return; }
+            if (Shader.GetGlobalFloat(SnowId) > 0.25f) Footprints.Ensure().Add(pos, toe, left, false, 1f);
+        }
+
+        /// <summary>Точка внутри растёкшейся лужи (крупные пятна крови на земле).</summary>
+        bool InBlood(Vector3 pos)
+        {
+            for (int i = 0; i < decals.Count; i++)
+            {
+                Decal d = decals[i];
+                if (d.t == null || !d.t.gameObject.activeSelf) continue;
+                float r = d.t.localScale.x * 0.42f;
+                if (r < 0.12f) continue;
+                Vector3 dd = d.t.position - pos; dd.y = 0f;
+                if (dd.sqrMagnitude < r * r) return true;
+            }
+            return false;
         }
 
         ParticleSystem MakeFootFx()

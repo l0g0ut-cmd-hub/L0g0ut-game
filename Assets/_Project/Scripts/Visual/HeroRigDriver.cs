@@ -657,9 +657,9 @@ namespace BladePath
             {
                 float gy = ft.position.y;
                 float hL = solL != null ? SoleL.y - gy : footL.position.y - gy - footRestH, hR = solR != null ? SoleR.y - gy : footR.position.y - gy - footRestH;
-                if (footUpL && hL < 0.012f) { footUpL = false; Juice.Instance.Footstep(new Vector3(footL.position.x, ft.position.y, footL.position.z), 0.8f); }
+                if (footUpL && hL < 0.012f) { footUpL = false; Juice.Instance.Footstep(new Vector3(footL.position.x, ft.position.y, footL.position.z), 0.8f, Toe(footL, solL, ft), -1); }
                 else if (hL > 0.035f) footUpL = true;
-                if (footUpR && hR < 0.012f) { footUpR = false; Juice.Instance.Footstep(new Vector3(footR.position.x, ft.position.y, footR.position.z), 0.8f); }
+                if (footUpR && hR < 0.012f) { footUpR = false; Juice.Instance.Footstep(new Vector3(footR.position.x, ft.position.y, footR.position.z), 0.8f, Toe(footR, solR, ft), 1); }
                 else if (hR > 0.035f) footUpR = true;
             }
 
@@ -820,7 +820,15 @@ namespace BladePath
         {
             float d = (f.to - f.from).magnitude;
             if (d < 0.05f) return;   // переставил стопу на месте — не слышно
-            Juice.Instance.Footstep(f.pos, Mathf.Clamp(d / 0.5f, 0.3f, 1.2f));
+            Juice.Instance.Footstep(f.pos, Mathf.Clamp(d / 0.5f, 0.3f, 1.2f), Quaternion.Euler(0f, f.yaw, 0f) * Vector3.forward, f.side > 0f ? 1 : -1);
+        }
+
+        /// <summary>Куда смотрит носок (по точкам подошвы: пятка → носок), по земле.</summary>
+        static Vector3 Toe(Transform foot, Vector3[] sol, Transform ft)
+        {
+            Vector3 d = sol != null && sol.Length >= 3 ? foot.TransformPoint(sol[2]) - foot.TransformPoint(sol[0]) : ft.forward;
+            d.y = 0f;
+            return d.sqrMagnitude > 1e-6f ? d.normalized : ft.forward;
         }
 
         static Foot NewFoot(Vector3 p, float y, float side) { return new Foot { pos = p, from = p, to = p, yaw = y, yawFrom = y, yawTo = y, land = 9f, side = side }; }
