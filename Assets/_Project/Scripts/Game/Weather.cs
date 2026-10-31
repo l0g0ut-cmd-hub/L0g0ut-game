@@ -181,8 +181,8 @@ namespace BladePath
 
         void StartFog()
         {
-            RenderSettings.fogDensity = fogDensBase * 2.4f;
-            RenderSettings.fogColor = Color.Lerp(fogBase, new Color(0.2f, 0.22f, 0.27f), 0.55f);
+            RenderSettings.fogDensity = fogDensBase * 3.2f;
+            RenderSettings.fogColor = Color.Lerp(fogBase, new Color(0.26f, 0.29f, 0.35f), 0.7f);
             Mist(3.5f, 2.6f);
         }
 
