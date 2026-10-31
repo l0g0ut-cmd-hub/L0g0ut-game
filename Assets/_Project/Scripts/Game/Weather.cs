@@ -21,6 +21,10 @@ namespace BladePath
         /// <summary>Закат (из дневных матчей): солнце за храмом, контровой свет, хигураси.</summary>
         public bool Dusk { get; private set; }
         [Range(0f, 1f)] public float duskShare = 0.4f;   // доля закатов среди не-рассветных дней
+        /// <summary>Ночной туман (из ясных ночей): густая холодная дымка, огни в ореолах, по земле стелется молоко.</summary>
+        public bool Foggy { get; private set; }
+        [Range(0f, 1f)] public float fogChance = 0.3f;
+        ParticleSystem mistPs; float mistRate0 = -1f; Color mistCol0;
         [Range(0f, 1f)] public float dawnShare = 0.35f;
         float fogDensBase = 0.05f;
         ParticleSystem snow;
@@ -66,7 +70,8 @@ namespace BladePath
             // время суток: сперва свет и небо, потом — база для погоды
             if (Raining) StopRain();
             if (Snowing) StopSnow();
-            Raining = false; Snowing = false;
+            if (Foggy) StopFog();
+            Raining = false; Snowing = false; Foggy = false;
             Daytime = DayNight.Instance != null && Random.value < dayChance;
             Dawn = Daytime && Random.value < dawnShare;
             Dusk = Daytime && !Dawn && Random.value < duskShare;
@@ -77,6 +82,8 @@ namespace BladePath
             Snowing = !Daytime && !Raining && r < rainChance + snowChance;
             if (Raining) StartRain(); else StopRain();
             if (Snowing) StartSnow(); else StopSnow();
+            Foggy = !Daytime && !Raining && !Snowing && Random.value < fogChance;
+            if (Foggy) StartFog(); else StopFog();
             if (Dawn) EnsureBreaths();   // утро холодное — изо рта пар
             Critters(!Raining && !Snowing && !Daytime);
             DayCritters(Daytime);
@@ -159,6 +166,30 @@ namespace BladePath
                 foreach (ParticleSystem b in breaths) if (b != null && b.transform.parent == d.head) has = true;
                 if (!has) breaths.Add(BuildBreath(d.head, d.fighter != null ? d.fighter.transform : d.transform));
             }
+        }
+
+        void Mist(float rateK, float alphaK)
+        {
+            if (mistPs == null) { GameObject g = GameObject.Find("GroundMist"); if (g != null) mistPs = g.GetComponent<ParticleSystem>(); }
+            if (mistPs == null) return;
+            var main = mistPs.main; var em = mistPs.emission;
+            if (mistRate0 < 0f) { mistRate0 = em.rateOverTime.constant; mistCol0 = main.startColor.color; }
+            em.rateOverTime = mistRate0 * rateK;
+            main.maxParticles = Mathf.Max(main.maxParticles, Mathf.CeilToInt(40 * rateK));
+            Color c = mistCol0; c.a = Mathf.Min(1f, mistCol0.a * alphaK); main.startColor = c;
+        }
+
+        void StartFog()
+        {
+            RenderSettings.fogDensity = fogDensBase * 2.4f;
+            RenderSettings.fogColor = Color.Lerp(fogBase, new Color(0.2f, 0.22f, 0.27f), 0.55f);
+            Mist(3.5f, 2.6f);
+        }
+
+        void StopFog()
+        {
+            if (!Raining && !Snowing) { RenderSettings.fogDensity = fogDensBase; RenderSettings.fogColor = fogBase; }
+            Mist(1f, 1f);
         }
 
         void StopSnow()

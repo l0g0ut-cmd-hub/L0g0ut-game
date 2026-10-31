@@ -551,6 +551,12 @@ namespace BladePath.EditorTools
                     if (ps.name == "Rain" || ps.name == "RainSplash" || ps.name == "RainRipples" || ps.name == "EaveDrips") ps.Simulate(2f, true, true);
                 Shot(cam, dir, "21_rain", pos, look, cam.fieldOfView, log);
                 Shot(cam, dir, "21b_rain_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);   // мокрое дерево и камень блестят
+                Call(w, "StopRain"); rainP.GetSetMethod(true).Invoke(w, new object[] { false });
+                Call(w, "StartFog");
+                Shot(cam, dir, "42_fog", pos, look, cam.fieldOfView, log);
+                Shot(cam, dir, "42b_fog_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);
+                Call(w, "StopFog");
+                rainP.GetSetMethod(true).Invoke(w, new object[] { true });
                 Call(w, "StopRain");
                 rainP.GetSetMethod(true).Invoke(w, new object[] { false });
                 Shader.SetGlobalFloat("_BP_Wetness", 0f);
