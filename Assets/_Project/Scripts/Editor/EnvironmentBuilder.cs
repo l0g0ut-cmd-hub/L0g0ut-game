@@ -315,6 +315,9 @@ namespace BladePath.EditorTools
                 CharacterVisuals.Part(g, "RimStone" + i, PrimitiveType.Sphere, c + new Vector3(o.x, -0.06f + s * 0.2f, o.y),
                     new Vector3((float)r.NextDouble() * 18f - 9f, (float)r.NextDouble() * 180f, (float)r.NextDouble() * 18f - 9f), new Vector3(s * 1.9f, s * 0.8f, s * 1.3f), m);
             }
+            // каменный фонарь у берега — ночью сад у ворот не тонет во тьме, огонь дрожит в воде
+            AddLantern(env, look, c + new Vector3(1.75f, 0f, 0.75f));
+            if (look.aoBlob != null) EnvMesh.Decal(g, "LanternAO", c + new Vector3(1.75f, -0.067f, 0.75f), 0f, 1.15f, 1.15f, look.aoBlob);
             // листья лотоса — плоские диски у дальнего берега, разного размера
             if (look.lotus != null)
                 for (int i = 0; i < 7; i++)
@@ -337,6 +340,8 @@ namespace BladePath.EditorTools
             Vector3 c = new Vector3(3.6f, 0f, -5.3f);
             EnvMesh.Decal(g, "Rake", c + new Vector3(0f, -0.068f, 0f), 0f, 4.0f, 2.0f, look.karesansui);
             float[,] rocks = { { -1.05f, 0.15f, 0.32f }, { 0.55f, -0.35f, 0.24f }, { 1.25f, 0.42f, 0.18f } };
+            AddLantern(env, look, c + new Vector3(-1.75f, 0f, -1.25f));   // фонарь у края сада, ближе к воротам
+            if (look.aoBlob != null) EnvMesh.Decal(g, "LanternAO", c + new Vector3(-1.75f, -0.067f, -1.25f), 0f, 1.15f, 1.15f, look.aoBlob);
             for (int i = 0; i < 3; i++)
             {
                 float rx = rocks[i, 0], rz = rocks[i, 1], rr = rocks[i, 2];
