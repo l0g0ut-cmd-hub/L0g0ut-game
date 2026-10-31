@@ -59,7 +59,7 @@ namespace BladePath.EditorTools
 
                 // компоненты, которые в игре готовятся в Awake (текстуры листьев/лепестков, ореолы) — в редакторе вызываем сами
                 foreach (MonoBehaviour mb in UnityEngine.Object.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
-                    if (mb is PetalTexture || mb is GlowSprite || mb is FlickerLight || mb is FloorReflection) Call(mb, "Awake");
+                    if (mb is PetalTexture || mb is GlowSprite || mb is FlickerLight || mb is FloorReflection || mb is LightShaft) Call(mb, "Awake");
                 // окружение: огонь, туман, светлячки, лепестки — уже «живут» несколько секунд
                 foreach (ParticleSystem ps in UnityEngine.Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None))
                     if (ps.transform.parent == null || ps.GetComponentInParent<FighterController>() == null) ps.Simulate(4f, true, true);
@@ -450,6 +450,7 @@ namespace BladePath.EditorTools
                 cam.fieldOfView = fov;
                 foreach (GlowSprite gs in UnityEngine.Object.FindObjectsByType<GlowSprite>(FindObjectsSortMode.None)) Call(gs, "LateUpdate");   // ореолы — лицом к камере
                 foreach (FloorReflection fr in UnityEngine.Object.FindObjectsByType<FloorReflection>(FindObjectsSortMode.None)) Call(fr, "LateUpdate");   // отражения — под эту камеру
+                foreach (LightShaft ls in UnityEngine.Object.FindObjectsByType<LightShaft>(FindObjectsSortMode.None)) Call(ls, "LateUpdate");          // лучи — лицом к этой камере
                 cam.targetTexture = rt;
                 cam.Render();
                 RenderTexture.active = rt;

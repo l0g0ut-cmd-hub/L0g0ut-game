@@ -96,6 +96,7 @@ namespace BladePath.EditorTools
             AddIncense(env, look, new Vector3(1.7f, -0.07f, 3.32f));
             AddWindChime(env, look, new Vector3(1.3f, 2.24f, 4.98f));
             new GameObject("CrowFlock").AddComponent<CrowFlock>();
+            AddLightShafts(moonLight.transform.forward);
 
             // луна
             GameObject moon = GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -629,6 +630,26 @@ namespace BladePath.EditorTools
             Object.DestroyImmediate(CharacterVisuals.Part(sp, "StripCord", PrimitiveType.Cylinder, new Vector3(0f, -0.05f, 0f), Vector3.zero, new Vector3(0.003f, 0.05f, 0.003f), look.woodDark).GetComponent<Collider>());
             EnvMesh.Box(sp, "Strip", new Vector3(0f, -0.2f, 0f), Vector3.zero, new Vector3(0.05f, 0.18f, 0.003f), look.paper, 0f);
             root.gameObject.AddComponent<WindChime>().strip = sp;
+        }
+
+        /// <summary>Лунные лучи сквозь кроны клёнов в дымке (LightShaft): от кроны по направлению лунного света к земле.</summary>
+        static void AddLightShafts(Vector3 lightDir)
+        {
+            Transform root = new GameObject("LightShafts").transform;
+            Vector3 d = lightDir.normalized;
+            // (точка в кроне, ширина, длина, сила)
+            Vector4[] shafts = {
+                new Vector4(5.2f, 4.6f, -0.9f, 0.9f), new Vector4(5.9f, 4.9f, -0.2f, 0.55f), new Vector4(4.9f, 5.0f, 3.1f, 1.0f),
+                new Vector4(5.8f, 5.3f, 3.7f, 0.6f), new Vector4(-5.0f, 4.8f, 4.0f, 0.8f), new Vector4(-5.2f, 4.4f, -1.3f, 0.7f) };
+            for (int i = 0; i < shafts.Length; i++)
+            {
+                GameObject g = new GameObject("Shaft" + i);
+                g.transform.SetParent(root, false);
+                g.transform.position = new Vector3(shafts[i].x, shafts[i].y, shafts[i].z);
+                LightShaft ls = g.AddComponent<LightShaft>();
+                ls.dir = d; ls.width = shafts[i].w; ls.length = shafts[i].y / Mathf.Max(0.2f, -d.y) * 0.95f;
+                ls.strength = 0.11f + 0.04f * (i % 3);
+            }
         }
 
         static void AddTree(Transform env, Look look, Vector3 pos, float s, int seed)
