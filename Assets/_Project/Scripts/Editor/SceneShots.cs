@@ -144,6 +144,12 @@ namespace BladePath.EditorTools
                             for (int i = 0; i < 40; i++) Tick(enemy, d, dt, dt);
                             Shot(cam, dir, "22_enemy_ronin", ep + new Vector3(0f, 1.2f, -3.0f) + enemy.transform.forward * 0.9f, ep + Vector3.up * 0.95f, 36f, log);
                             Shot(cam, dir, "23_ronin_duel", focus + new Vector3(0f, 0f, -dist), focus, cam.fieldOfView, log);
+                            // ронин в ранах крупно и в ударе — проверка, что сетка не «рвётся» (раны по 3D-шуму, руки на вытянутом ударе)
+                            SetWound(enemy, 0.3f);
+                            Shot(cam, dir, "22c_ronin_wounds", ep + new Vector3(0f, 1.3f, -2.2f) + enemy.transform.forward * 0.8f, ep + Vector3.up * 1.1f, 34f, log);
+                            SetWound(enemy, 0f);
+                            SwingStrip(cam, dir, "22b_ronin_overhead", enemy, AttackType.Overhead, log);
+                            SwingStrip(cam, dir, "22d_ronin_thrust", enemy, AttackType.Thrust, log);
                         }
                     }
                     catch (Exception e) { log.Append("PROBE|shots|ronin|error " + e.Message + "\n"); }
