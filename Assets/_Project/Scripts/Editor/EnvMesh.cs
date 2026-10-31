@@ -308,6 +308,42 @@ namespace BladePath.EditorTools
             return m;
         }
 
+        /// <summary>
+        /// Гранёное тело вращения (каменные фонари, чаши): профиль (радиус по углам многоугольника, высота) вокруг оси Y,
+        /// sides граней, каждая грань — свои вершины (чёткие рёбра камня). UV — в метрах (по периметру и высоте) / tile.
+        /// </summary>
+        public static Mesh LatheFlat(string key, Vector2[] profile, int sides, float tile = 0.5f, float startAngle = 0f)
+        {
+            Mesh m;
+            if (cache.TryGetValue("latheF" + key, out m) && m != null) return m;
+            List<Vector3> v = new List<Vector3>(); List<Vector2> uv = new List<Vector2>(); List<int> t = new List<int>();
+            for (int i = 0; i < sides; i++)
+            {
+                float a0 = startAngle + Mathf.PI * 2f * i / sides, a1 = startAngle + Mathf.PI * 2f * (i + 1) / sides;
+                float h = 0f;
+                for (int j = 0; j < profile.Length - 1; j++)
+                {
+                    Vector2 p0 = profile[j], p1 = profile[j + 1];
+                    Vector3 v00 = new Vector3(Mathf.Cos(a0) * p0.x, p0.y, Mathf.Sin(a0) * p0.x), v10 = new Vector3(Mathf.Cos(a1) * p0.x, p0.y, Mathf.Sin(a1) * p0.x);
+                    Vector3 v01 = new Vector3(Mathf.Cos(a0) * p1.x, p1.y, Mathf.Sin(a0) * p1.x), v11 = new Vector3(Mathf.Cos(a1) * p1.x, p1.y, Mathf.Sin(a1) * p1.x);
+                    float w0 = Vector3.Distance(v00, v10), w1 = Vector3.Distance(v01, v11), dh = Vector2.Distance(p0, p1);
+                    int b = v.Count;
+                    v.Add(v00); v.Add(v10); v.Add(v11); v.Add(v01);
+                    uv.Add(new Vector2(0f, h) / tile); uv.Add(new Vector2(w0, h) / tile); uv.Add(new Vector2(w1, h + dh) / tile); uv.Add(new Vector2(0f, h + dh) / tile);
+                    // снаружи по часовой (профиль идёт снизу вверх)
+                    t.Add(b); t.Add(b + 3); t.Add(b + 2); t.Add(b); t.Add(b + 2); t.Add(b + 1);
+                    h += dh;
+                }
+            }
+            m = new Mesh { name = "latheF_" + key };
+            m.SetVertices(v); m.SetUVs(0, uv); m.SetTriangles(t, 0);
+            m.RecalculateNormals(); m.RecalculateBounds(); m.RecalculateTangents();
+            if (!AssetDatabase.IsValidFolder(Folder)) AssetDatabase.CreateFolder("Assets/_Project/Models", "Env");
+            AssetDatabase.CreateAsset(m, Folder + "/env_" + (counter++) + ".asset");
+            cache["latheF" + key] = m;
+            return m;
+        }
+
         public static GameObject MeshObj(Transform parent, string name, Mesh m, Vector3 pos, Vector3 euler, Vector3 scale, Material mat)
         {
             GameObject g = Make(parent, name, m, pos, euler, mat);

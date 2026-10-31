@@ -1132,23 +1132,48 @@ namespace BladePath.EditorTools
             pt.disc = true;
         }
 
+        /// <summary>
+        /// Каменный фонарь касуга-торо (шестигранный, гранёный камень): основание с лепестковым скосом, круглый столб с поясом,
+        /// подставка, фонарная камера с шестью светящимися окошками, широкая шатровая крыша с загнутыми углами (варабидэ),
+        /// чашечка-лотос и навершие-жемчужина. Высота ~1,4 м, огонь на ~0,87 м.
+        /// </summary>
         static void AddLantern(Transform env, Look look, Vector3 pos)
         {
             Transform t = new GameObject("StoneLantern").transform;
             t.SetParent(env, false);
             t.position = pos;
-            EnvMesh.Box(t, "Foot", new Vector3(0f, 0.075f, 0f), Vector3.zero, new Vector3(0.46f, 0.15f, 0.46f), look.stoneBlock, 0.8f);
-            CharacterVisuals.Part(t, "Shaft", PrimitiveType.Cylinder, new Vector3(0f, 0.4f, 0f), Vector3.zero, new Vector3(0.18f, 0.25f, 0.18f), look.stoneBlock);
-            EnvMesh.Box(t, "Plate", new Vector3(0f, 0.69f, 0f), Vector3.zero, new Vector3(0.52f, 0.08f, 0.52f), look.stoneBlock, 0.8f);
-            EnvMesh.Box(t, "Lamp", new Vector3(0f, 0.9f, 0f), Vector3.zero, new Vector3(0.34f, 0.34f, 0.34f), look.stoneBlock, 0.8f);
-            EnvMesh.Box(t, "GlowA", new Vector3(0f, 0.9f, 0f), Vector3.zero, new Vector3(0.24f, 0.2f, 0.36f), look.glow, 1f);
-            EnvMesh.Box(t, "GlowB", new Vector3(0f, 0.9f, 0f), Vector3.zero, new Vector3(0.36f, 0.2f, 0.24f), look.glow, 1f);
-            EnvMesh.Glow(t, "Halo", new Vector3(0f, 0.9f, 0f), 0.9f, look.haloWarm, 0.08f);
-            GameObject lp = new GameObject("LampPoint"); lp.transform.SetParent(t, false); lp.transform.localPosition = new Vector3(0f, 0.9f, 0f);
+            Material st = look.rock != null ? look.rock : look.stoneBlock;
+            const float a30 = Mathf.PI / 6f;   // грань — к камере, угол — в стороны
+            Mesh kiso = EnvMesh.LatheFlat("toro_kiso", new[] { new Vector2(0.27f, 0f), new Vector2(0.27f, 0.1f), new Vector2(0.22f, 0.15f), new Vector2(0.1f, 0.17f), new Vector2(0f, 0.17f) }, 6, 0.4f, a30);
+            Mesh sao = EnvMesh.LatheFlat("toro_sao", new[] { new Vector2(0.075f, 0.16f), new Vector2(0.075f, 0.35f), new Vector2(0.088f, 0.36f), new Vector2(0.088f, 0.39f), new Vector2(0.075f, 0.4f), new Vector2(0.072f, 0.6f) }, 12, 0.4f);
+            Mesh chudai = EnvMesh.LatheFlat("toro_chudai", new[] { new Vector2(0.08f, 0.58f), new Vector2(0.24f, 0.64f), new Vector2(0.24f, 0.7f), new Vector2(0.17f, 0.72f), new Vector2(0f, 0.72f) }, 6, 0.4f, a30);
+            Mesh hib = EnvMesh.LatheFlat("toro_hibukuro", new[] { new Vector2(0.165f, 0.72f), new Vector2(0.165f, 1.02f), new Vector2(0f, 1.02f) }, 6, 0.4f, a30);
+            Mesh kasa = EnvMesh.LatheFlat("toro_kasa", new[] { new Vector2(0.13f, 1.0f), new Vector2(0.35f, 1.05f), new Vector2(0.35f, 1.085f), new Vector2(0.21f, 1.18f), new Vector2(0.08f, 1.26f), new Vector2(0f, 1.27f) }, 6, 0.4f, a30);
+            Mesh hoju = EnvMesh.LatheFlat("toro_hoju", new[] { new Vector2(0.04f, 1.25f), new Vector2(0.075f, 1.29f), new Vector2(0.05f, 1.31f), new Vector2(0.065f, 1.34f), new Vector2(0.06f, 1.38f), new Vector2(0.03f, 1.42f), new Vector2(0f, 1.44f) }, 10, 0.3f);
+            EnvMesh.MeshObj(t, "Kiso", kiso, Vector3.zero, Vector3.zero, Vector3.one, st);
+            EnvMesh.MeshObj(t, "Sao", sao, Vector3.zero, Vector3.zero, Vector3.one, st);
+            EnvMesh.MeshObj(t, "Chudai", chudai, Vector3.zero, Vector3.zero, Vector3.one, st);
+            EnvMesh.MeshObj(t, "Hibukuro", hib, Vector3.zero, Vector3.zero, Vector3.one, st);
+            EnvMesh.MeshObj(t, "Kasa", kasa, Vector3.zero, Vector3.zero, Vector3.one, st);
+            EnvMesh.MeshObj(t, "Hoju", hoju, Vector3.zero, Vector3.zero, Vector3.one, st);
+            // окошки фонарной камеры: на каждой из шести граней — светящийся проём (чуть выступает из камня)
+            float ap = 0.165f * Mathf.Cos(a30) + 0.004f;
+            for (int k = 0; k < 6; k++)
+            {
+                float ang = a30 + k * Mathf.PI / 3f + Mathf.PI / 6f;   // середина грани
+                Vector3 c = new Vector3(Mathf.Cos(ang) * ap, 0.87f, Mathf.Sin(ang) * ap);
+                EnvMesh.Box(t, "Window" + k, c, new Vector3(0f, -ang * Mathf.Rad2Deg + 90f, 0f), new Vector3(0.1f, 0.15f, 0.006f), look.glow, 1f);
+            }
+            // загнутые углы крыши
+            for (int k = 0; k < 6; k++)
+            {
+                float ang = a30 + k * Mathf.PI / 3f;
+                CharacterVisuals.Part(t, "Warabide" + k, PrimitiveType.Sphere, new Vector3(Mathf.Cos(ang) * 0.345f, 1.1f, Mathf.Sin(ang) * 0.345f), Vector3.zero, new Vector3(0.045f, 0.05f, 0.045f), st);
+            }
+            EnvMesh.Glow(t, "Halo", new Vector3(0f, 0.87f, 0f), 0.85f, look.haloWarm, 0.08f);
+            GameObject lp = new GameObject("LampPoint"); lp.transform.SetParent(t, false); lp.transform.localPosition = new Vector3(0f, 0.87f, 0f);
             AddReflection(lp.transform, null, 1f, new Color(1f, 0.72f, 0.38f), 0.34f, 1.7f, 0.5f);
             AddMoths(lp.transform, look);
-            EnvMesh.Pyramid(t, "Cap", new Vector3(0f, 1.07f, 0f), 0.3f, 0.22f, look.stoneBlock, 0.8f);
-            CharacterVisuals.Part(t, "Jewel", PrimitiveType.Sphere, new Vector3(0f, 1.32f, 0f), Vector3.zero, new Vector3(0.09f, 0.09f, 0.09f), look.stoneBlock);
         }
 
         /// <summary>
@@ -1550,16 +1575,76 @@ namespace BladePath.EditorTools
             }
         }
 
+        /// <summary>Слить все дочерние меши с материалом mat в один (ассет) — меньше вызовов отрисовки у нестатичных предметов.</summary>
+        static void CombineByMaterial(Transform root, Material mat, string name)
+        {
+            var parts = new System.Collections.Generic.List<CombineInstance>();
+            var kill = new System.Collections.Generic.List<GameObject>();
+            Matrix4x4 inv = root.worldToLocalMatrix;
+            foreach (MeshFilter mf in root.GetComponentsInChildren<MeshFilter>())
+            {
+                MeshRenderer mr = mf.GetComponent<MeshRenderer>();
+                if (mr == null || mr.sharedMaterial != mat || mf.sharedMesh == null) continue;
+                parts.Add(new CombineInstance { mesh = mf.sharedMesh, transform = inv * mf.transform.localToWorldMatrix });
+                kill.Add(mf.gameObject);
+            }
+            if (parts.Count < 2) return;
+            Mesh m = new Mesh { name = name };
+            m.CombineMeshes(parts.ToArray(), true, true);
+            m.RecalculateBounds();
+            string dir = "Assets/_Project/Models/Env";
+            if (!UnityEditor.AssetDatabase.IsValidFolder(dir)) UnityEditor.AssetDatabase.CreateFolder("Assets/_Project/Models", "Env");
+            UnityEditor.AssetDatabase.CreateAsset(m, dir + "/" + name + "_" + root.GetInstanceID() + ".asset");
+            foreach (GameObject g in kill) Object.DestroyImmediate(g);
+            GameObject go = new GameObject(name);
+            go.transform.SetParent(root, false);
+            go.AddComponent<MeshFilter>().sharedMesh = m;
+            go.AddComponent<MeshRenderer>().sharedMaterial = mat;
+        }
+
+        /// <summary>Железный прут (цилиндр) от a до b, толщина d.</summary>
+        static void Rod(Transform parent, string name, Vector3 a, Vector3 b, float d, Material m)
+        {
+            Vector3 dir = b - a;
+            Transform t = CharacterVisuals.Part(parent, name, PrimitiveType.Cylinder, (a + b) * 0.5f, Vector3.zero, new Vector3(d, dir.magnitude * 0.5f, d), m).transform;
+            t.localRotation = Quaternion.FromToRotation(Vector3.up, dir.normalized);
+        }
+
+        /// <summary>Профиль кольца-обода (ромб в сечении) радиуса r на высоте y, толщина w — для LatheFlat.</summary>
+        static Vector2[] RingProfile(float r, float y, float w)
+        {
+            return new[] { new Vector2(r, y - w), new Vector2(r + w, y), new Vector2(r, y + w), new Vector2(r - w, y), new Vector2(r, y - w) };
+        }
+
         static void AddBrazier(Look look, Vector3 pos)
         {
             Transform b = new GameObject("Brazier").transform;
             b.position = pos;
             b.gameObject.AddComponent<ArenaObstacle>().radius = 0.32f;
-            CharacterVisuals.Part(b, "Stand", PrimitiveType.Cylinder, new Vector3(0f, 0.45f, 0f), Vector3.zero, new Vector3(0.22f, 0.45f, 0.22f), look.stoneBlock);
-            EnvMesh.Box(b, "Foot", new Vector3(0f, 0.06f, 0f), Vector3.zero, new Vector3(0.46f, 0.12f, 0.46f), look.stoneBlock, 0.8f);
-            CharacterVisuals.Part(b, "Bowl", PrimitiveType.Cylinder, new Vector3(0f, 0.93f, 0f), Vector3.zero, new Vector3(0.52f, 0.05f, 0.52f), look.bronze);
-            CharacterVisuals.Part(b, "BowlRim", PrimitiveType.Cylinder, new Vector3(0f, 0.99f, 0f), Vector3.zero, new Vector3(0.56f, 0.02f, 0.56f), look.bronze);
-            CharacterVisuals.Part(b, "Coals", PrimitiveType.Sphere, new Vector3(0f, 0.99f, 0f), Vector3.zero, new Vector3(0.42f, 0.08f, 0.42f), look.ember);
+            // кагарибi — железная корзина-жаровня на расставленной треноге (вместо каменного столба с чашей)
+            Material iron = look.iron != null ? look.iron : look.woodDark;
+            for (int k = 0; k < 3; k++)
+            {
+                float ang = k * Mathf.PI * 2f / 3f + 0.4f;
+                Vector3 foot = new Vector3(Mathf.Cos(ang) * 0.34f, 0f, Mathf.Sin(ang) * 0.34f);
+                Vector3 top = new Vector3(Mathf.Cos(ang) * 0.15f, 0.93f, Mathf.Sin(ang) * 0.15f);
+                Rod(b, "Leg" + k, foot, top, 0.032f, iron);
+                CharacterVisuals.Part(b, "LegFoot" + k, PrimitiveType.Sphere, foot + Vector3.up * 0.01f, Vector3.zero, new Vector3(0.06f, 0.03f, 0.06f), iron);
+                // распорка-кольцо на треть высоты
+                Vector3 mid = Vector3.Lerp(foot, top, 0.35f), mid2 = Vector3.Lerp(new Vector3(Mathf.Cos(ang + 2.094f) * 0.34f, 0f, Mathf.Sin(ang + 2.094f) * 0.34f), new Vector3(Mathf.Cos(ang + 2.094f) * 0.15f, 0.93f, Mathf.Sin(ang + 2.094f) * 0.15f), 0.35f);
+                Rod(b, "Brace" + k, mid, mid2, 0.016f, iron);
+            }
+            // корзина: нижнее и верхнее кольцо, днище и прутья, расширяется кверху
+            EnvMesh.MeshObj(b, "RingLow", EnvMesh.LatheFlat("kagari_ring_lo", RingProfile(0.17f, 0.93f, 0.014f), 16, 0.3f), Vector3.zero, Vector3.zero, Vector3.one, iron);
+            EnvMesh.MeshObj(b, "RingTop", EnvMesh.LatheFlat("kagari_ring_hi", RingProfile(0.265f, 1.15f, 0.016f), 18, 0.3f), Vector3.zero, Vector3.zero, Vector3.one, iron);
+            CharacterVisuals.Part(b, "Floor", PrimitiveType.Cylinder, new Vector3(0f, 0.925f, 0f), Vector3.zero, new Vector3(0.34f, 0.01f, 0.34f), iron);
+            for (int k = 0; k < 12; k++)
+            {
+                float ang = k * Mathf.PI * 2f / 12f;
+                Rod(b, "Bar" + k, new Vector3(Mathf.Cos(ang) * 0.17f, 0.93f, Mathf.Sin(ang) * 0.17f), new Vector3(Mathf.Cos(ang) * 0.265f, 1.15f, Mathf.Sin(ang) * 0.265f), 0.014f, iron);
+            }
+            CombineByMaterial(b, iron, "Kagaribi");   // два десятка железных деталей — одним мешем (один вызов отрисовки)
+            CharacterVisuals.Part(b, "Coals", PrimitiveType.Sphere, new Vector3(0f, 0.99f, 0f), Vector3.zero, new Vector3(0.36f, 0.08f, 0.36f), look.ember);
             // поленья в чаше (тёмные, крест-накрест) — огонь растёт из дров, а не из шара
             for (int k = 0; k < 3; k++)
                 CharacterVisuals.Part(b, "Log" + k, PrimitiveType.Cylinder, new Vector3(0f, 1.03f, 0f), new Vector3(78f, k * 60f, 0f), new Vector3(0.05f, 0.17f, 0.05f), look.woodDark);
