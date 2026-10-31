@@ -47,7 +47,7 @@ namespace BladePath
         Material skyMat;
         float skyExpBase;
 
-        void Awake() { Instance = this; }
+        void Awake() { Instance = this; if (GetComponent<SnowDrifts>() == null) gameObject.AddComponent<SnowDrifts>(); }   // сугробы растут по _BP_Snow
 
         void Start()
         {

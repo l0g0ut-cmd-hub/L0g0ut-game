@@ -521,6 +521,7 @@ namespace BladePath.EditorTools
                 snowP.GetSetMethod(true).Invoke(w, new object[] { true }); rainP.GetSetMethod(true).Invoke(w, new object[] { false });
                 Call(w, "StartSnow");
                 Shader.SetGlobalFloat("_BP_Snow", 0.85f); Shader.SetGlobalFloat("_BP_Wetness", 0f);
+                SnowDrifts drifts = wg.GetComponent<SnowDrifts>(); if (drifts != null) Call(drifts, "Update");   // сугробы у стен и жаровен
                 foreach (ParticleSystem ps in UnityEngine.Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None)) if (ps.name == "Snow") ps.Simulate(8f, true, true);
                 // следы в снегу: бойцы пришли к месту поединка — цепочка отпечатков за каждым (и пара кровавых у врага)
                 Footprints fp = Footprints.Ensure();
@@ -539,12 +540,14 @@ namespace BladePath.EditorTools
                 Shot(cam, dir, "20b_snow_prints", look + new Vector3(0f, 2.4f, -3.2f), look - Vector3.up * 1.0f, 46f, log);
                 Shot(cam, dir, "20c_snow_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);   // снег на крышах, стенах, земле
                 Shader.SetGlobalFloat("_BP_Snow", 0.4f);
+                if (drifts != null) Call(drifts, "Update");
                 Shot(cam, dir, "20d_snow_early", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);   // снег только начал ложиться — пятнами
                 Shader.SetGlobalFloat("_BP_Snow", 0.85f);
                 UnityEngine.Object.DestroyImmediate(fp.gameObject);
                 Call(w, "StopSnow");
                 snowP.GetSetMethod(true).Invoke(w, new object[] { false });
                 Shader.SetGlobalFloat("_BP_Snow", 0f);
+                GameObject driftRoot = GameObject.Find("SnowDrifts"); if (driftRoot != null) UnityEngine.Object.DestroyImmediate(driftRoot);
                 foreach (ParticleSystem ps in UnityEngine.Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None)) if (ps.name == "Snow") ps.Clear();
                 // ливень
                 rainP.GetSetMethod(true).Invoke(w, new object[] { true });
