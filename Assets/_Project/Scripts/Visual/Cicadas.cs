@@ -16,7 +16,8 @@ namespace BladePath
         AudioSource[] voices;
         AudioSource far;
         static AudioClip[] abura, minmin;
-        static AudioClip higurashi, tobi, owl;
+        static AudioClip higurashi, tobi, owl, broom;
+        AudioSource sweep; float sweepAt, strokeAt; int strokes;   // рассвет: за храмом монах метёт двор
         float nextAt = -1f, farAt;
         bool wasOn;
         int last = -1;
@@ -31,6 +32,9 @@ namespace BladePath
             if (higurashi == null) higurashi = Higurashi();
             if (tobi == null) tobi = Tobi();
             if (owl == null) owl = Owl();
+            if (broom == null) broom = Broom();
+            sweep = Src(); sweep.panStereo = -0.55f;
+            sweepAt = Time.time + Random.Range(6f, 15f);
             farAt = Time.time + Random.Range(10f, 22f);
         }
 
@@ -50,6 +54,7 @@ namespace BladePath
         void Update()
         {
             Far();
+            Sweep();
             Weather w = Weather.Instance;
             bool on = w != null && w.Daytime && !w.Raining && !w.Snowing;
             if (on && !wasOn) nextAt = Time.time + Random.Range(1.5f, 4f);   // наступил день — первая запоёт почти сразу
@@ -85,6 +90,39 @@ namespace BladePath
             if (s == null || c == null) return;
             s.clip = c; s.panStereo = pan; s.pitch = Random.Range(0.96f, 1.04f); s.volume = vol;
             s.Play();
+        }
+
+        /// <summary>Рассвет: где-то за храмом монах метёт двор бамбуковой метлой — серия «шурх… шурх», пауза, снова.</summary>
+        void Sweep()
+        {
+            Weather w = Weather.Instance;
+            if (sweep == null || w == null || !w.Dawn || w.Raining || w.Snowing) { strokes = 0; return; }
+            if (strokes <= 0 && Time.time >= sweepAt) { strokes = Random.Range(8, 18); strokeAt = Time.time; sweep.panStereo = Random.Range(-0.7f, 0.7f); }
+            if (strokes > 0 && Time.time >= strokeAt)
+            {
+                strokes--;
+                strokeAt = Time.time + Random.Range(0.75f, 1.05f);
+                sweep.pitch = Random.Range(0.9f, 1.1f);
+                sweep.PlayOneShot(broom, Random.Range(0.08f, 0.13f));
+                if (strokes == 0) sweepAt = Time.time + Random.Range(25f, 50f);
+            }
+        }
+
+        /// <summary>Мах метлы: шорох прутьев по гравию — шум в полосе 1,5–5 кГц, нарастает и обрывается, 0,4 с.</summary>
+        static AudioClip Broom()
+        {
+            int n = (int)(Rate * 0.42f); float[] d = new float[n];
+            System.Random r = new System.Random(91); float prev = 0f, hp = 0f, lp = 0f, peak = 1e-4f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)Rate, x = (float)(r.NextDouble() * 2.0 - 1.0);
+                hp = 0.8f * (hp + x - prev); prev = x; lp += 0.5f * (hp - lp);
+                float env = Mathf.SmoothStep(0f, 1f, t / 0.25f) * Mathf.Min(1f, (0.42f - t) / 0.06f);
+                float grit = 0.7f + 0.3f * (float)r.NextDouble();   // камешки под прутьями
+                d[i] = lp * env * grit; peak = Mathf.Max(peak, Mathf.Abs(d[i]));
+            }
+            for (int i = 0; i < n; i++) d[i] *= 0.8f / peak;
+            AudioClip c = AudioClip.Create("broom", n, 1, Rate, false); c.SetData(d, 0); return c;
         }
 
         /// <summary>Дальний голос: коршун днём (не на рассвете), неясыть ночью; в дождь и снег — тишина.</summary>
