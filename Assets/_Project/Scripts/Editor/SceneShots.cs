@@ -137,6 +137,25 @@ namespace BladePath.EditorTools
                     if (shoji.walker != null) shoji.walker.enabled = false;
                 }
                 ReflectShot(cam, dir, "37_reflect_night", log);
+                // храмовый кот на веранде: сидит, вылизывает лапу, трёт морду, идёт (строится в игре при запуске — здесь вручную)
+                TempleCat cat = UnityEngine.Object.FindFirstObjectByType<TempleCat>();
+                if (cat != null)
+                {
+                    cat.Build();
+                    Transform cr = cat.transform.Find("TempleCat");
+                    if (cr != null)
+                    {
+                        Vector3 cp = new Vector3(-2.9f, 0.6f, 4.85f);
+                        cr.position = cp; cr.rotation = Quaternion.Euler(0f, 180f, 0f);
+                        Vector3 camP = cp + new Vector3(0.45f, 0.32f, -1.15f), lookP = cp + new Vector3(0f, 0.16f, 0f);
+                        cat.Pose(1f, -1f, 0f, 15f, 0f, 0.5f); Shot(cam, dir, "45_cat_sit", camP, lookP, 38f, log);
+                        cat.Pose(1f, 1.6f, 0f, 0f, 0f, 0.5f); Shot(cam, dir, "45b_cat_lick", camP, lookP, 38f, log);
+                        cat.Pose(1f, 5.0f, 0f, 0f, 0f, 0.5f); Shot(cam, dir, "45c_cat_wipe", camP, lookP, 38f, log);
+                        cr.rotation = Quaternion.Euler(0f, 90f, 0f);
+                        cat.Pose(0f, -1f, 1.1f, 0f, 0f, 0.5f); Shot(cam, dir, "45d_cat_walk", camP, lookP, 38f, log);
+                        UnityEngine.Object.DestroyImmediate(cr.gameObject);
+                    }
+                }
                 foreach (ParticleSystem ps in UnityEngine.Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None))
                     if (ps.name == "Fire" || ps.name == "FireCore" || ps.name == "Embers" || ps.name == "Smoke") ps.Simulate(3f, false, true);
                 Shot(cam, dir, "43_brazier", new Vector3(-2.3f, 1.35f, 0.9f), new Vector3(-3.2f, 1.2f, 2.2f), 40f, log);   // огонь жаровни крупно
