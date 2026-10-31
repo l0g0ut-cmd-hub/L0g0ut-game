@@ -987,6 +987,10 @@ namespace BladePath.EditorTools
                 CharacterVisuals.Part(g, "Lantern" + side, PrimitiveType.Sphere, lp, Vector3.zero, new Vector3(0.24f, 0.36f, 0.24f), look.paper);
                 EnvMesh.Glow(null, "LanternHalo" + side, lp, 1.1f, look.haloWarm, 0.1f);
             }
+            // за воротами дорожку в рощу провожают каменные фонари (ночью — огоньки, уходящие в лес)
+            foreach (float lz in new[] { -9.3f, -11.7f })
+                for (int side = -1; side <= 1; side += 2)
+                    AddLantern(env, look, new Vector3(side * 1.05f, -0.06f, lz));
             // дорожка из плоских камней от площадки к воротам и за них
             System.Random r = new System.Random(55);
             for (float z = -3.2f; z > -12.5f; z -= 0.62f)
