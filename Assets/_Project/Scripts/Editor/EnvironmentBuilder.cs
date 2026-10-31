@@ -458,6 +458,7 @@ namespace BladePath.EditorTools
             vel.enabled = true; vel.space = ParticleSystemSimulationSpace.Local;
             vel.orbitalY = new ParticleSystem.MinMaxCurve(1.6f, 3.2f);
             vel.orbitalX = new ParticleSystem.MinMaxCurve(-0.5f, 0.5f);
+            vel.orbitalZ = new ParticleSystem.MinMaxCurve(-0.2f, 0.2f);   // все оси орбиты в одном режиме (две константы)
             vel.radial = new ParticleSystem.MinMaxCurve(-0.05f, 0.05f);
             ParticleSystem.NoiseModule noise = ps.noise;
             noise.enabled = true; noise.strength = 0.55f; noise.frequency = 2.2f; noise.scrollSpeed = 1.2f;
