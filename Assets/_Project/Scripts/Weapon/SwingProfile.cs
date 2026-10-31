@@ -236,6 +236,15 @@ namespace BladePath
                     p.K(1.0f, 0.15f, -0.4f, 0.3f, -4f, -4f, 0f, 0.1f, 0.1f, 20f, 10f, 12f, 8f, 0.06f, 0.03f, 0.2f);      // выпрямился
                     p.KReady(1.48f);
                     break;
+                case AttackType.Salute:   // перед боем: клинок вертикально перед лицом (приветствие), затем в стойку
+                    p.label = "САЛЮТ"; p.scripted = true;
+                    p.windupTime = 0.45f; p.strikeTime = 0.05f; p.followTime = 0.7f; p.recoveryTime = 0.5f;
+                    //        t      руки x,y,z              клинок p,y,r      таз F,D        таз yaw,pitch  грудь yaw,pitch  стопы F,R,пятка
+                    p.KReady(0f);
+                    p.K(0.45f, 0.02f, 0.06f, 0.3f, -86f, 0f, 0f, -0.02f, 0.02f, 4f, 2f, 0f, -2f, 0f, 0f, 0f);    // клинок перед лицом, корпус прямо
+                    p.K(1.2f, 0.02f, 0.06f, 0.3f, -86f, 0f, 0f, -0.02f, 0.02f, 4f, 2f, 0f, -2f, 0f, 0f, 0f);     // держит
+                    p.KReady(1.7f);
+                    break;
                 case AttackType.Mikiri:      // микири: рывок навстречу уколу — нога наступает на клинок врага, корпус навис, свой клинок низко вперёд
                     p.label = "МИКИРИ"; p.scripted = true;
                     p.windupTime = 0.06f; p.strikeTime = 0.03f; p.followTime = 0.26f; p.recoveryTime = 0.3f;
