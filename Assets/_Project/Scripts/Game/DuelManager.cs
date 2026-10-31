@@ -134,6 +134,7 @@ namespace BladePath
             if (GetComponent<Music>() == null) gameObject.AddComponent<Music>();
             Breadcrumbs.Mark("бой: ступень пути");
             ApplyStage();
+            if (player != null) player.Gourds = player.gourdMax;
             ResetDuel();
             Breadcrumbs.Mark("бой: первый кадр");
         }
@@ -234,6 +235,7 @@ namespace BladePath
         {
             PlayerWins = 0; EnemyWins = 0; Round = 1; MatchOver = false;
             Resurrections = 1;   // 回生 — раз за матч
+            if (player != null) player.Gourds = player.gourdMax;   // тыква-горлянка — полная на матч
             firstBlood = false;
             stats.Clear();
             ApplyStage();
@@ -356,6 +358,7 @@ namespace BladePath
             UpdateCharge(player); UpdateCharge(enemy);
             UpdateSuper();
             UpdateDeathblow();
+            UpdateDrink();
             UpdateResurrectOffer();
             UpdateBodyTint(player);
             UpdateBodyTint(enemy);
@@ -682,6 +685,25 @@ namespace BladePath
                 DeathblowBy = null; DeathblowTarget = null;
                 if (State == DuelState.Fighting && !ResurrectOffered) Freeze(false);
             }
+        }
+
+        // тыква-горлянка: на середине глотка — лечение (40% здоровья) с тёплым сиянием и звуком; один раз за глоток
+        int healedDrink = -1;
+        public const float GourdHeal = 0.4f;
+        void UpdateDrink()
+        {
+            if (player == null || !player.Drinking || healedDrink == player.DrinkId) return;
+            if (player.DrinkT < FighterController.DrinkHealAt) return;
+            healedDrink = player.DrinkId;
+            float before = Hp(player);
+            hp[player] = Mathf.Min(MaxHp(player), before + MaxHp(player) * GourdHeal);
+            if (hpTrail.ContainsKey(player)) hpTrail[player] = Mathf.Max(hpTrail[player], hp[player]);
+            Popup hp_ = new Popup();
+            hp_.world = player.transform.position + Vector3.up * 2.0f; hp_.text = "+" + Mathf.RoundToInt(hp[player] - before); hp_.color = new Color(1f, 0.82f, 0.4f);
+            hp_.born = Time.unscaledTime; hp_.size = 24f;
+            Popups.Add(hp_);
+            if (Juice.Instance != null) Juice.Instance.HealFx(player);
+            Haptics.Pulse(25);
         }
 
         // замедление времени — и звук «под водой»: фильтр низких частот на слушателе (как в кино на рапиде), смерть — глуше
@@ -1146,6 +1168,18 @@ namespace BladePath
 
         void ApplyDamage(FighterController target, FighterController attacker, float dmg, Vector3 point, bool crit, bool chip = false, Vector3 normal = default(Vector3), Vector3 hitDir = default(Vector3), Transform zoneT = null)
         {
+            // удар во время глотка из тыквы: глоток сорван (если ещё не успел подействовать — лечения не будет, тыква потрачена)
+            if (!chip && target != null && target.Drinking)
+            {
+                target.CancelDrink();
+                if (healedDrink != target.DrinkId)
+                {
+                    Popup dp = new Popup();
+                    dp.world = target.transform.position + Vector3.up * 2.0f; dp.text = "ГЛОТОК СОРВАН"; dp.color = new Color(1f, 0.6f, 0.3f);
+                    dp.born = Time.unscaledTime; dp.size = 20f;
+                    Popups.Add(dp);
+                }
+            }
             if (!chip && attacker != null)
             {
                 // контратака после парирования: ×1,5

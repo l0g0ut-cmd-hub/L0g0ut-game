@@ -178,6 +178,27 @@ namespace BladePath
             Posture = Mathf.Max(0f, Posture - v);
         }
         public bool Dashing { get { return dashLeft > 0f; } }
+
+        // ---- тыква-горлянка (как в Sekiro): глоток лечит, но ~1 с боец уязвим — клинок опущен, ход медленный; удар прерывает
+        [Header("Тыква-горлянка")]
+        public int gourdMax = 2;
+        public int Gourds { get; set; }
+        public const float DrinkTime = 1.15f, DrinkHealAt = 0.68f;
+        float drinkStart = -10f, drinkUntil;
+        public bool Drinking { get { return Time.time < drinkUntil; } }
+        /// <summary>Сколько секунд идёт глоток (номер глотка — DrinkId, чтобы лечить один раз).</summary>
+        public float DrinkT { get { return Time.time - drinkStart; } }
+        public int DrinkId { get; private set; }
+        public bool CanDrink { get { return CanAct && Grounded && !Drinking && Gourds > 0 && !Dashing && (weapon == null || weapon.Phase == SwingPhase.Idle); } }
+        public bool TryDrink()
+        {
+            if (!CanDrink) return false;
+            Gourds--; DrinkId++;
+            drinkStart = Time.time; drinkUntil = Time.time + DrinkTime;
+            Blocking = false; BlockTime = 0f;
+            return true;
+        }
+        public void CancelDrink() { drinkUntil = 0f; }
         public float DashReady01 { get { return Mathf.Clamp01(1f - (dashReadyAt - Time.time) / dashCooldown); } }
         /// <summary>Скорость хода в этом кадре 0…1; знак минус, если идёт спиной к направлению взгляда — для аниматора.</summary>
         public float MoveAxis { get; private set; }
@@ -205,7 +226,7 @@ namespace BladePath
         /// <summary>Рывок: в сторону вектора (мировой XZ); без вектора — шаг назад от противника.</summary>
         public bool Dash(Vector2 worldXZ)
         {
-            if (!CanAct || Time.time < dashReadyAt || !Grounded) return false;
+            if (!CanAct || Drinking || Time.time < dashReadyAt || !Grounded) return false;
             Vector3 d = new Vector3(worldXZ.x, 0f, worldXZ.y);
             if (d.sqrMagnitude < 0.04f)
             {
@@ -224,7 +245,7 @@ namespace BladePath
 
         public bool Jump()
         {
-            if (!CanAct) return false;
+            if (!CanAct || Drinking) return false;
             if (!Grounded) return false;
             vy = jumpVelocity;
             Grounded = false;
@@ -241,7 +262,7 @@ namespace BladePath
         /// <summary>Следующий удар серии прямо из восстановления после предыдущего (на земле, без шара духа).</summary>
         public bool Chain(AttackType type)
         {
-            if (weapon == null || !CanAct || !Grounded || type == AttackType.Energy || type == AttackType.JumpStrike) return false;
+            if (weapon == null || !CanAct || Drinking || !Grounded || type == AttackType.Energy || type == AttackType.JumpStrike) return false;
             if (weapon.Phase == SwingPhase.Idle) return Attack(type);
             return weapon.TryChain(type);
         }
@@ -258,7 +279,7 @@ namespace BladePath
         /// </summary>
         public bool Attack(AttackType type, bool perilous = false)
         {
-            if (weapon == null || !CanAct) return false;
+            if (weapon == null || !CanAct || Drinking) return false;
             AttackType t = type;
             if (!Grounded)
             {
@@ -277,7 +298,7 @@ namespace BladePath
             float dt = Time.deltaTime;
             if (!Dead && !Frozen) AddKi(kiRegen * KiRegenMul * dt);
 
-            bool canBlock = CanAct && Grounded && weapon != null && weapon.Phase == SwingPhase.Idle && !GuardBroken;
+            bool canBlock = CanAct && Grounded && !Drinking && weapon != null && weapon.Phase == SwingPhase.Idle && !GuardBroken;
             bool wasBlocking = Blocking;
             Blocking = canBlock && blockWanted;
             if (Blocking && !wasBlocking)
@@ -318,6 +339,7 @@ namespace BladePath
             float speed = moveSpeed;
             if (weapon != null && weapon.Phase != SwingPhase.Idle) speed *= attackMoveMultiplier;
             if (Blocking) speed *= 0.45f;
+            if (Drinking) speed *= 0.35f;   // пьёт — еле переступает
             Vector3 mv = CanAct ? new Vector3(moveInput.x, 0f, moveInput.y) : Vector3.zero;
             float mag = Mathf.Min(1f, mv.magnitude);
             float sign = 1f;
@@ -398,7 +420,7 @@ namespace BladePath
             moveInput = Vector2.zero;
             Ki = kiStart; knockVel = Vector3.zero;
             Dead = false; Frozen = false; Blocking = false; BlockTime = 0f; guardBrokenUntil = 0f; stunUntil = 0f; dashLeft = 0f; dashReadyAt = 0f;
-            Posture = 0f; postureBrokenUntil = 0f; postureHitAt = -10f; blockSpam = 0; lastBlockStart = -10f;
+            Posture = 0f; postureBrokenUntil = 0f; postureHitAt = -10f; blockSpam = 0; lastBlockStart = -10f; drinkUntil = 0f;
             if (weapon != null) weapon.ResetState();
             if (zones != null) for (int i = 0; i < zones.Length; i++) if (zones[i] != null) zones[i].ClearFlash();
             EnergyProjectile.DestroyAll();

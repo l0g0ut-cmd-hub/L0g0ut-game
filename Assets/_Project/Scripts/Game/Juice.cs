@@ -1182,6 +1182,74 @@ namespace BladePath
             return Make("stab", d);
         }
 
+        /// <summary>Глоток из тыквы: два-три глухих «глюк» (низкий тон с падающей частотой и бульканьем) и тихий звон в конце.</summary>
+        static AudioClip Gulp()
+        {
+            int n = (int)(Rate * 0.9f);
+            float[] d = new float[n];
+            System.Random rnd = new System.Random(41);
+            float ph = 0f, peak = 1e-4f, lp = 0f;
+            float[] at = { 0.02f, 0.26f, 0.5f };
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)Rate, v = 0f;
+                for (int k = 0; k < at.Length; k++)
+                {
+                    float u = t - at[k];
+                    if (u < 0f || u > 0.22f) continue;
+                    float env = Mathf.Sin(Mathf.PI * u / 0.22f);
+                    float f = 230f - 120f * (u / 0.22f) + 30f * k;
+                    ph += 2f * Mathf.PI * f / Rate;
+                    float x = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                    lp += 0.08f * (x - lp);
+                    v += (Mathf.Sin(ph) * 0.8f + lp * 2.2f) * env * env;
+                }
+                float c = t - 0.72f;   // тёплый звон — лечение подействовало
+                if (c > 0f) v += 0.25f * Mathf.Exp(-c * 6f) * (Mathf.Sin(2f * Mathf.PI * 880f * c) + 0.5f * Mathf.Sin(2f * Mathf.PI * 1320f * c));
+                d[i] = v; peak = Mathf.Max(peak, Mathf.Abs(v));
+            }
+            for (int i = 0; i < n; i++) d[i] *= 0.8f / peak;
+            return Make("gulp", d);
+        }
+
+        AudioClip gulp;
+        /// <summary>Тыква подействовала: тёплые искры поднимаются от тела, мягкое золотое сияние, глоток и звон.</summary>
+        public void HealFx(FighterController f)
+        {
+            if (gulp == null) gulp = Gulp();
+            Play(gulp, 0.7f, 1f);
+            Vector3 c = f.transform.position + Vector3.up * 1.0f;
+            Flash(c, 0.9f, new Color(1f, 0.72f, 0.3f, 0.35f), 0.5f, false);
+            SparkLight(c, new Color(1f, 0.75f, 0.4f), 1.6f, 3f, 0.5f);
+            if (softMat == null) return;
+            GameObject g = new GameObject("HealMotes");
+            g.transform.position = f.transform.position + Vector3.up * 0.3f;
+            ParticleSystem ps = g.AddComponent<ParticleSystem>();
+            ps.Stop();
+            var main = ps.main;
+            main.loop = false; main.duration = 0.4f;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.7f, 1.2f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.1f, 0.4f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.02f, 0.05f);
+            main.startColor = new Color(1f, 0.78f, 0.38f, 1f);
+            main.gravityModifier = -0.15f;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.stopAction = ParticleSystemStopAction.Destroy;
+            var em = ps.emission; em.rateOverTime = 0f;
+            em.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, (short)26) });
+            var sh = ps.shape; sh.shapeType = ParticleSystemShapeType.Cone; sh.angle = 10f; sh.radius = 0.32f;
+            g.transform.rotation = Quaternion.Euler(-90f, 0f, 0f);
+            var col = ps.colorOverLifetime; col.enabled = true;
+            Gradient gr = new Gradient();
+            gr.SetKeys(new GradientColorKey[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(new Color(1f, 0.6f, 0.3f), 1f) },
+                       new GradientAlphaKey[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.15f), new GradientAlphaKey(0f, 1f) });
+            col.color = gr;
+            ParticleSystemRenderer r = g.GetComponent<ParticleSystemRenderer>();
+            r.material = Additive(ref glowMat, SoftSprites.Fog);
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            ps.Play();
+        }
+
         /// <summary>Клинок выдернут: влажное скольжение (резонансный шум, частота уходит вниз) с бульканьем и короткий «туп».</summary>
         static AudioClip Squelch()
         {
