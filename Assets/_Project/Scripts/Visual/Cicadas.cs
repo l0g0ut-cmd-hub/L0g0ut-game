@@ -61,6 +61,16 @@ namespace BladePath
 
         const int Rate = 22050;
 
+        /// <summary>
+        /// Нормировка с мягким насыщением (tanh): шумовой треск с высоким пик-фактором по пику выходит тихим (RMS ~0,18) —
+        /// насыщение поднимает среднюю громкость в 1,7–2 раза и добавляет цикаде характерной «жёсткости» звука.
+        /// </summary>
+        static void Loud(float[] d, float peak, float drive)
+        {
+            float k = 1f / (float)System.Math.Tanh(drive);
+            for (int i = 0; i < d.Length; i++) d[i] = 0.85f * k * (float)System.Math.Tanh(d[i] / peak * drive);
+        }
+
         /// <summary>Абурадзэми: шум, отфильтрованный резонансом ~5 кГц, с грубой пульсацией ~90 Гц и дрожью; нарастание 1,5 с, хвост 2 с.</summary>
         static AudioClip Abura()
         {
@@ -82,7 +92,7 @@ namespace BladePath
                 float v = band * (0.4f + 0.6f * pulse) * trem * env;
                 d[i] = v; peak = Mathf.Max(peak, Mathf.Abs(v));
             }
-            for (int i = 0; i < n; i++) d[i] *= 0.85f / peak;
+            Loud(d, peak, 2.6f);
             AudioClip c = AudioClip.Create("cicada_abura", n, 1, Rate, false);
             c.SetData(d, 0);
             return c;
@@ -113,7 +123,7 @@ namespace BladePath
                 float v = tone * syl * env;
                 d[i] = v; peak = Mathf.Max(peak, Mathf.Abs(v));
             }
-            for (int i = 0; i < n; i++) d[i] *= 0.8f / peak;
+            Loud(d, peak, 1.6f);
             AudioClip c = AudioClip.Create("cicada_higurashi", n, 1, Rate, false);
             c.SetData(d, 0);
             return c;
@@ -159,7 +169,7 @@ namespace BladePath
                 v *= Mathf.Min(1f, t * 200f) * Mathf.Min(1f, (total - t) * 20f);
                 d[i] = v; peak = Mathf.Max(peak, Mathf.Abs(v));
             }
-            for (int i = 0; i < n; i++) d[i] *= 0.8f / peak;
+            Loud(d, peak, 2f);
             AudioClip c = AudioClip.Create("cicada_minmin", n, 1, Rate, false);
             c.SetData(d, 0);
             return c;

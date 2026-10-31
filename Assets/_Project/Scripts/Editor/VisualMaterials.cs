@@ -11,7 +11,7 @@ namespace BladePath.EditorTools
         public Material heroArmor, enemyArmor, cloth, skin, hair, lacquer, bronze, steel, handle;
         public Material flesh, tooth, maw, voidBlack, deadSkin, ember, tentacle, ronin;
         public Material stone, stoneDark, flame, moon, petal;
-        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage;
+        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage, forestFloor;
     }
 
     /// <summary>
@@ -62,6 +62,7 @@ namespace BladePath.EditorTools
             l.stoneBlock = Textured("Env_StoneBlock", "stoneblock_albedo.png", "stoneblock_normal.png", Vector2.one, Color.white, 0f, 0.25f);
             Gloss(l.stoneBlock, "stoneblock_ms.png", 1f);   // тёсаный гранит: следы зубила, фаски, лишайник (tools: texgen/stoneblock.py)
             l.gravel = Textured("Env_Gravel", "gravel_albedo.png", "gravel_normal.png", Vector2.one, Color.white, 0f, 0.15f);
+            l.forestFloor = Textured("Env_ForestFloor", "forest_floor_albedo.png", "forest_floor_normal.png", Vector2.one, Color.white, 0f, 0.1f);   // мох, земля и хвоя за стенами
             l.bark = Textured("Env_Bark", "bark_albedo.png", "bark_normal.png", new Vector2(2f, 2f), Color.white, 0f, 0.1f);
             // крона клёна: карточки гроздей листьев с альфа-срезом (tools/texgen/maple_cluster.py)
             // листва и трава качаются на ветру (BladePath/Foliage): sway 0 — карточки кроны трепещут по месту, 1 — трава гнётся верхушкой
@@ -101,6 +102,9 @@ namespace BladePath.EditorTools
             l.flame = Unlit("Flame", new Color(1f, 0.55f, 0.12f));
             l.moon = Unlit("Moon", new Color(0.86f, 0.90f, 1f));
             l.petal = SpriteLike("Petal", new Color(1f, 0.72f, 0.82f));
+            // окружение — на шейдере с погодой: снег ложится на крыши, колпаки стен, камень и землю, в дождь всё мокнет и блестит
+            foreach (Material em in new[] { l.wood, l.woodDark, l.roof, l.plaster, l.stoneBlock, l.gravel, l.forestFloor, l.bark, l.stone, l.moss, l.stoneDark })
+                EnvShader(em);
             // Материалы зон тела подсвечиваются при попадании через emission (см. BodyZone):
             // включаем _EMISSION заранее, иначе нужный вариант шейдера вырежется из сборки.
             EnableRuntimeEmission(l.heroArmor);
@@ -507,6 +511,15 @@ namespace BladePath.EditorTools
             if (emission.maxColorComponent > 0f) { m.EnableKeyword("_EMISSION"); m.SetColor("_EmissionColor", emission); m.SetTexture("_EmissionMap", tex); m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None; }
             if (isNew) AssetDatabase.CreateAsset(m, path); else EditorUtility.SetDirty(m);
             return m;
+        }
+
+        /// <summary>Перевод материала окружения на BladePath/Env (свойства те же, что у Standard, — ничего не теряется).</summary>
+        static void EnvShader(Material m)
+        {
+            Shader sh = Shader.Find("BladePath/Env");
+            if (m == null || sh == null || m.shader == sh) return;
+            m.shader = sh;
+            EditorUtility.SetDirty(m);
         }
 
         /// <summary>Карта металличности/гладкости (A — гладкость), линейная.</summary>

@@ -15,7 +15,7 @@ namespace BladePath
         public bool Snowing { get; private set; }
         /// <summary>Солнечный день (иногда, раз на матч): дневной свет и небо (DayNight), днём не бывает дождя и снега.</summary>
         public bool Daytime { get; private set; }
-        [Range(0f, 1f)] public float dayChance = 0.3f;
+        [Range(0f, 1f)] public float dayChance = 0.36f;
         /// <summary>Рассвет в тумане (часть «дневных» матчей): низкое солнце, розоватая дымка, на рассвете поют хигураси.</summary>
         public bool Dawn { get; private set; }
         [Range(0f, 1f)] public float dawnShare = 0.35f;
@@ -158,16 +158,16 @@ namespace BladePath
             if (!Raining) { RenderSettings.fogDensity = fogDensBase; RenderSettings.fogColor = fogBase; }
         }
 
-        Color floorColor0 = new Color(-1f, 0f, 0f);
+        Color floorColor0 = Color.white;
         /// <summary>Камень припорошён: светлее и холоднее, матовый.</summary>
         void Snowy(bool on)
         {
             if (floorMat == null) { Wet(Raining); }
             if (floorMat == null) return;
-            if (floorColor0.r < 0f) floorColor0 = floorMat.color;
             if (on)
             {
-                floorMat.color = new Color(1.25f, 1.3f, 1.42f);
+                // сам снег рисует шейдер окружения (BladePath/Env по _BP_Snow) — здесь только холоднее и светлее под ним
+                floorMat.color = new Color(floorColor0.r * 1.12f, floorColor0.g * 1.15f, floorColor0.b * 1.24f, 1f);
                 if (floorMat.HasProperty("_Glossiness")) floorMat.SetFloat("_Glossiness", 0.25f);
                 if (floorMat.IsKeywordEnabled("_METALLICGLOSSMAP") && floorMat.HasProperty("_GlossMapScale")) floorMat.SetFloat("_GlossMapScale", 0.35f);
             }
@@ -242,9 +242,12 @@ namespace BladePath
                 if (r == null) return;
                 floorMat = r.material;
                 floorGloss = floorMat.HasProperty("_Glossiness") ? floorMat.GetFloat("_Glossiness") : 0.35f;
+                floorColor0 = floorMat.color;
             }
             if (floorMat.HasProperty("_Glossiness")) floorMat.SetFloat("_Glossiness", on ? 0.82f : floorGloss);
-            floorMat.color = on ? new Color(0.72f, 0.74f, 0.8f) : Color.white;
+            // цвет — исходный оттенок мостовой (раньше сухой пол становился белым, на телефоне ярче задуманного);
+            // мокрое потемнение делает шейдер окружения по _BP_Wetness
+            floorMat.color = floorColor0;
             // пол с картой гладкости (мостовая): блеск задаёт масштаб карты, а не _Glossiness
             if (floorMat.IsKeywordEnabled("_METALLICGLOSSMAP") && floorMat.HasProperty("_GlossMapScale"))
             {

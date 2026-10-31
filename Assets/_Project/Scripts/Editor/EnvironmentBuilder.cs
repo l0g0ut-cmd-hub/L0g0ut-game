@@ -469,9 +469,18 @@ namespace BladePath.EditorTools
         /// </summary>
         static void BuildCedarForest(Transform env, Look look)
         {
-            if (look.cedarFoliage == null) return;
             Transform f = new GameObject("CedarForest").transform;
             f.SetParent(env, false);
+            // за стенами — лесная подстилка (мох, земля, рыжая хвоя), а не гравий двора: сверху и при облёте
+            // светлый гравий до горизонта читался как бетонная площадка. Чуть выше гравия (1 см) — без z-мерцания.
+            if (look.forestFloor != null)
+            {
+                for (int side = -1; side <= 1; side += 2)
+                    EnvMesh.Box(f, "Floor" + side, new Vector3(side * 15.3f, -0.11f, 6f), Vector3.zero, new Vector3(17.4f, 0.1f, 40f), look.forestFloor, 3.2f);
+                EnvMesh.Box(f, "FloorFront", new Vector3(0f, -0.11f, -10.9f), Vector3.zero, new Vector3(13.2f, 0.1f, 6.2f), look.forestFloor, 3.2f);
+                EnvMesh.Box(f, "FloorBack", new Vector3(0f, -0.11f, 19.2f), Vector3.zero, new Vector3(13.2f, 0.1f, 13.6f), look.forestFloor, 3.2f);
+            }
+            if (look.cedarFoliage == null) return;
             System.Random r = new System.Random(101);
             System.Func<float> R = () => (float)r.NextDouble();
             int n = 0;

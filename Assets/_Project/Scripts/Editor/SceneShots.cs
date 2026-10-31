@@ -513,6 +513,10 @@ namespace BladePath.EditorTools
                 Call(fp, "LateUpdate");
                 Shot(cam, dir, "20_snow", pos, look, cam.fieldOfView, log);
                 Shot(cam, dir, "20b_snow_prints", look + new Vector3(0f, 2.4f, -3.2f), look - Vector3.up * 1.0f, 46f, log);
+                Shot(cam, dir, "20c_snow_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);   // снег на крышах, стенах, земле
+                Shader.SetGlobalFloat("_BP_Snow", 0.4f);
+                Shot(cam, dir, "20d_snow_early", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);   // снег только начал ложиться — пятнами
+                Shader.SetGlobalFloat("_BP_Snow", 0.85f);
                 UnityEngine.Object.DestroyImmediate(fp.gameObject);
                 Call(w, "StopSnow");
                 snowP.GetSetMethod(true).Invoke(w, new object[] { false });
@@ -525,6 +529,7 @@ namespace BladePath.EditorTools
                 foreach (ParticleSystem ps in UnityEngine.Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None))
                     if (ps.name == "Rain" || ps.name == "RainSplash" || ps.name == "RainRipples" || ps.name == "EaveDrips") ps.Simulate(2f, true, true);
                 Shot(cam, dir, "21_rain", pos, look, cam.fieldOfView, log);
+                Shot(cam, dir, "21b_rain_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);   // мокрое дерево и камень блестят
                 Call(w, "StopRain");
                 rainP.GetSetMethod(true).Invoke(w, new object[] { false });
                 Shader.SetGlobalFloat("_BP_Wetness", 0f);
