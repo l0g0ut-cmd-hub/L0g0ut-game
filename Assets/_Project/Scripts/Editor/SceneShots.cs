@@ -104,6 +104,7 @@ namespace BladePath.EditorTools
                     SwingStrip(cam, dir, "11_swing_thrust", player, AttackType.Thrust, log);
                 }
                 Shot(cam, dir, "4_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);
+                WeatherShots(cam, dir, focus + new Vector3(0f, 0f, -dist), focus, log);
                 // походка: шаг вперёд и приставной вбок (мокап + замок стоп), камера едет рядом
                 if (player != null)
                 {
@@ -376,6 +377,58 @@ namespace BladePath.EditorTools
                 ft.position = start; ft.rotation = startRot;
                 if (other != null) other.transform.position = otherPos;
                 for (int i = 0; i < 20; i++) Tick(f, d, dt, dt);
+            }
+        }
+
+        /// <summary>Погода: снег (хлопья, побелевший камень, снег на плечах) и ливень (мокрые бойцы, отражения) — общий план как в игре.</summary>
+        static void WeatherShots(Camera cam, string dir, Vector3 pos, Vector3 look, StringBuilder log)
+        {
+            // Weather в игре добавляет DuelManager при запуске — здесь временный, со своими частицами; после кадров всё убираем
+            GameObject wg = new GameObject("WeatherShots");
+            Weather w = wg.AddComponent<Weather>();
+            PropertyInfo snowP = typeof(Weather).GetProperty("Snowing", F), rainP = typeof(Weather).GetProperty("Raining", F);
+            float fogD = RenderSettings.fogDensity; Color fogC = RenderSettings.fogColor;
+            try
+            {
+                Call(w, "Awake");
+                Call(w, "Start");   // запоминает луну, туман, небо (и бросает случайную погоду — сбрасываем)
+                Call(w, "StopRain"); Call(w, "StopSnow");
+                // снег
+                snowP.GetSetMethod(true).Invoke(w, new object[] { true }); rainP.GetSetMethod(true).Invoke(w, new object[] { false });
+                Call(w, "StartSnow");
+                Shader.SetGlobalFloat("_BP_Snow", 0.85f); Shader.SetGlobalFloat("_BP_Wetness", 0f);
+                foreach (ParticleSystem ps in UnityEngine.Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None)) if (ps.name == "Snow") ps.Simulate(8f, true, true);
+                Shot(cam, dir, "20_snow", pos, look, cam.fieldOfView, log);
+                Call(w, "StopSnow");
+                snowP.GetSetMethod(true).Invoke(w, new object[] { false });
+                Shader.SetGlobalFloat("_BP_Snow", 0f);
+                foreach (ParticleSystem ps in UnityEngine.Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None)) if (ps.name == "Snow") ps.Clear();
+                // ливень
+                rainP.GetSetMethod(true).Invoke(w, new object[] { true });
+                Call(w, "StartRain");
+                Shader.SetGlobalFloat("_BP_Wetness", 1f);
+                foreach (ParticleSystem ps in UnityEngine.Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None))
+                    if (ps.name == "Rain" || ps.name == "RainSplash" || ps.name == "RainRipples") ps.Simulate(2f, true, true);
+                Shot(cam, dir, "21_rain", pos, look, cam.fieldOfView, log);
+                Call(w, "StopRain");
+                rainP.GetSetMethod(true).Invoke(w, new object[] { false });
+                Shader.SetGlobalFloat("_BP_Wetness", 0f);
+                foreach (ParticleSystem ps in UnityEngine.Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None))
+                    if (ps.name == "Rain" || ps.name == "RainSplash" || ps.name == "RainRipples") ps.Clear();
+            }
+            catch (Exception e) { log.Append("PROBE|shots|weather|error " + e.Message + "\n"); }
+            finally
+            {
+                foreach (string n in new[] { "Rain", "RainSplash", "RainRipples", "Snow", "SnowFloor" })
+                {
+                    GameObject g = GameObject.Find(n);
+                    if (g != null) UnityEngine.Object.DestroyImmediate(g);
+                }
+                foreach (HeroRigDriver d in UnityEngine.Object.FindObjectsByType<HeroRigDriver>(FindObjectsSortMode.None))
+                    if (d.head != null) { Transform b = d.head.Find("Breath"); if (b != null) UnityEngine.Object.DestroyImmediate(b.gameObject); }
+                UnityEngine.Object.DestroyImmediate(wg);
+                RenderSettings.fogDensity = fogD; RenderSettings.fogColor = fogC;
+                Shader.SetGlobalFloat("_BP_Snow", 0f); Shader.SetGlobalFloat("_BP_Wetness", 0f);
             }
         }
 
