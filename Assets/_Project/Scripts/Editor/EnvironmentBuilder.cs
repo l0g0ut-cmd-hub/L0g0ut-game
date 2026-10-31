@@ -375,6 +375,48 @@ namespace BladePath.EditorTools
             }
         }
 
+        /// <summary>
+        /// Мотыльки у огня фонаря: 2–4 светлых пятнышка кружат вокруг света по неровным орбитам, крылья «мелькают»
+        /// (размер дёргается шумом), то подлетают к самому огню, то отлетают. В дождь и снег их нет (Weather).
+        /// </summary>
+        static void AddMoths(Transform lamp, Look look)
+        {
+            GameObject go = new GameObject("Moths");
+            go.transform.SetParent(lamp, false);
+            ParticleSystem ps = go.AddComponent<ParticleSystem>();
+            ParticleSystem.MainModule main = ps.main;
+            main.loop = true; main.prewarm = true;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(6f, 11f);
+            main.startSpeed = 0f;
+            main.startSize = new ParticleSystem.MinMaxCurve(0.022f, 0.034f);
+            main.startColor = new Color(0.95f, 0.88f, 0.72f, 0.9f);
+            main.maxParticles = 4;
+            main.simulationSpace = ParticleSystemSimulationSpace.Local;
+            ParticleSystem.EmissionModule em = ps.emission; em.rateOverTime = 0.45f;
+            ParticleSystem.ShapeModule sh = ps.shape;
+            sh.shapeType = ParticleSystemShapeType.Sphere; sh.radius = 0.32f; sh.radiusThickness = 0.3f;
+            ParticleSystem.VelocityOverLifetimeModule vel = ps.velocityOverLifetime;
+            vel.enabled = true; vel.space = ParticleSystemSimulationSpace.Local;
+            vel.orbitalY = new ParticleSystem.MinMaxCurve(1.6f, 3.2f);
+            vel.orbitalX = new ParticleSystem.MinMaxCurve(-0.5f, 0.5f);
+            vel.radial = new ParticleSystem.MinMaxCurve(-0.05f, 0.05f);
+            ParticleSystem.NoiseModule noise = ps.noise;
+            noise.enabled = true; noise.strength = 0.55f; noise.frequency = 2.2f; noise.scrollSpeed = 1.2f;
+            noise.sizeAmount = new ParticleSystem.MinMaxCurve(0.7f);   // крылья мелькают
+            noise.quality = ParticleSystemNoiseQuality.Medium;
+            ParticleSystem.ColorOverLifetimeModule col = ps.colorOverLifetime;
+            col.enabled = true;
+            Gradient g = new Gradient();
+            g.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                      new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.15f), new GradientAlphaKey(1f, 0.85f), new GradientAlphaKey(0f, 1f) });
+            col.color = g;
+            ParticleSystemRenderer r = go.GetComponent<ParticleSystemRenderer>();
+            r.sharedMaterial = look.petal;
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; r.receiveShadows = false;
+            PetalTexture pt = go.AddComponent<PetalTexture>();
+            pt.disc = true;
+        }
+
         static void AddLantern(Transform env, Look look, Vector3 pos)
         {
             Transform t = new GameObject("StoneLantern").transform;
@@ -389,6 +431,7 @@ namespace BladePath.EditorTools
             EnvMesh.Glow(t, "Halo", new Vector3(0f, 0.9f, 0f), 0.9f, look.haloWarm, 0.08f);
             GameObject lp = new GameObject("LampPoint"); lp.transform.SetParent(t, false); lp.transform.localPosition = new Vector3(0f, 0.9f, 0f);
             AddReflection(lp.transform, null, 1f, new Color(1f, 0.72f, 0.38f), 0.34f, 1.7f, 0.5f);
+            AddMoths(lp.transform, look);
             EnvMesh.Pyramid(t, "Cap", new Vector3(0f, 1.07f, 0f), 0.3f, 0.22f, look.stoneBlock, 0.8f);
             CharacterVisuals.Part(t, "Jewel", PrimitiveType.Sphere, new Vector3(0f, 1.32f, 0f), Vector3.zero, new Vector3(0.09f, 0.09f, 0.09f), look.stoneBlock);
         }
