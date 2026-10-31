@@ -31,6 +31,7 @@ namespace BladePath
             if (s != null) { Material m = new Material(s) { name = "Meteor" }; m.mainTexture = SoftSprites.Disc; m.SetColor("_TintColor", new Color(0.6f, 0.62f, 0.7f, 0.8f)); r.sharedMaterial = m; }
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; r.receiveShadows = false;
             nextAt = Time.time + Random.Range(8f, 20f);
+            if (GetComponent<StarTwinkle>() == null) gameObject.AddComponent<StarTwinkle>();   // и мерцание звёзд
         }
 
         void Update()
