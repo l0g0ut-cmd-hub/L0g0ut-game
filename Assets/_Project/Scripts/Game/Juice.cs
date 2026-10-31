@@ -13,7 +13,7 @@ namespace BladePath
 
         AudioSource[] voices;
         int voiceIdx;
-        AudioClip swish, hit, hitHeavy, clang, boom, drum, heart, whoosh, step, growl, stepWet, danger, stab, squelch;
+        AudioClip swish, hit, hitHeavy, clang, boom, drum, heart, whoosh, step, growl, stepWet, stepSnow, danger, stab, squelch;
         AudioSource stepVoice;
         ParticleSystem footFx;
         ParticleSystem petals;
@@ -41,7 +41,7 @@ namespace BladePath
             voices = new AudioSource[6];
             for (int i = 0; i < voices.Length; i++) { voices[i] = gameObject.AddComponent<AudioSource>(); voices[i].spatialBlend = 0f; voices[i].playOnAwake = false; }
             swish = Swish(); hit = Thump(0.22f, 140f, 55f, 0.55f); hitHeavy = Thump(0.34f, 100f, 38f, 0.9f); clang = Clang(); boom = Thump(1.0f, 70f, 28f, 0.8f);
-            drum = Drum(); heart = Heart(); whoosh = Swish(); step = Step(); growl = Growl(); stepWet = StepWet(); danger = Danger_(); stab = Stab(); squelch = Squelch();
+            drum = Drum(); heart = Heart(); whoosh = Swish(); step = Step(); growl = Growl(); stepWet = StepWet(); stepSnow = StepSnow(); danger = Danger_(); stab = Stab(); squelch = Squelch();
             stepVoice = gameObject.AddComponent<AudioSource>(); stepVoice.spatialBlend = 0f; stepVoice.playOnAwake = false;   // шаги не отнимают голоса у ударов
             ambient = gameObject.AddComponent<AudioSource>();
             ambient.clip = Wind(); ambient.loop = true; ambient.volume = 0.22f; ambient.spatialBlend = 0f; ambient.Play();
@@ -431,12 +431,14 @@ namespace BladePath
         public void Footstep(Vector3 pos, float k, Vector3 toe = default(Vector3), int side = 0)
         {
             bool wet = Weather.Instance != null && Weather.Instance.Raining;
+            bool snowy = !wet && Shader.GetGlobalFloat(SnowId) > 0.3f;   // снег уже лёг — хруст и белая пыль
             Prints(pos, toe, side);
             if (stepVoice != null)
             {
                 stepVoice.pitch = Random.Range(0.85f, 1.12f);
-                stepVoice.PlayOneShot(step, Mathf.Clamp(0.12f + 0.16f * k, 0.1f, 0.45f));
+                stepVoice.PlayOneShot(step, Mathf.Clamp(0.12f + 0.16f * k, 0.1f, 0.45f) * (snowy ? 0.55f : 1f));
                 if (wet && stepWet != null) stepVoice.PlayOneShot(stepWet, Mathf.Clamp(0.08f + 0.12f * k, 0.06f, 0.35f));
+                if (snowy && stepSnow != null) stepVoice.PlayOneShot(stepSnow, Mathf.Clamp(0.14f + 0.2f * k, 0.12f, 0.5f));
             }
             if (footFx == null) footFx = MakeFootFx();
             if (footFx == null) return;
@@ -452,6 +454,13 @@ namespace BladePath
                     v.y = Random.Range(0.6f, 1.4f) * (0.7f + 0.4f * k);
                     ep.velocity = v; ep.startSize = Random.Range(0.012f, 0.026f); ep.startLifetime = Random.Range(0.25f, 0.45f);
                     ep.startColor = new Color(0.62f, 0.68f, 0.78f, 0.55f);
+                }
+                else if (snowy)
+                {
+                    // снежная пыль: мелкая, светлая, подлетает выше пыли и быстро оседает
+                    v.y = Random.Range(0.3f, 0.8f) * (0.6f + 0.5f * k);
+                    ep.velocity = v * 0.35f; ep.startSize = Random.Range(0.025f, 0.06f); ep.startLifetime = Random.Range(0.35f, 0.7f);
+                    ep.startColor = new Color(0.82f, 0.86f, 0.94f, 0.45f);
                 }
                 else
                 {
@@ -1068,6 +1077,32 @@ namespace BladePath
                 d[i] = Mathf.Clamp(hp * 0.55f * env, -1f, 1f);
             }
             return Make("step_wet", d);
+        }
+
+        /// <summary>
+        /// Хруст снега: 6–9 коротких сухих щелчков-зёрен (шум в полосе 2–5 кГц) за ~0,16 с с глухим низом сминаемого наста.
+        /// </summary>
+        static AudioClip StepSnow()
+        {
+            int n = (int)(Rate * 0.2f);
+            float[] d = new float[n];
+            System.Random rnd = new System.Random(41);
+            float prev = 0f, hp = 0f, lp = 0f;
+            int grains = 8;
+            float[] gt = new float[grains], ga = new float[grains];
+            for (int g = 0; g < grains; g++) { gt[g] = 0.006f + (float)rnd.NextDouble() * 0.15f; ga[g] = 0.5f + (float)rnd.NextDouble() * 0.5f; }
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)Rate;
+                float x = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                hp = 0.7f * (hp + x - prev); prev = x;
+                lp += 0.06f * (x - lp);
+                float crk = 0f;
+                for (int g = 0; g < grains; g++) { float u = (t - gt[g]) * 900f; if (u > 0f && u < 6f) crk += ga[g] * Mathf.Exp(-u); }
+                float body = Mathf.Min(1f, t * 300f) * Mathf.Exp(-t * 22f);
+                d[i] = Mathf.Clamp(hp * crk * 0.7f + lp * body * 1.6f + hp * body * 0.15f, -1f, 1f);
+            }
+            return Make("step_snow", d);
         }
 
         static AudioClip Drum()
