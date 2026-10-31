@@ -419,6 +419,14 @@ namespace BladePath
                 UiKit.Text(new Rect(cx - 80f, ry, 160f, 14f), names[i], 11f, new Color(0.85f, 0.8f, 0.7f, a), TextAnchor.MiddleCenter, false);
                 UiKit.Text(new Rect(cx + 90f, ry, 80f, 14f), ev[i].ToString(), 13f, ec, TextAnchor.MiddleLeft, false);
             }
+            // оценка боя кистью, как отметка учителя каллиграфии: 秀 / 優 / 良 / 可 — «печать» опускается на лист
+            int score = (duel.PlayerWonMatch ? 40 : 0) + p.parries * 6 + p.maxCombo * 4 + p.hits * 2 + p.blocks + p.supers * 3 - e.hits * 5;
+            string tex = score >= 95 ? "UI/rank_s" : score >= 70 ? "UI/rank_a" : score >= 45 ? "UI/rank_b" : "UI/rank_c";
+            string word = score >= 95 ? "ПРЕВОСХОДНО" : score >= 70 ? "ОТЛИЧНО" : score >= 45 ? "ХОРОШО" : "ДОСТОЙНО";
+            float stamp = Mathf.Clamp01(a * 1.4f);
+            Vector2 gc = new Vector2(cx + 262f, y + 24f);
+            DrawGlyph(tex, gc, 86f * (1f + 0.7f * (1f - stamp) * (1f - stamp)), stamp);
+            UiKit.Text(new Rect(gc.x - 70f, gc.y + 40f, 140f, 16f), word, 11f, new Color(0.9f, 0.82f, 0.68f, a), TextAnchor.MiddleCenter, false);
         }
 
         /// <summary>Квадрат с прозрачным кругом в центре: превращает квадратный портрет в круглый.</summary>
