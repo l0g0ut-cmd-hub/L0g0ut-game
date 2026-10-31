@@ -135,6 +135,7 @@ namespace BladePath.EditorTools
                     if (shoji.walker != null) shoji.walker.enabled = false;
                 }
                 ReflectShot(cam, dir, "37_reflect_night", log);
+                Shot(cam, dir, "38_gate", new Vector3(0.4f, 2.0f, 3.4f), new Vector3(0f, 1.1f, -8f), 55f, log);   // назад: передняя стена, ворота, дорожка, лес
                 WeatherShots(cam, dir, focus + new Vector3(0f, 0f, -dist), focus, log);
                 DayShots(cam, dir, focus + new Vector3(0f, 0f, -dist), focus, log);
                 // второй облик врага (ронин) — как 3_enemy
