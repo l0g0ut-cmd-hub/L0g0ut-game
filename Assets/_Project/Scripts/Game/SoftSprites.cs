@@ -32,7 +32,46 @@ namespace BladePath
             }
         }
 
-        static Texture2D star, ring;
+        static Texture2D star, ring, dragonfly;
+
+        /// <summary>
+        /// Стрекоза (тонбо — «насекомое победы» самураев) сверху: тонкое тёмное брюшко, голова-шарик, четыре прозрачных крыла
+        /// с размытой кромкой (крылья бьются — в кадре видна дымка, а не перепонки). Брюшко вдоль оси X.
+        /// </summary>
+        public static Texture2D Dragonfly
+        {
+            get
+            {
+                if (dragonfly != null) return dragonfly;
+                const int n = 64;
+                dragonfly = new Texture2D(n, n, TextureFormat.RGBA32, true) { wrapMode = TextureWrapMode.Clamp, name = "dragonfly" };
+                Color[] px = new Color[n * n];
+                for (int y = 0; y < n; y++)
+                    for (int x = 0; x < n; x++)
+                    {
+                        float u = (x + 0.5f) / n * 2f - 1f, v = (y + 0.5f) / n * 2f - 1f;
+                        float a = 0f; Color c = new Color(1f, 1f, 1f, 0f);
+                        // крылья: две пары эллипсов поперёк тела (передние чуть впереди груди)
+                        for (int w = 0; w < 4; w++)
+                        {
+                            float cx = w < 2 ? 0.28f : 0.08f, sgn = (w % 2 == 0) ? 1f : -1f;
+                            float ex = (u - cx) / 0.13f, ey = (v - sgn * 0.42f) / 0.42f;
+                            float e = ex * ex + ey * ey;
+                            if (e < 1f) a = Mathf.Max(a, (1f - e) * 0.45f);
+                        }
+                        Color wing = new Color(0.85f, 0.9f, 0.95f, a);
+                        // брюшко (длинное, к хвосту тоньше), грудь, голова
+                        float body = 0f;
+                        if (u > -0.92f && u < 0.2f) { float th = Mathf.Lerp(0.025f, 0.06f, (u + 0.92f) / 1.12f); if (Mathf.Abs(v) < th) body = 1f; }
+                        float tx = (u - 0.3f) / 0.11f, ty = v / 0.08f; if (tx * tx + ty * ty < 1f) body = 1f;
+                        float hx = (u - 0.45f) / 0.07f, hy = v / 0.075f; if (hx * hx + hy * hy < 1f) body = 1f;
+                        c = body > 0f ? new Color(0.12f, 0.16f, 0.2f, 1f) : wing;
+                        px[y * n + x] = c;
+                    }
+                dragonfly.SetPixels(px); dragonfly.Apply(true);
+                return dragonfly;
+            }
+        }
 
         /// <summary>Блик металла: яркое ядро и четыре тонких луча (крест чуть повёрнут), края в ноль.</summary>
         public static Texture2D Star

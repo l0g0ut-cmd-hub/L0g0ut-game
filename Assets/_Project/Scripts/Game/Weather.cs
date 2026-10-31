@@ -70,6 +70,7 @@ namespace BladePath
             if (Raining) StartRain(); else StopRain();
             if (Snowing) StartSnow(); else StopSnow();
             Critters(!Raining && !Snowing && !Daytime);
+            DayCritters(Daytime);
             nextFlashAt = Time.time + Random.Range(5f, 12f);
         }
 
@@ -81,6 +82,16 @@ namespace BladePath
             if (ps == null) return;
             var em = ps.emission; em.rateOverTime = on ? (DuelManager.Gfx == 1 ? 90f : 45f) : 0f;
             if (on && !ps.isPlaying) ps.Play();
+        }
+
+        /// <summary>Стрекозы — только ясным днём.</summary>
+        void DayCritters(bool on)
+        {
+            GameObject g = GameObject.Find("Dragonflies");
+            ParticleSystem ps = g != null ? g.GetComponent<ParticleSystem>() : null;
+            if (ps == null) return;
+            var em = ps.emission; em.enabled = on;
+            if (!on) ps.Clear(); else if (!ps.isPlaying) ps.Play();
         }
 
         /// <summary>Светлячки и мотыльки у фонарей — только в ясную ночь (в дождь и снег прячутся).</summary>

@@ -11,6 +11,7 @@ namespace BladePath
         public bool disc;   // круглый мягкий спрайт (светлячки) вместо лепестка
         public bool fog;    // гауссово пятно без края (дымка)
         public bool leaf;   // красный лист клёна из референса (Resources/FX/maple_leaf)
+        public bool dragonfly;   // стрекоза (день)
         void Awake()
         {
             Breadcrumbs.Mark("частицы: " + name);
@@ -18,7 +19,7 @@ namespace BladePath
             if (r == null || r.sharedMaterial == null) return;
             Material m = new Material(r.sharedMaterial);
             Texture2D lt = leaf ? Resources.Load<Texture2D>("FX/maple_leaf") : null;
-            m.mainTexture = lt != null ? lt : (fog ? SoftSprites.Fog : (disc ? SoftSprites.Disc : SoftSprites.Petal));
+            m.mainTexture = lt != null ? lt : dragonfly ? SoftSprites.Dragonfly : (fog ? SoftSprites.Fog : (disc ? SoftSprites.Disc : SoftSprites.Petal));
             if (lt != null) m.color = Color.white;
             r.material = m;
         }

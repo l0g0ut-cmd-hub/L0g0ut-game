@@ -443,8 +443,19 @@ namespace BladePath.EditorTools
                 Call(dn, "Awake");
                 dn.Apply(true);
                 foreach (FlickerLight fl in UnityEngine.Object.FindObjectsByType<FlickerLight>(FindObjectsSortMode.None)) Call(fl, "Update");
+                GameObject dfly = GameObject.Find("Dragonflies");
+                ParticleSystem dps = dfly != null ? dfly.GetComponent<ParticleSystem>() : null;
+                if (dps != null) { Call(dfly.GetComponent<PetalTexture>(), "Awake"); var dem = dps.emission; dem.enabled = true; dps.Simulate(8f, true, true); }
                 Shot(cam, dir, "33_day", pos, look, cam.fieldOfView, log);
                 Shot(cam, dir, "33b_day_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);
+                if (dps != null)
+                {
+                    // стрекоза крупно: ближайшая частица
+                    ParticleSystem.Particle[] pp = new ParticleSystem.Particle[8];
+                    int cnt = dps.GetParticles(pp);
+                    if (cnt > 0) Shot(cam, dir, "33c_dragonfly", pp[0].position + new Vector3(0.25f, 0.1f, -0.6f), pp[0].position, 30f, log);
+                    var dem2 = dps.emission; dem2.enabled = false; dps.Clear();
+                }
             }
             catch (Exception e) { log.Append("PROBE|shots|day|error " + e.Message + "\n"); }
             finally

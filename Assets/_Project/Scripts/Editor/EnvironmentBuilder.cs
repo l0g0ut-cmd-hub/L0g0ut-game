@@ -120,6 +120,7 @@ namespace BladePath.EditorTools
             MarkStatic(env);
             AddMist(look);
             AddFireflies(look);
+            AddDragonflies(look);
             AddPetals(look);
         }
 
@@ -192,6 +193,42 @@ namespace BladePath.EditorTools
         }
 
         /// <summary>Светлячки / искры, плывущие над двором.</summary>
+        /// <summary>
+        /// Стрекозы над двором в ясный день (тонбо — «насекомое победы», их рисовали на доспехах): 2–4 штуки, зависают и
+        /// резко перелетают (сильный медленный шум), повёрнуты по ходу полёта. Ночью, в дождь и снег их нет (Weather).
+        /// </summary>
+        static void AddDragonflies(Look look)
+        {
+            GameObject go = new GameObject("Dragonflies");
+            go.transform.position = new Vector3(0f, 1.5f, 0.8f);
+            ParticleSystem ps = go.AddComponent<ParticleSystem>();
+            ParticleSystem.MainModule main = ps.main;
+            main.loop = true; main.prewarm = true;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(10f, 16f);
+            main.startSpeed = 0f;
+            main.startSize = new ParticleSystem.MinMaxCurve(0.07f, 0.1f);
+            main.startColor = Color.white;
+            main.maxParticles = 4;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            ParticleSystem.EmissionModule em = ps.emission; em.rateOverTime = 0.3f; em.enabled = false;   // включает Weather днём
+            ParticleSystem.ShapeModule sh = ps.shape;
+            sh.shapeType = ParticleSystemShapeType.Box; sh.scale = new Vector3(8f, 1.2f, 6f);
+            ParticleSystem.NoiseModule noise = ps.noise;
+            noise.enabled = true; noise.strength = 1.4f; noise.frequency = 0.35f; noise.scrollSpeed = 0.6f; noise.damping = false;
+            noise.quality = ParticleSystemNoiseQuality.Medium;
+            ParticleSystem.ColorOverLifetimeModule col = ps.colorOverLifetime;
+            col.enabled = true;
+            Gradient g = new Gradient();
+            g.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                      new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.1f), new GradientAlphaKey(1f, 0.9f), new GradientAlphaKey(0f, 1f) });
+            col.color = g;
+            ParticleSystemRenderer r = go.GetComponent<ParticleSystemRenderer>();
+            r.sharedMaterial = look.petal;
+            r.renderMode = ParticleSystemRenderMode.Stretch; r.velocityScale = 0f; r.lengthScale = 1.6f;   // повёрнуты по ходу полёта
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; r.receiveShadows = false;
+            go.AddComponent<PetalTexture>().dragonfly = true;
+        }
+
         static void AddFireflies(Look look)
         {
             GameObject go = new GameObject("Fireflies");
