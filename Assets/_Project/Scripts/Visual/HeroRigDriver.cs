@@ -780,28 +780,37 @@ namespace BladePath
                 return;
             }
             Vector3 up = Vector3.up, fwd = ft.forward, right = ft.right;
+            float sc = transform.lossyScale.y;
             // голова запрокидывается на глотке
-            head.rotation = Quaternion.AngleAxis(-20f * pourW, right) * head.rotation;
-            Vector3 mouth = head.position + fwd * (0.1f * transform.lossyScale.y) + Vector3.down * (0.07f * transform.lossyScale.y);
-            Vector3 target = mouth + fwd * 0.06f - right * (0.03f * ys) + Vector3.down * Mathf.Lerp(0.17f, 0.1f, pourW);
+            head.rotation = Quaternion.AngleAxis(-28f * pourW, right) * head.rotation;
+            // рот: кость головы — у основания черепа, рот выше и впереди
+            Vector3 mouth = head.position + up * (0.05f * sc) + fwd * (0.1f * sc);
+            // тыква: сперва поднята к подбородку стоймя, на глотке — дном вверх-вперёд, горлышко у губ
+            Vector3 axUp = (up + fwd * 0.15f).normalized, axPour = (-fwd * 0.75f + Vector3.down * 0.66f).normalized;
+            Vector3 axis = Vector3.Slerp(axUp, axPour, pourW);
+            Vector3 cUp = mouth + fwd * 0.12f + Vector3.down * 0.14f - right * (0.02f * ys);
+            Vector3 cPour = mouth - axPour * 0.1f - right * (0.01f * ys);
+            Vector3 center = Vector3.Lerp(cUp, cPour, pourW);
+            // кисть обхватывает тыкву, как рукоять с осью тыквы: сперва поворот кисти, потом запястье так, чтобы центр кулака лёг на перехват
             Vector3 hand0 = handL.position; Quaternion hr0 = handL.rotation;
-            SolveArm(upperArmL, forearmL, handL, l1L, l2L, Vector3.Lerp(hand0, target, drinkW), -right * ys + Vector3.down * 0.7f + fwd * 0.2f);
-            // ось тыквы (дно → горлышко): стоит вверх, на глотке горлышко к губам
-            Vector3 center0 = gripFromBind ? handL.TransformPoint(gripLocalL) : handL.position;
-            Vector3 axis = Vector3.Slerp((up + fwd * 0.15f).normalized, (mouth - center0).normalized, pourW * 0.9f);
+            Quaternion q = hr0;
+            Vector3 off = Vector3.zero;
             if (framesReady)
             {
                 Vector3 gf, gn;
-                GripFrame(axis, sideL, ft, out gf, out gn);   // кисть обхватывает тыкву, как рукоять с вертикальной осью
-                OrientHand(handL, bindL, gf, gn);
-                handL.rotation = Quaternion.Slerp(hr0, handL.rotation, drinkW);
+                GripFrame(axis, sideL, ft, out gf, out gn);
+                q = Quaternion.LookRotation(gf, gn) * bindL;
+                off = gripFromBind ? q * Vector3.Scale(gripLocalL, handL.lossyScale) : gf * palmOffset;
             }
+            Vector3 wrist = center - off;
+            SolveArm(upperArmL, forearmL, handL, l1L, l2L, Vector3.Lerp(hand0, wrist, drinkW), -right * ys + Vector3.down * 0.6f + fwd * 0.25f);
+            if (framesReady) handL.rotation = Quaternion.Slerp(hr0, q, drinkW);
             if (gourd == null) gourd = MakeGourd();
             if (gourd == null) return;
             if (!gourd.gameObject.activeSelf) gourd.gameObject.SetActive(true);
-            Vector3 center = gripFromBind ? handL.TransformPoint(gripLocalL) : handL.position + fwd * 0.04f;
+            Vector3 gc = handL.position + (framesReady ? handL.rotation * Quaternion.Inverse(q) * off : off);   // где теперь центр кулака
             gourd.rotation = Quaternion.FromToRotation(Vector3.up, axis);
-            gourd.position = center - axis * 0.085f;   // кисть — на перехвате тыквы
+            gourd.position = gc - axis * 0.09f;   // перехват тыквы — в кулаке
             gourd.localScale = Vector3.one * Mathf.Lerp(0.6f, 1f, Mathf.Clamp01(drinkW * 3f));
         }
 
