@@ -348,8 +348,9 @@ namespace BladePath.EditorTools
                 Material m = i == 1 || look.moss == null ? (look.rock != null ? look.rock : look.stoneBlock) : look.moss;
                 // главный камень — стоячий (татэ-иси), остальные — пологие; из двух сфер, чтобы не было «яиц»
                 float hgt = i == 0 ? rr * 3.0f : rr * 1.4f;
-                CharacterVisuals.Part(g, "Rock" + i, PrimitiveType.Sphere, c + new Vector3(rx, -0.07f + hgt * 0.42f, rz),
-                    new Vector3(8f * i - 4f, 37f * i, -6f * i + 5f), new Vector3(rr * 2.0f, hgt, rr * 1.7f), m);
+                // стоячий — гранёный (кубоид с наклоном), пологие — округлые
+                CharacterVisuals.Part(g, "Rock" + i, i == 0 ? PrimitiveType.Cube : PrimitiveType.Sphere, c + new Vector3(rx, -0.07f + hgt * (i == 0 ? 0.4f : 0.42f), rz),
+                    i == 0 ? new Vector3(7f, 28f, -9f) : new Vector3(8f * i - 4f, 37f * i, -6f * i + 5f), i == 0 ? new Vector3(rr * 1.5f, hgt, rr * 1.1f) : new Vector3(rr * 2.0f, hgt, rr * 1.7f), m);
                 CharacterVisuals.Part(g, "Rock" + i + "b", PrimitiveType.Sphere, c + new Vector3(rx + rr * 0.45f, -0.07f + hgt * 0.22f, rz - rr * 0.3f),
                     new Vector3(-12f, 60f * i + 20f, 9f), new Vector3(rr * 1.3f, hgt * 0.55f, rr * 1.2f), m);
                 if (look.aoBlob != null) EnvMesh.Decal(g, "RockAO" + i, c + new Vector3(rx, -0.067f, rz), 0f, rr * 3.4f, rr * 3.4f, look.aoBlob);
