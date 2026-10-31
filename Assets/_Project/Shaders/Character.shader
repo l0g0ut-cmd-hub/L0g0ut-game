@@ -66,6 +66,10 @@ Shader "BladePath/Character"
         #else
             o.Normal = half3(0, 0, 1);
         #endif
+            // вывернутые нормали (у полы плаща героя в FBX): видимая грань «смотрит» от камеры — контур светился бледным
+            // пятном, свет шёл с изнанки. Явно вывернутое (не край силуэта) — разворачиваем
+            half vz = normalize(IN.viewDir).z;   // касательное пространство: косинус между взглядом и нормалью вершины
+            if (vz < -0.15h) o.Normal = -o.Normal;
         #ifdef _METALLICGLOSSMAP
             fixed4 mg = tex2D(_MetallicGlossMap, IN.uv_MainTex);
             o.Metallic = mg.r;
@@ -113,7 +117,7 @@ Shader "BladePath/Character"
                 o.Metallic = lerp(o.Metallic, 0.0h, s);
             }
             // контровой свет: сильнее у краёв силуэта (вид почти по касательной к поверхности)
-            half rim = 1.0h - saturate(dot(normalize(IN.viewDir), o.Normal));
+            half rim = 1.0h - saturate(abs(dot(normalize(IN.viewDir), o.Normal)));
             rim = pow(rim, _RimPower) * (1.0h - 0.65h * _BP_Day);
             o.Emission = tex2D(_EmissionMap, IN.uv_MainTex).rgb * _EmissionColor.rgb + _RimColor.rgb * rim;
             o.Alpha = 1;
