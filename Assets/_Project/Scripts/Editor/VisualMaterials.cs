@@ -11,7 +11,7 @@ namespace BladePath.EditorTools
         public Material heroArmor, enemyArmor, cloth, skin, hair, lacquer, bronze, steel, handle;
         public Material flesh, tooth, maw, voidBlack, deadSkin, ember, tentacle, ronin;
         public Material stone, stoneDark, flame, moon, petal;
-        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage, forestFloor, aoStrip, aoBlob, shojiMonk, shojiWalker, karesansui, pondWater, lotus, bellBronze;
+        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, skyDusk, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage, forestFloor, aoStrip, aoBlob, shojiMonk, shojiWalker, karesansui, pondWater, lotus, bellBronze;
     }
 
     /// <summary>
@@ -86,6 +86,7 @@ namespace BladePath.EditorTools
             l.mist = SpriteLike("Env_Mist", Color.white);
             l.sky = Sky();
             l.skyDay = SkyDay();
+            l.skyDusk = SkyPanorama("sky_dusk.png", "Sky_Dusk", 1.0f);
             Texture2D halo = HaloTexture();
             Texture2D fireTex = Tex("fire_sprite.png", false);
             l.fireSprite = Additive("Fire_Sprite", fireTex != null ? fireTex : halo, new Color(0.6f, 0.55f, 0.5f, 0.7f));
@@ -266,6 +267,27 @@ namespace BladePath.EditorTools
             if (isNew) m = new Material(sh); else m.shader = sh;
             m.mainTexture = t;
             m.SetFloat("_Strength", strength);
+            if (isNew) AssetDatabase.CreateAsset(m, path); else EditorUtility.SetDirty(m);
+            return m;
+        }
+
+        /// <summary>Небо-панорама (Skybox/Panoramic) из PNG 4096×2048 без мипов.</summary>
+        static Material SkyPanorama(string file, string name, float exposure)
+        {
+            string tp = TexFolder + file;
+            TextureImporter ti = AssetImporter.GetAtPath(tp) as TextureImporter;
+            if (ti == null) return null;
+            if (ti.mipmapEnabled || ti.maxTextureSize < 4096) { ti.mipmapEnabled = false; ti.maxTextureSize = 4096; ti.wrapMode = TextureWrapMode.Repeat; ti.SaveAndReimport(); }
+            Shader sh = Shader.Find("Skybox/Panoramic");
+            if (sh == null) return null;
+            string path = MatFolder + name + ".mat";
+            Material m = AssetDatabase.LoadAssetAtPath<Material>(path);
+            bool isNew = m == null;
+            if (isNew) m = new Material(sh);
+            m.SetTexture("_MainTex", AssetDatabase.LoadAssetAtPath<Texture2D>(tp));
+            m.SetColor("_Tint", new Color(0.5f, 0.5f, 0.5f, 1f));
+            m.SetFloat("_Exposure", exposure);
+            m.SetFloat("_Rotation", 0f);
             if (isNew) AssetDatabase.CreateAsset(m, path); else EditorUtility.SetDirty(m);
             return m;
         }

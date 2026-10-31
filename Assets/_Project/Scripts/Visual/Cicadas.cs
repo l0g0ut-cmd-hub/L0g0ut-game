@@ -58,9 +58,9 @@ namespace BladePath
             if (!on || voices == null || Time.time < nextAt) return;
             AudioSource src = FreeVoice();
             if (src == null) { nextAt = Time.time + 1f; return; }
-            if (w.Dawn)
+            if (w.Dawn || w.Dusk)
             {
-                // рассвет: хигураси — по одной, печально; иногда отвечает вторая издалека
+                // рассвет и закат: хигураси («вечерняя цикада») — по одной, печально; иногда отвечает вторая издалека
                 bool farOne = Random.value < 0.45f;
                 Play(src, higurashi, Random.Range(-0.8f, 0.8f), farOne ? Random.Range(0.14f, 0.2f) : Random.Range(0.3f, 0.4f));
                 nextAt = Time.time + (Random.value < 0.35f ? Random.Range(2.5f, 5f) : higurashi.length + Random.Range(5f, 14f));
@@ -94,7 +94,7 @@ namespace BladePath
             if (far == null || w == null || Time.time < farAt) return;
             farAt = Time.time + Random.Range(40f, 75f);
             if (w.Raining || w.Snowing) return;
-            AudioClip c = w.Daytime ? (w.Dawn ? null : tobi) : owl;
+            AudioClip c = w.Daytime ? (w.Dawn || w.Dusk ? null : tobi) : owl;
             if (c == null) return;
             far.clip = c; far.panStereo = Random.Range(-0.65f, 0.65f); far.pitch = Random.Range(0.96f, 1.04f);
             far.volume = w.Daytime ? 0.24f : 0.32f;

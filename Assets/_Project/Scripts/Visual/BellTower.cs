@@ -39,7 +39,7 @@ namespace BladePath
             if (t < 0f && Time.time >= nextAt)
             {
                 t = 0f;
-                bool day = DayNight.Instance != null && DayNight.Instance.Day && !DayNight.Instance.Dawn;
+                bool day = DayNight.Instance != null && DayNight.Instance.Day && !DayNight.Instance.Dawn && !DayNight.Instance.Dusk;   // вечерний колокол — на закате
                 nextAt = Time.time + Random.Range(minGap, maxGap) * (day ? 1.6f : 1f);
             }
             float logAng = 0f;

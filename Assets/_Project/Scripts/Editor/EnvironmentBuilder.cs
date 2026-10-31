@@ -112,12 +112,14 @@ namespace BladePath.EditorTools
             // день и ночь: дневное небо и тусклые днём огни — переключает Weather при броске погоды на матч
             BladePath.DayNight dn = new GameObject("DayNight").AddComponent<BladePath.DayNight>();
             dn.daySky = look.skyDay;
+            dn.duskSky = look.skyDusk;
             dn.glowMats = new[] { look.haloWarm, look.haloFire, look.haloMoon, look.glow, look.paper, look.shoji };
             // отражения неба в мокром камне, доспехе, крови: свои кубкарты на ночь, день и рассвет (иначе отражалось то небо,
             // что было при последнем обновлении окружения, — на телефоне и после дневных кадров CI серые «дыры» на глянце)
             dn.nightRefl = SkyCube("sky_night.png", new Color(0.5f, 0.5f, 0.5f), 1.3f, "Refl_Night", new Color(0.025f, 0.028f, 0.04f));
             dn.dayRefl = SkyCube("sky_day.png", new Color(0.5f, 0.5f, 0.5f), 1.0f, "Refl_Day", new Color(0.26f, 0.25f, 0.23f));
             dn.dawnRefl = SkyCube("sky_day.png", new Color(0.62f, 0.5f, 0.48f), 0.82f, "Refl_Dawn", new Color(0.24f, 0.2f, 0.19f));
+            dn.duskRefl = SkyCube("sky_dusk.png", new Color(0.5f, 0.5f, 0.5f), 1.0f, "Refl_Dusk", new Color(0.2f, 0.13f, 0.14f));
             if (dn.nightRefl != null) { BladePath.DayNight.SetReflection(dn.nightRefl); RenderSettings.reflectionIntensity = 1f; }
 
             // жаровни с мерцающим огнём

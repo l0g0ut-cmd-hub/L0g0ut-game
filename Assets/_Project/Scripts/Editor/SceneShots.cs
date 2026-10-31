@@ -474,6 +474,10 @@ namespace BladePath.EditorTools
                 ReflectShot(cam, dir, "37b_reflect_day", log);
                 Shot(cam, dir, "39b_garden_day", new Vector3(0f, 3.0f, -2.0f), new Vector3(0f, 0f, -5.8f), 62f, log);
                 Shot(cam, dir, "40b_backcourt_day", new Vector3(7.5f, 5.5f, 4.5f), new Vector3(0.5f, 1.2f, 10.6f), 55f, log);
+                dn.Apply(true, false, true);   // закат: солнце за храмом
+                foreach (FlickerLight fl in UnityEngine.Object.FindObjectsByType<FlickerLight>(FindObjectsSortMode.None)) Call(fl, "Update");
+                Shot(cam, dir, "41_dusk", pos, look, cam.fieldOfView, log);
+                Shot(cam, dir, "41b_dusk_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);
                 dn.Apply(true, true);   // рассвет в тумане
                 foreach (FlickerLight fl in UnityEngine.Object.FindObjectsByType<FlickerLight>(FindObjectsSortMode.None)) Call(fl, "Update");
                 Shot(cam, dir, "34_dawn", pos, look, cam.fieldOfView, log);

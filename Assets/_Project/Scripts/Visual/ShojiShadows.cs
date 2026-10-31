@@ -69,7 +69,8 @@ namespace BladePath
 
         void Update()
         {
-            bool night = DayNight.Instance == null || !DayNight.Instance.Day;
+            // внутри зажгли свет — ночью, на рассвете и на закате (днём бумага изнутри не светится)
+            bool night = DayNight.Instance == null || !DayNight.Instance.Day || DayNight.Instance.Dawn || DayNight.Instance.Dusk;
             if (monk != null)
             {
                 monk.enabled = night;

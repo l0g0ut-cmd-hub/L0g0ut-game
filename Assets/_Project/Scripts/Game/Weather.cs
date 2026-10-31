@@ -15,9 +15,12 @@ namespace BladePath
         public bool Snowing { get; private set; }
         /// <summary>Солнечный день (иногда, раз на матч): дневной свет и небо (DayNight), днём не бывает дождя и снега.</summary>
         public bool Daytime { get; private set; }
-        [Range(0f, 1f)] public float dayChance = 0.36f;
+        [Range(0f, 1f)] public float dayChance = 0.45f;
         /// <summary>Рассвет в тумане (часть «дневных» матчей): низкое солнце, розоватая дымка, на рассвете поют хигураси.</summary>
         public bool Dawn { get; private set; }
+        /// <summary>Закат (из дневных матчей): солнце за храмом, контровой свет, хигураси.</summary>
+        public bool Dusk { get; private set; }
+        [Range(0f, 1f)] public float duskShare = 0.4f;   // доля закатов среди не-рассветных дней
         [Range(0f, 1f)] public float dawnShare = 0.35f;
         float fogDensBase = 0.05f;
         ParticleSystem snow;
@@ -66,7 +69,8 @@ namespace BladePath
             Raining = false; Snowing = false;
             Daytime = DayNight.Instance != null && Random.value < dayChance;
             Dawn = Daytime && Random.value < dawnShare;
-            if (DayNight.Instance != null) DayNight.Instance.Apply(Daytime, Dawn);
+            Dusk = Daytime && !Dawn && Random.value < duskShare;
+            if (DayNight.Instance != null) DayNight.Instance.Apply(Daytime, Dawn, Dusk);
             CaptureBase();
             float r = Random.value;
             Raining = !Daytime && r < rainChance;
