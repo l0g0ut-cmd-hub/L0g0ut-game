@@ -222,6 +222,49 @@ namespace BladePath.EditorTools
             return Make(parent, name, m, pos, new Vector3(0f, yaw, 0f), mat);
         }
 
+        /// <summary>
+        /// Валун: сфера 10×7 с бугристым радиусом (шум по направлению) и плоскими гранями — гранёный камень, а не гладкое «яйцо».
+        /// size — полные размеры по осям; низ приплюснут (камень лежит). Меш на seed кэшируется.
+        /// </summary>
+        public static GameObject Boulder(Transform parent, string name, Vector3 pos, Vector3 euler, Vector3 size, Material mat, int seed)
+        {
+            string key = "boulder" + seed;
+            Mesh m;
+            if (!cache.TryGetValue(key, out m) || m == null)
+            {
+                System.Random r = new System.Random(seed);
+                const int seg = 10, ring = 7;
+                Vector3[,] p = new Vector3[seg, ring + 1];
+                float[] ph = new float[6];
+                for (int i = 0; i < 6; i++) ph[i] = (float)r.NextDouble() * 6.28f;
+                for (int j = 0; j <= ring; j++)
+                    for (int i = 0; i < seg; i++)
+                    {
+                        float th = Mathf.PI * j / ring, fi = Mathf.PI * 2f * i / seg;
+                        Vector3 d = new Vector3(Mathf.Sin(th) * Mathf.Cos(fi), Mathf.Cos(th), Mathf.Sin(th) * Mathf.Sin(fi));
+                        float k = 1f + 0.16f * Mathf.Sin(d.x * 3.1f + ph[0]) * Mathf.Cos(d.z * 2.7f + ph[1]) + 0.1f * Mathf.Sin(d.y * 4.3f + d.x * 2f + ph[2])
+                                + 0.06f * ((float)r.NextDouble() - 0.5f);
+                        if (d.y < -0.2f) k *= Mathf.Lerp(1f, 0.75f, (-d.y - 0.2f) / 0.8f);   // плоское дно
+                        p[i, j] = d * 0.5f * k;
+                    }
+                MB mb = new MB();
+                Vector3 c = Vector3.zero;
+                for (int j = 0; j < ring; j++)
+                    for (int i = 0; i < seg; i++)
+                    {
+                        int i2 = (i + 1) % seg;
+                        Vector3 a = p[i, j], b = p[i2, j], cc = p[i2, j + 1], dd = p[i, j + 1];
+                        if (j == 0) mb.Poly(new[] { a, cc, dd }, 0.5f, c, false, false);
+                        else if (j == ring - 1) mb.Poly(new[] { a, b, dd }, 0.5f, c, false, false);
+                        else { mb.Poly(new[] { a, b, cc }, 0.5f, c, false, false); mb.Poly(new[] { a, cc, dd }, 0.5f, c, false, false); }
+                    }
+                m = Save(key, mb);
+            }
+            GameObject g = Make(parent, name, m, pos, euler, mat);
+            g.transform.localScale = size;
+            return g;
+        }
+
         /// <summary>Неровный почти эллиптический контур камня: n точек, полуоси rx, rz, разброс радиуса jitter.</summary>
         public static Vector2[] StoneOutline(System.Random r, int n, float rx, float rz, float jitter)
         {

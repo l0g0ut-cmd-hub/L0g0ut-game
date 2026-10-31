@@ -375,8 +375,8 @@ namespace BladePath.EditorTools
                 Vector2 o = outline[i] * (1.03f + 0.04f * (float)r.NextDouble());
                 float s = 0.11f + 0.13f * (float)r.NextDouble();
                 Material m = r.NextDouble() < 0.35 && look.moss != null ? look.moss : rockM;
-                CharacterVisuals.Part(g, "RimStone" + i, PrimitiveType.Sphere, c + new Vector3(o.x, -0.06f + s * 0.2f, o.y),
-                    new Vector3((float)r.NextDouble() * 18f - 9f, (float)r.NextDouble() * 180f, (float)r.NextDouble() * 18f - 9f), new Vector3(s * 1.9f, s * 0.8f, s * 1.3f), m);
+                EnvMesh.Boulder(g, "RimStone" + i, c + new Vector3(o.x, -0.06f + s * 0.2f, o.y),
+                    new Vector3((float)r.NextDouble() * 18f - 9f, (float)r.NextDouble() * 180f, (float)r.NextDouble() * 18f - 9f), new Vector3(s * 1.9f, s * 0.8f, s * 1.3f), m, 300 + i % 6);
             }
             // карпы кои под водой (тонкий слой между дном-гравием и гладью)
             if (look.koi != null)
@@ -432,14 +432,12 @@ namespace BladePath.EditorTools
                 // главный камень — стоячий (татэ-иси), остальные — пологие; из двух сфер, чтобы не было «яиц»
                 float hgt = i == 0 ? rr * 3.0f : rr * 1.4f;
                 // стоячий — гранёный (кубоид с наклоном), пологие — округлые
-                CharacterVisuals.Part(g, "Rock" + i, i == 0 ? PrimitiveType.Cube : PrimitiveType.Sphere, c + new Vector3(rx, -0.07f + hgt * (i == 0 ? 0.4f : 0.42f), rz),
-                    i == 0 ? new Vector3(3f, 28f, -4f) : new Vector3(8f * i - 4f, 37f * i, -6f * i + 5f), i == 0 ? new Vector3(rr * 1.5f, hgt, rr * 1.1f) : new Vector3(rr * 2.0f, hgt, rr * 1.7f), m);
-                // стоячий камень гранёный: второй кубоид, повёрнутый и чуть ниже, ломает силуэт «ящика»
-                if (i == 0)
-                    CharacterVisuals.Part(g, "Rock0c", PrimitiveType.Cube, c + new Vector3(rx - rr * 0.18f, -0.07f + hgt * 0.32f, rz + rr * 0.12f),
-                        new Vector3(-6f, 71f, 11f), new Vector3(rr * 1.25f, hgt * 0.8f, rr * 1.0f), rockMat);
-                CharacterVisuals.Part(g, "Rock" + i + "b", PrimitiveType.Sphere, c + new Vector3(rx + rr * 0.45f, -0.07f + hgt * 0.22f, rz - rr * 0.3f),
-                    new Vector3(-12f, 60f * i + 20f, 9f), new Vector3(rr * 1.3f, hgt * 0.55f, rr * 1.2f), m);
+                // стоячий (татэ-иси) — высокий гранёный валун, почти прямо; пологие — приземистые
+                if (i == 0) EnvMesh.Boulder(g, "Rock0", c + new Vector3(rx, -0.07f + hgt * 0.45f, rz), new Vector3(3f, 28f, -4f), new Vector3(rr * 1.45f, hgt * 1.05f, rr * 1.15f), m, 340);
+                else EnvMesh.Boulder(g, "Rock" + i, c + new Vector3(rx, -0.07f + hgt * 0.42f, rz),
+                    new Vector3(8f * i - 4f, 37f * i, -6f * i + 5f), new Vector3(rr * 2.0f, hgt, rr * 1.7f), m, 320 + i);
+                EnvMesh.Boulder(g, "Rock" + i + "b", c + new Vector3(rx + rr * 0.45f, -0.07f + hgt * 0.22f, rz - rr * 0.3f),
+                    new Vector3(-12f, 60f * i + 20f, 9f), new Vector3(rr * 1.3f, hgt * 0.55f, rr * 1.2f), m, 330 + i);
                 if (look.aoBlob != null) EnvMesh.Decal(g, "RockAO" + i, c + new Vector3(rx, -0.067f, rz), 0f, rr * 3.4f, rr * 3.4f, look.aoBlob);
             }
         }
