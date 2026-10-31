@@ -326,6 +326,7 @@ namespace BladePath
             ApplyTimeScale();
 
             CheckClash();
+            UpdateCharge(player); UpdateCharge(enemy);
             UpdateSuper();
             UpdateDeathblow();
             UpdateResurrectOffer();
@@ -600,6 +601,45 @@ namespace BladePath
             }
         }
 
+        // ---------------------------------------------------------------- натиск (тай-атари): бьёт телом, блок не держит
+        readonly Dictionary<FighterController, int> chargeDone = new Dictionary<FighterController, int>();
+        void UpdateCharge(FighterController a)
+        {
+            if (a == null || State != DuelState.Fighting || DeathblowActive) return;
+            WeaponController w = a.weapon;
+            if (w == null || w.CurrentProfile == null || w.CurrentProfile.type != AttackType.Charge || w.Phase != SwingPhase.Strike) return;
+            int done;
+            if (chargeDone.TryGetValue(a, out done) && done == w.SwingId) return;
+            FighterController t = a.opponent;
+            if (t == null || t.Dead || Reviving(t)) return;
+            Vector3 d = t.transform.position - a.transform.position; d.y = 0f;
+            if (d.magnitude > 0.95f) return;
+            chargeDone[a] = w.SwingId;
+            if (t.Dashing || t.SinceDash < 0.25f)
+            {
+                // ушёл рывком: натиск проскочил, атакующий открыт
+                a.Stun(0.7f); a.AddPosture(25f); t.AddKi(12f);
+                Popup up = new Popup(); up.world = t.transform.position + Vector3.up * 1.9f; up.text = "УКЛОНЕНИЕ!"; up.color = new Color(0.5f, 0.95f, 1f); up.born = Time.unscaledTime; up.size = 28f; Popups.Add(up);
+                Slowmo = true; slowUntil = Time.unscaledTime + 0.3f;
+                return;
+            }
+            // сбит с ног: урон, равновесие, на колено
+            float dmg = Mathf.Round(18f * (a == enemy ? Ladder.Current.dmgMul * Records.Assist : 1f));
+            ApplyDamage(t, a, dmg, t.transform.position + Vector3.up * 1.1f, true, false, -d.normalized, d.normalized * 4f, null);
+            if (!t.Dead)
+            {
+                t.AddPosture(35f);
+                t.Knockback(d, 3.6f);
+                t.Stun(0.9f);
+                if (t.weapon != null) { t.weapon.ResetState(); t.weapon.Down(0.8f); }
+            }
+            if (Juice.Instance != null) { Juice.Instance.Dust(t.transform.position + Vector3.up * 0.05f, d, 18); Juice.Instance.Taiko(0.8f, 1.2f); }
+            if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(0.1f); CameraOrbit.Instance.Punch(3f); }
+            PostFX.Kick(0.008f);
+            Haptics.Pulse(t == player ? 110 : 40);
+            a.StopDash();
+        }
+
         /// <summary>Подъём после добивания (здоровье наполняется за 1,2 с) и выход из «пустого» здоровья без добивания.</summary>
         void UpdateLives(float dt)
         {
@@ -760,7 +800,8 @@ namespace BladePath
             if (f == enemy && perilTips < 2 && PlayerPrefs.GetInt("peril_tip", 0) < 3)
             {
                 perilTips++; PlayerPrefs.SetInt("peril_tip", PlayerPrefs.GetInt("peril_tip", 0) + 1);
-                Announce(f.weapon.CurrentProfile != null && f.weapon.CurrentProfile.type == AttackType.LegSweep ? "ОПАСНО: ПОДСЕЧКА — ПРЫГАЙ!" : "ОПАСНО: ВЫПАД — РЫВОК НАВСТРЕЧУ!", new Color(1f, 0.25f, 0.15f));
+                AttackType pt = f.weapon.CurrentProfile != null ? f.weapon.CurrentProfile.type : AttackType.Thrust;
+                Announce(pt == AttackType.LegSweep ? "ОПАСНО: ПОДСЕЧКА — ПРЫГАЙ!" : pt == AttackType.Charge ? "ОПАСНО: НАТИСК — РЫВОК ВБОК!" : "ОПАСНО: ВЫПАД — РЫВОК НАВСТРЕЧУ!", new Color(1f, 0.25f, 0.15f));
             }
         }
 

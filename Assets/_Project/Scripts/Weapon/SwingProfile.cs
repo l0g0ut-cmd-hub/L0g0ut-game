@@ -223,6 +223,19 @@ namespace BladePath
                     p.K(1.18f, 0.34f, -0.38f, 0.3f, 36f, 62f, 0f, 0.08f, 0.13f, 22f, 8f, 14f, 9f, 0.1f, 0.04f, 0.15f);    // тибури
                     p.KReady(1.6f);
                     break;
+                case AttackType.Charge:   // натиск (тай-атари, 危): присел, клинок прижат к правому бедру — бросок плечом вперёд; блок не держит, уходи рывком вбок
+                    p.label = "НАТИСК"; p.scripted = true;   // бьёт телом, клинок не проверяется — попадание считает DuelManager
+                    p.windupTime = 0.42f; p.strikeTime = 0.3f; p.followTime = 0.16f; p.recoveryTime = 0.6f;
+                    p.lungeSpeed = 6.5f;
+                    //        t      руки x,y,z              клинок p,y,r      таз F,D        таз yaw,pitch  грудь yaw,pitch  стопы F,R,пятка
+                    p.KReady(0f);
+                    p.K(0.2f, 0.24f, -0.34f, 0.04f, -4f, 10f, 0f, -0.08f, 0.16f, 24f, 14f, 18f, 16f, 0f, 0f, 0f);      // присел, плечо вперёд, клинок к бедру
+                    p.K(0.42f, 0.25f, -0.36f, 0.02f, -2f, 10f, 0f, -0.1f, 0.2f, 30f, 18f, 22f, 20f, 0f, 0f, 0f);       // взвод
+                    p.K(0.52f, 0.22f, -0.32f, 0.12f, 0f, 8f, 0f, 0.28f, 0.14f, 34f, 24f, 26f, 24f, 0.22f, 0.12f, 0.7f);   // бросок: плечо таранит
+                    p.K(0.72f, 0.22f, -0.32f, 0.14f, 0f, 8f, 0f, 0.34f, 0.14f, 34f, 24f, 26f, 24f, 0.26f, 0.14f, 0.8f);
+                    p.K(1.0f, 0.15f, -0.4f, 0.3f, -4f, -4f, 0f, 0.1f, 0.1f, 20f, 10f, 12f, 8f, 0.06f, 0.03f, 0.2f);      // выпрямился
+                    p.KReady(1.48f);
+                    break;
                 case AttackType.Mikiri:      // микири: рывок навстречу уколу — нога наступает на клинок врага, корпус навис, свой клинок низко вперёд
                     p.label = "МИКИРИ"; p.scripted = true;
                     p.windupTime = 0.06f; p.strikeTime = 0.03f; p.followTime = 0.26f; p.recoveryTime = 0.3f;

@@ -186,7 +186,7 @@ namespace BladePath
                 if (!quick && Random.value < Ladder.Current.heavyBias) t = AttackType.Overhead;   // Они любит рубить сверху
                 // опасная атака (危): с уровня «воин», не в серии
                 bool peril = !quick && Level >= 1 && Random.value < 0.10f + 0.04f * Level;
-                if (peril) t = Random.value < 0.6f ? AttackType.Thrust : AttackType.LegSweep;
+                if (peril) { float pr = Random.value; t = pr < 0.45f ? AttackType.Thrust : (pr < 0.75f || Level < 2 ? AttackType.LegSweep : AttackType.Charge); }   // натиск — с уровня 2
                 if (self.Attack(t, peril))
                 {
                     nextAttackAt = Time.time + Mathf.Lerp(2.4f, 0.8f, agg) + Random.Range(0f, 0.7f);

@@ -259,12 +259,12 @@ namespace BladePath
             AttackType t = type;
             if (!Grounded)
             {
-                if (type == AttackType.LegSweep || type == AttackType.Thrust || type == AttackType.Slash || type == AttackType.SlashBack) return false;
+                if (type == AttackType.LegSweep || type == AttackType.Thrust || type == AttackType.Slash || type == AttackType.SlashBack || type == AttackType.Charge) return false;
                 if (type == AttackType.Overhead || type == AttackType.Rising) t = AttackType.JumpStrike;
             }
             else if (type == AttackType.JumpStrike) t = AttackType.Overhead;
             if (t == AttackType.Energy && !CanEnergy) return false;
-            bool ok = weapon.TryStartSwing(t, perilous && (t == AttackType.Thrust || t == AttackType.LegSweep));
+            bool ok = weapon.TryStartSwing(t, perilous && (t == AttackType.Thrust || t == AttackType.LegSweep || t == AttackType.Charge));
             if (ok && t == AttackType.Energy) Ki -= energyCost;
             return ok;
         }
