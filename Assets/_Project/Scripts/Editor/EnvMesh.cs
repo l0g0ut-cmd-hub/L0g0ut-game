@@ -177,6 +177,31 @@ namespace BladePath.EditorTools
             return g;
         }
 
+        /// <summary>Горизонтальная наклейка с кусочком атласа: клетка (cx, cy) из сетки n×n (0,0 — левый нижний угол текстуры).</summary>
+        public static GameObject DecalCell(Transform parent, string name, Vector3 pos, float yaw, float sx, float sz, Material mat, int cx, int cy, int n)
+        {
+            string key = "decalcell" + n + "_" + cx + "_" + cy;
+            Mesh m;
+            if (!cache.TryGetValue(key, out m) || m == null)
+            {
+                float u0 = cx / (float)n, v0 = cy / (float)n, d = 1f / n;
+                m = new Mesh { name = key };
+                m.vertices = new[] { new Vector3(-0.5f, 0f, -0.5f), new Vector3(0.5f, 0f, -0.5f), new Vector3(0.5f, 0f, 0.5f), new Vector3(-0.5f, 0f, 0.5f) };
+                m.uv = new[] { new Vector2(u0, v0), new Vector2(u0 + d, v0), new Vector2(u0 + d, v0 + d), new Vector2(u0, v0 + d) };
+                m.normals = new[] { Vector3.up, Vector3.up, Vector3.up, Vector3.up };
+                m.triangles = new[] { 0, 2, 1, 0, 3, 2 };   // по часовой сверху — лицом вверх
+                m.RecalculateBounds(); m.RecalculateTangents();
+                if (!AssetDatabase.IsValidFolder(Folder)) AssetDatabase.CreateFolder("Assets/_Project/Models", "Env");
+                AssetDatabase.CreateAsset(m, Folder + "/env_" + (counter++) + ".asset");
+                cache[key] = m;
+            }
+            GameObject g = Make(parent, name, m, pos, new Vector3(0f, yaw, 0f), mat);
+            g.transform.localScale = new Vector3(sx, 1f, sz);
+            MeshRenderer r = g.GetComponent<MeshRenderer>();
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            return g;
+        }
+
         /// <summary>Плоский многоугольник (звёздный относительно центра) на высоте pos.y: веер из центра, UV в метрах / tile.</summary>
         public static GameObject Flat(Transform parent, string name, Vector3 pos, Vector2[] outline, Material mat, float tile)
         {

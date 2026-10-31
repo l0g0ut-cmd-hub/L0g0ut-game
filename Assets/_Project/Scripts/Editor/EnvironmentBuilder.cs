@@ -148,6 +148,7 @@ namespace BladePath.EditorTools
             AddPond(env, look);
             AddBackCourt(env, look);
             AddKaresansui(env, look);
+            AddGroundDetails(env, look);
             AddShojiShadows(look);
             AddCameraOccluders(env);
             MarkStatic(env);
@@ -438,16 +439,59 @@ namespace BladePath.EditorTools
                     float a = 1.2f + (float)r.NextDouble() * 2.6f, rr = 0.35f + (float)r.NextDouble() * 0.45f;
                     float s = 0.14f + 0.12f * (float)r.NextDouble();
                 {
-                    // лист лотоса: круг с клиновидным вырезом к центру (как у настоящего), развёрнут как попало
-                    Vector2[] pad = new Vector2[15];
-                    float cut = 0.35f;   // ширина выреза, рад
-                    for (int k = 0; k < 14; k++) { float ang = cut * 0.5f + (Mathf.PI * 2f - cut) * k / 13f; float rk = s * 0.5f * (0.96f + 0.04f * Mathf.Sin(k * 2.3f)); pad[k] = new Vector2(Mathf.Cos(ang) * rk, Mathf.Sin(ang) * rk); }
-                    pad[14] = new Vector2(s * 0.04f, 0f);   // вершина выреза у центра
-                    GameObject lp = EnvMesh.Flat(g, "Lotus" + i, c + new Vector3(Mathf.Cos(a) * rr * 1.45f, -0.0585f, Mathf.Sin(a) * rr * 0.85f), pad, look.lotus, 0.3f);
-                    lp.transform.localRotation = Quaternion.Euler(0f, (float)r.NextDouble() * 360f, 0f);
-                    lp.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    // лист лотоса — фото из атласа (4 разных листа 2×2), развёрнут как попало, чуть крупнее (альфа-край)
+                    EnvMesh.DecalCell(g, "Lotus" + i, c + new Vector3(Mathf.Cos(a) * rr * 1.45f, -0.0585f, Mathf.Sin(a) * rr * 0.85f), (float)r.NextDouble() * 360f, s * 1.15f, s * 1.15f, look.lotus, i % 2, (i / 2) % 2, 2);
                 }
                 }
+        }
+
+        /// <summary>
+        /// Мелочи на земле: пятна мха у подножия стен, у камней сада и у пруда (фото из атласа, всегда), и опавшие лепестки
+        /// сакуры на камне арены и гравии под деревьями (включает Weather, только когда цветёт сакура — дети SakuraGround).
+        /// </summary>
+        static void AddGroundDetails(Transform env, Look look)
+        {
+            System.Random r = new System.Random(91);
+            System.Func<float> R = () => (float)r.NextDouble();
+            if (look.mossDecal != null)
+            {
+                Transform mg = new GameObject("MossDecals").transform; mg.SetParent(env, false);
+                int k = 0;
+                for (int side = -1; side <= 1; side += 2)
+                    for (int i = 0; i < 5; i++)
+                    {
+                        float s = 0.35f + 0.25f * R();
+                        EnvMesh.DecalCell(mg, "Moss" + k, new Vector3(side * (6.05f - 0.1f * R()), -0.066f + 0.0004f * k, -3f + i * 1.6f + R() * 0.8f), R() * 360f, s, s * (0.7f + 0.3f * R()), look.mossDecal, k % 2, (k / 2) % 2, 2); k++;
+                    }
+                Vector3[] spots = { new Vector3(2.55f, 0f, -5.15f), new Vector3(4.15f, 0f, -5.65f), new Vector3(4.85f, 0f, -4.9f), new Vector3(-4.9f, 0f, -4.7f), new Vector3(-2.3f, 0f, -6.1f), new Vector3(-3.2f, 0f, 4.25f), new Vector3(1.6f, 0f, 4.3f) };
+                foreach (Vector3 p in spots)
+                {
+                    float s = 0.3f + 0.2f * R();
+                    EnvMesh.DecalCell(mg, "Moss" + k, p + new Vector3(R() * 0.2f, -0.066f + 0.0004f * k, R() * 0.2f), R() * 360f, s, s, look.mossDecal, k % 2, (k / 2) % 2, 2); k++;
+                }
+            }
+            if (look.sakuraGround != null)
+            {
+                Transform sg = new GameObject("SakuraGround").transform; sg.SetParent(env, false);
+                int k = 0;
+                // на камне арены — у бордюров (середину бойцы «вымели»)
+                for (int i = 0; i < 14; i++)
+                {
+                    float u = R();
+                    Vector3 p = u < 0.5f ? new Vector3((R() - 0.5f) * 6.6f, 0f, (R() < 0.5f ? -1f : 1f) * (2.2f + 0.35f * R())) : new Vector3((R() < 0.5f ? -1f : 1f) * (3.0f + 0.45f * R()), 0f, (R() - 0.5f) * 4.6f);
+                    p.y = 0.004f + 0.0003f * k;
+                    float s = 0.4f + 0.3f * R();
+                    GameObject d = EnvMesh.DecalCell(sg, "Petals" + k, p, R() * 360f, s, s, look.sakuraGround, k % 2, (k / 2) % 2, 2); d.SetActive(false); k++;
+                }
+                // на гравии и у ступеней храма
+                for (int i = 0; i < 12; i++)
+                {
+                    Vector3 p = new Vector3((R() - 0.5f) * 11f, -0.066f + 0.0003f * i, -6.5f + R() * 10.5f);
+                    if (Mathf.Abs(p.x) < 3.9f && Mathf.Abs(p.z) < 3.0f) p.x += p.x < 0 ? -4f : 4f;
+                    float s = 0.45f + 0.35f * R();
+                    GameObject d = EnvMesh.DecalCell(sg, "Petals" + k, p, R() * 360f, s, s, look.sakuraGround, k % 2, (k / 2) % 2, 2); d.SetActive(false); k++;
+                }
+            }
         }
 
         /// <summary>
@@ -1577,6 +1621,9 @@ namespace BladePath.EditorTools
                 sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.6f), new Keyframe(1f, 2.6f)));
                 var noise = sm.noise; noise.enabled = true; noise.strength = 0.25f; noise.frequency = 0.5f;
                 var rot = sm.rotationOverLifetime; rot.enabled = true; rot.z = new ParticleSystem.MinMaxCurve(-0.6f, 0.6f);
+                // клубы дыма — 4 разных из атласа (2×2), каждой частице свой
+                var tsa = sm.textureSheetAnimation; tsa.enabled = true; tsa.numTilesX = 2; tsa.numTilesY = 2;
+                tsa.frameOverTime = new ParticleSystem.MinMaxCurve(0f); tsa.startFrame = new ParticleSystem.MinMaxCurve(0f, 3.99f);
             }
         }
 

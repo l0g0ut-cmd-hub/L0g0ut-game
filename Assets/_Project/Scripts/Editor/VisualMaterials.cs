@@ -11,7 +11,7 @@ namespace BladePath.EditorTools
         public Material heroArmor, enemyArmor, cloth, skin, hair, lacquer, bronze, steel, handle;
         public Material flesh, tooth, maw, voidBlack, deadSkin, ember, tentacle, ronin;
         public Material stone, stoneDark, flame, moon, petal;
-        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, skyDusk, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage, forestFloor, aoStrip, aoBlob, shojiMonk, shojiWalker, karesansui, pondWater, lotus, bellBronze, rock, flameSheet, smoke, koi, nobori1, nobori2;
+        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, skyDusk, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage, forestFloor, aoStrip, aoBlob, shojiMonk, shojiWalker, karesansui, pondWater, lotus, bellBronze, rock, flameSheet, smoke, koi, nobori1, nobori2, sakuraGround, mossDecal;
     }
 
     /// <summary>
@@ -33,7 +33,7 @@ namespace BladePath.EditorTools
             l.cloth = Textured("Cloth", "cloth_albedo.png", "cloth_normal.png", new Vector2(3f, 3f), Color.white, 0f, 0.12f);
             l.skin = Solid("Skin", new Color(0.74f, 0.54f, 0.43f), 0f, 0.25f);
             l.hair = Solid("Hair", new Color(0.05f, 0.04f, 0.04f), 0f, 0.30f);
-            l.lacquer = Textured("Lacquer_Red", "lacquer_albedo.png", null, Vector2.one, Color.white, 0.10f, 0.65f);
+            l.lacquer = Textured("Lacquer_Red", "lacquer_albedo.png", null, Vector2.one, new Color(0.72f, 0.7f, 0.7f), 0.10f, 0.6f);   // старый лак с облупившейся краской (фото)
             l.bronze = Solid("Bronze", new Color(0.62f, 0.44f, 0.20f), 0.85f, 0.55f);
             l.steel = KatanaBlade();
             l.handle = Solid("Handle", new Color(0.07f, 0.05f, 0.05f), 0f, 0.30f);
@@ -68,7 +68,7 @@ namespace BladePath.EditorTools
             // листва и трава качаются на ветру (BladePath/Foliage): sway 0 — карточки кроны трепещут по месту, 1 — трава гнётся верхушкой
             l.bambooFoliage = Cutout("Env_BambooFoliage", "bamboo_leaves.png", Color.white, 0.42f, new Color(0.006f, 0.012f, 0.004f), 0f, 0.05f);
             l.mapleCrown = Cutout("Env_MapleCrown", "maple_cluster.png", new Color(0.92f, 0.92f, 0.92f), 0.42f, new Color(0.05f, 0.006f, 0.004f), 0f, 0.03f);
-            l.cedarFoliage = Cutout("Env_CedarFoliage", "bamboo_leaves.png", new Color(0.26f, 0.36f, 0.3f), 0.35f, new Color(0.002f, 0.005f, 0.003f), 0f, 0.035f);   // хвоя криптомерии: те же листья-карточки, темнее и холоднее
+            l.cedarFoliage = Cutout("Env_CedarFoliage", "cedar_cluster.png", new Color(0.52f, 0.6f, 0.54f), 0.4f, new Color(0.002f, 0.005f, 0.003f), 0f, 0.035f);   // хвоя криптомерии — фото-карточка (атлас 3)   // хвоя криптомерии: те же листья-карточки, темнее и холоднее
             l.fallenLeaves = Cutout("Env_FallenLeaves", "fallen_leaves.png", new Color(1f, 1f, 1f), 0.5f, new Color(0.03f, 0.004f, 0.003f));
             l.grass = Cutout("Env_Grass", "grass_tuft.png", new Color(0.9f, 0.95f, 0.9f), 0.45f, new Color(0.004f, 0.007f, 0.003f), 1f, 0.05f);
             l.blossom = Textured("Env_Blossom", "blossom_albedo.png", null, new Vector2(3f, 3f), new Color(0.95f, 0.85f, 0.85f), 0f, 0.1f);   // кроны — текстура красного клёна (лист 2)
@@ -98,7 +98,8 @@ namespace BladePath.EditorTools
                 if (fti != null && (fti.wrapMode != TextureWrapMode.Clamp || !fti.alphaIsTransparency)) { fti.wrapMode = TextureWrapMode.Clamp; fti.alphaIsTransparency = true; fti.SaveAndReimport(); }
                 l.flameSheet = Additive("Fire_Flipbook", fs, new Color(0.5f, 0.4f, 0.33f, 0.85f));   // не пересвечивать в белое пятно
             }
-            l.smoke = AlphaParticle("Fire_Smoke", halo, new Color(0.5f, 0.5f, 0.5f, 0.5f));
+            Texture2D smokeT = Tex("smoke.png", false);
+            l.smoke = AlphaParticle("Fire_Smoke", smokeT != null ? smokeT : halo, new Color(0.5f, 0.5f, 0.5f, 0.5f));   // клубы дыма 2×2 (атлас 3)
             l.banner = Cutout("Env_Banner", "banner.png");
             // нобори с кандзи (tools/texgen/nobori.py): «武運長久» и «八幡大菩薩»
             if (AssetDatabase.LoadAssetAtPath<Texture2D>(TexFolder + "nobori_buun.png") != null) l.nobori1 = Cutout("Env_Nobori1", "nobori_buun.png");
@@ -108,7 +109,7 @@ namespace BladePath.EditorTools
             l.iron = Solid("Katana_Iron", new Color(0.09f, 0.08f, 0.08f), 0.7f, 0.45f);
             l.bamboo = Solid("Env_Bamboo", new Color(0.36f, 0.48f, 0.22f), 0f, 0.55f);
             l.bambooLeaf = Solid("Env_BambooLeaf", new Color(0.16f, 0.30f, 0.12f), 0f, 0.2f);
-            l.moss = Textured("Env_MossRock", "stoneblock_albedo.png", "stoneblock_normal.png", new Vector2(0.5f, 0.5f), new Color(0.62f, 0.72f, 0.58f), 0f, 0.15f);
+            l.moss = Textured("Env_MossRock", "rock_albedo.png", "rock_normal.png", new Vector2(0.6f, 0.6f), new Color(0.5f, 0.62f, 0.46f), 0f, 0.15f);   // замшелый гранит (не кладка — на валунах швы блоков были бы странны)
             l.haloWarm = Additive("Halo_Warm", halo, new Color(1f, 0.62f, 0.28f, 0.55f));
             l.haloFire = Additive("Halo_Fire", halo, new Color(1f, 0.45f, 0.12f, 0.75f));
             l.haloMoon = Additive("Halo_Moon", halo, new Color(0.55f, 0.65f, 1f, 0.35f));
@@ -142,7 +143,9 @@ namespace BladePath.EditorTools
             }
             Texture2D koiT = Tex("koi.png", false);
             if (koiT != null) { l.koi = AlphaParticle("Koi", koiT, new Color(0.5f, 0.5f, 0.5f, 0.5f)); l.koi.renderQueue = 2990; }
-            l.lotus = Solid("Env_Lotus", new Color(0.12f, 0.24f, 0.09f), 0f, 0.55f);
+            l.lotus = Cutout("Env_Lotus", "lotus.png", new Color(0.78f, 0.82f, 0.76f), 0.45f, Color.black);   // 4 листа лотоса в атласе 2×2
+            l.sakuraGround = Cutout("Env_SakuraGround", "sakura_ground.png", new Color(0.92f, 0.9f, 0.9f), 0.4f, new Color(0.02f, 0.01f, 0.012f));
+            l.mossDecal = Cutout("Env_MossDecal", "moss_patches.png", new Color(0.75f, 0.8f, 0.72f), 0.4f, Color.black);
             l.rock = Textured("Env_Rock", "rock_albedo.png", "rock_normal.png", new Vector2(0.6f, 0.6f), new Color(0.56f, 0.56f, 0.55f), 0f, 0.2f);   // садовые валуны: тёмный гранит
             l.bellBronze = Solid("Env_BellBronze", new Color(0.2f, 0.19f, 0.13f), 0.75f, 0.42f);   // старая бронза с патиной
             // окружение — на шейдере с погодой: снег ложится на крыши, колпаки стен, камень и землю, в дождь всё мокнет и блестит

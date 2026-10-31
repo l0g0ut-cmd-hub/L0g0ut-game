@@ -144,6 +144,7 @@ namespace BladePath
             fogBase = new Color(fogBase.r * 1.35f, fogBase.g * 0.72f, fogBase.b * 0.72f);
             RenderSettings.fogColor = fogBase; RenderSettings.ambientLight = ambBase;
         }
+        Transform sakuraGround;
         Material crownMat; Texture crownTex0; Color crownEm0; Texture sakuraTex; bool crownInit;
         /// <summary>
         /// Весна: когда падает сакура, кроны клёнов во дворе цветут — карточки крон получают текстуру соцветий сакуры
@@ -186,6 +187,8 @@ namespace BladePath
                 if (petalsPs != null) { Renderer pr = petalsPs.GetComponent<Renderer>(); if (pr != null && pr.sharedMaterial != null) mapleTex = pr.sharedMaterial.mainTexture; }
             }
             Crowns(mode == 2);
+            if (sakuraGround == null) { GameObject sg = GameObject.Find("SakuraGround"); if (sg != null) sakuraGround = sg.transform; }
+            if (sakuraGround != null) foreach (Transform ch in sakuraGround) ch.gameObject.SetActive(mode == 2);   // опавшие лепестки на камне и гравии
             if (petalsPs == null) return;
             var main = petalsPs.main; var em = petalsPs.emission; var noise = petalsPs.noise;
             Renderer r = petalsPs.GetComponent<Renderer>();
