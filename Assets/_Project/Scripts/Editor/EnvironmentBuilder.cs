@@ -207,8 +207,8 @@ namespace BladePath.EditorTools
             main.loop = true; main.prewarm = true;
             main.startLifetime = new ParticleSystem.MinMaxCurve(10f, 16f);
             main.startSpeed = 0f;
-            main.startSize = new ParticleSystem.MinMaxCurve(0.07f, 0.1f);
-            main.startColor = Color.white;
+            main.startSize = new ParticleSystem.MinMaxCurve(0.06f, 0.085f);
+            main.startColor = new Color(0.8f, 1f, 1f, 1f);   // материал лепестков розоватый — крылья выходят дымчато-прозрачными, а не розовыми
             main.maxParticles = 4;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             ParticleSystem.EmissionModule em = ps.emission; em.rateOverTime = 0.3f; em.enabled = false;   // включает Weather днём
