@@ -324,6 +324,7 @@ namespace BladePath
                 }
             }
             if (Slowmo && Time.unscaledTime >= slowUntil) Slowmo = false;
+            UpdateMuffle();
             if (!MatchOver && !Paused && (State == DuelState.PlayerWon || State == DuelState.PlayerLost) && Time.unscaledTime >= nextRoundAt) { Round++; ResetDuel(); return; }
             ApplyTimeScale();
 
@@ -601,6 +602,26 @@ namespace BladePath
                 DeathblowBy = null; DeathblowTarget = null;
                 if (State == DuelState.Fighting && !ResurrectOffered) Freeze(false);
             }
+        }
+
+        // замедление времени — и звук «под водой»: фильтр низких частот на слушателе (как в кино на рапиде), смерть — глуше
+        AudioLowPassFilter muffle;
+        void UpdateMuffle()
+        {
+            if (muffle == null)
+            {
+                AudioListener l = FindFirstObjectByType<AudioListener>();
+                if (l == null) return;
+                muffle = l.GetComponent<AudioLowPassFilter>();
+                if (muffle == null) muffle = l.gameObject.AddComponent<AudioLowPassFilter>();
+                muffle.cutoffFrequency = 22000f; muffle.lowpassResonanceQ = 1.2f;
+            }
+            float want = ResurrectOffered ? 700f : (Slowmo ? 1600f : 22000f);
+            float cur = muffle.cutoffFrequency;
+            // по логарифму частоты: вниз быстро (0,08 с), обратно мягко (0,4 с)
+            float k = 1f - Mathf.Exp(-Time.unscaledDeltaTime / (want < cur ? 0.08f : 0.4f));
+            muffle.cutoffFrequency = Mathf.Exp(Mathf.Lerp(Mathf.Log(cur), Mathf.Log(want), k));
+            muffle.enabled = muffle.cutoffFrequency < 21000f;
         }
 
         // ---------------------------------------------------------------- натиск (тай-атари): бьёт телом, блок не держит
