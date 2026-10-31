@@ -386,6 +386,17 @@ namespace BladePath.EditorTools
                 for (int i = 0; i < 4; i++) { float s = 0.32f + 0.08f * i; fish[i] = EnvMesh.Decal(kp, "Fish" + i, Vector3.zero, 0f, s * 0.5f, s, look.koi).transform; }
                 BladePath.KoiPond kpond = kp.gameObject.AddComponent<BladePath.KoiPond>(); kpond.fish = fish;
             }
+            // мостик-плита (исибаси) через узкое место пруда: длинный гранитный брус чуть изогнут (две плиты под углом),
+            // концы лежат на опорных камнях
+            {
+                Material slab = look.stoneBlock != null ? look.stoneBlock : rockM;
+                Vector3 bc = c + new Vector3(-0.55f, 0f, 0f);
+                for (int s = -1; s <= 1; s += 2)
+                    EnvMesh.Box(g, "BridgeSlab" + s, bc + new Vector3(0f, -0.005f, s * 0.52f), new Vector3(s * 3.5f, 6f, 0f), new Vector3(0.36f, 0.075f, 1.06f), slab, 0.6f);
+                for (int s = -1; s <= 1; s += 2)
+                    CharacterVisuals.Part(g, "BridgeFoot" + s, PrimitiveType.Sphere, bc + new Vector3(0.02f * s, -0.06f, s * 1.02f), new Vector3(0f, 30f * s, 0f), new Vector3(0.5f, 0.14f, 0.36f), rockM);
+                if (look.aoBlob != null) EnvMesh.Decal(g, "BridgeAO", bc + new Vector3(0f, -0.065f, 0f), 6f, 0.8f, 2.4f, look.aoBlob);
+            }
             // каменный фонарь у берега — ночью сад у ворот не тонет во тьме, огонь дрожит в воде
             AddLantern(env, look, c + new Vector3(1.75f, 0f, 0.75f));
             if (look.aoBlob != null) EnvMesh.Decal(g, "LanternAO", c + new Vector3(1.75f, -0.067f, 0.75f), 0f, 1.15f, 1.15f, look.aoBlob);
@@ -1442,8 +1453,11 @@ namespace BladePath.EditorTools
         {
             Material fm = look.flameSheet != null ? look.flameSheet : look.fireSprite;
             bool sheet = look.flameSheet != null;
-            // языки пламени
-            ParticleSystem tongues = FireLayer(parent, "Fire", new Vector3(0f, 0.98f, 0f), fm, 0.55f, 0.85f, 0.34f, 0.58f, 0.28f, 0.46f, 26f, 44, new Color(1f, 0.85f, 0.72f, 1f), 0.14f, sheet);
+            // языки пламени: каждая частица — целый рваный язык из флипбука (основание у нижнего края кадра), почти не летит —
+            // подъём уже нарисован в кадрах; немного и редко, иначе аддитивные языки сливаются в жёлтый прямоугольник
+            ParticleSystem tongues = sheet
+                ? FireLayer(parent, "Fire", new Vector3(0f, 1.2f, 0f), fm, 0.7f, 1.0f, 0.06f, 0.16f, 0.4f, 0.56f, 11f, 22, new Color(1f, 0.85f, 0.72f, 1f), 0.11f, true)
+                : FireLayer(parent, "Fire", new Vector3(0f, 0.98f, 0f), fm, 0.55f, 0.85f, 0.34f, 0.58f, 0.28f, 0.46f, 26f, 44, new Color(1f, 0.85f, 0.72f, 1f), 0.14f, false);
             {
                 var col = tongues.colorOverLifetime; col.enabled = true;
                 Gradient g = new Gradient();
@@ -1455,7 +1469,7 @@ namespace BladePath.EditorTools
                 var noise = tongues.noise; noise.enabled = true; noise.strength = 0.14f; noise.frequency = 1.3f; noise.scrollSpeed = 0.6f;
             }
             // низкое яркое ядро над углями
-            ParticleSystem core = FireLayer(parent, "FireCore", new Vector3(0f, 0.98f, 0f), fm, 0.35f, 0.5f, 0.12f, 0.25f, 0.18f, 0.26f, 14f, 20, new Color(1f, 0.95f, 0.85f, 0.65f), 0.1f, sheet);
+            ParticleSystem core = FireLayer(parent, "FireCore", new Vector3(0f, 1.06f, 0f), fm, 0.35f, 0.5f, 0.05f, 0.12f, 0.15f, 0.21f, 8f, 12, new Color(1f, 0.95f, 0.85f, 0.5f), 0.08f, sheet);
             {
                 var col = core.colorOverLifetime; col.enabled = true;
                 Gradient g = new Gradient();
