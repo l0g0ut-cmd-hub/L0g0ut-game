@@ -106,6 +106,27 @@ namespace BladePath.EditorTools
                 }
                 Shot(cam, dir, "4_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);
                 WeatherShots(cam, dir, focus + new Vector3(0f, 0f, -dist), focus, log);
+                // второй облик врага (ронин) — как 3_enemy
+                EnemySkins skins = enemy != null ? enemy.GetComponent<EnemySkins>() : null;
+                if (skins != null && skins.models.Length > 1)
+                {
+                    try
+                    {
+                        skins.Apply(1);
+                        HeroRigDriver d = skins.models[1].GetComponent<HeroRigDriver>();
+                        if (d != null)
+                        {
+                            Call(d, "Start");
+                            if (d.animator != null) { d.animator.Rebind(); d.animator.Update(0f); }
+                            if (enemy.weapon != null) enemy.weapon.SnapRest();
+                            for (int i = 0; i < 40; i++) Tick(enemy, d, dt, dt);
+                            Shot(cam, dir, "22_enemy_ronin", ep + new Vector3(0f, 1.2f, -3.0f) + enemy.transform.forward * 0.9f, ep + Vector3.up * 0.95f, 36f, log);
+                            Shot(cam, dir, "23_ronin_duel", focus + new Vector3(0f, 0f, -dist), focus, cam.fieldOfView, log);
+                        }
+                    }
+                    catch (Exception e) { log.Append("PROBE|shots|ronin|error " + e.Message + "\n"); }
+                    finally { skins.Apply(0); }
+                }
                 // походка: шаг вперёд и приставной вбок (мокап + замок стоп), камера едет рядом
                 if (player != null)
                 {

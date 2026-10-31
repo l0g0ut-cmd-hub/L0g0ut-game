@@ -11,6 +11,7 @@ namespace BladePath
         public RenderTexture Texture { get; private set; }
         Camera cam;
         Transform head, root;
+        FighterController fighter;
         int frame;
 
         public static PortraitCam Create(FighterController f, Color bg)
@@ -19,7 +20,7 @@ namespace BladePath
             if (rig == null || rig.head == null) return null;
             GameObject g = new GameObject("PortraitCam_" + f.name);
             PortraitCam p = g.AddComponent<PortraitCam>();
-            p.head = rig.head; p.root = f.transform;
+            p.head = rig.head; p.root = f.transform; p.fighter = f;
             p.Texture = new RenderTexture(160, 160, 16, RenderTextureFormat.ARGB32);
             p.Texture.antiAliasing = 2;
             p.cam = g.AddComponent<Camera>();
@@ -36,6 +37,12 @@ namespace BladePath
 
         void LateUpdate()
         {
+            if ((head == null || !head.gameObject.activeInHierarchy) && fighter != null)
+            {
+                // облик бойца сменился (другой враг на «Пути») — смотрим на голову активной модели
+                HeroRigDriver rig = fighter.GetComponentInChildren<HeroRigDriver>();
+                if (rig != null) head = rig.head;
+            }
             if (head == null || root == null || cam == null) return;
             // после позы (HeroRigDriver тоже в LateUpdate): ставимся перед лицом, чуть сбоку и сверху
             Vector3 fw = root.forward, rt = root.right;

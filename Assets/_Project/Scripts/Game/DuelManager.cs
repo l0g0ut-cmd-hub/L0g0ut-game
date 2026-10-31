@@ -202,6 +202,8 @@ namespace BladePath
             Ladder.Stage s = Ladder.Current;
             if (enemyBaseSpeed < 0f) enemyBaseSpeed = enemy.moveSpeed;
             enemy.moveSpeed = enemyBaseSpeed * s.speedMul;
+            EnemySkins skins = enemy.GetComponent<EnemySkins>();
+            if (skins != null && skins.Active != s.model) skins.Apply(s.model);
             MatsOf(enemy).tint = s.tint;
             if (Juice.Instance != null) Juice.Instance.SetAuraColor(enemy, s.aura);
         }

@@ -30,29 +30,50 @@ namespace BladePath.EditorTools
         static bool shadowLook;
         static bool Exists(string path) { return AssetDatabase.LoadAssetAtPath<GameObject>(path) != null; }
 
+        const string EnemyRoninControllerPath = "Assets/_Project/Animation/EnemyRonin.controller";
+
         public static bool TryAttach(FighterController fighter, Transform bladeRoot, Look look, bool undead = false)
         {
-            // враг — самурай в красном лакированном доспехе с золотом и полумесяцем на кабуто (текстуры 2K): рядом с чёрным героем
-            // читается сразу; прежний «теневой» самурай был без текстур (плоские цвета)
-            string fbx = undead
-                ? (Exists(Samurai2FbxPath) ? Samurai2FbxPath : Exists(ShadowFbxPath) ? ShadowFbxPath : UndeadFbxPath)
-                : (Exists(Hero3FbxPath) ? Hero3FbxPath : Exists(Samurai2FbxPath) ? Samurai2FbxPath : Exists(RoninFbxPath) ? RoninFbxPath : FbxPath);
+            // враг — несколько обликов по ступеням «Пути»: самурай в красном доспехе с полумесяцем на кабуто и ронин в чёрно-красном
+            // доспехе с бородой (Meshy); у каждого свой скелет и клипы, активен один (EnemySkins)
+            if (undead)
+            {
+                string first = Exists(Samurai2FbxPath) ? Samurai2FbxPath : Exists(ShadowFbxPath) ? ShadowFbxPath : UndeadFbxPath;
+                GameObject a = Attach(fighter, bladeRoot, look, true, first, UndeadControllerPath, "Undead_", "UndeadModel");
+                if (a == null) return false;
+                if (Exists(RoninFbxPath) && first != RoninFbxPath)
+                {
+                    GameObject b = Attach(fighter, bladeRoot, look, true, RoninFbxPath, EnemyRoninControllerPath, "EnemyRonin_", "EnemyRoninModel");
+                    if (b != null)
+                    {
+                        EnemySkins sk = fighter.gameObject.AddComponent<EnemySkins>();
+                        sk.models = new[] { a, b };
+                        b.SetActive(false);
+                    }
+                }
+                return true;
+            }
+            string heroFbx = Exists(Hero3FbxPath) ? Hero3FbxPath : Exists(Samurai2FbxPath) ? Samurai2FbxPath : Exists(RoninFbxPath) ? RoninFbxPath : FbxPath;
+            return Attach(fighter, bladeRoot, look, false, heroFbx, ControllerPath, "Hero_", null) != null;
+        }
+
+        static GameObject Attach(FighterController fighter, Transform bladeRoot, Look look, bool undead, string fbx, string ctrlPath, string clipPrefix, string modelName)
+        {
             bool hero3 = fbx == Hero3FbxPath;
             bool ronin = fbx == RoninFbxPath;
             bool samurai = fbx == Samurai2FbxPath || fbx == ShadowFbxPath || hero3;
             shadowLook = fbx == ShadowFbxPath;
-            string ctrlPath = undead ? UndeadControllerPath : ControllerPath;
             GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(fbx);
             if (asset == null)
             {
                 Debug.LogWarning("HeroModelBuilder: FBX не найден (" + fbx + "), используется модель из примитивов");
-                return false;
+                return null;
             }
 
             ConfigureImport(fbx);
 
             GameObject model = (GameObject)PrefabUtility.InstantiatePrefab(asset);
-            model.name = undead ? "UndeadModel" : (ronin ? "RoninModel" : "HeroModel");
+            model.name = modelName ?? (undead ? "UndeadModel" : (ronin ? "RoninModel" : "HeroModel"));
             model.transform.SetParent(fighter.transform, false);
             model.transform.localPosition = Vector3.zero;
             model.transform.localRotation = Quaternion.identity;
@@ -86,7 +107,7 @@ namespace BladePath.EditorTools
 
             // Мокап-ходьба: клипы под скелет этой модели (вперёд/назад/вбок), до сборки контроллера
             if (!AssetDatabase.IsValidFolder("Assets/_Project/Animation")) AssetDatabase.CreateFolder("Assets/_Project", "Animation");
-            List<MocapBaker.Result> loco = MocapBaker.Bake(model.transform, fighter.transform, n => FindBone(model.transform, n), Clip(fbx, "Idle"), "Assets/_Project/Animation", undead ? "Undead_" : "Hero_");
+            List<MocapBaker.Result> loco = MocapBaker.Bake(model.transform, fighter.transform, n => FindBone(model.transform, n), Clip(fbx, "Idle"), "Assets/_Project/Animation", clipPrefix);
             AnimatorController ctrl = BuildController(fbx, ctrlPath, loco);
 
             // Аниматор
@@ -154,8 +175,8 @@ namespace BladePath.EditorTools
                 if (z.flashRenderer != null) z.flashRenderer.enabled = false;
             }
 
-            Debug.Log("HeroModelBuilder: модель " + (undead ? "врага" : "героя") + " подключена (кости: " + (d.handL != null && d.handR != null ? "руки найдены" : "РУКИ НЕ НАЙДЕНЫ") + ")");
-            return true;
+            Debug.Log("HeroModelBuilder: модель " + (undead ? "врага" : "героя") + " " + model.name + " подключена (кости: " + (d.handL != null && d.handR != null ? "руки найдены" : "РУКИ НЕ НАЙДЕНЫ") + ")");
+            return model;
         }
 
         static Material MapMaterial(string name, Look look, bool undead)
@@ -167,7 +188,7 @@ namespace BladePath.EditorTools
             {
                 case "Skin": return undead ? look.deadSkin : look.skin;
                 case "Armor_Black": return undead ? look.enemyArmor : look.heroArmor;
-                case "Ronin": return look.ronin;
+                case "Ronin": return undead ? VisualMaterials.CharacterRim(look.ronin, true) : look.ronin;
                 case "Void": return look.tentacle;
                 case "Ember": return look.ember;
                 case "Flesh": return look.flesh;
