@@ -144,6 +144,13 @@ namespace BladePath
             if (pw != null && parrySwing == pw.SwingId && pw.Phase == SwingPhase.Strike) { parrySwing = -1; blockUntil = Time.time + 0.35f; }
             if (Time.time < blockUntil && !busy) self.SetBlock(true);
 
+            // игрок пьёт из тыквы — опытный враг наказывает: сближается и бьёт, пока клинок у того опущен
+            if (target.Drinking && !busy && Time.time >= punishAt && Random.value < 0.25f + 0.15f * Level)
+            {
+                punishAt = Time.time + 0.9f;
+                if (dist > 1.35f) self.SetMoveVector(new Vector2(dir.x, dir.z));
+                else if (self.Attack(Random.value < 0.5f ? AttackType.Thrust : AttackType.Overhead)) { nextAttackAt = Time.time + 0.7f; return; }
+            }
             // наказание за промах: игрок восстанавливается после удара рядом — бьём сразу
             if (pw != null && pw.Phase == SwingPhase.Recovery && dist < 1.4f && !busy && Time.time >= punishAt && Random.value < 0.35f + 0.1f * Level)
             {

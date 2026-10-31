@@ -37,7 +37,7 @@ namespace BladePath
         public float openHips, openChest;
         [Tooltip("Стойка (камаэ): 0 — тюдан (остриё на противника), 1 — хассо (клинок вертикально у правого плеча), 2 — вакигамаэ (клинок у бедра остриём назад, спрятан за телом). Враг меняет стойки — по ней читается, чем он ударит.")]
         public int stance;
-        float stanceK1, stanceK2;
+        float stanceK1, stanceK2, drinkK;
         /// <summary>Насколько боец сейчас в стойке хассо / вакигамаэ (0…1, плавно).</summary>
         public float StanceK(int s) { return s == 1 ? stanceK1 : s == 2 ? stanceK2 : 1f - Mathf.Max(stanceK1, stanceK2); }
 
@@ -235,6 +235,9 @@ namespace BladePath
             Vector3 sE = restEuler, sH = new Vector3(restHand.x * yawSign, restHand.y, restHand.z);
             if (k1 > 0.001f) { sE = Vector3.Lerp(sE, new Vector3(-97f, -16f * yawSign, 0f), k1); sH = Vector3.Lerp(sH, new Vector3(0.27f * yawSign, -0.05f, 0.1f), k1); }    // хассо: руки у правого плеча, клинок вверх и чуть назад за голову
             if (k2 > 0.001f) { sE = Vector3.Lerp(sE, new Vector3(24f, 150f * yawSign, 0f), k2); sH = Vector3.Lerp(sH, new Vector3(0.3f * yawSign, -0.48f, -0.02f), k2); }   // вакигамаэ: руки у бедра, остриё назад-вниз, клинок за телом
+            // глоток из тыквы: клинок в одной правой руке, опущен остриём вниз-вперёд (левая рука с тыквой — у рта, HeroRigDriver)
+            float drk = Smooth(drinkK);
+            if (drk > 0.001f) { sE = Vector3.Lerp(sE, new Vector3(62f, 18f * yawSign, 0f), drk); sH = Vector3.Lerp(sH, new Vector3(0.24f * yawSign, -0.6f, 0.18f), drk); }
             Vector3 re = Vector3.Lerp(sE, gE, bk);
             Vector3 rh = Vector3.Lerp(sH, gH, bk);
             for (int c = PoseCh.PF; c < PoseCh.N; c++) Pose[c] = SwingProfile.ReadyPose[c];
@@ -300,6 +303,7 @@ namespace BladePath
             bool stag = (owner != null && owner.PostureBroken) || Time.time < pinUntil;
             downK = Mathf.MoveTowards(downK, Time.time < downUntil ? 1f : 0f, Time.deltaTime / (Time.time < downUntil ? 0.18f : 0.5f));
             stagK = Mathf.MoveTowards(stagK, stag ? 1f : 0f, Time.deltaTime / (stag ? 0.15f : 0.4f));
+            drinkK = Mathf.MoveTowards(drinkK, owner != null && owner.Drinking ? 1f : 0f, Time.deltaTime / 0.18f);
             stanceK1 = Mathf.MoveTowards(stanceK1, stance == 1 ? 1f : 0f, Time.deltaTime / 0.4f);
             stanceK2 = Mathf.MoveTowards(stanceK2, stance == 2 ? 1f : 0f, Time.deltaTime / 0.4f);
             blendLeft = Mathf.Max(0f, blendLeft - Time.deltaTime);

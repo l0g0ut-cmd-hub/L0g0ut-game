@@ -161,6 +161,7 @@ namespace BladePath.EditorTools
                     }
                     if (enemy != null) GuardStrip(cam, dir, "15_guard", player, enemy, log);
                     if (enemy != null) StanceShots(cam, dir, enemy, log);
+                    DrinkStrip(cam, dir, player, log);
                     MoveStrip(cam, dir, "19_dash_jump", player, enemy, log);
                 }
 
@@ -498,6 +499,50 @@ namespace BladePath.EditorTools
         }
 
         /// <summary>Один кадр бойца как в игре: Update драйвера → Animator → LateUpdate драйвера → полы плаща.</summary>
+        /// <summary>Глоток из тыквы-горлянки: 4 фазы (подъём, у рта, глоток с запрокинутой головой, опускание).</summary>
+        static void DrinkStrip(Camera cam, string dir, FighterController f, StringBuilder log)
+        {
+            WeaponController w = f.weapon; HeroRigDriver d = HeroRigDriver.Of(f);
+            if (w == null || d == null) return;
+            FieldInfo ds = typeof(FighterController).GetField("drinkStart", F), du = typeof(FighterController).GetField("drinkUntil", F), dk = typeof(WeaponController).GetField("drinkK", F);
+            if (ds == null || du == null || dk == null) { log.Append("PROBE|shots|32_drink|нет полей\n"); return; }
+            const int cw = 480, chh = 560;
+            float[] taus = { 0.15f, 0.36f, 0.6f, 1.02f };
+            Texture2D sheet = new Texture2D(cw * 4, chh, TextureFormat.RGB24, false);
+            RenderTexture rt = new RenderTexture(cw, chh, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
+            RenderTexture prevT = cam.targetTexture; Vector3 p0 = cam.transform.position; Quaternion r0 = cam.transform.rotation; float f0 = cam.fieldOfView;
+            try
+            {
+                w.SnapRest();
+                Transform ft = f.transform;
+                Vector3 eye = ft.position + ft.forward * 1.3f + Vector3.back * 1.6f + Vector3.up * 1.55f, look = ft.position + ft.forward * 0.15f + Vector3.up * 1.25f;
+                for (int k = 0; k < taus.Length; k++)
+                {
+                    for (int i = 0; i < 8; i++)
+                    {
+                        ds.SetValue(f, Time.time - taus[k]); du.SetValue(f, Time.time + 5f);
+                        dk.SetValue(w, 1f); Call(w, "ApplyRestPose");
+                        Tick(f, d, 1f / 30f, 1f / 30f);
+                    }
+                    cam.transform.position = eye; cam.transform.rotation = Quaternion.LookRotation(look - eye, Vector3.up); cam.fieldOfView = 34f;
+                    cam.targetTexture = rt; cam.Render();
+                    RenderTexture.active = rt; sheet.ReadPixels(new Rect(0, 0, cw, chh), cw * k, 0); RenderTexture.active = null;
+                }
+                sheet.Apply();
+                File.WriteAllBytes(Path.Combine(dir, "32_drink.jpg"), sheet.EncodeToJPG(86));
+                log.Append("PROBE|shots|32_drink|4 фазы\n");
+            }
+            catch (Exception e) { log.Append("PROBE|shots|32_drink|error " + e.Message + "\n"); }
+            finally
+            {
+                ds.SetValue(f, -10f); du.SetValue(f, 0f); dk.SetValue(w, 0f); w.SnapRest();
+                cam.targetTexture = prevT; cam.transform.SetPositionAndRotation(p0, r0); cam.fieldOfView = f0;
+                rt.Release(); UnityEngine.Object.DestroyImmediate(rt); UnityEngine.Object.DestroyImmediate(sheet);
+                for (int i = 0; i < 12; i++) Tick(f, d, 1f / 30f, 1f / 30f);
+                GameObject gq = GameObject.Find("Gourd"); if (gq != null) gq.SetActive(false);
+            }
+        }
+
         /// <summary>Стойки врага: тюдан, хассо, вакигамаэ — спереди-сбоку, склейка в один кадр.</summary>
         static void StanceShots(Camera cam, string dir, FighterController f, StringBuilder log)
         {

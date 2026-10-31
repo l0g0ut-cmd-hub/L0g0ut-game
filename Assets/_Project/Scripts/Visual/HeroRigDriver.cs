@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace BladePath
@@ -759,6 +760,101 @@ namespace BladePath
                 OrientHand(handR, bindR, fR, nR);
                 OrientHand(handL, bindL, fL, nL);
             }
+            DrinkPose(ft, ys, dt);
+        }
+
+        // ---- глоток из тыквы-горлянки: левая рука с тыквой поднимается ко рту, тыква наклоняется, голова запрокидывается
+        float drinkW, pourW;
+        Transform gourd;
+        void DrinkPose(Transform ft, float ys, float dt)
+        {
+            bool dr = fighter != null && fighter.Drinking;
+            float t = dr ? fighter.DrinkT : 9f;
+            float raise = dr ? Smooth(Mathf.Clamp01(t / 0.28f)) * (1f - Smooth(Mathf.Clamp01((t - 0.92f) / 0.23f))) : 0f;
+            float pour = dr ? Smooth(Mathf.Clamp01((t - 0.3f) / 0.15f)) * (1f - Smooth(Mathf.Clamp01((t - 0.78f) / 0.14f))) : 0f;
+            drinkW = Mathf.MoveTowards(drinkW, raise, dt / 0.08f);   // сорвали глоток — рука плавно возвращается на рукоять
+            pourW = Mathf.MoveTowards(pourW, pour, dt / 0.06f);
+            if (drinkW < 0.001f || handL == null || head == null || upperArmL == null || forearmL == null)
+            {
+                if (gourd != null && gourd.gameObject.activeSelf) gourd.gameObject.SetActive(false);
+                return;
+            }
+            Vector3 up = Vector3.up, fwd = ft.forward, right = ft.right;
+            // голова запрокидывается на глотке
+            head.rotation = Quaternion.AngleAxis(-20f * pourW, right) * head.rotation;
+            Vector3 mouth = head.position + fwd * (0.1f * transform.lossyScale.y) + Vector3.down * (0.07f * transform.lossyScale.y);
+            Vector3 target = mouth + fwd * 0.06f - right * (0.03f * ys) + Vector3.down * Mathf.Lerp(0.17f, 0.1f, pourW);
+            Vector3 hand0 = handL.position; Quaternion hr0 = handL.rotation;
+            SolveArm(upperArmL, forearmL, handL, l1L, l2L, Vector3.Lerp(hand0, target, drinkW), -right * ys + Vector3.down * 0.7f + fwd * 0.2f);
+            // ось тыквы (дно → горлышко): стоит вверх, на глотке горлышко к губам
+            Vector3 center0 = gripFromBind ? handL.TransformPoint(gripLocalL) : handL.position;
+            Vector3 axis = Vector3.Slerp((up + fwd * 0.15f).normalized, (mouth - center0).normalized, pourW * 0.9f);
+            if (framesReady)
+            {
+                Vector3 gf, gn;
+                GripFrame(axis, sideL, ft, out gf, out gn);   // кисть обхватывает тыкву, как рукоять с вертикальной осью
+                OrientHand(handL, bindL, gf, gn);
+                handL.rotation = Quaternion.Slerp(hr0, handL.rotation, drinkW);
+            }
+            if (gourd == null) gourd = MakeGourd();
+            if (gourd == null) return;
+            if (!gourd.gameObject.activeSelf) gourd.gameObject.SetActive(true);
+            Vector3 center = gripFromBind ? handL.TransformPoint(gripLocalL) : handL.position + fwd * 0.04f;
+            gourd.rotation = Quaternion.FromToRotation(Vector3.up, axis);
+            gourd.position = center - axis * 0.085f;   // кисть — на перехвате тыквы
+            gourd.localScale = Vector3.one * Mathf.Lerp(0.6f, 1f, Mathf.Clamp01(drinkW * 3f));
+        }
+
+        /// <summary>Тыква-горлянка: тело вращения (две доли с перехватом, горлышко, пробка), лак цвета мёда.</summary>
+        Transform MakeGourd()
+        {
+            Shader sh = Shader.Find("BladePath/Character");
+            if (sh == null) sh = Shader.Find("Standard");
+            if (sh == null) return null;
+            const int seg = 18, rings = 30;
+            const float hgt = 0.19f;
+            System.Func<float, float> R = y =>
+            {
+                float lo = Mathf.Sqrt(Mathf.Max(0f, 0.052f * 0.052f - (y - 0.052f) * (y - 0.052f)));
+                float hi = Mathf.Sqrt(Mathf.Max(0f, 0.034f * 0.034f - (y - 0.122f) * (y - 0.122f)));
+                float neck = y > 0.145f && y < 0.172f ? 0.011f : 0f;
+                float stop = y >= 0.168f && y < hgt ? 0.014f : 0f;
+                float r = Mathf.Max(Mathf.Max(lo, hi), Mathf.Max(neck, stop));
+                return y > 0.003f && y < hgt - 0.002f ? Mathf.Max(r, 0.016f) : r;
+            };
+            List<Vector3> v = new List<Vector3>(); List<Vector3> n = new List<Vector3>(); List<int> tri = new List<int>();
+            for (int i = 0; i <= rings; i++)
+            {
+                float y = hgt * i / rings, r = R(y);
+                float dr = (R(Mathf.Min(hgt, y + 0.002f)) - R(Mathf.Max(0f, y - 0.002f))) / 0.004f;
+                for (int k = 0; k <= seg; k++)
+                {
+                    float a = k / (float)seg * Mathf.PI * 2f;
+                    Vector3 d = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+                    v.Add(d * r + Vector3.up * y);
+                    n.Add((d - Vector3.up * dr).normalized);
+                }
+            }
+            for (int i = 0; i < rings; i++)
+                for (int k = 0; k < seg; k++)
+                {
+                    int a = i * (seg + 1) + k, b = a + seg + 1;
+                    tri.Add(a); tri.Add(b); tri.Add(a + 1); tri.Add(a + 1); tri.Add(b); tri.Add(b + 1);
+                }
+            Mesh m = new Mesh { name = "gourd" };
+            m.SetVertices(v); m.SetNormals(n); m.SetTriangles(tri, 0); m.RecalculateBounds();
+            GameObject g = new GameObject("Gourd");
+            g.AddComponent<MeshFilter>().sharedMesh = m;
+            MeshRenderer mr = g.AddComponent<MeshRenderer>();
+            Material mat = new Material(sh) { name = "Gourd" };
+            mat.color = new Color(0.72f, 0.46f, 0.2f);
+            if (mat.HasProperty("_Glossiness")) mat.SetFloat("_Glossiness", 0.62f);
+            if (mat.HasProperty("_Metallic")) mat.SetFloat("_Metallic", 0f);
+            if (mat.HasProperty("_RimColor")) mat.SetColor("_RimColor", new Color(0.2f, 0.15f, 0.1f));
+            mr.sharedMaterial = mat;
+            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+            g.SetActive(false);
+            return g.transform;
         }
 
         /// <summary>
