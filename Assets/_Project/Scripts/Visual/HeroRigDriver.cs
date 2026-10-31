@@ -485,7 +485,7 @@ namespace BladePath
             wasGrounded = gnd;
             landK = Mathf.MoveTowards(landK, 0f, dt / 0.3f);
             // рывок — короткий прыжок-шаг: стопы над землёй, ноги подобраны наполовину
-            float airT = !gnd ? 1f : (fighter.Dashing ? 0.45f : 0f);
+            float airT = !gnd ? 1f : (fighter.Dashing ? 0.7f : 0f);
             airK = Mathf.MoveTowards(airK, airT, dt / (airT < airK ? 0.06f : 0.08f));
             lean = Mathf.MoveTowards(lean, pitchTarget, 140f * dt);
             yawS = Mathf.SmoothDampAngle(yawS, yawTarget, ref yawV, 0.05f);
@@ -624,7 +624,7 @@ namespace BladePath
                 }
                 if (solL != null && legsReady)
                 {
-                    bool use = locoW > 0.5f;
+                    bool use = locoW > 0.5f && !fighter.Dashing;   // рывок — прыжок-шаг: стопы не держим на земле (иначе волочатся позади)
                     LockFoot(ref lockL, upperLegL, lowerLegL, footL, lgL1, lgL2, solL, use, ft, dt);
                     LockFoot(ref lockR, upperLegR, lowerLegR, footR, lgR1, lgR2, solR, use, ft, dt);
                 }
