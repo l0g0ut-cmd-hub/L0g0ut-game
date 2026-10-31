@@ -119,11 +119,65 @@ namespace BladePath.EditorTools
             AddBrazier(look, new Vector3(3.2f, 0f, 2.2f));
 
             BuildDetails(env, look);
+            AddGroundAO(env, look);
             MarkStatic(env);
             AddMist(look);
             AddFireflies(look);
             AddDragonflies(look);
             AddPetals(look);
+        }
+
+        /// <summary>
+        /// Затенение у основания (AO): мягкие тёмные полосы на земле вдоль стен (с обеих сторон), у платформы храма и бордюров
+        /// арены, пятна под фонарями, жаровнями, столбами тории и ворот, стволами клёнов и пагодой. Без него предметы
+        /// «стояли на воздухе» — SSAO на телефоне не по карману, а запечённая тень стоит одну наклейку.
+        /// </summary>
+        static void AddGroundAO(Transform env, Look look)
+        {
+            if (look.aoStrip == null || look.aoBlob == null) return;
+            Transform ao = new GameObject("GroundAO").transform;
+            ao.SetParent(env, false);
+            const float yGravel = -0.068f, yForest = -0.058f, yArena = 0.002f;
+            int k = 0;
+            // полоса от a до b вдоль основания; toWall — куда стена (тень темнее у неё), width — на сколько отходит
+            System.Action<Vector3, Vector3, Vector3, float, float> Strip = (Vector3 a, Vector3 b, Vector3 toWall, float width, float y) =>
+            {
+                Vector3 c = (a + b) * 0.5f - toWall.normalized * width * 0.5f; c.y = y;
+                float yaw = Mathf.Atan2(-toWall.x, -toWall.z) * Mathf.Rad2Deg;
+                EnvMesh.Decal(ao, "Strip" + k++, c, yaw, (b - a).magnitude + width * 0.6f, width, look.aoStrip);
+            };
+            System.Action<float, float, float, float> Blob = (float x, float z, float size, float y) =>
+                EnvMesh.Decal(ao, "Blob" + k++, new Vector3(x, y, z), 0f, size, size, look.aoBlob);
+
+            // боковые стены: внутри двора (гравий) и снаружи (лес)
+            for (int side = -1; side <= 1; side += 2)
+            {
+                Strip(new Vector3(side * 6.21f, 0f, -7.41f), new Vector3(side * 6.21f, 0f, 8.55f), new Vector3(side, 0f, 0f), 0.85f, yGravel);
+                Strip(new Vector3(side * 6.59f, 0f, -7.79f), new Vector3(side * 6.59f, 0f, 8.55f), new Vector3(-side, 0f, 0f), 0.85f, yForest);
+                // передняя стена по сторонам ворот
+                Strip(new Vector3(side * 1.56f, 0f, -7.41f), new Vector3(side * 6.21f, 0f, -7.41f), new Vector3(0f, 0f, -1f), 0.75f, yGravel);
+                Strip(new Vector3(side * 1.56f, 0f, -7.79f), new Vector3(side * 6.59f, 0f, -7.79f), new Vector3(0f, 0f, 1f), 0.75f, yForest);
+            }
+            // платформа храма (x −5,4…3,8, фасад z = 4,5) и её торцы
+            Strip(new Vector3(-5.4f, 0f, 4.5f), new Vector3(3.8f, 0f, 4.5f), new Vector3(0f, 0f, 1f), 0.7f, yGravel);
+            Strip(new Vector3(-5.4f, 0f, 4.5f), new Vector3(-5.4f, 0f, 7.1f), new Vector3(1f, 0f, 0f), 0.6f, yGravel);
+            Strip(new Vector3(3.8f, 0f, 4.5f), new Vector3(3.8f, 0f, 7.1f), new Vector3(-1f, 0f, 0f), 0.6f, yGravel);
+            // бордюр арены: снаружи на гравии и внутри на мостовой (узко)
+            Strip(new Vector3(-3.9f, 0f, 3.0f), new Vector3(3.9f, 0f, 3.0f), new Vector3(0f, 0f, -1f), 0.4f, yGravel);
+            Strip(new Vector3(-3.9f, 0f, -3.0f), new Vector3(3.9f, 0f, -3.0f), new Vector3(0f, 0f, 1f), 0.4f, yGravel);
+            Strip(new Vector3(-3.9f, 0f, -3.0f), new Vector3(-3.9f, 0f, 3.0f), new Vector3(1f, 0f, 0f), 0.4f, yGravel);
+            Strip(new Vector3(3.9f, 0f, -3.0f), new Vector3(3.9f, 0f, 3.0f), new Vector3(-1f, 0f, 0f), 0.4f, yGravel);
+            Strip(new Vector3(-3.55f, 0f, 2.7f), new Vector3(3.55f, 0f, 2.7f), new Vector3(0f, 0f, 1f), 0.3f, yArena);
+            Strip(new Vector3(-3.55f, 0f, -2.7f), new Vector3(3.55f, 0f, -2.7f), new Vector3(0f, 0f, -1f), 0.3f, yArena);
+            Strip(new Vector3(-3.6f, 0f, -2.65f), new Vector3(-3.6f, 0f, 2.65f), new Vector3(-1f, 0f, 0f), 0.3f, yArena);
+            Strip(new Vector3(3.6f, 0f, -2.65f), new Vector3(3.6f, 0f, 2.65f), new Vector3(1f, 0f, 0f), 0.3f, yArena);
+            // фонари, жаровни, тории, ворота, клёны, пагода
+            foreach (Vector2 p in new[] { new Vector2(-4.5f, -1.6f), new Vector2(4.5f, -1.6f), new Vector2(-4.5f, 2.2f), new Vector2(4.5f, 2.2f) }) Blob(p.x, p.y, 1.15f, yGravel);
+            Blob(-3.2f, 2.2f, 0.95f, yArena); Blob(3.2f, 2.2f, 0.95f, yArena);
+            Blob(0.7f, 3.6f, 0.85f, yGravel); Blob(2.7f, 3.6f, 0.85f, yGravel);
+            Blob(-1.35f, -7.6f, 0.9f, yGravel); Blob(1.35f, -7.6f, 0.9f, yGravel);
+            Blob(5.4f, 3.4f, 1.6f, yGravel); Blob(-5.5f, 4.4f, 1.7f, yGravel); Blob(5.6f, -0.6f, 1.4f, yGravel); Blob(-5.4f, -1.0f, 1.45f, yGravel); Blob(4.6f, 8.2f, 1.9f, yGravel);
+            Blob(-3.4f, 9.6f, 4.2f, yGravel);
         }
 
         /// <summary>Мелочи, оживляющие кадр: бумажные фонари на веранде, верёвка симэнава на тории, знамёна.</summary>

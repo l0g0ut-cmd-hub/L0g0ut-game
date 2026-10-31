@@ -11,7 +11,7 @@ namespace BladePath.EditorTools
         public Material heroArmor, enemyArmor, cloth, skin, hair, lacquer, bronze, steel, handle;
         public Material flesh, tooth, maw, voidBlack, deadSkin, ember, tentacle, ronin;
         public Material stone, stoneDark, flame, moon, petal;
-        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage, forestFloor;
+        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage, forestFloor, aoStrip, aoBlob;
     }
 
     /// <summary>
@@ -102,6 +102,8 @@ namespace BladePath.EditorTools
             l.flame = Unlit("Flame", new Color(1f, 0.55f, 0.12f));
             l.moon = Unlit("Moon", new Color(0.86f, 0.90f, 1f));
             l.petal = SpriteLike("Petal", new Color(1f, 0.72f, 0.82f));
+            l.aoStrip = AO("AO_Strip", false, 0.62f);
+            l.aoBlob = AO("AO_Blob", true, 0.6f);
             // окружение — на шейдере с погодой: снег ложится на крыши, колпаки стен, камень и землю, в дождь всё мокнет и блестит
             foreach (Material em in new[] { l.wood, l.woodDark, l.roof, l.plaster, l.stoneBlock, l.gravel, l.forestFloor, l.bark, l.stone, l.moss, l.stoneDark })
                 EnvShader(em);
@@ -188,6 +190,52 @@ namespace BladePath.EditorTools
             m.SetFloat("_Rotation", 0f);
             if (isNew) AssetDatabase.CreateAsset(m, path); else EditorUtility.SetDirty(m);
             return m;
+        }
+
+        /// <summary>
+        /// Затенение у основания (шейдер BladePath/AO, умножение): полоса — темно у стены (v = 0) с плавным спадом и мягкими
+        /// концами по u; пятно — радиальное. Маска хранится ассетом, чтобы попала в сборку.
+        /// </summary>
+        static Material AO(string name, bool blob, float strength)
+        {
+            Shader sh = Shader.Find("BladePath/AO");
+            if (sh == null) return null;
+            string tpath = MatFolder + name + "_Mask.asset";
+            Texture2D t = AssetDatabase.LoadAssetAtPath<Texture2D>(tpath);
+            if (t == null)
+            {
+                const int n = 64;
+                t = new Texture2D(n, n, TextureFormat.RGBA32, true, true);
+                t.wrapMode = TextureWrapMode.Clamp;
+                Color[] px = new Color[n * n];
+                for (int y = 0; y < n; y++)
+                    for (int x = 0; x < n; x++)
+                    {
+                        float u = (x + 0.5f) / n, v = (y + 0.5f) / n, dark;
+                        if (blob)
+                        {
+                            float d = Mathf.Clamp01(Mathf.Sqrt((u - 0.5f) * (u - 0.5f) + (v - 0.5f) * (v - 0.5f)) * 2f);
+                            dark = Mathf.Pow(1f - d, 1.6f);
+                        }
+                        else
+                        {
+                            float ends = Mathf.SmoothStep(0f, 1f, u / 0.12f) * Mathf.SmoothStep(0f, 1f, (1f - u) / 0.12f);
+                            dark = Mathf.Pow(1f - v, 2.2f) * ends;
+                        }
+                        float m = 1f - dark;
+                        px[y * n + x] = new Color(m, m, m, 1f);
+                    }
+                t.SetPixels(px); t.Apply();
+                AssetDatabase.CreateAsset(t, tpath);
+            }
+            string path = MatFolder + name + ".mat";
+            Material mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            bool isNew = mat == null;
+            if (isNew) mat = new Material(sh); else mat.shader = sh;
+            mat.mainTexture = t;
+            mat.SetFloat("_Strength", strength);
+            if (isNew) AssetDatabase.CreateAsset(mat, path); else EditorUtility.SetDirty(mat);
+            return mat;
         }
 
         /// <summary>Мягкий радиальный ореол (сохраняется ассетом, чтобы попал в сборку).</summary>

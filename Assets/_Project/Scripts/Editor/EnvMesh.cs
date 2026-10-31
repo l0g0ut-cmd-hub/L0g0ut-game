@@ -155,6 +155,28 @@ namespace BladePath.EditorTools
             return g;
         }
 
+        /// <summary>
+        /// Плоская «наклейка» на земле (AO у основания предметов): горизонтальный квад sx×sz, UV 0..1; v = 0 — у стены (край −z
+        /// до поворота). yaw — поворот вокруг вертикали. Тень не отбрасывает и не принимает.
+        /// </summary>
+        public static GameObject Decal(Transform parent, string name, Vector3 pos, float yaw, float sx, float sz, Material mat)
+        {
+            const string key = "decalquad";
+            Mesh m;
+            if (!cache.TryGetValue(key, out m) || m == null)
+            {
+                MB mb = new MB();
+                mb.Poly(new[] { new Vector3(-0.5f, 0f, -0.5f), new Vector3(0.5f, 0f, -0.5f), new Vector3(0.5f, 0f, 0.5f), new Vector3(-0.5f, 0f, 0.5f) }, 1f, new Vector3(0f, -1f, 0f), true, false);
+                m = Save(key, mb);
+            }
+            GameObject g = Make(parent, name, m, pos, new Vector3(0f, yaw, 0f), mat);
+            g.transform.localScale = new Vector3(sx, 1f, sz);
+            MeshRenderer r = g.GetComponent<MeshRenderer>();
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            r.receiveShadows = false;
+            return g;
+        }
+
         /// <summary>Ореол-биллборд: аддитивный квад с мягким диском, разворачивается к камере (GlowSprite).</summary>
         public static GameObject Glow(Transform parent, string name, Vector3 pos, float size, Material mat, float flicker = 0.12f)
         {
