@@ -304,13 +304,16 @@ namespace BladePath.EditorTools
             MeshRenderer wr = water.GetComponent<MeshRenderer>(); wr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             // тёмная кромка воды (AO) и камни бордюра
             if (look.aoBlob != null) EnvMesh.Decal(g, "PondAO", c + new Vector3(0f, -0.067f, 0f), 0f, 3.9f, 2.4f, look.aoBlob);
-            for (int i = 0; i < n; i += 2)
+            // бордюр — плотный ряд разномастных тёмных камней (вплотную, разного размера и наклона), часть замшелые
+            Material rockM = look.rock != null ? look.rock : look.stoneBlock;
+            for (int i = 0; i < n; i++)
             {
-                Vector2 o = outline[i] * 1.06f;
-                float s = 0.16f + 0.14f * (float)r.NextDouble();
-                Material m = r.NextDouble() < 0.4 && look.moss != null ? look.moss : look.stoneBlock;
-                CharacterVisuals.Part(g, "RimStone" + i, PrimitiveType.Sphere, c + new Vector3(o.x, -0.05f + s * 0.18f, o.y),
-                    new Vector3(0f, (float)r.NextDouble() * 180f, 0f), new Vector3(s * 1.6f, s * 0.7f, s * 1.2f), m);
+                if (i % 7 == 3) continue;   // кое-где берег без камня — трава и гравий
+                Vector2 o = outline[i] * (1.03f + 0.04f * (float)r.NextDouble());
+                float s = 0.11f + 0.13f * (float)r.NextDouble();
+                Material m = r.NextDouble() < 0.35 && look.moss != null ? look.moss : rockM;
+                CharacterVisuals.Part(g, "RimStone" + i, PrimitiveType.Sphere, c + new Vector3(o.x, -0.06f + s * 0.2f, o.y),
+                    new Vector3((float)r.NextDouble() * 18f - 9f, (float)r.NextDouble() * 180f, (float)r.NextDouble() * 18f - 9f), new Vector3(s * 1.9f, s * 0.8f, s * 1.3f), m);
             }
             // листья лотоса — плоские диски у дальнего берега, разного размера
             if (look.lotus != null)
@@ -337,9 +340,13 @@ namespace BladePath.EditorTools
             for (int i = 0; i < 3; i++)
             {
                 float rx = rocks[i, 0], rz = rocks[i, 1], rr = rocks[i, 2];
-                Material m = i == 1 || look.moss == null ? look.stoneBlock : look.moss;
-                CharacterVisuals.Part(g, "Rock" + i, PrimitiveType.Sphere, c + new Vector3(rx, -0.07f + rr * 0.45f, rz),
-                    new Vector3(8f * i, 37f * i, -6f * i), new Vector3(rr * 2.1f, rr * 1.5f, rr * 1.8f), m);
+                Material m = i == 1 || look.moss == null ? (look.rock != null ? look.rock : look.stoneBlock) : look.moss;
+                // главный камень — стоячий (татэ-иси), остальные — пологие; из двух сфер, чтобы не было «яиц»
+                float hgt = i == 0 ? rr * 3.0f : rr * 1.4f;
+                CharacterVisuals.Part(g, "Rock" + i, PrimitiveType.Sphere, c + new Vector3(rx, -0.07f + hgt * 0.42f, rz),
+                    new Vector3(8f * i - 4f, 37f * i, -6f * i + 5f), new Vector3(rr * 2.0f, hgt, rr * 1.7f), m);
+                CharacterVisuals.Part(g, "Rock" + i + "b", PrimitiveType.Sphere, c + new Vector3(rx + rr * 0.45f, -0.07f + hgt * 0.22f, rz - rr * 0.3f),
+                    new Vector3(-12f, 60f * i + 20f, 9f), new Vector3(rr * 1.3f, hgt * 0.55f, rr * 1.2f), m);
                 if (look.aoBlob != null) EnvMesh.Decal(g, "RockAO" + i, c + new Vector3(rx, -0.067f, rz), 0f, rr * 3.4f, rr * 3.4f, look.aoBlob);
             }
         }

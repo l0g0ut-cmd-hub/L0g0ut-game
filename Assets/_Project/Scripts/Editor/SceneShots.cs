@@ -138,7 +138,7 @@ namespace BladePath.EditorTools
                 ReflectShot(cam, dir, "37_reflect_night", log);
                 Shot(cam, dir, "38_gate", new Vector3(0.4f, 2.0f, 3.4f), new Vector3(0f, 1.1f, -8f), 55f, log);   // назад: передняя стена, ворота, дорожка, лес
                 Shot(cam, dir, "39_garden", new Vector3(0f, 3.0f, -2.0f), new Vector3(0f, 0f, -5.8f), 62f, log);   // пруд слева, карэсансуй справа
-                Shot(cam, dir, "40_backcourt", new Vector3(7.5f, 5.5f, 4.5f), new Vector3(0.5f, 1.2f, 10.6f), 55f, log);   // за храмом: колокольня, кура, задняя стена
+                Shot(cam, dir, "40_backcourt", new Vector3(2.4f, 8.0f, 15.5f), new Vector3(0.8f, 1.0f, 9.4f), 58f, log);   // за храмом: колокольня, кура, задняя стена
                 WeatherShots(cam, dir, focus + new Vector3(0f, 0f, -dist), focus, log);
                 DayShots(cam, dir, focus + new Vector3(0f, 0f, -dist), focus, log);
                 // второй облик врага (ронин) — как 3_enemy
@@ -473,7 +473,7 @@ namespace BladePath.EditorTools
                 Shot(cam, dir, "33b_day_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);
                 ReflectShot(cam, dir, "37b_reflect_day", log);
                 Shot(cam, dir, "39b_garden_day", new Vector3(0f, 3.0f, -2.0f), new Vector3(0f, 0f, -5.8f), 62f, log);
-                Shot(cam, dir, "40b_backcourt_day", new Vector3(7.5f, 5.5f, 4.5f), new Vector3(0.5f, 1.2f, 10.6f), 55f, log);
+                Shot(cam, dir, "40b_backcourt_day", new Vector3(2.4f, 8.0f, 15.5f), new Vector3(0.8f, 1.0f, 9.4f), 58f, log);
                 dn.Apply(true, false, true);   // закат: солнце за храмом
                 foreach (FlickerLight fl in UnityEngine.Object.FindObjectsByType<FlickerLight>(FindObjectsSortMode.None)) Call(fl, "Update");
                 Shot(cam, dir, "41_dusk", pos, look, cam.fieldOfView, log);

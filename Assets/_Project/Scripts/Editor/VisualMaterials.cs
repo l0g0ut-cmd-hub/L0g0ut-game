@@ -11,7 +11,7 @@ namespace BladePath.EditorTools
         public Material heroArmor, enemyArmor, cloth, skin, hair, lacquer, bronze, steel, handle;
         public Material flesh, tooth, maw, voidBlack, deadSkin, ember, tentacle, ronin;
         public Material stone, stoneDark, flame, moon, petal;
-        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, skyDusk, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage, forestFloor, aoStrip, aoBlob, shojiMonk, shojiWalker, karesansui, pondWater, lotus, bellBronze;
+        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, skyDusk, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage, forestFloor, aoStrip, aoBlob, shojiMonk, shojiWalker, karesansui, pondWater, lotus, bellBronze, rock;
     }
 
     /// <summary>
@@ -114,9 +114,10 @@ namespace BladePath.EditorTools
             l.pondWater = Textured("Env_PondWater", null, "water_normal.png", Vector2.one, new Color(0.02f, 0.03f, 0.034f), 0f, 0.95f);
             if (l.pondWater != null) { l.pondWater.SetFloat("_BumpScale", 0.35f); l.pondWater.mainTextureScale = new Vector2(1.5f, 1.5f); EditorUtility.SetDirty(l.pondWater); }
             l.lotus = Solid("Env_Lotus", new Color(0.12f, 0.24f, 0.09f), 0f, 0.55f);
+            l.rock = Textured("Env_Rock", "stoneblock_albedo.png", "stoneblock_normal.png", new Vector2(0.45f, 0.45f), new Color(0.46f, 0.46f, 0.44f), 0f, 0.18f);   // садовые валуны: тёмный гранит
             l.bellBronze = Solid("Env_BellBronze", new Color(0.2f, 0.19f, 0.13f), 0.75f, 0.42f);   // старая бронза с патиной
             // окружение — на шейдере с погодой: снег ложится на крыши, колпаки стен, камень и землю, в дождь всё мокнет и блестит
-            foreach (Material em in new[] { l.wood, l.woodDark, l.roof, l.plaster, l.stoneBlock, l.gravel, l.forestFloor, l.bark, l.stone, l.moss, l.stoneDark })
+            foreach (Material em in new[] { l.rock, l.wood, l.woodDark, l.roof, l.plaster, l.stoneBlock, l.gravel, l.forestFloor, l.bark, l.stone, l.moss, l.stoneDark })
                 EnvShader(em);
             // Материалы зон тела подсвечиваются при попадании через emission (см. BodyZone):
             // включаем _EMISSION заранее, иначе нужный вариант шейдера вырежется из сборки.
