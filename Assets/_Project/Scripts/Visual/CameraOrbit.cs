@@ -206,7 +206,7 @@ namespace BladePath
             {
                 Vector3 a = dm.DeathblowBy.transform.position, t = dm.DeathblowTarget.transform.position;
                 Vector3 c = Vector3.Lerp(a, t, 0.55f);
-                dbFocus = new Vector3(c.x, 1.1f, c.z);
+                dbFocus = new Vector3(c.x, 1.1f + Mathf.Max(0f, a.y) * 0.55f, c.z);   // с прыжка — кадр поднимается за атакующим в воздухе
                 // ракурс свой у каждого приёма и медленный облёт во время добивания
                 dbYaw = (-dm.DeathblowCamYaw - 5f * Mathf.Min(dm.DeathblowAge, 2f)) * Mathf.Sign(t.x - a.x + 1e-4f);
             }
