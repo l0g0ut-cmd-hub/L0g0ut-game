@@ -56,7 +56,7 @@ namespace BladePath
             // в стойке — изредка, если клинок виден сбоку (не смотрит в камеру)
             if (runT < 0f && alive && weapon.Phase == SwingPhase.Idle && Time.time >= nextAt)
             {
-                nextAt = Time.time + Random.Range(6f, 11f);
+                nextAt = Time.time + (DayNight.Instance != null && DayNight.Instance.Day ? Random.Range(4f, 7f) : Random.Range(6f, 11f));   // на солнце сталь бликует чаще
                 float side = 1f - Mathf.Abs(Vector3.Dot(b.forward, (b.position - cam.transform.position).normalized));
                 if (side > 0.45f) Run(0.8f);
             }
@@ -73,7 +73,9 @@ namespace BladePath
             float size = (0.06f + 0.13f * pulse * pulse) * Mathf.Clamp(runPow, 0.5f, 1.3f);
             q.localScale = new Vector3(size, size, size);
             float blood = Juice.Instance != null ? Juice.Instance.BladeBlood(weapon) : 0f;
-            Color c = Color.Lerp(new Color(0.78f, 0.88f, 1f), new Color(0.9f, 0.45f, 0.4f), blood * 0.8f) * (pulse * 0.75f * runPow * (1f - blood * 0.55f));
+            bool day = DayNight.Instance != null && DayNight.Instance.Day;
+            Color baseC = day ? (DayNight.Instance.Dawn ? new Color(1f, 0.78f, 0.6f) : new Color(1f, 0.96f, 0.85f)) : new Color(0.78f, 0.88f, 1f);   // днём — солнечный блик
+            Color c = Color.Lerp(baseC, new Color(0.9f, 0.45f, 0.4f), blood * 0.8f) * (pulse * 0.75f * runPow * (1f - blood * 0.55f));
             c.a = 0.5f;
             rend.enabled = true;
             mpb.SetColor(TintId, c);
