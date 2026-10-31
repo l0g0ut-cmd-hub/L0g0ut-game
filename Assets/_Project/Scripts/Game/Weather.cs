@@ -209,6 +209,10 @@ namespace BladePath
             if (snow == null) BuildSnow();
             HeavySnow = Random.value < 0.5f;
             var em = snow.emission; em.rateOverTime = (DuelManager.Gfx == 1 ? 140f : 70f) * (HeavySnow ? 1.3f : 0.45f);
+            // сильный — хлопья крупнее и падают быстрее, слабый — мелкие редкие снежинки медленно кружат
+            var sm = snow.main;
+            sm.startSize = HeavySnow ? new ParticleSystem.MinMaxCurve(0.035f, 0.075f) : new ParticleSystem.MinMaxCurve(0.02f, 0.045f);
+            sm.gravityModifier = HeavySnow ? 0.1f : 0.05f;
             snow.Play();
             RenderSettings.fogDensity = fogDensBase * (HeavySnow ? 1.45f : 1.1f);
             RenderSettings.fogColor = Color.Lerp(fogBase, new Color(0.42f, 0.46f, 0.56f), 0.6f);
