@@ -318,6 +318,9 @@ namespace BladePath.EditorTools
             if (m.shader != sh) m.shader = sh;
             m.SetColor("_RimColor", enemy ? new Color(0.15f, 0.09f, 0.22f) : new Color(0.17f, 0.21f, 0.30f));
             m.SetFloat("_RimPower", 3.6f);
+            // маска брызг и потёков крови (раны проступают с потерей здоровья)
+            Texture2D wm = LoadTex(TexFolder + "wound_mask.png", false, false, 256);
+            if (wm != null) { m.SetTexture("_WoundMask", wm); m.SetFloat("_Wound", 0f); }
             EditorUtility.SetDirty(m);
             return m;
         }

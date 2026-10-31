@@ -89,6 +89,13 @@ namespace BladePath.EditorTools
                 Shot(cam, dir, "1_game", focus + new Vector3(0f, 0f, -dist), focus, cam.fieldOfView, log);   // как в игре (FOV камеры боя)
                 if (player != null) Shot(cam, dir, "2_player", pp + new Vector3(0f, 1.2f, -3.0f) + player.transform.forward * 0.9f, pp + Vector3.up * 0.95f, 36f, log);   // со стороны камеры боя, чуть спереди
                 if (enemy != null) Shot(cam, dir, "3_enemy", ep + new Vector3(0f, 1.2f, -3.0f) + enemy.transform.forward * 0.9f, ep + Vector3.up * 0.95f, 36f, log);
+                // раны: брызги и потёки крови на телах у почти убитых (в игре — по потере здоровья)
+                if (player != null && enemy != null)
+                {
+                    SetWound(player, 0.3f); SetWound(enemy, 0.3f);
+                    Shot(cam, dir, "31_wounds", mid + new Vector3(0f, 1.25f, -3.6f), mid + Vector3.up * 1.0f, 44f, log);
+                    SetWound(player, 0f); SetWound(enemy, 0f);
+                }
                 // хват: руки на рукояти крупно (с камеры спереди-сбоку и сверху-сбоку)
                 if (player != null && player.weapon != null && player.weapon.pivot != null)
                 {
@@ -559,6 +566,13 @@ namespace BladePath.EditorTools
             File.WriteAllBytes(Path.Combine(dir, "27_blade_blood.jpg"), sheet.EncodeToJPG(88));
             UnityEngine.Object.DestroyImmediate(sheet); rt.Release(); UnityEngine.Object.DestroyImmediate(rt);
             log.Append("PROBE|shots|27_blade_blood|4 уровня\n");
+        }
+
+        static void SetWound(FighterController f, float w)
+        {
+            foreach (Renderer r in f.GetComponentsInChildren<Renderer>(true))
+                foreach (Material m in r.sharedMaterials)
+                    if (m != null && m.HasProperty("_Wound")) m.SetFloat("_Wound", w);
         }
 
         static void Tick(FighterController f, HeroRigDriver d, float animDt, float dt)

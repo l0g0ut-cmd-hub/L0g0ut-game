@@ -150,7 +150,7 @@ namespace BladePath
         public float Trail01(FighterController f) { float v; return hpTrail.TryGetValue(f, out v) ? Mathf.Clamp01(v / MaxHp(f)) : 1f; }
 
         /// <summary>Материалы тела бойца (без оружия) и их исходные цвета — для окраса ступени и «окровавленности».</summary>
-        class BodyMats { public List<Material> mats = new List<Material>(); public List<Color> baseCol = new List<Color>(); public List<Color> baseEm = new List<Color>(); public Color tint = Color.white; public float blood; public Color applied = Color.white; public float flashAt = -10f, flashK; }
+        class BodyMats { public List<Material> mats = new List<Material>(); public List<Color> baseCol = new List<Color>(); public List<Color> baseEm = new List<Color>(); public Color tint = Color.white; public float blood; public Color applied = Color.white; public float flashAt = -10f, flashK, woundApplied; }
         readonly Dictionary<FighterController, BodyMats> bodyMats = new Dictionary<FighterController, BodyMats>();
         float enemyBaseSpeed = -1f;
 
@@ -181,7 +181,14 @@ namespace BladePath
             BodyMats b = MatsOf(f);
             float target = (1f - Hp01(f)) * 0.45f;
             b.blood = Mathf.MoveTowards(b.blood, target, Time.unscaledDeltaTime * 0.8f);
-            Color k = BloodCol(b.blood) * b.tint;
+            // раны на теле (шейдер персонажа): брызги и потёки — до трети поверхности у почти убитого
+            float wound = b.blood / 0.45f * 0.3f;
+            if (Mathf.Abs(wound - b.woundApplied) > 0.004f)
+            {
+                b.woundApplied = wound;
+                for (int i = 0; i < b.mats.Count; i++) if (b.mats[i].HasProperty("_Wound")) b.mats[i].SetFloat("_Wound", wound);
+            }
+            Color k = BloodCol(b.blood * 0.4f) * b.tint;   // общий оттенок слабее — кровь теперь пятнами
             // вспышка попадания по самой модели: красно-белое свечение на 0,15 с
             float fl = Mathf.Clamp01(1f - (Time.unscaledTime - b.flashAt) / 0.15f);
             if (fl > 0f) k = Color.Lerp(k, new Color(1f, 0.75f, 0.7f), fl * 0.6f);

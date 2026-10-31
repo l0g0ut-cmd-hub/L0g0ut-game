@@ -17,6 +17,8 @@ Shader "BladePath/Character"
         _EmissionMap ("Emission Map", 2D) = "white" {}
         _RimColor ("Rim Color", Color) = (0.3,0.37,0.52,1)
         _RimPower ("Rim Power", Range(0.5,8)) = 3.2
+        _WoundMask ("Wound Mask (R)", 2D) = "white" {}
+        _Wound ("Wound", Range(0,1)) = 0
     }
     SubShader
     {
@@ -30,7 +32,8 @@ Shader "BladePath/Character"
         #pragma shader_feature_local _METALLICGLOSSMAP
         #include "UnityStandardUtils.cginc"
 
-        sampler2D _MainTex, _BumpMap, _MetallicGlossMap, _EmissionMap;
+        sampler2D _MainTex, _BumpMap, _MetallicGlossMap, _EmissionMap, _WoundMask;
+        half _Wound;        // раны: доля тела в брызгах и потёках крови (DuelManager по потере здоровья)
         fixed4 _Color, _EmissionColor, _RimColor;
         half _BumpScale, _Metallic, _Glossiness, _GlossMapScale, _RimPower;
         half _BP_Wetness;   // глобально из Weather: дождь 0…1
@@ -61,6 +64,16 @@ Shader "BladePath/Character"
             o.Metallic = _Metallic;
             o.Smoothness = _Glossiness;
         #endif
+            // кровь на теле: брызги и потёки проступают с потерей здоровья (маска tools/texgen/wound_mask.py, плитка по развёртке)
+            if (_Wound > 0.001h)
+            {
+                half wm = tex2D(_WoundMask, IN.uv_MainTex * 5.0).r;
+                half wt = saturate((_Wound - wm) / 0.03h);
+                half fresh = saturate((_Wound - wm) / 0.12h);   // в середине пятна — гуще и темнее
+                o.Albedo = lerp(o.Albedo, lerp(half3(0.32h, 0.03h, 0.025h), half3(0.13h, 0.008h, 0.008h), fresh), wt * 0.92h);
+                o.Smoothness = lerp(o.Smoothness, 0.72h, wt);
+                o.Metallic = lerp(o.Metallic, 0.0h, wt);
+            }
             // мокрый под дождём: верх (плечи, шлем, руки) мокнет сильнее; ткань темнеет, всё блестит
             if (_BP_Wetness > 0.001h)
             {
