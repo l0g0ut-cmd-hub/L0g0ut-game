@@ -12,6 +12,10 @@ Shader "Hidden/BladePath/PostFX"
     half _Intensity, _Exposure, _Contrast, _Saturation, _Delta;
     half _Vignette, _Aberr, _Grain, _Desat, _EdgeBlur;
     half3 _Shadows, _Highlights;
+    half _BP_Snow;          // глобально из Weather: в снег по краям кадра нарастает иней
+    float Hash21 (float2 p) { p = frac(p * float2(123.34, 456.21)); p += dot(p, p + 45.32); return frac(p.x * p.y); }
+    float VNoise (float2 p) { float2 i = floor(p), f = frac(p); f = f * f * (3.0 - 2.0 * f);
+        return lerp(lerp(Hash21(i), Hash21(i + float2(1, 0)), f.x), lerp(Hash21(i + float2(0, 1)), Hash21(i + float2(1, 1)), f.x), f.y); }
 
     struct v2f { float4 pos : SV_POSITION; float2 uv : TEXCOORD0; };
     v2f vert (appdata_img v) { v2f o; o.pos = UnityObjectToClipPos(v.vertex); o.uv = v.texcoord; return o; }
@@ -77,6 +81,15 @@ Shader "Hidden/BladePath/PostFX"
         c = lerp(c, l.xxx * half3(1.05h, 0.92h, 0.9h), _Desat);
         float n = frac(sin(dot(uv * 431.7 + frac(_Time.y * 7.13), float2(12.9898, 78.233))) * 43758.5453);
         c += (n - 0.5) * _Grain;
+        // иней на «объективе» в снегопад: морозные разводы растут от углов и краёв, холодные и светлые
+        if (_BP_Snow > 0.01)
+        {
+            float2 e = abs(uv - 0.5) * 2.0;
+            float edge = max(e.x * 0.92, e.y) + 0.25 * e.x * e.y;
+            float cr = VNoise(uv * float2(38.0, 22.0)) * 0.6 + VNoise(uv * float2(130.0, 75.0)) * 0.4;   // кристаллы
+            half frost = saturate((edge - 0.78 + cr * 0.3) / 0.2) * saturate(_BP_Snow * 1.2);
+            c = lerp(c, half3(0.78h, 0.85h, 0.95h) * (0.75h + 0.35h * cr), frost * 0.42h);
+        }
         return saturate(c);
     }
     ENDCG
