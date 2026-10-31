@@ -33,6 +33,7 @@ namespace BladePath
             public float stepT; public bool wasGrounded = true;
             public int bloodSteps;   // наступил в лужу крови — столько ещё кровавых отпечатков
             public float dripAt;     // тяжело ранен — капает кровь
+            public float scrapeAt;   // остриё чиркнуло по камню (низкая подсечка) — искры не чаще раза в 60 мс
         }
         readonly List<Tracked> tracked = new List<Tracked>();
 
@@ -247,6 +248,18 @@ namespace BladePath
                     if (ph == SwingPhase.Strike) { SwingSound(t.w.CurrentProfile); KiaiFor(i, t.w.CurrentProfile); if (t.trail != null) { t.trail.Clear(); t.trail.emitting = true; } }
                     if ((ph == SwingPhase.Recovery || ph == SwingPhase.Idle) && t.trail != null) t.trail.emitting = false;
                     t.last = ph;
+                }
+                // остриё чиркает по камню арены на низкой дуге: искры и скрежет
+                if (t.w.bladeRoot != null && (ph == SwingPhase.Strike || ph == SwingPhase.FollowThrough) && Time.time >= t.scrapeAt)
+                {
+                    Vector3 tip = t.w.bladeRoot.position + t.w.bladeRoot.forward * t.w.bladeLength;
+                    if (tip.y < 0.05f && tip.y > -0.3f)
+                    {
+                        t.scrapeAt = Time.time + 0.06f;
+                        Vector3 at = new Vector3(tip.x, 0.01f, tip.z);
+                        Sparks(at, Vector3.up, 6, 0.45f);
+                        Play(clang, 0.16f, Random.Range(1.7f, 2.1f));
+                    }
                 }
                 if (t.f != null)
                 {
