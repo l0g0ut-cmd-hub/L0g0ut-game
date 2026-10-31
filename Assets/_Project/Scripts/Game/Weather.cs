@@ -114,6 +114,27 @@ namespace BladePath
         }
 
         bool sakuraRoll, lightSnowLeaves;
+        Material crownMat; Texture crownTex0; Color crownEm0; Texture sakuraTex; bool crownInit;
+        /// <summary>
+        /// Весна: когда падает сакура, кроны клёнов во дворе цветут — карточки крон получают текстуру соцветий сакуры
+        /// (Resources/FX/sakura_cluster, tools/texgen/sakura_cluster.py) и розоватое свечение; иначе — красный клён.
+        /// </summary>
+        void Crowns(bool sakura)
+        {
+            if (!crownInit)
+            {
+                crownInit = true;
+                sakuraTex = Resources.Load<Texture2D>("FX/sakura_cluster");
+                foreach (Renderer r in FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None))
+                    if (r.sharedMaterial != null && r.sharedMaterial.name.StartsWith("Env_MapleCrown")) { crownMat = r.sharedMaterial; break; }
+                if (crownMat != null) { crownTex0 = crownMat.mainTexture; crownEm0 = crownMat.HasProperty("_EmissionColor") ? crownMat.GetColor("_EmissionColor") : Color.black; }
+            }
+            if (crownMat == null || sakuraTex == null) return;
+            crownMat.mainTexture = sakura ? sakuraTex : crownTex0;
+            if (crownMat.HasProperty("_EmissionColor")) crownMat.SetColor("_EmissionColor", sakura ? new Color(0.06f, 0.04f, 0.045f) : crownEm0);
+        }
+
+        void RestoreCrowns() { if (crownMat != null && crownTex0 != null) { crownMat.mainTexture = crownTex0; if (crownMat.HasProperty("_EmissionColor")) crownMat.SetColor("_EmissionColor", crownEm0); } }   // в редакторе ассет не должен остаться розовым
         ParticleSystem petalsPs; Texture mapleTex; bool petalsInit;
         static readonly Color MapleA = new Color(0.75f, 0.55f, 0.5f, 0.95f), MapleB = new Color(1f, 0.85f, 0.8f, 0.95f);
         /// <summary>
@@ -134,6 +155,7 @@ namespace BladePath
                 if (g != null) petalsPs = g.GetComponent<ParticleSystem>();
                 if (petalsPs != null) { Renderer pr = petalsPs.GetComponent<Renderer>(); if (pr != null && pr.sharedMaterial != null) mapleTex = pr.sharedMaterial.mainTexture; }
             }
+            Crowns(mode == 2);
             if (petalsPs == null) return;
             var main = petalsPs.main; var em = petalsPs.emission; var noise = petalsPs.noise;
             Renderer r = petalsPs.GetComponent<Renderer>();
@@ -566,7 +588,7 @@ namespace BladePath
             if (skyMat != null && skyMat.HasProperty("_Exposure")) skyMat.SetFloat("_Exposure", skyExpBase);
         }
 
-        void OnDestroy() { Restore(); if (Instance == this) Instance = null; }
+        void OnDestroy() { Restore(); RestoreCrowns(); if (Instance == this) Instance = null; }
 
         const int Rate = 22050;
         static AudioClip RainClip()
