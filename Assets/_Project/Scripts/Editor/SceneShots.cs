@@ -91,6 +91,7 @@ namespace BladePath.EditorTools
 
                 Shot(cam, dir, "1_game", focus + new Vector3(0f, 0f, -dist), focus, cam.fieldOfView, log);   // как в игре (FOV камеры боя)
                 if (player != null) Shot(cam, dir, "2_player", pp + new Vector3(0f, 1.2f, -3.0f) + player.transform.forward * 0.9f, pp + Vector3.up * 0.95f, 36f, log);   // со стороны камеры боя, чуть спереди
+                if (enemy != null) YawProbe(enemy, HeroRigDriver.Of(enemy), "samurai", log);
                 if (enemy != null) Shot(cam, dir, "3_enemy", ep + new Vector3(0f, 1.2f, -3.0f) + enemy.transform.forward * 0.9f, ep + Vector3.up * 0.95f, 36f, log);
                 // раны: брызги и потёки крови на телах у почти убитых (в игре — по потере здоровья)
                 if (player != null && enemy != null)
@@ -130,7 +131,7 @@ namespace BladePath.EditorTools
                 ShojiShadows shoji = UnityEngine.Object.FindFirstObjectByType<ShojiShadows>();
                 if (shoji != null)
                 {
-                    shoji.dir = 1f; shoji.Pose(0.42f);
+                    shoji.dir = 1f; shoji.Pose(0.555f);
                     Shot(cam, dir, "36_shoji", new Vector3(-0.8f, 1.5f, 0.6f), new Vector3(-0.8f, 1.3f, 5.2f), 50f, log);
                     if (shoji.walker != null) shoji.walker.enabled = false;
                 }
@@ -152,6 +153,7 @@ namespace BladePath.EditorTools
                             if (d.animator != null) { d.animator.Rebind(); d.animator.Update(0f); }
                             if (enemy.weapon != null) enemy.weapon.SnapRest();
                             for (int i = 0; i < 40; i++) Tick(enemy, d, dt, dt);
+                            YawProbe(enemy, d, "ronin", log);
                             Shot(cam, dir, "22_enemy_ronin", ep + new Vector3(0f, 1.2f, -3.0f) + enemy.transform.forward * 0.9f, ep + Vector3.up * 0.95f, 36f, log);
                             Shot(cam, dir, "23_ronin_duel", focus + new Vector3(0f, 0f, -dist), focus, cam.fieldOfView, log);
                             // ронин в ранах крупно и в ударе — проверка, что сетка не «рвётся» (раны по 3D-шуму, руки на вытянутом ударе)
@@ -763,6 +765,20 @@ namespace BladePath.EditorTools
             s.GetComponent<Renderer>().sharedMaterial = m;
             try { Shot(cam, dir, name, new Vector3(0f, 1.25f, -2.75f), new Vector3(0f, 1.1f, -1.7f), 40f, log); }
             finally { UnityEngine.Object.DestroyImmediate(s); UnityEngine.Object.DestroyImmediate(m); }
+        }
+
+        /// <summary>Разворот таза и груди относительно бойца: поза Animator и после драйвера (строка диагностики драйвера).</summary>
+        static void YawProbe(FighterController f, HeroRigDriver d, string tag, StringBuilder log)
+        {
+            if (f == null || d == null) return;
+            HeroRigDriver.Diag = true;
+            try
+            {
+                Tick(f, d, 1f / 30f, 1f / 30f);
+                FieldInfo fi = typeof(HeroRigDriver).GetField("diag", BindingFlags.NonPublic | BindingFlags.Instance);
+                log.Append("PROBE|yaw|" + tag + "|" + (fi != null ? fi.GetValue(d) : "-") + "\n");
+            }
+            finally { HeroRigDriver.Diag = false; }
         }
 
         static void SetWound(FighterController f, float w)

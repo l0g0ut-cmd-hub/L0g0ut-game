@@ -196,9 +196,11 @@ namespace BladePath.EditorTools
             if (look.shojiMonk == null || look.shojiWalker == null) return;
             Transform root = new GameObject("ShojiShadows").transform;
             const float z = 5.211f;
-            GameObject monk = EnvMesh.Decal(root, "Monk", new Vector3(-2.35f, 0.6f + 0.7f, z), 0f, 0.7f, 1.4f, look.shojiMonk);
+            // монах — в средней створке (входной): на остальных висят знамёна и закрывали его
+            GameObject monk = EnvMesh.Decal(root, "Monk", new Vector3(-1.1f, 0.6f + 0.7f, z), 0f, 0.7f, 1.4f, look.shojiMonk);
             monk.transform.localEulerAngles = new Vector3(-90f, 0f, 0f);
-            GameObject walker = EnvMesh.Decal(root, "Walker", new Vector3(-0.8f, 0.55f + 0.9f, z), 0f, 0.9f, 1.8f, look.shojiWalker);
+            // идущий: рост тени ~1,38 м — макушка под верхней рамой створки, ступни на полу веранды
+            GameObject walker = EnvMesh.Decal(root, "Walker", new Vector3(-0.8f, 0.54f + 0.775f, z), 0f, 0.775f, 1.55f, look.shojiWalker);
             walker.transform.localEulerAngles = new Vector3(-90f, 0f, 0f);
             BladePath.ShojiShadows ss = root.gameObject.AddComponent<BladePath.ShojiShadows>();
             ss.monk = monk.GetComponent<Renderer>(); ss.walker = walker.GetComponent<Renderer>();

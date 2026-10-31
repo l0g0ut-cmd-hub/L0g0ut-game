@@ -39,6 +39,12 @@ namespace BladePath
         [Tooltip("Точный хват: центр кулака задан в системе кости кисти (по позе покоя: вниз от запястья gripDown, к ладони gripIn, м). " +
                  "Тогда рукоять проходит ровно через кулак при любом повороте кисти, без подгонки palmOffset/palmLift.")]
         public bool gripFromBind;
+        /// <summary>
+        /// Снять разворот таза/груди, заложенный в клип покоя модели (у ронина из Meshy idle уже развёрнут ~40° к камере, а стойка
+        /// добавляла свой разворот сверху — грудь смотрела прямо в камеру). В стойке поза Animator приводится к прямой, дальше — стойка.
+        /// </summary>
+        public bool neutralAnimYaw;
+        float animHipCal, animChestCal; bool animCalInit;
         [Tooltip("Вынос рук вперёд/вниз сверх позы клинка (м, в системе бойца): у модели с короткими руками и узкими плечами стойка иначе «прижата к себе». В ударе — вполовину.")]
         public float handForward = 0f, handLift = 0f;
         float handBiasK = 1f;
@@ -582,6 +588,17 @@ namespace BladePath
                 transform.localRotation = q * baseLocalRot;
             }
             else transform.localRotation = baseLocalRot;
+
+            if (neutralAnimYaw && deadK < 0.01f)
+            {
+                // сглаженно: дыхание клипа не дёргает корпус; на мокап-ходьбе клип ведёт сам
+                float ka = animCalInit ? 1f - Mathf.Exp(-dt / 0.25f) : 1f;
+                animCalInit = true;
+                animHipCal = Mathf.LerpAngle(animHipCal, diagHipA, ka); animChestCal = Mathf.LerpAngle(animChestCal, diagChestA, ka);
+                float kc = wSt * procW;
+                hYaw -= animHipCal * kc;
+                cYaw -= Mathf.DeltaAngle(animHipCal, animChestCal) * kc;
+            }
 
             // ---------- 3) таз → поясница → грудь (родитель раньше ребёнка); ось наклона повёрнута вместе с тазом
             Rot(hips, hYaw, up);

@@ -4,13 +4,14 @@ namespace BladePath
 {
     /// <summary>
     /// Жизнь за сёдзи храма ночью: на светящейся бумаге — тень монаха в сэйдза (чуть дышит), а раз в 25–55 с вдоль
-    /// всех створок неспешно проходит другой монах (4 кадра шага, тень проявляется и тает у краёв). Днём бумага не светится
+    /// всех створок неспешно проходит другой монах (8 кадров шага, тень проявляется и тает у краёв). Днём бумага не светится
     /// изнутри — теней не видно. Тени — наклейки умножения (BladePath/AO) прямо на бумаге; кадр и сила — через MaterialPropertyBlock.
     /// </summary>
     public class ShojiShadows : MonoBehaviour
     {
         public Renderer monk, walker;
-        public float xMin = -4.0f, xMax = 2.4f, speed = 0.55f, stride = 0.3f;
+        public float xMin = -4.0f, xMax = 2.4f, speed = 0.42f, stride = 0.0975f;   // stride — путь за кадр (8 кадров ≈ 2 шага, 0,78 м)
+        public int frames = 8;
         public float dir = 1f;
         MaterialPropertyBlock mpb;
         float nextAt, t = -1f, monkSy = 1f, walkStr = 0.66f;
@@ -54,11 +55,12 @@ namespace BladePath
             Transform w = walker.transform;
             Vector3 p = w.localPosition; p.x = dir > 0f ? Mathf.Lerp(xMin, xMax, u) : Mathf.Lerp(xMax, xMin, u); w.localPosition = p;
             Vector3 sc = w.localScale; sc.x = Mathf.Abs(sc.x) * (dir > 0f ? 1f : -1f); w.localScale = sc;
-            int frame = (int)(u * len / stride) % 4;
+            int frame = (int)(u * len / stride) % frames;
             float fade = Mathf.Clamp01(Mathf.Min(u, 1f - u) * len / 0.6f);
             walker.enabled = true;
             walker.GetPropertyBlock(mpb);
-            mpb.SetVector(StId, new Vector4(0.25f, 1f, frame * 0.25f, 0f));
+            float fw = 1f / frames;
+            mpb.SetVector(StId, new Vector4(fw, 1f, frame * fw, 0f));
             mpb.SetFloat(StrId, walkStr * fade);
             walker.SetPropertyBlock(mpb);
         }
