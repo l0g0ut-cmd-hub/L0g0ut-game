@@ -57,7 +57,8 @@ Shader "BladePath/Env"
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
             fixed4 c = tex2D(_MainTex, IN.uv_MainTex) * _Color;
-            half3 n = UnpackScaleNormal(tex2D(_BumpMap, IN.uv_MainTex), _BumpScale);
+            half3 n = UnpackNormal(tex2D(_BumpMap, IN.uv_MainTex));
+            n.xy *= _BumpScale; n = normalize(n);
         #ifdef _METALLICGLOSSMAP
             fixed4 ms = tex2D(_MetallicGlossMap, IN.uv_MainTex);
             half metal = ms.r, smooth = ms.a * _GlossMapScale;
