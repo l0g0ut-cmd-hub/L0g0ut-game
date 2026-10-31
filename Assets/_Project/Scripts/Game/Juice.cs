@@ -374,24 +374,54 @@ namespace BladePath
             ps.Stop();
             var main = ps.main;
             main.loop = false; main.duration = 0.1f;
-            main.startLifetime = new ParticleSystem.MinMaxCurve(0.45f, 1.1f);
-            main.startSpeed = new ParticleSystem.MinMaxCurve(speed * 0.35f, speed);
-            main.startSize = new ParticleSystem.MinMaxCurve(0.03f, 0.09f);
-            main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.45f, 0.0f, 0.02f), new Color(0.85f, 0.04f, 0.05f));
-            main.gravityModifier = 1.1f;
+            // много мелких тёмных капель (крупные ярко-красные «овалы» читались мультяшно) + короткое облачко кровавой взвеси
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.4f, 1.0f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(speed * 0.3f, speed * 1.05f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.012f, 0.038f);
+            main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.26f, 0.0f, 0.01f), new Color(0.55f, 0.02f, 0.03f));
+            main.gravityModifier = 1.15f;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
-            main.maxParticles = 400;
+            main.maxParticles = 600;
             main.stopAction = ParticleSystemStopAction.Destroy;
             var em = ps.emission; em.rateOverTime = 0f;
-            em.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, (short)count) });
+            int drops = Mathf.Min(500, Mathf.RoundToInt(count * 1.6f));
+            em.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, (short)drops) });
             var sp = ps.shape; sp.shapeType = ParticleSystemShapeType.Cone; sp.angle = angle; sp.radius = 0.03f;
             var sz = ps.sizeOverLifetime; sz.enabled = true;
-            sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(1f, 0.4f)));
+            sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(1f, 0.5f)));
             var rend = g.GetComponent<ParticleSystemRenderer>();
             rend.material = softMat;
             rend.renderMode = ParticleSystemRenderMode.Stretch;
-            rend.velocityScale = 0.05f; rend.lengthScale = 2.4f;
+            rend.velocityScale = 0.022f; rend.lengthScale = 1.3f;
+            rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             ps.Play();
+
+            GameObject mg = new GameObject("BloodMist");
+            mg.transform.SetParent(g.transform, false);
+            ParticleSystem mist = mg.AddComponent<ParticleSystem>();
+            mist.Stop();
+            var mm = mist.main;
+            mm.loop = false; mm.duration = 0.1f;
+            mm.startLifetime = new ParticleSystem.MinMaxCurve(0.22f, 0.4f);
+            mm.startSpeed = new ParticleSystem.MinMaxCurve(speed * 0.08f, speed * 0.25f);
+            mm.startSize = new ParticleSystem.MinMaxCurve(0.07f, 0.16f);
+            mm.startColor = new Color(0.32f, 0.02f, 0.03f, 0.32f);
+            mm.simulationSpace = ParticleSystemSimulationSpace.World;
+            mm.stopAction = ParticleSystemStopAction.None;
+            var me = mist.emission; me.rateOverTime = 0f;
+            me.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, (short)Mathf.Clamp(count / 6, 3, 14)) });
+            var ms = mist.shape; ms.shapeType = ParticleSystemShapeType.Cone; ms.angle = angle * 1.3f; ms.radius = 0.05f;
+            var msz = mist.sizeOverLifetime; msz.enabled = true;
+            msz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.6f), new Keyframe(1f, 1.6f)));
+            var mcol = mist.colorOverLifetime; mcol.enabled = true;
+            Gradient mgr = new Gradient();
+            mgr.SetKeys(new GradientColorKey[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                        new GradientAlphaKey[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) });
+            mcol.color = mgr;
+            var mr = mg.GetComponent<ParticleSystemRenderer>();
+            mr.material = softMat; mr.renderMode = ParticleSystemRenderMode.Billboard;
+            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            mist.Play();
         }
 
         /// <summary>

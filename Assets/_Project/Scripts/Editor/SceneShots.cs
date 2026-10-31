@@ -69,6 +69,9 @@ namespace BladePath.EditorTools
                     log.Append(string.Format("PROBE|shots|stance|{0}|elbow R {1:F0} L {2:F0}|hands from shoulders x {3:F2} y {4:F2} z {5:F2}\n", f.name, eR, eL, rel.x, rel.y, rel.z));
                 }
 
+                // портрет героя для полосы здоровья (в сборку: снимок попадает в Resources до сборки APK)
+                if (player != null) HeroPortrait(player, log);
+
                 // компоненты, которые в игре готовятся в Awake (текстуры листьев/лепестков, ореолы) — в редакторе вызываем сами
                 foreach (MonoBehaviour mb in UnityEngine.Object.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
                     if (mb is PetalTexture || mb is GlowSprite || mb is FlickerLight || mb is FloorReflection || mb is LightShaft) Call(mb, "Awake");
@@ -539,6 +542,77 @@ namespace BladePath.EditorTools
         }
 
         /// <summary>Один кадр бойца как в игре: Update драйвера → Animator → LateUpdate драйвера → полы плаща.</summary>
+        /// <summary>
+        /// Портрет героя для HUD в стиле нарисованных (UI/portrait_*): лицо крупно, тёплый ключевой свет и холодный контур,
+        /// тёмный фон, виньетка, рамка — пиксели кольца берутся из portrait_ronin. Сохраняется в Resources/UI/portrait_hero.png
+        /// и импортируется до сборки APK. Раньше у игрока был портрет бородатого ронина, а тот теперь — облик врага.
+        /// </summary>
+        static void HeroPortrait(FighterController f, StringBuilder log)
+        {
+            HeroRigDriver d = HeroRigDriver.Of(f);
+            string framePath = Path.Combine(Application.dataPath, "_Project/Resources/UI/portrait_ronin.png");
+            if (d == null || d.head == null || !File.Exists(framePath)) return;
+            const int S = 320, O = 160;
+            GameObject cg = new GameObject("PortraitShotCam");
+            Camera c = cg.AddComponent<Camera>();
+            GameObject k1 = new GameObject("PortraitKey"), k2 = new GameObject("PortraitRim");
+            RenderTexture rt = new RenderTexture(S, S, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
+            try
+            {
+                Transform ft = f.transform;
+                Vector3 face = d.head.position + ft.forward * 0.06f - Vector3.up * 0.01f;
+                c.transform.position = face + ft.forward * 0.62f + ft.right * 0.2f + Vector3.up * 0.03f;
+                c.transform.rotation = Quaternion.LookRotation(face - c.transform.position, Vector3.up);
+                c.fieldOfView = 24f; c.nearClipPlane = 0.05f; c.farClipPlane = 1.6f;
+                c.clearFlags = CameraClearFlags.SolidColor; c.backgroundColor = new Color(0.05f, 0.035f, 0.035f, 1f);
+                c.targetTexture = rt;
+                Light kl = k1.AddComponent<Light>(); kl.type = LightType.Point; kl.range = 2.2f; kl.intensity = 1.6f; kl.color = new Color(1f, 0.78f, 0.55f);
+                k1.transform.position = face + ft.forward * 0.55f - ft.right * 0.35f + Vector3.up * 0.3f;
+                Light rl = k2.AddComponent<Light>(); rl.type = LightType.Point; rl.range = 1.6f; rl.intensity = 1.2f; rl.color = new Color(0.55f, 0.65f, 1f);
+                k2.transform.position = face - ft.forward * 0.4f + ft.right * 0.45f + Vector3.up * 0.25f;
+                c.Render();
+                RenderTexture.active = rt;
+                Texture2D shot = new Texture2D(S, S, TextureFormat.RGB24, false);
+                shot.ReadPixels(new Rect(0, 0, S, S), 0, 0); shot.Apply();
+                RenderTexture.active = null;
+                Texture2D frame = new Texture2D(2, 2); frame.LoadImage(File.ReadAllBytes(framePath));
+                Texture2D outT = new Texture2D(O, O, TextureFormat.RGBA32, false);
+                Color[] fpx = frame.width == O ? frame.GetPixels() : null;
+                Color[] spx = shot.GetPixels();
+                Color[] opx = new Color[O * O];
+                for (int y = 0; y < O; y++)
+                    for (int x = 0; x < O; x++)
+                    {
+                        float u = (x + 0.5f) / O * 2f - 1f, v = (y + 0.5f) / O * 2f - 1f, r = Mathf.Sqrt(u * u + v * v);
+                        Color fc = fpx != null ? fpx[y * O + x] : Color.clear;
+                        if (r > 0.86f && fpx != null) { opx[y * O + x] = fc; continue; }   // кольцо рамки — как у нарисованных портретов
+                        // лицо: 2×2 отсчёта рендера, виньетка, лёгкое тёплое тонирование и контраст «под живопись»
+                        Color sc = (spx[(y * 2) * S + x * 2] + spx[(y * 2) * S + x * 2 + 1] + spx[(y * 2 + 1) * S + x * 2] + spx[(y * 2 + 1) * S + x * 2 + 1]) * 0.25f;
+                        float vig = Mathf.Clamp01(1.1f - r * r * 0.9f);
+                        float l = sc.r * 0.3f + sc.g * 0.55f + sc.b * 0.15f;
+                        Color g = Color.Lerp(new Color(l, l, l), sc, 0.85f);
+                        g = new Color(Mathf.Pow(g.r, 1.08f) * 1.06f, Mathf.Pow(g.g, 1.08f) * 1.0f, Mathf.Pow(g.b, 1.08f) * 0.94f);
+                        g *= vig;
+                        float edge = Mathf.Clamp01((0.88f - r) / 0.03f);
+                        Color o = new Color(g.r, g.g, g.b, 1f);
+                        opx[y * O + x] = fpx != null && r > 0.84f ? Color.Lerp(fc, o, edge) : o;
+                    }
+                outT.SetPixels(opx); outT.Apply();
+                string outPath = "Assets/_Project/Resources/UI/portrait_hero.png";
+                File.WriteAllBytes(Path.Combine(Application.dataPath, "_Project/Resources/UI/portrait_hero.png"), outT.EncodeToPNG());
+                UnityEditor.AssetDatabase.ImportAsset(outPath);
+                File.WriteAllBytes(Path.Combine(Path.GetFullPath(Path.Combine(Application.dataPath, "../build/shots")), "35_portrait_hero.png"), outT.EncodeToPNG());
+                log.Append("PROBE|shots|35_portrait_hero|ok\n");
+                UnityEngine.Object.DestroyImmediate(shot); UnityEngine.Object.DestroyImmediate(frame); UnityEngine.Object.DestroyImmediate(outT);
+            }
+            catch (Exception e) { log.Append("PROBE|shots|portrait|error " + e.Message + "\n"); }
+            finally
+            {
+                c.targetTexture = null; rt.Release(); UnityEngine.Object.DestroyImmediate(rt);
+                UnityEngine.Object.DestroyImmediate(cg); UnityEngine.Object.DestroyImmediate(k1); UnityEngine.Object.DestroyImmediate(k2);
+            }
+        }
+
         /// <summary>Глоток из тыквы-горлянки: 4 фазы (подъём, у рта, глоток с запрокинутой головой, опускание).</summary>
         static void DrinkStrip(Camera cam, string dir, FighterController f, StringBuilder log)
         {

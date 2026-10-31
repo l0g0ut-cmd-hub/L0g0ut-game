@@ -19,6 +19,7 @@ Shader "BladePath/Character"
         _RimPower ("Rim Power", Range(0.5,8)) = 3.2
         _WoundMask ("Wound Mask (R)", 2D) = "white" {}
         _Wound ("Wound", Range(0,1)) = 0
+        _WoundTri ("Wound 3D (UV3 = bind pose)", Float) = 0
     }
     SubShader
     {
@@ -26,7 +27,7 @@ Shader "BladePath/Character"
         LOD 300
 
         CGPROGRAM
-        #pragma surface surf Standard fullforwardshadows
+        #pragma surface surf Standard fullforwardshadows vertex:vert
         #pragma target 3.0
         #pragma shader_feature_local _NORMALMAP
         #pragma shader_feature_local _METALLICGLOSSMAP
@@ -34,6 +35,7 @@ Shader "BladePath/Character"
 
         sampler2D _MainTex, _BumpMap, _MetallicGlossMap, _EmissionMap, _WoundMask;
         half _Wound;        // раны: доля тела в брызгах и потёках крови (DuelManager по потере здоровья)
+        half _WoundTri;     // 1 — у меша в UV3 точка позы покоя (HeroModelBuilder): шум в 3D, без швов развёртки
         fixed4 _Color, _EmissionColor, _RimColor;
         half _BumpScale, _Metallic, _Glossiness, _GlossMapScale, _RimPower;
         half _BP_Wetness;   // глобально из Weather: дождь 0…1
@@ -45,8 +47,15 @@ Shader "BladePath/Character"
             float2 uv_MainTex;
             float3 viewDir;
             float3 worldNormal;
+            float3 bindPos;
             INTERNAL_DATA
         };
+
+        void vert (inout appdata_full v, out Input o)
+        {
+            UNITY_INITIALIZE_OUTPUT(Input, o);
+            o.bindPos = v.texcoord3.xyz;
+        }
 
         void surf (Input IN, inout SurfaceOutputStandard o)
         {
@@ -68,11 +77,19 @@ Shader "BladePath/Character"
             // кровь на теле: брызги и потёки проступают с потерей здоровья (маска tools/texgen/wound_mask.py, плитка по развёртке)
             if (_Wound > 0.001h)
             {
-                half wm = tex2D(_WoundMask, IN.uv_MainTex * 5.0).r;
-                half wt = saturate((_Wound - wm) / 0.03h);
-                half fresh = saturate((_Wound - wm) / 0.12h);   // в середине пятна — гуще и темнее
-                o.Albedo = lerp(o.Albedo, lerp(half3(0.32h, 0.03h, 0.025h), half3(0.13h, 0.008h, 0.008h), fresh), wt * 0.92h);
-                o.Smoothness = lerp(o.Smoothness, 0.72h, wt);
+                half wm, thr;
+                if (_WoundTri > 0.5h)
+                {
+                    // три проекции маски по точке позы покоя; минимум — непрерывен по телу (нет швов), пятна — объединение трёх узоров
+                    float3 p = IN.bindPos * 2.6;
+                    wm = min(tex2D(_WoundMask, p.xy).r, min(tex2D(_WoundMask, p.zy + 0.37).r, tex2D(_WoundMask, p.xz + 0.71).r));
+                    thr = _Wound * 0.38h;   // P(min < t) ≈ 3t — та же доля тела, что и раньше
+                }
+                else { wm = tex2D(_WoundMask, IN.uv_MainTex * 5.0).r; thr = _Wound; }
+                half wt = saturate((thr - wm) / 0.025h);
+                half fresh = saturate((thr - wm) / 0.08h);   // в середине пятна — гуще и темнее
+                o.Albedo = lerp(o.Albedo, lerp(half3(0.26h, 0.02h, 0.018h), half3(0.1h, 0.006h, 0.006h), fresh), wt * 0.9h);
+                o.Smoothness = lerp(o.Smoothness, 0.45h, wt);   // влажная, но без зеркального отблеска неба (на доспехе он читался как разрывы)
                 o.Metallic = lerp(o.Metallic, 0.0h, wt);
             }
             // мокрый под дождём: верх (плечи, шлем, руки) мокнет сильнее; ткань темнеет, всё блестит
@@ -86,8 +103,8 @@ Shader "BladePath/Character"
             // снег на плечах, шлеме, верхе рук: только почти горизонтальные поверхности, сверху
             if (_BP_Snow > 0.001h)
             {
-                half up = WorldNormalVector(IN, o.Normal).y;
-                half s = saturate((up - 0.55h) * 3.0h) * _BP_Snow;
+                half up = WorldNormalVector(IN, half3(0, 0, 1)).y;   // по геометрии, без карты нормалей — без рваных крапин на мелких пластинах
+                half s = smoothstep(0.62h, 0.9h, up) * _BP_Snow * 0.85h;
                 o.Albedo = lerp(o.Albedo, half3(0.82h, 0.86h, 0.92h), s);
                 o.Smoothness = lerp(o.Smoothness, 0.3h, s);
                 o.Metallic = lerp(o.Metallic, 0.0h, s);

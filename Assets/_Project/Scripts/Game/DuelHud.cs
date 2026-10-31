@@ -613,7 +613,11 @@ namespace BladePath
             // портрет за наружным концом рамки
             float px = mirror ? r.xMax + 66f : r.x - 66f;
             Vector2 pc = new Vector2(px, r.y + r.height * 0.5f + 4f);
-            Texture2D pt = UiKit.Tex(mirror ? "UI/portrait_undead" : "UI/portrait_ronin");
+            // портреты: герой — снимок модели героя (CI), враг — по облику: самурай в красном или ронин
+            string pp;
+            if (!mirror) pp = UiKit.Tex("UI/portrait_hero") != null ? "UI/portrait_hero" : "UI/portrait_ronin";
+            else { EnemySkins sk = f.GetComponent<EnemySkins>(); pp = sk != null && sk.Active == 1 ? "UI/portrait_ronin" : "UI/portrait_undead"; }
+            Texture2D pt = UiKit.Tex(pp);
             if (pt != null)
             {
                 Color tint = since < 0.18f ? new Color(1f, 0.55f, 0.5f) : Color.white;

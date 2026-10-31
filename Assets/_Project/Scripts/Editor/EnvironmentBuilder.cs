@@ -77,6 +77,7 @@ namespace BladePath.EditorTools
             BuildGarden(env, look);
             BuildPagoda(env, look);
             BuildWalls(env, look);
+            BuildFrontWall(env, look);
             BuildCedarForest(env, look);
 
             // каменные фонари у бордюра
@@ -497,11 +498,81 @@ namespace BladePath.EditorTools
                     Tree(new Vector3(side * (8.2f + R() * 1.6f), -0.07f, z + (R() - 0.5f) * 0.8f), 7.5f + R() * 3f);
                     if (R() < 0.6f) Tree(new Vector3(side * (10.6f + R() * 2f), -0.07f, z + 1f + (R() - 0.5f)), 8.5f + R() * 3f);   // второй ряд, выше
                 }
+            // перед передней стеной (за воротами) — лес, в который уходит дорожка
+            for (float x = -12f; x <= 12f; x += 2.0f + R() * 0.8f)
+            {
+                if (Mathf.Abs(x) < 1.2f) continue;   // просвет дорожки в воротах
+                Tree(new Vector3(x + (R() - 0.5f) * 0.6f, -0.07f, -9.6f - R() * 1.6f), 7.5f + R() * 3f);
+                if (R() < 0.7f) Tree(new Vector3(x + 1f + (R() - 0.5f), -0.07f, -12.2f - R() * 2f), 9f + R() * 3f);
+            }
             // позади храма и пагоды
             for (float x = -10f; x <= 10f; x += 2.3f + R() * 0.8f)
             {
                 if (x > 1.5f && x < 7.5f) continue;   // луна (4,8; 6,4; 16) с камеры боя — не заслоняем
                 Tree(new Vector3(x + (R() - 0.5f) * 0.8f, -0.07f, 12.5f + R() * 2.5f), 9f + R() * 3.5f);
+            }
+        }
+
+        /// <summary>
+        /// Двор закрыт и спереди: боковые стены доведены до передней, в передней — ворота якуимон (два столба, балка,
+        /// крыша с загнутыми углами, распахнутые створки) и каменная дорожка наружу, к роще. Камера боя при облёте
+        /// видит не пустую равнину до горизонта, а ограду храма и лес за ней.
+        /// </summary>
+        static void BuildFrontWall(Transform env, Look look)
+        {
+            Transform w = new GameObject("FrontWall").transform;
+            w.SetParent(env, false);
+            const float zf = -7.6f, gate = 1.35f;
+            System.Action<Transform, string, Vector3, Vector3> WallSeg = (Transform par, string nm, Vector3 c, Vector3 size) =>
+            {
+                bool alongX = size.x > size.z;
+                Vector3 thin = alongX ? new Vector3(size.x, 0f, 0f) : new Vector3(0f, 0f, size.z);
+                EnvMesh.Box(par, nm, new Vector3(c.x, 0.55f, c.z), Vector3.zero, new Vector3(alongX ? size.x : 0.3f, 1.1f, alongX ? 0.3f : size.z), look.plaster, 2f);
+                EnvMesh.Box(par, nm + "Cap", new Vector3(c.x, 1.16f, c.z), Vector3.zero, new Vector3(alongX ? size.x + 0.4f : 0.6f, 0.12f, alongX ? 0.6f : size.z + 0.4f), look.roof, 1.2f, true);
+                EnvMesh.Box(par, nm + "Base", new Vector3(c.x, 0.17f, c.z), Vector3.zero, new Vector3(alongX ? size.x + 0.05f : 0.38f, 0.34f, alongX ? 0.38f : size.z + 0.05f), look.stoneBlock, 1.1f);
+                EnvMesh.Box(par, nm + "Beam", new Vector3(c.x, 0.98f, c.z), Vector3.zero, new Vector3(alongX ? size.x + 0.02f : 0.33f, 0.07f, alongX ? 0.33f : size.z + 0.02f), look.woodDark, 1f, true);
+                int posts = Mathf.Max(1, Mathf.RoundToInt(thin.magnitude / 2.9f));
+                for (int i = 0; i <= posts; i++)
+                {
+                    Vector3 pp = c - thin * 0.5f + thin * (i / (float)posts);
+                    EnvMesh.Box(par, nm + "Post" + i, new Vector3(pp.x, 0.55f, pp.z), Vector3.zero, alongX ? new Vector3(0.18f, 1.1f, 0.36f) : new Vector3(0.36f, 1.1f, 0.18f), look.woodDark, 1f);
+                }
+            };
+            // боковые стены до передней (были до z = −3,5)
+            for (int side = -1; side <= 1; side += 2)
+                WallSeg(w, "SideFront" + side, new Vector3(6.4f * side, 0f, (zf - 3.5f) * 0.5f), new Vector3(0.3f, 1.1f, -3.5f - zf + 0.3f));
+            // передняя стена по обе стороны ворот
+            float segL = 6.4f - gate;
+            WallSeg(w, "FrontL", new Vector3(-(gate + segL * 0.5f), 0f, zf), new Vector3(segL, 1.1f, 0.3f));
+            WallSeg(w, "FrontR", new Vector3(gate + segL * 0.5f, 0f, zf), new Vector3(segL, 1.1f, 0.3f));
+            // ворота якуимон: столбы, балки, крыша, распахнутые наружу створки, каменный порог
+            Transform g = new GameObject("Gate").transform; g.SetParent(w, false);
+            for (int side = -1; side <= 1; side += 2)
+            {
+                EnvMesh.Box(g, "Pillar" + side, new Vector3(gate * side, 1.3f, zf), Vector3.zero, new Vector3(0.28f, 2.6f, 0.28f), look.lacquer, 1f);
+                EnvMesh.Box(g, "PillarBase" + side, new Vector3(gate * side, 0.1f, zf), Vector3.zero, new Vector3(0.42f, 0.2f, 0.42f), look.stoneBlock, 1f);
+                EnvMesh.Box(g, "BackPost" + side, new Vector3(gate * side, 1.1f, zf - 0.75f), Vector3.zero, new Vector3(0.18f, 2.2f, 0.18f), look.woodDark, 1f);
+                EnvMesh.Box(g, "Tie" + side, new Vector3(gate * side, 2.05f, zf - 0.38f), Vector3.zero, new Vector3(0.14f, 0.14f, 0.85f), look.woodDark, 1f, true);
+                // створка распахнута наружу (к лесу)
+                Transform leaf = new GameObject("Leaf" + side).transform; leaf.SetParent(g, false);
+                leaf.localPosition = new Vector3((gate - 0.16f) * side, 0f, zf - 0.08f);
+                leaf.localRotation = Quaternion.Euler(0f, side * -72f, 0f);
+                EnvMesh.Box(leaf, "Door", new Vector3(-side * 0.6f, 1.05f, 0f), Vector3.zero, new Vector3(1.15f, 2.0f, 0.07f), look.woodDark, 1f);
+                for (int k = 0; k < 4; k++)
+                    EnvMesh.Box(leaf, "Rib" + k, new Vector3(-side * 0.6f, 0.35f + k * 0.48f, -0.045f), Vector3.zero, new Vector3(1.15f, 0.06f, 0.03f), look.iron != null ? look.iron : look.woodDark, 1f);
+            }
+            EnvMesh.Box(g, "Lintel", new Vector3(0f, 2.45f, zf), Vector3.zero, new Vector3(gate * 2f + 0.6f, 0.2f, 0.3f), look.lacquer, 1f, true);
+            EnvMesh.Box(g, "Lintel2", new Vector3(0f, 2.2f, zf), Vector3.zero, new Vector3(gate * 2f + 0.3f, 0.1f, 0.22f), look.woodDark, 1f, true);
+            EnvMesh.Box(g, "Plaque", new Vector3(0f, 2.33f, zf + 0.17f), Vector3.zero, new Vector3(0.6f, 0.18f, 0.04f), look.woodDark, 1f);
+            EnvMesh.CurvedHip(g, "GateRoof", new Vector3(0f, 2.6f, zf - 0.38f), gate + 0.75f, 0.85f, 0.75f, 0.18f, look.roof, look.woodDark, 1.2f);
+            EnvMesh.Box(g, "Threshold", new Vector3(0f, 0.05f, zf), Vector3.zero, new Vector3(gate * 2f, 0.1f, 0.34f), look.stoneBlock, 1f);
+            // дорожка из плоских камней от площадки к воротам и за них
+            System.Random r = new System.Random(55);
+            for (float z = -3.2f; z > -12.5f; z -= 0.62f)
+            {
+                if (z < zf + 0.3f && z > zf - 0.3f) continue;
+                float sx = 0.5f + (float)r.NextDouble() * 0.2f;
+                EnvMesh.Box(g, "Step" + z.ToString("F1"), new Vector3(((float)r.NextDouble() - 0.5f) * 0.25f, -0.045f, z), new Vector3(0f, (float)r.NextDouble() * 20f - 10f, 0f), new Vector3(sx, 0.06f, 0.42f), look.stoneBlock, 0.6f);
             }
         }
 
@@ -690,6 +761,16 @@ namespace BladePath.EditorTools
                     if (Mathf.Abs(p.x) < 3.95f && Mathf.Abs(p.z) < 3.0f) continue;   // не на камне площадки
                     Tuft(p, 0.2f + 0.22f * R());
                 }
+            // луг под криптомериями за стенами и за воротами: выше и гуще (днём там была голая серая равнина)
+            for (int i = 0; i < 420; i++)
+            {
+                Vector3 p;
+                float q = R();
+                if (q < 0.7f) p = new Vector3((R() < 0.5f ? -1f : 1f) * (6.75f + R() * 7f), gy, -12f + R() * 26f);
+                else p = new Vector3((R() - 0.5f) * 26f, gy, -7.95f - R() * 6f);
+                if (Mathf.Abs(p.x) < 0.7f && p.z < -7.8f) continue;   // дорожка
+                Tuft(p, 0.25f + 0.3f * R());
+            }
             Mesh m = new Mesh { name = "Grass" };
             m.SetVertices(v); m.SetNormals(n); m.SetUVs(0, uv); m.SetTriangles(t, 0);
             m.RecalculateBounds(); m.RecalculateTangents();

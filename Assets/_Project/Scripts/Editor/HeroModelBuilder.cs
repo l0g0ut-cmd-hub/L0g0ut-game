@@ -105,6 +105,10 @@ namespace BladePath.EditorTools
                 smr.updateWhenOffscreen = true;   // модель сильно двигается, bounds из позы покоя не годятся для отсечения
             }
 
+            // раны (шейдер персонажа): точка позы покоя в UV3 — брызги крови берутся из 3D-шума по телу, без швов развёртки
+            // (по развёртке пятна резались на краях островков, и на доспехе это выглядело как разрывы)
+            BakeWoundCoords(model, modelName ?? model.name);
+
             // Мокап-ходьба: клипы под скелет этой модели (вперёд/назад/вбок), до сборки контроллера
             if (!AssetDatabase.IsValidFolder("Assets/_Project/Animation")) AssetDatabase.CreateFolder("Assets/_Project", "Animation");
             List<MocapBaker.Result> loco = MocapBaker.Bake(model.transform, fighter.transform, n => FindBone(model.transform, n), Clip(fbx, "Idle"), "Assets/_Project/Animation", clipPrefix);
@@ -177,6 +181,31 @@ namespace BladePath.EditorTools
 
             Debug.Log("HeroModelBuilder: модель " + (undead ? "врага" : "героя") + " " + model.name + " подключена (кости: " + (d.handL != null && d.handR != null ? "руки найдены" : "РУКИ НЕ НАЙДЕНЫ") + ")");
             return model;
+        }
+
+        static void BakeWoundCoords(GameObject model, string key)
+        {
+            const string folder = "Assets/_Project/Models/Generated";
+            if (!AssetDatabase.IsValidFolder(folder)) AssetDatabase.CreateFolder("Assets/_Project/Models", "Generated");
+            int i = 0;
+            foreach (SkinnedMeshRenderer smr in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                Mesh src = smr.sharedMesh;
+                if (src == null) continue;
+                Mesh m = Object.Instantiate(src);
+                m.name = src.name + "_wound";
+                Vector3[] v = src.vertices;
+                Bounds b = src.bounds;
+                float h = Mathf.Max(1e-4f, b.size.y);
+                List<Vector3> p = new List<Vector3>(v.Length);
+                for (int k = 0; k < v.Length; k++) p.Add((v[k] - b.min) / h * 1.8f);   // в «метрах» фигуры ростом 1,8 независимо от единиц FBX
+                m.SetUVs(3, p);
+                string path = folder + "/" + key + "_" + (i++) + "_wound.asset";
+                AssetDatabase.DeleteAsset(path);
+                AssetDatabase.CreateAsset(m, path);
+                smr.sharedMesh = m;
+                foreach (Material mat in smr.sharedMaterials) if (mat != null && mat.HasProperty("_WoundTri")) { mat.SetFloat("_WoundTri", 1f); EditorUtility.SetDirty(mat); }
+            }
         }
 
         static Material MapMaterial(string name, Look look, bool undead)

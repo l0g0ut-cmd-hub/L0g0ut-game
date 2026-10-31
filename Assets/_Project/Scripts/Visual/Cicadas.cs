@@ -10,7 +10,7 @@ namespace BladePath
     /// </summary>
     public class Cicadas : MonoBehaviour
     {
-        public float minGap = 22f, maxGap = 50f;
+        public float minGap = 16f, maxGap = 34f;
         AudioSource[] voices;
         static AudioClip abura, minmin, higurashi;
         float nextAt = -1f;
@@ -34,7 +34,7 @@ namespace BladePath
         void Update()
         {
             bool ok = Allowed;
-            if (ok && !wasDay) nextAt = Time.time + Random.Range(3f, 8f);   // наступил день (новый матч) — скоро первая
+            if (ok && !wasDay) nextAt = Time.time + Random.Range(1.5f, 4f);   // наступил день (новый матч) — первая почти сразу, ещё в заставке
             if (!ok && wasDay) foreach (AudioSource v in voices) if (v != null) v.Stop();
             wasDay = ok;
             if (!ok || voices == null || Time.time < nextAt) return;
@@ -55,7 +55,7 @@ namespace BladePath
         {
             if (v == null || c == null) return;
             v.clip = c; v.panStereo = pan; v.pitch = Random.Range(0.95f, 1.05f);
-            v.volume = Random.Range(0.05f, 0.1f) * vol;
+            v.volume = Random.Range(0.26f, 0.38f) * vol;   // на динамике телефона тише 0,2 — тонет под музыкой и ветром
             v.PlayDelayed(delay);
         }
 
