@@ -48,13 +48,15 @@ Shader "BladePath/Blade"
 
             half m = tex2D(_BloodMask, IN.uv_MainTex).r;
             half lvl = _Blood * 1.04h - m;                        // > 0 — под кровью
-            half t = saturate(lvl / 0.06h) * step(0.004h, _Blood);
-            half rim = saturate(1.0h - abs(lvl - 0.025h) / 0.025h) * t;   // мениск у края потёка
-            half3 wetCol = half3(0.30h, 0.012h, 0.012h), dryCol = half3(0.11h, 0.02h, 0.015h);
-            half3 bc = lerp(wetCol, dryCol, _BloodDry) * (1.0h - rim * 0.4h);
-            o.Albedo = lerp(c.rgb, bc, t * 0.96h);
-            o.Metallic = lerp(metal, 0.04h, t);
-            o.Smoothness = lerp(smooth, lerp(0.9h, 0.38h, _BloodDry), t);
+            half t = saturate(lvl / 0.04h) * step(0.004h, _Blood);    // покрытие
+            half th = saturate(lvl / 0.28h);                         // толщина: у края потёка — тонкая плёнка, сталь просвечивает
+            half rim = saturate(1.0h - abs(lvl - 0.02h) / 0.02h) * t;   // мениск у края потёка
+            half3 wetCol = half3(0.17h, 0.006h, 0.006h), dryCol = half3(0.075h, 0.016h, 0.012h);
+            half3 bc = lerp(wetCol, dryCol, _BloodDry) * (1.0h - rim * 0.35h);
+            half3 film = c.rgb * half3(0.55h, 0.1h, 0.08h);              // тонкий слой: сталь сквозь красное
+            o.Albedo = lerp(c.rgb, lerp(film, bc, th), t);
+            o.Metallic = lerp(metal, lerp(metal * 0.5h, 0.03h, th), t);
+            o.Smoothness = lerp(smooth, lerp(0.92h, 0.4h, _BloodDry), t);
             o.Emission = _EmissionColor.rgb;
             o.Alpha = 1;
         }

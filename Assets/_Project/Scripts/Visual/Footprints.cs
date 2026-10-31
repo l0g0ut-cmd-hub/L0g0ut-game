@@ -85,7 +85,7 @@ namespace BladePath
                 float fade = 1f - Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((age - p.life * 0.55f) / (p.life * 0.45f)));
                 float a = p.alpha * fade * (p.blood ? 1f : Mathf.Clamp01(snow / 0.5f));
                 if (p.blood) a *= Mathf.Lerp(1f, 0.7f, Mathf.Clamp01(age / 8f));   // подсыхает — темнеет и тускнеет
-                Color c = p.blood ? new Color(0.36f, 0.025f, 0.02f, a * 0.85f) : new Color(0.78f, 0.84f, 0.96f, a);
+                Color c = p.blood ? new Color(0.36f, 0.025f, 0.02f, a * 0.85f) : new Color(0.62f, 0.68f, 0.8f, a * 0.9f);
                 p.r.GetPropertyBlock(mpb);
                 mpb.SetColor("_Color", c);
                 p.r.SetPropertyBlock(mpb);
@@ -125,10 +125,11 @@ namespace BladePath
                     Color c;
                     if (snow)
                     {
-                        float rim = Mathf.Clamp01(1f - Mathf.Abs(d - 0.05f) / 0.07f);   // валик снега чуть снаружи кромки
-                        float shade = inside * (0.55f + 0.25f * Mathf.Clamp01(-d / 0.25f));   // в глубине тень гуще
-                        float a = Mathf.Max(shade * 0.75f, rim * 0.5f);
-                        float lum = Mathf.Lerp(0.42f, 1f, rim * (1f - inside));
+                        // снег на камне тонкий: под подошвой он примят и подтаял — тёмный мокрый камень; по краю — узкий светлый валик
+                        float rim = Mathf.Clamp01(1f - Mathf.Abs(d - 0.04f) / 0.04f);
+                        float shade = inside * (0.7f + 0.3f * Mathf.Clamp01(-d / 0.2f));
+                        float a = Mathf.Max(shade * 0.85f, rim * 0.3f);
+                        float lum = Mathf.Lerp(0.16f, 1f, rim * (1f - inside));
                         c = new Color(lum, lum, lum, a);
                     }
                     else

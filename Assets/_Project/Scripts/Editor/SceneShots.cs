@@ -148,7 +148,7 @@ namespace BladePath.EditorTools
                         DeathblowStrip(cam, dir, "16_deathblow_kesa", player, enemy, AttackType.DeathblowKesa, 1.22f, new[] { 0f, 0.2f, 0.36f, 0.42f, 0.45f, 0.48f, 0.9f, 1.22f }, log);
                         DeathblowStrip(cam, dir, "17_deathblow_neck", player, enemy, AttackType.DeathblowNeck, 1.2f, new[] { 0f, 0.2f, 0.38f, 0.44f, 0.46f, 0.5f, 0.6f, 1.22f }, log);
                         DeathblowStrip(cam, dir, "18_deathblow_rising", player, enemy, AttackType.DeathblowRising, 1.22f, new[] { 0f, 0.2f, 0.38f, 0.44f, 0.46f, 0.5f, 0.6f, 1.18f }, log);
-                        DeathblowStrip(cam, dir, "28_deathblow_plunge", player, enemy, AttackType.DeathblowPlunge, 0.78f, new[] { 0.06f, 0.18f, 0.3f, 0.38f, 0.44f, 0.8f, 1.12f, 1.32f }, log, 0.44f);
+                        DeathblowStrip(cam, dir, "28_deathblow_plunge", player, enemy, AttackType.DeathblowPlunge, 1.0f, new[] { 0.06f, 0.18f, 0.3f, 0.38f, 0.44f, 0.8f, 1.12f, 1.32f }, log, 0.44f);
                     }
                     if (enemy != null) GuardStrip(cam, dir, "15_guard", player, enemy, log);
                     if (enemy != null) StanceShots(cam, dir, enemy, log);
@@ -263,7 +263,7 @@ namespace BladePath.EditorTools
                     if (plungeContact > 0f)
                     {
                         // с прыжка: траектория DuelManager.PlungePos от точки прыжка (1,3 м до приёма, на высоте 0,9 м) к месту приёма
-                        Vector3 to = pt0 - d * distance, from = to - d * 1.3f + Vector3.up * 0.9f;
+                        Vector3 to = pt0 - d * distance, from = to - d * 1.2f + Vector3.up * 0.75f;
                         float s = Mathf.Clamp01(taus[k] / plungeContact);
                         a.Carry(DuelManager.PlungePos(from, to, s), s >= 1f);
                     }
@@ -534,14 +534,15 @@ namespace BladePath.EditorTools
                 if (r is MeshRenderer && r.sharedMaterial != null && r.sharedMaterial.HasProperty("_Blood")) steel.Add(r);
             if (steel.Count == 0) { log.Append("PROBE|shots|27_blade_blood|нет шейдера крови\n"); return; }
             MaterialPropertyBlock mpb = new MaterialPropertyBlock();
-            Vector3 b0 = w.bladeRoot.position, tip = b0 + w.bladeRoot.forward * w.bladeLength;
-            Vector3 mid = Vector3.Lerp(b0, tip, 0.55f);
-            Vector3 side = Vector3.Cross(w.bladeRoot.forward, Vector3.up).normalized;
+            Bounds bb = steel[0].bounds;   // кадр по самому мешу клинка
+            Vector3 mid = bb.center;
+            Vector3 ax = w.bladeRoot.forward;
+            Vector3 side = Vector3.Cross(ax, Vector3.up).normalized;
             if (Vector3.Dot(side, cam.transform.position - mid) < 0f) side = -side;
-            Vector3 eye = mid + side * 0.85f + Vector3.up * 0.25f - f.transform.forward * 0.1f;
+            Vector3 eye = mid + side * (bb.extents.magnitude * 2.3f + 0.3f) + Vector3.up * 0.2f;
             float[] lv = { 0.22f, 0.6f, 0.95f, 0.6f }, dry = { 0f, 0f, 0f, 1f };
-            int W = 480, H = 540;
-            Texture2D sheet = new Texture2D(W * lv.Length, H, TextureFormat.RGB24, false);
+            int W = 960, H = 360;   // клинок длинный — кадры широкие, 2×2
+            Texture2D sheet = new Texture2D(W * 2, H * 2, TextureFormat.RGB24, false);
             RenderTexture rt = new RenderTexture(W, H, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
             RenderTexture prevT = cam.targetTexture; Vector3 pp = cam.transform.position; Quaternion pr = cam.transform.rotation; float pf = cam.fieldOfView;
             for (int i = 0; i < lv.Length; i++)
@@ -549,7 +550,7 @@ namespace BladePath.EditorTools
                 foreach (Renderer r in steel) { r.GetPropertyBlock(mpb); mpb.SetFloat("_Blood", lv[i]); mpb.SetFloat("_BloodDry", dry[i]); r.SetPropertyBlock(mpb); }
                 cam.transform.position = eye; cam.transform.LookAt(mid); cam.fieldOfView = 34f;
                 cam.targetTexture = rt; cam.Render();
-                RenderTexture.active = rt; sheet.ReadPixels(new Rect(0, 0, W, H), W * i, 0); RenderTexture.active = null;
+                RenderTexture.active = rt; sheet.ReadPixels(new Rect(0, 0, W, H), W * (i % 2), H * (1 - i / 2)); RenderTexture.active = null;
             }
             foreach (Renderer r in steel) { r.GetPropertyBlock(mpb); mpb.SetFloat("_Blood", 0f); mpb.SetFloat("_BloodDry", 0f); r.SetPropertyBlock(mpb); }
             cam.targetTexture = prevT; cam.transform.SetPositionAndRotation(pp, pr); cam.fieldOfView = pf;

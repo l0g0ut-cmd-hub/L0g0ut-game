@@ -433,7 +433,7 @@ namespace BladePath
         /// </summary>
         struct DbKind { public AttackType type; public float distance, contact, outcome, flick, camYaw; public bool cut, neck, plunge; }
         // с прыжка: удар в прыжке по сломленному — приземление с клинком в ключицу (только этим приёмом, выбор не случайный)
-        static readonly DbKind PlungeKind = new DbKind { type = AttackType.DeathblowPlunge, distance = 0.78f, contact = 0.44f, outcome = 0.98f, flick = 1.32f, camYaw = 26f, plunge = true };
+        static readonly DbKind PlungeKind = new DbKind { type = AttackType.DeathblowPlunge, distance = 1.0f, contact = 0.44f, outcome = 0.98f, flick = 1.32f, camYaw = 26f, plunge = true };
         Vector3 dbFrom;
 
         /// <summary>Траектория добивания с прыжка: s 0…1 от точки начала (в воздухе) к месту приёма на земле — подлёт с небольшим подъёмом.</summary>
@@ -442,7 +442,7 @@ namespace BladePath
             s = Mathf.Clamp01(s);
             float h = s * s * (3f - 2f * s);
             Vector3 p = Vector3.Lerp(from, to, h);
-            p.y = Mathf.Lerp(from.y, to.y, s * s) + 0.32f * Mathf.Sin(Mathf.PI * Mathf.Min(1f, s * 1.5f)) * (1f - s);
+            p.y = Mathf.Lerp(from.y, to.y, s * s) + 0.2f * Mathf.Sin(Mathf.PI * Mathf.Min(1f, s * 1.5f)) * (1f - s);
             return p;
         }
         static readonly DbKind[] DbKinds =
