@@ -81,11 +81,11 @@ namespace BladePath
                 d1 = RenderTexture.GetTemporary(Mathf.Max(8, src.width / 4), Mathf.Max(8, src.height / 4), 0, src.format);
                 d2 = RenderTexture.GetTemporary(Mathf.Max(8, src.width / 8), Mathf.Max(8, src.height / 8), 0, src.format);
                 d1.filterMode = FilterMode.Bilinear; d2.filterMode = FilterMode.Bilinear;
-                RenderTexture h = RenderTexture.GetTemporary(Mathf.Max(8, src.width / 2), Mathf.Max(8, src.height / 2), 0, src.format);
-                Graphics.Blit(src, h, material, 1);    // ступенями по ×2 — без мерцающих «пропущенных» пикселей
-                Graphics.Blit(h, d1, material, 1);
+                RenderTexture halfRt = RenderTexture.GetTemporary(Mathf.Max(8, src.width / 2), Mathf.Max(8, src.height / 2), 0, src.format);
+                Graphics.Blit(src, halfRt, material, 1);    // ступенями по ×2 — без мерцающих «пропущенных» пикселей
+                Graphics.Blit(halfRt, d1, material, 1);
                 Graphics.Blit(d1, d2, material, 1);
-                RenderTexture.ReleaseTemporary(h);
+                RenderTexture.ReleaseTemporary(halfRt);
                 material.SetTexture("_DofTex", d1); material.SetTexture("_DofTex2", d2);
             }
             else material.SetVector("_Dof", Vector4.zero);
