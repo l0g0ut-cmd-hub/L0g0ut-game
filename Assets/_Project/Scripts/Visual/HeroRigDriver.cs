@@ -685,7 +685,9 @@ namespace BladePath
             // досягаемость: если рукоять дальше, чем достают руки, меч подтягивается к плечам — кисти всегда на рукояти
             if (upperArmR != null && upperArmL != null && weapon != null && weapon.pivot != null)
             {
-                float reachR = (l1R + l2R) * 0.96f, reachL = (l1L + l2L) * 0.96f;
+                // в ударе руки выпрямляются почти до конца, в стойке — локти мягко согнуты (~140°, как у врага)
+                float rk = Mathf.Lerp(0.965f, 0.935f, Mathf.Clamp01((handBiasK - 0.5f) * 2f));
+                float reachR = (l1R + l2R) * rk, reachL = (l1L + l2L) * rk;
                 // досягаемость считаем до запястья: при хвате по центру кулака запястье стоит на вынос кулака ближе к плечу,
                 // чем рукоять (у героя ~11 см) — иначе меч зря подтягивался к груди и локти зажимались
                 Vector3 oR0 = Vector3.zero, oL0 = Vector3.zero;
@@ -697,17 +699,17 @@ namespace BladePath
                     oR0 = Quaternion.LookRotation(fR0, nR0) * bindR * Vector3.Scale(gripLocalR, handR.lossyScale);
                     oL0 = Quaternion.LookRotation(fL0, nL0) * bindL * Vector3.Scale(gripLocalL, handL.lossyScale);
                 }
-                for (int it = 0; it < 5; it++)
+                // по одной (худшей) руке за шаг: раньше поправки обеих рук складывались — меч уезжал к груди вдвое дальше нужного,
+                // и чем дальше вынесена стойка, тем сильнее зажимались локти (у героя руки короче — локти были ~90°)
+                for (int it = 0; it < 8; it++)
                 {
                     Vector3 ax = bladeRoot.forward;
                     Vector3 dr = bladeRoot.position - ax * gripFront - oR0 - upperArmR.position;
                     Vector3 dl = bladeRoot.position - ax * gripRear - oL0 - upperArmL.position;
                     float mr = dr.magnitude, ml = dl.magnitude;
-                    Vector3 shift = Vector3.zero;
-                    if (mr > reachR) shift -= dr / mr * (mr - reachR);
-                    if (ml > reachL) shift -= dl / ml * (ml - reachL);
-                    if (shift.sqrMagnitude < 1e-6f) break;
-                    weapon.pivot.position += shift;
+                    float er = mr - reachR, el = ml - reachL;
+                    if (er <= 1e-4f && el <= 1e-4f) break;
+                    weapon.pivot.position -= er >= el ? dr / mr * er : dl / ml * el;
                 }
             }
 
