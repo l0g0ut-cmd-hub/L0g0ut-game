@@ -100,7 +100,8 @@ namespace BladePath.EditorTools
             new GameObject("CrowFlock").AddComponent<CrowFlock>();
             new GameObject("Birds").AddComponent<BladePath.Birds>();
             new GameObject("ShootingStars").AddComponent<BladePath.ShootingStars>();   // метеоры ясной ночью
-            new GameObject("TempleCat").AddComponent<BladePath.TempleCat>();           // кот на веранде храма   // ворона на тории/коньке, воробьи, клин гусей, цапля, летучие мыши
+            new GameObject("TempleCat").AddComponent<BladePath.TempleCat>();           // кот на веранде храма
+            new GameObject("MoonClouds").AddComponent<BladePath.MoonClouds>();         // облака бегут по луне   // ворона на тории/коньке, воробьи, клин гусей, цапля, летучие мыши
             AddLightShafts(moonLight.transform.forward);
 
             // луна

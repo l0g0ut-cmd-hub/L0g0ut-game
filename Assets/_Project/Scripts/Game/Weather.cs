@@ -23,6 +23,8 @@ namespace BladePath
         [Range(0f, 1f)] public float duskShare = 0.4f;   // доля закатов среди не-рассветных дней
         /// <summary>Ночной туман (из ясных ночей): густая холодная дымка, огни в ореолах, по земле стелется молоко.</summary>
         public bool Foggy { get; private set; }
+        /// <summary>Множитель лунного света (облако на луне — MoonClouds).</summary>
+        public static float MoonDim = 1f;
         [Range(0f, 1f)] public float fogChance = 0.3f;
         ParticleSystem mistPs; float mistRate0 = -1f; Color mistCol0;
         /// <summary>Погода меняется по ходу боя: ясной ночью иногда через полминуты-минуту накрывает дождь (с громом) или начинается снег.</summary>
@@ -433,7 +435,7 @@ namespace BladePath
 
         void Restore()
         {
-            if (moon != null) moon.intensity = moonBase;
+            if (moon != null) moon.intensity = moonBase * (Daytime ? 1f : MoonDim);
             RenderSettings.ambientLight = ambBase;
             if (skyMat != null && skyMat.HasProperty("_Exposure")) skyMat.SetFloat("_Exposure", skyExpBase);
         }
