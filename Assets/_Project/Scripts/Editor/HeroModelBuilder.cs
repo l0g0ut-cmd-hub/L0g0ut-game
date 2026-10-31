@@ -240,7 +240,15 @@ namespace BladePath.EditorTools
             {
                 case "Skin": return undead ? look.deadSkin : look.skin;
                 case "Armor_Black": return undead ? look.enemyArmor : look.heroArmor;
-                case "Ronin": return undead ? VisualMaterials.CharacterRim(look.ronin, true) : look.ronin;
+                case "Ronin":
+                    {
+                        if (!undead) return look.ronin;
+                        Material rm = VisualMaterials.CharacterRim(look.ronin, true);
+                        // у тёмного доспеха ронина фиолетовый контур врага заливал всю фигуру сиреневым — контур холодный стальной,
+                        // а сам доспех чуть теплее (под луной чёрно-красный уходил в фиолет)
+                        if (rm != null) { rm.SetColor("_RimColor", new Color(0.12f, 0.12f, 0.15f)); rm.color = new Color(1f, 0.93f, 0.88f); EditorUtility.SetDirty(rm); }
+                        return rm;
+                    }
                 case "Void": return look.tentacle;
                 case "Ember": return look.ember;
                 case "Flesh": return look.flesh;
