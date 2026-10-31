@@ -149,6 +149,7 @@ namespace BladePath.EditorTools
             AddBackCourt(env, look);
             AddKaresansui(env, look);
             AddGroundDetails(env, look);
+            AddProps(env, look);
             AddShojiShadows(look);
             AddCameraOccluders(env);
             MarkStatic(env);
@@ -442,6 +443,38 @@ namespace BladePath.EditorTools
                     // лист лотоса — фото из атласа (4 разных листа 2×2), развёрнут как попало, чуть крупнее (альфа-край)
                     EnvMesh.DecalCell(g, "Lotus" + i, c + new Vector3(Mathf.Cos(a) * rr * 1.45f, -0.0585f, Mathf.Sin(a) * rr * 0.85f), (float)r.NextDouble() * 360f, s * 1.15f, s * 1.15f, look.lotus, i % 2, (i / 2) % 2, 2);
                 }
+                }
+        }
+
+        /// <summary>
+        /// Модель из Meshy (OBJ в Models/Props, см. tools/props/glb2obj.py): низ на pos.y, разворот yaw, масштаб scale.
+        /// Без файла — ничего (сцена собирается и без моделей).
+        /// </summary>
+        static GameObject Prop(Transform parent, string name, string file, Material mat, Vector3 pos, float yaw, float scale)
+        {
+            if (mat == null) return null;
+            Mesh mesh = null;
+            foreach (Object o in UnityEditor.AssetDatabase.LoadAllAssetsAtPath("Assets/_Project/Models/Props/" + file))
+                if (o is Mesh) { mesh = (Mesh)o; break; }
+            if (mesh == null) return null;
+            GameObject g = new GameObject(name);
+            g.transform.SetParent(parent, false);
+            g.transform.localPosition = pos; g.transform.localEulerAngles = new Vector3(0f, yaw, 0f); g.transform.localScale = Vector3.one * scale;
+            g.AddComponent<MeshFilter>().sharedMesh = mesh;
+            MeshRenderer r = g.AddComponent<MeshRenderer>(); r.sharedMaterial = mat;
+            return g;
+        }
+
+        /// <summary>Предметы из моделей: бамбуковая ограда вдоль дорожки от ворот (с обеих сторон, отделяет пруд и сухой сад).</summary>
+        static void AddProps(Transform env, Look look)
+        {
+            Transform pr = new GameObject("Props").transform; pr.SetParent(env, false);
+            // ограда такэгаки: секции 1,72 м вдоль дорожки ворота → арена, с просветом у ворот
+            for (int side = -1; side <= 1; side += 2)
+                for (int k = 0; k < 2; k++)
+                {
+                    GameObject f = Prop(pr, "BambooFence" + side + k, "bamboo_fence.obj", look.bambooFence, new Vector3(side * 1.25f, -0.07f, -6.3f + k * 1.74f), 90f, 1f);
+                    if (f != null && look.aoStrip != null) EnvMesh.Decal(pr, "FenceAO" + side + k, new Vector3(side * 1.25f, -0.067f, -6.3f + k * 1.74f), 90f, 1.9f, 0.5f, look.aoStrip);
                 }
         }
 
