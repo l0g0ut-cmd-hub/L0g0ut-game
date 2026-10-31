@@ -119,7 +119,7 @@ namespace BladePath
         // темп мокапа под настоящую скорость: снос опорной стопы клипа вдоль хода (м/с) → множитель темпа
         float driftAcc, tempoMul = 1f; int driftN;
         // прыжок: ноги поджаты в воздухе; приземление — короткое проседание
-        float airK, landK; bool wasGrounded = true;
+        float airK, landK, dashSettle; bool wasGrounded = true, wasDashing;
         float poolAt = -1f;
         FootLock lockL, lockR;
         /// <summary>Нижняя точка подошвы (мир) — после постановки на землю в этом кадре (для пыли/шагов и проб).</summary>
@@ -486,6 +486,9 @@ namespace BladePath
             landK = Mathf.MoveTowards(landK, 0f, dt / 0.3f);
             // рывок — короткий прыжок-шаг: стопы над землёй, ноги подобраны наполовину
             float airT = !gnd ? 1f : (fighter.Dashing ? 0.7f : 0f);
+            if (wasDashing && !fighter.Dashing) { dashSettle = 0.2f; landK = Mathf.Max(landK, 0.55f); }   // приземлился из рывка: присел, стопы в стойку
+            wasDashing = fighter.Dashing;
+            dashSettle = Mathf.Max(0f, dashSettle - dt);
             airK = Mathf.MoveTowards(airK, airT, dt / (airT < airK ? 0.06f : 0.08f));
             lean = Mathf.MoveTowards(lean, pitchTarget, 140f * dt);
             yawS = Mathf.SmoothDampAngle(yawS, yawTarget, ref yawV, 0.05f);
@@ -799,7 +802,14 @@ namespace BladePath
             gF.side = sideF; gR.side = sideR;
             bool stepF0 = gF.step, stepR0 = gR.step;
             keyW = Mathf.MoveTowards(keyW, keyed ? 1f : 0f, dt / 0.12f);
-            if (keyW > 0.001f) { walking = false; Settle(ref gF, tF, yF, keyW); Settle(ref gR, tR, yR, keyW); }
+            if ((fighter.Dashing || dashSettle > 0f) && keyW < 0.5f)
+            {
+                // рывок — прыжок-шаг: стопы летят с телом (поджаты в воздухе); после рывка — быстро встают в стойку, а не остаются позади
+                walking = false;
+                float k = fighter.Dashing ? 1f : 1f - Mathf.Exp(-dt / 0.04f);
+                Settle(ref gF, tF, yF, k); Settle(ref gR, tR, yR, k);
+            }
+            else if (keyW > 0.001f) { walking = false; Settle(ref gF, tF, yF, keyW); Settle(ref gR, tR, yR, keyW); }
             else if (vel.sqrMagnitude > 0.0225f && Mathf.Abs(fighter.MoveAxis) > 0.1f) WalkCycle(ft, vel, dt);   // идёт сам (отброс ударом — шагами стойки)
             else { walking = false; Gait(tF, yF, tR, yR, vel, dt); }
             FootPitch(ref gF, 0f, dt);

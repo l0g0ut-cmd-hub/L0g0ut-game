@@ -509,7 +509,7 @@ namespace BladePath.EditorTools
             try
             {
                 Transform ft = f.transform;
-                Vector3 eye = ft.position + ft.forward * 2.6f - ft.right * 1.3f + Vector3.up * 1.35f, look = ft.position + Vector3.up * 1.05f;
+                Vector3 eye = ft.position + Vector3.back * 3.0f + ft.forward * 1.1f + Vector3.up * 1.3f, look = ft.position + Vector3.up * 1.05f;   // как камера боя, чуть спереди
                 for (int i = 0; i < 3; i++)
                 {
                     w.stance = i; w.SnapRest();

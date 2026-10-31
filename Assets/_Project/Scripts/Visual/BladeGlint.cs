@@ -68,10 +68,10 @@ namespace BladePath
             q.position = pos + (cam.transform.position - pos).normalized * 0.03f;   // чуть к камере — не тонет в стали
             q.rotation = Quaternion.LookRotation(cam.transform.forward, cam.transform.up) * Quaternion.Euler(0f, 0f, 12f + u * 30f);
             float pulse = Mathf.Sin(Mathf.PI * u);
-            float size = (0.07f + 0.16f * pulse * pulse) * Mathf.Clamp(runPow, 0.5f, 1.3f);
+            float size = (0.06f + 0.13f * pulse * pulse) * Mathf.Clamp(runPow, 0.5f, 1.3f);
             q.localScale = new Vector3(size, size, size);
             float blood = Juice.Instance != null ? Juice.Instance.BladeBlood(weapon) : 0f;
-            Color c = Color.Lerp(new Color(0.78f, 0.88f, 1f), new Color(0.9f, 0.45f, 0.4f), blood * 0.8f) * (pulse * 0.9f * runPow * (1f - blood * 0.55f));
+            Color c = Color.Lerp(new Color(0.78f, 0.88f, 1f), new Color(0.9f, 0.45f, 0.4f), blood * 0.8f) * (pulse * 0.75f * runPow * (1f - blood * 0.55f));
             c.a = 0.5f;
             rend.enabled = true;
             mpb.SetColor(TintId, c);

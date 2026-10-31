@@ -233,8 +233,8 @@ namespace BladePath
             // стойка (камаэ): тюдан / хассо / вакигамаэ — плавно, блок поднимается из любой
             float k1 = Smooth(stanceK1), k2 = Smooth(stanceK2);
             Vector3 sE = restEuler, sH = new Vector3(restHand.x * yawSign, restHand.y, restHand.z);
-            if (k1 > 0.001f) { sE = Vector3.Lerp(sE, new Vector3(-75f, -12f * yawSign, 0f), k1); sH = Vector3.Lerp(sH, new Vector3(0.17f * yawSign, -0.12f, 0.16f), k1); }    // хассо: клинок вертикально у правого плеча
-            if (k2 > 0.001f) { sE = Vector3.Lerp(sE, new Vector3(20f, 155f * yawSign, 0f), k2); sH = Vector3.Lerp(sH, new Vector3(0.24f * yawSign, -0.46f, 0.06f), k2); }   // вакигамаэ: у бедра, остриё назад-вниз
+            if (k1 > 0.001f) { sE = Vector3.Lerp(sE, new Vector3(-97f, -16f * yawSign, 0f), k1); sH = Vector3.Lerp(sH, new Vector3(0.27f * yawSign, -0.05f, 0.1f), k1); }    // хассо: руки у правого плеча, клинок вверх и чуть назад за голову
+            if (k2 > 0.001f) { sE = Vector3.Lerp(sE, new Vector3(24f, 150f * yawSign, 0f), k2); sH = Vector3.Lerp(sH, new Vector3(0.3f * yawSign, -0.48f, -0.02f), k2); }   // вакигамаэ: руки у бедра, остриё назад-вниз, клинок за телом
             Vector3 re = Vector3.Lerp(sE, gE, bk);
             Vector3 rh = Vector3.Lerp(sH, gH, bk);
             for (int c = PoseCh.PF; c < PoseCh.N; c++) Pose[c] = SwingProfile.ReadyPose[c];
