@@ -102,7 +102,7 @@ jobs:
           git init -q; git checkout -q -b apk-latest
           sudo cp "$GITHUB_WORKSPACE"/build/Android/*.apk ./BladePath.apk; sudo chown "$(id -u)" BladePath.apk
           if [ -f "$GITHUB_WORKSPACE/build/probe.txt" ]; then sudo cp "$GITHUB_WORKSPACE/build/probe.txt" ./probe.txt; sudo chown "$(id -u)" probe.txt; fi
-          if ls "$GITHUB_WORKSPACE"/build/shots/*.jpg >/dev/null 2>&1; then mkdir -p shots; sudo cp "$GITHUB_WORKSPACE"/build/shots/*.jpg shots/; sudo chown -R "$(id -u)" shots; fi
+          if ls "$GITHUB_WORKSPACE"/build/shots/*.jpg >/dev/null 2>&1; then mkdir -p shots; sudo cp "$GITHUB_WORKSPACE"/build/shots/*.jpg shots/; sudo cp "$GITHUB_WORKSPACE"/build/shots/*.png shots/ 2>/dev/null || true; sudo chown -R "$(id -u)" shots; fi
           echo "run ${GITHUB_RUN_NUMBER} sha ${GITHUB_SHA}" > info.txt
           git -c user.name=ci -c user.email=ci@local add -A
           git -c user.name=ci -c user.email=ci@local commit -qm "apk run ${GITHUB_RUN_NUMBER}"
