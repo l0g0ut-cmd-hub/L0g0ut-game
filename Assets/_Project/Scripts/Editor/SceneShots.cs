@@ -137,6 +137,7 @@ namespace BladePath.EditorTools
                 }
                 ReflectShot(cam, dir, "37_reflect_night", log);
                 Shot(cam, dir, "38_gate", new Vector3(0.4f, 2.0f, 3.4f), new Vector3(0f, 1.1f, -8f), 55f, log);   // назад: передняя стена, ворота, дорожка, лес
+                Shot(cam, dir, "39_garden", new Vector3(0f, 3.0f, -2.0f), new Vector3(0f, 0f, -5.8f), 62f, log);   // пруд слева, карэсансуй справа
                 WeatherShots(cam, dir, focus + new Vector3(0f, 0f, -dist), focus, log);
                 DayShots(cam, dir, focus + new Vector3(0f, 0f, -dist), focus, log);
                 // второй облик врага (ронин) — как 3_enemy
@@ -470,6 +471,7 @@ namespace BladePath.EditorTools
                 Shot(cam, dir, "33_day", pos, look, cam.fieldOfView, log);
                 Shot(cam, dir, "33b_day_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);
                 ReflectShot(cam, dir, "37b_reflect_day", log);
+                Shot(cam, dir, "39b_garden_day", new Vector3(0f, 3.0f, -2.0f), new Vector3(0f, 0f, -5.8f), 62f, log);
                 dn.Apply(true, true);   // рассвет в тумане
                 foreach (FlickerLight fl in UnityEngine.Object.FindObjectsByType<FlickerLight>(FindObjectsSortMode.None)) Call(fl, "Update");
                 Shot(cam, dir, "34_dawn", pos, look, cam.fieldOfView, log);

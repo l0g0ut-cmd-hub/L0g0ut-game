@@ -126,6 +126,8 @@ namespace BladePath.EditorTools
 
             BuildDetails(env, look);
             AddGroundAO(env, look);
+            AddPond(env, look);
+            AddKaresansui(env, look);
             AddShojiShadows(look);
             MarkStatic(env);
             AddMist(look);
@@ -185,6 +187,69 @@ namespace BladePath.EditorTools
             Blob(-1.35f, -7.6f, 0.9f, yGravel); Blob(1.35f, -7.6f, 0.9f, yGravel);
             Blob(5.4f, 3.4f, 1.6f, yGravel); Blob(-5.5f, 4.4f, 1.7f, yGravel); Blob(5.6f, -0.6f, 1.4f, yGravel); Blob(-5.4f, -1.0f, 1.45f, yGravel); Blob(4.6f, 8.2f, 1.9f, yGravel);
             Blob(-3.4f, 9.6f, 4.2f, yGravel);
+        }
+
+        /// <summary>
+        /// Пруд в саду слева от дорожки к воротам: неровный контур, тёмная гладкая вода с плывущей рябью (отражает небо,
+        /// фонари и луну), бордюр из камней — часть замшелые, листья лотоса, тень у кромки.
+        /// </summary>
+        static void AddPond(Transform env, Look look)
+        {
+            if (look.pondWater == null) return;
+            Transform g = new GameObject("Pond").transform; g.SetParent(env, false);
+            Vector3 c = new Vector3(-3.6f, 0f, -5.4f);
+            System.Random r = new System.Random(77);
+            const int n = 28;
+            Vector2[] outline = new Vector2[n];
+            for (int i = 0; i < n; i++)
+            {
+                float a = i / (float)n * Mathf.PI * 2f;
+                float k = 1f + 0.12f * Mathf.Sin(a * 3f + 0.7f) + 0.07f * Mathf.Sin(a * 5f + 2.1f);   // бобовидный, не эллипс
+                outline[i] = new Vector2(Mathf.Cos(a) * 1.45f * k, Mathf.Sin(a) * 0.85f * k);
+            }
+            GameObject water = EnvMesh.Flat(g, "Water", c + new Vector3(0f, -0.062f, 0f), outline, look.pondWater, 1.2f);
+            water.AddComponent<BladePath.WaterRipple>();
+            MeshRenderer wr = water.GetComponent<MeshRenderer>(); wr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            // тёмная кромка воды (AO) и камни бордюра
+            if (look.aoBlob != null) EnvMesh.Decal(g, "PondAO", c + new Vector3(0f, -0.067f, 0f), 0f, 3.9f, 2.4f, look.aoBlob);
+            for (int i = 0; i < n; i += 2)
+            {
+                Vector2 o = outline[i] * 1.06f;
+                float s = 0.16f + 0.14f * (float)r.NextDouble();
+                Material m = r.NextDouble() < 0.4 && look.moss != null ? look.moss : look.stoneBlock;
+                CharacterVisuals.Part(g, "RimStone" + i, PrimitiveType.Sphere, c + new Vector3(o.x, -0.05f + s * 0.18f, o.y),
+                    new Vector3(0f, (float)r.NextDouble() * 180f, 0f), new Vector3(s * 1.6f, s * 0.7f, s * 1.2f), m);
+            }
+            // листья лотоса — плоские диски у дальнего берега, разного размера
+            if (look.lotus != null)
+                for (int i = 0; i < 7; i++)
+                {
+                    float a = 1.2f + (float)r.NextDouble() * 2.6f, rr = 0.35f + (float)r.NextDouble() * 0.45f;
+                    float s = 0.14f + 0.12f * (float)r.NextDouble();
+                    CharacterVisuals.Part(g, "Lotus" + i, PrimitiveType.Cylinder, c + new Vector3(Mathf.Cos(a) * rr * 1.45f, -0.058f, Mathf.Sin(a) * rr * 0.85f),
+                        Vector3.zero, new Vector3(s, 0.003f, s), look.lotus);
+                }
+        }
+
+        /// <summary>
+        /// Сухой сад карэсансуй справа от дорожки: бороздки граблей по гравию (кольца вокруг камней, прямые вдоль сада) и три
+        /// замшелых камня — позиции совпадают с tools/texgen/karesansui.py.
+        /// </summary>
+        static void AddKaresansui(Transform env, Look look)
+        {
+            if (look.karesansui == null) return;
+            Transform g = new GameObject("Karesansui").transform; g.SetParent(env, false);
+            Vector3 c = new Vector3(3.6f, 0f, -5.3f);
+            EnvMesh.Decal(g, "Rake", c + new Vector3(0f, -0.068f, 0f), 0f, 4.0f, 2.0f, look.karesansui);
+            float[,] rocks = { { -1.05f, 0.15f, 0.32f }, { 0.55f, -0.35f, 0.24f }, { 1.25f, 0.42f, 0.18f } };
+            for (int i = 0; i < 3; i++)
+            {
+                float rx = rocks[i, 0], rz = rocks[i, 1], rr = rocks[i, 2];
+                Material m = i == 1 || look.moss == null ? look.stoneBlock : look.moss;
+                CharacterVisuals.Part(g, "Rock" + i, PrimitiveType.Sphere, c + new Vector3(rx, -0.07f + rr * 0.45f, rz),
+                    new Vector3(8f * i, 37f * i, -6f * i), new Vector3(rr * 2.1f, rr * 1.5f, rr * 1.8f), m);
+                if (look.aoBlob != null) EnvMesh.Decal(g, "RockAO" + i, c + new Vector3(rx, -0.067f, rz), 0f, rr * 3.4f, rr * 3.4f, look.aoBlob);
+            }
         }
 
         /// <summary>
@@ -445,6 +510,7 @@ namespace BladePath.EditorTools
                 if (t.GetComponent<BladePath.GlowSprite>() != null || t.GetComponent<ParticleSystem>() != null || t.GetComponentInParent<BladePath.BannerSway>() != null) continue;
                 // движущиеся части (трубка сиси-одоси, полоска фурина) — не в статический батч, иначе застынут
                 if (t.GetComponentInParent<BladePath.ShishiOdoshi>() != null || t.GetComponentInParent<BladePath.WindChime>() != null) continue;
+                if (t.GetComponent<BladePath.WaterRipple>() != null) continue;   // у пруда свой экземпляр материала (рябь плывёт)
                 UnityEditor.GameObjectUtility.SetStaticEditorFlags(t.gameObject, UnityEditor.StaticEditorFlags.BatchingStatic);
             }
         }

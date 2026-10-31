@@ -177,6 +177,24 @@ namespace BladePath.EditorTools
             return g;
         }
 
+        /// <summary>Плоский многоугольник (звёздный относительно центра) на высоте pos.y: веер из центра, UV в метрах / tile.</summary>
+        public static GameObject Flat(Transform parent, string name, Vector3 pos, Vector2[] outline, Material mat, float tile)
+        {
+            MB mb = new MB();
+            Vector3 c = Vector3.zero;
+            for (int i = 0; i < outline.Length; i++)
+            {
+                Vector2 a = outline[i], b = outline[(i + 1) % outline.Length];
+                mb.Poly(new[] { c, new Vector3(b.x, 0f, b.y), new Vector3(a.x, 0f, a.y) }, 1f, new Vector3(0f, -1f, 0f), false, false);
+            }
+            // UV — в мировых метрах (Poly считает их от первой вершины треугольника — перезаписываем)
+            for (int i = 0; i < mb.uv.Count; i++) mb.uv[i] = new Vector2(mb.v[i].x, mb.v[i].z) / Mathf.Max(0.01f, tile);
+            Mesh m = mb.Build("env_flat_" + name);
+            if (!AssetDatabase.IsValidFolder(Folder)) AssetDatabase.CreateFolder("Assets/_Project/Models", "Env");
+            AssetDatabase.CreateAsset(m, Folder + "/env_" + (counter++) + ".asset");
+            return Make(parent, name, m, pos, Vector3.zero, mat);
+        }
+
         /// <summary>Ореол-биллборд: аддитивный квад с мягким диском, разворачивается к камере (GlowSprite).</summary>
         public static GameObject Glow(Transform parent, string name, Vector3 pos, float size, Material mat, float flicker = 0.12f)
         {

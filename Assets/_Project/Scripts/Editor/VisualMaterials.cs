@@ -11,7 +11,7 @@ namespace BladePath.EditorTools
         public Material heroArmor, enemyArmor, cloth, skin, hair, lacquer, bronze, steel, handle;
         public Material flesh, tooth, maw, voidBlack, deadSkin, ember, tentacle, ronin;
         public Material stone, stoneDark, flame, moon, petal;
-        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage, forestFloor, aoStrip, aoBlob, shojiMonk, shojiWalker;
+        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage, forestFloor, aoStrip, aoBlob, shojiMonk, shojiWalker, karesansui, pondWater, lotus;
     }
 
     /// <summary>
@@ -107,6 +107,12 @@ namespace BladePath.EditorTools
             // тени людей за сёдзи (tools/texgen/shoji_shadows.py): монах в сэйдза и идущий (лист из 4 кадров)
             l.shojiMonk = MaskMat("Shoji_Monk", "shoji_monk.png", 0.62f);
             l.shojiWalker = MaskMat("Shoji_Walker", "shoji_walker.png", 0.66f);
+            // сад перед храмом: бороздки граблей карэсансуй (умножение на гравий) и пруд — тёмная гладкая вода с рябью и листья лотоса
+            l.karesansui = MaskMat("Karesansui", "karesansui_mask.png", 0.75f);
+            // рябь — только в нормалях: альбедо ровное тёмное (без текстуры), отражает небо и огни
+            l.pondWater = Textured("Env_PondWater", null, "water_normal.png", Vector2.one, new Color(0.02f, 0.03f, 0.034f), 0f, 0.95f);
+            if (l.pondWater != null) { l.pondWater.SetFloat("_BumpScale", 0.35f); l.pondWater.mainTextureScale = new Vector2(1.5f, 1.5f); EditorUtility.SetDirty(l.pondWater); }
+            l.lotus = Solid("Env_Lotus", new Color(0.12f, 0.24f, 0.09f), 0f, 0.55f);
             // окружение — на шейдере с погодой: снег ложится на крыши, колпаки стен, камень и землю, в дождь всё мокнет и блестит
             foreach (Material em in new[] { l.wood, l.woodDark, l.roof, l.plaster, l.stoneBlock, l.gravel, l.forestFloor, l.bark, l.stone, l.moss, l.stoneDark })
                 EnvShader(em);
