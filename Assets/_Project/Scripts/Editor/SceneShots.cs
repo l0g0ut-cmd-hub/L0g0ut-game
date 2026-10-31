@@ -139,6 +139,7 @@ namespace BladePath.EditorTools
                 ReflectShot(cam, dir, "37_reflect_night", log);
                 Shot(cam, dir, "47_komainu", new Vector3(-0.8f, 1.1f, 1.6f), new Vector3(-0.8f, 0.45f, 4.15f), 50f, log);   // пара комаину у ступеней
                 Shot(cam, dir, "47b_komainu_close", new Vector3(-1.7f, 0.8f, 3.0f), new Vector3(-2.45f, 0.5f, 4.15f), 40f, log);
+                Shot(cam, dir, "48_jizo", new Vector3(-4.6f, 0.9f, 0.4f), new Vector3(-5.85f, 0.3f, 1.0f), 45f, log);   // три дзидзо у стены
                 Shot(cam, dir, "46_rainchain", new Vector3(-3.4f, 1.5f, 2.6f), new Vector3(-4.3f, 1.25f, 3.96f), 45f, log);   // цепь-водосток и основания колонн
                 // храмовый кот на веранде: сидит, вылизывает лапу, трёт морду, идёт (строится в игре при запуске — здесь вручную)
                 TempleCat cat = UnityEngine.Object.FindFirstObjectByType<TempleCat>();

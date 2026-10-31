@@ -478,6 +478,14 @@ namespace BladePath.EditorTools
                 if (side > 0) k.transform.localScale = new Vector3(-1f, 1f, 1f);
                 if (look.aoBlob != null) EnvMesh.Decal(pr, "KomainuAO" + side, new Vector3(x, -0.066f, 4.15f), 0f, 0.95f, 0.95f, look.aoBlob);
             }
+            // три дзидзо в ряд у левой стены между столбами, лицом во двор; разного роста и чуть вразнобой повёрнуты
+            float[] jz = { 0.35f, 0.95f, 1.6f }, jh = { 0.6f, 0.52f, 0.57f }, jy = { 4f, -6f, 9f };
+            for (int i = 0; i < 3; i++)
+            {
+                Vector3 jp = new Vector3(-5.85f, -0.075f, jz[i]);
+                if (Prop(pr, "Jizo" + i, "jizo.obj", look.jizo, jp, 90f + jy[i], jh[i]) == null) break;
+                if (look.aoBlob != null) EnvMesh.Decal(pr, "JizoAO" + i, new Vector3(jp.x, -0.066f + 0.0005f * i, jp.z), 0f, 0.55f, 0.55f, look.aoBlob);
+            }
             // ограда такэгаки: секции 1,72 м вдоль дорожки ворота → арена, с просветом у ворот
             for (int side = -1; side <= 1; side += 2)
                 for (int k = 0; k < 2; k++)
@@ -881,8 +889,13 @@ namespace BladePath.EditorTools
                 }
             }
             // дорожка к ступеням храма
+            // плоские природные камни неровного контура (как дорожка от ворот), а не цилиндры-«пеньки»
+            System.Random rs = new System.Random(77);
             for (int i = 0; i < 3; i++)
-                CharacterVisuals.Part(g, "SteppingStone" + i, PrimitiveType.Cylinder, new Vector3(-0.8f + (i % 2 == 0 ? -0.12f : 0.12f), -0.03f, 3.15f + i * 0.33f), new Vector3(0f, i * 40f, 0f), new Vector3(0.42f, 0.04f, 0.32f), look.stoneBlock);
+            {
+                Vector2[] ol = EnvMesh.StoneOutline(rs, 9, 0.22f + (float)rs.NextDouble() * 0.03f, 0.16f + (float)rs.NextDouble() * 0.03f, 0.1f);
+                EnvMesh.Slab(g, "SteppingStone" + i, new Vector3(-0.8f + (i % 2 == 0 ? -0.12f : 0.12f), -0.078f, 3.15f + i * 0.33f), i * 40f - 20f, ol, 0.07f, look.rock != null ? look.rock : look.stoneBlock, 0.6f);
+            }
         }
 
         /// <summary>
