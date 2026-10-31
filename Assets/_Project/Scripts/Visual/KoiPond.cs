@@ -17,6 +17,9 @@ namespace BladePath
         public float margin = 0.68f;
         float[] ang, spd, wob, pause;
         ParticleSystem rings; AudioSource plopSrc; static AudioClip plop; float nextRise;
+        // лягушки у пруда ночью: «керо-керо» сериями (в дождик — охотнее), не в снег и не днём; по общей очереди звуков
+        AudioSource frogSrc; static AudioClip kero; float frogAt; int frogLeft; float frogNext;
+        ParticleSystem mist; bool mistOn;   // на рассвете и в туман над водой стелется пар
 
         void Start()
         {
@@ -27,6 +30,94 @@ namespace BladePath
             rings = BuildRings();
             plopSrc = gameObject.AddComponent<AudioSource>(); plopSrc.playOnAwake = false; plopSrc.spatialBlend = 0.7f; plopSrc.minDistance = 2f; plopSrc.maxDistance = 22f;
             if (plop == null) plop = Plop();
+            frogSrc = gameObject.AddComponent<AudioSource>(); frogSrc.playOnAwake = false; frogSrc.spatialBlend = 0.75f; frogSrc.minDistance = 2f; frogSrc.maxDistance = 24f;
+            if (kero == null) kero = Kero();
+            frogAt = Time.time + Random.Range(15f, 35f);
+            mist = BuildMist();
+        }
+
+        ParticleSystem BuildMist()
+        {
+            GameObject g = new GameObject("PondMist");
+            g.transform.SetParent(transform, false);
+            g.transform.localPosition = new Vector3(0f, 0.06f, 0f);
+            ParticleSystem ps = g.AddComponent<ParticleSystem>();
+            ps.Stop();
+            var main = ps.main; main.loop = true; main.playOnAwake = false;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(6f, 9f); main.startSpeed = 0f;
+            main.startSize = new ParticleSystem.MinMaxCurve(0.6f, 1.2f); main.startRotation = new ParticleSystem.MinMaxCurve(0f, 6.28f);
+            main.startColor = new Color(0.8f, 0.84f, 0.9f, 0.13f); main.maxParticles = 40;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            var em = ps.emission; em.rateOverTime = 4f;
+            var sh = ps.shape; sh.shapeType = ParticleSystemShapeType.Box; sh.scale = new Vector3(1.9f, 0.02f, 0.9f);
+            var vel = ps.velocityOverLifetime; vel.enabled = true; vel.space = ParticleSystemSimulationSpace.World;
+            vel.x = new ParticleSystem.MinMaxCurve(-0.05f, 0.08f); vel.y = new ParticleSystem.MinMaxCurve(0.01f, 0.04f); vel.z = new ParticleSystem.MinMaxCurve(-0.03f, 0.03f);
+            var rot = ps.rotationOverLifetime; rot.enabled = true; rot.z = new ParticleSystem.MinMaxCurve(-0.15f, 0.15f);
+            var sz = ps.sizeOverLifetime; sz.enabled = true; sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.6f), new Keyframe(1f, 1.5f)));
+            var col = ps.colorOverLifetime; col.enabled = true;
+            Gradient gr = new Gradient();
+            gr.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) }, new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.3f), new GradientAlphaKey(1f, 0.7f), new GradientAlphaKey(0f, 1f) });
+            col.color = gr;
+            var r = g.GetComponent<ParticleSystemRenderer>();
+            Material m = new Material(Shader.Find("Sprites/Default")) { name = "PondMist", mainTexture = SoftSprites.Fog };
+            r.material = m; r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; r.receiveShadows = false;
+            return ps;
+        }
+
+        /// <summary>
+        /// «Керо»: кваканье японской квакши — два слога, каждый — пачка коротких звонких импульсов (горловой мешок
+        /// щёлкает ~65 раз в секунду), импульс — затухающий тон ~800 Гц («ке» ниже, «ро» выше и короче).
+        /// </summary>
+        static AudioClip Kero()
+        {
+            const int rate = 22050;
+            int n = (int)(rate * 0.42f);
+            float[] d = new float[n];
+            System.Random r = new System.Random(77);
+            float peak = 1e-4f;
+            float[] s0 = { 0f, 0.22f }, len = { 0.16f, 0.13f }, f = { 760f, 980f }, pr = { 62f, 70f };
+            for (int k = 0; k < 2; k++)
+            {
+                float tt = 0f;
+                while (tt < len[k])
+                {
+                    float env = Mathf.Sin(Mathf.PI * tt / len[k]);
+                    int i0 = (int)((s0[k] + tt) * rate);
+                    float fk = f[k] * (1f - 0.08f * tt / len[k]) * (0.97f + 0.06f * (float)r.NextDouble());
+                    for (int j = 0; j < (int)(0.012f * rate) && i0 + j < n; j++)
+                    {
+                        float u = j / (float)rate;
+                        d[i0 + j] += env * Mathf.Sin(2f * Mathf.PI * fk * u) * Mathf.Exp(-u * 380f) * (1f + 0.4f * Mathf.Sin(2f * Mathf.PI * fk * 2f * u));
+                    }
+                    tt += 1f / pr[k];
+                }
+            }
+            for (int i = 0; i < n; i++) peak = Mathf.Max(peak, Mathf.Abs(d[i]));
+            for (int i = 0; i < n; i++) d[i] *= 0.8f / peak;
+            AudioClip c = AudioClip.Create("frog_kero", n, 1, rate, false);
+            c.SetData(d, 0);
+            return c;
+        }
+
+        void Frogs(float t)
+        {
+            if (frogSrc == null || kero == null) return;
+            Weather w = Weather.Instance;
+            bool night = w != null && !w.Daytime && !w.Snowing;
+            if (frogLeft > 0)
+            {
+                if (t < frogNext) return;
+                frogLeft--; frogNext = t + Random.Range(0.42f, 0.6f);
+                frogSrc.pitch = Random.Range(0.95f, 1.06f);
+                frogSrc.PlayOneShot(kero, Random.Range(0.12f, 0.2f));
+                return;
+            }
+            if (t < frogAt) return;
+            frogAt = t + Random.Range(18f, 40f) * (w != null && w.Raining ? 0.6f : 1f);
+            if (!night) return;
+            int k = Random.Range(2, 6);
+            if (!Ambience.Claim(k * 0.5f, 3f, 7f)) { frogAt = t + Random.Range(4f, 8f); return; }
+            frogLeft = k; frogNext = t;
         }
 
         /// <summary>Кольцо ряби: процедурная текстура (тонкое светлое кольцо с мягкими краями), плоские частицы на глади.</summary>
@@ -116,6 +207,10 @@ namespace BladePath
             if (fish == null) return;
             bool hide = Weather.Instance != null && Weather.Instance.Snowing;
             float dt = Time.deltaTime, t = Time.time;
+            Frogs(t);
+            Weather wm = Weather.Instance;
+            bool wantMist = wm != null && (wm.Dawn || wm.Foggy) && !wm.Raining;
+            if (mist != null && wantMist != mistOn) { mistOn = wantMist; if (mistOn) mist.Play(); else mist.Stop(); }
             if (t >= nextRise)
             {
                 nextRise = t + Random.Range(8f, 20f);
