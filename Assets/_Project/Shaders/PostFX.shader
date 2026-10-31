@@ -14,6 +14,9 @@ Shader "Hidden/BladePath/PostFX"
     half3 _Shadows, _Highlights;
     half _BP_Snow;          // глобально из Weather: в снег по краям кадра нарастает иней
     half _BP_Wetness;       // глобально из Weather: 1 под дождём — на «объективе» капли
+    sampler2D _DofTex, _DofTex2;          // уменьшенные (¼ и ⅛) копии кадра — размытый дальний план
+    UNITY_DECLARE_DEPTH_TEXTURE(_CameraDepthTexture);
+    float4 _Dof;                           // x — с какой глубины (м) начинается размытие, y — на сколько метров нарастает, z — сила
     float Hash21 (float2 p) { p = frac(p * float2(123.34, 456.21)); p += dot(p, p + 45.32); return frac(p.x * p.y); }
     float VNoise (float2 p) { float2 i = floor(p), f = frac(p); f = f * f * (3.0 - 2.0 * f);
         return lerp(lerp(Hash21(i), Hash21(i + float2(1, 0)), f.x), lerp(Hash21(i + float2(0, 1)), Hash21(i + float2(1, 1)), f.x), f.y); }
@@ -162,6 +165,15 @@ Shader "Hidden/BladePath/PostFX"
             half4 frag (v2f i) : SV_Target
             {
                 half3 c = SampleLens(i.uv);
+                // глубина резкости: бойцы резкие, храм, лес и небо за ними мягко расплываются (как в объективе)
+                if (_Dof.z > 0.001)
+                {
+                    float z = LinearEyeDepth(SAMPLE_DEPTH_TEXTURE(_CameraDepthTexture, i.uv));
+                    half k = saturate((z - _Dof.x) / _Dof.y) * _Dof.z;
+                    if (z > 70.0) k *= 0.6h;   // небо — мягче (звёзды и луна не тают совсем)
+                    half3 b = lerp(tex2D(_DofTex, i.uv).rgb, tex2D(_DofTex2, i.uv).rgb, k);
+                    c = lerp(c, b, k);
+                }
                 c += tex2D(_BloomTex, i.uv).rgb * _Intensity;
                 return half4(Lens(Grade(c), i.uv), 1);
             }
