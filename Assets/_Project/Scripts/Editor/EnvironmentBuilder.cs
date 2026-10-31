@@ -285,6 +285,37 @@ namespace BladePath.EditorTools
         }
 
         /// <summary>
+        /// Кусари-тои — цепь-водосток с карниза храма в каменную чашу: звенья-чашечки из старой бронзы; в дождь по ним
+        /// бежит вода и плещет в чашу (RainChain). Отдельный корень — цепь качается на ветру.
+        /// </summary>
+        static void AddRainChain(Look look, Vector3 top)
+        {
+            Material bronze = look.bellBronze != null ? look.bellBronze : look.bronze;
+            Transform root = new GameObject("RainChain").transform; root.position = top;
+            Transform chain = new GameObject("Chain").transform; chain.SetParent(root, false);
+            float len = top.y - 0.25f;
+            int links = Mathf.RoundToInt(len / 0.16f);
+            for (int i = 0; i < links; i++)
+                CharacterVisuals.Part(chain, "Cup" + i, PrimitiveType.Cylinder, new Vector3(0f, -0.08f - i * 0.16f, 0f), new Vector3(0f, i * 45f, 0f), new Vector3(0.07f, 0.045f, 0.07f), bronze);
+            CharacterVisuals.Part(chain, "Hook", PrimitiveType.Cylinder, new Vector3(0f, 0.02f, 0f), Vector3.zero, new Vector3(0.02f, 0.05f, 0.02f), bronze);
+            // каменная чаша и галька
+            Material rockM = look.rock != null ? look.rock : look.stoneBlock;
+            CharacterVisuals.Part(root, "Basin", PrimitiveType.Cylinder, new Vector3(0f, -top.y + 0.07f, 0f), Vector3.zero, new Vector3(0.38f, 0.08f, 0.38f), rockM);
+            CharacterVisuals.Part(root, "BasinWater", PrimitiveType.Cylinder, new Vector3(0f, -top.y + 0.152f, 0f), Vector3.zero, new Vector3(0.3f, 0.002f, 0.3f), look.pondWater != null ? look.pondWater : look.puddle);
+            // вода по цепи и брызги в чаше (выключены, включает RainChain)
+            ParticleSystem water = FireLayer(root, "ChainWater", new Vector3(0f, -0.05f, 0f), look.petal, 0.55f, 0.65f, 3.2f, 3.6f, 0.02f, 0.035f, 0f, 120, new Color(0.7f, 0.76f, 0.88f, 0.55f), 0.02f, false);
+            water.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);   // вниз
+            { var r = water.GetComponent<ParticleSystemRenderer>(); r.renderMode = ParticleSystemRenderMode.Stretch; r.velocityScale = 0.05f; r.lengthScale = 1f; }
+            { var main = water.main; main.gravityModifier = 0.2f; var sh = water.shape; sh.angle = 1f; }
+            water.gameObject.AddComponent<PetalTexture>().disc = true;
+            ParticleSystem splash = FireLayer(root, "ChainSplash", new Vector3(0f, -top.y + 0.17f, 0f), look.petal, 0.2f, 0.35f, 0.5f, 1.0f, 0.01f, 0.02f, 0f, 60, new Color(0.7f, 0.76f, 0.88f, 0.5f), 0.05f, false);
+            { var main = splash.main; main.gravityModifier = 1f; var sh = splash.shape; sh.angle = 50f; }
+            splash.gameObject.AddComponent<PetalTexture>().disc = true;
+            BladePath.RainChain rc = root.gameObject.AddComponent<BladePath.RainChain>();
+            rc.water = water; rc.splash = splash; rc.chain = chain;
+        }
+
+        /// <summary>
         /// Пруд в саду слева от дорожки к воротам: неровный контур, тёмная гладкая вода с плывущей рябью (отражает небо,
         /// фонари и луну), бордюр из камней — часть замшелые, листья лотоса, тень у кромки.
         /// </summary>
@@ -768,6 +799,8 @@ namespace BladePath.EditorTools
             // вальмовая крыша с вогнутыми скатами и загнутыми углами (как в референсе)
             EnvMesh.CurvedHip(hall, "Roof", new Vector3(cx, roofY - 0.1f, 6.0f), 5.0f, 2.1f, 1.45f, 0.3f, look.roof, look.woodDark, 1.6f);
             AddEaveDrips(new Vector3(cx, roofY - 0.16f, 6.0f - 2.08f), 4.7f, look);
+            AddRainChain(look, new Vector3(-4.3f, roofY - 0.18f, 3.96f));
+            AddRainChain(look, new Vector3(3.35f, roofY - 0.18f, 3.96f));
             EnvMesh.Box(hall, "Ridge", new Vector3(cx, roofY - 0.1f + 1.47f, 6.0f), Vector3.zero, new Vector3(2f * (5.0f - 2.1f) + 0.4f, 0.18f, 0.24f), look.woodDark, 1f, true);
             CharacterVisuals.Part(hall, "RidgeEndL", PrimitiveType.Sphere, new Vector3(cx - 5.0f + 2.1f - 0.2f, roofY + 1.5f, 6.0f), Vector3.zero, new Vector3(0.22f, 0.32f, 0.22f), look.woodDark);
             CharacterVisuals.Part(hall, "RidgeEndR", PrimitiveType.Sphere, new Vector3(cx + 5.0f - 2.1f + 0.2f, roofY + 1.5f, 6.0f), Vector3.zero, new Vector3(0.22f, 0.32f, 0.22f), look.woodDark);
