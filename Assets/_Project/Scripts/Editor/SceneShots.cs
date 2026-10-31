@@ -464,13 +464,13 @@ namespace BladePath.EditorTools
                 Call(w, "StartRain");
                 Shader.SetGlobalFloat("_BP_Wetness", 1f);
                 foreach (ParticleSystem ps in UnityEngine.Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None))
-                    if (ps.name == "Rain" || ps.name == "RainSplash" || ps.name == "RainRipples") ps.Simulate(2f, true, true);
+                    if (ps.name == "Rain" || ps.name == "RainSplash" || ps.name == "RainRipples" || ps.name == "EaveDrips") ps.Simulate(2f, true, true);
                 Shot(cam, dir, "21_rain", pos, look, cam.fieldOfView, log);
                 Call(w, "StopRain");
                 rainP.GetSetMethod(true).Invoke(w, new object[] { false });
                 Shader.SetGlobalFloat("_BP_Wetness", 0f);
                 foreach (ParticleSystem ps in UnityEngine.Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None))
-                    if (ps.name == "Rain" || ps.name == "RainSplash" || ps.name == "RainRipples") ps.Clear();
+                    if (ps.name == "Rain" || ps.name == "RainSplash" || ps.name == "RainRipples" || ps.name == "EaveDrips" || ps.name == "EaveSplash") ps.Clear();
             }
             catch (Exception e) { log.Append("PROBE|shots|weather|error " + e.Message + "\n"); }
             finally

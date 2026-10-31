@@ -54,6 +54,16 @@ namespace BladePath
             nextFlashAt = Time.time + Random.Range(5f, 12f);
         }
 
+        /// <summary>Капель с карниза храма (EnvironmentBuilder.AddEaveDrips) — только в дождь.</summary>
+        void Eaves(bool on)
+        {
+            GameObject g = GameObject.Find("EaveDrips");
+            ParticleSystem ps = g != null ? g.GetComponent<ParticleSystem>() : null;
+            if (ps == null) return;
+            var em = ps.emission; em.rateOverTime = on ? (DuelManager.Gfx == 1 ? 90f : 45f) : 0f;
+            if (on && !ps.isPlaying) ps.Play();
+        }
+
         /// <summary>Светлячки и мотыльки у фонарей — только в ясную ночь (в дождь и снег прячутся).</summary>
         void Critters(bool on)
         {
@@ -73,6 +83,7 @@ namespace BladePath
             rain.Play(); splash.Play(); if (ripples != null) ripples.Play();
             if (rainAudio != null && !rainAudio.isPlaying) rainAudio.Play();
             RenderSettings.fogDensity = 0.065f;
+            Eaves(true);
             Wet(true);
             RenderSettings.fogColor = fogBase * 0.85f;
         }
@@ -83,6 +94,7 @@ namespace BladePath
             if (ripples != null) ripples.Stop();
             if (rainAudio != null) rainAudio.Stop();
             RenderSettings.fogDensity = 0.05f;
+            Eaves(false);
             Wet(false);
             RenderSettings.fogColor = fogBase;
         }

@@ -295,6 +295,64 @@ namespace BladePath.EditorTools
                 CharacterVisuals.Part(g, "SteppingStone" + i, PrimitiveType.Cylinder, new Vector3(-0.8f + (i % 2 == 0 ? -0.12f : 0.12f), -0.03f, 3.15f + i * 0.33f), new Vector3(0f, i * 40f, 0f), new Vector3(0.42f, 0.04f, 0.32f), look.stoneBlock);
         }
 
+        /// <summary>
+        /// Капель с карниза храма в дождь: вода срывается со свеса неровными струйками и разбивается о камень брызгами.
+        /// Система стоит выключенной (эмиссия 0) — включает Weather на время дождя. Отдельный корень (не статика).
+        /// </summary>
+        static void AddEaveDrips(Vector3 edge, float halfWidth, Look look)
+        {
+            GameObject go = new GameObject("EaveDrips");
+            go.transform.position = edge;
+            ParticleSystem ps = go.AddComponent<ParticleSystem>();
+            ParticleSystem.MainModule main = ps.main;
+            main.loop = true; main.playOnAwake = true;
+            main.startLifetime = 1.4f;
+            main.startSpeed = 0f;
+            main.startSize = new ParticleSystem.MinMaxCurve(0.012f, 0.022f);
+            main.startColor = new Color(0.72f, 0.78f, 0.9f, 0.55f);
+            main.gravityModifier = 1f;
+            main.maxParticles = 300;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            ParticleSystem.EmissionModule em = ps.emission; em.rateOverTime = 0f;
+            ParticleSystem.ShapeModule sh = ps.shape;
+            sh.shapeType = ParticleSystemShapeType.Box; sh.scale = new Vector3(halfWidth * 2f, 0.01f, 0.03f);
+            // струйки, а не сплошная завеса: шум по ширине сгущает капли в «жёлобки»
+            ParticleSystem.NoiseModule noise = ps.noise; noise.enabled = true; noise.strength = 0.04f; noise.frequency = 0.3f;
+            ParticleSystem.CollisionModule col = ps.collision;
+            col.enabled = true; col.type = ParticleSystemCollisionType.Planes; col.dampen = 1f; col.bounce = 0f; col.lifetimeLoss = 1f;
+            GameObject floor = new GameObject("EaveFloor"); floor.transform.SetParent(go.transform, false); floor.transform.position = new Vector3(edge.x, 0.005f, edge.z);
+            col.SetPlane(0, floor.transform);
+            ParticleSystemRenderer r = go.GetComponent<ParticleSystemRenderer>();
+            r.sharedMaterial = look.petal;
+            r.renderMode = ParticleSystemRenderMode.Stretch; r.velocityScale = 0.035f; r.lengthScale = 1.2f;
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; r.receiveShadows = false;
+            go.AddComponent<PetalTexture>().disc = true;
+
+            // брызги о камень: на каждую разбившуюся каплю — несколько мелких капель вверх-вбок
+            GameObject sg = new GameObject("EaveSplash");
+            sg.transform.SetParent(go.transform, false);
+            ParticleSystem sp = sg.AddComponent<ParticleSystem>();
+            ParticleSystem.MainModule sm = sp.main;
+            sm.loop = false; sm.playOnAwake = false;
+            sm.startLifetime = new ParticleSystem.MinMaxCurve(0.18f, 0.32f);
+            sm.startSpeed = new ParticleSystem.MinMaxCurve(0.5f, 1.2f);
+            sm.startSize = new ParticleSystem.MinMaxCurve(0.008f, 0.016f);
+            sm.startColor = new Color(0.72f, 0.78f, 0.9f, 0.5f);
+            sm.gravityModifier = 0.9f; sm.maxParticles = 400;
+            sm.simulationSpace = ParticleSystemSimulationSpace.World;
+            ParticleSystem.EmissionModule se = sp.emission; se.rateOverTime = 0f;
+            se.SetBursts(new[] { new ParticleSystem.Burst(0f, 2, 4) });
+            ParticleSystem.ShapeModule ss = sp.shape; ss.shapeType = ParticleSystemShapeType.Hemisphere; ss.radius = 0.02f;
+            sg.transform.rotation = Quaternion.Euler(-90f, 0f, 0f);
+            ParticleSystemRenderer sr = sg.GetComponent<ParticleSystemRenderer>();
+            sr.sharedMaterial = look.petal;
+            sr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; sr.receiveShadows = false;
+            sg.AddComponent<PetalTexture>().disc = true;
+            ParticleSystem.SubEmittersModule sub = ps.subEmitters;
+            sub.enabled = true;
+            sub.AddSubEmitter(sp, ParticleSystemSubEmitterType.Collision, ParticleSystemSubEmitterProperties.InheritNothing);
+        }
+
         static void BuildHall(Transform env, Look look)
         {
             Transform hall = new GameObject("TempleHall").transform;
@@ -327,6 +385,7 @@ namespace BladePath.EditorTools
             const float roofY = 2.6f;
             // вальмовая крыша с вогнутыми скатами и загнутыми углами (как в референсе)
             EnvMesh.CurvedHip(hall, "Roof", new Vector3(cx, roofY - 0.1f, 6.0f), 5.0f, 2.1f, 1.45f, 0.3f, look.roof, look.woodDark, 1.6f);
+            AddEaveDrips(new Vector3(cx, roofY - 0.16f, 6.0f - 2.08f), 4.7f, look);
             EnvMesh.Box(hall, "Ridge", new Vector3(cx, roofY - 0.1f + 1.47f, 6.0f), Vector3.zero, new Vector3(2f * (5.0f - 2.1f) + 0.4f, 0.18f, 0.24f), look.woodDark, 1f, true);
             CharacterVisuals.Part(hall, "RidgeEndL", PrimitiveType.Sphere, new Vector3(cx - 5.0f + 2.1f - 0.2f, roofY + 1.5f, 6.0f), Vector3.zero, new Vector3(0.22f, 0.32f, 0.22f), look.woodDark);
             CharacterVisuals.Part(hall, "RidgeEndR", PrimitiveType.Sphere, new Vector3(cx + 5.0f - 2.1f + 0.2f, roofY + 1.5f, 6.0f), Vector3.zero, new Vector3(0.22f, 0.32f, 0.22f), look.woodDark);
