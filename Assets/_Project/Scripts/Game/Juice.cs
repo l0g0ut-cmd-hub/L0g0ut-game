@@ -331,6 +331,28 @@ namespace BladePath
         /// <summary>Рывок.</summary>
         public void DashSound() { Play(whoosh, 0.45f, 0.6f); }
 
+        /// <summary>Рывок поднимает с камня опавшие листья (или лепестки сакуры): горсть взлетает из-под ног и кружит позади.</summary>
+        public void LeafKick(Vector3 pos, Vector3 dir)
+        {
+            int mode = Weather.LeafMode;
+            if (mode == 0 || (Weather.Instance != null && Weather.Instance.Raining)) return;   // мокрые листья не взлетают
+            if (petals == null) { GameObject g = GameObject.Find("Petals"); if (g != null) petals = g.GetComponent<ParticleSystem>(); }
+            if (petals == null) return;
+            bool sakura = mode == 2;
+            int n = mode == 3 ? 2 : Random.Range(4, 8);
+            ParticleSystem.EmitParams e = new ParticleSystem.EmitParams();
+            for (int i = 0; i < n; i++)
+            {
+                Vector2 c = Random.insideUnitCircle * 0.25f;
+                e.position = pos + new Vector3(c.x, 0.04f, c.y);
+                e.velocity = -dir.normalized * Random.Range(0.6f, 1.6f) + new Vector3(Random.Range(-0.5f, 0.5f), Random.Range(0.8f, 1.8f), Random.Range(-0.5f, 0.5f));
+                e.startSize = sakura ? Random.Range(0.035f, 0.06f) : Random.Range(0.07f, 0.12f);
+                e.startLifetime = Random.Range(2.2f, 3.4f);
+                e.startColor = sakura ? Color.Lerp(new Color(1f, 0.78f, 0.86f), new Color(1f, 0.93f, 0.96f), Random.value) : Color.Lerp(new Color(0.75f, 0.5f, 0.45f), new Color(1f, 0.82f, 0.75f), Random.value);
+                petals.Emit(e, 1);
+            }
+        }
+
         /// <summary>Боец врезался в жаровню: глухой бронзовый удар, жаровня качается, из чаши взметается сноп искр.</summary>
         public void ObstacleBump(ArenaObstacle o, Vector3 vel)
         {

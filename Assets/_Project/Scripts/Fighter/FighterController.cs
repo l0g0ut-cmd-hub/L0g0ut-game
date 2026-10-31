@@ -240,7 +240,7 @@ namespace BladePath
             dashReadyAt = Time.time + dashCooldown;
             if (Dashed != null) Dashed(this, dashDir);
             lastDashAt = Time.time;
-            if (Juice.Instance != null) { Juice.Instance.DashSound(); Juice.Instance.Dust(transform.position + Vector3.up * 0.05f, -dashDir, 14); }
+            if (Juice.Instance != null) { Juice.Instance.DashSound(); Juice.Instance.Dust(transform.position + Vector3.up * 0.05f, -dashDir, 14); Juice.Instance.LeafKick(transform.position, dashDir); }
             return true;
         }
 
