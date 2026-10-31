@@ -201,11 +201,19 @@ namespace BladePath
 
         public void CleanBlades() { for (int i = 0; i < tracked.Count; i++) tracked[i].blood = 0f; }
 
+        /// <summary>Лужа крови под павшим телом: медленно растекается (несколько пятен разного размера с задержкой).</summary>
+        public void BloodPool(Vector3 pos)
+        {
+            AddDecal(pos, 0.55f, Vector2.zero, 60f, 0.1f, 4.5f);
+            AddDecal(pos + new Vector3(Random.Range(-0.2f, 0.2f), 0f, Random.Range(-0.2f, 0.2f)), 0.4f, Vector2.zero, 60f, 0.6f, 5f);
+            AddDecal(pos + new Vector3(Random.Range(-0.3f, 0.3f), 0f, Random.Range(-0.3f, 0.3f)), 0.3f, Vector2.zero, 60f, 1.2f, 6f);
+        }
+
         void Update()
         {
             if (crickets != null)
             {
-                bool rain = Weather.Instance != null && Weather.Instance.Raining;
+                bool rain = Weather.Instance != null && (Weather.Instance.Raining || Weather.Instance.Snowing);
                 crickets.volume = Mathf.MoveTowards(crickets.volume, rain ? 0f : 0.09f, Time.unscaledDeltaTime * 0.05f);
             }
             for (int i = 0; i < tracked.Count; i++)

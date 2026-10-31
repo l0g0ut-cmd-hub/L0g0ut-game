@@ -109,7 +109,7 @@ namespace BladePath
             transform.rotation = Quaternion.LookRotation(Vector3.down, toCam);   // +Y квада (v↑) — к камере
             transform.localScale = new Vector3(width * Mathf.Lerp(1f, 0.7f, Mathf.InverseLerp(0.6f, 7f, graze)), len, 1f);
             float li = lightRef != null && baseIntensity > 0f ? lightRef.intensity / baseIntensity : 1f;
-            float wet = Weather.Instance != null && Weather.Instance.Raining ? 1.5f : 1f;
+            float wet = Weather.Instance != null && Weather.Instance.Raining ? 1.5f : (Weather.Instance != null && Weather.Instance.Snowing ? 0.35f : 1f);   // под снегом камень матовый
             Color col = color * (0.5f * strength * li * wet); col.a = 0.5f;
             mpb.SetColor("_TintColor", col);
             rend.SetPropertyBlock(mpb);

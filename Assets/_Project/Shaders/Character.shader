@@ -34,6 +34,7 @@ Shader "BladePath/Character"
         fixed4 _Color, _EmissionColor, _RimColor;
         half _BumpScale, _Metallic, _Glossiness, _GlossMapScale, _RimPower;
         half _BP_Wetness;   // глобально из Weather: дождь 0…1
+        half _BP_Snow;      // глобально из Weather: снег на верхних поверхностях 0…1
 
         struct Input
         {
@@ -67,6 +68,15 @@ Shader "BladePath/Character"
                 half w = _BP_Wetness * lerp(0.5h, 1.0h, top);
                 o.Albedo *= lerp(1.0h, 0.7h, w * (1.0h - o.Metallic));
                 o.Smoothness = lerp(o.Smoothness, max(o.Smoothness, 0.8h), w * 0.85h);
+            }
+            // снег на плечах, шлеме, верхе рук: только почти горизонтальные поверхности, сверху
+            if (_BP_Snow > 0.001h)
+            {
+                half up = WorldNormalVector(IN, o.Normal).y;
+                half s = saturate((up - 0.55h) * 3.0h) * _BP_Snow;
+                o.Albedo = lerp(o.Albedo, half3(0.82h, 0.86h, 0.92h), s);
+                o.Smoothness = lerp(o.Smoothness, 0.3h, s);
+                o.Metallic = lerp(o.Metallic, 0.0h, s);
             }
             // контровой свет: сильнее у краёв силуэта (вид почти по касательной к поверхности)
             half rim = 1.0h - saturate(dot(normalize(IN.viewDir), o.Normal));

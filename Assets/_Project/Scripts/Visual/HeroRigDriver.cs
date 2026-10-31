@@ -120,6 +120,7 @@ namespace BladePath
         float driftAcc, tempoMul = 1f; int driftN;
         // прыжок: ноги поджаты в воздухе; приземление — короткое проседание
         float airK, landK; bool wasGrounded = true;
+        float poolAt = -1f;
         FootLock lockL, lockR;
         /// <summary>Нижняя точка подошвы (мир) — после постановки на землю в этом кадре (для пыли/шагов и проб).</summary>
         public Vector3 SoleL { get; private set; }
@@ -409,7 +410,14 @@ namespace BladePath
                         {
                             fallDust = true;
                             if (Juice.Instance != null && hips != null) Juice.Instance.Dust(new Vector3(hips.position.x, 0.05f, hips.position.z), Vector3.up, 26);
+                            poolAt = Time.time + 0.6f;   // кровь растекается, когда тело улеглось
                             if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.04f);
+                        }
+                        if (poolAt > 0f && Time.time >= poolAt && Juice.Instance != null)
+                        {
+                            poolAt = -1f;
+                            Transform at = chest != null ? chest : hips;
+                            if (at != null) Juice.Instance.BloodPool(new Vector3(at.position.x, 0f, at.position.z));
                         }
                         DropSword();
                         return;

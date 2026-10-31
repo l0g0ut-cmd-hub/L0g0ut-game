@@ -89,7 +89,7 @@ namespace BladePath
             transform.localScale = new Vector3(width, length, 1f);
             float facing = 1f - Mathf.Abs(Vector3.Dot(toCam.normalized, ax));   // вдоль луча — гаснет
             float breathe = 0.75f + 0.25f * Mathf.PerlinNoise(Time.time * 0.15f + seed, seed);
-            float wet = Weather.Instance != null && Weather.Instance.Raining ? 0.4f : 1f;   // в дождь луна за тучами
+            float wet = Weather.Instance != null && Weather.Instance.Raining ? 0.4f : (Weather.Instance != null && Weather.Instance.Snowing ? 0.7f : 1f);   // в дождь луна за тучами
             Color col = color * (strength * breathe * facing * wet); col.a = 0.5f;
             rend.enabled = true;
             mpb.SetColor("_TintColor", col);
