@@ -34,7 +34,7 @@ namespace BladePath
                 nextAt = Time.time + Random.Range(minGap, maxGap);
                 gust = 1f;
                 bool rain = Weather.Instance != null && Weather.Instance.Raining;
-                if (src != null && ring != null) { src.pitch = Random.Range(0.97f, 1.03f); src.PlayOneShot(ring, rain ? 0.6f : 1f); }
+                if (src != null && ring != null && (ws > 0.5f || Ambience.Claim(1.5f, 3f, 7f))) { src.pitch = Random.Range(0.97f, 1.03f); src.PlayOneShot(ring, rain ? 0.6f : 1f); }
             }
             gust = Mathf.MoveTowards(gust, 0f, Time.deltaTime * 0.35f);
             if (strip != null)

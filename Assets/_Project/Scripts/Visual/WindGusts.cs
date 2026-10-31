@@ -18,7 +18,7 @@ namespace BladePath
         ParticleSystem[] fireBits = new ParticleSystem[0];   // искры и дым жаровен — сносит порывом
         AudioSource src, rustle;
         static AudioClip whoosh, rustleClip; static AudioClip[] knocks;
-        AudioSource knockSrc; float knockAt;   // стволы бамбука стучат друг о друга на порыве
+        AudioSource knockSrc; float knockAt; int knocksLeft;   // стволы бамбука стучат друг о друга на порыве
         bool fired;
         float snowLookAt;
 
@@ -54,6 +54,10 @@ namespace BladePath
                 Dir = (Random.value < 0.5f ? Vector3.right : Vector3.left) + new Vector3(0f, 0f, Random.Range(-0.3f, 0.3f));
                 Dir = Dir.normalized;
                 if (src != null && whoosh != null) { src.pitch = Random.Range(0.85f, 1.1f); src.PlayOneShot(whoosh, 0.6f + 0.4f * peak); }
+                // бамбук стучит не на каждом порыве и всего 2–3 раза, вразнобой (а не дробью) — и только если эфир свободен
+                knocksLeft = Random.value < 0.5f && Ambience.Claim(2.5f, 3f, 6f) ? Random.Range(2, 4) : 0;
+                knockAt = Time.time + Random.Range(0.5f, 1.2f);
+                Ambience.Extend(rise + 1f, 1.5f);   // свист порыва — следующему звуку подождать
             }
             float s = 0f;
             if (t >= 0f)
@@ -66,9 +70,10 @@ namespace BladePath
             }
             Strength = s;
             // бамбуковая роща на порыве: глухие полые «ток-ток» — стволы раскачиваются и бьются друг о друга
-            if (s > 0.45f && Time.time >= knockAt && knockSrc != null && knocks != null)
+            if (s > 0.45f && knocksLeft > 0 && Time.time >= knockAt && knockSrc != null && knocks != null)
             {
-                knockAt = Time.time + Random.Range(0.12f, 0.6f) / s;
+                knocksLeft--;
+                knockAt = Time.time + Random.Range(0.4f, 1.1f);
                 knockSrc.panStereo = Random.Range(-0.7f, 0.7f); knockSrc.pitch = Random.Range(0.9f, 1.12f);
                 knockSrc.PlayOneShot(knocks[Random.Range(0, knocks.Length)], Random.Range(0.12f, 0.3f) * s);
             }

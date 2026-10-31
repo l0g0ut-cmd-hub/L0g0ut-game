@@ -21,6 +21,7 @@ namespace BladePath
         float nextAt = -1f, farAt;
         bool wasOn;
         int last = -1;
+        bool answer;
 
         void Start()
         {
@@ -66,9 +67,19 @@ namespace BladePath
             if (w.Dawn || w.Dusk)
             {
                 // рассвет и закат: хигураси («вечерняя цикада») — по одной, печально; иногда отвечает вторая издалека
+                if (!Ambience.Claim(higurashi.length, 4f, 12f)) { nextAt = Time.time + Random.Range(1.5f, 3f); return; }   // общая очередь — без залпов
                 bool farOne = Random.value < 0.45f;
                 Play(src, higurashi, Random.Range(-0.8f, 0.8f), farOne ? Random.Range(0.14f, 0.2f) : Random.Range(0.3f, 0.4f));
-                nextAt = Time.time + (Random.value < 0.35f ? Random.Range(2.5f, 5f) : higurashi.length + Random.Range(5f, 14f));
+                nextAt = Time.time + higurashi.length + Random.Range(5f, 14f);
+                return;
+            }
+            if (answer)
+            {
+                answer = false;
+                AudioClip ac = (Random.value < 0.5f ? abura : minmin)[Random.Range(0, 3)];
+                Play(src, ac, Random.Range(-0.85f, 0.85f), Random.Range(0.1f, 0.18f));   // дальняя, тихо
+                Ambience.Extend(ac.length, Random.Range(6f, 12f));
+                nextAt = Time.time + ac.length + 1f;
                 return;
             }
             // кто поёт: чередуем виды, чтобы не тянулось одно и то же
@@ -76,13 +87,15 @@ namespace BladePath
             last = ab ? 0 : 1;
             AudioClip[] set = ab ? abura : minmin;
             AudioClip c = set[Random.Range(0, set.Length)];
+            // общая очередь звуков: пока звучит другой (птица, коршун, бамбук…) или не прошла пауза — ждём
+            float lull = Random.value < 0.25f ? Random.Range(12f, 25f) : Random.Range(4f, 10f);
+            if (!Ambience.Claim(c.length * 0.9f, lull, lull + 3f)) { nextAt = Time.time + Random.Range(1.5f, 3f); last = -1; return; }
             bool near = Random.value < 0.35f;   // ближняя — громко и ярко, дальние — тише
             Play(src, c, Random.Range(-0.85f, 0.85f), near ? Random.Range(0.32f, 0.42f) : Random.Range(0.12f, 0.22f));
             // дальше: иногда подхватывает вторая, обычно — дослушали и пауза, изредка — долгое затишье
-            float r = Random.value;
-            if (r < 0.3f) nextAt = Time.time + Random.Range(1.5f, 4f);
-            else if (r < 0.82f) nextAt = Time.time + c.length * Random.Range(0.85f, 1f) + Random.Range(3f, 9f);
-            else nextAt = Time.time + c.length + Random.Range(12f, 22f);
+            // изредка (10%) подхватывает вторая — через пару секунд, внеочередно; иначе — дослушали и тишина (её держит Ambience)
+            if (Random.value < 0.1f) { nextAt = Time.time + Random.Range(2f, 4f); answer = true; }
+            else nextAt = Time.time + c.length * 0.9f + 1f;
         }
 
         static void Play(AudioSource s, AudioClip c, float pan, float vol)
@@ -97,7 +110,12 @@ namespace BladePath
         {
             Weather w = Weather.Instance;
             if (sweep == null || w == null || !w.Dawn || w.Raining || w.Snowing) { strokes = 0; return; }
-            if (strokes <= 0 && Time.time >= sweepAt) { strokes = Random.Range(8, 18); strokeAt = Time.time; sweep.panStereo = Random.Range(-0.7f, 0.7f); }
+            if (strokes <= 0 && Time.time >= sweepAt)
+            {
+                int n = Random.Range(6, 12);
+                if (!Ambience.Claim(n * 0.9f, 4f, 9f)) { sweepAt = Time.time + Random.Range(3f, 6f); return; }
+                strokes = n; strokeAt = Time.time; sweep.panStereo = Random.Range(-0.7f, 0.7f);
+            }
             if (strokes > 0 && Time.time >= strokeAt)
             {
                 strokes--;
@@ -134,6 +152,7 @@ namespace BladePath
             if (w.Raining || w.Snowing) return;
             AudioClip c = w.Daytime ? (w.Dawn || w.Dusk ? null : tobi) : owl;
             if (c == null) return;
+            if (!Ambience.Claim(c.length, 4f, 9f)) { farAt = Time.time + Random.Range(4f, 8f); return; }
             far.clip = c; far.panStereo = Random.Range(-0.65f, 0.65f); far.pitch = Random.Range(0.96f, 1.04f);
             far.volume = w.Daytime ? 0.24f : 0.32f;
             far.Play();

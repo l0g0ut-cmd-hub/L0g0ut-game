@@ -56,7 +56,7 @@ namespace BladePath
                 e.rotation = 0f;
                 ps.Emit(e, 1);
             }
-            if (src != null && caw != null && Random.value < 0.7f) { src.pitch = Random.Range(0.9f, 1.1f); src.PlayOneShot(caw); }
+            if (src != null && caw != null && Random.value < 0.7f && Ambience.Claim(0.7f, 3f, 7f)) { src.pitch = Random.Range(0.9f, 1.1f); src.PlayOneShot(caw); }
         }
 
         /// <summary>4 кадра силуэта вороны в ряд (128×32): крылья вверх, середина, вниз, середина.</summary>

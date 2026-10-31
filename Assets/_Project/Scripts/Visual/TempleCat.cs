@@ -119,12 +119,12 @@ namespace BladePath
             {
                 seenStartle = Birds.StartleCount;
                 walking = true; rush = 3f; targetZ = z < 0.5f ? Random.Range(0.85f, 1f) : Random.Range(0f, 0.15f);
-                if (voice != null && meowShort != null) { voice.pitch = Random.Range(0.95f, 1.1f); voice.PlayOneShot(meowShort, 0.35f); }
+                if (voice != null && meowShort != null) { voice.pitch = Random.Range(0.95f, 1.1f); voice.PlayOneShot(meowShort, 0.35f); Ambience.Extend(0.4f); }
             }
             if (!walking && t >= meowAt)
             {
                 meowAt = t + Random.Range(50f, 120f);
-                if (voice != null && meow != null) { voice.pitch = Random.Range(0.92f, 1.08f); voice.PlayOneShot(meow, 0.22f); }
+                if (voice != null && meow != null && Ambience.Claim(0.7f, 3f, 7f)) { voice.pitch = Random.Range(0.92f, 1.08f); voice.PlayOneShot(meow, 0.22f); }
             }
             if (!walking && timer <= 0f)
             {

@@ -96,7 +96,7 @@ namespace BladePath
             ParticleSystem.EmitParams e = new ParticleSystem.EmitParams();
             e.position = head; e.startSize = Random.Range(0.55f, 0.75f); rings.Emit(e, 1);
             e.startSize *= 0.6f; e.startLifetime = 1.3f; rings.Emit(e, 1);
-            if (plopSrc != null && plop != null) { plopSrc.transform.position = head; plopSrc.pitch = Random.Range(0.85f, 1.2f); plopSrc.PlayOneShot(plop, 0.25f); }
+            if (plopSrc != null && plop != null && Ambience.Claim(0.3f, 3f, 7f)) { plopSrc.transform.position = head; plopSrc.pitch = Random.Range(0.85f, 1.2f); plopSrc.PlayOneShot(plop, 0.25f); }
         }
 
         void Update()

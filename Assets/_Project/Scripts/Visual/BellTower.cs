@@ -53,7 +53,7 @@ namespace BladePath
                     if (t - dt < Pull + Release)
                     {
                         // удар: звук и толчок колоколу
-                        if (src != null && toll != null) { src.pitch = Random.Range(0.97f, 1.02f); src.PlayOneShot(toll, 0.55f); }
+                        if (src != null && toll != null) { src.pitch = Random.Range(0.97f, 1.02f); src.PlayOneShot(toll, 0.55f); Ambience.Extend(7f, 3f); }   // пока гудит колокол — окружение молчит
                         swayV += 9f;
                     }
                     float k = t - Pull - Release;

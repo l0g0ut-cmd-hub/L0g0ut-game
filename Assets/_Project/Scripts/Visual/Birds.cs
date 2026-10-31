@@ -208,7 +208,7 @@ namespace BladePath
                     if (b.t >= 1f)
                     {
                         b.state = State.Perch; b.timer = Random.Range(14f, 40f); b.flapRate = 4.5f; b.heading = Random.Range(0f, 360f);
-                        Play(caw, b.pos, 0.35f);
+                        if (Ambience.Claim(0.4f, 3f, 7f)) Play(caw, b.pos, 0.35f);
                     }
                     break;
                 case State.Perch:
@@ -220,15 +220,15 @@ namespace BladePath
                     b.root.rotation = Quaternion.Slerp(b.root.rotation, Quaternion.Euler(-14f + Mathf.Sin(now * 5f) * (Random.value < 0.02f ? 20f : 0f), b.heading, 0f), 1f - Mathf.Exp(-dt * 6f));
                     Pose(b, dt, 0f, true);
                     b.root.position = b.pos; b.body.localPosition = Vector3.zero;
-                    if (Random.value < dt * 0.08f) Play(caw, b.pos, 0.3f, Random.Range(0.9f, 1.05f));
+                    if (Random.value < dt * 0.08f && Ambience.Claim(0.4f, 4f, 9f)) Play(caw, b.pos, 0.3f, Random.Range(0.9f, 1.05f));
                     if (b.timer <= 0f || NearestFighter(b.perch) < 2.2f || Wet || startled)
                     {
-                        if (startled) Play(caw, b.pos, 0.4f, 1.12f);   // испуганное «кар!»
+                        if (startled) { Play(caw, b.pos, 0.4f, 1.12f); Ambience.Extend(0.6f); }   // испуганное «кар!»
                         b.state = State.Takeoff; b.t = 0f; b.from = b.pos;
                         float side = Random.value < 0.5f ? -1f : 1f;
                         b.to = new Vector3(side * 18f, b.pos.y + Random.Range(6f, 10f), b.pos.z + Random.Range(6f, 14f));
                         b.dur = Vector3.Distance(b.from, b.to) / 6.5f;
-                        Play(flutter, b.pos, 0.35f); if (Random.value < 0.6f) Play(caw, b.pos, 0.32f, 1.05f);
+                        Play(flutter, b.pos, 0.35f); if (!startled && Random.value < 0.6f && Ambience.Claim(0.5f, 3f, 6f)) Play(caw, b.pos, 0.32f, 1.05f);
                     }
                     break;
                 case State.Takeoff:
@@ -271,7 +271,7 @@ namespace BladePath
                             b.timer = Random.Range(0.35f, 1.4f);
                             if (Random.value < 0.6f) { b.heading += Random.Range(-90f, 90f); b.hop = 1f; b.vel = Quaternion.Euler(0f, b.heading, 0f) * Vector3.forward * Random.Range(0.25f, 0.5f); }
                             else b.hop = -1f;   // клюёт
-                            if (Random.value < 0.25f && now > chirpNext) { chirpNext = now + 0.6f; Play(chirp, b.pos, 0.18f, Random.Range(0.95f, 1.15f)); }
+                            if (Random.value < 0.25f && now > chirpNext && Ambience.Claim(0.4f, 2.5f, 6f)) { chirpNext = now + 0.6f; Play(chirp, b.pos, 0.18f, Random.Range(0.95f, 1.15f)); }
                         }
                         float y = 0f;
                         if (b.hop > 0f) { b.hop = Mathf.Max(0f, b.hop - dt / 0.22f); b.perch += b.vel * dt; y = Mathf.Sin(b.hop * Mathf.PI) * 0.05f; }
