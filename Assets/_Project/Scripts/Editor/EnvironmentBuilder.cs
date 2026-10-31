@@ -473,10 +473,10 @@ namespace BladePath.EditorTools
             for (int side = -1; side <= 1; side += 2)
             {
                 float x = side < 0 ? -2.45f : 0.85f;
-                GameObject k = Prop(pr, "Komainu" + side, "komainu.obj", look.komainu, new Vector3(x, 0f, 4.15f), 180f + side * 8f, 1f);
+                GameObject k = Prop(pr, "Komainu" + side, "komainu.obj", look.komainu, new Vector3(x, -0.075f, 4.15f), 180f + side * 8f, 1f);
                 if (k == null) continue;
                 if (side > 0) k.transform.localScale = new Vector3(-1f, 1f, 1f);
-                if (look.aoBlob != null) EnvMesh.Decal(pr, "KomainuAO" + side, new Vector3(x, 0.004f, 4.15f), 0f, 0.95f, 0.95f, look.aoBlob);
+                if (look.aoBlob != null) EnvMesh.Decal(pr, "KomainuAO" + side, new Vector3(x, -0.066f, 4.15f), 0f, 0.95f, 0.95f, look.aoBlob);
             }
             // ограда такэгаки: секции 1,72 м вдоль дорожки ворота → арена, с просветом у ворот
             for (int side = -1; side <= 1; side += 2)
