@@ -11,7 +11,7 @@ namespace BladePath.EditorTools
         public Material heroArmor, enemyArmor, cloth, skin, hair, lacquer, bronze, steel, handle;
         public Material flesh, tooth, maw, voidBlack, deadSkin, ember, tentacle, ronin;
         public Material stone, stoneDark, flame, moon, petal;
-        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, skyDusk, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage, forestFloor, aoStrip, aoBlob, shojiMonk, shojiWalker, karesansui, pondWater, lotus, bellBronze, rock, flameSheet, smoke, koi, nobori1, nobori2, sakuraGround, mossDecal, ironOld, rope, gateDoor, chochin, cedarBark, bambooFence;
+        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, skyDusk, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage, forestFloor, aoStrip, aoBlob, shojiMonk, shojiWalker, karesansui, pondWater, lotus, bellBronze, rock, flameSheet, smoke, koi, nobori1, nobori2, sakuraGround, mossDecal, ironOld, rope, gateDoor, chochin, cedarBark, bambooFence, komainu;
     }
 
     /// <summary>
@@ -161,7 +161,9 @@ namespace BladePath.EditorTools
             // модели из Meshy (tools/props/glb2obj.py): цвет — их текстура
             if (AssetDatabase.LoadAssetAtPath<Texture2D>(TexFolder + "bamboo_fence.png") != null)
                 l.bambooFence = Textured("Prop_BambooFence", "bamboo_fence.png", null, Vector2.one, new Color(0.85f, 0.85f, 0.82f), 0f, 0.3f);
-            foreach (Material em in new[] { l.rock, l.wood, l.woodDark, l.roof, l.plaster, l.stoneBlock, l.gravel, l.forestFloor, l.bark, l.stone, l.moss, l.stoneDark, l.bambooFence })
+            if (AssetDatabase.LoadAssetAtPath<Texture2D>(TexFolder + "komainu.png") != null)
+                l.komainu = Textured("Prop_Komainu", "komainu.png", null, Vector2.one, new Color(0.8f, 0.8f, 0.78f), 0f, 0.2f);
+            foreach (Material em in new[] { l.rock, l.wood, l.woodDark, l.roof, l.plaster, l.stoneBlock, l.gravel, l.forestFloor, l.bark, l.stone, l.moss, l.stoneDark, l.bambooFence, l.komainu })
                 EnvShader(em);
             // сырость и мох у земли: каменный цоколь и стены сильнее, штукатурка и дерево слабее
             Grime(l.stoneBlock, 0.85f); Grime(l.stone, 0.7f); Grime(l.stoneDark, 0.6f); Grime(l.plaster, 0.75f); Grime(l.wood, 0.45f); Grime(l.woodDark, 0.4f); Grime(l.rock, 0.5f);
