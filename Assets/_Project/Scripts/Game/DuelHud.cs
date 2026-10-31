@@ -458,8 +458,9 @@ namespace BladePath
             if (k < 0.01f && !broken) return;
             float h = 7f;
             Rect r = new Rect(c.x - w * 0.5f, c.y - h * 0.5f, w, h);
-            UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), new Color(0f, 0f, 0f, 0.65f));
-            UiKit.Rect(new Rect(c.x - 1f, r.y - 4f, 2f, h + 8f), new Color(1f, 0.85f, 0.4f, 0.5f));   // засечка середины
+            Texture2D pf = UiKit.Tex("UI/posture_frame");
+            UiKit.Rect(new Rect(r.x - 1f, r.y - 1f, r.width + 2f, r.height + 2f), new Color(0f, 0f, 0f, 0.7f));
+            if (pf == null) UiKit.Rect(new Rect(c.x - 1f, r.y - 4f, 2f, h + 8f), new Color(1f, 0.85f, 0.4f, 0.5f));   // засечка середины
             Color col = Color.Lerp(new Color(1f, 0.82f, 0.25f), new Color(1f, 0.45f, 0.1f), Mathf.InverseLerp(0.4f, 0.75f, k));
             col = Color.Lerp(col, new Color(1f, 0.12f, 0.08f), Mathf.InverseLerp(0.75f, 1f, k));
             if (broken) { k = 1f; col = new Color(1f, 0.1f, 0.06f, 0.6f + 0.4f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * 10f))); }
@@ -469,6 +470,15 @@ namespace BladePath
             float ph = f.SincePostureHit;
             if (ph < 0.18f && !broken) UiKit.Rect(new Rect(c.x - fw * 0.5f, r.y, fw, h), new Color(1f, 1f, 0.9f, 0.7f * (1f - ph / 0.18f)));
             if (k > 0.75f || broken) UiKit.Rect(new Rect(c.x - fw * 0.5f, r.y - 1f, fw, 1.5f), new Color(1f, 1f, 0.8f, 0.6f));
+            // рамка тушью с ромбом посередине (окно рамки в текстуре: x 6…506, y 22…42 из 512×64); на грани слома — краснеет
+            if (pf != null)
+            {
+                float sx = w / 500f, sy = h / 20f;
+                Color o = GUI.color;
+                GUI.color = broken ? new Color(1f, 0.35f, 0.25f, 1f) : Color.Lerp(Color.white, new Color(1f, 0.55f, 0.35f), Mathf.InverseLerp(0.7f, 1f, k));
+                GUI.DrawTexture(new Rect(r.x - 6f * sx, r.y - 22f * sy, 512f * sx, 64f * sy), pf);
+                GUI.color = o;
+            }
             if (broken && f != duel.enemy)   // у врага метка добивания — энсо на груди
             {
                 // знак добивания: красная точка, как в Sekiro

@@ -178,3 +178,36 @@ def stroke(name, W=1024, H=256):
 
 
 stroke("brush_stroke.png")
+
+
+def posture_frame(name, W=512, H=64):
+    """Рамка полосы равновесия (как у Sekiro): тонкий рваный контур тушью, ромб в центре, засечки на концах; середина прозрачна.
+    Окно заливки: x 6…506, y 22…42 (в пикселях текстуры)."""
+    ss = 2; w, h = W * ss, H * ss
+    im = Image.new("L", (w, h), 0); dr = ImageDraw.Draw(im)
+    x0, x1, y0, y1 = 4 * ss, (W - 4) * ss, 20 * ss, 44 * ss
+    t = 3 * ss
+    dr.rectangle([x0, y0, x1, y0 + t], fill=255); dr.rectangle([x0, y1 - t, x1, y1], fill=255)
+    dr.rectangle([x0, y0, x0 + t, y1], fill=255); dr.rectangle([x1 - t, y0, x1, y1], fill=255)
+    cx, cy = w // 2, (y0 + y1) // 2
+    d = 16 * ss
+    dr.polygon([(cx, cy - d), (cx + d * 0.7, cy), (cx, cy + d), (cx - d * 0.7, cy)], outline=255, width=t)
+    for ex in (x0, x1):   # засечки-«крылья» на концах
+        sgn = 1 if ex == x0 else -1
+        dr.polygon([(ex, y0 - 6 * ss), (ex + sgn * 14 * ss, y0), (ex, y0 + t)], fill=255)
+        dr.polygon([(ex, y1 + 6 * ss), (ex + sgn * 14 * ss, y1), (ex, y1 - t)], fill=255)
+    m = np.array(im, np.float32) / 255.0
+    jit = (noise(h, w, 3 * ss) - 0.5) * 2.2 * ss
+    yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+    m = ndimage.map_coordinates(m, [yy + jit, xx + jit * 0.5], order=1, mode="constant")
+    A = np.array(Image.fromarray((np.clip(m, 0, 1) * 255).astype(np.uint8)).resize((W, H), Image.LANCZOS), np.float32) / 255.0
+    sh = np.array(Image.fromarray((A * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(2.5)), np.float32) / 255.0
+    gold = np.array([0.86, 0.68, 0.36])
+    rgb = gold[None, None, :] * np.ones((H, W, 3))
+    out_a = np.clip(A + sh * 0.6 * (1 - A), 0, 1)
+    col = np.where(A[..., None] > 1e-3, rgb, 0.03) * (A[..., None] / np.maximum(out_a[..., None], 1e-4)) + 0.03 * (1 - A[..., None] / np.maximum(out_a[..., None], 1e-4))
+    im2 = Image.fromarray((np.concatenate([np.clip(col, 0, 1), out_a[..., None]], -1) * 255).astype(np.uint8), "RGBA")
+    im2.save(os.path.join(OUT, name)); print(name, im2.size)
+
+
+posture_frame("posture_frame.png")
