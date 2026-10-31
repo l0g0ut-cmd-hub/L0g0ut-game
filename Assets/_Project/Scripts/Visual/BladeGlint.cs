@@ -51,7 +51,7 @@ namespace BladePath
 
             // салют: клинок перед лицом — блик снизу вверх
             SwingProfile p = weapon.CurrentProfile;
-            if (p != null && p.type == AttackType.Salute && weapon.Phase != SwingPhase.Idle && weapon.SwingId != saluteId && weapon.SwingTime > 0.5f)
+            if (p != null && p.type == AttackType.Salute && weapon.Phase != SwingPhase.Idle && weapon.SwingId != saluteId && weapon.SwingTime > 1.05f)
             { saluteId = weapon.SwingId; Run(1.2f); }
             // в стойке — изредка, если клинок виден сбоку (не смотрит в камеру)
             if (runT < 0f && alive && weapon.Phase == SwingPhase.Idle && Time.time >= nextAt)

@@ -125,6 +125,7 @@ namespace BladePath.EditorTools
                     SwingStrip(cam, dir, "24_swing_rising", player, AttackType.Rising, log);
                     SwingStrip(cam, dir, "25_swing_legs", player, AttackType.LegSweep, log);
                     if (enemy != null) SwingStrip(cam, dir, "26_enemy_charge", enemy, AttackType.Charge, log);
+                    SwingStrip(cam, dir, "44_salute_bow", player, AttackType.Salute, log);   // поклон перед боем и клинок у лица
                 }
                 Shot(cam, dir, "4_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);
                 // тени за сёдзи: сидящий монах и идущий (поставлен на середину пути), крупно на храм
