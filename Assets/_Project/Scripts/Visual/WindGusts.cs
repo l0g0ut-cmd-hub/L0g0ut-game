@@ -15,6 +15,7 @@ namespace BladePath
         public float minGap = 12f, maxGap = 25f;
         float nextAt, t = -1f, rise = 1f, fall = 3.5f, peak = 1f;
         ParticleSystem petals, snow, skitter, whirl;
+        ParticleSystem[] fireBits = new ParticleSystem[0];   // искры и дым жаровен — сносит порывом
         AudioSource src, rustle;
         static AudioClip whoosh, rustleClip;
         bool fired;
@@ -32,6 +33,10 @@ namespace BladePath
             rustle = gameObject.AddComponent<AudioSource>(); rustle.playOnAwake = false; rustle.spatialBlend = 0f; rustle.loop = true;
             rustle.clip = rustleClip; rustle.volume = 0f; rustle.Play();
             skitter = BuildSkitter();
+            var bits = new System.Collections.Generic.List<ParticleSystem>();
+            foreach (ParticleSystem ps in FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None))
+                if (ps.name == "Embers" || ps.name == "Smoke" || ps.name == "IncenseSmoke") bits.Add(ps);
+            fireBits = bits.ToArray();
         }
 
         static readonly int WindId = Shader.PropertyToID("_BP_Wind"), WindDirId = Shader.PropertyToID("_BP_WindDir");
@@ -71,6 +76,7 @@ namespace BladePath
             Push(petals, 2.2f);
             if (snow == null && Time.time >= snowLookAt) { snowLookAt = Time.time + 2f; GameObject g = GameObject.Find("Snow"); if (g != null) snow = g.GetComponent<ParticleSystem>(); }   // снег появляется с погодой — ищем редко
             Push(snow, 3.5f);
+            for (int i = 0; i < fireBits.Length; i++) Push(fireBits[i], fireBits[i].name == "Embers" ? 2.6f : 1.4f);
         }
 
         void Push(ParticleSystem ps, float k)

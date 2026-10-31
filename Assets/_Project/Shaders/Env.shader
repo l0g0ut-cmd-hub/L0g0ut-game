@@ -3,6 +3,7 @@
 //  • снег (_BP_Snow 0…0,85, копится ~25 с): ложится на всё, что смотрит вверх, — крыши, колпаки стен, верх фонарей, камень,
 //    гравий, лесную подстилку; сперва пятнами (мировой шум), потом сплошь; крутые скаты держат меньше, стены — ничего.
 //    Наклон берётся по геометрической нормали (карта нормалей давала «крапинки»), рельеф под снегом сглаживается;
+//  • низ стен (_Grime): поднимающаяся сырость — рваная тёмная кайма от земли и пятна мха на вертикальных гранях;
 //  • дождь (_BP_Wetness): пористое темнеет, всё блестит — верх сильнее, стены слабее (огни отражаются в мокром дереве и камне).
 Shader "BladePath/Env"
 {
@@ -17,6 +18,7 @@ Shader "BladePath/Env"
         _Glossiness ("Smoothness", Range(0,1)) = 0.5
         _GlossMapScale ("Smoothness Scale", Range(0,1)) = 1
         _SnowCatch ("Snow Catch", Range(0,1)) = 1
+        _Grime ("Ground Grime", Range(0,1)) = 0
     }
     SubShader
     {
@@ -30,7 +32,7 @@ Shader "BladePath/Env"
 
         sampler2D _MainTex, _BumpMap, _MetallicGlossMap;
         fixed4 _Color;
-        half _BumpScale, _Metallic, _Glossiness, _GlossMapScale, _SnowCatch;
+        half _BumpScale, _Metallic, _Glossiness, _GlossMapScale, _SnowCatch, _Grime;
         half _BP_Snow, _BP_Wetness;
 
         struct Input
@@ -69,6 +71,20 @@ Shader "BladePath/Env"
 
             // наклон по геометрической нормали (до карты нормалей)
             float up = WorldNormalVector(IN, float3(0, 0, 1)).y;
+
+            if (_Grime > 0.001h)
+            {
+                // сырость тянется от земли по стенам, столбам и цоколю: верхняя кромка рваная, выше 0,2–0,6 м — чисто
+                float2 vq = float2(IN.worldPos.x + IN.worldPos.z, IN.worldPos.y);
+                float nn = VNoise(vq * float2(3.0, 5.0)) * 0.6 + VNoise(vq * float2(11.0, 17.0)) * 0.4;
+                float rise = saturate(1.0 - (IN.worldPos.y + 0.07) / (0.18 + 0.42 * nn));
+                half vert = 1.0h - smoothstep(0.55h, 0.9h, abs(up));
+                half g = rise * vert * _Grime;
+                half moss = smoothstep(0.42, 0.72, VNoise(vq * float2(6.0, 8.0) + 17.0)) * g;
+                alb *= 1.0h - 0.38h * g;
+                alb = lerp(alb, half3(0.1h, 0.13h, 0.06h), moss * 0.55h);
+                smooth *= 1.0h - 0.4h * g;
+            }
 
             if (_BP_Wetness > 0.001h)
             {

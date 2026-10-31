@@ -146,6 +146,8 @@ namespace BladePath.EditorTools
             // окружение — на шейдере с погодой: снег ложится на крыши, колпаки стен, камень и землю, в дождь всё мокнет и блестит
             foreach (Material em in new[] { l.rock, l.wood, l.woodDark, l.roof, l.plaster, l.stoneBlock, l.gravel, l.forestFloor, l.bark, l.stone, l.moss, l.stoneDark })
                 EnvShader(em);
+            // сырость и мох у земли: каменный цоколь и стены сильнее, штукатурка и дерево слабее
+            Grime(l.stoneBlock, 0.85f); Grime(l.stone, 0.7f); Grime(l.stoneDark, 0.6f); Grime(l.plaster, 0.75f); Grime(l.wood, 0.45f); Grime(l.woodDark, 0.4f); Grime(l.rock, 0.5f);
             // Материалы зон тела подсвечиваются при попадании через emission (см. BodyZone):
             // включаем _EMISSION заранее, иначе нужный вариант шейдера вырежется из сборки.
             EnableRuntimeEmission(l.heroArmor);
@@ -664,6 +666,12 @@ namespace BladePath.EditorTools
             if (m == null || sh == null || m.shader == sh) return;
             m.shader = sh;
             EditorUtility.SetDirty(m);
+        }
+
+        static void Grime(Material m, float k)
+        {
+            if (m == null || !m.HasProperty("_Grime")) return;
+            m.SetFloat("_Grime", k); EditorUtility.SetDirty(m);
         }
 
         /// <summary>Карта металличности/гладкости (A — гладкость), линейная.</summary>
