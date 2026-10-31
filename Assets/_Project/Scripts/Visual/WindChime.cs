@@ -10,7 +10,7 @@ namespace BladePath
     {
         public Transform strip;    // бумажная полоска (танзаку) — качается
         public float minGap = 7f, maxGap = 16f;
-        float nextAt, gust;
+        float nextAt, gust, lastWind, lastRing = -10f;
         AudioSource src;
         static AudioClip ring;
 
@@ -23,8 +23,14 @@ namespace BladePath
 
         void Update()
         {
+            // порыв ветра (WindGusts) — колокольчик звенит на подъёме порыва
+            float ws = WindGusts.Strength;
+            if (ws > 0.55f && lastWind <= 0.55f && Time.time > lastRing + 2.5f) nextAt = Time.time;
+            lastWind = ws;
+            gust = Mathf.Max(gust, ws);
             if (Time.time >= nextAt)
             {
+                lastRing = Time.time;
                 nextAt = Time.time + Random.Range(minGap, maxGap);
                 gust = 1f;
                 bool rain = Weather.Instance != null && Weather.Instance.Raining;

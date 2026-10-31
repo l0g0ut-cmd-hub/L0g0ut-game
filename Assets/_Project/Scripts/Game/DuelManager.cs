@@ -129,6 +129,7 @@ namespace BladePath
             if (enemy != null) j.Track(enemy.weapon);
             Breadcrumbs.Mark("бой: погода");
             if (GetComponent<Weather>() == null) gameObject.AddComponent<Weather>();
+            if (GetComponent<WindGusts>() == null) gameObject.AddComponent<WindGusts>();
             Breadcrumbs.Mark("бой: музыка");
             if (GetComponent<Music>() == null) gameObject.AddComponent<Music>();
             Breadcrumbs.Mark("бой: ступень пути");

@@ -71,6 +71,9 @@ namespace BladePath
                 if (!p.init) { p.pos = target; p.vel = Vector3.zero; p.init = true; }
                 // пружина к целевой точке + вес ткани
                 Vector3 acc = (target - p.pos) * stiffness - p.vel * damping + Vector3.down * gravity;
+                // порыв ветра (WindGusts) треплет полы — у каждой своя фаза
+                float ws = WindGusts.Strength;
+                if (ws > 0.01f) acc += WindGusts.Dir * (ws * 7f * (0.6f + 0.8f * Mathf.PerlinNoise(Time.time * 3.1f, p.bone.GetInstanceID() * 0.013f)));
                 p.vel += acc * dt;
                 p.pos += p.vel * dt;
                 // длина полы постоянна
