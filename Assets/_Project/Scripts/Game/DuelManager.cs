@@ -1082,7 +1082,13 @@ namespace BladePath
             bool kill = Hp(target) <= 0f;
             if (!chip)
             {
-                if (Juice.Instance != null) Juice.Instance.OnHit(point, normal, hitDir, Mathf.Clamp(dmg / 16f + (crit ? 0.4f : 0f) + (kill ? 0.5f : 0f), 0.4f, 2.2f), false, kill, zoneT);
+                if (Juice.Instance != null)
+                {
+                    Juice.Instance.OnHit(point, normal, hitDir, Mathf.Clamp(dmg / 16f + (crit ? 0.4f : 0f) + (kill ? 0.5f : 0f), 0.4f, 2.2f), false, kill, zoneT);
+                    // враг в доспехе: по корпусу, рукам и шлему клинок ещё и высекает искры
+                    BodyZone bz = zoneT != null ? zoneT.GetComponent<BodyZone>() : null;
+                    if (target == enemy && bz != null && bz.zoneId != BodyZoneId.LegLeft && bz.zoneId != BodyZoneId.LegRight) Juice.Instance.ArmorSparks(point, normal.sqrMagnitude > 1e-4f ? normal : -hitDir.normalized);
+                }
                 if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(kill ? 0.12f : (dmg >= 20f ? 0.07f : 0.04f)); CameraOrbit.Instance.Punch(kill ? 5f : (dmg >= 20f ? 2.5f : 1f)); }
                 hitStopUntil = Time.unscaledTime + (kill ? 0.16f : (dmg >= 20f ? 0.08f : 0.05f));
                 if (kill || dmg >= 20f) PostFX.Kick(kill ? 0.012f : 0.006f);

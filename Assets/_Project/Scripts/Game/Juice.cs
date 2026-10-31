@@ -201,6 +201,13 @@ namespace BladePath
 
         public void CleanBlades() { for (int i = 0; i < tracked.Count; i++) tracked[i].blood = 0f; }
 
+        /// <summary>Клинок по доспеху: горсть искр и сухой металлический «тик» поверх крови.</summary>
+        public void ArmorSparks(Vector3 point, Vector3 normal)
+        {
+            Sparks(point, normal, 14, 0.55f);
+            Play(clang, 0.35f, Random.Range(1.5f, 1.8f));
+        }
+
         /// <summary>Лужа крови под павшим телом: медленно растекается (несколько пятен разного размера с задержкой).</summary>
         public void BloodPool(Vector3 pos)
         {
