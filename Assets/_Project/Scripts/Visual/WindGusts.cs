@@ -18,6 +18,7 @@ namespace BladePath
         AudioSource src;
         static AudioClip whoosh;
         bool fired;
+        float snowLookAt;
 
         void Start()
         {
@@ -53,7 +54,7 @@ namespace BladePath
             Strength = s;
             // листья в воздухе и снег сносит по ветру
             Push(petals, 2.2f);
-            if (snow == null) { GameObject g = GameObject.Find("Snow"); if (g != null) snow = g.GetComponent<ParticleSystem>(); }
+            if (snow == null && Time.time >= snowLookAt) { snowLookAt = Time.time + 2f; GameObject g = GameObject.Find("Snow"); if (g != null) snow = g.GetComponent<ParticleSystem>(); }   // снег появляется с погодой — ищем редко
             Push(snow, 3.5f);
         }
 
