@@ -196,9 +196,29 @@ namespace BladePath.EditorTools
                 m.name = src.name + "_wound";
                 Vector3[] v = src.vertices;
                 Bounds b = src.bounds;
-                float h = Mathf.Max(1e-4f, b.size.y);
-                List<Vector3> p = new List<Vector3>(v.Length);
-                for (int k = 0; k < v.Length; k++) p.Add((v[k] - b.min) / h * 1.8f);   // в «метрах» фигуры ростом 1,8 независимо от единиц FBX
+                // рост — по наибольшему размеру (у части FBX ось вверх — Z, и по size.y шум выходил втрое мельче: крапины-«дыры»)
+                float h = Mathf.Max(1e-4f, Mathf.Max(b.size.x, Mathf.Max(b.size.y, b.size.z)));
+                // «вверх» в позе привязки: от центра к кости головы (иначе — по наибольшей оси); w — доля роста 0 (стопы) … 1 (макушка)
+                Vector3 up = b.size.y >= b.size.x && b.size.y >= b.size.z ? Vector3.up : b.size.z >= b.size.x ? Vector3.forward : Vector3.right;
+                Transform[] bones = smr.bones; Matrix4x4[] bind = src.bindposes;
+                for (int j = 0; j < bones.Length && j < bind.Length; j++)
+                {
+                    if (bones[j] == null) continue;
+                    string bn = bones[j].name.ToLowerInvariant();
+                    if (!bn.EndsWith("head") && !bn.EndsWith(":head") && bn != "head") continue;
+                    Vector3 hp = bind[j].inverse.MultiplyPoint3x4(Vector3.zero);
+                    if ((hp - b.center).sqrMagnitude > 1e-8f) up = (hp - b.center).normalized;
+                    break;
+                }
+                float lo = float.MaxValue, hi = float.MinValue;
+                for (int k = 0; k < v.Length; k++) { float d = Vector3.Dot(v[k] - b.center, up); lo = Mathf.Min(lo, d); hi = Mathf.Max(hi, d); }
+                float span = Mathf.Max(1e-4f, hi - lo);
+                List<Vector4> p = new List<Vector4>(v.Length);
+                for (int k = 0; k < v.Length; k++)
+                {
+                    Vector3 q = (v[k] - b.min) / h * 1.8f;   // в «метрах» фигуры ростом 1,8 независимо от единиц FBX
+                    p.Add(new Vector4(q.x, q.y, q.z, (Vector3.Dot(v[k] - b.center, up) - lo) / span));
+                }
                 m.SetUVs(3, p);
                 string path = folder + "/" + key + "_" + (i++) + "_wound.asset";
                 AssetDatabase.DeleteAsset(path);

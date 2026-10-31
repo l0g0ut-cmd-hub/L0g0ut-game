@@ -47,14 +47,14 @@ Shader "BladePath/Character"
             float2 uv_MainTex;
             float3 viewDir;
             float3 worldNormal;
-            float3 bindPos;
+            float4 bindPos;   // xyz — точка позы привязки (шум ран), w — доля роста 0…1
             INTERNAL_DATA
         };
 
         void vert (inout appdata_full v, out Input o)
         {
             UNITY_INITIALIZE_OUTPUT(Input, o);
-            o.bindPos = v.texcoord3.xyz;
+            o.bindPos = v.texcoord3;
         }
 
         void surf (Input IN, inout SurfaceOutputStandard o)
@@ -81,10 +81,10 @@ Shader "BladePath/Character"
                 if (_WoundTri > 0.5h)
                 {
                     // три проекции маски по точке позы покоя; минимум — непрерывен по телу (нет швов), пятна — объединение трёх узоров
-                    float3 p = IN.bindPos * 1.9;   // крупнее брызги: мелкие тёмные крапины издали читались как дыры в сетке
+                    float3 p = IN.bindPos.xyz * 1.9;   // крупнее брызги: мелкие тёмные крапины издали читались как дыры в сетке
                     wm = min(tex2D(_WoundMask, p.xy).r, min(tex2D(_WoundMask, p.zy + 0.37).r, tex2D(_WoundMask, p.xz + 0.71).r));
                     thr = _Wound * 0.38h;   // P(min < t) ≈ 3t — та же доля тела, что и раньше
-                    thr *= lerp(1.0h, 0.1h, smoothstep(1.4h, 1.55h, IN.bindPos.y));   // лицо и голова — лишь редкие брызги
+                    thr *= lerp(1.0h, 0.1h, smoothstep(0.8h, 0.87h, IN.bindPos.w));   // лицо и голова — лишь редкие брызги
                 }
                 else { wm = tex2D(_WoundMask, IN.uv_MainTex * 5.0).r; thr = _Wound; }
                 half wt = saturate((thr - wm) / 0.05h);      // мягкий край — кровь впитывается в ткань, а не вырезана
