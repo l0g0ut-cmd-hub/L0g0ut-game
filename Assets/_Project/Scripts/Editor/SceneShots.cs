@@ -124,6 +124,7 @@ namespace BladePath.EditorTools
                 }
                 Shot(cam, dir, "4_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);
                 WeatherShots(cam, dir, focus + new Vector3(0f, 0f, -dist), focus, log);
+                DayShots(cam, dir, focus + new Vector3(0f, 0f, -dist), focus, log);
                 // второй облик врага (ронин) — как 3_enemy
                 EnemySkins skins = enemy != null ? enemy.GetComponent<EnemySkins>() : null;
                 if (skins != null && skins.models.Length > 1)
@@ -432,6 +433,29 @@ namespace BladePath.EditorTools
         }
 
         /// <summary>Погода: снег (хлопья, побелевший камень, снег на плечах) и ливень (мокрые бойцы, отражения) — общий план как в игре.</summary>
+        /// <summary>Солнечный день (DayNight): кадр как в игре и общий план двора; после — ночь как была.</summary>
+        static void DayShots(Camera cam, string dir, Vector3 pos, Vector3 look, StringBuilder log)
+        {
+            DayNight dn = UnityEngine.Object.FindFirstObjectByType<DayNight>();
+            if (dn == null) { log.Append("PROBE|shots|day|нет DayNight\n"); return; }
+            try
+            {
+                Call(dn, "Awake");
+                dn.Apply(true);
+                foreach (FlickerLight fl in UnityEngine.Object.FindObjectsByType<FlickerLight>(FindObjectsSortMode.None)) Call(fl, "Update");
+                Shot(cam, dir, "33_day", pos, look, cam.fieldOfView, log);
+                Shot(cam, dir, "33b_day_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);
+            }
+            catch (Exception e) { log.Append("PROBE|shots|day|error " + e.Message + "\n"); }
+            finally
+            {
+                dn.Apply(false);
+                foreach (FlickerLight fl in UnityEngine.Object.FindObjectsByType<FlickerLight>(FindObjectsSortMode.None)) Call(fl, "Update");
+                PropertyInfo ip = typeof(DayNight).GetProperty("Instance", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                if (ip != null) ip.GetSetMethod(true).Invoke(null, new object[] { null });   // иначе следующий бросок погоды в редакторе может включить день
+            }
+        }
+
         static void WeatherShots(Camera cam, string dir, Vector3 pos, Vector3 look, StringBuilder log)
         {
             // Weather в игре добавляет DuelManager при запуске — здесь временный, со своими частицами; после кадров всё убираем

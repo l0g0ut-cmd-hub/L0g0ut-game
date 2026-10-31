@@ -232,7 +232,7 @@ namespace BladePath
             UpdateSparkLight();
             if (crickets != null)
             {
-                bool rain = Weather.Instance != null && (Weather.Instance.Raining || Weather.Instance.Snowing);
+                bool rain = Weather.Instance != null && (Weather.Instance.Raining || Weather.Instance.Snowing || Weather.Instance.Daytime);   // днём сверчков нет — цикады (Cicadas)
                 crickets.volume = Mathf.MoveTowards(crickets.volume, rain ? 0f : 0.09f, Time.unscaledDeltaTime * 0.05f);
             }
             for (int i = 0; i < tracked.Count; i++)

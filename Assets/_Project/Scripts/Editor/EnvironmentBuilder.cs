@@ -107,6 +107,11 @@ namespace BladePath.EditorTools
             EnvMesh.Glow(null, "MoonHalo", moon.transform.position + new Vector3(0f, 0f, 0.5f), 11f, look.haloMoon, 0f);
             moon.GetComponent<Renderer>().sharedMaterial = look.moon;
 
+            // день и ночь: дневное небо и тусклые днём огни — переключает Weather при броске погоды на матч
+            BladePath.DayNight dn = new GameObject("DayNight").AddComponent<BladePath.DayNight>();
+            dn.daySky = look.skyDay;
+            dn.glowMats = new[] { look.haloWarm, look.haloFire, look.haloMoon, look.glow, look.paper, look.shoji };
+
             // жаровни с мерцающим огнём
             AddBrazier(look, new Vector3(-3.2f, 0f, 2.2f));
             AddBrazier(look, new Vector3(3.2f, 0f, 2.2f));

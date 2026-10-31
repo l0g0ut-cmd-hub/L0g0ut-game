@@ -13,6 +13,10 @@ namespace BladePath
         public bool Raining { get; private set; }
         /// <summary>Первый снег: хлопья, побелевший камень, снег на плечах и шлемах, пар дыхания.</summary>
         public bool Snowing { get; private set; }
+        /// <summary>Солнечный день (иногда, раз на матч): дневной свет и небо (DayNight), днём не бывает дождя и снега.</summary>
+        public bool Daytime { get; private set; }
+        [Range(0f, 1f)] public float dayChance = 0.3f;
+        float fogDensBase = 0.05f;
         ParticleSystem snow;
         readonly System.Collections.Generic.List<ParticleSystem> breaths = new System.Collections.Generic.List<ParticleSystem>();
         float snowK, nextBreathAt;
@@ -34,23 +38,38 @@ namespace BladePath
         {
             foreach (Light l in FindObjectsByType<Light>(FindObjectsSortMode.None))
                 if (l.type == LightType.Directional) { moon = l; break; }
+            CaptureBase();
+            skyMat = RenderSettings.skybox;
+            Roll();
+        }
+
+        /// <summary>База света, тумана и неба (после смены времени суток — заново): от неё считают дождь, снег и молнии.</summary>
+        void CaptureBase()
+        {
             if (moon != null) moonBase = moon.intensity;
             ambBase = RenderSettings.ambientLight;
             fogBase = RenderSettings.fogColor;
+            fogDensBase = RenderSettings.fogDensity;
             skyMat = RenderSettings.skybox;
             if (skyMat != null && skyMat.HasProperty("_Exposure")) skyExpBase = skyMat.GetFloat("_Exposure");
-            Roll();
         }
 
         /// <summary>Новый матч — новая погода.</summary>
         public void Roll()
         {
+            // время суток: сперва свет и небо, потом — база для погоды
+            if (Raining) StopRain();
+            if (Snowing) StopSnow();
+            Raining = false; Snowing = false;
+            Daytime = DayNight.Instance != null && Random.value < dayChance;
+            if (DayNight.Instance != null) DayNight.Instance.Apply(Daytime);
+            CaptureBase();
             float r = Random.value;
-            Raining = r < rainChance;
-            Snowing = !Raining && r < rainChance + snowChance;
+            Raining = !Daytime && r < rainChance;
+            Snowing = !Daytime && !Raining && r < rainChance + snowChance;
             if (Raining) StartRain(); else StopRain();
             if (Snowing) StartSnow(); else StopSnow();
-            Critters(!Raining && !Snowing);
+            Critters(!Raining && !Snowing && !Daytime);
             nextFlashAt = Time.time + Random.Range(5f, 12f);
         }
 
@@ -82,7 +101,7 @@ namespace BladePath
             var re = rain.emission; re.rateOverTime = DuelManager.Gfx == 1 ? 700f : 300f;
             rain.Play(); splash.Play(); if (ripples != null) ripples.Play();
             if (rainAudio != null && !rainAudio.isPlaying) rainAudio.Play();
-            RenderSettings.fogDensity = 0.065f;
+            RenderSettings.fogDensity = fogDensBase * 1.3f;
             Eaves(true);
             Wet(true);
             RenderSettings.fogColor = fogBase * 0.85f;
@@ -93,7 +112,7 @@ namespace BladePath
             if (rain != null) { rain.Stop(); splash.Stop(); }
             if (ripples != null) ripples.Stop();
             if (rainAudio != null) rainAudio.Stop();
-            RenderSettings.fogDensity = 0.05f;
+            RenderSettings.fogDensity = fogDensBase;
             Eaves(false);
             Wet(false);
             RenderSettings.fogColor = fogBase;
@@ -104,7 +123,7 @@ namespace BladePath
             if (snow == null) BuildSnow();
             var em = snow.emission; em.rateOverTime = DuelManager.Gfx == 1 ? 140f : 70f;
             snow.Play();
-            RenderSettings.fogDensity = 0.06f;
+            RenderSettings.fogDensity = fogDensBase * 1.2f;
             RenderSettings.fogColor = Color.Lerp(fogBase, new Color(0.42f, 0.46f, 0.56f), 0.6f);
             Snowy(true);
             // пар дыхания у голов бойцов
@@ -121,7 +140,7 @@ namespace BladePath
         {
             if (snow != null) snow.Stop();
             Snowy(false);
-            if (!Raining) { RenderSettings.fogDensity = 0.05f; RenderSettings.fogColor = fogBase; }
+            if (!Raining) { RenderSettings.fogDensity = fogDensBase; RenderSettings.fogColor = fogBase; }
         }
 
         Color floorColor0 = new Color(-1f, 0f, 0f);

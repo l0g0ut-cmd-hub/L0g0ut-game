@@ -11,7 +11,7 @@ namespace BladePath.EditorTools
         public Material heroArmor, enemyArmor, cloth, skin, hair, lacquer, bronze, steel, handle;
         public Material flesh, tooth, maw, voidBlack, deadSkin, ember, tentacle, ronin;
         public Material stone, stoneDark, flame, moon, petal;
-        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass;
+        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass;
     }
 
     /// <summary>
@@ -82,6 +82,7 @@ namespace BladePath.EditorTools
             l.paper = Unlit("Env_Paper", new Color(1f, 0.78f, 0.45f));
             l.mist = SpriteLike("Env_Mist", Color.white);
             l.sky = Sky();
+            l.skyDay = SkyDay();
             Texture2D halo = HaloTexture();
             Texture2D fireTex = Tex("fire_sprite.png", false);
             l.fireSprite = Additive("Fire_Sprite", fireTex != null ? fireTex : halo, new Color(0.6f, 0.55f, 0.5f, 0.7f));
@@ -153,6 +154,31 @@ namespace BladePath.EditorTools
             m.SetTexture("_MainTex", AssetDatabase.LoadAssetAtPath<Texture2D>(tp));
             m.SetColor("_Tint", new Color(0.5f, 0.5f, 0.5f, 1f));
             m.SetFloat("_Exposure", 1.3f);
+            m.SetFloat("_Rotation", 0f);
+            if (isNew) AssetDatabase.CreateAsset(m, path); else EditorUtility.SetDirty(m);
+            return m;
+        }
+
+        /// <summary>Дневное небо-панорама (tools/gen_sky_day.py): ясный день, солнце высоко за левым плечом камеры боя.</summary>
+        static Material SkyDay()
+        {
+            string tp = TexFolder + "sky_day.png";
+            TextureImporter ti = AssetImporter.GetAtPath(tp) as TextureImporter;
+            if (ti == null) return null;
+            if (ti.mipmapEnabled || ti.maxTextureSize < 4096)
+            {
+                ti.mipmapEnabled = false; ti.maxTextureSize = 4096; ti.wrapMode = TextureWrapMode.Repeat;
+                ti.SaveAndReimport();
+            }
+            Shader sh = Shader.Find("Skybox/Panoramic");
+            if (sh == null) return null;
+            string path = MatFolder + "Sky_Day.mat";
+            Material m = AssetDatabase.LoadAssetAtPath<Material>(path);
+            bool isNew = m == null;
+            if (isNew) m = new Material(sh);
+            m.SetTexture("_MainTex", AssetDatabase.LoadAssetAtPath<Texture2D>(tp));
+            m.SetColor("_Tint", new Color(0.5f, 0.5f, 0.5f, 1f));
+            m.SetFloat("_Exposure", 1.0f);
             m.SetFloat("_Rotation", 0f);
             if (isNew) AssetDatabase.CreateAsset(m, path); else EditorUtility.SetDirty(m);
             return m;
