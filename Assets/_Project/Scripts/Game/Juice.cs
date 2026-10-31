@@ -13,6 +13,7 @@ namespace BladePath
 
         AudioSource[] voices;
         int voiceIdx;
+        AudioClip kiaiA, kiaiB; float[] kiaiAt = new float[4];
         AudioClip swish, hit, hitHeavy, clang, boom, drum, heart, whoosh, step, growl, stepWet, stepSnow, danger, stab, squelch;
         AudioSource stepVoice;
         ParticleSystem footFx;
@@ -42,6 +43,7 @@ namespace BladePath
             for (int i = 0; i < voices.Length; i++) { voices[i] = gameObject.AddComponent<AudioSource>(); voices[i].spatialBlend = 0f; voices[i].playOnAwake = false; }
             swish = Swish(); hit = Thump(0.22f, 140f, 55f, 0.55f); hitHeavy = Thump(0.34f, 100f, 38f, 0.9f); clang = Clang(); boom = Thump(1.0f, 70f, 28f, 0.8f);
             drum = Drum(); heart = Heart(); whoosh = Swish(); step = Step(); growl = Growl(); stepWet = StepWet(); stepSnow = StepSnow(); danger = Danger_(); stab = Stab(); squelch = Squelch();
+            kiaiA = Kiai(31, 1f, 1150f); kiaiB = Kiai(32, 0.86f, 1500f);
             stepVoice = gameObject.AddComponent<AudioSource>(); stepVoice.spatialBlend = 0f; stepVoice.playOnAwake = false;   // шаги не отнимают голоса у ударов
             ambient = gameObject.AddComponent<AudioSource>();
             ambient.clip = Wind(); ambient.loop = true; ambient.volume = 0.22f; ambient.spatialBlend = 0f; ambient.Play();
@@ -242,7 +244,7 @@ namespace BladePath
                 SwingPhase ph = t.w.Phase;
                 if (ph != t.last)
                 {
-                    if (ph == SwingPhase.Strike) { SwingSound(t.w.CurrentProfile); if (t.trail != null) { t.trail.Clear(); t.trail.emitting = true; } }
+                    if (ph == SwingPhase.Strike) { SwingSound(t.w.CurrentProfile); KiaiFor(i, t.w.CurrentProfile); if (t.trail != null) { t.trail.Clear(); t.trail.emitting = true; } }
                     if ((ph == SwingPhase.Recovery || ph == SwingPhase.Idle) && t.trail != null) t.trail.emitting = false;
                     t.last = ph;
                 }
@@ -310,6 +312,18 @@ namespace BladePath
         public void Danger() { Play(danger, 0.9f, 1f); }
         /// <summary>Рывок.</summary>
         public void DashSound() { Play(whoosh, 0.45f, 0.6f); }
+
+        /// <summary>Киай на тяжёлых ударах: сверху и в прыжке — через раз, добивание и натиск — всегда; не чаще раза в 1,5 с у бойца.</summary>
+        void KiaiFor(int who, SwingProfile p)
+        {
+            if (p == null || who < 0 || who >= kiaiAt.Length) return;
+            bool db = p.type.ToString().StartsWith("Deathblow");
+            bool heavy = p.type == AttackType.Overhead || p.type == AttackType.JumpStrike;
+            if (!(db || p.type == AttackType.Charge || (heavy && Random.value < 0.5f))) return;
+            if (Time.time < kiaiAt[who]) return;
+            kiaiAt[who] = Time.time + 1.5f;
+            Play(who == 0 ? kiaiA : kiaiB, db ? 0.42f : 0.32f, Random.Range(0.96f, 1.04f));
+        }
 
         /// <summary>
         /// Свист клинка по характеру удара: укол — короткое тонкое «сс» (высоко и тихо), горизонтальный — ровный свист,
@@ -1032,6 +1046,53 @@ namespace BladePath
             AudioClip c = AudioClip.Create(name, d.Length, 1, Rate, false);
             c.SetData(d, 0);
             return c;
+        }
+
+        /// <summary>
+        /// Киай — короткий выдох-выкрик на тяжёлом ударе («Хаа!»): голосовой тон 150→175→105 Гц с дрожанием и хрипом
+        /// (субгармоника — напряжённые связки), придыхание «х» в начале, гласная «а» тремя формантами (750/1150/2500 Гц),
+        /// мягкое насыщение. variant меняет высоту и окраску (у второго — ближе к «эй»).
+        /// </summary>
+        static AudioClip Kiai(int seed, float pitchK, float f2)
+        {
+            float T = 0.46f;
+            int n = (int)(Rate * T);
+            float[] d = new float[n];
+            System.Random rnd = new System.Random(seed);
+            float ph = 0f, jit = 0f, peak = 1e-4f;
+            float[] fF = { 760f, f2, 2550f }, bw = { 110f, 140f, 220f }, gF = { 1f, 0.55f, 0.22f };
+            float[] y1 = new float[3], y2 = new float[3];
+            int pulse = 0; float prevPh = 0f;
+            for (int i = 0; i < n; i++)
+            {
+                float t = i / (float)Rate;
+                // высота: рывок вверх на ударе и спад на выдохе
+                float f0 = (t < 0.06f ? Mathf.Lerp(150f, 178f, t / 0.06f) : Mathf.Lerp(178f, 105f, Mathf.Pow((t - 0.06f) / (T - 0.06f), 0.8f))) * pitchK;
+                if ((i & 63) == 0) jit = ((float)rnd.NextDouble() - 0.5f) * 0.04f;
+                ph += f0 * (1f + jit) / Rate;
+                if (ph >= 1f) { ph -= 1f; pulse++; }
+                // импульс связок (Розенберг): плавное открытие, резкое закрытие; каждый второй слабее — хрип
+                float g = ph < 0.55f ? 0.5f * (1f - Mathf.Cos(Mathf.PI * ph / 0.55f)) : Mathf.Max(0f, Mathf.Cos(Mathf.PI * (ph - 0.55f) / 0.5f));
+                float src = (g - prevPh) * 30f; prevPh = g;   // производная — спектр голоса
+                float rough = (pulse & 1) == 0 ? 1f : 0.62f;
+                float voiceEnv = Mathf.SmoothStep(0f, 1f, (t - 0.025f) / 0.03f) * Mathf.Clamp01((T - t) / 0.2f);
+                float x = (float)(rnd.NextDouble() * 2.0 - 1.0);
+                float breath = Mathf.Exp(-t * 28f) * 1.4f + 0.22f * Mathf.Clamp01((T - t) / 0.25f);   // «х» и придых на выдохе
+                float exc = src * rough * voiceEnv + x * breath * 0.6f;
+                float v = 0f;
+                for (int k = 0; k < 3; k++)
+                {
+                    float fk = fF[k] * (t > 0.3f ? Mathf.Lerp(1f, 0.92f, (t - 0.3f) / (T - 0.3f)) : 1f);   // к концу рот прикрывается
+                    float r = Mathf.Exp(-Mathf.PI * bw[k] / Rate), w = 2f * Mathf.PI * fk / Rate;
+                    float y = (1f - r) * exc + 2f * r * Mathf.Cos(w) * y1[k] - r * r * y2[k];
+                    y2[k] = y1[k]; y1[k] = y; v += y * gF[k];
+                }
+                float env = Mathf.Min(1f, t * 120f) * Mathf.Clamp01((T - t) / 0.12f);
+                v = (float)System.Math.Tanh(v * 1.8f * env);
+                d[i] = v; peak = Mathf.Max(peak, Mathf.Abs(v));
+            }
+            for (int i = 0; i < n; i++) d[i] *= 0.85f / peak;
+            return Make("kiai_" + seed, d);
         }
 
         static AudioClip Growl()

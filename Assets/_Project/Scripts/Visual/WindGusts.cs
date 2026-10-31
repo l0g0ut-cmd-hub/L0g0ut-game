@@ -14,7 +14,7 @@ namespace BladePath
         public static Vector3 Dir { get; private set; } = Vector3.right;
         public float minGap = 12f, maxGap = 25f;
         float nextAt, t = -1f, rise = 1f, fall = 3.5f, peak = 1f;
-        ParticleSystem petals, snow, skitter;
+        ParticleSystem petals, snow, skitter, whirl;
         AudioSource src, rustle;
         static AudioClip whoosh, rustleClip;
         bool fired;
@@ -53,7 +53,7 @@ namespace BladePath
                 t += Time.deltaTime;
                 s = t < rise ? Mathf.SmoothStep(0f, 1f, t / rise) : 1f - Mathf.SmoothStep(0f, 1f, (t - rise) / fall);
                 s *= peak;
-                if (!fired && t > rise * 0.6f) { fired = true; Skitter(); }
+                if (!fired && t > rise * 0.6f) { fired = true; Skitter(); if (peak > 0.82f && Random.value < 0.45f) Whirl(); }
                 if (t > rise + fall) { t = -1f; s = 0f; nextAt = Time.time + Random.Range(minGap, maxGap); }
             }
             Strength = s;
@@ -101,6 +101,69 @@ namespace BladePath
                 e.angularVelocity3D = new Vector3(Random.Range(-500f, 500f), Random.Range(-200f, 200f), Random.Range(-500f, 500f));
                 skitter.Emit(e, 1);
             }
+        }
+
+        /// <summary>
+        /// Вихрь листьев: на сильном порыве у края двора (на гравии, сбоку от арены) горсть опавших листьев закручивается
+        /// столбиком — кружит, поднимается до пояса и рассыпается. В дождь мокрые листья не летят, в снег — нет листвы.
+        /// </summary>
+        void Whirl()
+        {
+            Weather w = Weather.Instance;
+            if (w != null && (w.Raining || w.Snowing)) return;
+            if (whirl == null) whirl = BuildWhirl();
+            if (whirl == null) return;
+            float side = Random.value < 0.5f ? -1f : 1f;
+            whirl.transform.position = new Vector3(side * Random.Range(4.3f, 5.4f), 0.02f, Random.Range(-2.5f, 3f));
+            ParticleSystem.EmitParams e = new ParticleSystem.EmitParams();
+            int n = Random.Range(12, 18);
+            for (int i = 0; i < n; i++)
+            {
+                float a = Random.Range(0f, Mathf.PI * 2f), r = Random.Range(0.15f, 0.55f);
+                e.position = new Vector3(Mathf.Cos(a) * r, Random.Range(0f, 0.15f), Mathf.Sin(a) * r);
+                e.velocity = new Vector3(0f, Random.Range(0.5f, 1.2f), 0f);
+                e.startSize = Random.Range(0.06f, 0.11f);
+                e.startLifetime = Random.Range(2.2f, 3.4f);
+                e.rotation3D = new Vector3(Random.Range(0f, 360f), Random.Range(0f, 360f), Random.Range(0f, 360f));
+                e.angularVelocity3D = new Vector3(Random.Range(-400f, 400f), Random.Range(-300f, 300f), Random.Range(-400f, 400f));
+                whirl.Emit(e, 1);
+            }
+        }
+
+        ParticleSystem BuildWhirl()
+        {
+            GameObject g = new GameObject("LeafWhirl");
+            g.transform.SetParent(transform, false);
+            ParticleSystem ps = g.AddComponent<ParticleSystem>();
+            ps.Stop();
+            var main = ps.main;
+            main.loop = true; main.playOnAwake = false; main.startSpeed = 0f; main.maxParticles = 30;
+            main.gravityModifier = 0.12f; main.startRotation3D = true;
+            main.simulationSpace = ParticleSystemSimulationSpace.Local;
+            main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.75f, 0.5f, 0.45f, 1f), new Color(1f, 0.82f, 0.75f, 1f));
+            var em = ps.emission; em.enabled = false;
+            var sh = ps.shape; sh.enabled = false;
+            // кружение вокруг оси вихря: орбита слабеет к концу жизни, лёгкий разлёт наружу — вихрь распадается
+            var vel = ps.velocityOverLifetime; vel.enabled = true; vel.space = ParticleSystemSimulationSpace.Local;
+            AnimationCurve orb = new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(0.6f, 0.8f), new Keyframe(1f, 0.1f));
+            vel.orbitalX = new ParticleSystem.MinMaxCurve(0f, orb); vel.orbitalY = new ParticleSystem.MinMaxCurve(7f, orb); vel.orbitalZ = new ParticleSystem.MinMaxCurve(0f, orb);   // все три — в одном режиме
+            AnimationCurve rad = new AnimationCurve(new Keyframe(0f, -0.2f), new Keyframe(0.55f, 0f), new Keyframe(1f, 1f));
+            vel.radial = new ParticleSystem.MinMaxCurve(1.2f, rad);
+            vel.x = new ParticleSystem.MinMaxCurve(0f); vel.y = new ParticleSystem.MinMaxCurve(0f); vel.z = new ParticleSystem.MinMaxCurve(0f);
+            var noise = ps.noise; noise.enabled = true; noise.strength = 0.5f; noise.frequency = 1.4f;
+            var colLife = ps.colorOverLifetime; colLife.enabled = true;
+            Gradient gr = new Gradient();
+            gr.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                       new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.08f), new GradientAlphaKey(1f, 0.7f), new GradientAlphaKey(0f, 1f) });
+            colLife.color = gr;
+            ParticleSystemRenderer r = g.GetComponent<ParticleSystemRenderer>();
+            ParticleSystemRenderer pr = skitter != null ? skitter.GetComponent<ParticleSystemRenderer>() : null;
+            if (pr != null && pr.sharedMaterial != null) r.sharedMaterial = pr.sharedMaterial;
+            r.renderMode = ParticleSystemRenderMode.Billboard;
+            r.alignment = ParticleSystemRenderSpace.World;
+            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; r.receiveShadows = false;
+            ps.Play();
+            return ps;
         }
 
         ParticleSystem BuildSkitter()
