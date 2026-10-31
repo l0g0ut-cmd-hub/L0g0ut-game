@@ -552,7 +552,8 @@ namespace BladePath
             main.startLifetime = new ParticleSystem.MinMaxCurve(0.5f, 1.1f);
             main.startSpeed = new ParticleSystem.MinMaxCurve(0.2f, 0.9f);
             main.startSize = new ParticleSystem.MinMaxCurve(0.05f, 0.12f);
-            main.startColor = new Color(0.38f, 0.34f, 0.3f, 0.3f);   // тёплая серо-бурая пыль
+            bool snowDust = Shader.GetGlobalFloat(SnowId) > 0.3f && !(Weather.Instance != null && Weather.Instance.Raining);
+            main.startColor = snowDust ? new Color(0.8f, 0.85f, 0.94f, 0.42f) : new Color(0.38f, 0.34f, 0.3f, 0.3f);   // в снег — снежная пыль, иначе тёплая серо-бурая
             main.gravityModifier = -0.02f;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             main.stopAction = ParticleSystemStopAction.Destroy;
