@@ -115,9 +115,9 @@ namespace BladePath.EditorTools
             dn.glowMats = new[] { look.haloWarm, look.haloFire, look.haloMoon, look.glow, look.paper, look.shoji };
             // отражения неба в мокром камне, доспехе, крови: свои кубкарты на ночь, день и рассвет (иначе отражалось то небо,
             // что было при последнем обновлении окружения, — на телефоне и после дневных кадров CI серые «дыры» на глянце)
-            dn.nightRefl = SkyCube("sky_night.png", new Color(0.5f, 0.5f, 0.5f), 1.3f, "Refl_Night");
-            dn.dayRefl = SkyCube("sky_day.png", new Color(0.5f, 0.5f, 0.5f), 1.0f, "Refl_Day");
-            dn.dawnRefl = SkyCube("sky_day.png", new Color(0.62f, 0.5f, 0.48f), 0.82f, "Refl_Dawn");
+            dn.nightRefl = SkyCube("sky_night.png", new Color(0.5f, 0.5f, 0.5f), 1.3f, "Refl_Night", new Color(0.025f, 0.028f, 0.04f));
+            dn.dayRefl = SkyCube("sky_day.png", new Color(0.5f, 0.5f, 0.5f), 1.0f, "Refl_Day", new Color(0.26f, 0.25f, 0.23f));
+            dn.dawnRefl = SkyCube("sky_day.png", new Color(0.62f, 0.5f, 0.48f), 0.82f, "Refl_Dawn", new Color(0.24f, 0.2f, 0.19f));
             if (dn.nightRefl != null) { BladePath.DayNight.SetReflection(dn.nightRefl); RenderSettings.reflectionIntensity = 1f; }
 
             // жаровни с мерцающим огнём
@@ -207,10 +207,10 @@ namespace BladePath.EditorTools
 
         /// <summary>
         /// Кубкарта отражений из панорамы неба (та же раскладка, что у Skybox/Panoramic: u = 0,5 − atan2(z, x)/2π,
-        /// v = 1 − acos(y)/π; цвет = текстура × оттенок × 2 × экспозиция). Панорама сперва ужимается до 256×128 (звёзды не
+        /// v = 1 − acos(y)/π; цвет = текстура × оттенок × 2 × экспозиция; ниже горизонта — цвет земли). Панорама сперва ужимается до 256×128 (звёзды не
         /// мерцают шумом), грани 64² с мип-уровнями — по ним Standard размывает отражение на шершавом.
         /// </summary>
-        static Cubemap SkyCube(string file, Color tint, float exposure, string name)
+        static Cubemap SkyCube(string file, Color tint, float exposure, string name, Color ground)
         {
             string src = "Assets/_Project/Art/Textures/" + file;
             if (!System.IO.File.Exists(src)) return null;
@@ -262,6 +262,7 @@ namespace BladePath.EditorTools
                         float u = 0.5f - Mathf.Atan2(d.z, d.x) / (2f * Mathf.PI);
                         float v = 1f - Mathf.Acos(Mathf.Clamp(d.y, -1f, 1f)) / Mathf.PI;
                         Color c = small.GetPixelBilinear(u, v) * mul;
+                        c = Color.Lerp(c, ground, Mathf.SmoothStep(0f, 1f, -d.y / 0.18f));   // ниже горизонта — двор и земля (глянец снизу темнее)
                         c.r = Mathf.Clamp01(c.r); c.g = Mathf.Clamp01(c.g); c.b = Mathf.Clamp01(c.b); c.a = 1f;
                         px[y * N + x] = c;
                     }
@@ -728,6 +729,16 @@ namespace BladePath.EditorTools
             EnvMesh.Box(g, "Plaque", new Vector3(0f, 2.33f, zf + 0.17f), Vector3.zero, new Vector3(0.6f, 0.18f, 0.04f), look.woodDark, 1f);
             EnvMesh.CurvedHip(g, "GateRoof", new Vector3(0f, 2.6f, zf - 0.38f), gate + 0.75f, 0.85f, 0.75f, 0.18f, look.roof, look.woodDark, 1.2f);
             EnvMesh.Box(g, "Threshold", new Vector3(0f, 0.05f, zf), Vector3.zero, new Vector3(gate * 2f, 0.1f, 0.34f), look.stoneBlock, 1f);
+            // бумажные фонари-тётин под балкой ворот (изнутри двора): ворота читаются ночью тёплым светом, без лишних источников
+            for (int side = -1; side <= 1; side += 2)
+            {
+                Vector3 lp = new Vector3(side * 0.85f, 1.78f, zf + 0.22f);
+                EnvMesh.Box(g, "LanternCord" + side, lp + new Vector3(0f, 0.27f, 0f), Vector3.zero, new Vector3(0.012f, 0.2f, 0.012f), look.woodDark, 0.2f);
+                EnvMesh.Box(g, "LanternCap" + side, lp + new Vector3(0f, 0.19f, 0f), Vector3.zero, new Vector3(0.17f, 0.035f, 0.17f), look.woodDark, 1f);
+                EnvMesh.Box(g, "LanternBase" + side, lp - new Vector3(0f, 0.19f, 0f), Vector3.zero, new Vector3(0.17f, 0.035f, 0.17f), look.woodDark, 1f);
+                CharacterVisuals.Part(g, "Lantern" + side, PrimitiveType.Sphere, lp, Vector3.zero, new Vector3(0.24f, 0.36f, 0.24f), look.paper);
+                EnvMesh.Glow(null, "LanternHalo" + side, lp, 1.1f, look.haloWarm, 0.1f);
+            }
             // дорожка из плоских камней от площадки к воротам и за них
             System.Random r = new System.Random(55);
             for (float z = -3.2f; z > -12.5f; z -= 0.62f)

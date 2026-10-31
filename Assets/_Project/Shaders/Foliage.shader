@@ -58,7 +58,7 @@ Shader "BladePath/Foliage"
             float snow = saturate(_BP_Snow) * saturate(IN.worldNormal.y * 0.5 + 0.6) * lerp(1.0, IN.uv_MainTex.y, _Sway);
             o.Albedo = lerp(c.rgb * (1.0 - 0.28 * wet), fixed3(0.78, 0.8, 0.84), snow * 0.55);
             o.Metallic = 0;
-            o.Smoothness = lerp(_Glossiness, 0.58, wet);
+            o.Smoothness = lerp(_Glossiness, 0.3, wet);   // выше — отражение неба на мокрых листьях читалось розово-белыми пятнами
             o.Emission = t.rgb * _EmissionColor.rgb;   // как у Standard с _EmissionMap = альбедо
             o.Alpha = c.a;
         }
