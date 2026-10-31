@@ -73,6 +73,7 @@ namespace BladePath
             Snowing = !Daytime && !Raining && r < rainChance + snowChance;
             if (Raining) StartRain(); else StopRain();
             if (Snowing) StartSnow(); else StopSnow();
+            if (Dawn) EnsureBreaths();   // утро холодное — изо рта пар
             Critters(!Raining && !Snowing && !Daytime);
             DayCritters(Daytime);
             nextFlashAt = Time.time + Random.Range(5f, 12f);
@@ -141,7 +142,12 @@ namespace BladePath
             RenderSettings.fogDensity = fogDensBase * 1.2f;
             RenderSettings.fogColor = Color.Lerp(fogBase, new Color(0.42f, 0.46f, 0.56f), 0.6f);
             Snowy(true);
-            // пар дыхания у голов бойцов
+            EnsureBreaths();
+        }
+
+        /// <summary>Пар дыхания у голов бойцов (в снег и холодным туманным рассветом).</summary>
+        void EnsureBreaths()
+        {
             foreach (HeroRigDriver d in FindObjectsByType<HeroRigDriver>(FindObjectsSortMode.None))
             {
                 if (d.head == null) continue;
@@ -338,7 +344,7 @@ namespace BladePath
             // снег оседает на плечах и шлемах за полминуты боя; пар дыхания раз в пару секунд
             snowK = Mathf.MoveTowards(snowK, Snowing ? 0.85f : 0f, Time.deltaTime / (Snowing ? 30f : 1f));
             Shader.SetGlobalFloat(SnowId, snowK);
-            if (Snowing && Time.time >= nextBreathAt)
+            if ((Snowing || Dawn) && Time.time >= nextBreathAt)
             {
                 nextBreathAt = Time.time + Random.Range(1.6f, 2.6f);
                 foreach (ParticleSystem b in breaths) if (b != null && b.transform.parent != null && b.transform.parent.gameObject.activeInHierarchy) b.Play();
