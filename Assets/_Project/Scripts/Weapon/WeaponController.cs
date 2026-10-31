@@ -33,6 +33,8 @@ namespace BladePath
         [Tooltip("Слом равновесия: клинок опущен остриём к земле, руки внизу, корпус осел.")]
         public Vector3 staggerEuler = new Vector3(62f, -25f, 15f);
         public Vector3 staggerHand = new Vector3(0.16f, -0.70f, 0.22f);
+        [Tooltip("Насколько меньше раскрыт корпус в стойке, град (таз, грудь): переднюю руку на цубе держит дальнее плечо — при сильном развороте к камере руки прижаты к груди. Вычитается из всех поз (и ударов), динамика удара сохраняется.")]
+        public float openHips, openChest;
 
         public SwingProfile CurrentProfile { get; private set; }
         public SwingPhase Phase { get; private set; }
@@ -225,7 +227,7 @@ namespace BladePath
             Vector3 re = Vector3.Lerp(restEuler, gE, bk);
             Vector3 rh = Vector3.Lerp(new Vector3(restHand.x * yawSign, restHand.y, restHand.z), gH, bk);
             for (int c = PoseCh.PF; c < PoseCh.N; c++) Pose[c] = SwingProfile.ReadyPose[c];
-            Pose[PoseCh.HYAW] *= yawSign; Pose[PoseCh.CYAW] *= yawSign;
+            Pose[PoseCh.HYAW] = (Pose[PoseCh.HYAW] - openHips) * yawSign; Pose[PoseCh.CYAW] = (Pose[PoseCh.CYAW] - openChest) * yawSign;
             Pose[PoseCh.PF] -= 0.04f * bk; Pose[PoseCh.PD] += 0.03f * bk; Pose[PoseCh.CPIT] -= 3f * bk;   // блок: вес чуть назад, колени ниже
             float sk = Smooth(stagK);
             if (sk > 0.001f)
@@ -383,7 +385,7 @@ namespace BladePath
             }
             VisualLunge = Mathf.Max(0f, b) * p.bodyStep - Mathf.Max(0f, -b) * 0.05f;
             for (int c = PoseCh.PF; c < PoseCh.N; c++) Pose[c] = SwingProfile.ReadyPose[c];   // тело для старых профилей достраивает HeroRigDriver
-            Pose[PoseCh.HYAW] *= yawSign; Pose[PoseCh.CYAW] *= yawSign;
+            Pose[PoseCh.HYAW] = (Pose[PoseCh.HYAW] - openHips) * yawSign; Pose[PoseCh.CYAW] = (Pose[PoseCh.CYAW] - openChest) * yawSign;
             FootSpeedF = FootSpeedR = 0f;
             SetHandEuler(hand, e);
             ApplyBlend();
@@ -431,7 +433,8 @@ namespace BladePath
             tr.Sample(tf - 0.01f, sample, PoseCh.FF, PoseCh.RF + 1);
             FootSpeedF = (f1 - sample[PoseCh.FF]) / 0.02f; FootSpeedR = (r1 - sample[PoseCh.RF]) / 0.02f;
             Pose[PoseCh.HX] *= yawSign; Pose[PoseCh.EY] *= yawSign; Pose[PoseCh.ER] *= yawSign;
-            Pose[PoseCh.HYAW] *= yawSign; Pose[PoseCh.CYAW] *= yawSign;
+            float ok = 1f - w;   // у концов удара (стойка) — поправка разворота целиком, в середине — авторская поза
+            Pose[PoseCh.HYAW] = (Pose[PoseCh.HYAW] - openHips * ok) * yawSign; Pose[PoseCh.CYAW] = (Pose[PoseCh.CYAW] - openChest * ok) * yawSign;
             ApplyBlend();
             VisualLunge = Pose[PoseCh.PF];
             pivot.localRotation = Quaternion.Euler(CurrentEuler);
