@@ -11,7 +11,7 @@ namespace BladePath.EditorTools
         public Material heroArmor, enemyArmor, cloth, skin, hair, lacquer, bronze, steel, handle;
         public Material flesh, tooth, maw, voidBlack, deadSkin, ember, tentacle, ronin;
         public Material stone, stoneDark, flame, moon, petal;
-        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage, forestFloor, aoStrip, aoBlob;
+        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage, forestFloor, aoStrip, aoBlob, shojiMonk, shojiWalker;
     }
 
     /// <summary>
@@ -104,6 +104,9 @@ namespace BladePath.EditorTools
             l.petal = SpriteLike("Petal", new Color(1f, 0.72f, 0.82f));
             l.aoStrip = AO("AO_Strip", false, 0.62f);
             l.aoBlob = AO("AO_Blob", true, 0.6f);
+            // тени людей за сёдзи (tools/texgen/shoji_shadows.py): монах в сэйдза и идущий (лист из 4 кадров)
+            l.shojiMonk = MaskMat("Shoji_Monk", "shoji_monk.png", 0.62f);
+            l.shojiWalker = MaskMat("Shoji_Walker", "shoji_walker.png", 0.66f);
             // окружение — на шейдере с погодой: снег ложится на крыши, колпаки стен, камень и землю, в дождь всё мокнет и блестит
             foreach (Material em in new[] { l.wood, l.woodDark, l.roof, l.plaster, l.stoneBlock, l.gravel, l.forestFloor, l.bark, l.stone, l.moss, l.stoneDark })
                 EnvShader(em);
@@ -236,6 +239,28 @@ namespace BladePath.EditorTools
             mat.SetFloat("_Strength", strength);
             if (isNew) AssetDatabase.CreateAsset(mat, path); else EditorUtility.SetDirty(mat);
             return mat;
+        }
+
+        /// <summary>Маска-тень из PNG на шейдере BladePath/AO (линейная, без повтора по краям).</summary>
+        static Material MaskMat(string name, string file, float strength)
+        {
+            Shader sh = Shader.Find("BladePath/AO");
+            TextureImporter ti = AssetImporter.GetAtPath(TexFolder + file) as TextureImporter;
+            if (ti != null && (ti.sRGBTexture || ti.wrapMode != TextureWrapMode.Clamp))
+            {
+                ti.sRGBTexture = false; ti.wrapMode = TextureWrapMode.Clamp; ti.alphaSource = TextureImporterAlphaSource.None;
+                ti.SaveAndReimport();
+            }
+            Texture2D t = AssetDatabase.LoadAssetAtPath<Texture2D>(TexFolder + file);
+            if (sh == null || t == null) return null;
+            string path = MatFolder + name + ".mat";
+            Material m = AssetDatabase.LoadAssetAtPath<Material>(path);
+            bool isNew = m == null;
+            if (isNew) m = new Material(sh); else m.shader = sh;
+            m.mainTexture = t;
+            m.SetFloat("_Strength", strength);
+            if (isNew) AssetDatabase.CreateAsset(m, path); else EditorUtility.SetDirty(m);
+            return m;
         }
 
         /// <summary>Мягкий радиальный ореол (сохраняется ассетом, чтобы попал в сборку).</summary>

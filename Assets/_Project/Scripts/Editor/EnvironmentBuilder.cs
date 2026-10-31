@@ -120,6 +120,7 @@ namespace BladePath.EditorTools
 
             BuildDetails(env, look);
             AddGroundAO(env, look);
+            AddShojiShadows(look);
             MarkStatic(env);
             AddMist(look);
             AddFireflies(look);
@@ -178,6 +179,24 @@ namespace BladePath.EditorTools
             Blob(-1.35f, -7.6f, 0.9f, yGravel); Blob(1.35f, -7.6f, 0.9f, yGravel);
             Blob(5.4f, 3.4f, 1.6f, yGravel); Blob(-5.5f, 4.4f, 1.7f, yGravel); Blob(5.6f, -0.6f, 1.4f, yGravel); Blob(-5.4f, -1.0f, 1.45f, yGravel); Blob(4.6f, 8.2f, 1.9f, yGravel);
             Blob(-3.4f, 9.6f, 4.2f, yGravel);
+        }
+
+        /// <summary>
+        /// Тени людей на светящихся сёдзи (вне статики — двигаются): сидящий монах во второй створке и идущий вдоль всех.
+        /// Наклейки — прямо перед бумагой (сёдзи: z = 5,24, толщина 0,05), снизу — уровень пола веранды.
+        /// </summary>
+        static void AddShojiShadows(Look look)
+        {
+            if (look.shojiMonk == null || look.shojiWalker == null) return;
+            Transform root = new GameObject("ShojiShadows").transform;
+            const float z = 5.211f;
+            GameObject monk = EnvMesh.Decal(root, "Monk", new Vector3(-2.35f, 0.6f + 0.7f, z), 0f, 0.7f, 1.4f, look.shojiMonk);
+            monk.transform.localEulerAngles = new Vector3(-90f, 0f, 0f);
+            GameObject walker = EnvMesh.Decal(root, "Walker", new Vector3(-0.8f, 0.55f + 0.9f, z), 0f, 0.9f, 1.8f, look.shojiWalker);
+            walker.transform.localEulerAngles = new Vector3(-90f, 0f, 0f);
+            BladePath.ShojiShadows ss = root.gameObject.AddComponent<BladePath.ShojiShadows>();
+            ss.monk = monk.GetComponent<Renderer>(); ss.walker = walker.GetComponent<Renderer>();
+            walker.GetComponent<Renderer>().enabled = false;   // появляется сам, когда пойдёт
         }
 
         /// <summary>Мелочи, оживляющие кадр: бумажные фонари на веранде, верёвка симэнава на тории, знамёна.</summary>

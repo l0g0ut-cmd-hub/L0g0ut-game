@@ -126,6 +126,14 @@ namespace BladePath.EditorTools
                     if (enemy != null) SwingStrip(cam, dir, "26_enemy_charge", enemy, AttackType.Charge, log);
                 }
                 Shot(cam, dir, "4_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);
+                // тени за сёдзи: сидящий монах и идущий (поставлен на середину пути), крупно на храм
+                ShojiShadows shoji = UnityEngine.Object.FindFirstObjectByType<ShojiShadows>();
+                if (shoji != null)
+                {
+                    shoji.dir = 1f; shoji.Pose(0.42f);
+                    Shot(cam, dir, "36_shoji", new Vector3(-0.8f, 1.5f, 0.6f), new Vector3(-0.8f, 1.3f, 5.2f), 50f, log);
+                    if (shoji.walker != null) shoji.walker.enabled = false;
+                }
                 WeatherShots(cam, dir, focus + new Vector3(0f, 0f, -dist), focus, log);
                 DayShots(cam, dir, focus + new Vector3(0f, 0f, -dist), focus, log);
                 // второй облик врага (ронин) — как 3_enemy

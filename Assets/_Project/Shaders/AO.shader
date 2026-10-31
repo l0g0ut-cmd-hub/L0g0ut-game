@@ -15,6 +15,7 @@ Shader "BladePath/AO"
         {
             Blend DstColor Zero
             ZWrite Off
+            Cull Off
             Offset -1, -1
             CGPROGRAM
             #pragma vertex vert
