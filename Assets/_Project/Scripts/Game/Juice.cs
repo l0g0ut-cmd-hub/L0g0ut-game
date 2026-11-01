@@ -1024,7 +1024,7 @@ namespace BladePath
             if (!packSlashChecked)
             {
                 packSlashChecked = true;
-                packSlashAvailable = Resources.Load<Texture2D>("FX/slash_red") != null;
+                packSlashAvailable = Resources.Load<Texture2D>("FX/slash_red") != null || EmbeddedFxArt.Get("slash_red") != null;
             }
             // Optional six-frame painted slash, layered over the existing physical blade flash.
             // Low graphics tier keeps the lightweight line only.
