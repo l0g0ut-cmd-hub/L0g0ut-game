@@ -40,6 +40,9 @@ jobs:
           print('ok')
           PY
 
+      - name: Validate packaged visual assets
+        run: python3 tools/validate_visual_assets.py
+
       - name: Environment info
         run: |
           { echo "== uname"; uname -a; echo "== docker"; docker version 2>&1 | head -20; echo "== df"; df -h /; } 2>&1 | tee "$RUNNER_TEMP/ci.log"
