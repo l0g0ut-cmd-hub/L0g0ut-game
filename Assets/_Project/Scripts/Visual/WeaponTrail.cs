@@ -162,11 +162,19 @@ namespace BladePath
                     Vector3 a = CR(p0.a, p1.a, p2.a, p3.a, u), b = CR(p0.b, p1.b, p2.b, p3.b, u);
                     float t = Mathf.Lerp(p1.t, p2.t, u);
                     float age = Mathf.Clamp01((now - t) / life);
-                    float alpha = (1f - age) * (1f - age);
-                    Color core = Color.Lerp(Color.white, color, age * 1.5f);
-                    core.a = alpha;
-                    Color edge = color; edge.a = alpha * 0.25f;
-                    if (textured) { core = new Color(1f, 1f, 1f, Mathf.Clamp01(alpha * 1.3f)); edge = new Color(1f, 1f, 1f, alpha); }
+                    // Bright leading edge with a soft, fast-dissolving tail; keep the blade itself visible.
+                    float alpha = Mathf.Pow(1f - age, 2.4f);
+                    float headGlow = 1f - Mathf.SmoothStep(0f, 0.45f, age);
+                    Color core = Color.Lerp(color, Color.white, headGlow * 0.8f);
+                    core.a = alpha * (0.75f + 0.25f * headGlow);
+                    Color edge = Color.Lerp(color, Color.white, headGlow * 0.15f);
+                    edge.a = alpha * 0.12f;
+                    if (textured)
+                    {
+                        // Atlas controls shape; vertex alpha adds the same temporal fade.
+                        core = new Color(1f, 1f, 1f, alpha);
+                        edge = new Color(1f, 1f, 1f, alpha * 0.8f);
+                    }
                     verts.Add(a); cols.Add(edge); uvs.Add(new Vector2(age, 0f));
                     verts.Add(b); cols.Add(core); uvs.Add(new Vector2(age, 1f));
                 }

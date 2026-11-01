@@ -1385,8 +1385,8 @@ namespace BladePath
             var lv = ps.limitVelocityOverLifetime; lv.enabled = true; lv.drag = 2.2f; lv.multiplyDragByParticleSize = false; lv.multiplyDragByParticleVelocity = true;
             var col = ps.colorOverLifetime; col.enabled = true;
             Gradient gr = new Gradient();
-            gr.SetKeys(new GradientColorKey[] { new GradientColorKey(new Color(1f, 1f, 0.92f), 0f), new GradientColorKey(new Color(1f, 0.72f, 0.28f), 0.25f), new GradientColorKey(new Color(0.95f, 0.32f, 0.06f), 0.7f), new GradientColorKey(new Color(0.5f, 0.08f, 0.02f), 1f) },
-                       new GradientAlphaKey[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 0.6f), new GradientAlphaKey(0f, 1f) });
+            gr.SetKeys(new GradientColorKey[] { new GradientColorKey(new Color(1f, 0.97f, 0.82f), 0f), new GradientColorKey(new Color(1f, 0.78f, 0.35f), 0.18f), new GradientColorKey(new Color(1f, 0.34f, 0.07f), 0.55f), new GradientColorKey(new Color(0.34f, 0.035f, 0.015f), 1f) },
+                       new GradientAlphaKey[] { new GradientAlphaKey(0.95f, 0f), new GradientAlphaKey(1f, 0.12f), new GradientAlphaKey(0.75f, 0.5f), new GradientAlphaKey(0f, 1f) });
             col.color = gr;
             var sz = ps.sizeOverLifetime; sz.enabled = true;
             sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(1f, 0.35f)));
