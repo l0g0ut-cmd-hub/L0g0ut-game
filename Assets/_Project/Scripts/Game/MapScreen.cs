@@ -161,6 +161,19 @@ namespace BladePath
             return 11;
         }
 
+        // Art-driven node badges use individually imported PNGs, retaining the existing atlas as fallback.
+        // Only a subset has dedicated badges; the other nodes keep their original symbols.
+        static Texture2D SpecialNodeIcon(NodeType type, bool unknown, bool completed)
+        {
+            if (completed) return null;
+            string id = unknown ? "node_unknown" :
+                type == NodeType.Duel ? "node_duel" :
+                type == NodeType.Elite || type == NodeType.Boss ? "node_elite" :
+                type == NodeType.Treasure ? "node_treasure_node" :
+                type == NodeType.Rest || type == NodeType.Herbalist ? "node_camp_node" : null;
+            return id != null ? UiKit.Tex("UI/pack02/" + id) : null;
+        }
+
         bool Known(MapNode n)
         {
             MapNode c = Campaign.Current;
@@ -242,7 +255,11 @@ namespace BladePath
                 int k = !known ? 11 : (n.done && n.Type != NodeType.Start && i != Campaign.At) ? 10 : IconOf(n.Type);
                 if (i == sel && ic != null) { GUI.color = Color.white; GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.75f, p.y - s * 0.5f, s * 1.5f, s), ic, Cell(12)); }
                 GUI.color = !known ? new Color(1f, 1f, 1f, 0.85f) : n.done && i != Campaign.At && n.Type != NodeType.Start ? new Color(0.8f, 0.78f, 0.74f, 0.9f) : Color.white;
-                if (ic != null) GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), ic, Cell(k));
+                Texture2D special = SpecialNodeIcon(n.Type, !known, n.done && i != Campaign.At);
+                if (special != null)
+                    GUI.DrawTexture(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), special, ScaleMode.ScaleToFit, true);
+                else if (ic != null)
+                    GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), ic, Cell(k));
                 else UiKit.Disc(p, s * 0.45f, can ? Gold : Dim);
                 GUI.color = oc;
                 if (!interactive) continue;
@@ -328,7 +345,9 @@ namespace BladePath
                 MapNode n = Campaign.Nodes[show];
                 bool known = Known(n);
                 Texture2D ic = UiKit.Tex("UI/map_icons");
-                if (ic != null) GUI.DrawTextureWithTexCoords(new Rect(x, y, 64f, 64f), ic, Cell(known ? IconOf(n.Type) : 11));
+                Texture2D special = SpecialNodeIcon(n.Type, !known, n.done && show != Campaign.At);
+                if (special != null) GUI.DrawTexture(new Rect(x, y, 64f, 64f), special, ScaleMode.ScaleToFit, true);
+                else if (ic != null) GUI.DrawTextureWithTexCoords(new Rect(x, y, 64f, 64f), ic, Cell(known ? IconOf(n.Type) : 11));
                 UiKit.Text(new Rect(x + 72f, y + 6f, w - 72f, 24f), known ? Campaign.TypeNames[n.type] : "НЕИЗВЕСТНО", 16f, Ink, TextAnchor.MiddleLeft);
                 if (known && n.IsFight) UiKit.Text(new Rect(x + 72f, y + 32f, w - 72f, 20f), Ladder.Stages[Mathf.Clamp(n.enemy, 0, Ladder.Count - 1)].name, 12f, new Color(1f, 0.6f, 0.45f), TextAnchor.MiddleLeft, false);
                 y += 72f;
@@ -392,6 +411,9 @@ namespace BladePath
             Rect r = new Rect((W - w) * 0.5f, (540f - h) * 0.5f + (1f - a) * 20f, w, h);
             UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), new Color(Gold.r, Gold.g, Gold.b, 0.8f));
             UiKit.Rect(r, new Color(0.07f, 0.05f, 0.045f, 0.98f));
+            // Thin inset lines make the modal read as a lacquered, gold-trimmed panel.
+            UiKit.Rect(new Rect(r.x + 7f, r.y + 7f, r.width - 14f, 1f), new Color(Gold.r, Gold.g, Gold.b, 0.35f * a));
+            UiKit.Rect(new Rect(r.x + 7f, r.yMax - 8f, r.width - 14f, 1f), new Color(Gold.r, Gold.g, Gold.b, 0.22f * a));
             UiKit.Corners(r, 18f, 0.9f);
             return r;
         }
@@ -412,7 +434,14 @@ namespace BladePath
         void Picture(Rect r, string tex)
         {
             Texture2D t = UiKit.Tex(tex);
-            if (t != null) GUI.DrawTexture(r, t, ScaleMode.ScaleAndCrop);
+            if (t != null)
+            {
+                GUI.DrawTexture(r, t, ScaleMode.ScaleAndCrop);
+                // Dark scrim keeps silhouettes atmospheric without washing out the image.
+                UiKit.Rect(new Rect(r.x, r.y, r.width, 10f), new Color(0.015f, 0.012f, 0.012f, 0.40f));
+                UiKit.Rect(new Rect(r.x, r.yMax - 16f, r.width, 16f), new Color(0.015f, 0.012f, 0.012f, 0.50f));
+                UiKit.Rect(new Rect(r.x + 5f, r.y + 5f, 2f, r.height - 10f), new Color(Gold.r, Gold.g, Gold.b, 0.38f));
+            }
             UiKit.Rect(new Rect(r.xMax - 1f, r.y, 1f, r.height), new Color(Gold.r, Gold.g, Gold.b, 0.6f));
         }
 
