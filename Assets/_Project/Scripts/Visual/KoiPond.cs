@@ -16,7 +16,7 @@ namespace BladePath
         public Vector2 pondR = new Vector2(1.45f, 0.85f);
         public float edge = 0.97f;    // доля контура воды
         public float clear = 0.27f;   // запас до берега в метрах: камни бордюра нависают над водой до ~0,2 м
-        float[] ang, spd, wob, pause;
+        float[] ang, spd, wob, pause, fitK;
         ParticleSystem rings; AudioSource plopSrc; static AudioClip plop; float nextRise;
         // лягушки у пруда ночью: «керо-керо» сериями (в дождик — охотнее), не в снег и не днём; по общей очереди звуков
         AudioSource frogSrc; static AudioClip kero; float frogAt; int frogLeft; float frogNext;
@@ -25,7 +25,8 @@ namespace BladePath
         void Start()
         {
             int n = fish != null ? fish.Length : 0;
-            ang = new float[n]; spd = new float[n]; wob = new float[n]; pause = new float[n];
+            ang = new float[n]; spd = new float[n]; wob = new float[n]; pause = new float[n]; fitK = new float[n];
+            for (int i = 0; i < n; i++) fitK[i] = 0.6f;
             for (int i = 0; i < n; i++) { ang[i] = Random.value * 6.28f; spd[i] = Random.Range(0.12f, 0.22f) * (Random.value < 0.5f ? 1f : -1f); wob[i] = Random.value * 6.28f; }
             nextRise = Time.time + Random.Range(5f, 12f);
             // атлас карпов: кохаку, сёва, ямабуки — каждой рыбе свой окрас
@@ -205,6 +206,11 @@ namespace BladePath
         }
 
         /// <summary>Точка (локально от центра пруда) внутри контура воды с запасом margin.</summary>
+        bool Fits(Vector3 p, Vector3 fwd, Vector3 rt, float half, float side)
+        {
+            return Inside(p + fwd * half) && Inside(p - fwd * half) && Inside(p + rt * side) && Inside(p - rt * side);
+        }
+
         bool Inside(Vector3 q)
         {
             // точку сдвигаем к берегу на clear метров и проверяем, что она ещё в воде — запас одинаков в метрах
@@ -248,9 +254,18 @@ namespace BladePath
                 wob[i] += dt * (s > 0.5f ? 7f : 2.5f);
                 float yaw = Mathf.Atan2(tangent.x, tangent.z) * Mathf.Rad2Deg + Mathf.Sin(wob[i]) * 9f;
                 // рыба целиком (голова и хвост) остаётся в воде: если край выходит за берег под камнями — ближе к центру
-                float half = f.localScale.z * 0.5f, side = f.localScale.x * 0.3f;
-                Vector3 fwd = Quaternion.Euler(0f, yaw, 0f) * Vector3.forward, rt = new Vector3(fwd.z, 0f, -fwd.x);
-                for (int it = 0; it < 16 && (!Inside(p + fwd * half) || !Inside(p - fwd * half) || !Inside(p + rt * side) || !Inside(p - rt * side)); it++) p *= 0.9f;
+                // рыба целиком в воде с запасом от камней: наибольшая доля орбиты, при которой голова, хвост и бока внутри
+                // (ищем непрерывно, по ходу без виляния, и сглаживаем во времени — раньше ступенчатое «×0,9» дёргало рыбу у края)
+                float half = f.localScale.z * 0.5f + 0.03f, side = f.localScale.x * 0.3f + 0.02f;
+                Vector3 fwd = new Vector3(tangent.x, 0f, tangent.z).normalized, rt = new Vector3(fwd.z, 0f, -fwd.x);
+                float lo = 0.15f, hi = 1f;
+                if (!Fits(p, fwd, rt, half, side))
+                {
+                    for (int it = 0; it < 10; it++) { float m = (lo + hi) * 0.5f; if (Fits(p * m, fwd, rt, half, side)) lo = m; else hi = m; }
+                }
+                else lo = 1f;
+                fitK[i] = Mathf.Min(lo, Mathf.Lerp(fitK[i], lo, 1f - Mathf.Exp(-dt * 3f)));   // уменьшается сразу, растёт плавно
+                p *= fitK[i];
                 f.localPosition = new Vector3(p.x, f.localPosition.y, p.z);
                 f.localRotation = Quaternion.Euler(0f, yaw, 0f);
             }

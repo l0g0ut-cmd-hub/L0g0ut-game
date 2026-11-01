@@ -443,7 +443,7 @@ namespace BladePath.EditorTools
                     float s = 0.14f + 0.12f * (float)r.NextDouble();
                 {
                     // лист лотоса — фото из атласа (4 разных листа 2×2), развёрнут как попало, чуть крупнее (альфа-край)
-                    EnvMesh.DecalCell(g, "Lotus" + i, c + new Vector3(Mathf.Cos(a) * rr * 1.45f, -0.0585f, Mathf.Sin(a) * rr * 0.85f), (float)r.NextDouble() * 360f, s * 1.15f, s * 1.15f, look.lotus, i % 2, (i / 2) % 2, 2);
+                    EnvMesh.DecalCell(g, "Lotus" + i, c + new Vector3(Mathf.Cos(a) * rr * 1.45f, -0.056f, Mathf.Sin(a) * rr * 0.85f), (float)r.NextDouble() * 360f, s * 1.15f, s * 1.15f, look.lotus, i % 2, (i / 2) % 2, 2);
                 }
                 }
         }

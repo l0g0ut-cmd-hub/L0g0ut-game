@@ -18,8 +18,8 @@ namespace BladePath
         public FighterController enemy;
 
         enum B { Stick, Jump, Dash, Overhead, Rising, Legs, Energy, Thrust, Slash, Pause,
-                 Resume, Restart, CamReset, AiToggle, DebugToggle, ToMenu, OverAgain, OverMenu, Block, Vibro, Difficulty, Super, Gfx, Heal, CamMode, TimerToggle, Gear, OverGear }
-        const int Count = 28;
+                 Resume, Restart, CamReset, AiToggle, DebugToggle, ToMenu, OverAgain, OverMenu, Block, Vibro, Difficulty, Super, Gfx, Heal, CamMode, TimerToggle, Gear, OverGear, Stats }
+        const int Count = 29;
 
         const float StickRadius = 84f;
 
@@ -94,7 +94,8 @@ namespace BladePath
             if (InventoryScreen.Open) return;   // снаряжение открыто — бой и кнопки не слушают касания
             Layout();
             Poll();
-            if (down[(int)B.Gear] || down[(int)B.OverGear]) { InventoryScreen.Show(); return; }
+            if (down[(int)B.Gear] || down[(int)B.OverGear]) { InventoryScreen.Show(0); return; }
+            if (down[(int)B.Stats]) { InventoryScreen.Show(1); return; }
 
             Vector2 kb = Vector2.zero;
             bool jump = down[(int)B.Jump], dash = down[(int)B.Dash];
@@ -233,6 +234,7 @@ namespace BladePath
             Box(B.TimerToggle, rx, 220f, 300f, 40f);
             Box(B.AiToggle, rx, 270f, 300f, 40f);
             Box(B.DebugToggle, rx, 320f, 300f, 40f);
+            Box(B.Stats, rx, 370f, 300f, 40f);
             Box(B.OverAgain, cx - 210f, 300f, 200f, 56f);
             Box(B.OverMenu, cx + 10f, 300f, 200f, 56f);
             Box(B.OverGear, cx - 100f, 480f, 200f, 46f);
@@ -242,7 +244,7 @@ namespace BladePath
                 foreach (B b in new[] { B.Stick, B.Jump, B.Dash, B.Block, B.Overhead, B.Rising, B.Legs, B.Energy, B.Thrust, B.Slash, B.Pause, B.Heal }) active[(int)b] = true;
             if (play && player != null && player.KiFull) active[(int)B.Super] = true;
             if (paused)
-                foreach (B b in new[] { B.Resume, B.Restart, B.Difficulty, B.Gfx, B.Vibro, B.CamReset, B.AiToggle, B.DebugToggle, B.ToMenu, B.CamMode, B.TimerToggle, B.Gear }) active[(int)b] = true;
+                foreach (B b in new[] { B.Resume, B.Restart, B.Difficulty, B.Gfx, B.Vibro, B.CamReset, B.AiToggle, B.DebugToggle, B.ToMenu, B.CamMode, B.TimerToggle, B.Gear, B.Stats }) active[(int)b] = true;
             if (over) { active[(int)B.OverAgain] = true; active[(int)B.OverMenu] = true; active[(int)B.OverGear] = true; }
 
             labels[(int)B.Resume] = "ПРОДОЛЖИТЬ";
@@ -258,7 +260,8 @@ namespace BladePath
             labels[(int)B.TimerToggle] = "ТАЙМЕР БОЯ: " + (DuelManager.TimerOn ? "ВКЛ" : "ВЫКЛ");
             labels[(int)B.OverAgain] = duel != null && duel.PlayerWonMatch ? (Ladder.IsLast ? "С НАЧАЛА" : "ДАЛЕЕ") : "ЕЩЁ РАЗ";
             labels[(int)B.OverMenu] = "В МЕНЮ";
-            labels[(int)B.Gear] = "СНАРЯЖЕНИЕ" + (Profile.Points > 0 ? "  (+" + Profile.Points + ")" : "");
+            labels[(int)B.Gear] = "СНАРЯЖЕНИЕ";
+            labels[(int)B.Stats] = "ПРОКАЧКА" + (Profile.Points > 0 ? "  (+" + Profile.Points + ")" : "");
             labels[(int)B.OverGear] = "СНАРЯЖЕНИЕ" + (Profile.Points > 0 ? " (+" + Profile.Points + ")" : "");
 
             if (!stickActive) { stickCenter = new Vector2(124f, H - 124f); stickKnob = stickCenter; }
@@ -424,7 +427,7 @@ namespace BladePath
                 }
                 for (int b = (int)B.Resume; b <= (int)B.ToMenu; b++) DrawRectButton(b);
                 DrawRectButton((int)B.Vibro); DrawRectButton((int)B.Difficulty); DrawRectButton((int)B.Gfx);
-                DrawRectButton((int)B.CamMode); DrawRectButton((int)B.TimerToggle); DrawRectButton((int)B.Gear);
+                DrawRectButton((int)B.CamMode); DrawRectButton((int)B.TimerToggle); DrawRectButton((int)B.Gear); DrawRectButton((int)B.Stats);
                 UiKit.Text(new Rect(W * 0.5f - 400f, 510f, 800f, 24f),
                     "ПУТЬ " + (Ladder.Index + 1) + "/" + Ladder.Count + "  ·  ПОБЕД " + Records.Wins + "  ·  ПОРАЖЕНИЙ " + Records.Losses + "  ·  ЛУЧШЕЕ " + Records.BestStage + "/" + Ladder.Count + (Records.Cleared > 0 ? "  ·  ПРОЙДЕН ×" + Records.Cleared : ""),
                     13f, new Color(0.85f, 0.8f, 0.7f, 0.9f));

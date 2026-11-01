@@ -153,7 +153,7 @@ namespace BladePath.EditorTools
                 EditorUtility.SetDirty(l.pondWater);
             }
             Texture2D koiT = Tex("koi.png", false);
-            if (koiT != null) { l.koi = AlphaParticle("Koi", koiT, new Color(0.5f, 0.5f, 0.5f, 0.5f)); l.koi.renderQueue = 2990; }
+            if (koiT != null) { l.koi = AlphaParticle("Koi", koiT, new Color(0.5f, 0.5f, 0.5f, 0.5f)); l.koi.renderQueue = 2440; }   // до листьев лотоса и воды: листья закрывают рыбу, вода ровно притеняет её везде
             l.lotus = Cutout("Env_Lotus", "lotus.png", new Color(0.78f, 0.82f, 0.76f), 0.45f, Color.black);   // 4 листа лотоса в атласе 2×2
             l.sakuraGround = Cutout("Env_SakuraGround", "sakura_ground.png", new Color(0.92f, 0.9f, 0.9f), 0.4f, new Color(0.02f, 0.01f, 0.012f));
             l.mossDecal = Cutout("Env_MossDecal", "moss_patches.png", new Color(0.75f, 0.8f, 0.72f), 0.4f, Color.black);

@@ -173,7 +173,30 @@ namespace BladePath
             {
                 if (!dirty) return cache;
                 dirty = false;
-                int[] st = D.stats;
+                cache = Compute(D.stats);
+                return cache;
+            }
+        }
+
+        /// <summary>Все очки: свободные + вложенные (для перераспределения).</summary>
+        public static int TotalPoints { get { int s = D.points; foreach (int v in D.stats) s += v; return s; } }
+        public static int[] StatsCopy() { return (int[])D.stats.Clone(); }
+
+        /// <summary>Принять новое распределение (сумма не больше всех очков; остаток — свободные).</summary>
+        public static bool SetStats(int[] st)
+        {
+            if (st == null || st.Length != StatCount) return false;
+            int sum = 0; foreach (int v in st) { if (v < 0) return false; sum += v; }
+            int total = TotalPoints;
+            if (sum > total) return false;
+            D.stats = (int[])st.Clone(); D.points = total - sum; Save();
+            return true;
+        }
+
+        /// <summary>Бонусы при данных характеристиках и надетом снаряжении (для предпросмотра в «Прокачке»).</summary>
+        public static Bonus Compute(int[] st)
+        {
+            {
                 Bonus b = new Bonus();
                 b.dmgMul = 1f + 0.04f * st[0] + ModSum(ModId.Damage);
                 b.hp = 8 * st[1] + Mathf.RoundToInt(ModSum(ModId.MaxHp));
@@ -191,7 +214,6 @@ namespace BladePath
                 b.gourds = Mathf.RoundToInt(ModSum(ModId.Gourd)) + (Has(Tech.SecondWind) ? 1 : 0);
                 b.postureMax = Mathf.RoundToInt(ModSum(ModId.PostureMax));
                 b.blockPostureMul = Has(Tech.StoneGuard) ? 0.7f : 1f;
-                cache = b;
                 return b;
             }
         }
