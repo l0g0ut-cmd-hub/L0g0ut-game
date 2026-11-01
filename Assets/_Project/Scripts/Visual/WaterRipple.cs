@@ -14,6 +14,16 @@ namespace BladePath
         Vector2 off;
         static readonly int BumpId = Shader.PropertyToID("_BumpScale");
 
+        void OnDestroy()
+        {
+            // Renderer.material creates a private material instance; release it with the pond.
+            if (mat != null)
+            {
+                if (Application.isPlaying) Destroy(mat);
+                else DestroyImmediate(mat);
+            }
+        }
+
         void Start()
         {
             Renderer r = GetComponent<Renderer>();
@@ -29,7 +39,8 @@ namespace BladePath
             off += drift * (1f + 2.5f * wind) * Time.deltaTime;
             mat.mainTextureOffset = off;
             float target = snow ? 0.08f : calm + 0.35f * wind + (rain ? 0.5f : 0f);
-            mat.SetFloat(BumpId, Mathf.MoveTowards(mat.GetFloat(BumpId), target, Time.deltaTime * 0.5f));
+            if (mat.HasProperty(BumpId))
+                mat.SetFloat(BumpId, Mathf.MoveTowards(mat.GetFloat(BumpId), target, Time.deltaTime * 0.5f));
         }
     }
 }
