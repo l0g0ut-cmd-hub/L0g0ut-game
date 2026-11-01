@@ -28,6 +28,57 @@ namespace BladePath
 
         void Start() { nextAttackAt = Time.time + 2.2f; }
 
+        // ---------------- фирменные приёмы врагов «Пути» ----------------
+        // Тень клана — уходит в дым и возникает за спиной; Кровавый они — бьёт по земле (волна, перепрыгнуть);
+        // Проклятый сёгун — три фазы по меткам жизни: 2-я — залпы шаров духа, 3-я — ещё и уход в дым, быстрее и злее
+        float vanishAt; int slamSwing = -1; bool slamDone; float volleyAt = -1f; int lastPhase = 1;
+        int StageIdx { get { return Ladder.Index; } }
+        int Phase { get { DuelManager dm = DuelManager.Instance; return dm == null ? 1 : 1 + Mathf.Max(0, dm.MaxMarks(self) - dm.Marks(self)); } }
+
+        bool TryVanish(Vector3 dir)
+        {
+            if (Time.time < vanishAt || target == null) return false;
+            vanishAt = Time.time + Random.Range(5f, 8f);
+            if (Juice.Instance != null) Juice.Instance.SmokeVanish(self.transform.position);
+            Vector3 back = target.transform.position - target.transform.forward * 0.95f;
+            self.Teleport(back);
+            if (Juice.Instance != null) Juice.Instance.SmokeVanish(self.transform.position);
+            nextAttackAt = Time.time + Random.Range(0.18f, 0.32f);   // удар почти сразу — успей развернуться и закрыться
+            blockUntil = 0f;
+            return true;
+        }
+
+        void Signatures(float dist, Vector3 dir, bool busy)
+        {
+            DuelManager dm = DuelManager.Instance;
+            // удар по земле: волна на ударе тяжёлого «сверху»
+            if (slamSwing >= 0 && self.weapon != null)
+            {
+                if (self.weapon.SwingId != slamSwing) slamSwing = -1;
+                else if (!slamDone && self.weapon.Phase == SwingPhase.Strike && self.weapon.PhaseProgress > 0.5f)
+                {
+                    slamDone = true;
+                    Vector3 at = self.transform.position + self.transform.forward * 1.0f;
+                    if (Juice.Instance != null) Juice.Instance.Slam(at);
+                    Vector3 d = target.transform.position - at; d.y = 0f;
+                    if (d.magnitude < 2.6f && dm != null)
+                    {
+                        if (target.Grounded) dm.ForceHit(target, self, 9f, 32f, at);
+                        else { target.AddKi(10f); dm.Announce("ПЕРЕПРЫГНУЛ!", new Color(0.5f, 0.95f, 1f)); }
+                    }
+                }
+            }
+            // сёгун: смена фазы — объявление и злость
+            int ph = StageIdx == 3 ? Phase : 1;
+            if (ph != lastPhase)
+            {
+                if (ph > lastPhase && dm != null) dm.Announce(ph == 2 ? "СЁГУН ПРИЗЫВАЕТ ДУХОВ" : "СЁГУН В ЯРОСТИ", new Color(1f, 0.8f, 0.3f), ph == 2 ? "шары духа залпами — сближайся" : "уходит в дым и бьёт со спины");
+                lastPhase = ph;
+            }
+            // залп второго шара
+            if (volleyAt > 0f && Time.time >= volleyAt && !busy) { volleyAt = -1f; self.Attack(AttackType.Energy); }
+        }
+
         void OnDestroy() { if (hooked && DuelManager.Instance != null) DuelManager.Instance.Damaged -= OnDamaged; }
 
         void OnDamaged(FighterController victim, float dmg)
@@ -56,6 +107,7 @@ namespace BladePath
             if (self != null) self.InString = stringLeft > 0;
             if (!aiEnabled || self == null || target == null || !self.CanAct) return;
             if (DuelManager.Instance != null && DuelManager.Instance.State != DuelState.Fighting) return;
+            if (DuelManager.Instance != null && DuelManager.Instance.Round == 1 && lastPhase > 1 && Phase == 1) lastPhase = 1;   // новый матч
 
             float agg = Mathf.Clamp01(aggression - 0.2f + 0.2f * Difficulty + 0.12f * Mathf.Max(0, Level) + Ladder.Current.aggr
                 + (DuelManager.Instance != null && DuelManager.Instance.EnemyEnraged ? 0.25f : 0f));   // ярость на последней трети здоровья
@@ -64,6 +116,8 @@ namespace BladePath
             Vector3 dir = dist > 1e-3f ? to / dist : Vector3.right;
             Vector3 side = new Vector3(-dir.z, 0f, dir.x);
             bool busy = self.weapon != null && self.weapon.Phase != SwingPhase.Idle;
+            Signatures(dist, dir, busy);
+            bool canVanish = StageIdx == 1 || (StageIdx == 3 && Phase >= 3);
 
             if (Time.time > strafeUntil) { strafeUntil = Time.time + Random.Range(0.8f, 1.8f); strafeDir = Random.value < 0.5f ? -1f : 1f; }
 
@@ -136,6 +190,8 @@ namespace BladePath
             {
                 lastSeenSwing = pw.SwingId;
                 float r = Random.value;
+                // Тень (и сёгун в 3-й фазе): вместо блока — в дым и за спину
+                if (canVanish && Random.value < 0.3f + 0.08f * Level && TryVanish(dir)) return;
                 if (r < 0.32f + 0.1f * Level)
                 {
                     // мастер ставит блок в последний миг — это парирование
@@ -194,11 +250,18 @@ namespace BladePath
             if (!busy && self.KiFull && dist < 2.8f && Random.value < 0.02f + 0.01f * Level && DuelManager.Instance != null && DuelManager.Instance.TrySuper(self)) return;
 
             // шар духа издалека
-            if (!busy && dist > 2.2f && self.CanEnergy && Time.time >= energyAt && Time.time >= blockUntil)
+            bool volley = StageIdx == 3 && Phase >= 2;
+            if (!busy && dist > (volley ? 1.8f : 2.2f) && self.CanEnergy && Time.time >= energyAt && Time.time >= blockUntil)
             {
-                energyAt = Time.time + Random.Range(2.5f, 5f);
-                if (Random.value < 0.6f && self.Attack(AttackType.Energy)) return;
+                energyAt = Time.time + (volley ? Random.Range(1.4f, 2.8f) : Random.Range(2.5f, 5f));
+                if (Random.value < (volley ? 0.85f : 0.6f) && self.Attack(AttackType.Energy))
+                {
+                    if (volley && Random.value < 0.6f) volleyAt = Time.time + 0.55f;   // второй шар следом
+                    return;
+                }
             }
+            // Тень издалека иногда сама уходит в дым к игроку
+            if (canVanish && !busy && dist > 2.4f && Random.value < 0.006f && TryVanish(dir)) return;
 
             if (!busy && Time.time >= nextAttackAt && Time.time >= blockUntil && dist < 1.35f)
             {
@@ -212,8 +275,15 @@ namespace BladePath
                 // опасная атака (危): с уровня «воин», не в серии
                 bool peril = !quick && Level >= 1 && Random.value < 0.10f + 0.04f * Level;
                 if (peril) { float pr = Random.value; t = pr < 0.45f ? AttackType.Thrust : (pr < 0.75f || Level < 2 ? AttackType.LegSweep : AttackType.Charge); }   // натиск — с уровня 2
+                // они: тяжёлое «сверху» — удар по земле с волной (危: перепрыгни)
+                bool slam = StageIdx == 2 && !quick && !peril && t == AttackType.Overhead && Random.value < 0.5f;
                 if (self.Attack(t, peril))
                 {
+                    if (slam && self.weapon != null && DuelManager.Instance != null)
+                    {
+                        slamSwing = self.weapon.SwingId; slamDone = false;
+                        DuelManager.Instance.PerilAt[self] = Time.unscaledTime;   // знак 危 над головой
+                    }
                     if (self.weapon != null && Random.value < 0.65f) { self.weapon.stance = 0; stanceAt = Time.time + Random.Range(2f, 5f); }   // после удара — обычно назад в тюдан
                     nextAttackAt = Time.time + Mathf.Lerp(2.4f, 0.8f, agg) + Random.Range(0f, 0.7f);
                     // серия: с уровня «воин», не после опасной атаки и не шаром
@@ -222,7 +292,7 @@ namespace BladePath
                         stringLeft = 1 + Random.Range(0, Level >= 2 ? 3 : 2);
                         stringLast = t; stringDelay = Level >= 3 && Random.value < 0.35f; stringPauseUntil = 0f; self.InString = true;
                     }
-                    else if (!peril && !quick && Level >= 2 && t != AttackType.Energy && Random.value < 0.08f * (Level - 1)) feintSwing = self.weapon.SwingId;
+                    else if (!peril && !quick && t != AttackType.Energy && (StageIdx == 1 ? Level >= 1 && Random.value < 0.25f : Level >= 2 && Random.value < 0.08f * (Level - 1))) feintSwing = self.weapon.SwingId;   // Тень — мастер финтов
                     else if (Random.value < 0.45f - 0.08f * Level) retreatUntil = Time.time + 0.9f;
                 }
             }

@@ -847,6 +847,50 @@ namespace BladePath
             b.r.SetPropertyBlock(mpb);
         }
 
+        /// <summary>Удар они по земле: волна пыли и воздуха, трещины, барабан, тряска.</summary>
+        public void Slam(Vector3 pos)
+        {
+            pos.y = 0.02f;
+            Shockwave(pos + Vector3.up * 0.05f, 2.6f, new Color(1f, 0.6f, 0.4f, 0.35f), 0.3f);
+            Dust(pos, Vector3.up, 34);
+            GroundCrack(pos, 1.6f);
+            Play(boom, 0.8f, 0.75f); Taiko(1f, 0.7f);
+            if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(0.12f); CameraOrbit.Instance.Punch(3f); }
+            Haptics.Pulse(90);
+        }
+
+        /// <summary>Уход в дым (Тень клана): клуб тёмного дыма на месте бойца и шорох.</summary>
+        public void SmokeVanish(Vector3 pos)
+        {
+            if (dustMat == null) return;
+            GameObject g = new GameObject("SmokeVanish");
+            g.transform.position = pos + Vector3.up * 0.9f;
+            ParticleSystem ps = g.AddComponent<ParticleSystem>();
+            ps.Stop();
+            var main = ps.main;
+            main.loop = false; main.duration = 0.1f;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.6f, 1.1f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.3f, 1.4f);
+            main.startSize = new ParticleSystem.MinMaxCurve(0.35f, 0.8f);
+            main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+            main.startColor = new Color(0.12f, 0.12f, 0.15f, 0.8f);
+            main.gravityModifier = -0.05f;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            main.stopAction = ParticleSystemStopAction.Destroy;
+            var em = ps.emission; em.rateOverTime = 0f;
+            em.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, (short)26) });
+            var sh = ps.shape; sh.shapeType = ParticleSystemShapeType.Sphere; sh.radius = 0.45f;
+            var col = ps.colorOverLifetime; col.enabled = true;
+            Gradient gr = new Gradient();
+            gr.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) }, new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) });
+            col.color = gr;
+            var sz = ps.sizeOverLifetime; sz.enabled = true;
+            sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.6f), new Keyframe(1f, 1.6f)));
+            g.GetComponent<ParticleSystemRenderer>().material = dustMat;
+            ps.Play();
+            Play(whoosh, 0.7f, 0.8f);
+        }
+
         /// <summary>Новый раунд: трещины заделаны.</summary>
         public void ClearCracks() { for (int i = 0; i < cracks.Count; i++) if (cracks[i] != null) cracks[i].gameObject.SetActive(false); }
 

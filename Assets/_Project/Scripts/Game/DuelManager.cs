@@ -1223,6 +1223,15 @@ namespace BladePath
             if (Juice.Instance != null) Juice.Instance.Taiko(1f, 0.8f);
         }
 
+        /// <summary>Урон не клинком (удар по земле и т.п.): здоровье и равновесие, без серии и контратаки.</summary>
+        public void ForceHit(FighterController target, FighterController attacker, float dmg, float posture, Vector3 point)
+        {
+            if (target == null || target.Dead || State != DuelState.Fighting) return;
+            if (target == player) dmg *= Profile.B.armorMul * Profile.CycleDmg;
+            ApplyDamage(target, attacker, Mathf.Round(dmg), point, false, true, Vector3.up, (target.transform.position - point).normalized * 3f, null);
+            if (!target.Dead) target.AddPosture(posture);
+        }
+
         /// <summary>Матч окончен: опыт, монеты, добыча (та же оценка боя, что на экране итогов).</summary>
         void GrantReward()
         {

@@ -334,22 +334,29 @@ namespace BladePath
             int t = left[UnityEngine.Random.Range(0, left.Count)];
             foreach (Item x in D.items) if (x.slot == (int)Slot.Scroll && x.tech == t) already = true;
             if (already && left.Count > 1) { left.Remove(t); t = left[UnityEngine.Random.Range(0, left.Count)]; }
-            return new Item { slot = (int)Slot.Scroll, rarity = 2, tech = t, name = "Свиток «" + TechNames[t].Substring(0, 1) + TechNames[t].Substring(1).ToLower() + "»", icon = 14 };
+            return new Item { slot = (int)Slot.Scroll, rarity = 2, tech = t, name = "Свиток «" + TechNames[t].Substring(0, 1) + TechNames[t].Substring(1).ToLower() + "»", icon = Pick(ScrollIcons) };
         }
 
-        /// <summary>Ячейка атласа значков (UI/items, 4×4): 0–3 клинки, 4–5 цубы, 6–7 облачение, 8–10 амулеты, 11 маска, 12–13 тыквы, 14 свиток, 15 монеты.</summary>
+        /// <summary>
+        /// Значок: 0–15 — UI/items (4×4: клинки, цубы, облачение, амулеты, маска, тыквы, свиток, монеты),
+        /// 16–51 — UI/items2 (6×6: ещё 6 клинков, 6 цуб, 6 облачений, 6 масок, амулеты и тыквы, свитки, ценности).
+        /// По ячейке и редкости — случайный из подходящих, чтобы добыча не повторялась.
+        /// </summary>
+        static readonly int[][][] Icons =
+        {
+            new[] { new[] { 0, 16, 21 }, new[] { 3, 21, 19, 17 }, new[] { 1, 17, 18, 19 }, new[] { 2, 20, 18 } },   // клинок
+            new[] { new[] { 4, 27 }, new[] { 4, 22, 26 }, new[] { 5, 23, 24 }, new[] { 5, 25, 24 } },                 // цуба
+            new[] { new[] { 6, 28, 33, 30 }, new[] { 6, 29, 30 }, new[] { 7, 31, 29 }, new[] { 7, 32 } },             // облачение
+            new[] { new[] { 39, 11 }, new[] { 34, 36, 11 }, new[] { 35, 38, 36, 11 }, new[] { 37, 38 } },             // маска
+            new[] { new[] { 8, 9, 41 }, new[] { 8, 9, 42 }, new[] { 10, 40, 42 }, new[] { 43, 10 } },                 // амулет
+            new[] { new[] { 12, 45 }, new[] { 12, 44 }, new[] { 13, 44, 45 }, new[] { 13 } },                         // тыква
+        };
+        static readonly int[] ScrollIcons = { 14, 46, 47, 48 };
+
         static int IconFor(int slot, int rarity)
         {
-            switch ((Slot)slot)
-            {
-                case Slot.Blade: return rarity == 0 ? 0 : rarity == 1 ? 3 : rarity == 2 ? 1 : 2;
-                case Slot.Guard: return rarity >= 2 ? 5 : 4;
-                case Slot.Garb: return rarity >= 2 ? 7 : 6;
-                case Slot.Mask: return 11;
-                case Slot.Charm: return rarity == 3 ? 10 : UnityEngine.Random.value < 0.5f ? 8 : 9;
-                case Slot.Gourd: return rarity >= 2 ? 13 : 12;
-            }
-            return 14;
+            if (slot >= SlotCount) return Pick(ScrollIcons);
+            return Pick(Icons[slot][Mathf.Clamp(rarity, 0, 3)]);
         }
 
         /// <summary>Строка свойства для интерфейса: «+12% урона».</summary>

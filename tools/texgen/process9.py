@@ -53,3 +53,26 @@ for i, n in [(12, 'plank'), (13, 'plank_red')]:
     rgb, al = key(cell(a, xs, ys, i)); ys_, xs_ = np.nonzero(al > 0.1)
     c = img(rgb, al).crop((xs_.min(), ys_.min(), xs_.max() + 1, ys_.max() + 1)); c.resize((512, int(512 * c.size[1] / c.size[0])), Image.LANCZOS).save(U + n + '.png')
 print('ok')
+
+# атлас 11: ещё 36 значков (6×6) → UI/items2.png, ячейки по 128
+a = np.asarray(Image.open('atlas_src/atlas11_items.png').convert('RGB')).astype(np.float32) / 255
+w = (a.min(2) > 0.92)
+def runs6(v, n):
+    r = []; s = None
+    for i, x in enumerate(v > 0.97):
+        if x and s is None: s = i
+        if not x and s is not None: r.append((s, i - 1)); s = None
+    if s is not None: r.append((s, len(v) - 1))
+    g = [x for x in r if 5 < x[0] < n - 6]
+    e = [0] + [x for gg in g for x in (gg[0], gg[1] + 1)] + [n]
+    cells = [(e[2 * i], e[2 * i + 1]) for i in range(len(e) // 2)]
+    return [c for c in cells if c[1] - c[0] > 40]   # обрывки швов — не ячейки
+xs6, ys6 = runs6(w.mean(0), a.shape[1]), runs6(w.mean(1), a.shape[0])
+assert len(xs6) == 6 and len(ys6) == 6, (xs6, ys6)
+sheet = Image.new('RGBA', (768, 768), (0, 0, 0, 0))
+for i in range(36):
+    x0, x1 = xs6[i % 6]; y0, y1 = ys6[i // 6]
+    c = a[y0 + 6:y1 - 6, x0 + 6:x1 - 6]
+    sheet.paste(img(*key(c)).resize((128, 128), Image.LANCZOS), ((i % 6) * 128, (i // 6) * 128))
+sheet.save(U + 'items2.png')
+print('items2 ok')

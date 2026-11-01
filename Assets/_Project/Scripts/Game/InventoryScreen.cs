@@ -40,12 +40,14 @@ namespace BladePath
             UiKit.Rect(r, new Color(0.04f, 0.035f, 0.035f, 0.92f));
             if (it != null)
             {
-                Texture2D atlas = UiKit.Tex("UI/items");
+                bool second = it.icon >= 16;
+                Texture2D atlas = UiKit.Tex(second ? "UI/items2" : "UI/items");
                 Rect ir = new Rect(r.x + r.width * 0.15f, r.y + r.height * 0.15f, r.width * 0.7f, r.height * 0.7f);   // внутри проёма рамки
                 if (atlas != null)
                 {
-                    int c = it.icon % 4, row = it.icon / 4;
-                    GUI.DrawTextureWithTexCoords(ir, atlas, new Rect(c * 0.25f, 1f - (row + 1) * 0.25f, 0.25f, 0.25f));
+                    int n = second ? 6 : 4, k = second ? it.icon - 16 : it.icon;
+                    float u = 1f / n;
+                    GUI.DrawTextureWithTexCoords(ir, atlas, new Rect((k % n) * u, 1f - (k / n + 1) * u, u, u));
                 }
                 else
                 {
