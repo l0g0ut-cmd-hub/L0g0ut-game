@@ -522,7 +522,7 @@ namespace BladePath
                 case Modal.Rest:
                 {
                     Rect r = Card(660f, 360f);
-                    Picture(new Rect(r.x, r.y, 260f, r.height), Pack02Art("herbalist", PackArt("herbalist", "UI/npc_3")));
+                    Picture(new Rect(r.x, r.y, 260f, r.height), Pack02Art("camp", PackArt("herbalist", "UI/npc_3")));
                     float x = r.x + 280f, w = r.width - 300f, y = r.y + 22f;
                     UiKit.Text(new Rect(x, y, w, 26f), "ПРИВАЛ", 20f, Gold, TextAnchor.MiddleLeft); y += 34f;
                     y = Lines(x, y, w, "У костра греется старый мастер меча. «Отдохни. Или возьми боккэн — покажу, чего тебе не хватает.»", 40, 13f, Ink) + 14f;
@@ -536,7 +536,7 @@ namespace BladePath
                 case Modal.Knocked:
                 {
                     Rect r = Card(640f, 340f);
-                    Picture(new Rect(r.x, r.y, 250f, r.height), UiKit.Tex("UI/npc_4") != null ? "UI/npc_4" : "UI/npc_2");
+                    Picture(new Rect(r.x, r.y, 250f, r.height), Pack02Art("herbalist", UiKit.Tex("UI/npc_4") != null ? "UI/npc_4" : "UI/npc_2"));
                     float x = r.x + 270f, w = r.width - 290f, y = r.y + 22f;
                     UiKit.Text(new Rect(x, y, w, 26f), "ХИЖИНА ТРАВНИЦЫ", 20f, Gold, TextAnchor.MiddleLeft); y += 34f;
                     string tx = modal == Modal.Knocked
