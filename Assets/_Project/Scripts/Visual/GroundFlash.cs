@@ -7,7 +7,7 @@ namespace BladePath
     public class GroundFlash : MonoBehaviour
     {
         static readonly Dictionary<string, Material> mats = new Dictionary<string, Material>();
-        float born, life, s0, s1, spin; Color col; bool hold; MeshRenderer mr; MaterialPropertyBlock mpb;
+        float born, life, s0, s1, spin; Color col; bool hold; int cols = 1, rows = 1, frames = 1; MeshRenderer mr; MaterialPropertyBlock mpb;
         static Mesh quad;
 
         public static GroundFlash Spawn(string tex, Vector3 pos, float s0, float s1, Color col, float life, float spin, bool hold = false)
@@ -40,6 +40,14 @@ namespace BladePath
             return f;
         }
 
+        /// <summary>То же, но покадровая анимация из листа cols×rows (кадры слева направо, сверху вниз).</summary>
+        public static GroundFlash SpawnSheet(string tex, Vector3 pos, float s0, float s1, Color col, float life, int cols, int rows, int frames)
+        {
+            GroundFlash f = Spawn(tex, pos, s0, s1, col, life, 0f);
+            if (f != null) { f.cols = Mathf.Max(1, cols); f.rows = Mathf.Max(1, rows); f.frames = Mathf.Max(1, frames); f.Tick(); }
+            return f;
+        }
+
         void Update() { Tick(); }
 
         void Tick()
@@ -53,6 +61,14 @@ namespace BladePath
             // трещины горят и медленно остывают; кольцо и пятно — быстро гаснут
             float a = hold ? (k < 0.1f ? k / 0.1f : 1f - Mathf.SmoothStep(0f, 1f, (k - 0.1f) / 0.9f)) : 1f - e;
             mpb.SetColor("_TintColor", new Color(0.5f * Mathf.Lerp(1f, col.r, 0.8f), 0.5f * Mathf.Lerp(1f, col.g, 0.8f), 0.5f * Mathf.Lerp(1f, col.b, 0.8f), 0.5f * a));
+            if (frames > 1)
+            {
+                int fr = Mathf.Min(frames - 1, (int)(k * frames));
+                a = 1f - k * k * k * k;   // лист сам гаснет к концу
+                mpb.SetColor("_TintColor", new Color(0.5f * Mathf.Lerp(1f, col.r, 0.8f), 0.5f * Mathf.Lerp(1f, col.g, 0.8f), 0.5f * Mathf.Lerp(1f, col.b, 0.8f), 0.5f * a));
+                mpb.SetVector("_MainTex_ST", new Vector4(1f / cols, 1f / rows, (fr % cols) / (float)cols, 1f - (fr / cols + 1) / (float)rows));
+            }
+            else mpb.SetVector("_MainTex_ST", new Vector4(1f, 1f, 0f, 0f));
             mr.SetPropertyBlock(mpb);
         }
     }

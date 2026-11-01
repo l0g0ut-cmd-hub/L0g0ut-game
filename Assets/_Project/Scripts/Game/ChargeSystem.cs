@@ -20,7 +20,8 @@ namespace BladePath
         class Charge
         {
             public FighterController f; public float start; public int level; public Color col;
-            public Transform sigil, anchor, early, pillar, pool; public Material sigilMat, earlyMat, pillarMat, poolMat; public ParticleSystem rise; public FxSprite flame; public Light light; public float pillarAspect = 1.3f;
+            public Transform sigil, anchor, early, pillar, pool; public Material sigilMat, earlyMat, pillarMat, poolMat; public ParticleSystem rise; public FxSprite flame, inhale, embers; public Light light; public float pillarAspect = 1.3f; public int pillarFrames = 1;
+            public Transform draw, emberAnchor; public Material drawMat;
         }
         readonly Dictionary<FighterController, Charge> active = new Dictionary<FighterController, Charge>();
         readonly Dictionary<FighterController, int> strikeSwing = new Dictionary<FighterController, int>();
@@ -84,7 +85,16 @@ namespace BladePath
             if (lvl >= 2) waveAt[f] = Time.time + 0.18f;
             Vector3 hitAt = f.transform.position + f.transform.forward * 0.9f;
             GroundFlash.Spawn("FX/crack_glow", hitAt, 1.4f + 0.9f * lvl, 1.6f + 1.1f * lvl, c.col, 1.3f + 0.3f * lvl, 0f, true);
-            GroundFlash.Spawn("FX/shock_ring", hitAt, 0.6f, 2.5f + 1.5f * lvl, c.col, 0.45f, 0f);
+            GroundFlash.SpawnSheet("FX/shock_dust", hitAt, 2.0f + 1.0f * lvl, 3.2f + 1.6f * lvl, c.col, 0.55f, 4, 1, 4);
+            // выплеск: вспышка → купол → столб → угли (16 кадров), низ кадра — по земле
+            float es = 2.2f + 0.8f * lvl;
+            FxSprite er = FxSprite.Spawn("eruption", hitAt + Vector3.up * (es * 0.31f), es, 4, 4, 16, 22f, false, 0.8f + 0.1f * lvl);
+            if (er != null) er.tint = Color.Lerp(c.col, Color.white, 0.35f);
+            if (lvl >= 2)
+            {
+                FxSprite lb = FxSprite.Spawn("lightning_burst", hitAt + Vector3.up * 1.0f, 3.2f, 4, 1, 4, 12f, false, 0.36f);
+                if (lb != null) lb.tint = Color.Lerp(c.col, Color.white, 0.5f);
+            }
             if (Juice.Instance != null) { Juice.Instance.Taiko(1f, 0.75f + 0.1f * lvl); Juice.Instance.Dust(f.transform.position + Vector3.up * 0.05f, f.transform.forward, 14 + 8 * lvl); }
             if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Punch(2f + 1.5f * lvl); CameraOrbit.Instance.Shake(0.03f + 0.03f * lvl); }
             Haptics.Pulse(50 + 30 * lvl);
@@ -125,7 +135,9 @@ namespace BladePath
             // пятно света под ногами
             c.pool = GroundQuad("ChargePool", Resources.Load<Texture2D>("FX/glow_pool"), add, out c.poolMat);
             // столб ауры: вертикальная плоскость, всегда повёрнута к камере
-            Texture2D pt = Resources.Load<Texture2D>(PillarFor(c.f));
+            // анимированный столб (4 кадра цикла), запасной — статичный
+            Texture2D pt = Resources.Load<Texture2D>(PillarFor(c.f).Replace("pillar_", "pillar_loop_"));
+            if (pt != null) c.pillarFrames = 4; else pt = Resources.Load<Texture2D>(PillarFor(c.f));
             if (pt != null && add != null)
             {
                 GameObject g = new GameObject("ChargePillar");
@@ -134,8 +146,12 @@ namespace BladePath
                 c.pillarMat = new Material(add) { mainTexture = pt };
                 r.sharedMaterial = c.pillarMat; r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 c.pillar = g.transform;
-                c.pillarAspect = pt.height / (float)Mathf.Max(1, pt.width);
+                c.pillarAspect = pt.height / Mathf.Max(1f, pt.width / (float)c.pillarFrames);
+                if (c.pillarFrames > 1) c.pillarMat.mainTextureScale = new Vector2(1f / c.pillarFrames, 1f);
             }
+            // светом рисуется узор: точка → кольца → спицы → мандала (12 кадров), потом разряды по ободу
+            c.draw = GroundQuad("ChargeSigilDraw", Resources.Load<Texture2D>("FX/sigil_draw"), add, out c.drawMat);
+            if (c.drawMat != null) c.drawMat.mainTextureScale = new Vector2(0.25f, 0.25f);
             // поднимающаяся энергия: искры и струйки вверх по кругу узора
             GameObject pg = new GameObject("ChargeRise");
             c.rise = pg.AddComponent<ParticleSystem>();
@@ -163,6 +179,13 @@ namespace BladePath
             c.anchor = new GameObject("ChargeAnchor").transform;
             c.anchor.SetParent(c.f.transform, false); c.anchor.localPosition = Vector3.up * 0.95f;
             if (c.flame != null) { c.flame.follow = c.anchor; c.flame.tint = new Color(c.col.r, c.col.g, c.col.b, 0.6f); }
+            // энергия втягивается в бойца (спираль) и угли поднимаются от земли
+            c.inhale = FxSprite.Spawn("charge_inhale", c.anchor.position, 1.3f, 4, 1, 4, 12f, true);
+            if (c.inhale != null) { c.inhale.follow = c.anchor; c.inhale.tint = new Color(c.col.r, c.col.g, c.col.b, 0.3f); }
+            c.emberAnchor = new GameObject("ChargeEmbers").transform;
+            c.emberAnchor.SetParent(c.f.transform, false); c.emberAnchor.localPosition = Vector3.up * 0.7f;
+            c.embers = FxSprite.Spawn("embers_loop", c.emberAnchor.position, 1.4f, 4, 1, 4, 10f, true);
+            if (c.embers != null) { c.embers.follow = c.emberAnchor; c.embers.tint = Color.Lerp(c.col, Color.white, 0.3f); }
             // свет растёт со ступенями
             GameObject lg = new GameObject("ChargeLight");
             c.light = lg.AddComponent<Light>(); c.light.type = LightType.Point; c.light.color = c.col; c.light.range = 3f; c.light.intensity = 0f; c.light.shadows = LightShadows.None;
@@ -223,6 +246,11 @@ namespace BladePath
             if (c.flame != null) Destroy(c.flame.gameObject);
             if (c.light != null) Destroy(c.light.gameObject);
             if (c.anchor != null) Destroy(c.anchor.gameObject);
+            if (c.draw != null) Destroy(c.draw.gameObject);
+            if (c.drawMat != null) Destroy(c.drawMat);
+            if (c.inhale != null) Destroy(c.inhale.gameObject);
+            if (c.embers != null) Destroy(c.embers.gameObject);
+            if (c.emberAnchor != null) Destroy(c.emberAnchor.gameObject);
             if (c.early != null) Destroy(c.early.gameObject);
             if (c.earlyMat != null) Destroy(c.earlyMat);
             if (c.pool != null) Destroy(c.pool.gameObject);
@@ -258,6 +286,7 @@ namespace BladePath
                     GroundFlash.Spawn("FX/shock_ring", f.transform.position, 1.0f, 3.2f + 1.4f * lvl, c.col, 0.5f, 0f);
                     FxSprite fl = FxSprite.Spawn("charge_flecks", f.transform.position + Vector3.up * 1.0f, 1.6f + 0.6f * lvl, 1, 1, 1, 1f, false, 0.45f);
                     if (fl != null) { fl.tint = Color.Lerp(c.col, Color.white, 0.4f); fl.grow = 1.5f; }
+                    if (lvl >= 2) GroundFlash.SpawnSheet("FX/lightning_burst", f.transform.position, 3.4f, 4.2f, c.col, 0.4f, 4, 1, 4);   // третья ступень — разряд по земле
                     if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.02f + 0.02f * lvl);
                     Haptics.Pulse(25 + 15 * lvl);
                 }
@@ -283,6 +312,27 @@ namespace BladePath
                         c.earlyMat.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0.5f * ea));
                     }
                 }
+                if (c.draw != null)
+                {
+                    int fr; float da;
+                    if (t < 0.6f) { fr = Mathf.Min(11, (int)(t / 0.6f * 12f)); da = 1f; }
+                    else if (c.level >= 2) { fr = 12 + (int)(Time.time * 14f) % 4; da = 0.9f; }
+                    else { fr = 11; da = Mathf.Lerp(1f, 0.4f, Mathf.Clamp01((t - 0.6f) / 0.5f)); }
+                    c.drawMat.mainTextureOffset = new Vector2((fr % 4) * 0.25f, 0.75f - (fr / 4) * 0.25f);
+                    float sd = Mathf.Lerp(0.9f, 3.4f, 1f - (1f - k) * (1f - k)) * pulse * 1.16f;
+                    c.draw.position = new Vector3(f.transform.position.x, 0.026f, f.transform.position.z);
+                    c.draw.localScale = new Vector3(sd, sd, 1f);
+                    if (c.sigil != null) c.draw.rotation = c.sigil.rotation;
+                    Color dc = Color.Lerp(c.col, Color.white, 0.35f);
+                    c.drawMat.SetColor("_TintColor", new Color(dc.r * 0.5f, dc.g * 0.5f, dc.b * 0.5f, 0.5f * da));
+                }
+                if (c.inhale != null) { c.inhale.size = Mathf.Lerp(1.3f, 2.8f, k) * pulse; c.inhale.tint = new Color(c.col.r, c.col.g, c.col.b, 0.25f + 0.45f * k); }
+                if (c.embers != null)
+                {
+                    c.embers.size = Mathf.Lerp(1.2f, 2.8f, k);
+                    if (c.emberAnchor != null) c.emberAnchor.localPosition = Vector3.up * (c.embers.size * 0.5f);
+                    Color ec = Color.Lerp(c.col, Color.white, 0.3f); c.embers.tint = new Color(ec.r, ec.g, ec.b, 0.4f + 0.6f * k);
+                }
                 if (c.pool != null)
                 {
                     float sp = Mathf.Lerp(1.6f, 4.6f, k);
@@ -303,6 +353,7 @@ namespace BladePath
                     }
                     float pa = Mathf.Clamp01((t - 0.15f) / 0.4f) * (0.2f + 0.7f * k);
                     c.pillarMat.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0.5f * pa));
+                    if (c.pillarFrames > 1) c.pillarMat.mainTextureOffset = new Vector2(((int)(Time.time * 12f) % c.pillarFrames) / (float)c.pillarFrames, 0f);
                 }
                 if (c.rise != null)
                 {
@@ -328,6 +379,7 @@ namespace BladePath
                     if (a == null || dm == null) continue;
                     Vector3 at = a.transform.position + a.transform.forward * 0.9f;
                     if (Juice.Instance != null) Juice.Instance.Slam(at);
+                    GroundFlash.SpawnSheet("FX/shock_dust", at, 5.0f, 7.0f, ColorOf(a), 0.7f, 4, 1, 4);
                     GroundFlash.Spawn("FX/shock_ring", at, 1.0f, 6.2f, ColorOf(a), 0.6f, 0f);
                     GroundFlash.Spawn("FX/glow_pool", at, 2.0f, 5.0f, ColorOf(a), 0.5f, 0f);
                     FighterController t = a.opponent;
