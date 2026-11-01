@@ -1270,6 +1270,10 @@ namespace BladePath
                 FxSprite flame = FxSprite.Spawn("flame_red", pos + Vector3.up * 1.1f,
                     1.65f, 6, 1, 6, 19f, false, 0.32f);
                 if (flame != null) flame.tint = new Color(1f, 0.6f, 0.55f, 0.55f);
+                // A fleeting spectral beast follows the finishing crescent.
+                FxSprite spirit = FxSprite.Spawn("spirit_wolf", pos + Vector3.up * 1.1f,
+                    2.25f, 6, 1, 6, 14f, false, 0.42f);
+                if (spirit != null) { spirit.tint = new Color(0.95f, 0.58f, 0.65f, 0.6f); spirit.vel = dir.normalized * 1.1f; }
             }
             SparkLight(pos + Vector3.up * 2f, new Color(0.75f, 0.6f, 1f), 6f, 6f, 0.25f);
         }
@@ -1397,46 +1401,14 @@ namespace BladePath
         }
 
         // искры: раскалённые (белое → оранжевое → тёмно-красное), тают и тормозят в воздухе, отскакивают от земли
+        // Katana impacts reuse particle systems instead of allocating/destroying
+        // a GameObject, gradient and particle renderer for every sword clash.
         void Sparks(Vector3 pos, Vector3 normal, int count, float power = 1f)
         {
             if (softMat == null) return;
-            // Keep the impact readable while respecting the mobile particle budget.
             count = Mathf.Clamp(count, 1, DuelManager.Gfx == 1 ? 28 : 14);
-            GameObject g = new GameObject("Sparks");
-            g.transform.position = pos;
-            g.transform.rotation = Quaternion.LookRotation(normal.sqrMagnitude > 1e-4f ? normal : Vector3.up);
-            ParticleSystem ps = g.AddComponent<ParticleSystem>();
-            ps.Stop();
-            var main = ps.main;
-            main.loop = false; main.duration = 0.1f;
-            main.startLifetime = new ParticleSystem.MinMaxCurve(0.18f, 0.6f);
-            main.startSpeed = new ParticleSystem.MinMaxCurve(2f * power, 8.5f * power);
-            main.startSize = new ParticleSystem.MinMaxCurve(0.010f, 0.026f);
-            main.startColor = Color.white;
-            main.gravityModifier = 1.5f;
-            main.simulationSpace = ParticleSystemSimulationSpace.World;
-            main.stopAction = ParticleSystemStopAction.Destroy;
-            main.maxParticles = count;
-            var em = ps.emission; em.rateOverTime = 0f;
-            em.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, (short)count) });
-            var sp = ps.shape; sp.shapeType = ParticleSystemShapeType.Cone; sp.angle = 55f; sp.radius = 0.02f;
-            var lv = ps.limitVelocityOverLifetime; lv.enabled = true; lv.drag = 2.2f; lv.multiplyDragByParticleSize = false; lv.multiplyDragByParticleVelocity = true;
-            var col = ps.colorOverLifetime; col.enabled = true;
-            Gradient gr = new Gradient();
-            gr.SetKeys(new GradientColorKey[] { new GradientColorKey(new Color(1f, 0.97f, 0.82f), 0f), new GradientColorKey(new Color(1f, 0.78f, 0.35f), 0.18f), new GradientColorKey(new Color(1f, 0.34f, 0.07f), 0.55f), new GradientColorKey(new Color(0.34f, 0.035f, 0.015f), 1f) },
-                       new GradientAlphaKey[] { new GradientAlphaKey(0.95f, 0f), new GradientAlphaKey(1f, 0.12f), new GradientAlphaKey(0.75f, 0.5f), new GradientAlphaKey(0f, 1f) });
-            col.color = gr;
-            var sz = ps.sizeOverLifetime; sz.enabled = true;
-            sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(1f, 0.35f)));
-            // земля — плоскость коллизий (без физики мешей): искры скачут по камню
-            if (sparkFloor == null) { GameObject fl = new GameObject("SparkFloor"); fl.transform.position = new Vector3(0f, 0.01f, 0f); sparkFloor = fl.transform; }
-            var cl = ps.collision; cl.enabled = true; cl.type = ParticleSystemCollisionType.Planes; cl.SetPlane(0, sparkFloor);
-            cl.bounce = new ParticleSystem.MinMaxCurve(0.25f, 0.5f); cl.dampen = new ParticleSystem.MinMaxCurve(0.3f, 0.5f); cl.lifetimeLoss = 0.25f; cl.radiusScale = 0.3f;
-            var rend = g.GetComponent<ParticleSystemRenderer>();
-            rend.material = Additive(ref addMat, SoftSprites.Disc);
-            rend.renderMode = ParticleSystemRenderMode.Stretch; rend.velocityScale = 0.035f; rend.lengthScale = 2.2f;
-            rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            ps.Play();
+            ImpactSparkPool.Emit(pos, normal, count, power,
+                Additive(ref addMat, SoftSprites.Disc), transform);
         }
 
         static Mesh quad;
