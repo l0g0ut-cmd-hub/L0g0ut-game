@@ -42,6 +42,8 @@ namespace BladePath
             public bool training;            // бой со странствующим ронином (запасной способ добыть кость)
             public bool knocked;             // проиграл — очнулся у травницы (плашка на карте)
             public List<MapNode> nodes = new List<MapNode>();
+            // Only actual moves, never inferred from completed nodes. Persisted across restarts.
+            public List<int> travelled = new List<int>();
         }
 
         public static readonly string[] RegionNames = { "ЛЕС ТЕНЕЙ", "ГОРЫ ОНИ", "ПРОКЛЯТЫЙ СЁГУНАТ" };
@@ -107,12 +109,26 @@ namespace BladePath
             if (!string.IsNullOrEmpty(s)) { try { d = JsonUtility.FromJson<Data>(s); } catch { d = null; } }
             if (d == null || d.nodes == null || d.nodes.Count == 0) { d = new Data(); Generate(0); }
             if (d.at < 0 || d.at >= d.nodes.Count) d.at = 0;
+            // Old campaign_v1 saves have no travel history: start from the current position.
+            if (d.travelled == null) d.travelled = new List<int>();
+            if (d.travelled.Count == 0 || d.travelled[d.travelled.Count - 1] != d.at)
+            {
+                d.travelled.Clear(); d.travelled.Add(d.at);
+            }
         }
         public static void Save() { PlayerPrefs.SetString("campaign_v1", JsonUtility.ToJson(D)); PlayerPrefs.Save(); }
 
         public static int Region { get { return D.region; } }
         public static List<MapNode> Nodes { get { return D.nodes; } }
         public static int At { get { return D.at; } }
+        public static IList<int> Travelled { get { return D.travelled; } }
+        public static bool WasTravelled(int from, int to)
+        {
+            List<int> path = D.travelled;
+            for (int i = 1; i < path.Count; i++)
+                if (path[i - 1] == from && path[i] == to) return true;
+            return false;
+        }
         public static MapNode Current { get { return D.nodes[D.at]; } }
         public static bool InFight { get { return D.fight >= 0 && D.fight < D.nodes.Count; } }
         public static MapNode FightNode { get { return InFight ? D.nodes[D.fight] : null; } }
@@ -158,6 +174,8 @@ namespace BladePath
         {
             Data dd = d;
             dd.region = region; dd.nodes.Clear(); dd.at = 0; dd.fight = -1;
+            if (dd.travelled == null) dd.travelled = new List<int>();
+            dd.travelled.Clear(); dd.travelled.Add(0);
             Vector2[][] spots = Spots[Mathf.Clamp(region, 0, Spots.Length - 1)];
             int L = spots.Length;
             List<int>[] layers = new List<int>[L];
@@ -255,6 +273,10 @@ namespace BladePath
             // Иначе прямой вызов MoveTo обходит ограничения похода.
             if (!CanGo(i)) return;
             D.at = i;
+            if (D.travelled == null) D.travelled = new List<int>();
+            D.travelled.Add(i);
+            // Keep the footprint trail bounded, while retaining the current node at the tail.
+            if (D.travelled.Count > 48) D.travelled.RemoveRange(0, D.travelled.Count - 48);
             D.steps = Mathf.Max(0, D.steps - 1);
             MapNode n = D.nodes[i];
             if (n.IsFight && !n.done) D.steps = 0;   // бой обрывает ход: остаток сгорает
@@ -317,6 +339,10 @@ namespace BladePath
                 if (n.Type == NodeType.Herbalist && n.layer <= lost.layer - 2 && n.layer > D.nodes[cp].layer) cp = i;
             }
             D.at = cp; D.nodes[cp].done = true; D.fight = -1; D.steps = 0;
+            // Retreat is an instant checkpoint jump, not a walked road segment.
+            // Clear previous marks so the map cannot draw an imaginary shortcut.
+            if (D.travelled == null) D.travelled = new List<int>();
+            D.travelled.Clear(); D.travelled.Add(cp);
             D.blessing = 0; D.cursed = false; D.knocked = true;
             if (D.rolls <= 0) D.rolls = 1; // emergency die: defeat must never soft-lock travel
             Weather.ForceNight = false;
