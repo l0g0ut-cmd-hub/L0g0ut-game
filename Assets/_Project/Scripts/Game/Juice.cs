@@ -19,7 +19,7 @@ namespace BladePath
         ParticleSystem footFx;
         ParticleSystem petals;
         AudioSource ambient, crickets;
-        Material fxMat, softMat, splatMat, fogMat, dustMat, crackMat;
+        Material fxMat, softMat, splatMat, fogMat, dustMat, crackMat, streakMat, poolMat, burstMat;
         const int MaxDecals = 220;
         readonly List<Decal> decals = new List<Decal>();
         int decalIdx;
@@ -62,6 +62,12 @@ namespace BladePath
                 fogMat = new Material(sh); fogMat.mainTexture = SoftSprites.Fog;
                 Texture2D dp = Resources.Load<Texture2D>("FX/dust_puff");   // клубы пыли из атласа (фото-облачко)
                 dustMat = new Material(sh); dustMat.mainTexture = dp != null ? dp : SoftSprites.Fog;
+                // варианты пятен (атлас тушью, в игре — тон крови): вытянутая полоса по ходу полёта и растёкшаяся лужа
+                Texture2D bst = Resources.Load<Texture2D>("FX/blood_streak"), bpl = Resources.Load<Texture2D>("FX/blood_pool");
+                streakMat = bst != null ? new Material(sh) { mainTexture = bst } : splatMat;
+                poolMat = bpl != null ? new Material(sh) { mainTexture = bpl } : splatMat;
+                Texture2D bb = Resources.Load<Texture2D>("FX/blood_burst");
+                if (bb != null) burstMat = new Material(sh) { mainTexture = bb };
                 Texture2D cr = Resources.Load<Texture2D>("FX/ground_crack");
                 if (cr != null) { crackMat = new Material(sh); crackMat.mainTexture = cr; }
             }
@@ -529,8 +535,9 @@ namespace BladePath
             Spray(pos, cone, count, 3.5f * Mathf.Lerp(0.9f, 1.4f, Mathf.Clamp01(strength - 0.5f)), 36f);
             // 2) веер вперёд по ходу клинка (длинные тонкие капли)
             Spray(pos, dir, Mathf.RoundToInt(count * 0.4f), 6.5f * Mathf.Lerp(0.9f, 1.3f, Mathf.Clamp01(strength - 0.5f)), 14f);
-            // 3) кровавая взвесь
+            // 3) кровавая взвесь и веер брызг крупным планом (покадровый спрайт из атласа: вылет — разлёт — капли)
             Mist(pos, cone, 10 + Mathf.RoundToInt(10 * strength), 0.9f);
+            BloodBurst(pos, (dir * 0.85f + Vector3.up * 0.3f).normalized, (0.42f + 0.28f * Mathf.Clamp01(strength)) * (kill ? 1.35f : 1f));
             // 4) пятна на земле там, куда долетели капли
             int splats = Mathf.RoundToInt(14 * strength) + (kill ? 18 : 0);
             for (int i = 0; i < splats; i++)
@@ -778,6 +785,66 @@ namespace BladePath
             r.GetPropertyBlock(mpb);
             mpb.SetColor("_Color", new Color(0.06f, 0.05f, 0.045f, 0.8f));
             r.SetPropertyBlock(mpb);
+        }
+
+        // ---- веер брызг при попадании: 4 кадра (лист 2×2) за 0,26 с, плоскость к камере, вылет по экранной проекции удара
+        class Burst { public Transform t; public Renderer r; public float born, size; public Vector3 pos, dir; }
+        readonly List<Burst> bursts = new List<Burst>();
+        static Mesh[] burstFrames;
+        const float BurstLife = 0.26f;
+
+        void BloodBurst(Vector3 pos, Vector3 dir, float size)
+        {
+            if (burstMat == null) return;
+            if (burstFrames == null)
+            {
+                burstFrames = new Mesh[4];
+                for (int i = 0; i < 4; i++)
+                {
+                    float u0 = (i % 2) * 0.5f, v0 = 0.5f - (i / 2) * 0.5f;
+                    Mesh m = new Mesh { name = "BurstFrame" + i };
+                    m.vertices = new[] { new Vector3(-0.5f, -0.5f, 0f), new Vector3(0.5f, -0.5f, 0f), new Vector3(0.5f, 0.5f, 0f), new Vector3(-0.5f, 0.5f, 0f) };
+                    m.uv = new[] { new Vector2(u0, v0), new Vector2(u0 + 0.5f, v0), new Vector2(u0 + 0.5f, v0 + 0.5f), new Vector2(u0, v0 + 0.5f) };
+                    m.triangles = new[] { 0, 2, 1, 0, 3, 2 };
+                    m.RecalculateBounds();
+                    burstFrames[i] = m;
+                }
+            }
+            Burst b = null;
+            for (int i = 0; i < bursts.Count; i++) if (!bursts[i].t.gameObject.activeSelf) { b = bursts[i]; break; }
+            if (b == null && bursts.Count < 4)
+            {
+                GameObject g = new GameObject("BloodBurst");
+                g.AddComponent<MeshFilter>();
+                MeshRenderer mr = g.AddComponent<MeshRenderer>(); mr.sharedMaterial = burstMat;
+                mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; mr.receiveShadows = false;
+                b = new Burst { t = g.transform, r = mr };
+                bursts.Add(b);
+            }
+            if (b == null) { b = bursts[0]; float oldest = b.born; foreach (Burst x in bursts) if (x.born < oldest) { oldest = x.born; b = x; } }
+            b.born = Time.time; b.size = size; b.pos = pos; b.dir = dir.sqrMagnitude > 1e-4f ? dir.normalized : Vector3.right;
+            b.t.gameObject.SetActive(true);
+            PoseBurst(b);
+        }
+
+        void PoseBurst(Burst b)
+        {
+            float age = (Time.time - b.born) / BurstLife;
+            if (age >= 1f) { b.t.gameObject.SetActive(false); return; }
+            int fr = Mathf.Min(3, (int)(age * 4f));
+            b.t.GetComponent<MeshFilter>().sharedMesh = burstFrames[fr];
+            Camera cam = Camera.main;
+            Vector3 f = cam != null ? cam.transform.forward : Vector3.forward;
+            Vector3 r = b.dir - f * Vector3.Dot(b.dir, f);
+            if (r.sqrMagnitude < 1e-4f) r = cam != null ? cam.transform.right : Vector3.right;
+            r.Normalize();
+            Vector3 up = Vector3.Cross(f, r);
+            b.t.rotation = Quaternion.LookRotation(f, up);
+            float s = b.size * (1f + 0.15f * age);
+            b.t.localScale = new Vector3(s, s, 1f);
+            b.t.position = b.pos + r * (0.42f * s) + up * (0.35f * s);   // начало брызг (левый нижний угол кадра) — в точке удара
+            mpb.SetColor("_Color", new Color(0.42f, 0.015f, 0.02f, 0.95f * (age < 0.75f ? 1f : (1f - age) / 0.25f)));
+            b.r.SetPropertyBlock(mpb);
         }
 
         /// <summary>Новый раунд: трещины заделаны.</summary>
@@ -1185,7 +1252,12 @@ namespace BladePath
             float yaw = dir.sqrMagnitude > 1e-4f ? Mathf.Atan2(dir.x, dir.y) * Mathf.Rad2Deg : Random.Range(0f, 360f);
             d.t.position = new Vector3(pos.x, 0.012f + (decalIdx % 7) * 0.0006f, pos.z);
             d.t.rotation = Quaternion.Euler(90f, yaw, 0f);
-            float stretch = dir.sqrMagnitude > 1e-4f ? Random.Range(1.0f, 1.8f) : 1f;
+            // лужа под павшим, вытянутые полосы по ходу брызг (капли улетают дальше), остальное — круглые брызги
+            bool streak = grow <= 0f && dir.sqrMagnitude > 1e-4f && Random.value < 0.5f;
+            Material dm = grow > 0f ? poolMat : streak ? streakMat : splatMat;
+            if (dm != null && d.r.sharedMaterial != dm) d.r.sharedMaterial = dm;
+            float stretch = streak ? Random.Range(1.0f, 1.3f) : dir.sqrMagnitude > 1e-4f ? Random.Range(1.0f, 1.6f) : 1f;
+            if (streak) size *= 1.35f;
             d.size = size; d.grow = grow;
             d.t.localScale = new Vector3(size, size * stretch, 1f) * (grow > 0f ? 0.1f : 1f);
             d.born = Time.unscaledTime + delay; d.life = life;
@@ -1195,6 +1267,7 @@ namespace BladePath
 
         void LateUpdate()
         {
+            for (int i = 0; i < bursts.Count; i++) if (bursts[i].t != null && bursts[i].t.gameObject.activeSelf) PoseBurst(bursts[i]);
             for (int i = 0; i < decals.Count; i++)
             {
                 Decal d = decals[i];
