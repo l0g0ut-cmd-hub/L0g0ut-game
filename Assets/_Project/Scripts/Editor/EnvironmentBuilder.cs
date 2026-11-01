@@ -469,14 +469,15 @@ namespace BladePath.EditorTools
         static void AddProps(Transform env, Look look)
         {
             Transform pr = new GameObject("Props").transform; pr.SetParent(env, false);
-            // пара каменных комаину по бокам ступеней храма, мордами во двор; правый — зеркальная копия (как пара а-ун)
+            // пара каменных комаину по бокам дорожки к ступеням храма, мордами во двор; вынесены вперёд, перед столбом тории —
+            // иначе правый целиком прятался за ним; правый — зеркальная копия (как пара а-ун)
             for (int side = -1; side <= 1; side += 2)
             {
                 float x = side < 0 ? -2.45f : 0.85f;
-                GameObject k = Prop(pr, "Komainu" + side, "komainu.obj", look.komainu, new Vector3(x, -0.075f, 4.15f), 180f + side * 8f, 1f);
+                GameObject k = Prop(pr, "Komainu" + side, "komainu.obj", look.komainu, new Vector3(x, -0.075f, 3.05f), 180f + side * 8f, 1f);
                 if (k == null) continue;
                 if (side > 0) k.transform.localScale = new Vector3(-1f, 1f, 1f);
-                if (look.aoBlob != null) EnvMesh.Decal(pr, "KomainuAO" + side, new Vector3(x, -0.066f, 4.15f), 0f, 0.95f, 0.95f, look.aoBlob);
+                if (look.aoBlob != null) EnvMesh.Decal(pr, "KomainuAO" + side, new Vector3(x, -0.066f, 3.05f), 0f, 0.95f, 0.95f, look.aoBlob);
             }
             // три дзидзо в ряд у левой стены между столбами, лицом во двор; разного роста и чуть вразнобой повёрнуты
             float[] jz = { 0.35f, 0.95f, 1.6f }, jh = { 0.6f, 0.52f, 0.57f }, jy = { 4f, -6f, 9f };
@@ -680,7 +681,7 @@ namespace BladePath.EditorTools
             {
                 float x = -0.8f - 2.8f + i * 1.4f + 0.7f;
                 EnvMesh.Box(d, "String" + i, new Vector3(x, 2.28f, 4.75f), Vector3.zero, new Vector3(0.012f, 0.16f, 0.012f), look.woodDark, 0.2f);
-                GameObject lamp = CharacterVisuals.Part(d, "PaperLamp" + i, PrimitiveType.Sphere, new Vector3(x, 2.05f, 4.75f), new Vector3(0f, 90f, 0f), new Vector3(0.28f, 0.36f, 0.28f), look.chochin != null ? look.chochin : look.paper);
+                GameObject lamp = CharacterVisuals.Part(d, "PaperLamp" + i, PrimitiveType.Sphere, new Vector3(x, 2.05f, 4.75f), new Vector3(0f, 0f, 0f), new Vector3(0.28f, 0.36f, 0.28f), look.chochin != null ? look.chochin : look.paper);
                 AddReflection(lamp.transform, null, 1f, new Color(1f, 0.8f, 0.5f), 0.24f, 1.5f, 0.36f);
                 EnvMesh.Glow(d, "LampHalo" + i, new Vector3(x, 2.05f, 4.6f), 1.0f, look.haloWarm, 0.06f);
                 CharacterVisuals.Part(d, "LampCapT" + i, PrimitiveType.Cylinder, new Vector3(x, 2.25f, 4.75f), Vector3.zero, new Vector3(0.12f, 0.012f, 0.12f), look.woodDark);
@@ -1156,7 +1157,7 @@ namespace BladePath.EditorTools
                 EnvMesh.Box(g, "LanternCord" + side, lp + new Vector3(0f, 0.27f, 0f), Vector3.zero, new Vector3(0.012f, 0.2f, 0.012f), look.woodDark, 0.2f);
                 EnvMesh.Box(g, "LanternCap" + side, lp + new Vector3(0f, 0.19f, 0f), Vector3.zero, new Vector3(0.17f, 0.035f, 0.17f), look.woodDark, 1f);
                 EnvMesh.Box(g, "LanternBase" + side, lp - new Vector3(0f, 0.19f, 0f), Vector3.zero, new Vector3(0.17f, 0.035f, 0.17f), look.woodDark, 1f);
-                CharacterVisuals.Part(g, "Lantern" + side, PrimitiveType.Sphere, lp, new Vector3(0f, 90f, 0f), new Vector3(0.24f, 0.36f, 0.24f), look.chochin != null ? look.chochin : look.paper);
+                CharacterVisuals.Part(g, "Lantern" + side, PrimitiveType.Sphere, lp, new Vector3(0f, 0f, 0f), new Vector3(0.24f, 0.36f, 0.24f), look.chochin != null ? look.chochin : look.paper);
                 EnvMesh.Glow(null, "LanternHalo" + side, lp, 1.1f, look.haloWarm, 0.1f);
             }
             // за воротами дорожку в рощу провожают каменные фонари (ночью — огоньки, уходящие в лес)

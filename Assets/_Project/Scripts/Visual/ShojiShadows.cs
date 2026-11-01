@@ -4,14 +4,17 @@ namespace BladePath
 {
     /// <summary>
     /// Жизнь за сёдзи храма ночью: на светящейся бумаге — тень монаха в сэйдза (чуть дышит), а раз в 25–55 с вдоль
-    /// всех створок неспешно проходит другой монах (8 кадров шага, тень проявляется и тает у краёв). Днём бумага не светится
+    /// всех створок неспешно проходит другой монах (15 кадров цикла шага с плавным перетеканием кадров друг в друга,
+    /// тень проявляется и тает у краёв; у сидящего может остановиться — встаёт, сведя стопы, и кланяется паузой). Днём бумага не светится
     /// изнутри — теней не видно. Тени — наклейки умножения (BladePath/AO) прямо на бумаге; кадр и сила — через MaterialPropertyBlock.
     /// </summary>
     public class ShojiShadows : MonoBehaviour
     {
         public Renderer monk, walker;
-        public float xMin = -4.0f, xMax = 2.4f, speed = 0.42f, stride = 0.0975f;   // stride — путь за кадр (8 кадров ≈ 2 шага, 0,78 м)
-        public int frames = 8;
+        public float xMin = -4.0f, xMax = 2.4f, speed = 0.42f, stride = 0.052f;   // stride — путь за кадр (15 кадров = 2 шага, 0,78 м)
+        public int frames = 15;
+        // лист 8×2: кадры цикла 0…14, ячейка 15 — «стоит, стопы вместе» (для остановки у сидящего)
+        const int Cols = 8, Rows = 2, StandCell = 15;
         public float dir = 1f;
         MaterialPropertyBlock mpb;
         float nextAt, t = -1f, monkSy = 1f, walkStr = 0.66f;
@@ -22,7 +25,8 @@ namespace BladePath
         AudioSource floor;
         static AudioClip[] chirps;
         int lastStep = -1;
-        static readonly int StId = Shader.PropertyToID("_MainTex_ST"), StrId = Shader.PropertyToID("_Strength");
+        static readonly int StId = Shader.PropertyToID("_MainTex_ST"), StrId = Shader.PropertyToID("_Strength"), F2Id = Shader.PropertyToID("_Frame2");
+        float pauseT;
 
         void Start()
         {
@@ -99,18 +103,24 @@ namespace BladePath
                     float u0 = dir > 0f ? (mx - xMin) / len0 : (xMax - mx) / len0;
                     float cyc = frames * stride / len0;
                     pauseU = Mathf.Round(u0 / cyc) * cyc + 1e-4f;
-                    pauseLeft = Random.Range(2f, 3.5f);
+                    pauseLeft = Random.Range(2f, 3.5f); pauseT = 0f;
                 }
             }
             float dur = (xMax - xMin) / speed;
-            if (pauseU > 0f && pauseLeft > 0f && t / dur >= pauseU) { pauseLeft -= Time.deltaTime; t = pauseU * dur; Pose(pauseU); return; }
+            if (pauseU > 0f && pauseLeft > 0f && t / dur >= pauseU)
+            {
+                // остановился: за 0,35 с сводит стопы, перед уходом за 0,35 с снова встаёт в шаг
+                pauseLeft -= Time.deltaTime; pauseT += Time.deltaTime; t = pauseU * dur;
+                Pose(pauseU, Mathf.Clamp01(Mathf.Min(pauseT, pauseLeft) / 0.35f));
+                return;
+            }
             t += Time.deltaTime;
             if (t > dur || !night) { t = -1f; lastStep = -1; walker.enabled = false; nextAt = Time.time + Random.Range(25f, 55f); return; }
             Pose(t / dur);
         }
 
         /// <summary>Поставить идущего в долю пути u (0…1): позиция, разворот по направлению, кадр шага, проявление у краёв.</summary>
-        public void Pose(float u)
+        public void Pose(float u, float stand = 0f)
         {
             if (walker == null) return;
             if (mpb == null) mpb = new MaterialPropertyBlock();
@@ -119,9 +129,13 @@ namespace BladePath
             Vector3 p = w.localPosition; p.x = dir > 0f ? Mathf.Lerp(xMin, xMax, u) : Mathf.Lerp(xMax, xMin, u); w.localPosition = p;
             Vector3 sc = w.localScale; sc.x = Mathf.Abs(sc.x) * (dir > 0f ? 1f : -1f); w.localScale = sc;
             float fade = Mathf.Clamp01(Mathf.Min(u, 1f - u) * len / 0.6f);
-            int frame = (int)(u * len / stride) % frames;
-            // шаг — каждые полцикла (кадры 0 и 4 — стопа встаёт): скрип доски
-            int step = (int)(u * len / stride) / (frames / 2);
+            float fpos = u * len / stride;
+            int frame = (int)fpos % frames;
+            float blend = fpos - Mathf.Floor(fpos);
+            int next = (frame + 1) % frames;
+            if (stand > 0f) { next = StandCell; blend = stand; }
+            // шаг — каждые полцикла (в кадрах 0 и 7,5 пятка встаёт на пол): скрип доски
+            int step = Mathf.FloorToInt(fpos / (frames * 0.5f));
             if (step != lastStep && Application.isPlaying)
             {
                 lastStep = step;
@@ -133,8 +147,10 @@ namespace BladePath
             }
             walker.enabled = true;
             walker.GetPropertyBlock(mpb);
-            float fw = 1f / frames;
-            mpb.SetVector(StId, new Vector4(fw, 1f, frame * fw, 0f));
+            float fw = 1f / Cols, fh = 1f / Rows;
+            // строки листа сверху вниз, а v растёт снизу вверх
+            mpb.SetVector(StId, new Vector4(fw, fh, (frame % Cols) * fw, (Rows - 1 - frame / Cols) * fh));
+            mpb.SetVector(F2Id, new Vector4((next % Cols) * fw, (Rows - 1 - next / Cols) * fh, blend, 0f));
             mpb.SetFloat(StrId, walkStr * fade);
             walker.SetPropertyBlock(mpb);
         }
