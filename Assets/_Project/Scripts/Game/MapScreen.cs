@@ -228,6 +228,17 @@ namespace BladePath
                 if (can) s *= 1f + 0.07f * Mathf.Sin(Time.unscaledTime * 4f + i);
                 if (i == sel) s *= 1.18f;
                 bool known = Known(n);
+                // Focused marker effects use the existing cached UI disc texture:
+                // glowing boss warning, reachable nodes and the hero's current checkpoint.
+                if (known && (can || i == Campaign.At || n.Type == NodeType.Boss) && !n.done)
+                {
+                    float wave = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * (n.Type == NodeType.Boss ? 2.3f : 3.5f) + i * 0.37f);
+                    float reach = can ? 0.12f + wave * 0.08f : 0.08f + wave * 0.05f;
+                    Color halo = n.Type == NodeType.Boss
+                        ? new Color(0.85f, 0.08f, 0.035f, reach)
+                        : new Color(0.92f, 0.58f, 0.2f, reach);
+                    UiKit.Disc(p, s * (0.64f + wave * 0.12f), halo);
+                }
                 int k = !known ? 11 : (n.done && n.Type != NodeType.Start && i != Campaign.At) ? 10 : IconOf(n.Type);
                 if (i == sel && ic != null) { GUI.color = Color.white; GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.75f, p.y - s * 0.5f, s * 1.5f, s), ic, Cell(12)); }
                 GUI.color = !known ? new Color(1f, 1f, 1f, 0.85f) : n.done && i != Campaign.At && n.Type != NodeType.Start ? new Color(0.8f, 0.78f, 0.74f, 0.9f) : Color.white;
