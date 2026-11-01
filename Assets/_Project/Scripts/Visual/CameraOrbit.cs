@@ -54,6 +54,7 @@ namespace BladePath
         float midX, midZ, midVx, midVz;
         FighterController[] fighters;
         readonly HashSet<int> camTouches = new HashSet<int>();
+        readonly List<Touch> touchBuffer = new List<Touch>(2);
         float lastTapTime = -10f;
         Vector2 lastTapPos;
         Vector2 lastMouse;
@@ -93,7 +94,8 @@ namespace BladePath
         void ReadTouches()
         {
             int tc = Input.touchCount;
-            List<Touch> mine = null;
+            List<Touch> mine = touchBuffer;
+            mine.Clear();
             for (int i = 0; i < tc; i++)
             {
                 Touch t = Input.GetTouch(i);
@@ -111,11 +113,10 @@ namespace BladePath
                 if (t.phase == TouchPhase.Ended || t.phase == TouchPhase.Canceled) { camTouches.Remove(t.fingerId); continue; }
                 if (camTouches.Contains(t.fingerId))
                 {
-                    if (mine == null) mine = new List<Touch>(2);
                     mine.Add(t);
                 }
             }
-            if (mine == null) return;
+            if (mine.Count == 0) return;
 
             float h = Mathf.Max(1f, Screen.height);
             if (mine.Count == 1)
