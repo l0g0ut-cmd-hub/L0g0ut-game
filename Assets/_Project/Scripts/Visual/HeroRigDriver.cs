@@ -1256,16 +1256,26 @@ namespace BladePath
         /// <summary>Аналитический двухкостный IK: локоть в плоскости (плечо → цель) со смещением в сторону pole.</summary>
         static void SolveArm(Transform upper, Transform fore, Transform hand, float l1, float l2, Vector3 target, Vector3 pole)
         {
-            if (upper == null || fore == null || hand == null) return;
+            if (upper == null || fore == null || hand == null || l1 <= 1e-5f || l2 <= 1e-5f) return;
             Vector3 s = upper.position;
             Vector3 toT = target - s;
-            float dist = Mathf.Clamp(toT.magnitude, 0.05f, (l1 + l2) * 0.999f);
-            Vector3 dir = toT.sqrMagnitude > 1e-8f ? toT.normalized : Vector3.forward;
+            Vector3 dir = toT.sqrMagnitude > 1e-8f ? toT.normalized : upper.forward;
+            // A two-bone chain cannot reach closer than the difference of its lengths.
+            // Respect both reach limits to avoid impossible elbow positions near the shoulder.
+            float minReach = Mathf.Abs(l1 - l2) + 0.0001f;
+            float maxReach = l1 + l2 - 0.0001f;
+            if (minReach >= maxReach) return;
+            float dist = Mathf.Clamp(toT.magnitude, minReach, maxReach);
 
             float a = (l1 * l1 - l2 * l2 + dist * dist) / (2f * dist);
             float h = Mathf.Sqrt(Mathf.Max(0f, l1 * l1 - a * a));
             Vector3 perp = Vector3.ProjectOnPlane(pole, dir);
             if (perp.sqrMagnitude < 1e-6f) perp = Vector3.ProjectOnPlane(Vector3.down, dir);
+            // Looking straight down makes the down-vector fallback degenerate too.
+            // Preserve the current elbow bend as the preferred stable fallback.
+            if (perp.sqrMagnitude < 1e-6f) perp = Vector3.ProjectOnPlane(fore.position - s, dir);
+            if (perp.sqrMagnitude < 1e-6f) perp = Vector3.ProjectOnPlane(Vector3.right, dir);
+            if (perp.sqrMagnitude < 1e-6f) perp = Vector3.ProjectOnPlane(Vector3.forward, dir);
             perp.Normalize();
 
             Vector3 elbow = s + dir * a + perp * h;
