@@ -476,7 +476,7 @@ namespace BladePath
                 float kt = lvl < 0 ? 0.12f * Mathf.Clamp01(t / LevelAt[0]) : Mathf.Min(1f, (lvl + 1) / 3f);
                 if (lvl >= 0 && lvl < 2 && f.Ki >= KiCost[lvl + 1]) kt += 0.07f * Mathf.Clamp01((t - LevelAt[lvl]) / (LevelAt[lvl + 1] - LevelAt[lvl]));
                 c.kv = Mathf.MoveTowards(c.kv, kt, Time.deltaTime * 1.8f);
-                c.ex = Mathf.MoveTowards(c.ex, lvl >= Max ? 1f : 0f, Time.deltaTime * 3f);
+                c.ex = Mathf.MoveTowards(c.ex, lvl >= Max ? 1f : 0f, Time.deltaTime * (lvl >= Max ? 1.5f : 3f));   // багровый круг проступает, пока выжигается
                 if (lvl > c.level)
                 {
                     c.level = lvl; c.popAt = Time.time;
@@ -501,6 +501,8 @@ namespace BladePath
                         if (Juice.Instance != null) { Juice.Instance.Growl(0.75f); Juice.Instance.Taiko(1.2f, 0.7f); Juice.Instance.ChargePulse(f.transform.position, Crimson, 4.5f); }
                         GroundFlash.SpawnSheet("FX/shock_dust", f.transform.position, 4f, 6.5f, Crimson, 0.7f, 4, 1, 4);
                         GroundFlash.Spawn("FX/rage_ring", f.transform.position, 1.5f, 7.5f, Color.white, 0.6f, 0f);
+                        // круг выжигается в землю: искра → трещины-лучи → кольца и когти → вспышка (16 кадров за 0,7 с)
+                        GroundFlash.SpawnSheet("FX/rage_ignite", f.transform.position, 4.4f, 4.6f, Color.white, 0.7f, 4, 4, 16);
                         GroundFlash.Spawn("FX/rage_cracks", f.transform.position, 3.5f, 4.2f, Color.white, 2.5f, 0f, true);
                         FxSprite re = FxSprite.Spawn("rage_embers", f.transform.position + Vector3.up * 1.3f, 3.0f, 1, 1, 1, 1f, false, 0.9f);
                         if (re != null) { re.grow = 0.5f; re.tint = new Color(1f, 1f, 1f, 0.9f); }
