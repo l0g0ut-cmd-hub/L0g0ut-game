@@ -410,18 +410,18 @@ namespace BladePath
             // линии скорости тушью по краям экрана — выхват, супер-удар, добивание, удар с III ступени накопления
             float sl = 0f;
             if (duel.IaiCued) sl = 0.9f;
-            float ia = Time.unscaledTime - duel.IaiResultAt; if (ia < 0.45f) sl = Mathf.Max(sl, 0.9f * (1f - ia / 0.45f));
+            float slIai = Time.unscaledTime - duel.IaiResultAt; if (slIai < 0.45f) sl = Mathf.Max(sl, 0.9f * (1f - slIai / 0.45f));
             if (duel.SuperActive) sl = Mathf.Max(sl, 0.8f);
             if (duel.DeathblowActive) sl = Mathf.Max(sl, 0.7f);
-            float ra = Time.unscaledTime - ChargeSystem.BigReleaseAt; if (ra < 0.55f) sl = Mathf.Max(sl, 0.85f * (1f - ra / 0.55f));
+            float slRel = Time.unscaledTime - ChargeSystem.BigReleaseAt; if (slRel < 0.55f) sl = Mathf.Max(sl, 0.85f * (1f - slRel / 0.55f));
             Texture2D slt = sl > 0.01f ? UiKit.Tex("UI/speed_lines") : null;
             if (slt != null)
             {
                 int sf = (int)(Time.unscaledTime * 24f) % 4;   // дрожание: 4 варианта по кругу
-                float k = 1.04f + 0.03f * Mathf.Sin(Time.unscaledTime * 40f);
-                Color oc = GUI.color; GUI.color = new Color(1f, 1f, 1f, sl);
-                GUI.DrawTextureWithTexCoords(new Rect(W * 0.5f - W * k * 0.5f, 270f - 540f * k * 0.5f, W * k, 540f * k), slt, new Rect((sf % 2) * 0.5f, 0.5f - (sf / 2) * 0.5f, 0.5f, 0.5f));
-                GUI.color = oc;
+                float slk = 1.04f + 0.03f * Mathf.Sin(Time.unscaledTime * 40f);
+                Color slc = GUI.color; GUI.color = new Color(1f, 1f, 1f, sl);
+                GUI.DrawTextureWithTexCoords(new Rect(W * 0.5f - W * slk * 0.5f, 270f - 540f * slk * 0.5f, W * slk, 540f * slk), slt, new Rect((sf % 2) * 0.5f, 0.5f - (sf / 2) * 0.5f, 0.5f, 0.5f));
+                GUI.color = slc;
             }
 
             // затемнение между раундами
