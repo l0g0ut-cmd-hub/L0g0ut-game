@@ -67,7 +67,10 @@ namespace BladePath
                 Texture2D bst = Resources.Load<Texture2D>("FX/blood_streak"), bpl = Resources.Load<Texture2D>("FX/blood_pool");
                 streakMat = bst != null ? new Material(sh) { mainTexture = bst } : splatMat;
                 poolMat = bpl != null ? new Material(sh) { mainTexture = bpl } : splatMat;
-                Texture2D bb = Resources.Load<Texture2D>("FX/blood_burst");
+                // брызги удара: 16 кадров (атлас 36, исток — левый край по центру), запасные — 4 кадра (исток — левый нижний угол)
+                Texture2D bb = Resources.Load<Texture2D>("FX/blood_spray");
+                spray16 = bb != null;
+                if (bb == null) bb = Resources.Load<Texture2D>("FX/blood_burst");
                 if (bb != null) burstMat = new Material(sh) { mainTexture = bb };
                 Texture2D cr = Resources.Load<Texture2D>("FX/ground_crack");
                 if (cr != null) { crackMat = new Material(sh); crackMat.mainTexture = cr; }
@@ -794,20 +797,23 @@ namespace BladePath
         class Burst { public Transform t; public Renderer r; public float born, size; public Vector3 pos, dir; }
         readonly List<Burst> bursts = new List<Burst>();
         static Mesh[] burstFrames;
-        const float BurstLife = 0.26f;
+        const float BurstLife4 = 0.26f, BurstLife16 = 0.46f;
+        bool spray16;
+        float BurstLife { get { return spray16 ? BurstLife16 : BurstLife4; } }
 
         void BloodBurst(Vector3 pos, Vector3 dir, float size)
         {
             if (burstMat == null) return;
             if (burstFrames == null)
             {
-                burstFrames = new Mesh[4];
-                for (int i = 0; i < 4; i++)
+                int n = spray16 ? 4 : 2;
+                burstFrames = new Mesh[n * n];
+                for (int i = 0; i < n * n; i++)
                 {
-                    float u0 = (i % 2) * 0.5f, v0 = 0.5f - (i / 2) * 0.5f;
+                    float du = 1f / n, u0 = (i % n) * du, v0 = 1f - (i / n + 1) * du;
                     Mesh m = new Mesh { name = "BurstFrame" + i };
                     m.vertices = new[] { new Vector3(-0.5f, -0.5f, 0f), new Vector3(0.5f, -0.5f, 0f), new Vector3(0.5f, 0.5f, 0f), new Vector3(-0.5f, 0.5f, 0f) };
-                    m.uv = new[] { new Vector2(u0, v0), new Vector2(u0 + 0.5f, v0), new Vector2(u0 + 0.5f, v0 + 0.5f), new Vector2(u0, v0 + 0.5f) };
+                    m.uv = new[] { new Vector2(u0, v0), new Vector2(u0 + du, v0), new Vector2(u0 + du, v0 + du), new Vector2(u0, v0 + du) };
                     m.triangles = new[] { 0, 2, 1, 0, 3, 2 };
                     m.RecalculateBounds();
                     burstFrames[i] = m;
@@ -834,7 +840,7 @@ namespace BladePath
         {
             float age = (Time.time - b.born) / BurstLife;
             if (age >= 1f) { b.t.gameObject.SetActive(false); return; }
-            int fr = Mathf.Min(3, (int)(age * 4f));
+            int fr = Mathf.Min(burstFrames.Length - 1, (int)(age * burstFrames.Length));
             b.t.GetComponent<MeshFilter>().sharedMesh = burstFrames[fr];
             Camera cam = Camera.main;
             Vector3 f = cam != null ? cam.transform.forward : Vector3.forward;
@@ -843,10 +849,11 @@ namespace BladePath
             r.Normalize();
             Vector3 up = Vector3.Cross(f, r);
             b.t.rotation = Quaternion.LookRotation(f, up);
-            float s = b.size * (1f + 0.15f * age);
+            float s = b.size * (spray16 ? 1.25f : 1f) * (1f + 0.15f * age);
             b.t.localScale = new Vector3(s, s, 1f);
-            b.t.position = b.pos + r * (0.42f * s) + up * (0.35f * s);   // начало брызг (левый нижний угол кадра) — в точке удара
-            mpb.SetColor("_Color", new Color(0.42f, 0.015f, 0.02f, 0.95f * (age < 0.75f ? 1f : (1f - age) / 0.25f)));
+            // начало брызг — в точке удара: у 16-кадровых исток у левого края по центру, у старых — в левом нижнем углу
+            b.t.position = spray16 ? b.pos + r * (0.47f * s) + up * (0.02f * s) : b.pos + r * (0.42f * s) + up * (0.35f * s);
+            mpb.SetColor("_Color", new Color(0.42f, 0.015f, 0.02f, 0.95f * (age < (spray16 ? 0.85f : 0.75f) ? 1f : (1f - age) / (spray16 ? 0.15f : 0.25f))));
             b.r.SetPropertyBlock(mpb);
         }
 
