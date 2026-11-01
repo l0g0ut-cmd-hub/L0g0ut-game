@@ -24,6 +24,7 @@ namespace BladePath
         ParticleSystem[] fires;
         bool wasRain;
         bool firesFound;
+        float nextWindParticleAt;
 
         void Update()
         {
@@ -53,7 +54,11 @@ namespace BladePath
                 }
             }
             if (lightSource != null && rain) lightSource.intensity *= 0.85f;
-            if (fires != null)
+            // Updating each particle module every rendered frame is unnecessary;
+            // a 10 Hz wind update stays smooth for smoke and flying embers.
+            if (fires != null && Time.unscaledTime >= nextWindParticleAt)
+            {
+                nextWindParticleAt = Time.unscaledTime + 0.1f;
                 foreach (ParticleSystem ps in fires)
                 {
                     if (ps == null) continue;
@@ -63,6 +68,7 @@ namespace BladePath
                     Vector3 w = WindGusts.Dir * (g * 2.4f);
                     f.x = new ParticleSystem.MinMaxCurve(w.x); f.y = new ParticleSystem.MinMaxCurve(0f); f.z = new ParticleSystem.MinMaxCurve(w.z);
                 }
+            }
         }
     }
 }
