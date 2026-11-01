@@ -1050,6 +1050,12 @@ namespace BladePath
             lr.widthCurve = new AnimationCurve(new Keyframe(0f, 0f), new Keyframe(0.5f, 0.05f + 0.03f * strength), new Keyframe(1f, 0f));
             lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             g.AddComponent<FadeLine>().Init(lr, new Color(1f, 0.9f, 0.85f), 0.16f);
+            // Animated gold sparks for strong contacts; no external PNG required.
+            if (DuelManager.Gfx == 1 && strength >= 1.1f)
+            {
+                FxSprite burst = FxSprite.Spawn("sparks_gold", p, 0.45f, 6, 1, 6, 24f, false, 0.25f);
+                if (burst != null) burst.tint = new Color(1f, 0.7f, 0.35f, 0.7f);
+            }
         }
 
         /// <summary>Заряд супер-удара: воронка светящихся частиц втягивается в бойца.</summary>
