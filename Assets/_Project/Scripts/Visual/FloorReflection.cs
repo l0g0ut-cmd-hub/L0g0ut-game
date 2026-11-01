@@ -22,6 +22,9 @@ namespace BladePath
         static Mesh quad;
         MeshRenderer rend;
         MaterialPropertyBlock mpb;
+        Camera cachedCamera;
+        float nextCameraLookup;
+        float wetBlend;
 
         static Material Mat()
         {
@@ -83,11 +86,17 @@ namespace BladePath
             rend.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             rend.receiveShadows = false;
             mpb = new MaterialPropertyBlock();
+            wetBlend = 1f;
         }
 
         void LateUpdate()
         {
-            Camera c = Camera.main;
+            if (cachedCamera == null && Time.unscaledTime >= nextCameraLookup)
+            {
+                cachedCamera = Camera.main;
+                nextCameraLookup = Time.unscaledTime + 0.5f;
+            }
+            Camera c = cachedCamera;
             if (c == null || source == null || rend == null) return;
             Vector3 L = source.position;
             float hgt = L.y - floorY;
@@ -109,8 +118,10 @@ namespace BladePath
             transform.rotation = Quaternion.LookRotation(Vector3.down, toCam);   // +Y квада (v↑) — к камере
             transform.localScale = new Vector3(width * Mathf.Lerp(1f, 0.7f, Mathf.InverseLerp(0.6f, 7f, graze)), len, 1f);
             float li = lightRef != null && baseIntensity > 0f ? lightRef.intensity / baseIntensity : 1f;
-            float wet = Weather.Instance != null && Weather.Instance.Raining ? 1.5f : (Weather.Instance != null && Weather.Instance.Snowing ? 0.35f : 1f);   // под снегом камень матовый
-            Color col = color * (0.5f * strength * li * wet); col.a = 0.5f;
+            float targetWet = Weather.Instance != null && Weather.Instance.Raining ? 1.5f : (Weather.Instance != null && Weather.Instance.Snowing ? 0.35f : 1f);
+            // Reflections fade in/out with wet stone rather than popping on weather transitions.
+            wetBlend = Mathf.MoveTowards(wetBlend, targetWet, Time.deltaTime * 0.8f);
+            Color col = color * (0.5f * strength * li * wetBlend); col.a = 0.5f;
             mpb.SetColor("_TintColor", col);
             rend.SetPropertyBlock(mpb);
         }
