@@ -252,6 +252,14 @@ namespace BladePath
                 return;
             }
 
+            // Before selecting a destination, preview available next roads subtly.
+            if (previewPath.Count <= 1 && Campaign.Steps > 0 && Campaign.Current.done && !Campaign.InFight)
+            {
+                foreach (int next in Campaign.Current.next)
+                    DrawFootprintsOnRoad(Campaign.At, next,
+                        new Color(0.88f, 0.79f, 0.48f, 0.48f), 1f, false);
+            }
+
             for (int i = 1; i < previewPath.Count; i++)
             {
                 bool withinDie = i <= Campaign.Steps;
@@ -376,6 +384,16 @@ namespace BladePath
                     GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), ic, Cell(k));
                 else UiKit.Disc(p, s * 0.45f, can ? Gold : Dim);
                 GUI.color = oc;
+                int routeIndex = previewPath.IndexOf(i);
+                if (routeIndex > 0)
+                {
+                    Vector2 chip = p + new Vector2(s * 0.36f, -s * 0.35f);
+                    bool inRange = routeIndex <= Campaign.Steps;
+                    Color chipColor = inRange ? new Color(0.20f, 0.38f, 0.22f, 0.95f) : new Color(0.46f, 0.12f, 0.10f, 0.94f);
+                    UiKit.Disc(chip, 12f, chipColor);
+                    UiKit.Text(new Rect(chip.x - 12f, chip.y - 12f, 24f, 24f),
+                        routeIndex.ToString(), 12f, Ink, TextAnchor.MiddleCenter);
+                }
                 if (!interactive) continue;
                 Rect hit = new Rect(p.x - 34f, p.y - 34f, 68f, 68f);
                 if (GUI.Button(hit, GUIContent.none, GUIStyle.none))
@@ -497,7 +515,7 @@ namespace BladePath
             }
             else
             {
-                string tip = Campaign.InFight ? "Бой ещё не окончен." : !Campaign.Current.done ? "Ты на месте." : Campaign.Steps > 0 ? "Коснись узла на дороге — и ещё раз, чтобы идти. Бой обрывает ход." : "Брось кость пути, чтобы идти дальше.";
+                string tip = Campaign.InFight ? "Бой ещё не окончен." : !Campaign.Current.done ? "Ты на месте." : Campaign.Steps > 0 ? "Выбери цель. Светлые следы — доступные шаги, красные — сверх броска." : "Брось кость пути, чтобы идти дальше.";
                 foreach (string line in Wrap(tip, 34)) { UiKit.Text(new Rect(x, y, w, 17f), line, 12f, Dim, TextAnchor.MiddleLeft, false); y += 17f; }
             }
             if (Btn(new Rect(x, 540f - 112f, w, 44f), "СНАРЯЖЕНИЕ" + (Profile.Points > 0 ? " (+" + Profile.Points + ")" : ""), interactive)) InventoryScreen.Show(0);
