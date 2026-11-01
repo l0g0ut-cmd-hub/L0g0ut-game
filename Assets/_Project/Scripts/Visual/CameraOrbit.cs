@@ -265,7 +265,14 @@ namespace BladePath
             }
             if (shakeAmp > 0.0005f)
             {
-                pos += Random.insideUnitSphere * shakeAmp;
+                // Smooth camera impulse: noisy handheld impact rather than
+                // frame-to-frame random jumps that feel harsher at low FPS.
+                float shakeTime = Time.unscaledTime * 31f;
+                Vector3 impulse = new Vector3(
+                    Mathf.PerlinNoise(shakeTime, 17.3f) - 0.5f,
+                    Mathf.PerlinNoise(9.1f, shakeTime) - 0.5f,
+                    Mathf.PerlinNoise(shakeTime, 41.2f) - 0.5f) * (2f * shakeAmp);
+                pos += impulse;
                 shakeAmp *= Mathf.Exp(-14f * Time.unscaledDeltaTime);
             }
             transform.position = pos;
