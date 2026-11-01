@@ -263,6 +263,7 @@ namespace BladePath
             if (player != null) { player.ResetFighter(); hp[player] = maxHp; hpTrail[player] = maxHp; lastSwing[player] = -1; }
             if (enemy != null) { enemy.ResetFighter(); hp[enemy] = MaxHp(enemy); hpTrail[enemy] = MaxHp(enemy); lastSwing[enemy] = -1; }
             Popups.Clear();
+            if (Juice.Instance != null) Juice.Instance.ClearCracks();
             combo.Clear(); comboTime.Clear(); counterUntil.Clear(); PerilAt.Clear(); perilSwing.Clear(); jumpedSweep.Clear(); sweepJumpAt.Clear(); DeathblowAt = -10f;
             Enraged = false;
             ApplyStage();   // скорость врага к базовой ступени (сброс ярости)
@@ -427,6 +428,7 @@ namespace BladePath
                 dir = d > 1e-3f ? dir / d : a.transform.forward;
                 SuperLanded = d < 3.2f && !t.Dead;
                 Vector3 end = SuperLanded ? t.transform.position + dir * 1.0f : a.transform.position + dir * Mathf.Min(2.2f, d - 0.8f);
+                if (SuperLanded && Juice.Instance != null) Juice.Instance.GroundCrack(t.transform.position, 1.9f);   // удар духа раскалывает камень
                 a.Teleport(end);
                 if (a.weapon != null)
                 {
@@ -608,6 +610,7 @@ namespace BladePath
                 {
                     if (db.plunge)
                     {
+                        Juice.Instance.GroundCrack(t.transform.position, 1.5f);   // клинок до земли: камень под жертвой трескается
                         // клинок сверху в ключицу: кровь бьёт вверх из раны, к атакующему
                         Juice.Instance.OnHit(hit, Vector3.up, (Vector3.up * 0.8f - dir * 0.45f).normalized * 4.5f, 1.2f, false, false, torso);
                         Juice.Instance.StabSound();

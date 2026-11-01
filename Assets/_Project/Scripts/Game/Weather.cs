@@ -48,7 +48,8 @@ namespace BladePath
         float snowK, nextBreathAt;
         static readonly int SnowId = Shader.PropertyToID("_BP_Snow");
 
-        ParticleSystem rain, splash, ripples;
+        ParticleSystem rain, splash, ripples, crowns;
+        Transform bolt; Material boltMat;
         AudioSource rainAudio, thunderAudio;
         AudioClip thunder;
         Light moon;
@@ -249,7 +250,7 @@ namespace BladePath
         {
             if (rain == null) Build();
             var re = rain.emission; re.rateOverTime = DuelManager.Gfx == 1 ? 700f : 300f;
-            rain.Play(); splash.Play(); if (ripples != null) ripples.Play();
+            rain.Play(); splash.Play(); if (ripples != null) ripples.Play(); if (crowns != null) crowns.Play();
             if (rainAudio != null && !rainAudio.isPlaying) rainAudio.Play();
             RenderSettings.fogDensity = fogDensBase * 1.3f;
             Eaves(true);
@@ -262,6 +263,8 @@ namespace BladePath
         {
             if (rain != null) { rain.Stop(); splash.Stop(); }
             if (ripples != null) ripples.Stop();
+            if (crowns != null) crowns.Stop();
+            if (bolt != null) bolt.gameObject.SetActive(false);
             if (rainAudio != null) rainAudio.Stop();
             RenderSettings.fogDensity = fogDensBase;
             Eaves(false);
@@ -552,9 +555,50 @@ namespace BladePath
                        new GradientAlphaKey[] { new GradientAlphaKey(0.9f, 0f), new GradientAlphaKey(0.5f, 0.4f), new GradientAlphaKey(0f, 1f) });
             rc.color = rg;
             var rr = rp.GetComponent<ParticleSystemRenderer>();
-            Material rmat = new Material(sh); rmat.mainTexture = SoftSprites.Ring;
+            Texture2D rpt = Resources.Load<Texture2D>("FX/ripple");   // несколько расходящихся колец (атлас), а не одно ровное
+            Material rmat = new Material(sh); rmat.mainTexture = rpt != null ? rpt : SoftSprites.Ring;
             rr.material = rmat; rr.renderMode = ParticleSystemRenderMode.HorizontalBillboard;
             rr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; rr.receiveShadows = false;
+
+            // «коронки» брызг: капля бьёт в лужу и на миг встаёт венчик (стоячий спрайт из атласа)
+            Texture2D crt = Resources.Load<Texture2D>("FX/splash_crown");
+            if (crt != null)
+            {
+                GameObject cg = new GameObject("RainCrowns");
+                cg.transform.position = new Vector3(0f, 0.045f, 0.3f);
+                cg.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+                crowns = cg.AddComponent<ParticleSystem>();
+                crowns.Stop();
+                var cm = crowns.main;
+                cm.loop = true; cm.startLifetime = new ParticleSystem.MinMaxCurve(0.12f, 0.2f); cm.startSpeed = 0f;
+                cm.startSize = new ParticleSystem.MinMaxCurve(0.07f, 0.13f);
+                cm.startColor = new Color(0.78f, 0.82f, 0.9f, 0.55f);
+                cm.maxParticles = 80; cm.simulationSpace = ParticleSystemSimulationSpace.World;
+                var ce = crowns.emission; ce.rateOverTime = 110f;
+                var cs = crowns.shape; cs.shapeType = ParticleSystemShapeType.Box; cs.scale = new Vector3(8f, 6f, 0.01f);
+                var csz = crowns.sizeOverLifetime; csz.enabled = true;
+                csz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.55f), new Keyframe(1f, 1.1f)));
+                var cc = crowns.colorOverLifetime; cc.enabled = true;
+                Gradient cgr = new Gradient();
+                cgr.SetKeys(new GradientColorKey[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                            new GradientAlphaKey[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0.8f, 0.5f), new GradientAlphaKey(0f, 1f) });
+                cc.color = cgr;
+                var cr = cg.GetComponent<ParticleSystemRenderer>();
+                Material cmat = new Material(sh); cmat.mainTexture = crt;
+                cr.material = cmat; cr.renderMode = ParticleSystemRenderMode.VerticalBillboard;
+                cr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; cr.receiveShadows = false;
+            }
+            // молния в небе: ветвистый разряд (атлас) на миг вспыхивает над лесом вместе со светом
+            Texture2D bt = Resources.Load<Texture2D>("FX/lightning");
+            if (bt != null)
+            {
+                GameObject bg = new GameObject("LightningBolt");
+                bg.AddComponent<MeshFilter>().sharedMesh = BoltQuad();
+                boltMat = new Material(sh) { name = "Lightning", mainTexture = bt, renderQueue = 2600 };
+                MeshRenderer br = bg.AddComponent<MeshRenderer>(); br.sharedMaterial = boltMat;
+                br.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; br.receiveShadows = false;
+                bolt = bg.transform; bg.SetActive(false);
+            }
 
             rainAudio = gameObject.AddComponent<AudioSource>();
             rainAudio.clip = RainClip(); rainAudio.loop = true; rainAudio.volume = 0.35f; rainAudio.spatialBlend = 0f;
@@ -606,6 +650,7 @@ namespace BladePath
             {
                 flashT = Time.unscaledTime;
                 nextFlashAt = Time.time + Random.Range(7f, 18f);
+                PlaceBolt();
                 thunderAt = Time.unscaledTime + Random.Range(0.3f, 1.8f);
             }
             if (thunderAt > 0f && Time.unscaledTime >= thunderAt)
@@ -618,8 +663,40 @@ namespace BladePath
             float f = 0f;
             if (t < 0.6f) f = Mathf.Max(Spike(t, 0f, 0.07f), 0.7f * Spike(t, 0.16f, 0.1f), 0.45f * Spike(t, 0.32f, 0.25f));
             if (moon != null) moon.intensity = moonBase * (0.85f + 3.5f * f);
+            if (bolt != null)
+            {
+                bool on = t < 0.6f && f > 0.02f;
+                if (bolt.gameObject.activeSelf != on) bolt.gameObject.SetActive(on);
+                if (on && boltMat != null) boltMat.color = new Color(0.85f, 0.9f, 1f, Mathf.Clamp01(f * 1.6f));
+                if (on) { Camera cm = Camera.main; if (cm != null) { Vector3 to = cm.transform.position - bolt.position; to.y = 0f; if (to.sqrMagnitude > 1e-3f) bolt.rotation = Quaternion.LookRotation(-to.normalized, Vector3.up); } }
+            }
             RenderSettings.ambientLight = ambBase * (0.95f + 2.5f * f);
             if (skyMat != null && skyMat.HasProperty("_Exposure")) skyMat.SetFloat("_Exposure", skyExpBase * (0.8f + 4f * f));
+        }
+
+        /// <summary>Молния — далеко за стенами, по ту сторону двора от камеры, в пределах её обзора (±35°), низ — за кронами.</summary>
+        void PlaceBolt()
+        {
+            if (bolt == null) return;
+            Camera cm = Camera.main;
+            Vector3 fwd = cm != null ? cm.transform.forward : Vector3.forward; fwd.y = 0f;
+            if (fwd.sqrMagnitude < 1e-3f) fwd = Vector3.forward;
+            fwd = Quaternion.Euler(0f, Random.Range(-35f, 35f), 0f) * fwd.normalized;
+            Vector3 c = cm != null ? cm.transform.position : Vector3.zero; c.y = 0f;
+            float s = Random.Range(0.85f, 1.2f);
+            bolt.position = c + fwd * Random.Range(34f, 44f) + Vector3.up * 5f;
+            bolt.localScale = new Vector3(13f * s * (Random.value < 0.5f ? 1f : -1f), 26f * s, 1f);
+        }
+
+        /// <summary>Квад молнии: низ в начале координат (растёт вверх), лицом к −Z.</summary>
+        static Mesh BoltQuad()
+        {
+            Mesh m = new Mesh { name = "BoltQuad" };
+            m.vertices = new[] { new Vector3(-0.5f, 0f, 0f), new Vector3(0.5f, 0f, 0f), new Vector3(0.5f, 1f, 0f), new Vector3(-0.5f, 1f, 0f) };
+            m.uv = new[] { new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(0f, 1f) };
+            m.triangles = new[] { 0, 2, 1, 0, 3, 2 };
+            m.RecalculateNormals(); m.RecalculateBounds();
+            return m;
         }
 
         static float Spike(float t, float at, float len) { float u = (t - at) / len; return u < 0f || u > 1f ? 0f : (1f - u) * (1f - u); }

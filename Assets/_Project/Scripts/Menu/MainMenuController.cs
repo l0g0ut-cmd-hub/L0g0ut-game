@@ -236,6 +236,9 @@ namespace BladePath
             UiKit.Rect(new Rect(box.x - 2f, box.y - 2f, box.width + 4f, box.height + 4f), gold * 0.8f);
             UiKit.Rect(box, new Color(0.06f, 0.05f, 0.05f, 0.97f));
             UiKit.Paper(box, new Color(0.2f, 0.16f, 0.12f, 0.55f));   // фактура старой бумаги поверх тёмной подложки
+            UiKit.Corners(box, 58f);   // резные уголки чёрного лака с золотом
+            Texture2D br = UiKit.Tex("UI/sakura_branch");
+            if (br != null) { Color oc = GUI.color; GUI.color = new Color(1f, 1f, 1f, 0.95f); GUI.DrawTextureWithTexCoords(new Rect(box.xMax - 150f, box.y - 34f, 190f, 190f), br, new Rect(1f, 0f, -1f, 1f)); GUI.color = oc; }   // ветка сакуры с правого угла
             UiKit.Text(new Rect(box.x, box.y + 10f, box.width, 44f), "НАСТРОЙКИ", 32f, gold);
 
             string[] labels =

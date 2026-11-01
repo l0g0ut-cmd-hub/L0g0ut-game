@@ -73,6 +73,32 @@ namespace BladePath
             GUI.color = o;
         }
 
+        /// <summary>Резные уголки рамки (чёрный лак с золотом, Resources/UI/corner) по четырём углам, чуть наружу.</summary>
+        public static void Corners(Rect r, float size, float alpha = 1f)
+        {
+            Texture2D t = Tex("UI/corner");
+            if (t == null) return;
+            Color o = GUI.color; GUI.color = new Color(1f, 1f, 1f, alpha);
+            float s = size, k = size * 0.16f;
+            GUI.DrawTextureWithTexCoords(new Rect(r.x - k, r.y - k, s, s), t, new Rect(0f, 0f, 1f, 1f));
+            GUI.DrawTextureWithTexCoords(new Rect(r.xMax - s + k, r.y - k, s, s), t, new Rect(1f, 0f, -1f, 1f));
+            GUI.DrawTextureWithTexCoords(new Rect(r.x - k, r.yMax - s + k, s, s), t, new Rect(0f, 1f, 1f, -1f));
+            GUI.DrawTextureWithTexCoords(new Rect(r.xMax - s + k, r.yMax - s + k, s, s), t, new Rect(1f, 1f, -1f, -1f));
+            GUI.color = o;
+        }
+
+        /// <summary>Знак тушью (белая маска, цвет — оттенком) высотой h по центру c; reveal — кисть проводит слева направо.</summary>
+        public static void Ink(string tex, Vector2 c, float h, Color col, float reveal = 1f)
+        {
+            Texture2D t = Tex(tex);
+            if (t == null || col.a <= 0.01f || reveal <= 0.001f) return;
+            float w = h * t.width / Mathf.Max(1f, t.height);
+            reveal = 1f - (1f - reveal) * (1f - reveal);
+            Color o = GUI.color; GUI.color = col;
+            GUI.DrawTextureWithTexCoords(new Rect(c.x - w * 0.5f, c.y - h * 0.5f, w * reveal, h), t, new Rect(0f, 0f, reveal, 1f));
+            GUI.color = o;
+        }
+
         public static void Rect(Rect r, Color c) { Init(); Color o = GUI.color; GUI.color = c; GUI.DrawTexture(r, white); GUI.color = o; }
 
         public static void Disc(Vector2 center, float radius, Color c)

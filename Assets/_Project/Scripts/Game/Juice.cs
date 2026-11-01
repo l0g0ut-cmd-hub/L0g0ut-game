@@ -19,7 +19,7 @@ namespace BladePath
         ParticleSystem footFx;
         ParticleSystem petals;
         AudioSource ambient, crickets;
-        Material fxMat, softMat, splatMat, fogMat;
+        Material fxMat, softMat, splatMat, fogMat, dustMat, crackMat;
         const int MaxDecals = 220;
         readonly List<Decal> decals = new List<Decal>();
         int decalIdx;
@@ -60,6 +60,10 @@ namespace BladePath
                 softMat = new Material(sh); softMat.mainTexture = SoftSprites.Disc;
                 splatMat = new Material(sh); Texture2D bs = Resources.Load<Texture2D>("FX/blood_splat"); splatMat.mainTexture = bs != null ? bs : SoftSprites.Splat;
                 fogMat = new Material(sh); fogMat.mainTexture = SoftSprites.Fog;
+                Texture2D dp = Resources.Load<Texture2D>("FX/dust_puff");   // клубы пыли из атласа (фото-облачко)
+                dustMat = new Material(sh); dustMat.mainTexture = dp != null ? dp : SoftSprites.Fog;
+                Texture2D cr = Resources.Load<Texture2D>("FX/ground_crack");
+                if (cr != null) { crackMat = new Material(sh); crackMat.mainTexture = cr; }
             }
             mpb = new MaterialPropertyBlock();
         }
@@ -744,9 +748,40 @@ namespace BladePath
             col.color = gr;
             var sz = ps.sizeOverLifetime; sz.enabled = true;
             sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.7f), new Keyframe(1f, 1.3f)));
-            g.GetComponent<ParticleSystemRenderer>().material = fogMat != null ? fogMat : softMat;
+            main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+            g.GetComponent<ParticleSystemRenderer>().material = dustMat != null ? dustMat : (fogMat != null ? fogMat : softMat);
             ps.Play();
         }
+
+        // трещины в камне под сокрушительным ударом (добивание сверху, удар духа): тёмная паутина трещин, держится до конца раунда
+        readonly List<Transform> cracks = new List<Transform>();
+        int crackIdx;
+        public void GroundCrack(Vector3 pos, float size)
+        {
+            if (crackMat == null) return;
+            Transform t;
+            if (cracks.Count < 3)
+            {
+                GameObject q = new GameObject("GroundCrack");
+                q.AddComponent<MeshFilter>().sharedMesh = QuadMesh();
+                MeshRenderer rr = q.AddComponent<MeshRenderer>();
+                rr.sharedMaterial = crackMat;
+                rr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; rr.receiveShadows = false;
+                t = q.transform; cracks.Add(t);
+            }
+            else { crackIdx = (crackIdx + 1) % cracks.Count; t = cracks[crackIdx]; }
+            t.gameObject.SetActive(true);
+            t.position = new Vector3(pos.x, 0.0105f + cracks.IndexOf(t) * 0.0004f, pos.z);
+            t.rotation = Quaternion.Euler(90f, Random.Range(0f, 360f), 0f);
+            t.localScale = Vector3.one * size;
+            Renderer r = t.GetComponent<Renderer>();
+            r.GetPropertyBlock(mpb);
+            mpb.SetColor("_Color", new Color(0.06f, 0.05f, 0.045f, 0.8f));
+            r.SetPropertyBlock(mpb);
+        }
+
+        /// <summary>Новый раунд: трещины заделаны.</summary>
+        public void ClearCracks() { for (int i = 0; i < cracks.Count; i++) if (cracks[i] != null) cracks[i].gameObject.SetActive(false); }
 
         void Mist(Vector3 pos, Vector3 dir, int count, float life)
         {
@@ -1011,6 +1046,7 @@ namespace BladePath
         }
 
         Material addMat, glowMat, starMat, ringMat;
+        Texture2D sparkTex;
         Transform sparkFloor;
 
         Material Additive(ref Material m, Texture2D tex)
@@ -1028,7 +1064,12 @@ namespace BladePath
         {
             // ядро — гауссово пятно без края (диск с краем читается как «белая тарелка»), блик — тонкие лучи крупнее ядра
             Burst1(pos, size, c, life, Additive(ref glowMat, SoftSprites.Fog), Random.Range(0f, 360f));
-            if (glint) Burst1(pos, size * 2.6f, Color.Lerp(c, Color.white, 0.5f), life * 1.4f, Additive(ref starMat, SoftSprites.Star), Random.Range(-12f, 12f));
+            if (glint)
+            {
+                // сноп искр из атласа (лучи разной длины), а не ровный крест-звезда
+                if (sparkTex == null) { sparkTex = Resources.Load<Texture2D>("FX/spark_burst"); if (sparkTex == null) sparkTex = SoftSprites.Star; }
+                Burst1(pos, size * 3.2f, Color.Lerp(c, Color.white, 0.5f), life * 1.5f, Additive(ref starMat, sparkTex), Random.Range(0f, 360f));
+            }
         }
 
         void Shockwave(Vector3 pos, float size, Color c, float life)

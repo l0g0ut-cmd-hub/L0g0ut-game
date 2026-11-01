@@ -48,6 +48,10 @@ namespace BladePath
             Shader sh = Shader.Find("Standard");
             Material fur = new Material(sh) { name = "CatFur", color = new Color(0.5f, 0.29f, 0.13f) }; fur.SetFloat("_Glossiness", 0.12f);
             Material white = new Material(sh) { name = "CatWhite", color = new Color(0.78f, 0.75f, 0.7f) }; white.SetFloat("_Glossiness", 0.1f);
+            // настоящий мех из атласа: рыжий полосатый и белый (полосы идут поперёк спины — v вдоль хребта)
+            Texture2D furT = Resources.Load<Texture2D>("FX/cat_fur_ginger"), whiteT = Resources.Load<Texture2D>("FX/cat_fur_white");
+            if (furT != null) { fur.mainTexture = furT; fur.color = new Color(0.6f, 0.56f, 0.56f); fur.mainTextureScale = new Vector2(1f, 2f); }
+            if (whiteT != null) { white.mainTexture = whiteT; white.color = new Color(0.86f, 0.83f, 0.8f); }
             Material dark = new Material(sh) { name = "CatDark", color = new Color(0.12f, 0.06f, 0.05f) }; dark.SetFloat("_Glossiness", 0.3f);
             Material pink = new Material(sh) { name = "CatPink", color = new Color(0.55f, 0.32f, 0.3f) };
             Material eye = new Material(sh) { name = "CatEye", color = new Color(0.45f, 0.42f, 0.1f) };
@@ -130,6 +134,13 @@ namespace BladePath
             bodyMesh = new Mesh { name = "CatBody" };
             bodyMesh.MarkDynamic();
             bodyMesh.vertices = bodyV;
+            // развёртка: v — вдоль хребта (полосы поперёк спины), u — вокруг тела зеркально (1→0→1), без шва на стыке колец
+            Vector2[] uv = new Vector2[bodyV.Length];
+            for (int r = 0; r < Rings; r++)
+                for (int k = 0; k < Sides; k++)
+                    uv[r * Sides + k] = new Vector2(Mathf.Abs(k / (float)Sides * 2f - 1f) * 0.5f, r / (float)(Rings - 1) * 1.5f);
+            uv[capA] = new Vector2(0.25f, 0f); uv[capB] = new Vector2(0.25f, 1.5f);
+            bodyMesh.uv = uv;
             bodyMesh.SetTriangles(t, 0);
             GameObject g = new GameObject("Body");
             g.transform.SetParent(root, false);

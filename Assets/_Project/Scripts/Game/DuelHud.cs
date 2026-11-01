@@ -211,6 +211,8 @@ namespace BladePath
                     if (g.z > 0f)
                     {
                         float pop = 1f + 0.18f * Mathf.Max(0f, 0.22f - da) / 0.22f;
+                        // косой мазок туши через точку удара — кисть «рассекает» кадр за 0,12 с, тёмно-багровый, тает за секунду
+                        if (da < 1.2f) UiKit.Ink("FX/ink_slash", new Vector2(g.x / UiKit.Scale, (Screen.height - g.y) / UiKit.Scale), 330f, new Color(0.5f, 0.03f, 0.03f, 0.85f * Mathf.Clamp01((1.2f - da) / 0.6f)), Mathf.Clamp01(da / 0.12f));
                         DrawBrush("UI/deathblow", new Vector2(g.x / UiKit.Scale, (Screen.height - g.y) / UiKit.Scale - 70f), 170f * pop, Mathf.Clamp01((1.9f - da) / 0.45f), Mathf.Clamp01(da / 0.22f));
                     }
                 }
@@ -242,7 +244,7 @@ namespace BladePath
                     float reveal = Mathf.Clamp01(st / 0.22f);
                     Color glow = mine ? new Color(0.45f, 0.8f, 1f) : new Color(0.85f, 0.45f, 1f);
                     UiKit.Rect(new Rect(0f, 228f, W, 74f), new Color(glow.r * 0.12f, glow.g * 0.08f, glow.b * 0.15f, 0.45f * k));
-                    DrawBrush("UI/brush_stroke", new Vector2(W * 0.5f, 265f), 150f, 0.95f * k, reveal);
+                    DrawBrush(mine ? "UI/brush_stroke" : "UI/brush_stroke_red", new Vector2(W * 0.5f, 265f), 150f, 0.95f * k, reveal);   // удар духа врага — багровым мазком
                     float ta = Mathf.Clamp01((st - 0.12f) / 0.12f);
                     UiKit.Text(new Rect(0f, 222f, W, 86f), "УДАР ДУХА", 60f * (1f + 0.25f * (1f - ta)), new Color(Mathf.Lerp(1f, glow.r, 0.35f), Mathf.Lerp(1f, glow.g, 0.35f), Mathf.Lerp(1f, glow.b, 0.35f), ta));
                 }
@@ -299,9 +301,25 @@ namespace BladePath
                     }
                 }
                 float t = duel.StateTime / duel.IntroLength;
-                float a = t < 0.75f ? 1f : Mathf.Clamp01((1f - t) * 4f);
-                float sc = 1f + (1f - Mathf.Clamp01(t * 3f)) * 0.8f;
-                UiKit.Text(new Rect(cx - 300f, 150f, 600f, 110f), "БОЙ!", 78f * sc, new Color(Gold.r, Gold.g, Gold.b, a));
+                // первая половина: номер раунда тушью (壱 弐 参) в багровом круге энсо; вторая — 始 («начало») кистью за «БОЙ!»
+                const float split = 0.5f;
+                Vector2 rc = new Vector2(cx, 205f);
+                if (t < split)
+                {
+                    float rAl = Mathf.Clamp01(t / 0.06f) * Mathf.Clamp01((split - t) / 0.07f);
+                    float rv = Mathf.Clamp01(t / 0.16f);
+                    UiKit.Ink("UI/enso", rc, 190f * (1.06f - 0.06f * rv), new Color(0.72f, 0.1f, 0.08f, 0.9f * rAl), rv);
+                    string rg = duel.Round == 1 ? "UI/ink_r1" : duel.Round == 2 ? "UI/ink_r2" : duel.Round == 3 ? "UI/ink_r3" : null;
+                    if (rg != null) UiKit.Ink(rg, rc, 116f, new Color(0.96f, 0.92f, 0.84f, rAl), Mathf.Clamp01((t - 0.05f) / 0.14f));
+                }
+                else
+                {
+                    float t2 = (t - split) / (1f - split);
+                    float a = t2 < 0.6f ? 1f : Mathf.Clamp01((1f - t2) * 2.5f);
+                    float sc = 1f + (1f - Mathf.Clamp01(t2 * 4f)) * 0.8f;
+                    UiKit.Ink("UI/ink_hajime", rc, 210f * (1.12f - 0.12f * Mathf.Clamp01(t2 * 3f)), new Color(0.7f, 0.08f, 0.06f, 0.6f * a), Mathf.Clamp01(t2 * 5f));
+                    UiKit.Text(new Rect(cx - 300f, 150f, 600f, 110f), "БОЙ!", 78f * sc, new Color(Gold.r, Gold.g, Gold.b, a));
+                }
             }
 
             // итог
@@ -429,6 +447,20 @@ namespace BladePath
             string tex = score >= 95 ? "UI/rank_s" : score >= 70 ? "UI/rank_a" : score >= 45 ? "UI/rank_b" : "UI/rank_c";
             string word = score >= 95 ? "ПРЕВОСХОДНО" : score >= 70 ? "ОТЛИЧНО" : score >= 45 ? "ХОРОШО" : "ДОСТОЙНО";
             float stamp = Mathf.Clamp01(a * 1.4f);
+            // гербы над колонками: перья — герой, томоэ — противник
+            UiKit.Image(new Vector2(cx - 196f, y + 28f), 16f, UiKit.Tex("UI/kamon_feather"), new Color(1f, 1f, 1f, a));
+            UiKit.Image(new Vector2(cx + 196f, y + 28f), 16f, UiKit.Tex("UI/kamon_tomoe"), new Color(1f, 1f, 1f, a));
+            // печать итога матча слева (зеркально оценке): 勝 — победа, 敗 — поражение, 終 — весь путь пройден; чуть наискось, как оттиск
+            string seal = !duel.PlayerWonMatch ? "UI/seal_hai" : (Ladder.IsLast ? "UI/seal_owari" : "UI/seal_sho");
+            float st2 = Mathf.Clamp01(a * 1.4f - 0.15f);
+            if (st2 > 0f)
+            {
+                Vector2 sc2 = new Vector2(cx - 262f, y + 24f);
+                Matrix4x4 m0 = GUI.matrix;
+                GUIUtility.RotateAroundPivot(-7f, sc2 * UiKit.Scale);
+                DrawGlyph(seal, sc2, 80f * (1f + 0.8f * (1f - st2) * (1f - st2)), st2);
+                GUI.matrix = m0;
+            }
             Vector2 gc = new Vector2(cx + 262f, y + 24f);
             DrawGlyph(tex, gc, 86f * (1f + 0.7f * (1f - stamp) * (1f - stamp)), stamp);
             UiKit.Text(new Rect(gc.x - 70f, gc.y + 40f, 140f, 16f), word, 11f, new Color(0.9f, 0.82f, 0.68f, a), TextAnchor.MiddleCenter, false);

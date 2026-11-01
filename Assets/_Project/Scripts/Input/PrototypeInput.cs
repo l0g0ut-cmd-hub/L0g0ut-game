@@ -390,10 +390,30 @@ namespace BladePath
             {
                 UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, 0.65f));
                 Rect pr = new Rect(W * 0.5f - 340f, 54f, 680f, 422f);   // свиток-подложка под кнопками паузы
-                UiKit.Rect(new Rect(pr.x - 2f, pr.y - 2f, pr.width + 4f, pr.height + 4f), Gold * 0.6f);
-                UiKit.Rect(pr, new Color(0.05f, 0.04f, 0.04f, 0.9f));
-                UiKit.Paper(pr, new Color(0.22f, 0.17f, 0.12f, 0.5f));
-                UiKit.Text(new Rect(W * 0.5f - 200f, 62f, 400f, 50f), "ПАУЗА", 40f, Gold);
+                Texture2D scroll = UiKit.Tex("UI/scroll");
+                if (scroll != null)
+                {
+                    // развёрнутый свиток макимоно: бумага с роликами по краям, на ней — горы тушью; ветка сакуры свисает с угла
+                    Color o = GUI.color; GUI.color = new Color(0.86f, 0.82f, 0.74f, 1f);
+                    // бумага в текстуре — x 14,6…86 %, y 15,8…85,7 %: растягиваем так, чтобы лист лёг на (pr.x−10, 48, pr.w+20, 432)
+                    Rect paper = new Rect(pr.x - 10f, 48f, pr.width + 20f, 432f);
+                    float tw = paper.width / 0.714f, th = paper.height / 0.699f;
+                    GUI.DrawTexture(new Rect(paper.x - 0.146f * tw, paper.y - 0.158f * th, tw, th), scroll, ScaleMode.StretchToFill);
+                    GUI.color = new Color(1f, 1f, 1f, 0.5f);
+                    Texture2D mt = UiKit.Tex("UI/mountains");
+                    if (mt != null) GUI.DrawTexture(new Rect(paper.x + 20f, paper.yMax - 130f, paper.width - 40f, 124f), mt, ScaleMode.StretchToFill);
+                    GUI.color = o;
+                    UiKit.Text(new Rect(W * 0.5f - 200f, 62f, 400f, 50f), "ПАУЗА", 40f, new Color(0.16f, 0.09f, 0.06f, 1f));
+                    Texture2D br = UiKit.Tex("UI/sakura_branch");
+                    if (br != null) GUI.DrawTexture(new Rect(paper.x - 150f, -30f, 180f, 180f), br, ScaleMode.ScaleToFit);
+                }
+                else
+                {
+                    UiKit.Rect(new Rect(pr.x - 2f, pr.y - 2f, pr.width + 4f, pr.height + 4f), Gold * 0.6f);
+                    UiKit.Rect(pr, new Color(0.05f, 0.04f, 0.04f, 0.9f));
+                    UiKit.Paper(pr, new Color(0.22f, 0.17f, 0.12f, 0.5f));
+                    UiKit.Text(new Rect(W * 0.5f - 200f, 62f, 400f, 50f), "ПАУЗА", 40f, Gold);
+                }
                 for (int b = (int)B.Resume; b <= (int)B.ToMenu; b++) DrawRectButton(b);
                 DrawRectButton((int)B.Vibro); DrawRectButton((int)B.Difficulty); DrawRectButton((int)B.Gfx);
                 DrawRectButton((int)B.CamMode); DrawRectButton((int)B.TimerToggle);

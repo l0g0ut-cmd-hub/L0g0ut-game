@@ -39,20 +39,39 @@ namespace BladePath
             return t;
         }
 
+        static float SStep(float a, float b, float x) { x = Mathf.Clamp01((x - a) / (b - a)); return x * x * (3f - 2f * x); }
+
         static Material Mat()
         {
             if (mat != null) return mat;
             Shader sh = Shader.Find("Legacy Shaders/Particles/Additive");
             if (sh == null) sh = Shader.Find("Sprites/Default");
             mat = new Material(sh);
-            // поперечный градиент: мягкие края, яркая кромка у острия
-            Texture2D t = new Texture2D(4, 64, TextureFormat.RGBA32, false);
+            // поперечный градиент (мягкие края, яркая кромка у острия) + «волоски кисти»: тонкие продольные пряди разной яркости,
+            // к хвосту (u = возраст) пряди обрываются вразнобой — след рвётся на нити, как мазок сухой кистью, а не ровная лента
+            const int TW = 64, TH = 128;
+            Texture2D t = new Texture2D(TW, TH, TextureFormat.RGBA32, false);
             t.wrapMode = TextureWrapMode.Clamp;
-            for (int y = 0; y < 64; y++)
+            System.Random rnd = new System.Random(7);
+            float[] hair = new float[TH], end = new float[TH];
+            float h = 0.8f;
+            for (int y = 0; y < TH; y++)
             {
-                float v = y / 63f;
-                float a = Mathf.SmoothStep(0f, 1f, v) * (v > 0.9f ? Mathf.Lerp(1f, 0.2f, (v - 0.9f) / 0.1f) : 1f);
-                for (int x = 0; x < 4; x++) t.SetPixel(x, y, new Color(1f, 1f, 1f, a));
+                h = Mathf.Lerp(h, 0.45f + 0.55f * (float)rnd.NextDouble(), 0.55f);   // соседние пряди связаны — не «шум», а волокна
+                hair[y] = h;
+                end[y] = 0.35f + 0.65f * (float)rnd.NextDouble();
+            }
+            for (int y = 0; y < TH; y++)
+            {
+                float v = y / (TH - 1f);
+                float a0 = Mathf.SmoothStep(0f, 1f, v) * (v > 0.9f ? Mathf.Lerp(1f, 0.2f, (v - 0.9f) / 0.1f) : 1f);
+                float hv = Mathf.Lerp(hair[y], 1f, SStep(0.75f, 1f, v));   // у острия кромка цельная
+                for (int x = 0; x < TW; x++)
+                {
+                    float u = x / (TW - 1f);
+                    float cut = 1f - SStep(end[y] - 0.18f, end[y], u) * (1f - SStep(0.8f, 1f, v));
+                    t.SetPixel(x, y, new Color(1f, 1f, 1f, a0 * hv * cut));
+                }
             }
             t.Apply();
             mat.mainTexture = t;
