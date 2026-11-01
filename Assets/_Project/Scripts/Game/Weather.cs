@@ -617,8 +617,8 @@ namespace BladePath
             float t = Time.unscaledTime - flashT;
             float f = 0f;
             if (t < 0.6f) f = Mathf.Max(Spike(t, 0f, 0.07f), 0.7f * Spike(t, 0.16f, 0.1f), 0.45f * Spike(t, 0.32f, 0.25f));
-            if (moon != null) moon.intensity = moonBase * (0.75f + 3.5f * f);
-            RenderSettings.ambientLight = ambBase * (0.85f + 2.5f * f);
+            if (moon != null) moon.intensity = moonBase * (0.85f + 3.5f * f);
+            RenderSettings.ambientLight = ambBase * (0.95f + 2.5f * f);
             if (skyMat != null && skyMat.HasProperty("_Exposure")) skyMat.SetFloat("_Exposure", skyExpBase * (0.8f + 4f * f));
         }
 

@@ -17,7 +17,7 @@ namespace BladePath
         [Range(0f, 3f)] public float intensity = 0.85f;
         [Range(1, 6)] public int iterations = 5;
         [Header("Цвет")]
-        public float exposure = 1.04f, contrast = 1.10f, saturation = 1.06f;
+        public float exposure = 1.1f, contrast = 1.10f, saturation = 1.06f;
         public Color shadows = new Color(0.93f, 0.98f, 1.10f), highlights = new Color(1.07f, 1.0f, 0.92f);
         [Header("Объектив")]
         [Range(0f, 1f)] public float vignette = 0.38f;

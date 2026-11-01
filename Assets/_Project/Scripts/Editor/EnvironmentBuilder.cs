@@ -20,7 +20,7 @@ namespace BladePath.EditorTools
             RenderSettings.fogDensity = 0.05f;
             RenderSettings.fogColor = FogColor;
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(0.17f, 0.18f, 0.26f);
+            RenderSettings.ambientLight = new Color(0.235f, 0.25f, 0.34f);   // ночь светлее: лунная, а не «чёрный экран» на телефоне
 
             if (look.sky != null) RenderSettings.skybox = look.sky;
 
@@ -31,7 +31,7 @@ namespace BladePath.EditorTools
             Light l = moonLight.AddComponent<Light>();
             l.type = LightType.Directional;
             l.color = new Color(0.62f, 0.70f, 1f);
-            l.intensity = 0.95f;
+            l.intensity = 1.15f;
             l.shadows = LightShadows.Soft;
             l.shadowStrength = 0.8f;
             moonLight.transform.rotation = Quaternion.Euler(38f, -35f, 0f);
