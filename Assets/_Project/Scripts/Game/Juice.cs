@@ -1061,6 +1061,11 @@ namespace BladePath
         /// <summary>Заряд супер-удара: воронка светящихся частиц втягивается в бойца.</summary>
         public void SuperCharge(Vector3 pos)
         {
+            // Authored six-frame sigil atlas: expands on the ground during the charge.
+            // Keep the existing seal, so a missing material/shader never removes the effect.
+            if (DuelManager.Gfx == 1)
+                GroundFlash.SpawnSheet("FX/sigil_red", pos, 0.8f, 2.8f,
+                    new Color(1f, 0.23f, 0.14f, 0.65f), 0.8f, 6, 1, 6);
             // печать духа под ногами (крутится и гаснет) и воронка света, втягивающаяся в бойца
             Texture2D st = Resources.Load<Texture2D>("FX/seal_circle");
             Shader ash = Shader.Find("Legacy Shaders/Particles/Additive");
@@ -1260,6 +1265,12 @@ namespace BladePath
             Vector3 d = dir; d.y = 0f;
             FxSprite c = FxSprite.Spawn("super_crescent", pos + Vector3.up * 1.0f - d.normalized * 0.9f, 2.6f, 4, 1, 4, 14f, false, 0.3f);
             if (c != null) { c.dir = () => d; c.tint = new Color(1f, 1f, 1f, 0.9f); }
+            if (DuelManager.Gfx == 1)
+            {
+                FxSprite flame = FxSprite.Spawn("flame_red", pos + Vector3.up * 1.1f,
+                    1.65f, 6, 1, 6, 19f, false, 0.32f);
+                if (flame != null) flame.tint = new Color(1f, 0.6f, 0.55f, 0.55f);
+            }
             SparkLight(pos + Vector3.up * 2f, new Color(0.75f, 0.6f, 1f), 6f, 6f, 0.25f);
         }
 
