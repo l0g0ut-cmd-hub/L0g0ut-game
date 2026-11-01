@@ -115,10 +115,13 @@ namespace BladePath
             float wr = Random.value;
             Windiness = Snowing && HeavySnow ? 1.6f : wr < 0.4f ? 0.35f : wr < 0.8f ? 1f : 1.6f;
             // листопад: ясным днём (с рассветом и закатом) иногда сакура; в снег — смотря по силе снега
-            // ясный день — чаще сакура (55 %), рассвет/закат — 35 %; если три подходящих боя подряд без сакуры — точно сакура
+            // сакура днём — 50 %; два дневных боя подряд без неё — в третьем точно
             bool canSakura = Daytime && !Raining && !Snowing;
-            sakuraRoll = canSakura && (noSakura >= 3 || Random.value < (Dawn || Dusk ? 0.35f : 0.55f));
+            // рассвет/закат: сакура через раз гарантированно (если в прошлый рассвет/закат её не было — теперь точно), иначе 50 %
+            bool edge = Dawn || Dusk;
+            sakuraRoll = canSakura && (noSakura >= 2 || (edge && !lastEdgeSakura) || Random.value < 0.5f);
             if (canSakura) noSakura = sakuraRoll ? 0 : noSakura + 1;
+            if (edge) lastEdgeSakura = sakuraRoll;
             lightSnowLeaves = Random.value < 0.5f;
             Leaves();
             BloodMoon = !Daytime && !Raining && !Snowing && !Foggy && changeAt < 0f && Random.value < 0.12f;
@@ -128,6 +131,7 @@ namespace BladePath
 
         bool sakuraRoll, lightSnowLeaves;
         static int nightStreak, noClearDay, noSakura;   // счётчики серий между боями (на всю сессию)
+        static bool lastEdgeSakura;   // была ли сакура в прошлый рассвет/закат
         Renderer[] moonRends; Color[] moonCols;
         void Blood(bool on)
         {
