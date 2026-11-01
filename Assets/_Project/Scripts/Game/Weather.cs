@@ -186,6 +186,7 @@ namespace BladePath
             int mode = 1;
             if (Snowing) mode = HeavySnow ? 0 : (lightSnowLeaves ? 3 : 0);
             else if (Daytime && !Raining && sakuraRoll) mode = 2;
+            else if (Raining) mode = 3;   // в ливень мокрые листья почти не летят — редкие
             LeafMode = mode;
             if (!Application.isPlaying) return;   // кадры CI в редакторе: не трогать ассет материала и частицы сцены
             if (!petalsInit)
@@ -587,7 +588,7 @@ namespace BladePath
                 if (Foggy) { Foggy = false; StopFog(); }
                 Critters(false);
                 if (changeToSnow) { Snowing = true; StartSnow(); Leaves(); if (HeavySnow) Windiness = 1.6f; }
-                else { Raining = true; StartRain(); nextFlashAt = Time.time + Random.Range(0.5f, 2f); }
+                else { Raining = true; StartRain(); Leaves(); nextFlashAt = Time.time + Random.Range(0.5f, 2f); }
             }
             if ((Snowing || Dawn) && Time.time >= nextBreathAt)
             {

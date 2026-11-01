@@ -1817,6 +1817,7 @@ namespace BladePath.EditorTools
             noise.frequency = 0.4f;
 
             go.GetComponent<ParticleSystemRenderer>().sharedMaterial = look.petal;
+            go.GetComponent<ParticleSystemRenderer>().maxParticleSize = 0.03f;   // лист у самой камеры не раздувается в пол-экрана
             go.AddComponent<PetalTexture>().leaf = true;
         }
     }

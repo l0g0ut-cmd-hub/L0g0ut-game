@@ -117,7 +117,7 @@ namespace BladePath.EditorTools
                 // своя карта свечения: тушь в ней чёрная (контраст), иначе свет бумаги и блум заливали иероглиф на закате
                 Texture2D cht = Tex("chochin_emis.png", false);
                 if (cht == null) cht = Tex("chochin.png", false);
-                if (cht != null) { l.chochin.SetTexture("_EmissionMap", cht); l.chochin.EnableKeyword("_EMISSION"); l.chochin.SetColor("_EmissionColor", new Color(0.82f, 0.53f, 0.27f)); l.chochin.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None; }
+                if (cht != null) { l.chochin.SetTexture("_EmissionMap", cht); l.chochin.EnableKeyword("_EMISSION"); l.chochin.SetColor("_EmissionColor", new Color(0.68f, 0.44f, 0.22f)); l.chochin.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None; }
             }
             l.bambooLeaf = Solid("Env_BambooLeaf", new Color(0.16f, 0.30f, 0.12f), 0f, 0.2f);
             l.moss = Textured("Env_MossRock", "rock_albedo.png", "rock_normal.png", new Vector2(0.6f, 0.6f), new Color(0.5f, 0.62f, 0.46f), 0f, 0.15f);   // замшелый гранит (не кладка — на валунах швы блоков были бы странны)
