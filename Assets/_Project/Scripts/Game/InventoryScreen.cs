@@ -26,9 +26,12 @@ namespace BladePath
 
         void OnGUI()
         {
+            // No post-fight loot banner: rewards already go directly to Profile.
+            // Avoid an IMGUI layout pass entirely while the inventory is closed.
+            if (!Open) return;
             GUI.depth = -20;   // поверх HUD и кнопок боя
             Matrix4x4 old = UiKit.Begin();
-            if (Open) DrawScreen(); else DrawLootStrip();
+            DrawScreen();
             GUI.matrix = old;
         }
 
@@ -393,71 +396,5 @@ namespace BladePath
             if (Btn(new Rect(a.x + 20f + bw * 2f, by, bw, 34f), "ПРОДАТЬ " + Profile.SellPrice(it), true, true)) { Profile.Sell(it); sel = null; }
         }
 
-        // ---------------- полоса «Добыча» на экране итогов матча ----------------
-
-        void DrawLootStrip()
-        {
-            DuelManager dm = DuelManager.Instance;
-            Reward r = Profile.LastReward;
-            if (dm == null || r == null || !dm.MatchOver || Profile.LastRewardAt < dm.MatchStartedAt) return;
-            if (dm.State != DuelState.PlayerWon && dm.State != DuelState.PlayerLost) return;
-            float t = Time.unscaledTime - Profile.LastRewardAt - 1.4f;
-            if (t <= 0f) return;
-            float W = UiKit.Width, cx = W * 0.5f, a = Mathf.Clamp01(t / 0.35f);
-            Rect p = new Rect(cx - 350f, 366f, 700f, 106f);
-            UiKit.Rect(p, new Color(0.02f, 0.015f, 0.015f, 0.82f * a));
-            UiKit.Rect(new Rect(p.x, p.y, p.width, 2f), new Color(Gold.r, Gold.g, Gold.b, 0.7f * a));
-            float tx = p.x + 14f;
-            Texture2D ca = UiKit.Tex("UI/chest_anim");
-            if (ca != null)
-            {
-                // сундук открывается по кадрам, из него взлетают монеты
-                int cf = t < 0.15f ? 0 : t < 0.3f ? 1 : t < 0.45f ? 2 : 3;
-                Color oc = GUI.color; GUI.color = new Color(1f, 1f, 1f, a);
-                SheetFrame(new Rect(p.x + 4f, p.y + 6f, 94f, 94f), ca, cf, 4);
-                Texture2D cb = UiKit.Tex("UI/coin_burst");
-                float ct = t - 0.4f;
-                if (cb != null && ct > 0f && ct < 1.3f)
-                {
-                    GUI.color = new Color(1f, 1f, 1f, a * Mathf.Clamp01((1.3f - ct) / 0.3f));
-                    SheetFrame(new Rect(p.x + 14f, p.y - 46f, 76f, 76f), cb, Mathf.Min(3, (int)(ct / 0.16f)), 4);
-                }
-                GUI.color = oc; tx = p.x + 104f;
-            }
-            else
-            {
-                Texture2D chest = UiKit.Tex(r.items.Count > 0 ? "UI/chest_open" : "UI/chest_closed");
-                if (chest != null) { Color oc = GUI.color; GUI.color = new Color(1f, 1f, 1f, a); GUI.DrawTexture(new Rect(p.x + 6f, p.y + 8f, 90f, 90f), chest); GUI.color = oc; tx = p.x + 104f; }
-            }
-            UiKit.Text(new Rect(tx, p.y + 4f, 280f, 22f), "ДОБЫЧА", 16f, new Color(Gold.r, Gold.g, Gold.b, a), TextAnchor.MiddleLeft);
-            string line = "+" + r.gold + " МОН   ·   +" + r.xp + " ОПЫТА";
-            if (r.soldForSpace > 0) line += "   ·   сумка полна: продано за " + r.soldForSpace;
-            UiKit.Text(new Rect(tx, p.y + 26f, 360f, 18f), line, 12f, new Color(Ink.r, Ink.g, Ink.b, a), TextAnchor.MiddleLeft, false);
-            if (r.levels > 0)
-            {
-                float pulse = 1f + 0.06f * Mathf.Sin(Time.unscaledTime * 5f);
-                Texture2D ua = UiKit.Tex("UI/levelup_anim");
-                Texture2D up = ua != null ? ua : UiKit.Tex("UI/levelup");
-                float lt = t - 0.25f;
-                if (ua != null) SheetFrame(new Rect(tx - 8f, p.y + 38f, 34f, 34f), ua, lt < 0.12f ? 0 : lt < 0.24f ? 1 : lt < 0.42f ? 2 : 3, 4);   // герб вспыхивает лучами
-                else if (up != null) GUI.DrawTexture(new Rect(tx - 2f, p.y + 44f, 24f, 24f), up);
-                UiKit.Text(new Rect(tx + (up != null ? 26f : 0f), p.y + 46f, 340f, 22f), "НОВЫЙ УРОВЕНЬ " + Profile.Level + "  ·  +" + r.points + " ОЧКА", 15f * pulse, new Color(1f, 0.82f, 0.35f, a), TextAnchor.MiddleLeft);
-            }
-            if (r.cycleUp) UiKit.Text(new Rect(tx, p.y + 70f, 380f, 18f), "КРУГ " + (Profile.Cycle + 1) + ": ВРАГИ КРЕПЧЕ, ДОБЫЧА БОГАЧЕ", 11.5f, new Color(1f, 0.55f, 0.4f, a), TextAnchor.MiddleLeft, false);
-            // предметы появляются по одному
-            for (int i = 0; i < r.items.Count && i < 4; i++)
-            {
-                float it = Mathf.Clamp01((t - 0.3f - i * 0.3f) / 0.25f);
-                if (it <= 0f) continue;
-                float s = 64f * (1f + 0.4f * (1f - it) * (1f - it));
-                Vector2 c = new Vector2(p.xMax - 50f - (r.items.Count - 1 - i) * 74f, p.y + 46f);
-                Color o = GUI.color; GUI.color = new Color(1f, 1f, 1f, it * a);
-                DrawItem(new Rect(c.x - s * 0.5f, c.y - s * 0.5f, s, s), r.items[i], false);
-                GUI.color = o;
-                // под значком — только сам предмет (без прозвища в кавычках), чтобы подписи не налезали друг на друга
-                string nm = r.items[i].name; int q = nm.IndexOf('«'); if (q > 0) nm = nm.Substring(0, q).Trim();
-                UiKit.Text(new Rect(c.x - 36f, c.y + 34f, 72f, 14f), nm, 9f, new Color(Profile.RarityColors[r.items[i].rarity].r, Profile.RarityColors[r.items[i].rarity].g, Profile.RarityColors[r.items[i].rarity].b, it * a), TextAnchor.MiddleCenter, false);
-            }
-        }
     }
 }

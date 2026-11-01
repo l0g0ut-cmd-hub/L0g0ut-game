@@ -26,6 +26,9 @@ namespace BladePath
         enum Modal { None, Fight, Shrine, Smith, Merchant, Treasure, Rest, Event, Result, RegionClear, Herbalist, Knocked }
         Modal modal;
         int sel = -1;
+        readonly List<int> previewPath = new List<int>(16);
+        int plannedRegion = -1;   // keep a chosen destination across intermediate encounters
+        readonly Queue<int> routeQueue = new Queue<int>(16);
         int moveFrom = -1, moveTo = -1; float moveStart;
         const float MoveTime = 1.25f;
         float panU = -1f, shownAt, modalAt, rollAt = -10f;
@@ -35,7 +38,9 @@ namespace BladePath
 
         void OnShow()
         {
-            shownAt = Time.unscaledTime; sel = -1; moveTo = -1; modal = Modal.None; panU = -1f;
+            int resume = !Campaign.Knocked && Campaign.ClearedRegion < 0 && plannedRegion == Campaign.Region ? sel : -1;
+            shownAt = Time.unscaledTime; sel = -1; previewPath.Clear(); moveTo = -1; modal = Modal.None; panU = -1f;
+            if (resume >= 0 && resume < Campaign.Nodes.Count && resume != Campaign.At) SelectNode(resume);
             Campaign.CancelTraining();
             if (Campaign.Knocked) OpenModal(Modal.Knocked);
             else if (Campaign.ClearedRegion >= 0) OpenModal(Modal.RegionClear);
@@ -68,8 +73,13 @@ namespace BladePath
         {
             if (!Campaign.CanGo(i)) return;
             Profile.CostMul = 1f;
-            moveFrom = Campaign.At; moveTo = i; moveStart = Time.unscaledTime; sel = -1; stockNode = -1;
+            int destination = sel;
+            moveFrom = Campaign.At; moveTo = i; moveStart = Time.unscaledTime; sel = -1; previewPath.Clear(); stockNode = -1;
             Campaign.MoveTo(i);
+            // If the player plotted several waypoints, retain the remaining
+            // route after the next encounter is resolved. Never skip an encounter.
+            if (destination >= 0 && destination != i && destination < Campaign.Nodes.Count)
+                SelectNode(destination);
             if (Juice.Instance != null) Juice.Instance.DashSound();
         }
 
@@ -113,6 +123,7 @@ namespace BladePath
             Texture2D mt = UiKit.Tex(Campaign.MapTexture(Campaign.Region));
             if (mt != null) GUI.DrawTextureWithTexCoords(new Rect(mapX, 0f, viewW, MapH), mt, new Rect(u0, 0f, uw, 1f));
             DrawRoads();
+            DrawJourneyFootprints();
             DrawNodes(interactive && modal == Modal.None && moveTo < 0);
             DrawHero();
             // туман по краям и название области
@@ -180,6 +191,126 @@ namespace BladePath
             return n.done || n.Type == NodeType.Boss || n.Type == NodeType.Start || n.layer <= c.layer + 1;
         }
 
+        // Shortest route through the authored road graph, including future nodes.
+        // This is a PREVIEW, not automatic traversal: each intermediate encounter
+        // must be resolved before the next step is allowed by Campaign.CanGo.
+        void SelectNode(int index)
+        {
+            sel = index;
+            plannedRegion = Campaign.Region;
+            previewPath.Clear();
+            List<MapNode> nodes = Campaign.Nodes;
+            if (index < 0 || index >= nodes.Count) return;
+            int start = Campaign.At;
+            if (start == index) { previewPath.Add(start); return; }
+
+            int[] parents = new int[nodes.Count];
+            for (int i = 0; i < parents.Length; i++) parents[i] = -1;
+            routeQueue.Clear();
+            parents[start] = start;
+            routeQueue.Enqueue(start);
+            while (routeQueue.Count > 0 && parents[index] < 0)
+            {
+                int at = routeQueue.Dequeue();
+                foreach (int next in nodes[at].next)
+                {
+                    if (next < 0 || next >= parents.Length || parents[next] >= 0) continue;
+                    parents[next] = at;
+                    routeQueue.Enqueue(next);
+                }
+            }
+            if (parents[index] < 0) return;
+            int cur = index;
+            while (cur != start)
+            {
+                previewPath.Add(cur);
+                cur = parents[cur];
+            }
+            previewPath.Add(start);
+            previewPath.Reverse();
+        }
+
+        int NextPreviewStep
+        {
+            get { return previewPath.Count > 1 && previewPath[0] == Campaign.At ? previewPath[1] : -1; }
+        }
+
+        // Heroes-style walking footprints: ochre for the travelled route,
+        // pale green/gold within the die's remaining moves, red beyond its range.
+        // A bounded cached texture is used instead of thousands of ParticleSystems.
+        void DrawJourneyFootprints()
+        {
+            if (Event.current.type != EventType.Repaint) return;
+            IList<int> trail = Campaign.Travelled;
+            List<MapNode> nodes = Campaign.Nodes;
+            for (int i = 1; i < trail.Count; i++)
+            {
+                int a = trail[i - 1], b = trail[i];
+                if (a < 0 || a >= nodes.Count || b < 0 || b >= nodes.Count) continue;
+                float progress = (moveTo == b && moveFrom == a && i == trail.Count - 1)
+                    ? Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((Time.unscaledTime - moveStart) / MoveTime))
+                    : 1f;
+                DrawFootprintsOnRoad(a, b, new Color(0.64f, 0.33f, 0.16f, 0.68f), progress, false);
+            }
+
+            if (moveTo >= 0)
+            {
+                DrawFootprintsOnRoad(moveFrom, moveTo,
+                    new Color(1f, 0.84f, 0.43f, 0.92f),
+                    Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((Time.unscaledTime - moveStart) / MoveTime)), true);
+                return;
+            }
+
+            // Before selecting a destination, preview available next roads subtly.
+            if (previewPath.Count <= 1 && Campaign.Steps > 0 && Campaign.Current.done && !Campaign.InFight)
+            {
+                foreach (int next in Campaign.Current.next)
+                    DrawFootprintsOnRoad(Campaign.At, next,
+                        new Color(0.88f, 0.79f, 0.48f, 0.48f), 1f, false);
+            }
+
+            for (int i = 1; i < previewPath.Count; i++)
+            {
+                bool withinDie = i <= Campaign.Steps;
+                Color tint = withinDie && Campaign.Current.done && !Campaign.InFight
+                    ? new Color(0.67f, 1f, 0.65f, 0.95f)
+                    : new Color(1f, 0.35f, 0.29f, 0.67f);
+                DrawFootprintsOnRoad(previewPath[i - 1], previewPath[i], tint, 1f, withinDie);
+            }
+        }
+
+        void DrawFootprintsOnRoad(int from, int to, Color tint, float progress, bool shimmer)
+        {
+            List<MapNode> nodes = Campaign.Nodes;
+            if (from < 0 || from >= nodes.Count || to < 0 || to >= nodes.Count || progress <= 0f) return;
+            Vector2 a = new Vector2(nodes[from].x, nodes[from].y);
+            Vector2 b = new Vector2(nodes[to].x, nodes[to].y);
+            float len = Vector2.Distance(new Vector2(a.x * MapFullW, a.y * MapH),
+                                          new Vector2(b.x * MapFullW, b.y * MapH));
+            int count = Mathf.Clamp(Mathf.RoundToInt(len / 17f), 5, 22);
+            Texture2D feet = JourneyFootprintArt.Footsteps;
+            Color prev = GUI.color;
+            Matrix4x4 original = GUI.matrix;
+            for (int j = 1; j < count; j++)
+            {
+                float t = j / (float)count;
+                if (t < 0.13f || t > 0.87f || t > progress) continue;
+                Vector2 uv = Bez(a, b, Bend(from, to), t);
+                Vector2 point = new Vector2(mapX + (uv.x - u0) * MapFullW, uv.y * MapH);
+                if (point.x < mapX + 7f || point.x > mapX + viewW - 7f) continue;
+                Vector2 back = Bez(a, b, Bend(from, to), Mathf.Max(0f, t - 0.025f));
+                Vector2 ahead = Bez(a, b, Bend(from, to), Mathf.Min(1f, t + 0.025f));
+                Vector2 tangent = new Vector2((ahead.x - back.x) * MapFullW, (ahead.y - back.y) * MapH);
+                float angle = Mathf.Atan2(tangent.y, tangent.x) * Mathf.Rad2Deg + 90f;
+                float pulse = shimmer ? 0.84f + 0.16f * Mathf.Sin(Time.unscaledTime * 4.5f - j * 0.55f) : 1f;
+                GUI.color = new Color(tint.r, tint.g, tint.b, tint.a * pulse);
+                GUIUtility.RotateAroundPivot(angle, point * UiKit.Scale);
+                GUI.DrawTexture(new Rect(point.x - 8f, point.y - 8f, 16f, 16f), feet);
+                GUI.matrix = original;
+            }
+            GUI.color = prev;
+        }
+
         void DrawRoads()
         {
             Texture2D ic = UiKit.Tex("UI/map_icons");
@@ -191,7 +322,7 @@ namespace BladePath
             {
                 foreach (int b in ns[a].next)
                 {
-                    bool walked = ns[a].done && (ns[b].done || b == Campaign.At) && (ns[b].done || moveTo != b);
+                    bool walked = Campaign.WasTravelled(a, b) && !(moveFrom == a && moveTo == b);
                     bool open = a == Campaign.At && cur.done && moveTo < 0;
                     float alpha = walked ? 0.95f : open ? 0.7f + 0.3f * Mathf.Sin(Time.unscaledTime * 5f) : Known(ns[b]) ? 0.45f : 0.22f;
                     Color col = walked ? new Color(0.55f, 0.06f, 0.04f, alpha) : new Color(0.05f, 0.04f, 0.04f, alpha);
@@ -262,13 +393,23 @@ namespace BladePath
                     GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), ic, Cell(k));
                 else UiKit.Disc(p, s * 0.45f, can ? Gold : Dim);
                 GUI.color = oc;
+                int routeIndex = previewPath.IndexOf(i);
+                if (routeIndex > 0)
+                {
+                    Vector2 chip = p + new Vector2(s * 0.36f, -s * 0.35f);
+                    bool inRange = routeIndex <= Campaign.Steps;
+                    Color chipColor = inRange ? new Color(0.20f, 0.38f, 0.22f, 0.95f) : new Color(0.46f, 0.12f, 0.10f, 0.94f);
+                    UiKit.Disc(chip, 12f, chipColor);
+                    UiKit.Text(new Rect(chip.x - 12f, chip.y - 12f, 24f, 24f),
+                        routeIndex.ToString(), 12f, Ink, TextAnchor.MiddleCenter);
+                }
                 if (!interactive) continue;
                 Rect hit = new Rect(p.x - 34f, p.y - 34f, 68f, 68f);
                 if (GUI.Button(hit, GUIContent.none, GUIStyle.none))
                 {
-                    if (can) { if (sel == i) Go(i); else { sel = i; Haptics.Pulse(10); } }
-                    else if (i == Campaign.At && (n.Type == NodeType.Smith || n.Type == NodeType.Merchant)) OpenNode(i);   // вернуться к кузнецу / торговцу
-                    else sel = i;   // посмотреть, что там (если узнаваем)
+                    if (can && sel == i) Go(i);
+                    else if (i == Campaign.At && (n.Type == NodeType.Smith || n.Type == NodeType.Merchant)) OpenNode(i);
+                    else { SelectNode(i); Haptics.Pulse(10); }   // preview route before choosing to move
                 }
             }
             // знамя в начале пути
@@ -288,6 +429,9 @@ namespace BladePath
             Vector2 uv = HeroUV();
             Vector2 p = new Vector2(mapX + (uv.x - u0) * MapFullW, uv.y * MapH);
             bool moving = moveTo >= 0;
+            // Shadow and warm aureole make the tiny animated hero readable over foliage.
+            UiKit.Disc(p + new Vector2(0f, 8f), moving ? 16f : 12f, new Color(0.035f, 0.02f, 0.01f, 0.45f));
+            if (moving) UiKit.Disc(p, 21f + 2f * Mathf.Sin(Time.unscaledTime * 7f), new Color(0.98f, 0.70f, 0.28f, 0.18f));
             if (ic != null && !moving)
             {
                 Color oc = GUI.color; GUI.color = new Color(1f, 1f, 1f, 0.75f + 0.25f * Mathf.Sin(Time.unscaledTime * 3f));
@@ -354,11 +498,33 @@ namespace BladePath
                 string hint = known ? Campaign.TypeHints[n.type] : "Туман скрывает, что ждёт впереди. Подойди ближе.";
                 foreach (string line in Wrap(hint, 34)) { UiKit.Text(new Rect(x, y, w, 17f), line, 12f, Dim, TextAnchor.MiddleLeft, false); y += 17f; }
                 y += 10f;
-                if (Campaign.CanGo(show) && Btn(new Rect(x, y, w, 44f), "ИДТИ", interactive)) Go(show);
+                int nextStep = NextPreviewStep;
+                if (nextStep >= 0)
+                {
+                    int totalMoves = previewPath.Count - 1;
+                    int available = Mathf.Min(Campaign.Steps, totalMoves);
+                    bool enough = totalMoves <= Campaign.Steps;
+                    Color routeColor = enough ? new Color(0.65f, 0.94f, 0.65f) : new Color(1f, 0.61f, 0.48f);
+                    UiKit.Text(new Rect(x, y, w, 18f),
+                        "МАРШРУТ: " + totalMoves + " шаг.   ·   доступно: " + available,
+                        12f, routeColor, TextAnchor.MiddleLeft, false);
+                    y += 20f;
+                    // Travel remains one node at a time, so fight/event encounters
+                    // are never skipped by the route preview.
+                    if (Campaign.CanGo(nextStep) &&
+                        Btn(new Rect(x, y, w, 40f), totalMoves == 1 ? "ИДТИ ПО СЛЕДАМ" : "НАЧАТЬ ПУТЬ (1 / " + totalMoves + ")", interactive))
+                        Go(nextStep);
+                    else
+                        UiKit.Text(new Rect(x, y, w, 18f),
+                            Campaign.Steps == 0 ? "Нужен бросок кости пути" : "Следующий переход пока закрыт",
+                            11f, Dim, TextAnchor.MiddleLeft, false);
+                }
+                else if (Campaign.CanGo(show) && Btn(new Rect(x, y, w, 40f), "ИДТИ", interactive))
+                    Go(show);
             }
             else
             {
-                string tip = Campaign.InFight ? "Бой ещё не окончен." : !Campaign.Current.done ? "Ты на месте." : Campaign.Steps > 0 ? "Коснись узла на дороге — и ещё раз, чтобы идти. Бой обрывает ход." : "Брось кость пути, чтобы идти дальше.";
+                string tip = Campaign.InFight ? "Бой ещё не окончен." : !Campaign.Current.done ? "Ты на месте." : Campaign.Steps > 0 ? "Выбери цель. Светлые следы — доступные шаги, красные — сверх броска." : "Брось кость пути, чтобы идти дальше.";
                 foreach (string line in Wrap(tip, 34)) { UiKit.Text(new Rect(x, y, w, 17f), line, 12f, Dim, TextAnchor.MiddleLeft, false); y += 17f; }
             }
             if (Btn(new Rect(x, 540f - 112f, w, 44f), "СНАРЯЖЕНИЕ" + (Profile.Points > 0 ? " (+" + Profile.Points + ")" : ""), interactive)) InventoryScreen.Show(0);
