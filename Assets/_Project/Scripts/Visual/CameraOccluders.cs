@@ -12,12 +12,28 @@ namespace BladePath
         public Renderer[] items = new Renderer[0];
         bool[] hidden;
         Camera cam;
+        float nextCameraLookup;
+
+        void OnDisable()
+        {
+            // Re-enable scene objects hidden while the camera crossed their bounds.
+            if (items == null || hidden == null) return;
+            for (int i = 0; i < items.Length && i < hidden.Length; i++)
+            {
+                if (hidden[i] && items[i] != null) items[i].enabled = true;
+                hidden[i] = false;
+            }
+        }
 
         void LateUpdate()
         {
             if (items == null || items.Length == 0) return;
             if (hidden == null || hidden.Length != items.Length) hidden = new bool[items.Length];
-            if (cam == null) cam = Camera.main;
+            if (cam == null && Time.unscaledTime >= nextCameraLookup)
+            {
+                cam = Camera.main;
+                nextCameraLookup = Time.unscaledTime + 0.5f;
+            }
             if (cam == null) return;
             Vector3 a = cam.transform.position;
             Vector3 b = CameraOrbit.Instance != null ? CameraOrbit.Instance.Focus : new Vector3(0f, 1.1f, 0f);
