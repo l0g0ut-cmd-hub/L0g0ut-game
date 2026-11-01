@@ -277,7 +277,7 @@ namespace BladePath
                 // свой цветной узор — без подкраски; запасная печать — в цвет бойца
                 float a = Mathf.Clamp01(t / 0.25f) * (c.early != null ? Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.4f, 0.66f, k)) : 0.55f + 0.45f * k);   // II ступень — полный цветной узор
                 Color tc = c.early != null ? new Color(0.5f, 0.5f, 0.5f, 0.5f) : new Color(c.col.r * 0.5f, c.col.g * 0.5f, c.col.b * 0.5f, 0.5f);
-                c.sigilMat.SetColor("_TintColor", new Color(tc.r, tc.g, tc.b, tc.a * a * (0.8f + 0.2f * pulse)));
+                c.sigilMat.SetColor("_TintColor", new Color(tc.r, tc.g, tc.b, tc.a * a * 0.62f * (0.8f + 0.2f * pulse)));   // без пересвета в центре
                 if (c.early != null)
                 {
                     c.early.position = c.sigil.position + Vector3.up * 0.002f;
@@ -293,7 +293,7 @@ namespace BladePath
                 int fr; float da;
                 if (t < 0.6f) { fr = Mathf.Min(11, (int)(t / 0.6f * 12f)); da = 1f; }
                 else if (c.level >= 2) { fr = 12 + (int)(Time.time * 14f) % 4; da = 0.55f; }
-                else { fr = 11; da = Mathf.Lerp(1f, 0.22f, Mathf.Clamp01((t - 0.6f) / 0.5f)); }
+                else { fr = 11; da = Mathf.Lerp(0.8f, 0.12f, Mathf.Clamp01((t - 0.6f) / 0.5f)); }
                 c.drawMat.mainTextureOffset = new Vector2((fr % 4) * 0.25f, 0.75f - (fr / 4) * 0.25f);
                 float sd = Mathf.Lerp(0.9f, 3.4f, 1f - (1f - k) * (1f - k)) * pulse * 1.16f;
                 c.draw.position = new Vector3(f.transform.position.x, 0.026f, f.transform.position.z);
@@ -314,7 +314,7 @@ namespace BladePath
                 float sp = Mathf.Lerp(1.6f, 4.6f, k);
                 c.pool.position = new Vector3(f.transform.position.x, 0.018f, f.transform.position.z);
                 c.pool.localScale = new Vector3(sp, sp, 1f);
-                c.poolMat.SetColor("_TintColor", new Color(c.col.r * 0.5f, c.col.g * 0.5f, c.col.b * 0.5f, (0.05f + 0.11f * k) * Mathf.Clamp01(t / 0.3f)));
+                c.poolMat.SetColor("_TintColor", new Color(c.col.r * 0.5f, c.col.g * 0.5f, c.col.b * 0.5f, (0.03f + 0.06f * k) * Mathf.Clamp01(t / 0.3f)));
             }
             if (c.pillar != null)
             {
