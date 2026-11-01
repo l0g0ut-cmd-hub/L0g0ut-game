@@ -123,6 +123,7 @@ namespace BladePath
         {
             Breadcrumbs.Mark("бой: Awake");
             Instance = this;
+            ChargeSystem.Ensure(gameObject);   // накопление удара с узором на полу
             InventoryScreen.Ensure();   // экран снаряжения и полоса добычи
             // Android по умолчанию держит 30 кадров/с — для файтинга нужно 60
             QualitySettings.vSyncCount = 0;
@@ -1303,6 +1304,15 @@ namespace BladePath
         void ApplyDamage(FighterController target, FighterController attacker, float dmg, Vector3 point, bool crit, bool chip = false, Vector3 normal = default(Vector3), Vector3 hitDir = default(Vector3), Transform zoneT = null)
         {
             // удар во время глотка из тыквы: глоток сорван (если ещё не успел подействовать — лечения не будет, тыква потрачена)
+            // удар по накапливающему срывает накопление
+            if (!chip && target != null && ChargeSystem.Instance != null && ChargeSystem.Instance.IsCharging(target))
+            {
+                ChargeSystem.Instance.Cancel(target);
+                Popup sp = new Popup();
+                sp.world = target.transform.position + Vector3.up * 2.1f; sp.text = "НАКОПЛЕНИЕ СОРВАНО"; sp.color = new Color(0.7f, 0.85f, 1f);
+                sp.born = Time.unscaledTime; sp.size = 20f;
+                Popups.Add(sp);
+            }
             if (!chip && target != null && target.Drinking)
             {
                 target.CancelDrink();
@@ -1332,6 +1342,23 @@ namespace BladePath
                     if (Profile.B.bleedDps > 0f) bleedUntil = Time.time + 3f;
                 }
                 else if (target == player && !lethal) dmg *= Profile.B.armorMul * Profile.CycleDmg;
+                // накопленный удар: ×1,5 / ×2 / ×2,6 и сильный удар по равновесию
+                if (ChargeSystem.Instance != null)
+                {
+                    int clv;
+                    float cm = ChargeSystem.Instance.ConsumeMul(attacker, out clv);
+                    if (clv >= 0)
+                    {
+                        if (!lethal) dmg = Mathf.Round(dmg * cm);
+                        target.AddPosture(12f + 10f * clv);
+                        crit = true;
+                        Popup chp = new Popup();
+                        chp.world = point + Vector3.up * 0.6f; chp.text = clv == 2 ? "СОКРУШЕНИЕ!" : clv == 1 ? "ПРОРЫВ!" : "НАТИСК";
+                        chp.color = Color.Lerp(ChargeSystem.Instance.ColorOf(attacker), Color.white, 0.35f);
+                        chp.born = Time.unscaledTime; chp.size = 24f + 4f * clv;
+                        Popups.Add(chp);
+                    }
+                }
                 if (counterUntil.TryGetValue(attacker, out cu) && Time.unscaledTime < cu)
                 {
                     counterUntil[attacker] = 0f;

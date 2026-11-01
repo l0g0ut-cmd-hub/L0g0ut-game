@@ -79,6 +79,34 @@ namespace BladePath
             if (volleyAt > 0f && Time.time >= volleyAt && !busy) { volleyAt = -1f; self.Attack(AttackType.Energy); }
         }
 
+        // накопление удара (узор на полу): они, сёгун со 2-й фазы, на высоких уровнях — все. Пока копит — стоит; прерви ударом,
+        // иначе рывок и сокрушительный удар (со 2-й ступени блок не держит, на 3-й — волна, перепрыгни)
+        float chargeAt = 6f, chargeStart; int chargeGoal; bool chargeEarly; static bool chargeHinted;
+        bool Charge(float dist, bool busy)
+        {
+            ChargeSystem cs = ChargeSystem.Instance;
+            if (cs == null) return false;
+            if (cs.IsCharging(self))
+            {
+                int lv = cs.Level(self);
+                float held = Time.time - chargeStart;
+                if (lv >= chargeGoal || (chargeEarly && lv >= 0 && dist < 1.3f) || (lv >= 0 && held > 2.2f)) cs.Release(self, AttackType.Overhead);
+                else if (held > 2.6f) cs.Cancel(self);
+                return true;
+            }
+            bool can = StageIdx == 2 || (StageIdx == 3 && Phase >= 2) || Level >= 3;
+            if (!can || busy || Time.time < chargeAt || dist < 1.8f || dist > 4.2f || self.Ki < ChargeSystem.KiCost[0]) return false;
+            if (Random.value > 0.01f + 0.004f * Level) return false;
+            chargeAt = Time.time + Random.Range(7f, 12f) - Level;
+            int goal = StageIdx == 2 ? (Random.value < 0.5f ? 2 : 1) : (StageIdx == 3 && Phase >= 3 ? 2 : Random.Range(0, 2));
+            while (goal > 0 && self.Ki < ChargeSystem.KiCost[goal]) goal--;
+            if (!cs.Begin(self)) return false;
+            chargeStart = Time.time; chargeGoal = goal; chargeEarly = Random.value < 0.5f;
+            DuelManager dm = DuelManager.Instance;
+            if (!chargeHinted && dm != null) { chargeHinted = true; dm.Announce("ВРАГ КОПИТ СИЛУ", Ladder.Current.aura, "прерви ударом — или перепрыгни волну"); }
+            return true;
+        }
+
         void OnDestroy() { if (hooked && DuelManager.Instance != null) DuelManager.Instance.Damaged -= OnDamaged; }
 
         void OnDamaged(FighterController victim, float dmg)
@@ -117,6 +145,7 @@ namespace BladePath
             Vector3 side = new Vector3(-dir.z, 0f, dir.x);
             bool busy = self.weapon != null && self.weapon.Phase != SwingPhase.Idle;
             Signatures(dist, dir, busy);
+            if (Charge(dist, busy)) return;
             bool canVanish = StageIdx == 1 || (StageIdx == 3 && Phase >= 3);
 
             if (Time.time > strafeUntil) { strafeUntil = Time.time + Random.Range(0.8f, 1.8f); strafeDir = Random.value < 0.5f ? -1f : 1f; }

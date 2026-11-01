@@ -182,6 +182,8 @@ namespace BladePath
             Posture = Mathf.Max(0f, Posture - v);
         }
         public bool Dashing { get { return dashLeft > 0f; } }
+        /// <summary>Накапливает удар (ChargeSystem): стоит на месте, атаки и рывки — только отпусканием.</summary>
+        public bool Charging { get; set; }
 
         // ---- тыква-горлянка (как в Sekiro): глоток лечит, но ~1 с боец уязвим — клинок опущен, ход медленный; удар прерывает
         [Header("Тыква-горлянка")]
@@ -344,6 +346,7 @@ namespace BladePath
             if (weapon != null && weapon.Phase != SwingPhase.Idle) speed *= attackMoveMultiplier;
             if (Blocking) speed *= 0.45f;
             if (Drinking) speed *= 0.35f;   // пьёт — еле переступает
+            if (Charging) speed = 0f;        // накапливает удар — стоит на месте
             Vector3 mv = CanAct ? new Vector3(moveInput.x, 0f, moveInput.y) : Vector3.zero;
             float mag = Mathf.Min(1f, mv.magnitude);
             float sign = 1f;

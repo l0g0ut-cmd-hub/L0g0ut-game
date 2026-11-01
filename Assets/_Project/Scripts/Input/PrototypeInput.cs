@@ -29,6 +29,7 @@ namespace BladePath
         static readonly AttackType[] EnemyTypes = { AttackType.Overhead, AttackType.Rising, AttackType.LegSweep, AttackType.Thrust, AttackType.Slash, AttackType.Energy };
 
         readonly bool[] held = new bool[Count];
+        bool energyPending; float energyDownAt;
         readonly bool[] down = new bool[Count];
         readonly bool[] active = new bool[Count];
         readonly bool[] round = new bool[Count];
@@ -163,7 +164,29 @@ namespace BladePath
 #endif
                 player.SetBlock(blockHeld);
                 // буфер ввода: нажал во время удара — следующий начнётся сам, как только можно (серия из восстановления)
-                if (aEnergy) player.Attack(AttackType.Energy);
+                // «ДУХ»: короткое нажатие — шар (на отпускании), удержание — накопление удара с узором на полу
+                bool eHeld = held[(int)B.Energy];
+#if ENABLE_LEGACY_INPUT_MANAGER
+                eHeld |= Input.GetKey(KeyCode.M);
+#endif
+                ChargeSystem cs = ChargeSystem.Instance;
+                bool charging = cs != null && cs.IsCharging(player);
+                if (aEnergy) { energyPending = true; energyDownAt = Time.unscaledTime; }
+                if (energyPending && eHeld && cs != null && Time.unscaledTime - energyDownAt >= 0.28f && cs.Begin(player)) { energyPending = false; charging = true; }
+                if (charging)
+                {
+                    // другой удар во время накопления — выпустить накопленное этим ударом; рывок/прыжок/блок — сорвать
+                    AttackType rt = AttackType.Overhead; bool other = false;
+                    if (aRise) { rt = AttackType.Rising; other = true; }
+                    else if (aThrust) { rt = AttackType.Thrust; other = true; }
+                    else if (aSlash) { rt = AttackType.Slash; other = true; }
+                    else if (aLegs) { rt = AttackType.LegSweep; other = true; }
+                    else if (aOver) other = true;
+                    if (dash || jump || blockHeld) cs.Cancel(player);
+                    else if (other || !eHeld) cs.Release(player, rt);
+                    aOver = aRise = aLegs = aThrust = aSlash = false;
+                }
+                else if (energyPending && !eHeld) { energyPending = false; player.Attack(AttackType.Energy); }
                 if (aOver) Press(AttackType.Overhead);
                 if (aRise) Press(AttackType.Rising);
                 if (aLegs) Press(AttackType.LegSweep);
@@ -375,8 +398,18 @@ namespace BladePath
             DrawAttack(B.Slash, slashFlip ? Icon.SlashBack : Icon.Slash, air ? "" : "РЕЗ", canAct && !air);
             DrawAttack(B.Rising, Icon.Up, air ? "В ПРЫЖКЕ" : "СНИЗУ", canAct);
             DrawAttack(B.Legs, Icon.Low, air ? "" : "ПО НОГАМ", canAct && !air);
-            DrawAttack(B.Energy, Icon.Orb, "ШАР", canAct && player.CanEnergy);
-            DrawKiRing(B.Energy, player != null ? Mathf.Clamp01(player.Ki / Mathf.Max(1f, player.energyCost)) : 0f);
+            bool chg = player != null && ChargeSystem.Instance != null && ChargeSystem.Instance.IsCharging(player);
+            if (chg)
+            {
+                int cl = ChargeSystem.Instance.Level(player);
+                DrawAttack(B.Energy, Icon.Orb, cl < 0 ? "НАКОПЛЕНИЕ" : cl == 0 ? "НАТИСК" : cl == 1 ? "ПРОРЫВ" : "СОКРУШЕНИЕ", true);
+                DrawKiRing(B.Energy, ChargeSystem.Instance.Progress(player));
+            }
+            else
+            {
+                DrawAttack(B.Energy, Icon.Orb, "ШАР", canAct && player.CanEnergy);
+                DrawKiRing(B.Energy, player != null ? Mathf.Clamp01(player.Ki / Mathf.Max(1f, player.energyCost)) : 0f);
+            }
             DrawAttack(B.Jump, Icon.Jump, "ПРЫЖОК", player != null && player.CanAct && player.Grounded);
             DrawAttack(B.Block, Icon.Shield, "БЛОК", player != null && player.CanAct && !player.GuardBroken && player.weapon != null && player.weapon.Phase == SwingPhase.Idle);
             DrawAttack(B.Dash, Icon.Dash, "РЫВОК", player != null && player.CanAct && player.DashReady01 >= 1f);

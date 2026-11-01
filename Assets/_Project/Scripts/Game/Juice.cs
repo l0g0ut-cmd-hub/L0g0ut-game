@@ -1225,6 +1225,13 @@ namespace BladePath
             }
         }
 
+        /// <summary>Вспышка ступени накопления: кольцо по полу и ядро света.</summary>
+        public void ChargePulse(Vector3 pos, Color c, float size)
+        {
+            Shockwave(pos + Vector3.up * 0.15f, size * 2.2f, c, 0.45f);
+            Flash(pos + Vector3.up * 0.9f, size * 0.7f, Color.Lerp(c, Color.white, 0.4f), 0.22f, true);
+        }
+
         void Shockwave(Vector3 pos, float size, Color c, float life)
         {
             if (ringTex == null) { ringTex = Resources.Load<Texture2D>("FX/ring_glow"); if (ringTex == null) ringTex = SoftSprites.Ring; }   // светящееся кольцо из атласа
