@@ -114,8 +114,10 @@ namespace BladePath.EditorTools
             l.cedarBark = Textured("Env_CedarBark", "cedar_bark_albedo.png", "cedar_bark_normal.png", new Vector2(1f, 2f), new Color(0.6f, 0.58f, 0.56f), 0f, 0.1f);   // кора криптомерии
             l.chochin = Textured("Env_Chochin", "chochin.png", null, new Vector2(-2f, 1f), new Color(0.95f, 0.92f, 0.86f), 0f, 0.2f);   // бумажный фонарь с иероглифом 祭 (u на сфере Unity идёт справа налево — тайлинг −2, иначе знак зеркальный)
             {
-                Texture2D cht = Tex("chochin.png", false);
-                if (cht != null) { l.chochin.SetTexture("_EmissionMap", cht); l.chochin.EnableKeyword("_EMISSION"); l.chochin.SetColor("_EmissionColor", new Color(1.0f, 0.66f, 0.34f)); l.chochin.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None; }
+                // своя карта свечения: тушь в ней чёрная (контраст), иначе свет бумаги и блум заливали иероглиф на закате
+                Texture2D cht = Tex("chochin_emis.png", false);
+                if (cht == null) cht = Tex("chochin.png", false);
+                if (cht != null) { l.chochin.SetTexture("_EmissionMap", cht); l.chochin.EnableKeyword("_EMISSION"); l.chochin.SetColor("_EmissionColor", new Color(0.82f, 0.53f, 0.27f)); l.chochin.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None; }
             }
             l.bambooLeaf = Solid("Env_BambooLeaf", new Color(0.16f, 0.30f, 0.12f), 0f, 0.2f);
             l.moss = Textured("Env_MossRock", "rock_albedo.png", "rock_normal.png", new Vector2(0.6f, 0.6f), new Color(0.5f, 0.62f, 0.46f), 0f, 0.15f);   // замшелый гранит (не кладка — на валунах швы блоков были бы странны)

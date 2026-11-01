@@ -506,6 +506,8 @@ namespace BladePath.EditorTools
                 foreach (FlickerLight fl in UnityEngine.Object.FindObjectsByType<FlickerLight>(FindObjectsSortMode.None)) Call(fl, "Update");
                 Shot(cam, dir, "41_dusk", pos, look, cam.fieldOfView, log);
                 Shot(cam, dir, "41b_dusk_arena", new Vector3(0f, 3.6f, -6.4f), new Vector3(0f, 1.2f, 2.5f), 50f, log);
+                Shot(cam, dir, "41c_dusk_chochin", new Vector3(-0.8f, 1.9f, 2.9f), new Vector3(-0.8f, 2.0f, 4.75f), 40f, log);   // иероглиф на фонарях на закате
+                Shot(cam, dir, "41d_dusk_hall_side", new Vector3(6.0f, 2.0f, 0.6f), new Vector3(2.4f, 1.8f, 6.2f), 50f, log);   // торец зала под крышей
                 dn.Apply(true, true);   // рассвет в тумане
                 foreach (FlickerLight fl in UnityEngine.Object.FindObjectsByType<FlickerLight>(FindObjectsSortMode.None)) Call(fl, "Update");
                 Shot(cam, dir, "34_dawn", pos, look, cam.fieldOfView, log);

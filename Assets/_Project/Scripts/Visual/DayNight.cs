@@ -120,6 +120,8 @@ namespace BladePath
                 if (day)
                 {
                     float gk = Dawn ? 0.55f : K ? 0.75f : 0.25f;
+                    // бумажные фонари при солнце и так светлые: свечение сильнее приглушаем, иначе пересвет съедает тушь
+                    if (mb.m.name.Contains("Chochin")) gk = Dawn ? 0.35f : K ? 0.4f : 0.1f;
                     if (mb.prop == ColorId) c = Color.Lerp(c, new Color(0.85f, 0.8f, 0.7f, c.a), Dawn || K ? 0.25f : 0.5f); else { c.r *= gk; c.g *= gk; c.b *= gk; }
                 }
                 mb.m.SetColor(mb.prop, c);

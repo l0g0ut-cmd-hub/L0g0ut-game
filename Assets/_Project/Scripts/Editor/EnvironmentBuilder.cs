@@ -87,11 +87,11 @@ namespace BladePath.EditorTools
             AddLantern(env, look, new Vector3(4.5f, 0f, 2.2f));
 
             // сакуры
-            AddTree(env, look, new Vector3(5.4f, 0f, 3.4f), 1.25f, 1);
-            AddTree(env, look, new Vector3(-5.5f, 0f, 4.4f), 1.4f, 2);
+            AddTree(env, look, new Vector3(5.65f, 0f, 2.85f), 1.25f, 1);
+            AddTree(env, look, new Vector3(-5.8f, 0f, 2.65f), 1.4f, 2);
             AddTree(env, look, new Vector3(5.6f, 0f, -0.6f), 1.0f, 3);
             AddTree(env, look, new Vector3(-5.4f, 0f, -1.0f), 1.1f, 4);
-            AddTree(env, look, new Vector3(4.6f, 0f, 8.2f), 1.6f, 5);
+            AddTree(env, look, new Vector3(5.0f, 0f, 10.3f), 1.6f, 5);   // за залом, но не под его крышей
             if (look.fallenLeaves != null) AddFallenLeaves(env, look.fallenLeaves);
             if (look.grass != null) AddGrass(env, look.grass);
             AddShishiOdoshi(env, look, new Vector3(-3.25f, -0.07f, 3.55f));
@@ -212,8 +212,8 @@ namespace BladePath.EditorTools
             }
             // платформа храма (x −5,4…3,8, фасад z = 4,5) и её торцы
             Strip(new Vector3(-5.4f, 0f, 4.5f), new Vector3(3.8f, 0f, 4.5f), new Vector3(0f, 0f, 1f), 0.7f, yGravel);
-            Strip(new Vector3(-5.4f, 0f, 4.5f), new Vector3(-5.4f, 0f, 7.1f), new Vector3(1f, 0f, 0f), 0.6f, yGravel);
-            Strip(new Vector3(3.8f, 0f, 4.5f), new Vector3(3.8f, 0f, 7.1f), new Vector3(-1f, 0f, 0f), 0.6f, yGravel);
+            Strip(new Vector3(-5.4f, 0f, 4.5f), new Vector3(-5.4f, 0f, 7.8f), new Vector3(1f, 0f, 0f), 0.6f, yGravel);
+            Strip(new Vector3(3.8f, 0f, 4.5f), new Vector3(3.8f, 0f, 7.8f), new Vector3(-1f, 0f, 0f), 0.6f, yGravel);
             // бордюр арены: снаружи на гравии и внутри на мостовой (узко)
             Strip(new Vector3(-3.9f, 0f, 3.0f), new Vector3(3.9f, 0f, 3.0f), new Vector3(0f, 0f, -1f), 0.4f, yGravel);
             Strip(new Vector3(-3.9f, 0f, -3.0f), new Vector3(3.9f, 0f, -3.0f), new Vector3(0f, 0f, 1f), 0.4f, yGravel);
@@ -963,12 +963,22 @@ namespace BladePath.EditorTools
             hall.SetParent(env, false);
             const float cx = -0.8f;
             // каменный подиум и ступени
-            EnvMesh.Box(hall, "Platform", new Vector3(cx, 0.25f, 5.8f), Vector3.zero, new Vector3(9.2f, 0.5f, 2.6f), look.stoneBlock, 1.5f);
+            EnvMesh.Box(hall, "Platform", new Vector3(cx, 0.25f, 6.15f), Vector3.zero, new Vector3(9.2f, 0.5f, 3.3f), look.stoneBlock, 1.5f);
             EnvMesh.Box(hall, "Step1", new Vector3(cx, 0.17f, 4.35f), Vector3.zero, new Vector3(2.6f, 0.34f, 0.32f), look.stoneBlock, 1.5f);
             EnvMesh.Box(hall, "Step0", new Vector3(cx, 0.085f, 4.05f), Vector3.zero, new Vector3(2.6f, 0.17f, 0.3f), look.stoneBlock, 1.5f);
             // стены и потолок
-            EnvMesh.Box(hall, "Wall", new Vector3(cx, 1.5f, 6.1f), Vector3.zero, new Vector3(7.6f, 2.0f, 1.4f), look.plaster, 2f);
-            EnvMesh.Box(hall, "Ceiling", new Vector3(cx, 2.55f, 6.0f), Vector3.zero, new Vector3(8.2f, 0.08f, 3.0f), look.woodDark, 1f, true);
+            // корпус зала — почти под всю крышу (свес ~0,6 м): раньше по бокам и сзади под кровлей было пусто и сквозь просвет виднелся лес
+            EnvMesh.Box(hall, "Wall", new Vector3(cx, 1.5f, 6.5f), Vector3.zero, new Vector3(8.8f, 2.0f, 2.2f), look.plaster, 2f);
+            EnvMesh.Box(hall, "Ceiling", new Vector3(cx, 2.55f, 6.15f), Vector3.zero, new Vector3(9.4f, 0.08f, 3.5f), look.woodDark, 1f, true);
+            // угловые столбы торцевых пролётов и брус по низу стены
+            for (int side = -1; side <= 1; side += 2)
+            {
+                float x = cx + side * 4.3f;
+                CharacterVisuals.Part(hall, "CornerCol" + side, PrimitiveType.Cylinder, new Vector3(x, 1.5f, 5.3f), Vector3.zero, new Vector3(0.2f, 1.0f, 0.2f), look.lacquer);
+                EnvMesh.Box(hall, "CornerBase" + side, new Vector3(x, 0.585f, 5.3f), Vector3.zero, new Vector3(0.3f, 0.13f, 0.3f), look.stoneBlock, 1f);
+                CharacterVisuals.Part(hall, "BackCol" + side, PrimitiveType.Cylinder, new Vector3(x, 1.5f, 7.6f), Vector3.zero, new Vector3(0.2f, 1.0f, 0.2f), look.lacquer);
+            }
+            EnvMesh.Box(hall, "Sill", new Vector3(cx, 0.62f, 6.5f), Vector3.zero, new Vector3(8.84f, 0.12f, 2.24f), look.woodDark, 1f, true);
             // колонны, ставни-сёдзи, балка
             for (int i = 0; i < 6; i++)
             {
@@ -983,8 +993,8 @@ namespace BladePath.EditorTools
                     AddReflection(sp.transform, null, 1f, new Color(1f, 0.74f, 0.42f), 1.0f, 2.4f, 0.36f);
                 }
             }
-            EnvMesh.Box(hall, "Lintel", new Vector3(cx, 2.35f, 5.15f), Vector3.zero, new Vector3(7.8f, 0.2f, 0.24f), look.lacquer, 1f, true);
-            EnvMesh.Box(hall, "Veranda", new Vector3(cx, 0.55f, 4.95f), Vector3.zero, new Vector3(7.6f, 0.1f, 0.6f), look.wood, 1f, true);
+            EnvMesh.Box(hall, "Lintel", new Vector3(cx, 2.35f, 5.15f), Vector3.zero, new Vector3(8.8f, 0.2f, 0.24f), look.lacquer, 1f, true);
+            EnvMesh.Box(hall, "Veranda", new Vector3(cx, 0.55f, 4.95f), Vector3.zero, new Vector3(8.8f, 0.1f, 0.6f), look.wood, 1f, true);
             // крыша: скаты, конёк, свесы
             const float roofY = 2.6f;
             // вальмовая крыша с вогнутыми скатами и загнутыми углами (как в референсе)
@@ -1288,7 +1298,7 @@ namespace BladePath.EditorTools
         {
             System.Random r = new System.Random(77);
             List<Vector3> v = new List<Vector3>(); List<Vector3> n = new List<Vector3>(); List<Vector2> uv = new List<Vector2>(); List<int> t = new List<int>();
-            Vector3[] trees = { new Vector3(5.4f, 0f, 3.4f), new Vector3(-5.5f, 0f, 4.4f), new Vector3(5.6f, 0f, -0.6f), new Vector3(-5.4f, 0f, -1.0f) };
+            Vector3[] trees = { new Vector3(5.65f, 0f, 2.85f), new Vector3(-5.8f, 0f, 2.65f), new Vector3(5.6f, 0f, -0.6f), new Vector3(-5.4f, 0f, -1.0f) };
             System.Func<float> R = () => (float)r.NextDouble();
             System.Action<Vector3> Leaf = (Vector3 p) =>
             {
@@ -1377,7 +1387,7 @@ namespace BladePath.EditorTools
             // у подножий: фонари, тории, стволы клёнов
             Vector3[] bases = { new Vector3(-4.5f, 0f, -1.6f), new Vector3(4.5f, 0f, -1.6f), new Vector3(-4.5f, 0f, 2.2f), new Vector3(4.5f, 0f, 2.2f),
                                 new Vector3(0.7f, 0f, 3.6f), new Vector3(2.7f, 0f, 3.6f),
-                                new Vector3(5.4f, 0f, 3.4f), new Vector3(-5.5f, 0f, 4.4f), new Vector3(5.6f, 0f, -0.6f), new Vector3(-5.4f, 0f, -1.0f) };
+                                new Vector3(5.65f, 0f, 2.85f), new Vector3(-5.8f, 0f, 2.65f), new Vector3(5.6f, 0f, -0.6f), new Vector3(-5.4f, 0f, -1.0f) };
             foreach (Vector3 b in bases)
                 for (int i = 0; i < 9; i++)
                 {
