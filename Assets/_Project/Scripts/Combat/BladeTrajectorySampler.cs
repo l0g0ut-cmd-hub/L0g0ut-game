@@ -74,8 +74,8 @@ namespace BladePath
         static readonly Comparison<Candidate> ByOrder = delegate (Candidate x, Candidate y) { return x.order.CompareTo(y.order); };
 
         void Awake() { weapon = GetComponent<WeaponController>(); }
-        void OnEnable() { if (weapon == null) weapon = GetComponent<WeaponController>(); weapon.ContactWindowOpened += OnWindowOpened; }
-        void OnDisable() { if (weapon != null) weapon.ContactWindowOpened -= OnWindowOpened; }
+        void OnEnable() { if (weapon == null) weapon = GetComponent<WeaponController>(); if (weapon != null) weapon.ContactWindowOpened += OnWindowOpened; ResetTracking(); }
+        void OnDisable() { if (weapon != null) weapon.ContactWindowOpened -= OnWindowOpened; ResetTracking(); }
 
         // новый удар — новый набор «уже задетых» зон
         void OnWindowOpened(WeaponController w) { contactedThisSwing.Clear(); }
@@ -104,7 +104,9 @@ namespace BladePath
 
             float angle = Quaternion.Angle(r0, r1);
             float linear = (p1 - p0).magnitude;
-            int needed = Mathf.CeilToInt(Mathf.Max(angle / maxAngleStepDeg, linear / maxLinearStep));
+            // Serialized settings can be zero (or edited at runtime), even with Inspector sliders.
+            // Clamp denominators to keep the sweep finite and deterministic.
+            int needed = Mathf.CeilToInt(Mathf.Max(angle / Mathf.Max(0.01f, maxAngleStepDeg), linear / Mathf.Max(0.001f, maxLinearStep)));
             int n = Mathf.Clamp(needed, 1, maxSubsteps);
             SubstepsLastFrame = n;
             UndersampledLastFrame = needed > maxSubsteps;
