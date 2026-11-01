@@ -12,3 +12,4 @@ for i in range(16):
     v = v * np.clip((1.0 - rr) / 0.08, 0, 1)[..., None]
     S.paste(Image.fromarray((np.dstack([v, v.max(-1)]) * 255).astype(np.uint8), 'RGBA').resize((256, 256), Image.LANCZOS), (c * 256, r * 256))
 S.save('../../Assets/_Project/Resources/FX/rage_ignite.png'); print('ok')
+# атлас 35 (удар накопления, 16 кадров) нарезан тем же способом с краевым затуханием → FX/charge_slash.png

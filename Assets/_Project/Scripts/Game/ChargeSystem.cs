@@ -34,6 +34,7 @@ namespace BladePath
         readonly Dictionary<FighterController, int> strikeLevel = new Dictionary<FighterController, int>();
         readonly Dictionary<FighterController, float> waveAt = new Dictionary<FighterController, float>();
         readonly Dictionary<FighterController, int> waveLvl = new Dictionary<FighterController, int>();
+        readonly Dictionary<FighterController, Vector2Int> slashLvl = new Dictionary<FighterController, Vector2Int>();   // x — ступень, y — замах   // полумесяц энергии — на фазе удара
 
         void Awake() { Instance = this; }
 
@@ -90,6 +91,7 @@ namespace BladePath
             strikeSwing[f] = f.weapon != null ? f.weapon.SwingId : -1;
             strikeLevel[f] = lvl;
             if (lvl >= 2) { waveAt[f] = Time.time + 0.18f; waveLvl[f] = lvl; }
+            if (lvl >= 1) slashLvl[f] = new Vector2Int(lvl, f.weapon != null ? f.weapon.SwingId : -1);
             Vector3 hitAt = f.transform.position + f.transform.forward * 0.9f;
             GroundFlash.Spawn("FX/crack_glow", hitAt, 1.4f + 0.9f * lvl, 1.6f + 1.1f * lvl, c.col, 1.3f + 0.3f * lvl, 0f, true);
             GroundFlash.SpawnSheet("FX/shock_dust", hitAt, 2.0f + 1.0f * lvl, 3.2f + 1.6f * lvl, c.col, 0.55f, 4, 1, 4);
@@ -530,6 +532,35 @@ namespace BladePath
                 f.SetMoveVector(Vector2.zero);
             }
             if (drop != null) foreach (FighterController f in drop) Cancel(f);
+            // со II ступени: клинок выпускает огромный полумесяц энергии — в момент удара, по ходу взмаха
+            if (slashLvl.Count > 0)
+            {
+                List<FighterController> sd = null;
+                foreach (KeyValuePair<FighterController, Vector2Int> kv in slashLvl)
+                {
+                    FighterController a = kv.Key;
+                    bool gone = a == null || a.weapon == null || kv.Value.y != a.weapon.SwingId;
+                    if (!gone && a.weapon.Phase != SwingPhase.Strike) continue;
+                    (sd ?? (sd = new List<FighterController>())).Add(a);
+                    if (gone) continue;
+                    int lv = kv.Value.x;
+                    Color sc = lv >= Max ? Crimson : ColorOf(a);
+                    float size = 2.4f + 0.7f * lv;
+                    FxSprite s = FxSprite.Spawn("charge_slash", a.transform.position + a.transform.forward * 0.9f + Vector3.up * 1.15f, size, 4, 4, 16, 30f, false, 0.55f);
+                    if (s != null)
+                    {
+                        s.tint = new Color(Mathf.Lerp(1f, sc.r, 0.6f), Mathf.Lerp(1f, sc.g, 0.6f), Mathf.Lerp(1f, sc.b, 0.6f), 0.9f);
+                        Camera cam = Camera.main;
+                        if (cam != null) s.flipX = Vector3.Dot(a.transform.forward, cam.transform.right) < 0f;   // удар влево — полумесяц зеркально
+                    }
+                    if (lv >= 2)
+                    {
+                        FxSprite s2 = FxSprite.Spawn("charge_slash", a.transform.position + a.transform.forward * 1.2f + Vector3.up * 1.1f, size * 1.25f, 4, 4, 16, 30f, false, 0.65f);   // эхо, крупнее и тише
+                        if (s2 != null) { s2.tint = new Color(sc.r, sc.g, sc.b, 0.45f); if (s != null) s2.flipX = s.flipX; }
+                    }
+                }
+                if (sd != null) foreach (FighterController a in sd) slashLvl.Remove(a);
+            }
             // волна третьей ступени — по площадке вокруг удара
             if (waveAt.Count > 0)
             {

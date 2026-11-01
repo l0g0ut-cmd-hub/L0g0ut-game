@@ -17,6 +17,7 @@ namespace BladePath
         public Color tint = Color.white;
         public bool unscaled;      // время без замедления (эффекты в замедленной концовке раунда не тянутся)
         public Vector3 vel;        // дрейф, если не привязан к объекту
+        public bool flipX;         // зеркально (удар влево по экрану)
         float Now { get { return unscaled ? Time.unscaledTime : Time.time; } }
         Mesh[] meshes; MeshFilter mf; MeshRenderer mr; float born; MaterialPropertyBlock mpb;
         static readonly System.Collections.Generic.Dictionary<string, Material> mats = new System.Collections.Generic.Dictionary<string, Material>();
@@ -103,7 +104,7 @@ namespace BladePath
                 transform.rotation = Quaternion.LookRotation(f, up) * Quaternion.Euler(0f, 0f, ang);
             }
             float k = loop ? 1f : 1f + grow * (age / Mathf.Max(0.01f, life));
-            transform.localScale = Vector3.one * size * k;
+            transform.localScale = new Vector3(flipX ? -1f : 1f, 1f, 1f) * (size * k);
             float fade = loop ? 1f : Mathf.Clamp01((life - age) / (life * 0.35f));
             mr.GetPropertyBlock(mpb);
             mpb.SetColor(TintId, new Color(tint.r * 0.5f, tint.g * 0.5f, tint.b * 0.5f, 0.5f * tint.a * fade));
