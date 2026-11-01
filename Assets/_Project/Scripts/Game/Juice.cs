@@ -460,7 +460,7 @@ namespace BladePath
             if (strength > 0.6f) Shreds(point, dir, strength);
             HurtVoice(bleedAt, strength, kill);
             if (bleedAt != null) Bleed(bleedAt, Mathf.Lerp(1.2f, 3.5f, Mathf.Clamp01(strength - 0.4f)), strength);
-            if (kill) { Play(boom, 1f, 1f); PetalBurst(60); StartCoroutine(SpiritLater(point)); }
+            if (kill) { Play(boom, 1f, 1f); PetalBurst(60); }
             else if (strength > 1.2f) PetalBurst(12);
         }
 
@@ -1246,11 +1246,22 @@ namespace BladePath
             Sheet("fx_dash_dust", feet + Vector3.up * 0.52f, 1.5f, 0.5f, new Color(0.75f, 0.74f, 0.72f, 0.6f));
         }
 
-        // поверженный: через миг от тела поднимается дух — призрачные струи и светящийся пепел
+        /// <summary>
+        /// Поверженный в конце поединка (не в каждом раунде — враг ещё встанет): от тела поднимается дух. Время без замедления
+        /// концовки, три наложенных друг на друга волны со сдвигом и подъёмом — 4 кадра атласа не дёргаются.
+        /// </summary>
+        public void SpiritRise(Vector3 at) { StartCoroutine(SpiritLater(at)); }
+
         System.Collections.IEnumerator SpiritLater(Vector3 at)
         {
-            yield return new WaitForSeconds(0.7f);
-            Sheet("fx_spirit", new Vector3(at.x, 0f, at.z) + Vector3.up * 1.25f, 2.6f, 2.4f, new Color(0.85f, 0.9f, 1f, 0.8f));
+            yield return new WaitForSecondsRealtime(0.6f);
+            for (int i = 0; i < 3; i++)
+            {
+                Vector3 p = new Vector3(at.x + (i - 1) * 0.12f, 0f, at.z) + Vector3.up * (1.1f + 0.15f * i);
+                FxSprite s = FxSprite.Spawn("fx_spirit", p, 2.2f + 0.2f * i, 4, 1, 4, 4f, false, 1.5f);
+                if (s != null) { s.unscaled = true; s.vel = Vector3.up * 0.45f; s.grow = 0.3f; s.tint = new Color(0.85f, 0.9f, 1f, 0.55f); }
+                yield return new WaitForSecondsRealtime(0.22f);
+            }
         }
 
         /// <summary>Отражение (парирование): самая яркая вспышка в игре — блик, кольцо волны, веер искр от клинка.</summary>

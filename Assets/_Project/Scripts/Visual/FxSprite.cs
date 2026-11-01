@@ -15,6 +15,9 @@ namespace BladePath
         public Transform follow;
         public System.Func<Vector3> dir;
         public Color tint = Color.white;
+        public bool unscaled;      // время без замедления (эффекты в замедленной концовке раунда не тянутся)
+        public Vector3 vel;        // дрейф, если не привязан к объекту
+        float Now { get { return unscaled ? Time.unscaledTime : Time.time; } }
         Mesh[] meshes; MeshFilter mf; MeshRenderer mr; float born; MaterialPropertyBlock mpb;
         static readonly System.Collections.Generic.Dictionary<string, Material> mats = new System.Collections.Generic.Dictionary<string, Material>();
         static readonly int TintId = Shader.PropertyToID("_TintColor");
@@ -67,7 +70,7 @@ namespace BladePath
                 meshes[i] = m;
             }
             mpb = new MaterialPropertyBlock();
-            born = Time.time;
+            born = Now;
             Pose();
         }
 
@@ -75,13 +78,14 @@ namespace BladePath
         {
             if (meshes == null) return;
             if (loop && follow == null) { Destroy(gameObject); return; }   // шар погас — и пламя с ним
-            if (!loop && Time.time - born >= life) { Destroy(gameObject); return; }
+            if (!loop && Now - born >= life) { Destroy(gameObject); return; }
+            if (follow == null && vel != Vector3.zero) transform.position += vel * (unscaled ? Time.unscaledDeltaTime : Time.deltaTime);
             Pose();
         }
 
         void Pose()
         {
-            float age = Time.time - born;
+            float age = Now - born;
             int fr = loop ? (int)(age * fps) % frames : Mathf.Min(frames - 1, (int)(age / life * frames));
             mf.sharedMesh = meshes[fr];
             if (follow != null) transform.position = follow.position;

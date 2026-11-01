@@ -1482,7 +1482,7 @@ namespace BladePath
             SetState(playerLost ? DuelState.PlayerLost : DuelState.PlayerWon);
             if (playerLost) EnemyWins++; else PlayerWins++;
             MatchOver = PlayerWins >= winsToMatch || EnemyWins >= winsToMatch;
-            if (MatchOver) { Records.OnMatch(PlayerWins >= winsToMatch, Ladder.Index); GrantReward(); }
+            if (MatchOver) { Records.OnMatch(PlayerWins >= winsToMatch, Ladder.Index); GrantReward(); if (Juice.Instance != null && target != null) Juice.Instance.SpiritRise(target.transform.position); }
             nextRoundAt = Time.unscaledTime + nextRoundDelay;
             if (attacker != null) attacker.Frozen = true;
             Slowmo = true; slowUntil = Time.unscaledTime + 1.1f;
