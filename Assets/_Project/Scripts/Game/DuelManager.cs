@@ -288,6 +288,9 @@ namespace BladePath
             else ResolveIai(t <= 0.45f, false);
         }
 
+        // ИИ врага выключен (кнопка ИИ) — никаких самостоятельных ударов, и выхвата тоже
+        EnemyAI enemyAi; bool EnemyAiOn() { if (enemyAi == null) enemyAi = FindFirstObjectByType<EnemyAI>(); return enemyAi == null || enemyAi.aiEnabled; }
+
         void ResolveIai(bool playerWon, bool late)
         {
             IaiWaiting = false; iaiDone = true;
@@ -409,7 +412,7 @@ namespace BladePath
             if (State == DuelState.Intro && StateTime >= IntroLength)
             {
                 // выхват (иай): в первом раунде и через раз в остальных — бойцы замерли, ждут знака; кто первым — тот и рубит
-                if (!IaiWaiting && !iaiDone && (Round == 1 || iaiRoll)) { IaiWaiting = true; IaiCueAt = Time.unscaledTime + UnityEngine.Random.Range(1.0f, 2.4f); iaiCueSounded = false; }
+                if (!IaiWaiting && !iaiDone && (Round == 1 || iaiRoll) && EnemyAiOn()) { IaiWaiting = true; IaiCueAt = Time.unscaledTime + UnityEngine.Random.Range(1.0f, 2.4f); iaiCueSounded = false; }
                 if (IaiWaiting)
                 {
                     if (!iaiCueSounded && Time.unscaledTime >= IaiCueAt) { iaiCueSounded = true; if (Juice.Instance != null) Juice.Instance.Taiko(1f, 1.35f); Haptics.Pulse(30); }

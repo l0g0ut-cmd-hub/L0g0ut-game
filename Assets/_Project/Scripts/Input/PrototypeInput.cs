@@ -260,7 +260,7 @@ namespace BladePath
             Box(B.Stats, rx, 370f, 300f, 40f);
             Box(B.OverAgain, cx - 210f, 300f, 200f, 56f);
             Box(B.OverMenu, cx + 10f, 300f, 200f, 56f);
-            Box(B.OverGear, cx - 100f, 480f, 200f, 46f);
+            Box(B.OverGear, cx - 130f, 480f, 260f, 46f);
 
             for (int i = 0; i < Count; i++) active[i] = false;
             if (play)

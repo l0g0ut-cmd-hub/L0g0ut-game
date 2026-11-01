@@ -165,6 +165,12 @@ namespace BladePath
             Rect pr = new Rect(r.x * k, r.y * k, r.width * k, r.height * k);
             label.fontSize = Mathf.Max(6, Mathf.RoundToInt(size * k));
             label.alignment = anchor;
+            // не вылезать за рамку: длинная надпись ужимается по ширине (не мельче 55 %)
+            if (pr.width > 24f && !string.IsNullOrEmpty(s))
+            {
+                float w = label.CalcSize(new GUIContent(s)).x, room = pr.width - 4f * k;
+                if (w > room) label.fontSize = Mathf.Max(6, Mathf.RoundToInt(label.fontSize * Mathf.Max(0.55f, room / w)));
+            }
             if (shadow)
             {
                 label.normal.textColor = new Color(0f, 0f, 0f, 0.85f * c.a);

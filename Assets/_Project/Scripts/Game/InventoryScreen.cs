@@ -396,8 +396,9 @@ namespace BladePath
                 Color o = GUI.color; GUI.color = new Color(1f, 1f, 1f, it * a);
                 DrawItem(new Rect(c.x - s * 0.5f, c.y - s * 0.5f, s, s), r.items[i], false);
                 GUI.color = o;
-                string nm = r.items[i].name; if (nm.Length > 14) nm = nm.Substring(0, 13) + "…";
-                UiKit.Text(new Rect(c.x - 40f, c.y + 34f, 80f, 14f), nm, 9f, new Color(Profile.RarityColors[r.items[i].rarity].r, Profile.RarityColors[r.items[i].rarity].g, Profile.RarityColors[r.items[i].rarity].b, it * a), TextAnchor.MiddleCenter, false);
+                // под значком — только сам предмет (без прозвища в кавычках), чтобы подписи не налезали друг на друга
+                string nm = r.items[i].name; int q = nm.IndexOf('«'); if (q > 0) nm = nm.Substring(0, q).Trim();
+                UiKit.Text(new Rect(c.x - 36f, c.y + 34f, 72f, 14f), nm, 9f, new Color(Profile.RarityColors[r.items[i].rarity].r, Profile.RarityColors[r.items[i].rarity].g, Profile.RarityColors[r.items[i].rarity].b, it * a), TextAnchor.MiddleCenter, false);
             }
         }
     }
