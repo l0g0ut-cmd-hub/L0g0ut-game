@@ -259,6 +259,107 @@ namespace BladePath
             if (c.pillarMat != null) Destroy(c.pillarMat);
         }
 
+        void PoseVisuals(Charge c, FighterController f, float t)
+        {
+            float k = Mathf.Clamp01(t / LevelAt[2]);
+            float pulse = 1f + 0.06f * Mathf.Sin(Time.time * (8f + 6f * Mathf.Max(0, c.level)));
+            if (c.sigil != null)
+            {
+                float s = Mathf.Lerp(0.9f, 3.4f, 1f - (1f - k) * (1f - k)) * pulse;
+                c.sigil.position = new Vector3(f.transform.position.x, 0.022f, f.transform.position.z);
+                c.sigil.localScale = new Vector3(s, s, 1f);
+                c.sigil.Rotate(0f, 0f, (40f + 140f * k) * Time.deltaTime, Space.Self);
+                // свой цветной узор — без подкраски; запасная печать — в цвет бойца
+                float a = Mathf.Clamp01(t / 0.25f) * (c.early != null ? Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.25f, 0.75f, k)) : 0.55f + 0.45f * k);
+                Color tc = c.early != null ? new Color(0.5f, 0.5f, 0.5f, 0.5f) : new Color(c.col.r * 0.5f, c.col.g * 0.5f, c.col.b * 0.5f, 0.5f);
+                c.sigilMat.SetColor("_TintColor", new Color(tc.r, tc.g, tc.b, tc.a * a * (0.8f + 0.2f * pulse)));
+                if (c.early != null)
+                {
+                    c.early.position = c.sigil.position + Vector3.up * 0.002f;
+                    float se = Mathf.Lerp(1.1f, s * 0.62f, k);
+                    c.early.localScale = new Vector3(se, se, 1f);
+                    c.early.Rotate(0f, 0f, -(60f + 90f * k) * Time.deltaTime, Space.Self);   // против хода полного узора
+                    float ea = Mathf.Clamp01(t / 0.2f) * (1f - Mathf.InverseLerp(0.45f, 0.95f, k));
+                    c.earlyMat.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0.5f * ea));
+                }
+            }
+            if (c.draw != null)
+            {
+                int fr; float da;
+                if (t < 0.6f) { fr = Mathf.Min(11, (int)(t / 0.6f * 12f)); da = 1f; }
+                else if (c.level >= 2) { fr = 12 + (int)(Time.time * 14f) % 4; da = 0.9f; }
+                else { fr = 11; da = Mathf.Lerp(1f, 0.4f, Mathf.Clamp01((t - 0.6f) / 0.5f)); }
+                c.drawMat.mainTextureOffset = new Vector2((fr % 4) * 0.25f, 0.75f - (fr / 4) * 0.25f);
+                float sd = Mathf.Lerp(0.9f, 3.4f, 1f - (1f - k) * (1f - k)) * pulse * 1.16f;
+                c.draw.position = new Vector3(f.transform.position.x, 0.026f, f.transform.position.z);
+                c.draw.localScale = new Vector3(sd, sd, 1f);
+                if (c.sigil != null) c.draw.rotation = c.sigil.rotation;
+                Color dc = Color.Lerp(c.col, Color.white, 0.35f);
+                c.drawMat.SetColor("_TintColor", new Color(dc.r * 0.5f, dc.g * 0.5f, dc.b * 0.5f, 0.5f * da));
+            }
+            if (c.inhale != null) { c.inhale.size = Mathf.Lerp(1.3f, 2.8f, k) * pulse; c.inhale.tint = new Color(c.col.r, c.col.g, c.col.b, 0.25f + 0.45f * k); }
+            if (c.embers != null)
+            {
+                c.embers.size = Mathf.Lerp(1.2f, 2.8f, k);
+                if (c.emberAnchor != null) c.emberAnchor.localPosition = Vector3.up * (c.embers.size * 0.5f);
+                Color ec = Color.Lerp(c.col, Color.white, 0.3f); c.embers.tint = new Color(ec.r, ec.g, ec.b, 0.4f + 0.6f * k);
+            }
+            if (c.pool != null)
+            {
+                float sp = Mathf.Lerp(1.6f, 4.6f, k);
+                c.pool.position = new Vector3(f.transform.position.x, 0.018f, f.transform.position.z);
+                c.pool.localScale = new Vector3(sp, sp, 1f);
+                c.poolMat.SetColor("_TintColor", new Color(c.col.r * 0.5f, c.col.g * 0.5f, c.col.b * 0.5f, (0.12f + 0.25f * k) * Mathf.Clamp01(t / 0.3f)));
+            }
+            if (c.pillar != null)
+            {
+                float w = Mathf.Lerp(0.9f, 2.2f, k) * pulse;
+                c.pillar.position = new Vector3(f.transform.position.x, 0.0f, f.transform.position.z);
+                c.pillar.localScale = new Vector3(w, w * c.pillarAspect * Mathf.Lerp(0.7f, 1.25f, k), 1f);
+                Camera cam = Camera.main;
+                if (cam != null)
+                {
+                    Vector3 look = c.pillar.position - cam.transform.position; look.y = 0f;
+                    if (look.sqrMagnitude > 1e-4f) c.pillar.rotation = Quaternion.LookRotation(look.normalized, Vector3.up);
+                }
+                float pa = Mathf.Clamp01((t - 0.15f) / 0.4f) * (0.2f + 0.7f * k);
+                c.pillarMat.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0.5f * pa));
+                if (c.pillarFrames > 1) c.pillarMat.mainTextureOffset = new Vector2(((int)(Time.time * 12f) % c.pillarFrames) / (float)c.pillarFrames, 0f);
+            }
+            if (c.rise != null)
+            {
+                c.rise.transform.position = new Vector3(f.transform.position.x, 0.03f, f.transform.position.z);
+                var em = c.rise.emission; em.rateOverTime = 30f + 160f * k;
+                var sh = c.rise.shape; sh.radius = Mathf.Lerp(0.45f, 1.5f, k);
+                var main = c.rise.main; main.startSpeed = new ParticleSystem.MinMaxCurve(1.2f + 2f * k, 3.2f + 4f * k);
+            }
+            if (c.flame != null) { c.flame.size = Mathf.Lerp(1.1f, 2.6f, k) * pulse; c.flame.tint = new Color(c.col.r, c.col.g, c.col.b, 0.35f + 0.55f * k); }
+            if (c.light != null) { c.light.transform.position = f.transform.position + Vector3.up * 0.6f; c.light.intensity = (0.6f + 2.4f * k) * pulse; c.light.range = 2.5f + 2.5f * k; }
+        }
+
+        /// <summary>Повернуть столбы ауры к камере (в игре это делает PoseVisuals каждый кадр; здесь — для кадров CI).</summary>
+        public void FacePillars(Camera cam)
+        {
+            if (cam == null) return;
+            foreach (KeyValuePair<FighterController, Charge> kv in active)
+            {
+                Transform p = kv.Value.pillar;
+                if (p == null) continue;
+                Vector3 look = p.position - cam.transform.position; look.y = 0f;
+                if (look.sqrMagnitude > 1e-4f) p.rotation = Quaternion.LookRotation(look.normalized, Vector3.up);
+            }
+        }
+
+        /// <summary>Для кадров CI (редактор, без игрового цикла): построить накопление и показать его на момент t.</summary>
+        public void Preview(FighterController f, float t, int level)
+        {
+            Charge c = new Charge { f = f, start = 0f, level = level, col = ColorOf(f) };
+            Build(c);
+            active[f] = c;
+            PoseVisuals(c, f, t);
+            if (c.rise != null) c.rise.Simulate(1.2f, true, true);
+        }
+
         float hintCheck;
         void Update()
         {
@@ -290,80 +391,7 @@ namespace BladePath
                     if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.02f + 0.02f * lvl);
                     Haptics.Pulse(25 + 15 * lvl);
                 }
-                float k = Mathf.Clamp01(t / LevelAt[2]);
-                float pulse = 1f + 0.06f * Mathf.Sin(Time.time * (8f + 6f * Mathf.Max(0, c.level)));
-                if (c.sigil != null)
-                {
-                    float s = Mathf.Lerp(0.9f, 3.4f, 1f - (1f - k) * (1f - k)) * pulse;
-                    c.sigil.position = new Vector3(f.transform.position.x, 0.022f, f.transform.position.z);
-                    c.sigil.localScale = new Vector3(s, s, 1f);
-                    c.sigil.Rotate(0f, 0f, (40f + 140f * k) * Time.deltaTime, Space.Self);
-                    // свой цветной узор — без подкраски; запасная печать — в цвет бойца
-                    float a = Mathf.Clamp01(t / 0.25f) * (c.early != null ? Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.25f, 0.75f, k)) : 0.55f + 0.45f * k);
-                    Color tc = c.early != null ? new Color(0.5f, 0.5f, 0.5f, 0.5f) : new Color(c.col.r * 0.5f, c.col.g * 0.5f, c.col.b * 0.5f, 0.5f);
-                    c.sigilMat.SetColor("_TintColor", new Color(tc.r, tc.g, tc.b, tc.a * a * (0.8f + 0.2f * pulse)));
-                    if (c.early != null)
-                    {
-                        c.early.position = c.sigil.position + Vector3.up * 0.002f;
-                        float se = Mathf.Lerp(1.1f, s * 0.62f, k);
-                        c.early.localScale = new Vector3(se, se, 1f);
-                        c.early.Rotate(0f, 0f, -(60f + 90f * k) * Time.deltaTime, Space.Self);   // против хода полного узора
-                        float ea = Mathf.Clamp01(t / 0.2f) * (1f - Mathf.InverseLerp(0.45f, 0.95f, k));
-                        c.earlyMat.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0.5f * ea));
-                    }
-                }
-                if (c.draw != null)
-                {
-                    int fr; float da;
-                    if (t < 0.6f) { fr = Mathf.Min(11, (int)(t / 0.6f * 12f)); da = 1f; }
-                    else if (c.level >= 2) { fr = 12 + (int)(Time.time * 14f) % 4; da = 0.9f; }
-                    else { fr = 11; da = Mathf.Lerp(1f, 0.4f, Mathf.Clamp01((t - 0.6f) / 0.5f)); }
-                    c.drawMat.mainTextureOffset = new Vector2((fr % 4) * 0.25f, 0.75f - (fr / 4) * 0.25f);
-                    float sd = Mathf.Lerp(0.9f, 3.4f, 1f - (1f - k) * (1f - k)) * pulse * 1.16f;
-                    c.draw.position = new Vector3(f.transform.position.x, 0.026f, f.transform.position.z);
-                    c.draw.localScale = new Vector3(sd, sd, 1f);
-                    if (c.sigil != null) c.draw.rotation = c.sigil.rotation;
-                    Color dc = Color.Lerp(c.col, Color.white, 0.35f);
-                    c.drawMat.SetColor("_TintColor", new Color(dc.r * 0.5f, dc.g * 0.5f, dc.b * 0.5f, 0.5f * da));
-                }
-                if (c.inhale != null) { c.inhale.size = Mathf.Lerp(1.3f, 2.8f, k) * pulse; c.inhale.tint = new Color(c.col.r, c.col.g, c.col.b, 0.25f + 0.45f * k); }
-                if (c.embers != null)
-                {
-                    c.embers.size = Mathf.Lerp(1.2f, 2.8f, k);
-                    if (c.emberAnchor != null) c.emberAnchor.localPosition = Vector3.up * (c.embers.size * 0.5f);
-                    Color ec = Color.Lerp(c.col, Color.white, 0.3f); c.embers.tint = new Color(ec.r, ec.g, ec.b, 0.4f + 0.6f * k);
-                }
-                if (c.pool != null)
-                {
-                    float sp = Mathf.Lerp(1.6f, 4.6f, k);
-                    c.pool.position = new Vector3(f.transform.position.x, 0.018f, f.transform.position.z);
-                    c.pool.localScale = new Vector3(sp, sp, 1f);
-                    c.poolMat.SetColor("_TintColor", new Color(c.col.r * 0.5f, c.col.g * 0.5f, c.col.b * 0.5f, (0.12f + 0.25f * k) * Mathf.Clamp01(t / 0.3f)));
-                }
-                if (c.pillar != null)
-                {
-                    float w = Mathf.Lerp(0.9f, 2.2f, k) * pulse;
-                    c.pillar.position = new Vector3(f.transform.position.x, 0.0f, f.transform.position.z);
-                    c.pillar.localScale = new Vector3(w, w * c.pillarAspect * Mathf.Lerp(0.7f, 1.25f, k), 1f);
-                    Camera cam = Camera.main;
-                    if (cam != null)
-                    {
-                        Vector3 look = c.pillar.position - cam.transform.position; look.y = 0f;
-                        if (look.sqrMagnitude > 1e-4f) c.pillar.rotation = Quaternion.LookRotation(look.normalized, Vector3.up);
-                    }
-                    float pa = Mathf.Clamp01((t - 0.15f) / 0.4f) * (0.2f + 0.7f * k);
-                    c.pillarMat.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0.5f * pa));
-                    if (c.pillarFrames > 1) c.pillarMat.mainTextureOffset = new Vector2(((int)(Time.time * 12f) % c.pillarFrames) / (float)c.pillarFrames, 0f);
-                }
-                if (c.rise != null)
-                {
-                    c.rise.transform.position = new Vector3(f.transform.position.x, 0.03f, f.transform.position.z);
-                    var em = c.rise.emission; em.rateOverTime = 30f + 160f * k;
-                    var sh = c.rise.shape; sh.radius = Mathf.Lerp(0.45f, 1.5f, k);
-                    var main = c.rise.main; main.startSpeed = new ParticleSystem.MinMaxCurve(1.2f + 2f * k, 3.2f + 4f * k);
-                }
-                if (c.flame != null) { c.flame.size = Mathf.Lerp(1.1f, 2.6f, k) * pulse; c.flame.tint = new Color(c.col.r, c.col.g, c.col.b, 0.35f + 0.55f * k); }
-                if (c.light != null) { c.light.transform.position = f.transform.position + Vector3.up * 0.6f; c.light.intensity = (0.6f + 2.4f * k) * pulse; c.light.range = 2.5f + 2.5f * k; }
+                PoseVisuals(c, f, t);
                 f.SetMoveVector(Vector2.zero);
             }
             if (drop != null) foreach (FighterController f in drop) Cancel(f);

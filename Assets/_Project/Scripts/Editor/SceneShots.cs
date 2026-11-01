@@ -146,6 +146,16 @@ namespace BladePath.EditorTools
                 Shot(cam, dir, "53_pond_bridge", new Vector3(-3.4f, 3.6f, -3.0f), new Vector3(-3.9f, 0f, -5.5f), 50f, log);   // пруд и прямой мостик
                 Shot(cam, dir, "48_jizo", new Vector3(-4.6f, 0.9f, 0.4f), new Vector3(-5.85f, 0.3f, 1.0f), 45f, log);   // три дзидзо у стены
                 Shot(cam, dir, "46_rainchain", new Vector3(-3.4f, 1.5f, 2.6f), new Vector3(-4.3f, 1.25f, 3.96f), 45f, log);   // цепь-водосток и основания колонн
+                // накопление удара на 3-й ступени: узор на полу, столб ауры, втягивание, угли (в игре строит ChargeSystem)
+                if (player != null)
+                {
+                    ChargeSystem cs = UnityEngine.Object.FindFirstObjectByType<ChargeSystem>();
+                    if (cs == null) cs = new GameObject("ChargeShots").AddComponent<ChargeSystem>();
+                    cs.Preview(player, 1.8f, 2);
+                    Vector3 cp = player.transform.position;
+                    Shot(cam, dir, "54_charge", cp + new Vector3(0.9f, 1.9f, -4.0f), cp + Vector3.up * 0.9f, 50f, log);
+                    Shot(cam, dir, "54b_charge_top", cp + new Vector3(0.2f, 6.0f, -2.4f), cp, 50f, log);
+                }
                 // храмовый кот на веранде: сидит, вылизывает лапу, трёт морду, идёт (строится в игре при запуске — здесь вручную)
                 TempleCat cat = UnityEngine.Object.FindFirstObjectByType<TempleCat>();
                 if (cat != null)
@@ -928,6 +938,8 @@ namespace BladePath.EditorTools
                 foreach (FloorReflection fr in UnityEngine.Object.FindObjectsByType<FloorReflection>(FindObjectsSortMode.None)) Call(fr, "LateUpdate");   // отражения — под эту камеру
                 foreach (LightShaft ls in UnityEngine.Object.FindObjectsByType<LightShaft>(FindObjectsSortMode.None)) Call(ls, "LateUpdate");          // лучи — лицом к этой камере
                 foreach (BladeGlint bg in UnityEngine.Object.FindObjectsByType<BladeGlint>(FindObjectsSortMode.None)) Call(bg, "LateUpdate");          // блик — лицом к этой камере
+                foreach (FxSprite fx in UnityEngine.Object.FindObjectsByType<FxSprite>(FindObjectsSortMode.None)) Call(fx, "Pose");                  // спрайты эффектов — лицом к этой камере
+                foreach (ChargeSystem chs in UnityEngine.Object.FindObjectsByType<ChargeSystem>(FindObjectsSortMode.None)) chs.FacePillars(cam);   // столбы ауры — тоже
                 cam.targetTexture = rt;
                 cam.Render();
                 RenderTexture.active = rt;
