@@ -450,14 +450,16 @@ namespace BladePath
         /// <summary>Попадание. dir — направление удара (скорость клинка), strength ~0.4…2 (урон/крит/убийство).</summary>
         public void OnHit(Vector3 point, Vector3 normal, Vector3 dir, float strength, bool blocked, bool kill, Transform bleedAt)
         {
-            if (blocked) { Play(clang, 0.8f, Random.Range(0.9f, 1.2f)); Sparks(point, normal, 22, 0.8f); Flash(point, 0.22f, new Color(1f, 0.82f, 0.5f, 0.8f), 0.07f, false); return; }
+            if (blocked) { Play(clang, 0.8f, Random.Range(0.9f, 1.2f)); Sparks(point, normal, 22, 0.8f); Flash(point, 0.22f, new Color(1f, 0.82f, 0.5f, 0.8f), 0.07f, false); Sheet("fx_clash", point, 0.8f, 0.24f, new Color(1f, 0.95f, 0.85f, 0.9f)); return; }
+            Vector3 hd = dir;
+            Sheet("fx_slash_hit", point, 0.9f + 0.35f * Mathf.Clamp(strength, 0f, 2f), 0.26f, new Color(1f, 0.96f, 0.92f, 0.85f), () => hd);   // полумесяц рассечения по ходу удара
             Play(strength > 1f ? hitHeavy : hit, 0.95f, Random.Range(0.92f, 1.08f));
             SlashFlash(point, dir, strength);
             Blood(point, normal, dir, strength, kill);
             if (strength > 0.6f) Shreds(point, dir, strength);
             HurtVoice(bleedAt, strength, kill);
             if (bleedAt != null) Bleed(bleedAt, Mathf.Lerp(1.2f, 3.5f, Mathf.Clamp01(strength - 0.4f)), strength);
-            if (kill) { Play(boom, 1f, 1f); PetalBurst(60); }
+            if (kill) { Play(boom, 1f, 1f); PetalBurst(60); StartCoroutine(SpiritLater(point)); }
             else if (strength > 1.2f) PetalBurst(12);
         }
 
@@ -1185,6 +1187,33 @@ namespace BladePath
             Sparks(pos, Random.onUnitSphere, 22, 1f);
             Flash(pos, 0.22f, new Color(1f, 0.8f, 0.5f, 0.85f), 0.09f, true);   // компактная: ядро не заливает полкадра белым (bloom и так расширит)
             SparkLight(pos, new Color(1f, 0.72f, 0.4f), 2.6f, 3.2f, 0.12f);
+            Sheet("fx_clash", pos, 1.3f, 0.3f, Color.white);   // звезда удара сталь о сталь → веер искр
+        }
+
+        // ---- покадровые эффекты (атласы 19–20): лист 4×1, плоскость к камере
+        FxSprite Sheet(string tex, Vector3 pos, float size, float life, Color tint, System.Func<Vector3> dir = null)
+        {
+            FxSprite f = FxSprite.Spawn(tex, pos, size, 4, 1, 4, 4f / Mathf.Max(0.05f, life), false, life);
+            if (f != null) { f.tint = tint; f.dir = dir; }
+            return f;
+        }
+
+        /// <summary>Слом равновесия: золотое кольцо защиты трескается и разлетается осколками.</summary>
+        public void GuardBreak(Vector3 pos) { Sheet("fx_guard_break", pos, 2.0f, 0.5f, Color.white); }
+
+        /// <summary>Рывок: порыв ветра по ходу и пыль из-под ног.</summary>
+        public void DashFx(Vector3 feet, Vector3 dir)
+        {
+            Vector3 d = dir; d.y = 0f;
+            Sheet("fx_dash_streak", feet + Vector3.up * 0.95f, 2.4f, 0.32f, new Color(0.9f, 0.95f, 1f, 0.65f), () => d);
+            Sheet("fx_dash_dust", feet + Vector3.up * 0.52f, 1.5f, 0.5f, new Color(0.75f, 0.74f, 0.72f, 0.6f));
+        }
+
+        // поверженный: через миг от тела поднимается дух — призрачные струи и светящийся пепел
+        System.Collections.IEnumerator SpiritLater(Vector3 at)
+        {
+            yield return new WaitForSeconds(0.7f);
+            Sheet("fx_spirit", new Vector3(at.x, 0f, at.z) + Vector3.up * 1.25f, 2.6f, 2.4f, new Color(0.85f, 0.9f, 1f, 0.8f));
         }
 
         /// <summary>Отражение (парирование): самая яркая вспышка в игре — блик, кольцо волны, веер искр от клинка.</summary>
@@ -1197,6 +1226,7 @@ namespace BladePath
             Flash(pos, 0.28f, new Color(1f, 0.92f, 0.78f, 0.9f), 0.12f, true);   // искра, а не белое пятно: мельче ядро, лучи-блик остаются
             SparkLight(pos, new Color(1f, 0.86f, 0.62f), 3.6f, 3.8f, 0.16f);
             Shockwave(pos, 0.7f, new Color(0.6f, 0.85f, 1f, 0.22f), 0.16f);   // едва заметная волна воздуха, не «магическое кольцо»
+            Sheet("fx_perfect_parry", pos, 1.7f, 0.38f, Color.white);   // ледяное кольцо и осколки
         }
 
         Material addMat, glowMat, starMat, ringMat;
@@ -1745,6 +1775,12 @@ namespace BladePath
             if (gulp == null) gulp = Gulp();
             Play(gulp, 0.7f, 1f);
             Vector3 c = f.transform.position + Vector3.up * 1.0f;
+            // зелёно-золотые огоньки и листья спиралью вокруг пьющего (цикл, ~1,5 с)
+            Transform ha = new GameObject("HealFx").transform;
+            ha.SetParent(f.transform, false); ha.localPosition = Vector3.up * 0.78f;
+            FxSprite hs = FxSprite.Spawn("fx_heal", ha.position, 1.8f, 4, 1, 4, 10f, true);
+            if (hs != null) { hs.follow = ha; hs.tint = new Color(1f, 1f, 1f, 0.9f); }
+            Destroy(ha.gameObject, 1.5f);
             Flash(c, 0.9f, new Color(1f, 0.72f, 0.3f, 0.35f), 0.5f, false);
             SparkLight(c, new Color(1f, 0.75f, 0.4f), 1.6f, 3f, 0.5f);
             if (softMat == null) return;
