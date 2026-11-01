@@ -188,6 +188,7 @@ namespace BladePath
         /// Что падает с деревьев сейчас: сильный снег — ничего; слабый — то редкие листья клёна, то ничего; ясный день —
         /// иногда лепестки сакуры (мельче, розовые, кружат дольше); иначе — листья клёна.
         /// </summary>
+        Texture2D petals8, leaves8;
         void Leaves()
         {
             int mode = 1;
@@ -210,10 +211,21 @@ namespace BladePath
             var main = petalsPs.main; var em = petalsPs.emission; var noise = petalsPs.noise;
             Renderer r = petalsPs.GetComponent<Renderer>();
             bool sakura = mode == 2;
-            if (r != null && r.sharedMaterial != null) r.sharedMaterial.mainTexture = sakura ? SoftSprites.Petal : mapleTex;
-            main.startColor = sakura ? new ParticleSystem.MinMaxGradient(new Color(1f, 0.78f, 0.86f, 0.95f), new Color(1f, 0.93f, 0.96f, 0.95f))
+            // атлас 38: восемь лепестков и восемь листьев (лист 4×2, у каждой частицы — свой кадр); без него — прежние текстуры
+            if (petals8 == null) petals8 = Resources.Load<Texture2D>("FX/petals8");
+            if (leaves8 == null) leaves8 = Resources.Load<Texture2D>("FX/leaves8");
+            Texture tex = sakura ? (petals8 != null ? (Texture)petals8 : SoftSprites.Petal) : (leaves8 != null ? (Texture)leaves8 : mapleTex);
+            bool sheet = tex != null && (tex == petals8 || tex == leaves8);
+            if (r != null && r.sharedMaterial != null) r.sharedMaterial.mainTexture = tex;
+            var ts = petalsPs.textureSheetAnimation;
+            ts.enabled = sheet;
+            if (sheet) { ts.mode = ParticleSystemAnimationMode.Grid; ts.numTilesX = 4; ts.numTilesY = 2; ts.animation = ParticleSystemAnimationType.WholeSheet; ts.frameOverTime = new ParticleSystem.MinMaxCurve(0f, 0.999f); ts.cycleCount = 1; }
+            // цветные картинки не подкрашиваем (только разброс яркости), процедурные — как раньше
+            main.startColor = sheet ? new ParticleSystem.MinMaxGradient(new Color(1f, 1f, 1f, 0.95f), new Color(0.82f, 0.8f, 0.8f, 0.95f))
+                            : sakura ? new ParticleSystem.MinMaxGradient(new Color(1f, 0.78f, 0.86f, 0.95f), new Color(1f, 0.93f, 0.96f, 0.95f))
                                      : new ParticleSystem.MinMaxGradient(MapleA, MapleB);
-            main.startSize = sakura ? new ParticleSystem.MinMaxCurve(0.035f, 0.065f) : new ParticleSystem.MinMaxCurve(0.07f, 0.13f);
+            float ks = sheet ? 1.3f : 1f;   // на картинке лист/лепесток занимает ~70 % кадра
+            main.startSize = sakura ? new ParticleSystem.MinMaxCurve(0.035f * ks, 0.065f * ks) : new ParticleSystem.MinMaxCurve(0.07f * ks, 0.13f * ks);
             main.gravityModifier = sakura ? 0.03f : 0.05f;
             noise.strength = sakura ? 0.38f : 0.25f;
             em.rateOverTime = mode == 0 ? 0f : mode == 2 ? 24f : mode == 3 ? 3.5f : 14f;
