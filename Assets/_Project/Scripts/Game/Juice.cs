@@ -1198,6 +1198,17 @@ namespace BladePath
             return f;
         }
 
+        /// <summary>Супер-удар попал: молния с неба в противника и золотой полумесяц по ходу удара.</summary>
+        public void SuperStrike(Vector3 pos, Vector3 dir)
+        {
+            FxSprite b = FxSprite.Spawn("super_strike", new Vector3(pos.x, 0f, pos.z) + Vector3.up * (3.6f * 0.47f), 3.6f, 4, 3, 12, 14f, false, 0.95f);
+            if (b != null) b.tint = Color.white;
+            Vector3 d = dir; d.y = 0f;
+            FxSprite c = FxSprite.Spawn("super_crescent", pos + Vector3.up * 1.0f - d.normalized * 0.9f, 2.6f, 4, 1, 4, 14f, false, 0.3f);
+            if (c != null) { c.dir = () => d; c.tint = new Color(1f, 1f, 1f, 0.9f); }
+            SparkLight(pos + Vector3.up * 2f, new Color(0.75f, 0.6f, 1f), 6f, 6f, 0.25f);
+        }
+
         /// <summary>Слом равновесия: золотое кольцо защиты трескается и разлетается осколками.</summary>
         public void GuardBreak(Vector3 pos) { Sheet("fx_guard_break", pos, 1.6f, 0.5f, new Color(1f, 1f, 1f, 0.7f)); }
 

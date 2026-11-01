@@ -514,7 +514,7 @@ namespace BladePath
                 dir = d > 1e-3f ? dir / d : a.transform.forward;
                 SuperLanded = d < 3.2f && !t.Dead;
                 Vector3 end = SuperLanded ? t.transform.position + dir * 1.0f : a.transform.position + dir * Mathf.Min(2.2f, d - 0.8f);
-                if (SuperLanded && Juice.Instance != null) Juice.Instance.GroundCrack(t.transform.position, 1.9f);   // удар духа раскалывает камень
+                if (SuperLanded && Juice.Instance != null) { Juice.Instance.GroundCrack(t.transform.position, 1.9f); Juice.Instance.SuperStrike(t.transform.position, dir); }   // удар духа раскалывает камень, с неба бьёт молния
                 a.Teleport(end);
                 if (a.weapon != null)
                 {
