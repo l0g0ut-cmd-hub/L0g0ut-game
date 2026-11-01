@@ -90,15 +90,15 @@ namespace BladePath
             {
                 int lv = cs.Level(self);
                 float held = Time.time - chargeStart;
-                if (lv >= chargeGoal || (chargeEarly && lv >= 0 && dist < 1.3f) || (lv >= 0 && held > 2.2f)) cs.Release(self, AttackType.Overhead);
-                else if (held > 2.6f) cs.Cancel(self);
+                if (lv >= chargeGoal || (chargeEarly && lv >= 0 && dist < 1.3f) || (lv >= 0 && held > 3.0f)) cs.Release(self, AttackType.Overhead);
+                else if (held > 3.4f) cs.Cancel(self);
                 return true;
             }
             bool can = StageIdx == 2 || (StageIdx == 3 && Phase >= 2) || Level >= 3;
             if (!can || busy || Time.time < chargeAt || dist < 1.8f || dist > 4.2f || self.Ki < ChargeSystem.KiCost[0]) return false;
             if (Random.value > 0.01f + 0.004f * Level) return false;
             chargeAt = Time.time + Random.Range(7f, 12f) - Level;
-            int goal = StageIdx == 2 ? (Random.value < 0.5f ? 2 : 1) : (StageIdx == 3 && Phase >= 3 ? 2 : Random.Range(0, 2));
+            int goal = StageIdx == 2 ? (Random.value < 0.25f ? 3 : Random.value < 0.6f ? 2 : 1) : (StageIdx == 3 && Phase >= 3 ? 3 : StageIdx == 3 ? 2 : Random.Range(0, 2));   // ярость (IV) — они иногда, сёгун в 3-й фазе всегда
             while (goal > 0 && self.Ki < ChargeSystem.KiCost[goal]) goal--;
             if (!cs.Begin(self)) return false;
             chargeStart = Time.time; chargeGoal = goal; chargeEarly = Random.value < 0.5f;

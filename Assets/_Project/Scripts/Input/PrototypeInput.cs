@@ -402,7 +402,7 @@ namespace BladePath
             if (chg)
             {
                 int cl = ChargeSystem.Instance.Level(player);
-                DrawAttack(B.Energy, Icon.Orb, cl < 0 ? "НАКОПЛЕНИЕ" : cl == 0 ? "НАТИСК" : cl == 1 ? "ПРОРЫВ" : "СОКРУШЕНИЕ", true);
+                DrawAttack(B.Energy, Icon.Orb, cl < 0 ? "НАКОПЛЕНИЕ" : cl == 0 ? "НАТИСК" : cl == 1 ? "ПРОРЫВ" : cl == 2 ? "СОКРУШЕНИЕ" : "ЯРОСТЬ", true);
                 DrawKiRing(B.Energy, ChargeSystem.Instance.Progress(player));
             }
             else

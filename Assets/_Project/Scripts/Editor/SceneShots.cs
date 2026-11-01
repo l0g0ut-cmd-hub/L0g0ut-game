@@ -176,6 +176,12 @@ namespace BladePath.EditorTools
                         Vector3 ep2 = enemy.transform.position;
                         Shot(cam, dir, "54d_charge_stage1", ep2 + new Vector3(-0.9f, 1.9f, -4.0f), ep2 + Vector3.up * 0.9f, 50f, log);
                     }
+                    // IV ступень (ярость) у героя: всё прежнее скрыто, строится заново
+                    foreach (MeshRenderer mr in UnityEngine.Object.FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None)) if (mr.name.StartsWith("Charge") || mr.name.StartsWith("Fx_")) mr.enabled = false;
+                    foreach (ParticleSystemRenderer pr in UnityEngine.Object.FindObjectsByType<ParticleSystemRenderer>(FindObjectsSortMode.None)) if (pr.name == "ChargeRise") pr.enabled = false;
+                    cs.Preview(player, 2.8f, ChargeSystem.Max);
+                    Shot(cam, dir, "54e_charge_rage", cp + new Vector3(0.9f, 1.9f, -4.0f), cp + Vector3.up * 0.9f, 50f, log);
+                    Shot(cam, dir, "54f_charge_rage_top", cp + new Vector3(0.2f, 6.0f, -2.4f), cp, 50f, log);
                 }
                 // храмовый кот на веранде: сидит, вылизывает лапу, трёт морду, идёт (строится в игре при запуске — здесь вручную)
                 TempleCat cat = UnityEngine.Object.FindFirstObjectByType<TempleCat>();

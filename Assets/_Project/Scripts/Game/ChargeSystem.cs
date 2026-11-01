@@ -14,21 +14,26 @@ namespace BladePath
     public class ChargeSystem : MonoBehaviour
     {
         public static ChargeSystem Instance { get; private set; }
-        public static readonly float[] LevelAt = { 0.5f, 1.1f, 1.7f };
-        public static readonly float[] KiCost = { 15f, 25f, 40f };
-        public static readonly float[] DmgMul = { 1.5f, 2.0f, 2.6f };
+        public static readonly float[] LevelAt = { 0.5f, 1.1f, 1.7f, 2.6f };
+        public static readonly float[] KiCost = { 15f, 25f, 40f, 60f };
+        public static readonly float[] DmgMul = { 1.5f, 2.0f, 2.6f, 3.4f };
+        public const int Max = 3;   // IV ступень — «ЯРОСТЬ»: аура в багровый, второй узор и столб, гул, молнии и трещины
+        static readonly Color Crimson = new Color(1f, 0.07f, 0.05f);
 
         class Charge
         {
             public FighterController f; public float start; public int level; public Color col;
             public Transform sigil, anchor, early, pillar, pool; public Material sigilMat, earlyMat, pillarMat, poolMat; public ParticleSystem rise; public FxSprite flame, inhale, embers; public Light light; public float pillarAspect = 1.3f; public int pillarFrames = 1;
             public Transform draw, emberAnchor; public Material drawMat;
-            public float kv, popAt = -10f, boltAt;   // kv — облик ступени (0…1, догоняет ступень), popAt — вспышка новой ступени
+            public float kv, popAt = -10f, boltAt;
+            public float ex, crackAt, beatAt; public Color baseCol;   // ex — ярость (IV ступень) 0…1
+            public Transform rage, ragePillar; public Material rageMat, ragePillarMat; public int ragePillarFrames = 1; public float ragePillarAspect = 1f;   // kv — облик ступени (0…1, догоняет ступень), popAt — вспышка новой ступени
         }
         readonly Dictionary<FighterController, Charge> active = new Dictionary<FighterController, Charge>();
         readonly Dictionary<FighterController, int> strikeSwing = new Dictionary<FighterController, int>();
         readonly Dictionary<FighterController, int> strikeLevel = new Dictionary<FighterController, int>();
         readonly Dictionary<FighterController, float> waveAt = new Dictionary<FighterController, float>();
+        readonly Dictionary<FighterController, int> waveLvl = new Dictionary<FighterController, int>();
 
         void Awake() { Instance = this; }
 
@@ -36,7 +41,7 @@ namespace BladePath
 
         public bool IsCharging(FighterController f) { return f != null && active.ContainsKey(f); }
         public int Level(FighterController f) { Charge c; return active.TryGetValue(f, out c) ? c.level : -1; }
-        public float Progress(FighterController f) { Charge c; return active.TryGetValue(f, out c) ? Mathf.Clamp01((Time.time - c.start) / LevelAt[2]) : 0f; }
+        public float Progress(FighterController f) { Charge c; return active.TryGetValue(f, out c) ? Mathf.Clamp01((Time.time - c.start) / LevelAt[Max]) : 0f; }
 
         public Color ColorOf(FighterController f)
         {
@@ -84,7 +89,7 @@ namespace BladePath
             if (!f.Attack(type, lvl >= 1)) return false;   // со второй ступени блок не держит
             strikeSwing[f] = f.weapon != null ? f.weapon.SwingId : -1;
             strikeLevel[f] = lvl;
-            if (lvl >= 2) waveAt[f] = Time.time + 0.18f;
+            if (lvl >= 2) { waveAt[f] = Time.time + 0.18f; waveLvl[f] = lvl; }
             Vector3 hitAt = f.transform.position + f.transform.forward * 0.9f;
             GroundFlash.Spawn("FX/crack_glow", hitAt, 1.4f + 0.9f * lvl, 1.6f + 1.1f * lvl, c.col, 1.3f + 0.3f * lvl, 0f, true);
             GroundFlash.SpawnSheet("FX/shock_dust", hitAt, 2.0f + 1.0f * lvl, 3.2f + 1.6f * lvl, c.col, 0.55f, 4, 1, 4);
@@ -94,8 +99,17 @@ namespace BladePath
             if (er != null) er.tint = Color.Lerp(c.col, Color.white, 0.35f);
             if (lvl >= 2)
             {
-                FxSprite lb = FxSprite.Spawn("lightning_burst", hitAt + Vector3.up * 1.0f, 3.2f, 4, 1, 4, 12f, false, 0.36f);
+                FxSprite lb = FxSprite.Spawn("lightning_burst", hitAt + Vector3.up * 1.0f, 3.2f + 1.2f * (lvl - 2), 4, 1, 4, 12f, false, 0.36f);
                 if (lb != null) lb.tint = Color.Lerp(c.col, Color.white, 0.5f);
+            }
+            if (lvl >= Max)
+            {
+                // ярость: второй, багровый выплеск выше первого, удар по экрану
+                FxSprite e2 = FxSprite.Spawn("eruption", hitAt + Vector3.up * (es * 1.3f * 0.31f), es * 1.3f, 4, 4, 16, 22f, false, 1.1f);
+                if (e2 != null) e2.tint = new Color(1f, 0.15f, 0.1f, 0.9f);
+                GroundFlash.Spawn("FX/crack_glow", hitAt, 4.5f, 5.5f, Crimson, 2.2f, 0f, true);
+                PostFX.Kick(0.012f);
+                if (Juice.Instance != null) Juice.Instance.Growl(0.7f);
             }
             if (Juice.Instance != null) { Juice.Instance.Taiko(1f, 0.75f + 0.1f * lvl); Juice.Instance.Dust(f.transform.position + Vector3.up * 0.05f, f.transform.forward, 14 + 8 * lvl); }
             if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Punch(2f + 1.5f * lvl); CameraOrbit.Instance.Shake(0.03f + 0.03f * lvl); }
@@ -140,6 +154,23 @@ namespace BladePath
             // пятно света под ногами
             c.pool = GroundQuad("ChargePool", Resources.Load<Texture2D>("FX/glow_pool"), add, out c.poolMat);
             // столб ауры: вертикальная плоскость, всегда повёрнута к камере
+            // ярость (IV): второй узор и столб — багровые; пока нет своего атласа — огненный лотос и огненный столб
+            c.rage = GroundQuad("ChargeRageSigil", Resources.Load<Texture2D>("FX/sigil_rage") ?? Resources.Load<Texture2D>("FX/sigil_flame"), add, out c.rageMat);
+            Texture2D rp = Resources.Load<Texture2D>("FX/pillar_loop_rage") ?? Resources.Load<Texture2D>("FX/pillar_loop_flame");
+            if (rp != null && add != null)
+            {
+                GameObject g = new GameObject("ChargeRagePillar");
+                g.AddComponent<MeshFilter>().sharedMesh = PillarQuad();
+                MeshRenderer r = g.AddComponent<MeshRenderer>();
+                c.ragePillarMat = new Material(add) { mainTexture = rp };
+                r.sharedMaterial = c.ragePillarMat; r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                c.ragePillar = g.transform;
+                c.ragePillarFrames = rp.width >= rp.height * 3 ? 4 : 1;
+                c.ragePillarAspect = rp.height / Mathf.Max(1f, rp.width / (float)c.ragePillarFrames);
+                c.ragePillarMat.mainTextureScale = new Vector2(1f / c.ragePillarFrames, 1f);
+                c.ragePillarMat.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0f));
+            }
+            if (c.rageMat != null) c.rageMat.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0f));
             // анимированный столб (4 кадра цикла), запасной — статичный
             Texture2D pt = Resources.Load<Texture2D>(PillarFor(c.f).Replace("pillar_", "pillar_loop_"));
             if (pt != null) c.pillarFrames = 4; else pt = Resources.Load<Texture2D>(PillarFor(c.f));
@@ -251,6 +282,10 @@ namespace BladePath
             if (c.flame != null) Destroy(c.flame.gameObject);
             if (c.light != null) Destroy(c.light.gameObject);
             if (c.anchor != null) Destroy(c.anchor.gameObject);
+            if (c.rage != null) Destroy(c.rage.gameObject);
+            if (c.rageMat != null) Destroy(c.rageMat);
+            if (c.ragePillar != null) Destroy(c.ragePillar.gameObject);
+            if (c.ragePillarMat != null) Destroy(c.ragePillarMat);
             if (c.draw != null) Destroy(c.draw.gameObject);
             if (c.drawMat != null) Destroy(c.drawMat);
             if (c.inhale != null) Destroy(c.inhale.gameObject);
@@ -267,6 +302,8 @@ namespace BladePath
         void PoseVisuals(Charge c, FighterController f, float t)
         {
             float k = c.kv;
+            if (c.baseCol.a <= 0f) c.baseCol = c.col;
+            c.col = Color.Lerp(c.baseCol, Crimson, c.ex);   // ярость перекрашивает всю ауру в багровый
             float pulse = (1f + 0.06f * Mathf.Sin(Time.time * (8f + 6f * Mathf.Max(0, c.level)))) * (1f + 0.22f * Mathf.Exp(-(Time.time - c.popAt) * 7f));
             if (c.sigil != null)
             {
@@ -339,7 +376,30 @@ namespace BladePath
                 var main = c.rise.main; main.startSpeed = new ParticleSystem.MinMaxCurve(0.8f + 1f * k, 2.2f + 2f * k);
             }
             if (c.flame != null) { c.flame.size = Mathf.Lerp(1.1f, 2.6f, k) * pulse; c.flame.tint = new Color(c.col.r, c.col.g, c.col.b, 0.25f + 0.3f * k); }
-            if (c.light != null) { c.light.transform.position = f.transform.position + Vector3.up * 0.6f; c.light.intensity = (0.4f + 1.2f * k) * pulse; c.light.range = 2.5f + 2.5f * k; }
+            if (c.light != null) { c.light.color = c.col; c.light.transform.position = f.transform.position + Vector3.up * 0.6f; c.light.intensity = (0.4f + 1.2f * k + 2.0f * c.ex) * pulse; c.light.range = 2.5f + 2.5f * k + 2f * c.ex; }
+            if (c.ex > 0.001f)
+            {
+                float jitter = 1f + 0.05f * Mathf.Sin(Time.time * 37f) + 0.03f * Mathf.Sin(Time.time * 61f);   // ярость дрожит
+                if (c.rage != null)
+                {
+                    float sr = Mathf.Lerp(2.6f, 4.6f, c.ex) * pulse * jitter;
+                    c.rage.position = new Vector3(f.transform.position.x, 0.03f, f.transform.position.z);
+                    c.rage.localScale = new Vector3(sr, sr, 1f);
+                    c.rage.Rotate(0f, 0f, -150f * Time.deltaTime, Space.Self);
+                    c.rageMat.SetColor("_TintColor", new Color(0.8f, 0.32f, 0.3f, 0.5f * c.ex));
+                }
+                if (c.ragePillar != null)
+                {
+                    float w2 = 3.0f * pulse * jitter;
+                    c.ragePillar.position = new Vector3(f.transform.position.x, 0f, f.transform.position.z);
+                    c.ragePillar.localScale = new Vector3(w2, w2 * c.ragePillarAspect * 1.35f * Mathf.Lerp(0.5f, 1f, c.ex), 1f);
+                    if (c.pillar != null) c.ragePillar.rotation = c.pillar.rotation;
+                    c.ragePillarMat.SetColor("_TintColor", new Color(0.75f, 0.35f, 0.32f, 0.5f * 0.7f * c.ex));
+                    if (c.ragePillarFrames > 1) c.ragePillarMat.mainTextureOffset = new Vector2(((int)(Time.time * 15f + 2) % c.ragePillarFrames) / (float)c.ragePillarFrames, 0f);
+                }
+                if (c.flame != null) c.flame.size *= 1f + 0.5f * c.ex;
+                if (c.rise != null) { var em2 = c.rise.emission; em2.rateOverTime = 20f + 70f * k + 140f * c.ex; var m2 = c.rise.main; m2.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 0.55f, 0.45f), Crimson); }
+            }
         }
 
         /// <summary>Повернуть столбы ауры к камере (в игре это делает PoseVisuals каждый кадр; здесь — для кадров CI).</summary>
@@ -358,7 +418,7 @@ namespace BladePath
         /// <summary>Для кадров CI (редактор, без игрового цикла): построить накопление и показать его на момент t.</summary>
         public void Preview(FighterController f, float t, int level)
         {
-            Charge c = new Charge { f = f, start = 0f, level = level, col = ColorOf(f), kv = (level + 1) / 3f };
+            Charge c = new Charge { f = f, start = 0f, level = level, col = ColorOf(f), kv = Mathf.Min(1f, (level + 1) / 3f), ex = level >= Max ? 1f : 0f };
             Build(c);
             active[f] = c;
             PoseVisuals(c, f, t);
@@ -382,20 +442,21 @@ namespace BladePath
                 Charge c = kv.Value; FighterController f = c.f;
                 if (f == null || f.Dead || f.Stunned || (dm != null && dm.State != DuelState.Fighting)) { (drop ?? (drop = new List<FighterController>())).Add(kv.Key); continue; }
                 float t = Time.time - c.start;
-                int lvl = t >= LevelAt[2] ? 2 : t >= LevelAt[1] ? 1 : t >= LevelAt[0] ? 0 : -1;
+                int lvl = t >= LevelAt[3] ? 3 : t >= LevelAt[2] ? 2 : t >= LevelAt[1] ? 1 : t >= LevelAt[0] ? 0 : -1;
                 while (lvl >= 0 && f.Ki < KiCost[lvl]) lvl--;   // духа не хватает — выше не поднимется
                 // облик ступени догоняет ступень; внутри ступени узор чуть подрастает к следующей (если на неё хватит духа)
-                float kt = lvl < 0 ? 0.12f * Mathf.Clamp01(t / LevelAt[0]) : (lvl + 1) / 3f;
+                float kt = lvl < 0 ? 0.12f * Mathf.Clamp01(t / LevelAt[0]) : Mathf.Min(1f, (lvl + 1) / 3f);
                 if (lvl >= 0 && lvl < 2 && f.Ki >= KiCost[lvl + 1]) kt += 0.07f * Mathf.Clamp01((t - LevelAt[lvl]) / (LevelAt[lvl + 1] - LevelAt[lvl]));
                 c.kv = Mathf.MoveTowards(c.kv, kt, Time.deltaTime * 1.8f);
+                c.ex = Mathf.MoveTowards(c.ex, lvl >= Max ? 1f : 0f, Time.deltaTime * 3f);
                 if (lvl > c.level)
                 {
                     c.level = lvl; c.popAt = Time.time;
                     if (dm != null)
                     {
                         DuelManager.Popup sp = new DuelManager.Popup();
-                        sp.world = f.transform.position + Vector3.up * 2.35f; sp.text = lvl == 0 ? "СТУПЕНЬ I" : lvl == 1 ? "СТУПЕНЬ II" : "СТУПЕНЬ III";
-                        sp.color = Color.Lerp(c.col, Color.white, 0.35f); sp.born = Time.unscaledTime; sp.size = 18f + 4f * lvl;
+                        sp.world = f.transform.position + Vector3.up * 2.35f; sp.text = lvl == 0 ? "СТУПЕНЬ I" : lvl == 1 ? "СТУПЕНЬ II" : lvl == 2 ? "СТУПЕНЬ III" : "IV · ЯРОСТЬ";
+                        sp.color = lvl >= Max ? new Color(1f, 0.25f, 0.18f) : Color.Lerp(c.col, Color.white, 0.35f); sp.born = Time.unscaledTime; sp.size = lvl >= Max ? 32f : 18f + 4f * lvl;
                         dm.Popups.Add(sp);
                     }
                     // вспышка ступени: кольцо, барабан, дрожь
@@ -406,11 +467,28 @@ namespace BladePath
                     if (lvl >= 2) GroundFlash.SpawnSheet("FX/lightning_burst", f.transform.position, 3.4f, 4.2f, c.col, 0.4f, 4, 1, 4);   // третья ступень — разряд по земле
                     if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.02f + 0.02f * lvl);
                     Haptics.Pulse(25 + 15 * lvl);
+                    if (lvl >= Max)
+                    {
+                        // взрыв ярости: рёв, багровая волна с пылью, трещины, удар по экрану
+                        if (Juice.Instance != null) { Juice.Instance.Growl(0.75f); Juice.Instance.Taiko(1.2f, 0.7f); Juice.Instance.ChargePulse(f.transform.position, Crimson, 4.5f); }
+                        GroundFlash.SpawnSheet("FX/shock_dust", f.transform.position, 4f, 6.5f, Crimson, 0.7f, 4, 1, 4);
+                        GroundFlash.Spawn("FX/crack_glow", f.transform.position, 3.5f, 4.2f, Crimson, 2.5f, 0f, true);
+                        if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(0.1f); CameraOrbit.Instance.Punch(4f); }
+                        PostFX.Kick(0.01f);
+                        Haptics.Pulse(140);
+                    }
+                }
+                // ярость держится: багровые молнии чаще, трещины, сердцебиение, земля дрожит
+                if (c.level >= Max)
+                {
+                    if (Time.time >= c.crackAt) { c.crackAt = Time.time + Random.Range(0.6f, 0.9f); GroundFlash.Spawn("FX/crack_glow", f.transform.position + new Vector3(Random.Range(-1.2f, 1.2f), 0f, Random.Range(-1.2f, 1.2f)), 1.4f, 1.8f, Crimson, 1.2f, 0f, true); }
+                    if (Time.time >= c.beatAt) { c.beatAt = Time.time + 0.55f; if (Juice.Instance != null) Juice.Instance.Heartbeat(); if (f == (dm != null ? dm.player : null)) Haptics.Pulse(20); }
+                    if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.012f);
                 }
                 // третья ступень держится: разряды по земле, свет мигает
                 if (c.level >= 2 && Time.time >= c.boltAt)
                 {
-                    c.boltAt = Time.time + Random.Range(0.35f, 0.6f);
+                    c.boltAt = Time.time + (c.level >= Max ? Random.Range(0.15f, 0.3f) : Random.Range(0.35f, 0.6f));
                     GroundFlash.SpawnSheet("FX/lightning_burst", f.transform.position + new Vector3(Random.Range(-0.4f, 0.4f), 0f, Random.Range(-0.4f, 0.4f)), 2.6f, 3.2f, c.col, 0.3f, 4, 1, 4);
                 }
                 PoseVisuals(c, f, t);
@@ -427,19 +505,22 @@ namespace BladePath
                     (done ?? (done = new List<FighterController>())).Add(kv.Key);
                     FighterController a = kv.Key;
                     if (a == null || dm == null) continue;
+                    int wl; if (!waveLvl.TryGetValue(a, out wl)) wl = 2;
+                    bool rage = wl >= Max;
+                    Color wc = rage ? Crimson : ColorOf(a);
                     Vector3 at = a.transform.position + a.transform.forward * 0.9f;
                     if (Juice.Instance != null) Juice.Instance.Slam(at);
-                    GroundFlash.SpawnSheet("FX/shock_dust", at, 5.0f, 7.0f, ColorOf(a), 0.7f, 4, 1, 4);
-                    GroundFlash.Spawn("FX/shock_ring", at, 1.0f, 6.2f, ColorOf(a), 0.6f, 0f);
-                    GroundFlash.Spawn("FX/glow_pool", at, 2.0f, 5.0f, ColorOf(a), 0.5f, 0f);
+                    GroundFlash.SpawnSheet("FX/shock_dust", at, rage ? 7f : 5.0f, rage ? 9.5f : 7.0f, wc, 0.7f, 4, 1, 4);
+                    GroundFlash.Spawn("FX/shock_ring", at, 1.0f, rage ? 8.5f : 6.2f, wc, 0.6f, 0f);
+                    GroundFlash.Spawn("FX/glow_pool", at, 2.0f, rage ? 7f : 5.0f, wc, 0.5f, 0f);
                     FighterController t = a.opponent;
                     if (t != null && !t.Dead)
                     {
                         Vector3 d = t.transform.position - at; d.y = 0f;
-                        if (d.magnitude < 2.8f && t.Grounded && !t.Dashing) dm.ForceHit(t, a, 12f, 40f, at);
+                        if (d.magnitude < (rage ? 3.8f : 2.8f) && t.Grounded && !t.Dashing) dm.ForceHit(t, a, rage ? 18f : 12f, rage ? 60f : 40f, at);
                     }
                 }
-                if (done != null) foreach (FighterController f in done) waveAt.Remove(f);
+                if (done != null) foreach (FighterController f in done) { waveAt.Remove(f); waveLvl.Remove(f); }
             }
         }
     }

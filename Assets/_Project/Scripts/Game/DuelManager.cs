@@ -1356,7 +1356,7 @@ namespace BladePath
                         target.AddPosture(12f + 10f * clv);
                         crit = true;
                         Popup chp = new Popup();
-                        chp.world = point + Vector3.up * 0.6f; chp.text = clv == 2 ? "СОКРУШЕНИЕ!" : clv == 1 ? "ПРОРЫВ!" : "НАТИСК";
+                        chp.world = point + Vector3.up * 0.6f; chp.text = clv >= 3 ? "ЯРОСТЬ!" : clv == 2 ? "СОКРУШЕНИЕ!" : clv == 1 ? "ПРОРЫВ!" : "НАТИСК";
                         chp.color = Color.Lerp(ChargeSystem.Instance.ColorOf(attacker), Color.white, 0.35f);
                         chp.born = Time.unscaledTime; chp.size = 24f + 4f * clv;
                         Popups.Add(chp);
