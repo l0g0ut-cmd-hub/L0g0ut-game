@@ -1362,6 +1362,8 @@ namespace BladePath
         void Sparks(Vector3 pos, Vector3 normal, int count, float power = 1f)
         {
             if (softMat == null) return;
+            // Keep the impact readable while respecting the mobile particle budget.
+            count = Mathf.Clamp(count, 1, DuelManager.Gfx == 1 ? 28 : 14);
             GameObject g = new GameObject("Sparks");
             g.transform.position = pos;
             g.transform.rotation = Quaternion.LookRotation(normal.sqrMagnitude > 1e-4f ? normal : Vector3.up);
@@ -1376,7 +1378,7 @@ namespace BladePath
             main.gravityModifier = 1.5f;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             main.stopAction = ParticleSystemStopAction.Destroy;
-            main.maxParticles = 200;
+            main.maxParticles = count;
             var em = ps.emission; em.rateOverTime = 0f;
             em.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, (short)count) });
             var sp = ps.shape; sp.shapeType = ParticleSystemShapeType.Cone; sp.angle = 55f; sp.radius = 0.02f;
