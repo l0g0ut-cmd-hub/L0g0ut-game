@@ -408,6 +408,7 @@ namespace BladePath.EditorTools
             {
                 if (i % 7 == 3) continue;   // кое-где берег без камня — трава и гравий
                 Vector2 o = outline[i] * (1.03f + 0.04f * (float)r.NextDouble());
+                if (Mathf.Abs(o.x + 0.55f) < 0.42f) continue;   // под концами мостика камней нет — плита лежит ровно
                 float s = 0.11f + 0.13f * (float)r.NextDouble();
                 Material m = r.NextDouble() < 0.35 && look.moss != null ? look.moss : rockM;
                 EnvMesh.Boulder(g, "RimStone" + i, c + new Vector3(o.x, -0.06f + s * 0.2f, o.y),
@@ -421,16 +422,15 @@ namespace BladePath.EditorTools
                 for (int i = 0; i < 4; i++) { float s = 0.32f + 0.08f * i; fish[i] = EnvMesh.Decal(kp, "Fish" + i, Vector3.zero, 0f, s * 0.5f, s, look.koi).transform; }
                 BladePath.KoiPond kpond = kp.gameObject.AddComponent<BladePath.KoiPond>(); kpond.fish = fish;
             }
-            // мостик-плита (исибаси) через узкое место пруда: длинный гранитный брус чуть изогнут (две плиты под углом),
-            // концы лежат на опорных камнях
+            // мостик-плита (исибаси) через узкое место пруда: один прямой тёсаный гранитный брус, строго ровно поперёк пруда,
+            // концы лежат на плоских опорных камнях вровень с берегом
             {
                 Material slab = rockM;   // цельный гранит (кладка stoneBlock читалась плиткой)
                 Vector3 bc = c + new Vector3(-0.55f, 0f, 0f);
+                EnvMesh.Box(g, "BridgeSlab", bc + new Vector3(0f, 0.0f, 0f), Vector3.zero, new Vector3(0.44f, 0.09f, 2.35f), slab, 0.6f);
                 for (int s = -1; s <= 1; s += 2)
-                    EnvMesh.Box(g, "BridgeSlab" + s, bc + new Vector3(0f, -0.005f, s * 0.52f), new Vector3(s * 3.5f, 6f, 0f), new Vector3(0.36f, 0.075f, 1.06f), slab, 0.6f);
-                for (int s = -1; s <= 1; s += 2)
-                    EnvMesh.Boulder(g, "BridgeFoot" + s, bc + new Vector3(0.02f * s, -0.06f, s * 1.02f), new Vector3(0f, 30f * s, 0f), new Vector3(0.5f, 0.14f, 0.36f), rockM, 360 + s);
-                if (look.aoBlob != null) EnvMesh.Decal(g, "BridgeAO", bc + new Vector3(0f, -0.065f, 0f), 6f, 0.8f, 2.4f, look.aoBlob);
+                    EnvMesh.Box(g, "BridgeFoot" + s, bc + new Vector3(0f, -0.07f, s * 1.08f), Vector3.zero, new Vector3(0.6f, 0.06f, 0.36f), slab, 0.6f);
+                if (look.aoBlob != null) EnvMesh.Decal(g, "BridgeAO", bc + new Vector3(0f, -0.065f, 0f), 0f, 0.8f, 2.6f, look.aoBlob);
             }
             // каменный фонарь у берега — ночью сад у ворот не тонет во тьме, огонь дрожит в воде
             AddLantern(env, look, c + new Vector3(1.75f, 0f, 0.75f));

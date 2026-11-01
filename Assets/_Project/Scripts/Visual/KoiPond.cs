@@ -14,7 +14,8 @@ namespace BladePath
         public Vector2 radii = new Vector2(1.0f, 0.5f);
         // берег пруда — та же формула, что в EnvironmentBuilder.AddPond (бобовидный контур), и запас под камни бордюра
         public Vector2 pondR = new Vector2(1.45f, 0.85f);
-        public float margin = 0.68f;
+        public float edge = 0.97f;    // доля контура воды
+        public float clear = 0.27f;   // запас до берега в метрах: камни бордюра нависают над водой до ~0,2 м
         float[] ang, spd, wob, pause;
         ParticleSystem rings; AudioSource plopSrc; static AudioClip plop; float nextRise;
         // лягушки у пруда ночью: «керо-керо» сериями (в дождик — охотнее), не в снег и не днём; по общей очереди звуков
@@ -206,10 +207,14 @@ namespace BladePath
         /// <summary>Точка (локально от центра пруда) внутри контура воды с запасом margin.</summary>
         bool Inside(Vector3 q)
         {
-            float x = q.x / pondR.x, z = q.z / pondR.y;
+            // точку сдвигаем к берегу на clear метров и проверяем, что она ещё в воде — запас одинаков в метрах
+            // и по длинной, и по узкой стороне пруда (раньше доля радиуса у узкого края пускала рыб под камни)
+            Vector2 d = new Vector2(q.x, q.z); float m = d.magnitude;
+            if (m > 1e-4f) d += d / m * clear;
+            float x = d.x / pondR.x, z = d.y / pondR.y;
             float a = Mathf.Atan2(z, x);
             float k = 1f + 0.12f * Mathf.Sin(a * 3f + 0.7f) + 0.07f * Mathf.Sin(a * 5f + 2.1f);
-            return Mathf.Sqrt(x * x + z * z) <= k * margin;
+            return Mathf.Sqrt(x * x + z * z) <= k * edge;
         }
 
         void Update()
@@ -243,9 +248,9 @@ namespace BladePath
                 wob[i] += dt * (s > 0.5f ? 7f : 2.5f);
                 float yaw = Mathf.Atan2(tangent.x, tangent.z) * Mathf.Rad2Deg + Mathf.Sin(wob[i]) * 9f;
                 // рыба целиком (голова и хвост) остаётся в воде: если край выходит за берег под камнями — ближе к центру
-                float half = f.localScale.z * 0.5f;
-                Vector3 fwd = Quaternion.Euler(0f, yaw, 0f) * Vector3.forward;
-                for (int it = 0; it < 12 && (!Inside(p + fwd * half) || !Inside(p - fwd * half)); it++) p *= 0.9f;
+                float half = f.localScale.z * 0.5f, side = f.localScale.x * 0.3f;
+                Vector3 fwd = Quaternion.Euler(0f, yaw, 0f) * Vector3.forward, rt = new Vector3(fwd.z, 0f, -fwd.x);
+                for (int it = 0; it < 16 && (!Inside(p + fwd * half) || !Inside(p - fwd * half) || !Inside(p + rt * side) || !Inside(p - rt * side)); it++) p *= 0.9f;
                 f.localPosition = new Vector3(p.x, f.localPosition.y, p.z);
                 f.localRotation = Quaternion.Euler(0f, yaw, 0f);
             }
