@@ -105,20 +105,30 @@ namespace BladePath
 
         void LateUpdate()
         {
-            if (weapon == null || weapon.bladeRoot == null) return;
+            if (weapon == null || weapon.bladeRoot == null)
+            {
+                samples.Clear();
+                if (trailRenderer != null) trailRenderer.enabled = false;
+                return;
+            }
             float now = Time.time;
+            float duration = Mathf.Max(0.035f, life);
             bool live = weapon.Phase == SwingPhase.Strike || weapon.Phase == SwingPhase.FollowThrough;
             if (live)
             {
                 Transform br = weapon.bladeRoot;
-                S s; s.a = br.position + br.forward * (weapon.bladeLength * from); s.b = br.position + br.forward * weapon.bladeLength; s.t = now;
+                float length = Mathf.Max(0.02f, weapon.bladeLength);
+                float start = Mathf.Clamp01(from);
+                S s; s.a = br.position + br.forward * (length * start); s.b = br.position + br.forward * length; s.t = now;
+                if (samples.Count > 0 && (samples[samples.Count - 1].b - s.b).sqrMagnitude > 1.5f)
+                    samples.Clear(); // new weapon pose/teleport: no full-screen streak
                 if (samples.Count == 0 || (samples[samples.Count - 1].b - s.b).sqrMagnitude > 1e-6f)
                 {
                     if (samples.Count >= MaxSamples) samples.RemoveAt(0);
                     samples.Add(s);
                 }
             }
-            while (samples.Count > 0 && now - samples[0].t > life) samples.RemoveAt(0);
+            while (samples.Count > 0 && now - samples[0].t > duration) samples.RemoveAt(0);
             transform.position = Vector3.zero; transform.rotation = Quaternion.identity;
             Build(now);
         }
@@ -161,7 +171,7 @@ namespace BladePath
                     float u = k / (float)sub;
                     Vector3 a = CR(p0.a, p1.a, p2.a, p3.a, u), b = CR(p0.b, p1.b, p2.b, p3.b, u);
                     float t = Mathf.Lerp(p1.t, p2.t, u);
-                    float age = Mathf.Clamp01((now - t) / life);
+                    float age = Mathf.Clamp01((now - t) / Mathf.Max(0.035f, life));
                     // Bright leading edge with a soft, fast-dissolving tail; keep the blade itself visible.
                     float alpha = Mathf.Pow(1f - age, 2.4f);
                     float headGlow = 1f - Mathf.SmoothStep(0f, 0.45f, age);
