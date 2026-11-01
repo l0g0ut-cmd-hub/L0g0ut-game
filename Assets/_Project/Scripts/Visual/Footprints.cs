@@ -37,7 +37,8 @@ namespace BladePath
             Shader sh = Shader.Find("Sprites/Default");
             if (sh == null) return;
             snowMat = new Material(sh) { name = "FootprintSnow", mainTexture = Sole(true), renderQueue = 2458 };
-            bloodMat = new Material(sh) { name = "FootprintBlood", mainTexture = Sole(false), renderQueue = 2458 };
+            Texture2D geta = Resources.Load<Texture2D>("FX/geta_print");   // кровавый след — отпечаток гэта (овал и два зуба), из атласа
+            bloodMat = new Material(sh) { name = "FootprintBlood", mainTexture = geta != null ? (Texture)geta : Sole(false), renderQueue = 2458 };
         }
 
         void OnDestroy() { if (Instance == this) Instance = null; }

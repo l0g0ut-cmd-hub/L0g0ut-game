@@ -59,6 +59,7 @@ namespace BladePath
             if (flutter == null) flutter = Flutter();
             fighters = FindObjectsByType<FighterController>(FindObjectsSortMode.None);
             crow = Make(Kind.Crow, 0.42f, dark);
+            BuildCrowSprite();
             heron = Make(Kind.Heron, 0.95f, dark);
             for (int i = 0; i < 4; i++) sparrows.Add(Make(Kind.Sparrow, 0.13f, brown));
             for (int i = 0; i < 7; i++) geese.Add(Make(Kind.Goose, 0.75f, dark));
@@ -114,6 +115,78 @@ namespace BladePath
             return g.transform;
         }
 
+        // ---------- ворона из атласа: фото-спрайт вместо процедурного «веретена» ----------
+        // кадры взмаха (вверх, горизонт, вниз, подъём) и сидящая; плоскость всегда к камере (по вертикальной оси),
+        // смотрит вправо или влево — по тому, куда летит или повёрнута относительно камеры
+        Transform crowSpr; MeshFilter crowMF; MeshRenderer crowMR; Material crowFlapMat, crowPerchMat;
+        Mesh[] crowFlap; Mesh crowPerchMesh; MaterialPropertyBlock crowMpb;
+        static readonly int[] FlapOrder = { 3, 0, 1, 2 };   // фаза взмаха 0…1 → кадр: подъём, верх, горизонт, низ
+
+        void BuildCrowSprite()
+        {
+            Texture2D ft = Resources.Load<Texture2D>("FX/crow_flap"), pt = Resources.Load<Texture2D>("FX/crow_perch");
+            Shader sh = Shader.Find("Sprites/Default");
+            if (ft == null || pt == null || sh == null) return;
+            crowFlapMat = new Material(sh) { name = "CrowFlap", mainTexture = ft };
+            crowPerchMat = new Material(sh) { name = "CrowPerch", mainTexture = pt };
+            crowFlap = new Mesh[4];
+            for (int i = 0; i < 4; i++) crowFlap[i] = SpriteQuad(i * 0.25f, i * 0.25f + 0.25f);
+            crowPerchMesh = SpriteQuad(0f, 1f);
+            GameObject g = new GameObject("CrowSprite"); g.transform.SetParent(transform, false);
+            crowSpr = g.transform; crowMF = g.AddComponent<MeshFilter>(); crowMR = g.AddComponent<MeshRenderer>();
+            crowMR.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; crowMR.receiveShadows = false;
+            crowMpb = new MaterialPropertyBlock();
+            foreach (Renderer r in crow.root.GetComponentsInChildren<Renderer>(true)) r.enabled = false;   // 3D-ворону прячем, поведение — её
+            g.SetActive(false);
+        }
+
+        static Mesh SpriteQuad(float u0, float u1)
+        {
+            Mesh m = new Mesh { name = "CrowQuad" };
+            m.vertices = new[] { new Vector3(-0.5f, -0.5f, 0f), new Vector3(0.5f, -0.5f, 0f), new Vector3(0.5f, 0.5f, 0f), new Vector3(-0.5f, 0.5f, 0f) };
+            m.uv = new[] { new Vector2(u0, 0f), new Vector2(u1, 0f), new Vector2(u1, 1f), new Vector2(u0, 1f) };
+            m.triangles = new[] { 0, 2, 1, 0, 3, 2 };
+            m.RecalculateBounds();
+            return m;
+        }
+
+        void CrowSprite()
+        {
+            if (crowSpr == null) return;
+            Bird b = crow;
+            bool vis = b.root.gameObject.activeSelf;
+            if (crowSpr.gameObject.activeSelf != vis) crowSpr.gameObject.SetActive(vis);
+            if (!vis) return;
+            Camera cam = Camera.main;
+            Vector3 fwd = cam != null ? cam.transform.forward : Vector3.forward; fwd.y = 0f;
+            if (fwd.sqrMagnitude < 1e-4f) fwd = Vector3.forward;
+            Vector3 right = cam != null ? cam.transform.right : Vector3.right;
+            bool perched = b.state == State.Perch;
+            Vector3 h = perched ? Quaternion.Euler(0f, b.heading, 0f) * Vector3.forward : b.vel;
+            bool faceRight = Vector3.Dot(h, right) >= 0f;
+            float s;
+            if (perched)
+            {
+                s = 0.5f;
+                crowMF.sharedMesh = crowPerchMesh; crowMR.sharedMaterial = crowPerchMat;
+                crowSpr.position = b.perch + Vector3.up * (s * 0.42f);   // лапы — у нижнего края кадра
+            }
+            else
+            {
+                s = 0.68f;
+                float ph = Mathf.Repeat(b.flap / (Mathf.PI * 2f), 1f);
+                int fr = b.glide > 0.5f ? 1 : FlapOrder[Mathf.FloorToInt(ph * 4f) % 4];
+                crowMF.sharedMesh = crowFlap[fr]; crowMR.sharedMaterial = crowFlapMat;
+                crowSpr.position = b.root.position;
+            }
+            crowSpr.rotation = Quaternion.LookRotation(fwd.normalized, Vector3.up);
+            crowSpr.localScale = new Vector3(faceRight ? s : -s, s, 1f);
+            // спрайт не освещается: тон по времени суток (ночью — тёмный силуэт)
+            float k = Night ? 0.3f : (Dawn || Dusk) ? 0.5f : 0.78f;
+            crowMpb.SetColor("_Color", new Color(k, k, k * 1.05f, 1f));
+            crowMR.SetPropertyBlock(crowMpb);
+        }
+
         // ---------- поведение ----------
 
         bool Night { get { return DayNight.Instance == null || !DayNight.Instance.Day; } }
@@ -134,6 +207,7 @@ namespace BladePath
             float dt = Time.deltaTime, now = Time.time;
             startled = startle != seenStartle; seenStartle = startle;
             UpdateCrow(dt, now);
+            CrowSprite();
             UpdateSparrows(dt, now);
             UpdateGeese(dt, now);
             UpdateHeron(dt, now);

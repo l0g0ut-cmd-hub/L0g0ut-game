@@ -140,6 +140,9 @@ namespace BladePath.EditorTools
                 Shot(cam, dir, "47_komainu", new Vector3(-0.8f, 1.2f, 0.4f), new Vector3(-0.8f, 0.5f, 3.6f), 55f, log);   // пара комаину у ступеней
                 Shot(cam, dir, "47b_komainu_close", new Vector3(-1.7f, 0.8f, 1.9f), new Vector3(-2.45f, 0.5f, 3.05f), 40f, log);
                 Shot(cam, dir, "49_chochin", new Vector3(-0.8f, 1.9f, 2.9f), new Vector3(-0.8f, 2.0f, 4.75f), 40f, log);   // фонари: иероглиф спереди
+                Shot(cam, dir, "50_wall_details", new Vector3(-3.4f, 1.0f, 1.6f), new Vector3(-6.25f, 0.6f, 3.6f), 50f, log);   // потёки, мох, плющ на стене
+                Shot(cam, dir, "51_hall_corner", new Vector3(-3.6f, 1.7f, 3.4f), new Vector3(-4.95f, 1.8f, 5.2f), 45f, log);   // паутина и офуда
+                Shot(cam, dir, "52_platform_moss", new Vector3(2.2f, 0.75f, 1.9f), new Vector3(2.4f, 0.2f, 4.4f), 50f, log);   // мох у подиума, цветы
                 Shot(cam, dir, "48_jizo", new Vector3(-4.6f, 0.9f, 0.4f), new Vector3(-5.85f, 0.3f, 1.0f), 45f, log);   // три дзидзо у стены
                 Shot(cam, dir, "46_rainchain", new Vector3(-3.4f, 1.5f, 2.6f), new Vector3(-4.3f, 1.25f, 3.96f), 45f, log);   // цепь-водосток и основания колонн
                 // храмовый кот на веранде: сидит, вылизывает лапу, трёт морду, идёт (строится в игре при запуске — здесь вручную)

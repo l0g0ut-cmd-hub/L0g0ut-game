@@ -661,7 +661,13 @@ namespace BladePath
             // портреты: герой — снимок модели героя (CI), враг — по облику: самурай в красном или ронин
             string pp;
             if (!mirror) pp = UiKit.Tex("UI/portrait_hero") != null ? "UI/portrait_hero" : "UI/portrait_ronin";
-            else { EnemySkins sk = f.GetComponent<EnemySkins>(); pp = sk != null && sk.Active == 1 ? "UI/portrait_ronin" : "UI/portrait_undead"; }
+            else
+            {
+                // у каждого врага «Пути» свой портрет (Поверженный, Тень клана, Кровавый они, Проклятый сёгун); нет — по облику модели
+                int li = Mathf.Clamp(Ladder.Index, 0, EnemyPortraits.Length - 1);
+                if (UiKit.Tex(EnemyPortraits[li]) != null) pp = EnemyPortraits[li];
+                else { EnemySkins sk = f.GetComponent<EnemySkins>(); pp = sk != null && sk.Active == 1 ? "UI/portrait_ronin" : "UI/portrait_undead"; }
+            }
             Texture2D pt = UiKit.Tex(pp);
             if (pt != null)
             {
@@ -678,6 +684,8 @@ namespace BladePath
 
             UiKit.Text(new Rect(mirror ? r.xMax - 260f : r.x, r.y + 34f, 260f, 18f), name, 13f, new Color(0.9f, 0.85f, 0.7f, 0.95f), mirror ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft);
         }
+
+        static readonly string[] EnemyPortraits = { "UI/portrait_fallen", "UI/portrait_shadow", "UI/portrait_oni", "UI/portrait_shogun" };
 
         static void DrawFill(Rect r, float k, bool mirror, Color c)
         {

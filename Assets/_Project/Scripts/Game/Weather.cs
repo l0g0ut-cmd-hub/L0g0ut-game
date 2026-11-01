@@ -59,7 +59,7 @@ namespace BladePath
         Material skyMat;
         float skyExpBase;
 
-        void Awake() { Instance = this; GlowSprite.Haze = 1f; if (GetComponent<SnowDrifts>() == null) gameObject.AddComponent<SnowDrifts>(); }   // сугробы растут по _BP_Snow
+        void Awake() { Instance = this; GlowSprite.Haze = 1f; if (GetComponent<SnowDrifts>() == null) gameObject.AddComponent<SnowDrifts>(); if (Application.isPlaying && GetComponent<Butterflies>() == null) gameObject.AddComponent<Butterflies>(); }   // сугробы растут по _BP_Snow
 
         void Start()
         {

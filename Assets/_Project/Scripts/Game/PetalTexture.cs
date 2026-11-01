@@ -18,7 +18,7 @@ namespace BladePath
             ParticleSystemRenderer r = GetComponent<ParticleSystemRenderer>();
             if (r == null || r.sharedMaterial == null) return;
             Material m = new Material(r.sharedMaterial);
-            Texture2D lt = leaf ? Resources.Load<Texture2D>("FX/maple_leaf") : null;
+            Texture2D lt = leaf ? Resources.Load<Texture2D>("FX/maple_leaf") : dragonfly ? Resources.Load<Texture2D>("FX/dragonfly") : null;   // стрекоза — фото из атласа
             m.mainTexture = lt != null ? lt : dragonfly ? SoftSprites.Dragonfly : (fog ? SoftSprites.Fog : (disc ? SoftSprites.Disc : SoftSprites.Petal));
             if (lt != null) m.color = Color.white;
             r.material = m;

@@ -11,7 +11,7 @@ namespace BladePath.EditorTools
         public Material heroArmor, enemyArmor, cloth, skin, hair, lacquer, bronze, steel, handle;
         public Material flesh, tooth, maw, voidBlack, deadSkin, ember, tentacle, ronin;
         public Material stone, stoneDark, flame, moon, petal;
-        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, skyDusk, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage, forestFloor, aoStrip, aoBlob, shojiMonk, shojiWalker, karesansui, pondWater, lotus, bellBronze, rock, flameSheet, smoke, koi, nobori1, nobori2, sakuraGround, mossDecal, ironOld, rope, gateDoor, chochin, cedarBark, bambooFence, komainu, jizo;
+        public Material wood, woodDark, roof, plaster, stoneBlock, gravel, bark, blossom, shoji, glow, sky, skyDay, skyDusk, paper, mist, haloWarm, haloFire, haloMoon, bamboo, bambooLeaf, moss, fireSprite, banner, puddle, tsuka, iron, mapleCrown, bambooFoliage, fallenLeaves, grass, cedarFoliage, forestFloor, aoStrip, aoBlob, shojiMonk, shojiWalker, karesansui, pondWater, lotus, bellBronze, rock, flameSheet, smoke, koi, nobori1, nobori2, sakuraGround, mossDecal, ironOld, rope, gateDoor, chochin, cedarBark, bambooFence, komainu, jizo, wallStains, mossStrip, ivy, cobweb, ofuda, flowers;
     }
 
     /// <summary>
@@ -165,6 +165,13 @@ namespace BladePath.EditorTools
                 l.bambooFence = Textured("Prop_BambooFence", "bamboo_fence.png", null, Vector2.one, new Color(0.85f, 0.85f, 0.82f), 0f, 0.3f);
             if (AssetDatabase.LoadAssetAtPath<Texture2D>(TexFolder + "komainu.png") != null)
                 l.komainu = Textured("Prop_Komainu", "komainu.png", null, Vector2.one, new Color(0.8f, 0.8f, 0.78f), 0f, 0.2f);
+            // детали окружения из атласа 8
+            if (AssetDatabase.LoadAssetAtPath<Texture2D>(TexFolder + "wall_stains.png") != null) l.wallStains = MaskMat("Env_WallStains", "wall_stains.png", 0.5f);
+            if (AssetDatabase.LoadAssetAtPath<Texture2D>(TexFolder + "moss_strip.png") != null) { l.mossStrip = Cutout("Env_MossStrip", "moss_strip.png"); l.mossStrip.color = new Color(0.62f, 0.66f, 0.58f); l.mossStrip.SetFloat("_Cutoff", 0.4f); }
+            if (AssetDatabase.LoadAssetAtPath<Texture2D>(TexFolder + "ivy.png") != null) { l.ivy = Cutout("Env_Ivy", "ivy.png"); l.ivy.color = new Color(0.62f, 0.68f, 0.6f); }
+            if (AssetDatabase.LoadAssetAtPath<Texture2D>(TexFolder + "ofuda.png") != null) { l.ofuda = Cutout("Env_Ofuda", "ofuda.png"); l.ofuda.color = new Color(0.78f, 0.75f, 0.7f); }
+            if (AssetDatabase.LoadAssetAtPath<Texture2D>(TexFolder + "cobweb.png") != null) l.cobweb = FadeMat("Env_Cobweb", "cobweb.png", new Color(0.8f, 0.8f, 0.82f, 0.75f));
+            if (AssetDatabase.LoadAssetAtPath<Texture2D>(TexFolder + "wildflowers.png") != null) l.flowers = Cutout("Env_Flowers", "wildflowers.png", new Color(0.72f, 0.74f, 0.68f), 0.45f, new Color(0.004f, 0.006f, 0.003f), 1f, 0.05f);
             if (AssetDatabase.LoadAssetAtPath<Texture2D>(TexFolder + "jizo.png") != null)
                 l.jizo = Textured("Prop_Jizo", "jizo.png", null, Vector2.one, new Color(0.8f, 0.8f, 0.78f), 0f, 0.2f);
             foreach (Material em in new[] { l.rock, l.wood, l.woodDark, l.roof, l.plaster, l.stoneBlock, l.gravel, l.forestFloor, l.bark, l.stone, l.moss, l.stoneDark, l.bambooFence, l.komainu, l.jizo })
@@ -393,7 +400,8 @@ namespace BladePath.EditorTools
         /// <summary>Лужа: почти чёрная, зеркально гладкая, полупрозрачная по форме кляксы (Standard, режим Fade).</summary>
         static Material Puddle()
         {
-            Material m = Textured("Env_Puddle", "blood_splat.png", null, Vector2.one, new Color(0.05f, 0.055f, 0.07f, 0.75f), 0.2f, 0.97f);
+            string pm = AssetDatabase.LoadAssetAtPath<Texture2D>(TexFolder + "puddle_mask.png") != null ? "puddle_mask.png" : "blood_splat.png";   // форма лужи (атлас), а не брызги
+            Material m = Textured("Env_Puddle", pm, null, Vector2.one, new Color(0.05f, 0.055f, 0.07f, 0.75f), 0.2f, 0.97f);
             m.SetFloat("_Mode", 2f);
             m.SetOverrideTag("RenderType", "Transparent");
             m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
@@ -403,6 +411,23 @@ namespace BladePath.EditorTools
             m.EnableKeyword("_ALPHABLEND_ON");
             m.DisableKeyword("_ALPHAPREMULTIPLY_ON");
             m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent - 10;
+            EditorUtility.SetDirty(m);
+            return m;
+        }
+
+        /// <summary>Полупрозрачный освещённый материал (Standard, Fade) по альфе текстуры — паутина и т.п.</summary>
+        static Material FadeMat(string name, string albedo, Color tint)
+        {
+            Material m = Textured(name, albedo, null, Vector2.one, tint, 0f, 0.2f);
+            m.SetFloat("_Mode", 2f);
+            m.SetOverrideTag("RenderType", "Transparent");
+            m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            m.SetInt("_ZWrite", 0);
+            m.DisableKeyword("_ALPHATEST_ON"); m.EnableKeyword("_ALPHABLEND_ON"); m.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            Texture2D t = AssetDatabase.LoadAssetAtPath<Texture2D>(TexFolder + albedo);
+            if (t != null) t.wrapMode = TextureWrapMode.Clamp;
             EditorUtility.SetDirty(m);
             return m;
         }

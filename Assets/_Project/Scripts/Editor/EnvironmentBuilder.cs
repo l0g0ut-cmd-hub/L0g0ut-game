@@ -150,6 +150,8 @@ namespace BladePath.EditorTools
             AddKaresansui(env, look);
             AddGroundDetails(env, look);
             AddProps(env, look);
+            AddWallDetails(env, look);
+            if (look.flowers != null) AddFlowers(env, look.flowers);
             AddShojiShadows(look);
             AddCameraOccluders(env);
             MarkStatic(env);
@@ -463,6 +465,110 @@ namespace BladePath.EditorTools
             g.AddComponent<MeshFilter>().sharedMesh = mesh;
             MeshRenderer r = g.AddComponent<MeshRenderer>(); r.sharedMaterial = mat;
             return g;
+        }
+
+        /// <summary>
+        /// Следы времени на стенах (атлас 8): потёки под кровлей, мох по каменному цоколю, плющ с колпаков, паутина в углах
+        /// галереи, бумажные талисманы-офуда на столбах тории и угловых колоннах. Вертикальные наклейки у самой поверхности.
+        /// </summary>
+        static void AddWallDetails(Transform env, Look look)
+        {
+            Transform g = new GameObject("WallDetails").transform; g.SetParent(env, false);
+            System.Random r = new System.Random(808);
+            System.Func<float> R = () => (float)r.NextDouble();
+            // yaw: −90 — лицом в +X, 90 — в −X, 0 — в −Z (к камере боя)
+            System.Func<string, Vector3, float, float, float, Material, GameObject> V = (nm, p, yaw, w, h, m) =>
+            {
+                GameObject d = EnvMesh.Decal(g, nm, p, 0f, w, h, m);
+                d.transform.localEulerAngles = new Vector3(-90f, yaw, 0f);
+                return d;
+            };
+            float[] bays = { -1.75f, 1.15f, 4.05f, 7.0f };   // пролёты между столбами боковых стен
+            for (int side = -1; side <= 1; side += 2)
+            {
+                float yaw = side < 0 ? -90f : 90f;
+                for (int i = 0; i < bays.Length; i++)
+                {
+                    if (look.wallStains != null && R() < 0.8f)
+                        V("Stains" + side + i, new Vector3(side * 6.244f, 0.64f, bays[i] + (R() - 0.5f) * 0.6f), yaw, 1.3f + R() * 0.8f, 0.6f, look.wallStains);
+                    if (look.mossStrip != null && R() < 0.75f)
+                        V("Moss" + side + i, new Vector3(side * 6.195f, 0.1f, bays[i] + (R() - 0.5f) * 1.2f), yaw, 1.44f, 0.36f, look.mossStrip);
+                }
+                if (look.ivy != null)
+                    for (int k = 0; k < 2; k++)
+                    {
+                        float h = 0.55f + R() * 0.25f;
+                        V("Ivy" + side + k, new Vector3(side * 6.09f, 1.16f - h * 0.5f, -2.5f + k * 5.2f + R() * 2.5f), yaw, h * 0.5f, h, look.ivy);
+                    }
+            }
+            // торцы зала: потёки под свесом
+            if (look.wallStains != null)
+            {
+                V("HallStainsL", new Vector3(-5.205f, 1.95f, 6.5f), 90f, 1.8f, 1.1f, look.wallStains);
+                V("HallStainsR", new Vector3(3.605f, 1.95f, 6.4f), -90f, 1.8f, 1.1f, look.wallStains);
+            }
+            // мох по низу каменного подиума зала (мимо ступеней)
+            if (look.mossStrip != null)
+                foreach (float x in new[] { -4.7f, -3.25f, 1.3f, 2.95f })
+                    V("PlatMoss" + x, new Vector3(x + (R() - 0.5f) * 0.3f, 0.08f, 4.488f), 0f, 1.25f, 0.31f, look.mossStrip);
+            // паутина в верхних углах галереи: между угловой колонной и балкой
+            if (look.cobweb != null)
+            {
+                V("CobwebL", new Vector3(-4.75f, 2.0f, 5.16f), 0f, 0.5f, 0.5f, look.cobweb);
+                GameObject cr = V("CobwebR", new Vector3(3.15f, 2.0f, 5.16f), 0f, 0.5f, 0.5f, look.cobweb);
+                Vector3 sc = cr.transform.localScale; sc.x = -sc.x; cr.transform.localScale = sc;   // зеркально: угол справа
+            }
+            // офуда на столбах тории и угловых колоннах галереи
+            if (look.ofuda != null)
+            {
+                V("OfudaToriiL", new Vector3(0.7f, 1.35f, 3.484f), 0f, 0.09f, 0.36f, look.ofuda);
+                V("OfudaToriiR", new Vector3(2.7f, 1.4f, 3.484f), 0f, 0.09f, 0.36f, look.ofuda);
+                V("OfudaHallL", new Vector3(-5.1f, 1.45f, 5.195f), 0f, 0.09f, 0.36f, look.ofuda);
+                V("OfudaHallR", new Vector3(3.5f, 1.5f, 5.195f), 0f, 0.09f, 0.36f, look.ofuda);
+            }
+        }
+
+        /// <summary>Полевые цветы (атлас 8) среди травы: вдоль бордюров, перед храмом, у подножий и на лугу за стенами; качаются на ветру.</summary>
+        static void AddFlowers(Transform env, Material mat)
+        {
+            System.Random r = new System.Random(4242);
+            System.Func<float> R = () => (float)r.NextDouble();
+            List<Vector3> v = new List<Vector3>(); List<Vector3> n = new List<Vector3>(); List<Vector2> uv = new List<Vector2>(); List<int> t = new List<int>();
+            System.Action<Vector3, float> Tuft = (Vector3 p, float h) =>
+            {
+                float a0 = R() * 180f;
+                for (int c = 0; c < 2; c++)
+                {
+                    float a = (a0 + c * 90f) * Mathf.Deg2Rad;
+                    Vector3 ex = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * h * 0.5f;
+                    int i0 = v.Count;
+                    v.Add(p - ex); v.Add(p + ex); v.Add(p + ex + Vector3.up * h); v.Add(p - ex + Vector3.up * h);
+                    for (int k = 0; k < 4; k++) n.Add(Vector3.up);
+                    bool flip = R() < 0.5f;
+                    uv.Add(new Vector2(flip ? 1f : 0f, 0f)); uv.Add(new Vector2(flip ? 0f : 1f, 0f)); uv.Add(new Vector2(flip ? 0f : 1f, 1f)); uv.Add(new Vector2(flip ? 1f : 0f, 1f));
+                    t.Add(i0); t.Add(i0 + 2); t.Add(i0 + 1); t.Add(i0); t.Add(i0 + 3); t.Add(i0 + 2);
+                    t.Add(i0); t.Add(i0 + 1); t.Add(i0 + 2); t.Add(i0); t.Add(i0 + 2); t.Add(i0 + 3);
+                }
+            };
+            const float gy = -0.07f;
+            for (int i = 0; i < 12; i++) { float side = R() < 0.5f ? -1f : 1f; Tuft(new Vector3(side * (4.0f + R() * 0.4f), gy, (R() - 0.5f) * 5f), 0.3f + 0.15f * R()); }
+            for (int i = 0; i < 10; i++)
+            {
+                float x = -4.6f + R() * 8.2f;
+                if ((x > -2.9f && x < 2.05f) || Mathf.Abs(x - 2.7f) < 0.35f) continue;   // ступени, комаину, дорожка, курильница, столб тории
+                Tuft(new Vector3(x, gy, 3.15f + R() * 0.7f), 0.28f + 0.14f * R());
+            }
+            Vector3[] bases = { new Vector3(-4.5f, 0f, -1.6f), new Vector3(4.5f, 0f, -1.6f), new Vector3(5.65f, 0f, 2.85f), new Vector3(-5.8f, 0f, 2.65f) };
+            foreach (Vector3 b in bases)
+                for (int i = 0; i < 2; i++) { float a = R() * 6.28f, d = 0.35f + R() * 0.3f; Tuft(new Vector3(b.x + Mathf.Cos(a) * d, gy, b.z + Mathf.Sin(a) * d), 0.3f + 0.15f * R()); }
+            for (int i = 0; i < 40; i++) Tuft(new Vector3((R() < 0.5f ? -1f : 1f) * (6.8f + R() * 6f), gy, -10f + R() * 22f), 0.35f + 0.2f * R());
+            Mesh m = new Mesh { name = "Flowers" };
+            m.SetVertices(v); m.SetNormals(n); m.SetUVs(0, uv); m.SetTriangles(t, 0);
+            m.RecalculateBounds(); m.RecalculateTangents();
+            GameObject g = new GameObject("Flowers"); g.transform.SetParent(env, false);
+            g.AddComponent<MeshFilter>().sharedMesh = m;
+            MeshRenderer mr = g.AddComponent<MeshRenderer>(); mr.sharedMaterial = mat;
+            mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; mr.receiveShadows = true;
         }
 
         /// <summary>Предметы из моделей: бамбуковая ограда вдоль дорожки от ворот (с обеих сторон, отделяет пруд и сухой сад).</summary>

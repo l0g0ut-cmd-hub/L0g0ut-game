@@ -10,6 +10,8 @@ namespace BladePath
     {
         public float minGap = 20f, maxGap = 40f;
         ParticleSystem ps;
+        ParticleSystemRenderer rend;
+        bool photo;
         float nextAt;
         AudioSource src;
         AudioClip caw;
@@ -31,7 +33,12 @@ namespace BladePath
             tsa.cycleCount = 40;   // взмахи крыльев за полёт
             var r = GetComponent<ParticleSystemRenderer>();
             Shader sh = Shader.Find("Sprites/Default");
-            if (sh != null) { Material m = new Material(sh) { name = "Crows" }; m.mainTexture = Sheet(); r.sharedMaterial = m; }
+            // фото-кадры взмаха из атласа (Resources/FX/crow_flap: вверх → горизонт → вниз → подъём); без них — процедурный силуэт
+            Texture2D atlas = Resources.Load<Texture2D>("FX/crow_flap");
+            photo = atlas != null;
+            if (sh != null) { Material m = new Material(sh) { name = "Crows" }; m.mainTexture = photo ? atlas : Sheet(); r.sharedMaterial = m; }
+            if (photo) main.startColor = new Color(0.62f, 0.62f, 0.68f, 1f);   // перо видно, но не светится ночью
+            rend = r;
             r.renderMode = ParticleSystemRenderMode.Billboard;
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; r.receiveShadows = false;
             src = gameObject.AddComponent<AudioSource>(); src.playOnAwake = false; src.spatialBlend = 0f; src.volume = 0.18f;
@@ -46,6 +53,7 @@ namespace BladePath
             // стая летит поперёк неба (слева направо или наоборот), чуть снижаясь
             int n = Random.Range(3, 7);
             float dir = Random.value < 0.5f ? 1f : -1f;
+            if (photo && rend != null) rend.flip = new Vector3(dir < 0f ? 1f : 0f, 0f, 0f);   // кадры смотрят вправо — стая влево отражается
             float y = Random.Range(6.5f, 9f), z = Random.Range(12f, 18f);
             for (int i = 0; i < n; i++)
             {
@@ -54,6 +62,12 @@ namespace BladePath
                 e.velocity = new Vector3(Random.Range(3.6f, 4.6f) * dir, Random.Range(-0.15f, 0.05f), 0f);
                 e.startSize = Random.Range(0.45f, 0.7f);
                 e.rotation = 0f;
+                if (photo)
+                {
+                    DayNight dn = DayNight.Instance;
+                    float k = dn == null || !dn.Day ? 0.26f : dn.Dusk || dn.Dawn ? 0.45f : 0.7f;   // спрайт не освещается — тон по времени суток
+                    e.startColor = new Color(k, k, k * 1.06f, 1f);
+                }
                 ps.Emit(e, 1);
             }
             if (src != null && caw != null && Random.value < 0.7f && Ambience.Claim(0.7f, 3f, 7f)) { src.pitch = Random.Range(0.9f, 1.1f); src.PlayOneShot(caw); }
