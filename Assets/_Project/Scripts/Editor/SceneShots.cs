@@ -155,6 +155,20 @@ namespace BladePath.EditorTools
                     Vector3 cp = player.transform.position;
                     Shot(cam, dir, "54_charge", cp + new Vector3(0.9f, 1.9f, -4.0f), cp + Vector3.up * 0.9f, 50f, log);
                     Shot(cam, dir, "54b_charge_top", cp + new Vector3(0.2f, 6.0f, -2.4f), cp, 50f, log);
+                    // диагностика: что из накопления реально в сцене (узор на полу на кадрах не виден)
+                    foreach (MeshRenderer mr in UnityEngine.Object.FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None))
+                    {
+                        if (!mr.name.StartsWith("Charge")) continue;
+                        Material mm = mr.sharedMaterial;
+                        log.Append("PROBE|charge|" + mr.name + "|on " + mr.enabled + "/" + mr.gameObject.activeInHierarchy + "|pos " + mr.transform.position.ToString("F3") + "|scl " + mr.transform.lossyScale.ToString("F2")
+                            + "|rot " + mr.transform.eulerAngles.ToString("F0") + "|bounds " + mr.bounds.size.ToString("F2") + "|sh " + (mm != null && mm.shader != null ? mm.shader.name : "-")
+                            + "|tex " + (mm != null && mm.mainTexture != null ? mm.mainTexture.name + " " + mm.mainTexture.width : "-") + "|tint " + (mm != null && mm.HasProperty("_TintColor") ? mm.GetColor("_TintColor").ToString("F2") : "-")
+                            + "|q " + (mm != null ? mm.renderQueue : 0) + "|mesh " + (mr.GetComponent<MeshFilter>() != null && mr.GetComponent<MeshFilter>().sharedMesh != null ? mr.GetComponent<MeshFilter>().sharedMesh.vertexCount.ToString() : "-") + "\n");
+                    }
+                    // только узор: столб, пламя, спираль и искры скрыты
+                    foreach (MeshRenderer mr in UnityEngine.Object.FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None)) if (mr.name == "ChargePillar" || mr.name.StartsWith("Fx_")) mr.enabled = false;
+                    foreach (ParticleSystemRenderer pr in UnityEngine.Object.FindObjectsByType<ParticleSystemRenderer>(FindObjectsSortMode.None)) if (pr.name == "ChargeRise") pr.enabled = false;
+                    Shot(cam, dir, "54c_charge_sigil_only", cp + new Vector3(0.2f, 6.0f, -2.4f), cp, 50f, log);
                 }
                 // храмовый кот на веранде: сидит, вылизывает лапу, трёт морду, идёт (строится в игре при запуске — здесь вручную)
                 TempleCat cat = UnityEngine.Object.FindFirstObjectByType<TempleCat>();
