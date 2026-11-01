@@ -16,7 +16,8 @@ namespace BladePath
             if (!mats.TryGetValue(tex, out m) || m == null)
             {
                 Texture2D t = Resources.Load<Texture2D>(tex);
-                Shader add = Shader.Find("Legacy Shaders/Particles/Additive");
+                Shader add = Shader.Find("BladePath/GroundAdditive");   // без «мягких частиц» — иначе у пола не видно
+                if (add == null) add = Shader.Find("Legacy Shaders/Particles/Additive");
                 if (t == null || add == null) return null;
                 m = new Material(add) { mainTexture = t }; mats[tex] = m;
             }

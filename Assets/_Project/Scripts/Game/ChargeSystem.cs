@@ -5,16 +5,17 @@ namespace BladePath
 {
     /// <summary>
     /// Накопление удара: боец замирает, под ногами разворачивается светящийся узор, вокруг поднимается энергия; узор и выплеск
-    /// растут по трём ступеням (0,5 / 1,1 / 1,7 с), каждая — вспышка, гул и дрожь. Отпустил — рывок к врагу и сокрушительный
+    /// растут по трём ступеням (0,5 / 1,1 / 1,7 с; каждая — свой облик: I — светом рисуется узор, II — раскрывается цветной узор и столб,
+    /// III — по ободу и земле бьют молнии, столб в полный рост), каждая — вспышка, гул и дрожь. Отпустил — рывок к врагу и сокрушительный
     /// удар: урон ×1,5 / ×2 / ×2,6, по равновесию сильнее; на третьей ступени — ещё и волна по площадке (блок не спасает,
-    /// только прыжок или рывок). Ступень стоит духа (20 / 35 / 50). Удар по накапливающему срывает накопление.
+    /// только прыжок или рывок). Ступень стоит духа (15 / 25 / 40). Удар по накапливающему срывает накопление.
     /// Игрок — удержанием кнопки «ДУХ» (короткое нажатие — по-прежнему шар), враги — они и сёгун в поздних фазах.
     /// </summary>
     public class ChargeSystem : MonoBehaviour
     {
         public static ChargeSystem Instance { get; private set; }
         public static readonly float[] LevelAt = { 0.5f, 1.1f, 1.7f };
-        public static readonly float[] KiCost = { 20f, 35f, 50f };
+        public static readonly float[] KiCost = { 15f, 25f, 40f };
         public static readonly float[] DmgMul = { 1.5f, 2.0f, 2.6f };
 
         class Charge
@@ -22,6 +23,7 @@ namespace BladePath
             public FighterController f; public float start; public int level; public Color col;
             public Transform sigil, anchor, early, pillar, pool; public Material sigilMat, earlyMat, pillarMat, poolMat; public ParticleSystem rise; public FxSprite flame, inhale, embers; public Light light; public float pillarAspect = 1.3f; public int pillarFrames = 1;
             public Transform draw, emberAnchor; public Material drawMat;
+            public float kv, popAt = -10f, boltAt;   // kv — облик ступени (0…1, догоняет ступень), popAt — вспышка новой ступени
         }
         readonly Dictionary<FighterController, Charge> active = new Dictionary<FighterController, Charge>();
         readonly Dictionary<FighterController, int> strikeSwing = new Dictionary<FighterController, int>();
@@ -116,7 +118,10 @@ namespace BladePath
 
         void Build(Charge c)
         {
-            Shader add = Shader.Find("Legacy Shaders/Particles/Additive");
+            // свет на полу — свой шейдер без «мягких частиц» (те гасят плоскость у самой поверхности — узор был невидим)
+            Shader add = Shader.Find("BladePath/GroundAdditive");
+            if (add == null) add = Shader.Find("Legacy Shaders/Particles/Additive");
+            Shader soft = Shader.Find("Legacy Shaders/Particles/Additive");
             // узор на полу: свой у героя (кристальный компас) и у врагов; пока нет атласа — золотая печать
             Texture2D sig = Resources.Load<Texture2D>(SigilFor(c.f));
             if (sig == null) sig = Resources.Load<Texture2D>("FX/seal_circle");
@@ -170,7 +175,7 @@ namespace BladePath
             gr.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) }, new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.15f), new GradientAlphaKey(0f, 1f) });
             col.color = gr;
             var pr = pg.GetComponent<ParticleSystemRenderer>();
-            if (add != null) { Material pm = new Material(add) { mainTexture = SoftSprites.Disc }; pm.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0.5f)); pr.sharedMaterial = pm; }
+            if (soft != null) { Material pm = new Material(soft) { mainTexture = SoftSprites.Disc }; pm.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0.5f)); pr.sharedMaterial = pm; }
             pr.renderMode = ParticleSystemRenderMode.Stretch; pr.velocityScale = 0.04f; pr.lengthScale = 1f;
             pr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             c.rise.Play();
@@ -261,8 +266,8 @@ namespace BladePath
 
         void PoseVisuals(Charge c, FighterController f, float t)
         {
-            float k = Mathf.Clamp01(t / LevelAt[2]);
-            float pulse = 1f + 0.06f * Mathf.Sin(Time.time * (8f + 6f * Mathf.Max(0, c.level)));
+            float k = c.kv;
+            float pulse = (1f + 0.06f * Mathf.Sin(Time.time * (8f + 6f * Mathf.Max(0, c.level)))) * (1f + 0.22f * Mathf.Exp(-(Time.time - c.popAt) * 7f));
             if (c.sigil != null)
             {
                 float s = Mathf.Lerp(0.9f, 3.4f, 1f - (1f - k) * (1f - k)) * pulse;
@@ -270,7 +275,7 @@ namespace BladePath
                 c.sigil.localScale = new Vector3(s, s, 1f);
                 c.sigil.Rotate(0f, 0f, (40f + 140f * k) * Time.deltaTime, Space.Self);
                 // свой цветной узор — без подкраски; запасная печать — в цвет бойца
-                float a = Mathf.Clamp01(t / 0.25f) * (c.early != null ? Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.25f, 0.75f, k)) : 0.55f + 0.45f * k);
+                float a = Mathf.Clamp01(t / 0.25f) * (c.early != null ? Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.4f, 0.66f, k)) : 0.55f + 0.45f * k);   // II ступень — полный цветной узор
                 Color tc = c.early != null ? new Color(0.5f, 0.5f, 0.5f, 0.5f) : new Color(c.col.r * 0.5f, c.col.g * 0.5f, c.col.b * 0.5f, 0.5f);
                 c.sigilMat.SetColor("_TintColor", new Color(tc.r, tc.g, tc.b, tc.a * a * (0.8f + 0.2f * pulse)));
                 if (c.early != null)
@@ -279,7 +284,7 @@ namespace BladePath
                     float se = Mathf.Lerp(1.1f, s * 0.62f, k);
                     c.early.localScale = new Vector3(se, se, 1f);
                     c.early.Rotate(0f, 0f, -(60f + 90f * k) * Time.deltaTime, Space.Self);   // против хода полного узора
-                    float ea = Mathf.Clamp01(t / 0.2f) * (1f - Mathf.InverseLerp(0.45f, 0.95f, k));
+                    float ea = Mathf.Clamp01(t / 0.2f) * Mathf.InverseLerp(0.12f, 0.33f, k) * (1f - Mathf.InverseLerp(0.5f, 0.72f, k));   // I ступень — ядро узора в цвете
                     c.earlyMat.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0.5f * ea));
                 }
             }
@@ -302,7 +307,7 @@ namespace BladePath
             {
                 c.embers.size = Mathf.Lerp(1.2f, 2.8f, k);
                 if (c.emberAnchor != null) c.emberAnchor.localPosition = Vector3.up * (c.embers.size * 0.5f);
-                Color ec = Color.Lerp(c.col, Color.white, 0.3f); c.embers.tint = new Color(ec.r, ec.g, ec.b, 0.3f + 0.4f * k);
+                Color ec = Color.Lerp(c.col, Color.white, 0.3f); c.embers.tint = new Color(ec.r, ec.g, ec.b, (0.3f + 0.4f * k) * Mathf.InverseLerp(0.2f, 0.4f, k));
             }
             if (c.pool != null)
             {
@@ -353,7 +358,7 @@ namespace BladePath
         /// <summary>Для кадров CI (редактор, без игрового цикла): построить накопление и показать его на момент t.</summary>
         public void Preview(FighterController f, float t, int level)
         {
-            Charge c = new Charge { f = f, start = 0f, level = level, col = ColorOf(f) };
+            Charge c = new Charge { f = f, start = 0f, level = level, col = ColorOf(f), kv = (level + 1) / 3f };
             Build(c);
             active[f] = c;
             PoseVisuals(c, f, t);
@@ -379,9 +384,20 @@ namespace BladePath
                 float t = Time.time - c.start;
                 int lvl = t >= LevelAt[2] ? 2 : t >= LevelAt[1] ? 1 : t >= LevelAt[0] ? 0 : -1;
                 while (lvl >= 0 && f.Ki < KiCost[lvl]) lvl--;   // духа не хватает — выше не поднимется
+                // облик ступени догоняет ступень; внутри ступени узор чуть подрастает к следующей (если на неё хватит духа)
+                float kt = lvl < 0 ? 0.12f * Mathf.Clamp01(t / LevelAt[0]) : (lvl + 1) / 3f;
+                if (lvl >= 0 && lvl < 2 && f.Ki >= KiCost[lvl + 1]) kt += 0.07f * Mathf.Clamp01((t - LevelAt[lvl]) / (LevelAt[lvl + 1] - LevelAt[lvl]));
+                c.kv = Mathf.MoveTowards(c.kv, kt, Time.deltaTime * 1.8f);
                 if (lvl > c.level)
                 {
-                    c.level = lvl;
+                    c.level = lvl; c.popAt = Time.time;
+                    if (dm != null)
+                    {
+                        DuelManager.Popup sp = new DuelManager.Popup();
+                        sp.world = f.transform.position + Vector3.up * 2.35f; sp.text = lvl == 0 ? "СТУПЕНЬ I" : lvl == 1 ? "СТУПЕНЬ II" : "СТУПЕНЬ III";
+                        sp.color = Color.Lerp(c.col, Color.white, 0.35f); sp.born = Time.unscaledTime; sp.size = 18f + 4f * lvl;
+                        dm.Popups.Add(sp);
+                    }
                     // вспышка ступени: кольцо, барабан, дрожь
                     if (Juice.Instance != null) { Juice.Instance.Taiko(0.7f + 0.15f * lvl, 1.2f + 0.15f * lvl); Juice.Instance.ChargePulse(f.transform.position, c.col, 1.2f + 0.8f * lvl); }
                     GroundFlash.Spawn("FX/shock_ring", f.transform.position, 1.0f, 3.2f + 1.4f * lvl, c.col, 0.5f, 0f);
@@ -390,6 +406,12 @@ namespace BladePath
                     if (lvl >= 2) GroundFlash.SpawnSheet("FX/lightning_burst", f.transform.position, 3.4f, 4.2f, c.col, 0.4f, 4, 1, 4);   // третья ступень — разряд по земле
                     if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.02f + 0.02f * lvl);
                     Haptics.Pulse(25 + 15 * lvl);
+                }
+                // третья ступень держится: разряды по земле, свет мигает
+                if (c.level >= 2 && Time.time >= c.boltAt)
+                {
+                    c.boltAt = Time.time + Random.Range(0.35f, 0.6f);
+                    GroundFlash.SpawnSheet("FX/lightning_burst", f.transform.position + new Vector3(Random.Range(-0.4f, 0.4f), 0f, Random.Range(-0.4f, 0.4f)), 2.6f, 3.2f, c.col, 0.3f, 4, 1, 4);
                 }
                 PoseVisuals(c, f, t);
                 f.SetMoveVector(Vector2.zero);

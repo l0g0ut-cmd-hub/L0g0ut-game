@@ -1034,7 +1034,8 @@ namespace BladePath
                 sg.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
                 sg.AddComponent<MeshFilter>().sharedMesh = QuadMesh();
                 MeshRenderer smr = sg.AddComponent<MeshRenderer>();
-                Material sm = new Material(ash) { mainTexture = st }; sm.SetColor("_TintColor", new Color(0.5f, 0.42f, 0.3f, 0.5f));
+                Shader gsh = Shader.Find("BladePath/GroundAdditive");
+                Material sm = new Material(gsh != null ? gsh : ash) { mainTexture = st }; sm.SetColor("_TintColor", new Color(0.5f, 0.42f, 0.3f, 0.5f));
                 smr.sharedMaterial = sm; smr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 sg.AddComponent<SealSpin>();
             }

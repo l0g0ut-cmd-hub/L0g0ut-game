@@ -169,6 +169,13 @@ namespace BladePath.EditorTools
                     foreach (MeshRenderer mr in UnityEngine.Object.FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None)) if (mr.name == "ChargePillar" || mr.name.StartsWith("Fx_")) mr.enabled = false;
                     foreach (ParticleSystemRenderer pr in UnityEngine.Object.FindObjectsByType<ParticleSystemRenderer>(FindObjectsSortMode.None)) if (pr.name == "ChargeRise") pr.enabled = false;
                     Shot(cam, dir, "54c_charge_sigil_only", cp + new Vector3(0.2f, 6.0f, -2.4f), cp, 50f, log);
+                    // враг на I ступени — для сравнения обликов
+                    if (enemy != null)
+                    {
+                        cs.Preview(enemy, 0.7f, 0);
+                        Vector3 ep2 = enemy.transform.position;
+                        Shot(cam, dir, "54d_charge_stage1", ep2 + new Vector3(-0.9f, 1.9f, -4.0f), ep2 + Vector3.up * 0.9f, 50f, log);
+                    }
                 }
                 // храмовый кот на веранде: сидит, вылизывает лапу, трёт морду, идёт (строится в игре при запуске — здесь вручную)
                 TempleCat cat = UnityEngine.Object.FindFirstObjectByType<TempleCat>();
