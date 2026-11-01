@@ -1303,12 +1303,18 @@ namespace BladePath
         void Flash(Vector3 pos, float size, Color c, float life, bool glint)
         {
             // ядро — гауссово пятно без края (диск с краем читается как «белая тарелка»), блик — тонкие лучи крупнее ядра
-            Burst1(pos, size, c, life, Additive(ref glowMat, SoftSprites.Fog), Random.Range(0f, 360f));
+            // Two-stage highlight: a tight white-hot center and a broader colored halo.
+            // Only the stronger glint uses an extra particle, keeping ordinary hits cheap.
+            Burst1(pos, size, Color.Lerp(c, Color.white, 0.55f), life * 0.75f,
+                Additive(ref glowMat, SoftSprites.Fog), Random.Range(0f, 360f));
             if (glint)
             {
-                // сноп искр из атласа (лучи разной длины), а не ровный крест-звезда
+                Burst1(pos, size * 1.8f, new Color(c.r, c.g, c.b, c.a * 0.55f),
+                    life * 1.25f, Additive(ref glowMat, SoftSprites.Fog), 0f);
+                // Irregular atlas rays avoid a static cross-shaped flare.
                 if (sparkTex == null) { sparkTex = Resources.Load<Texture2D>("FX/spark_burst"); if (sparkTex == null) sparkTex = SoftSprites.Star; }
-                Burst1(pos, size * 3.2f, Color.Lerp(c, Color.white, 0.5f), life * 1.5f, Additive(ref starMat, sparkTex), Random.Range(0f, 360f));
+                Burst1(pos, size * 2.7f, Color.Lerp(c, Color.white, 0.35f),
+                    life * 1.2f, Additive(ref starMat, sparkTex), Random.Range(0f, 360f));
             }
         }
 
