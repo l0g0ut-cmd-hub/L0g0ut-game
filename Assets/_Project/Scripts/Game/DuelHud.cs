@@ -285,6 +285,16 @@ namespace BladePath
                 UiKit.Text(new Rect(cx - 300f, 110f, 600f, 40f), deciding ? "РЕШАЮЩИЙ РАУНД" : "РАУНД " + duel.Round, 26f, new Color(0.95f, 0.9f, 0.8f, ta));
                 if (duel.Round == 1)
                 {
+                    // враг в полный рост справа — представление противника, как у боссов
+                    Texture2D ef = UiKit.Tex(EnemyFullArt[Mathf.Clamp(Ladder.Index, 0, EnemyFullArt.Length - 1)]);
+                    if (ef != null)
+                    {
+                        float ia = Mathf.Clamp01(duel.StateTime / 0.5f) * Mathf.Clamp01((duel.IntroLength - duel.StateTime) / 0.5f);
+                        float h = 380f, w = h * ef.width / Mathf.Max(1f, ef.height), slide = (1f - Mathf.Clamp01(duel.StateTime / 0.6f)) * 60f;
+                        Color oc = GUI.color; GUI.color = new Color(1f, 1f, 1f, 0.92f * ia);
+                        GUI.DrawTexture(new Rect(W - w - 30f + slide, 120f, w, h), ef);
+                        GUI.color = oc;
+                    }
                     // мазок туши под титулом врага (как имя босса в Sekiro): кисть проводит его слева направо
                     DrawBrush("UI/brush_stroke", new Vector2(cx, 292f), 120f, 0.88f * ta, Mathf.Clamp01(duel.StateTime / 0.45f));
                     UiKit.Text(new Rect(cx - 400f, 262f, 800f, 34f), "ПУТЬ " + (Ladder.Index + 1) + " / " + Ladder.Count + (Profile.Cycle > 0 ? "  ·  КРУГ " + (Profile.Cycle + 1) : "") + "  ·  " + Ladder.Current.name, 22f, new Color(Gold.r, Gold.g, Gold.b, ta));
@@ -699,6 +709,7 @@ namespace BladePath
             UiKit.Text(new Rect(mirror ? r.xMax - 260f : r.x, r.y + 34f, 260f, 18f), name, 13f, new Color(0.9f, 0.85f, 0.7f, 0.95f), mirror ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft);
         }
 
+        static readonly string[] EnemyFullArt = { "UI/enemy_full_fallen", "UI/enemy_full_shadow", "UI/enemy_full_oni", "UI/enemy_full_shogun" };
         static readonly string[] EnemyPortraits = { "UI/portrait_fallen", "UI/portrait_shadow", "UI/portrait_oni", "UI/portrait_shogun" };
 
         static void DrawFill(Rect r, float k, bool mirror, Color c)

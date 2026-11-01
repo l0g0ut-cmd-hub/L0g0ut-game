@@ -96,8 +96,9 @@ namespace BladePath
             UiKit.Corners(panel, 54f);
 
             // шапка: вкладки, монеты, «готово»
-            if (Btn(new Rect(30f, 18f, 190f, 36f), "СНАРЯЖЕНИЕ", true, tab == 0)) tab = 0;
-            if (Btn(new Rect(230f, 18f, 190f, 36f), "ПРОКАЧКА" + (Profile.Points > 0 ? "  +" + Profile.Points : ""), true, tab == 1)) { tab = 1; pending = Profile.StatsCopy(); }
+            if (Btn(new Rect(30f, 18f, 186f, 36f), "СНАРЯЖЕНИЕ", true, tab == 0)) tab = 0;
+            if (Btn(new Rect(226f, 18f, 186f, 36f), "ПРОКАЧКА" + (Profile.Points > 0 ? "  +" + Profile.Points : ""), true, tab == 1)) { tab = 1; pending = Profile.StatsCopy(); }
+            if (Btn(new Rect(422f, 18f, 150f, 36f), "ПУТЬ", true, tab == 2)) tab = 2;
             Texture2D coin = UiKit.Tex("UI/coins");
             float gx = W - 330f;
             if (coin != null) GUI.DrawTexture(new Rect(gx, 18f, 36f, 36f), coin); else UiKit.Disc(new Vector2(gx + 18f, 36f), 12f, Gold);
@@ -105,6 +106,7 @@ namespace BladePath
             if (Btn(new Rect(W - 160f, 18f, 130f, 36f), "ГОТОВО")) { Hide(); return; }
 
             if (tab == 1) { DrawUpgrade(W); return; }
+            if (tab == 2) { DrawPath(W); return; }
             DrawStats(new Rect(28f, 64f, 292f, 456f));
             DrawEquipped(new Rect(332f, 64f, 232f, 456f));
             DrawBag(new Rect(578f, 64f, W - 578f - 30f, 456f));
@@ -149,7 +151,10 @@ namespace BladePath
             for (int t = 0; t < 6; t++)
             {
                 if (!Profile.Has((Tech)t)) continue;
-                UiKit.Text(new Rect(a.x + (k % 2) * 150f, ty + 20f + (k / 2) * 16f, 150f, 16f), Profile.TechNames[t], 10.5f, Ink, TextAnchor.MiddleLeft, false);
+                Texture2D card = UiKit.Tex("UI/tech_" + t);
+                float cx0 = a.x + (k % 2) * 150f, cy0 = ty + 20f + (k / 2) * 16f;
+                if (card != null) GUI.DrawTexture(new Rect(cx0, cy0, 15f, 15f), card);
+                UiKit.Text(new Rect(cx0 + (card != null ? 18f : 0f), cy0, 132f, 16f), Profile.TechNames[t], 10.5f, Ink, TextAnchor.MiddleLeft, false);
                 k++;
             }
         }
@@ -213,6 +218,56 @@ namespace BladePath
             if (Btn(new Rect(52f + bw * 2f, by, bw, 42f), "ПРИНЯТЬ", changed)) { Profile.SetStats(pending); pending = Profile.StatsCopy(); if (DuelManager.Instance != null) DuelManager.Instance.ApplyProfile(); }
         }
 
+        // ---------------- «Путь»: горная тропа, печати ступеней, враг в полный рост ----------------
+
+        static readonly string[] EnemyFull = { "UI/enemy_full_fallen", "UI/enemy_full_shadow", "UI/enemy_full_oni", "UI/enemy_full_shogun" };
+        static readonly Vector2[] PathPts = { new Vector2(0.47f, 0.9f), new Vector2(0.36f, 0.66f), new Vector2(0.6f, 0.5f), new Vector2(0.55f, 0.24f) };
+
+        void DrawPath(float W)
+        {
+            float lw = Mathf.Min(560f, W * 0.55f);
+            Rect pr = new Rect(30f, 64f, lw, 452f);
+            Texture2D pan = UiKit.Tex("UI/path_panorama");
+            if (pan != null) GUI.DrawTexture(pr, pan, ScaleMode.ScaleAndCrop); else UiKit.Rect(pr, new Color(0.1f, 0.1f, 0.12f));
+            UiKit.Rect(new Rect(pr.x, pr.y, pr.width, 34f), new Color(0f, 0f, 0f, 0.5f));
+            UiKit.Text(new Rect(pr.x + 12f, pr.y + 2f, pr.width - 24f, 30f), "ПУТЬ КЛИНКА" + (Profile.Cycle > 0 ? "   ·   КРУГ " + (Profile.Cycle + 1) : "") + "   ·   ПРОЙДЕН РАЗ: " + Records.Cleared, 15f, Gold, TextAnchor.MiddleLeft);
+            int cur = Ladder.Index;
+            // фонари вдоль тропы
+            Texture2D lan = UiKit.Tex("UI/path_lantern");
+            for (int i = 0; i < PathPts.Length; i++)
+            {
+                Vector2 c = new Vector2(pr.x + PathPts[i].x * pr.width, pr.y + PathPts[i].y * pr.height);
+                if (lan != null && i < PathPts.Length - 1) { Vector2 m = (c + new Vector2(pr.x + PathPts[i + 1].x * pr.width, pr.y + PathPts[i + 1].y * pr.height)) * 0.5f; GUI.DrawTexture(new Rect(m.x - 14f, m.y - 40f, 28f, 44f), lan); }
+                Texture2D md = UiKit.Tex("UI/medal_" + i);
+                bool done = i < cur, now = i == cur;
+                float s = now ? 70f * (1f + 0.06f * Mathf.Sin(Time.unscaledTime * 4f)) : 56f;
+                Color o = GUI.color;
+                GUI.color = done ? Color.white : now ? Color.white : new Color(0.45f, 0.42f, 0.42f, 0.9f);
+                if (md != null) GUI.DrawTexture(new Rect(c.x - s * 0.5f, c.y - s * 0.5f, s, s), md); else UiKit.Disc(c, s * 0.45f, new Color(0.6f, 0.1f, 0.08f));
+                GUI.color = o;
+                if (done) UiKit.Disc(new Vector2(c.x + s * 0.32f, c.y - s * 0.32f), 6f, new Color(0.55f, 0.9f, 0.45f));   // пройдено
+                UiKit.Text(new Rect(c.x + s * 0.5f + 4f, c.y - 10f, 200f, 20f), Ladder.Stages[i].name, now ? 13f : 11f, now ? Gold : new Color(0.85f, 0.82f, 0.75f, done ? 1f : 0.6f), TextAnchor.MiddleLeft);
+            }
+            // справа — текущий противник
+            float rx = pr.xMax + 20f, rw = W - rx - 32f;
+            Rect rp = new Rect(rx, 64f, rw, 452f);
+            UiKit.Rect(rp, new Color(0f, 0f, 0f, 0.4f));
+            Texture2D ef = UiKit.Tex(EnemyFull[Mathf.Clamp(cur, 0, EnemyFull.Length - 1)]);
+            if (ef != null)
+            {
+                float h = 300f, w = h * ef.width / Mathf.Max(1f, ef.height);
+                if (w > rw - 20f) { w = rw - 20f; h = w * ef.height / Mathf.Max(1f, ef.width); }
+                GUI.DrawTexture(new Rect(rx + (rw - w) * 0.5f, 72f, w, h), ef);
+            }
+            Ladder.Stage st = Ladder.Current;
+            UiKit.Text(new Rect(rx + 10f, 378f, rw - 20f, 26f), "СЛЕДУЮЩИЙ: " + st.name, 17f, Gold);
+            UiKit.Text(new Rect(rx + 10f, 404f, rw - 20f, 18f), st.title, 12f, new Color(0.85f, 0.82f, 0.75f));
+            string[] traits = { "обычный бой — учись отражать", "уходит в дым за спину, финтит", "бьёт по земле — перепрыгивай волну", "три фазы: залпы духа, затем дым" };
+            UiKit.Text(new Rect(rx + 10f, 424f, rw - 20f, 18f), traits[Mathf.Clamp(cur, 0, 3)], 11.5f, new Color(1f, 0.65f, 0.45f));
+            UiKit.Text(new Rect(rx + 10f, 446f, rw - 20f, 18f), "жизней: " + Mathf.Max(1, st.marks) + "   ·   здоровье ×" + (st.hpMul * Profile.CycleHp).ToString("0.0") + "   ·   урон ×" + (st.dmgMul * Profile.CycleDmg).ToString("0.0"), 11f, new Color(0.8f, 0.78f, 0.72f));
+            UiKit.Text(new Rect(rx + 10f, 470f, rw - 20f, 36f), Ladder.IsLast ? "награда: добыча не ниже редкой, после победы — новый круг" : "победа открывает следующую ступень", 11f, new Color(0.75f, 0.72f, 0.66f));
+        }
+
         static string Fmt(float v, int kk) { return kk == 1 ? Mathf.RoundToInt(v).ToString() : (v >= 1f ? "+" : "−") + Mathf.RoundToInt(Mathf.Abs(v - 1f) * 100f) + "%"; }
 
         void DrawEquipped(Rect a)
@@ -269,8 +324,11 @@ namespace BladePath
             if (it.slot == (int)Slot.Scroll)
             {
                 int t = Mathf.Clamp(it.tech, 0, 5);
-                UiKit.Text(new Rect(a.x + 10f, y, a.width - 20f, 16f), "Приём: " + Profile.TechNames[t], 12f, Ink, TextAnchor.MiddleLeft, false);
-                UiKit.Text(new Rect(a.x + 10f, y + 16f, a.width - 20f, 16f), Profile.TechHint[t], 11f, new Color(0.85f, 0.82f, 0.74f), TextAnchor.MiddleLeft, false);
+                Texture2D card = UiKit.Tex("UI/tech_" + t);
+                float tx = a.x + 10f;
+                if (card != null) { GUI.DrawTexture(new Rect(a.x + 10f, y, 64f, 64f), card); tx = a.x + 82f; }
+                UiKit.Text(new Rect(tx, y, a.xMax - tx - 10f, 16f), "Приём: " + Profile.TechNames[t], 12f, Ink, TextAnchor.MiddleLeft, false);
+                UiKit.Text(new Rect(tx, y + 18f, a.xMax - tx - 10f, 32f), Profile.TechHint[t], 11f, new Color(0.85f, 0.82f, 0.74f), TextAnchor.UpperLeft, false);
             }
             else
             {

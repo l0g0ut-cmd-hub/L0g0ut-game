@@ -102,6 +102,7 @@ namespace BladePath
             if (Time.time - born > lifeSeconds)
             {
                 if (CombatResolver.Instance != null) CombatResolver.Instance.ReportProjectileMiss(owner);
+                if (Juice.Instance != null) Juice.Instance.OrbBurst(transform.position, owner);
                 Destroy(gameObject);
             }
         }
@@ -109,6 +110,7 @@ namespace BladePath
         void Hit(BodyZone zone, Vector3 point)
         {
             if (CombatResolver.Instance != null) CombatResolver.Instance.ReportProjectileHit(owner, zone, point, velocity);
+            if (Juice.Instance != null) Juice.Instance.OrbBurst(point, owner);
             Destroy(gameObject);
         }
     }

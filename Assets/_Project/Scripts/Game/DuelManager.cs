@@ -1339,6 +1339,7 @@ namespace BladePath
                     crit = true;
                     Popup cp = new Popup();
                     cp.world = point + Vector3.up * 0.45f; cp.text = "КОНТРАТАКА!"; cp.color = new Color(1f, 0.55f, 0.2f);
+                    if (Juice.Instance != null) Juice.Instance.XSlash(point);
                     cp.born = Time.unscaledTime; cp.size = 28f;
                     Popups.Add(cp);
                 }

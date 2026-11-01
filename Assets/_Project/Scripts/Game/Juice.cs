@@ -82,7 +82,7 @@ namespace BladePath
             {
                 FighterController owner = w.GetComponentInParent<FighterController>();
                 bool isPlayer = DuelManager.Instance != null && DuelManager.Instance.player == owner;
-                WeaponTrail.Attach(w, isPlayer ? new Color(0.55f, 0.8f, 1f) : new Color(0.85f, 0.35f, 1f));
+                WeaponTrail.Attach(w, isPlayer ? new Color(0.55f, 0.8f, 1f) : new Color(0.85f, 0.35f, 1f), isPlayer ? "trail_ice" : "trail_violet");   // ледяной след героя, фиолетовый — врага
                 if (!isPlayer && owner != null) MakeEyes(owner);
                 if (w.GetComponent<BladeGlint>() == null) w.gameObject.AddComponent<BladeGlint>().weapon = w;   // лунный блик по клинку
             }
@@ -1024,6 +1024,22 @@ namespace BladePath
         /// <summary>Заряд супер-удара: воронка светящихся частиц втягивается в бойца.</summary>
         public void SuperCharge(Vector3 pos)
         {
+            // печать духа под ногами (крутится и гаснет) и воронка света, втягивающаяся в бойца
+            Texture2D st = Resources.Load<Texture2D>("FX/seal_circle");
+            Shader ash = Shader.Find("Legacy Shaders/Particles/Additive");
+            if (st != null && ash != null)
+            {
+                GameObject sg = new GameObject("SuperSeal");
+                sg.transform.position = new Vector3(pos.x, 0.02f, pos.z);
+                sg.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+                sg.AddComponent<MeshFilter>().sharedMesh = QuadMesh();
+                MeshRenderer smr = sg.AddComponent<MeshRenderer>();
+                Material sm = new Material(ash) { mainTexture = st }; sm.SetColor("_TintColor", new Color(0.5f, 0.42f, 0.3f, 0.5f));
+                smr.sharedMaterial = sm; smr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                sg.AddComponent<SealSpin>();
+            }
+            FxSprite vx = FxSprite.Spawn("vortex", pos + Vector3.up * 1.0f, 1.7f, 3, 1, 3, 4f, false, 0.9f);
+            if (vx != null) vx.grow = -0.4f;
             if (softMat == null) return;
             GameObject g = new GameObject("SuperCharge");
             g.transform.position = pos + Vector3.up * 1.0f;
@@ -1096,7 +1112,33 @@ namespace BladePath
                 hr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 halo.AddComponent<GlowSprite>().flicker = 0.2f;
             }
+            // живое пламя духа (6 кадров из атласа) вместо гладкого шара; хвост пламени тянется за полётом
+            EnergyProjectile ep = ball.GetComponent<EnergyProjectile>();
+            FxSprite orb = FxSprite.Spawn(p ? "orb_blue" : "orb_red", ball.transform.position, 0.72f, 3, 2, 6, 16f, true);
+            if (orb != null)
+            {
+                orb.follow = ball.transform;
+                orb.dir = () => ep != null ? ep.velocity : Vector3.right;
+                Renderer br = ball.GetComponent<Renderer>(); if (br != null) br.enabled = false;
+                Transform halo2 = ball.transform.Find("BallHalo"); if (halo2 != null) halo2.localScale = Vector3.one * 3.2f;
+            }
             Play(whoosh, 0.5f, 1.4f);
+        }
+
+        /// <summary>Шар погас (попал, отбит или долетел): взрыв духа — вспышка, кольцо пламени, искры, дымка (6 кадров).</summary>
+        public void OrbBurst(Vector3 pos, FighterController owner)
+        {
+            bool p = DuelManager.Instance != null && DuelManager.Instance.player == owner;
+            FxSprite b = FxSprite.Spawn("burst_blue", pos, 1.1f, 3, 2, 6, 18f, false, 0.38f);
+            if (b != null) { b.grow = 0.35f; if (!p) b.tint = new Color(1f, 0.55f, 1f, 1f); }
+            SparkLight(pos, p ? new Color(0.55f, 0.8f, 1f) : new Color(0.95f, 0.45f, 1f), 2.4f, 3f, 0.15f);
+        }
+
+        /// <summary>Крестовая вспышка (контратака, добивание).</summary>
+        public void XSlash(Vector3 pos)
+        {
+            FxSprite x = FxSprite.Spawn("x_slash", pos, 0.9f, 1, 1, 1, 1f, false, 0.22f);
+            if (x != null) x.grow = 0.5f;
         }
 
         /// <summary>Шар отбит клинком.</summary>
@@ -1157,7 +1199,7 @@ namespace BladePath
         }
 
         Material addMat, glowMat, starMat, ringMat;
-        Texture2D sparkTex;
+        Texture2D sparkTex, ringTex;
         Transform sparkFloor;
 
         Material Additive(ref Material m, Texture2D tex)
@@ -1185,7 +1227,8 @@ namespace BladePath
 
         void Shockwave(Vector3 pos, float size, Color c, float life)
         {
-            Burst1(pos, size, c, life, Additive(ref ringMat, SoftSprites.Ring), 0f, true);
+            if (ringTex == null) { ringTex = Resources.Load<Texture2D>("FX/ring_glow"); if (ringTex == null) ringTex = SoftSprites.Ring; }   // светящееся кольцо из атласа
+            Burst1(pos, size, c, life, Additive(ref ringMat, ringTex), 0f, true);
         }
 
         void Burst1(Vector3 pos, float size, Color c, float life, Material m, float rotDeg, bool grow = false)
@@ -1804,6 +1847,22 @@ namespace BladePath
             }
             for (int i = 0; i < n; i++) d[i] *= 0.9f / peak;
             return Make("clang", d);
+        }
+    }
+
+    /// <summary>Печать духа на земле под ударом духа: разворачивается, крутится и гаснет за 1,2 с.</summary>
+    public class SealSpin : MonoBehaviour
+    {
+        float born; Material m;
+        void Start() { born = Time.time; Renderer r = GetComponent<Renderer>(); if (r != null) m = r.material; }
+        void Update()
+        {
+            float t = (Time.time - born) / 1.2f;
+            if (t >= 1f) { if (m != null) Destroy(m); Destroy(gameObject); return; }
+            float s = Mathf.Lerp(0.6f, 2.4f, 1f - (1f - t) * (1f - t));
+            transform.localScale = new Vector3(s, s, 1f);
+            transform.Rotate(0f, 0f, 90f * Time.deltaTime, Space.Self);
+            if (m != null) m.SetColor("_TintColor", new Color(0.5f, 0.42f, 0.3f, 0.5f * Mathf.Clamp01((1f - t) / 0.4f)));
         }
     }
 }

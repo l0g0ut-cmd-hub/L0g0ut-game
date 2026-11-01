@@ -15,6 +15,7 @@ namespace BladePath
         public Color color = new Color(0.6f, 0.85f, 1f);
         public float life = 0.14f;
         public float from = 0.25f;     // доля клинка, с которой начинается лента
+        bool textured;                 // цвет — в текстуре: вершины почти белые, только прозрачность
 
         struct S { public Vector3 a, b; public float t; }
         readonly List<S> samples = new List<S>();
@@ -25,7 +26,24 @@ namespace BladePath
         readonly List<int> tris = new List<int>();
         static Material mat;
 
-        public static WeaponTrail Attach(WeaponController w, Color c)
+        static readonly Dictionary<string, Material> texMats = new Dictionary<string, Material>();
+        /// <summary>След с текстурой из атласа (Resources/FX/trail_*: острая яркая кромка у острия, к хвосту рвётся на нити).</summary>
+        static Material TexMat(string tex)
+        {
+            Material m;
+            if (string.IsNullOrEmpty(tex)) return null;
+            if (texMats.TryGetValue(tex, out m) && m != null) return m;
+            Texture2D t = Resources.Load<Texture2D>("FX/" + tex);
+            Shader sh = Shader.Find("Legacy Shaders/Particles/Additive");
+            if (t == null || sh == null) return null;
+            t.wrapMode = TextureWrapMode.Clamp;
+            m = new Material(sh) { name = "Trail_" + tex, mainTexture = t };
+            m.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0.5f));
+            texMats[tex] = m;
+            return m;
+        }
+
+        public static WeaponTrail Attach(WeaponController w, Color c, string tex = null)
         {
             GameObject g = new GameObject("WeaponTrail");
             WeaponTrail t = g.AddComponent<WeaponTrail>();
@@ -33,7 +51,9 @@ namespace BladePath
             g.AddComponent<MeshFilter>().sharedMesh = t.mesh = new Mesh { name = "trail" };
             t.mesh.MarkDynamic();
             MeshRenderer r = g.AddComponent<MeshRenderer>();
-            r.sharedMaterial = Mat();
+            Material tm = TexMat(tex);
+            r.sharedMaterial = tm != null ? tm : Mat();
+            t.textured = tm != null;
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             r.receiveShadows = false;
             return t;
@@ -122,6 +142,7 @@ namespace BladePath
                     Color core = Color.Lerp(Color.white, color, age * 1.5f);
                     core.a = alpha;
                     Color edge = color; edge.a = alpha * 0.25f;
+                    if (textured) { core = new Color(1f, 1f, 1f, Mathf.Clamp01(alpha * 1.3f)); edge = new Color(1f, 1f, 1f, alpha); }
                     verts.Add(a); cols.Add(edge); uvs.Add(new Vector2(age, 0f));
                     verts.Add(b); cols.Add(core); uvs.Add(new Vector2(age, 1f));
                 }

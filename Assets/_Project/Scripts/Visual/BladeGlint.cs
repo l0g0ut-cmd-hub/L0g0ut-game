@@ -99,7 +99,8 @@ namespace BladePath
             if (mat != null) return mat;
             Shader sh = Shader.Find("Legacy Shaders/Particles/Additive");
             if (sh == null) return null;
-            mat = new Material(sh) { name = "BladeGlint", mainTexture = Glint() };
+            Texture2D sg = Resources.Load<Texture2D>("FX/star_glint");   // четырёхлучевой блик из атласа
+            mat = new Material(sh) { name = "BladeGlint", mainTexture = sg != null ? (Texture)sg : Glint() };
             mat.SetColor(TintId, new Color(0.5f, 0.5f, 0.5f, 0.5f));
             return mat;
         }
