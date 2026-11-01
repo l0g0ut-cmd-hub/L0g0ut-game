@@ -40,6 +40,7 @@ namespace BladePath
         void Update()
         {
             float dt = Application.isPlaying ? Time.unscaledDeltaTime : 0.016f;
+            MobileVfxBudget.Tick(dt, DuelManager.Gfx == 1);
             aberr = Mathf.MoveTowards(aberr, 0f, dt * 0.05f);
             desat = Mathf.MoveTowards(desat, desatTarget, dt * 1.5f);
             // фокус на паре: добивание — края кадра размыты; гибель игрока — сильнее
@@ -76,7 +77,7 @@ namespace BladePath
             // глубина резкости: фокус — на бойцах (точка обзора камеры), дальше — размытая копия кадра в ¼ и ⅛
             if (cam == null) cam = GetComponent<Camera>();
             RenderTexture d1 = null, d2 = null;
-            if (cam != null && dofStrength > 0.001f && SystemInfo.graphicsMemorySize >= 2048)
+            if (cam != null && dofStrength > 0.001f && MobileVfxBudget.AllowDepthOfField && SystemInfo.graphicsMemorySize >= 2048)
             {
                 cam.depthTextureMode |= DepthTextureMode.Depth;
                 float focus = CameraOrbit.Instance != null ? Vector3.Distance(cam.transform.position, CameraOrbit.Instance.Focus) : 6f;
@@ -94,14 +95,15 @@ namespace BladePath
             else material.SetVector("_Dof", Vector4.zero);
 
             // Keep the expensive bloom pyramid bounded on high-resolution phones.
-            int w = Mathf.Max(8, Mathf.RoundToInt(src.width * bloomResolutionScale));
-            int h = Mathf.Max(8, Mathf.RoundToInt(src.height * bloomResolutionScale));
+            float resScale = bloomResolutionScale * (MobileVfxBudget.Level == 2 ? 0.68f : MobileVfxBudget.Level == 1 ? 0.85f : 1f);
+            int w = Mathf.Max(8, Mathf.RoundToInt(src.width * resScale));
+            int h = Mathf.Max(8, Mathf.RoundToInt(src.height * resScale));
             RenderTextureFormat fmt = src.format;
             RenderTexture cur = RenderTexture.GetTemporary(w, h, 0, fmt);
             Graphics.Blit(src, cur, material, 0);
             chain[0] = cur;
             int n = 1;
-            int bloomPasses = Mathf.Min(iterations, mobileBloomIterations);
+            int bloomPasses = Mathf.Clamp(Mathf.Min(iterations, mobileBloomIterations) - MobileVfxBudget.BloomPenalty, 2, chain.Length);
             for (; n < bloomPasses && n < chain.Length; n++)
             {
                 w /= 2; h /= 2;
