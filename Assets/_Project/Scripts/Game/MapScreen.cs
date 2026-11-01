@@ -465,7 +465,7 @@ namespace BladePath
                 case Modal.Merchant:
                 {
                     Rect r = Card(720f, 400f);
-                    Picture(new Rect(r.x, r.y, 230f, r.height), "UI/npc_0");
+                    Picture(new Rect(r.x, r.y, 230f, r.height), Pack02Art("merchant", "UI/npc_0"));
                     float x = r.x + 248f, w = r.width - 266f, y = r.y + 18f;
                     UiKit.Text(new Rect(x, y, w, 26f), "ТОРГОВЕЦ", 20f, Gold, TextAnchor.MiddleLeft);
                     UiKit.Text(new Rect(x, y, w, 26f), Profile.Gold + " мон", 15f, Gold, TextAnchor.MiddleRight); y += 32f;
@@ -576,7 +576,7 @@ namespace BladePath
             "На замшелом камне сидит белая лиса с девятью хвостами. Вокруг пляшут синие огоньки и зовут за собой в чащу.",
         };
 
-        static readonly string[] Pack02Events = { "wounded_ronin", "shrine", "camp", "ruins" };
+        static readonly string[] Pack02Events = { "wounded_ronin", "shrine", "bandits", "fox" };
 
         void DrawEvent(MapNode n, int at, bool ok)
         {
