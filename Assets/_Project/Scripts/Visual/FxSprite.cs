@@ -54,6 +54,7 @@ namespace BladePath
             string id = alpha ? "a:" + tex : tex;
             if (mats.TryGetValue(id, out m) && m != null) return m;
             Texture2D t = Resources.Load<Texture2D>("FX/" + tex);
+            if (t == null) t = EmbeddedFxArt.Get(tex);
             Shader sh = Shader.Find(alpha ? "Legacy Shaders/Particles/Alpha Blended" : "Legacy Shaders/Particles/Additive");
             if (t == null || sh == null) return null;
             m = new Material(sh) { name = "Fx_" + tex, mainTexture = t };
