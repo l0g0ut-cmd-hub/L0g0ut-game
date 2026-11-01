@@ -1015,9 +1015,24 @@ namespace BladePath
         }
 
         /// <summary>Вспышка разреза: короткая яркая дуга вдоль хода клинка через точку попадания.</summary>
+        static bool packSlashChecked;
+        static bool packSlashAvailable;
+
         void SlashFlash(Vector3 p, Vector3 dir, float strength)
         {
             if (fxMat == null) return;
+            if (!packSlashChecked)
+            {
+                packSlashChecked = true;
+                packSlashAvailable = Resources.Load<Texture2D>("FX/slash_red") != null;
+            }
+            // Optional six-frame painted slash, layered over the existing physical blade flash.
+            // Low graphics tier keeps the lightweight line only.
+            if (packSlashAvailable && DuelManager.Gfx == 1)
+            {
+                FxSprite art = FxSprite.Spawn("slash_red", p, 1.1f + strength * 0.28f, 6, 1, 6, 24f, false, 0.25f);
+                if (art != null) art.tint = new Color(1f, 0.58f, 0.58f, 0.85f);
+            }
             if (dir.sqrMagnitude < 1e-4f) dir = Vector3.right;
             dir.Normalize();
             Camera cam = Camera.main;
