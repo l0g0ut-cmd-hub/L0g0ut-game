@@ -15,12 +15,12 @@ namespace BladePath
         public bool Snowing { get; private set; }
         /// <summary>Солнечный день (иногда, раз на матч): дневной свет и небо (DayNight), днём не бывает дождя и снега.</summary>
         public bool Daytime { get; private set; }
-        [Range(0f, 1f)] public float dayChance = 0.45f;
+        [Range(0f, 1f)] public float dayChance = 0.62f;
         /// <summary>Рассвет в тумане (часть «дневных» матчей): низкое солнце, розоватая дымка, на рассвете поют хигураси.</summary>
         public bool Dawn { get; private set; }
         /// <summary>Закат (из дневных матчей): солнце за храмом, контровой свет, хигураси.</summary>
         public bool Dusk { get; private set; }
-        [Range(0f, 1f)] public float duskShare = 0.4f;   // доля закатов среди не-рассветных дней
+        [Range(0f, 1f)] public float duskShare = 0.3f;   // доля закатов среди не-рассветных дней
         /// <summary>Ночной туман (из ясных ночей): густая холодная дымка, огни в ореолах, по земле стелется молоко.</summary>
         public bool Foggy { get; private set; }
         /// <summary>Снегопад сильный (крупно и густо, листья не летят) или слабый (редкий снег, иногда кружат последние листья).</summary>
@@ -40,7 +40,7 @@ namespace BladePath
         /// <summary>Погода меняется по ходу боя: ясной ночью иногда через полминуты-минуту накрывает дождь (с громом) или начинается снег.</summary>
         [Range(0f, 1f)] public float changeChance = 0.3f;
         float changeAt = -1f; bool changeToSnow, rumbled;
-        [Range(0f, 1f)] public float dawnShare = 0.35f;
+        [Range(0f, 1f)] public float dawnShare = 0.25f;
         float fogDensBase = 0.05f;
         ParticleSystem snow;
         readonly System.Collections.Generic.List<ParticleSystem> breaths = new System.Collections.Generic.List<ParticleSystem>();
@@ -88,9 +88,13 @@ namespace BladePath
             if (Snowing) StopSnow();
             if (Foggy) StopFog();
             Raining = false; Snowing = false; Foggy = false;
-            Daytime = DayNight.Instance != null && Random.value < dayChance;
+            // ночь не больше двух боёв подряд; ясный (не рассвет/закат) день — не реже раза в четыре боя
+            Daytime = DayNight.Instance != null && (nightStreak >= 2 || Random.value < dayChance);
             Dawn = Daytime && Random.value < dawnShare;
             Dusk = Daytime && !Dawn && Random.value < duskShare;
+            if (Daytime && noClearDay >= 3) { Dawn = false; Dusk = false; }
+            nightStreak = Daytime ? 0 : nightStreak + 1;
+            noClearDay = Daytime && !Dawn && !Dusk ? 0 : noClearDay + 1;
             if (DayNight.Instance != null) DayNight.Instance.Apply(Daytime, Dawn, Dusk);
             CaptureBase();
             float r = Random.value;
@@ -110,7 +114,11 @@ namespace BladePath
             float wr = Random.value;
             Windiness = Snowing && HeavySnow ? 1.6f : wr < 0.4f ? 0.35f : wr < 0.8f ? 1f : 1.6f;
             // листопад: ясным днём (с рассветом и закатом) иногда сакура; в снег — смотря по силе снега
-            sakuraRoll = Random.value < 0.4f; lightSnowLeaves = Random.value < 0.5f;
+            // ясный день — чаще сакура (55 %), рассвет/закат — 35 %; если три подходящих боя подряд без сакуры — точно сакура
+            bool canSakura = Daytime && !Raining && !Snowing;
+            sakuraRoll = canSakura && (noSakura >= 3 || Random.value < (Dawn || Dusk ? 0.35f : 0.55f));
+            if (canSakura) noSakura = sakuraRoll ? 0 : noSakura + 1;
+            lightSnowLeaves = Random.value < 0.5f;
             Leaves();
             BloodMoon = !Daytime && !Raining && !Snowing && !Foggy && changeAt < 0f && Random.value < 0.12f;
             Blood(BloodMoon);
@@ -118,6 +126,7 @@ namespace BladePath
         }
 
         bool sakuraRoll, lightSnowLeaves;
+        static int nightStreak, noClearDay, noSakura;   // счётчики серий между боями (на всю сессию)
         Renderer[] moonRends; Color[] moonCols;
         void Blood(bool on)
         {
