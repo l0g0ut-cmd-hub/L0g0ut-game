@@ -26,10 +26,12 @@ namespace BladePath
 
         void OnGUI()
         {
+            // No post-fight loot banner: rewards already go directly to Profile.
+            // Avoid an IMGUI layout pass entirely while the inventory is closed.
+            if (!Open) return;
             GUI.depth = -20;   // поверх HUD и кнопок боя
             Matrix4x4 old = UiKit.Begin();
-            // Rewards are applied immediately; never cover the journey map after a duel.
-            if (Open) DrawScreen();
+            DrawScreen();
             GUI.matrix = old;
         }
 
