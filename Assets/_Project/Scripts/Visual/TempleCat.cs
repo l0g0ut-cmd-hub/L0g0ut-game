@@ -50,7 +50,7 @@ namespace BladePath
             Material white = new Material(sh) { name = "CatWhite", color = new Color(0.78f, 0.75f, 0.7f) }; white.SetFloat("_Glossiness", 0.1f);
             // настоящий мех из атласа: рыжий полосатый и белый (полосы идут поперёк спины — v вдоль хребта)
             Texture2D furT = Resources.Load<Texture2D>("FX/cat_fur_ginger"), whiteT = Resources.Load<Texture2D>("FX/cat_fur_white");
-            if (furT != null) { fur.mainTexture = furT; fur.color = new Color(0.6f, 0.56f, 0.56f); fur.mainTextureScale = new Vector2(1f, 2f); }
+            if (furT != null) { fur.mainTexture = furT; fur.color = new Color(0.6f, 0.56f, 0.56f); fur.mainTextureScale = new Vector2(1f, 0.7f); }   // полос немного — иначе «деревянная» игрушка
             if (whiteT != null) { white.mainTexture = whiteT; white.color = new Color(0.86f, 0.83f, 0.8f); }
             Material dark = new Material(sh) { name = "CatDark", color = new Color(0.12f, 0.06f, 0.05f) }; dark.SetFloat("_Glossiness", 0.3f);
             Material pink = new Material(sh) { name = "CatPink", color = new Color(0.55f, 0.32f, 0.3f) };
