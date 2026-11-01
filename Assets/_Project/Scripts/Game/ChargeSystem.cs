@@ -23,11 +23,11 @@ namespace BladePath
         class Charge
         {
             public FighterController f; public float start; public int level; public Color col;
-            public Transform sigil, anchor, early, pillar, pool; public Material sigilMat, earlyMat, pillarMat, poolMat; public ParticleSystem rise; public FxSprite flame, inhale, embers; public Light light; public float pillarAspect = 1.3f; public int pillarFrames = 1;
+            public Transform sigil, anchor, early, pillar, pool; public Material sigilMat, earlyMat, pillarMat, poolMat; public ParticleSystem rise; public FxSprite flame, inhale, embers; public Light light; public float pillarAspect = 1.3f; public int pillarFrames = 1, pillarCols = 1, pillarRows = 1;
             public Transform draw, emberAnchor; public Material drawMat;
             public float kv, popAt = -10f, boltAt;
             public float ex, crackAt, beatAt; public Color baseCol;   // ex — ярость (IV ступень) 0…1
-            public Transform rage, ragePillar; public Material rageMat, ragePillarMat; public int ragePillarFrames = 1; public float ragePillarAspect = 1f; public bool ragePulse;   // kv — облик ступени (0…1, догоняет ступень), popAt — вспышка новой ступени
+            public Transform rage, ragePillar; public Material rageMat, ragePillarMat; public int ragePillarFrames = 1, ragePillarCols = 1, ragePillarRows = 1; public float ragePillarAspect = 1f; public bool ragePulse, bodyAura;   // kv — облик ступени (0…1, догоняет ступень), popAt — вспышка новой ступени
         }
         readonly Dictionary<FighterController, Charge> active = new Dictionary<FighterController, Charge>();
         readonly Dictionary<FighterController, int> strikeSwing = new Dictionary<FighterController, int>();
@@ -173,15 +173,17 @@ namespace BladePath
                 c.ragePillarMat = new Material(add) { mainTexture = rp };
                 r.sharedMaterial = c.ragePillarMat; r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 c.ragePillar = g.transform;
-                c.ragePillarFrames = rp.width >= rp.height * 3 ? 4 : 1;
-                c.ragePillarAspect = rp.height / Mathf.Max(1f, rp.width / (float)c.ragePillarFrames);
-                c.ragePillarMat.mainTextureScale = new Vector2(1f / c.ragePillarFrames, 1f);
+                SheetDims(rp, out c.ragePillarCols, out c.ragePillarRows);
+                c.ragePillarFrames = c.ragePillarCols * c.ragePillarRows;
+                c.ragePillarAspect = (rp.height / (float)c.ragePillarRows) / Mathf.Max(1f, rp.width / (float)c.ragePillarCols);
+                c.ragePillarMat.mainTextureScale = new Vector2(1f / c.ragePillarCols, 1f / c.ragePillarRows);
                 c.ragePillarMat.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0f));
             }
             if (c.rageMat != null) c.rageMat.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0f));
             // анимированный столб (4 кадра цикла), запасной — статичный
             Texture2D pt = Resources.Load<Texture2D>(PillarFor(c.f).Replace("pillar_", "pillar_loop_"));
-            if (pt != null) c.pillarFrames = 4; else pt = Resources.Load<Texture2D>(PillarFor(c.f));
+            if (pt != null) { SheetDims(pt, out c.pillarCols, out c.pillarRows); c.pillarFrames = c.pillarCols * c.pillarRows; }
+            else pt = Resources.Load<Texture2D>(PillarFor(c.f));
             if (pt != null && add != null)
             {
                 GameObject g = new GameObject("ChargePillar");
@@ -190,8 +192,8 @@ namespace BladePath
                 c.pillarMat = new Material(add) { mainTexture = pt };
                 r.sharedMaterial = c.pillarMat; r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 c.pillar = g.transform;
-                c.pillarAspect = pt.height / Mathf.Max(1f, pt.width / (float)c.pillarFrames);
-                if (c.pillarFrames > 1) c.pillarMat.mainTextureScale = new Vector2(1f / c.pillarFrames, 1f);
+                c.pillarAspect = (pt.height / (float)c.pillarRows) / Mathf.Max(1f, pt.width / (float)c.pillarCols);
+                if (c.pillarFrames > 1) c.pillarMat.mainTextureScale = new Vector2(1f / c.pillarCols, 1f / c.pillarRows);
             }
             // светом рисуется узор: точка → кольца → спицы → мандала (12 кадров), потом разряды по ободу
             c.draw = GroundQuad("ChargeSigilDraw", Resources.Load<Texture2D>("FX/sigil_draw"), add, out c.drawMat);
@@ -219,12 +221,16 @@ namespace BladePath
             pr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             c.rise.Play();
             // пламя ауры вокруг бойца (3 кадра из атласа)
-            c.flame = FxSprite.Spawn("aura_flame", c.f.transform.position + Vector3.up * 0.8f, 1.4f, 3, 1, 3, 10f, true);
+            // пламя ауры вокруг фигуры (16 кадров цикла); запасное — 3 кадра
+            c.flame = Resources.Load<Texture2D>("FX/aura_body") != null
+                ? FxSprite.Spawn("aura_body", c.f.transform.position + Vector3.up * 0.95f, 2.1f, 4, 4, 16, 14f, true)
+                : FxSprite.Spawn("aura_flame", c.f.transform.position + Vector3.up * 0.8f, 1.4f, 3, 1, 3, 10f, true);
+            c.bodyAura = c.flame != null && c.flame.frames == 16;
             c.anchor = new GameObject("ChargeAnchor").transform;
             c.anchor.SetParent(c.f.transform, false); c.anchor.localPosition = Vector3.up * 0.95f;
             if (c.flame != null) { c.flame.follow = c.anchor; c.flame.tint = new Color(c.col.r, c.col.g, c.col.b, 0.6f); }
             // энергия втягивается в бойца (спираль) и угли поднимаются от земли
-            c.inhale = FxSprite.Spawn("charge_inhale", c.anchor.position, 1.3f, 4, 1, 4, 12f, true);
+            c.inhale = FxSprite.Spawn("charge_inhale", c.anchor.position, 1.3f, 4, 2, 8, 14f, true);
             if (c.inhale != null) { c.inhale.follow = c.anchor; c.inhale.tint = new Color(c.col.r, c.col.g, c.col.b, 0.3f); }
             c.emberAnchor = new GameObject("ChargeEmbers").transform;
             c.emberAnchor.SetParent(c.f.transform, false); c.emberAnchor.localPosition = Vector3.up * 0.7f;
@@ -257,6 +263,14 @@ namespace BladePath
             g.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
             return g.transform;
         }
+
+        // лист кадров: 4 столбца квадратных кадров, строк — сколько поместится (4×1, 4×2, 4×4)
+        static void SheetDims(Texture2D t, out int cols, out int rows)
+        {
+            cols = 4; rows = Mathf.Max(1, Mathf.RoundToInt(4f * t.height / Mathf.Max(1f, t.width)));
+            if (t.width < t.height * 2 && rows == 1) cols = 1;   // одиночная картинка
+        }
+        static Vector2 FrameUV(int f, int cols, int rows) { return new Vector2((f % cols) / (float)cols, 1f - (f / cols + 1) / (float)rows); }
 
         static Mesh pillarQuad;
         static Mesh PillarQuad()
@@ -374,7 +388,7 @@ namespace BladePath
                 }
                 float pa = Mathf.Clamp01((t - 0.15f) / 0.4f) * (0.15f + 0.45f * k);
                 c.pillarMat.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0.5f * pa * (1f - 0.75f * c.ex)));
-                if (c.pillarFrames > 1) c.pillarMat.mainTextureOffset = new Vector2(((int)(Time.time * 12f) % c.pillarFrames) / (float)c.pillarFrames, 0f);
+                if (c.pillarFrames > 1) c.pillarMat.mainTextureOffset = FrameUV((int)(Time.time * 12f) % c.pillarFrames, c.pillarCols, c.pillarRows);
             }
             if (c.rise != null)
             {
@@ -383,7 +397,12 @@ namespace BladePath
                 var sh = c.rise.shape; sh.radius = Mathf.Lerp(0.4f, 1.15f, k);
                 var main = c.rise.main; main.startSpeed = new ParticleSystem.MinMaxCurve(0.8f + 1f * k, 2.2f + 2f * k);
             }
-            if (c.flame != null) { c.flame.size = Mathf.Lerp(1.1f, 2.6f, k) * pulse; c.flame.tint = new Color(c.col.r, c.col.g, c.col.b, 0.25f + 0.3f * k); }
+            if (c.flame != null)
+            {
+                // аура по фигуре — в рост бойца (размер почти не меняется, растёт яркость); старое пламя — растёт
+                c.flame.size = c.bodyAura ? Mathf.Lerp(2.05f, 2.3f, k) * (1f + 0.25f * (pulse - 1f)) : Mathf.Lerp(1.1f, 2.6f, k) * pulse;
+                c.flame.tint = new Color(c.col.r, c.col.g, c.col.b, c.bodyAura ? 0.2f + 0.45f * k : 0.25f + 0.3f * k);
+            }
             if (c.light != null) { c.light.color = c.col; c.light.transform.position = f.transform.position + Vector3.up * 0.6f; c.light.intensity = (0.4f + 1.2f * k + 1.0f * c.ex) * pulse; c.light.range = 2.5f + 2.5f * k + 2f * c.ex; }
             if (c.ex > 0.001f)
             {
@@ -404,9 +423,9 @@ namespace BladePath
                     c.ragePillar.localScale = new Vector3(w2, w2 * c.ragePillarAspect * 1.35f * Mathf.Lerp(0.5f, 1f, c.ex), 1f);
                     if (c.pillar != null) c.ragePillar.rotation = c.pillar.rotation;
                     c.ragePillarMat.SetColor("_TintColor", new Color(0.62f, 0.5f, 0.5f, 0.5f * 0.75f * c.ex));
-                    if (c.ragePillarFrames > 1) c.ragePillarMat.mainTextureOffset = new Vector2(((int)(Time.time * 15f + 2) % c.ragePillarFrames) / (float)c.ragePillarFrames, 0f);
+                    if (c.ragePillarFrames > 1) c.ragePillarMat.mainTextureOffset = FrameUV((int)(Time.time * 16f + 2) % c.ragePillarFrames, c.ragePillarCols, c.ragePillarRows);
                 }
-                if (c.flame != null) c.flame.size *= 1f + 0.5f * c.ex;
+                if (c.flame != null) c.flame.size *= 1f + (c.bodyAura ? 0.12f : 0.5f) * c.ex;
                 if (c.rise != null) { var em2 = c.rise.emission; em2.rateOverTime = 20f + 70f * k + 140f * c.ex; var m2 = c.rise.main; m2.startColor = new ParticleSystem.MinMaxGradient(new Color(1f, 0.55f, 0.45f), Crimson); }
             }
         }

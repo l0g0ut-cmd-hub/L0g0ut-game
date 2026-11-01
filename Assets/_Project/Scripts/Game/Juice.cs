@@ -1255,12 +1255,13 @@ namespace BladePath
         System.Collections.IEnumerator SpiritLater(Vector3 at)
         {
             yield return new WaitForSecondsRealtime(0.6f);
-            for (int i = 0; i < 3; i++)
+            // 16 кадров: дух встаёт столбом, крутится, рассыпается пеплом; вторая, слабее и шире — следом, для глубины
+            for (int i = 0; i < 2; i++)
             {
-                Vector3 p = new Vector3(at.x + (i - 1) * 0.12f, 0f, at.z) + Vector3.up * (1.1f + 0.15f * i);
-                FxSprite s = FxSprite.Spawn("fx_spirit", p, 2.2f + 0.2f * i, 4, 1, 4, 4f, false, 1.5f);
-                if (s != null) { s.unscaled = true; s.vel = Vector3.up * 0.45f; s.grow = 0.3f; s.tint = new Color(0.85f, 0.9f, 1f, 0.55f); }
-                yield return new WaitForSecondsRealtime(0.22f);
+                float sz = 2.4f + 0.4f * i;
+                FxSprite s = FxSprite.Spawn("fx_spirit", new Vector3(at.x, 0f, at.z) + Vector3.up * (sz * 0.43f), sz, 4, 4, 16, 8f, false, 2.1f);
+                if (s != null) { s.unscaled = true; s.vel = Vector3.up * 0.12f; s.grow = 0.1f; s.tint = new Color(0.85f, 0.9f, 1f, i == 0 ? 0.75f : 0.35f); }
+                yield return new WaitForSecondsRealtime(0.3f);
             }
         }
 
@@ -1826,7 +1827,7 @@ namespace BladePath
             // зелёно-золотые огоньки и листья спиралью вокруг пьющего (цикл, ~1,5 с)
             Transform ha = new GameObject("HealFx").transform;
             ha.SetParent(f.transform, false); ha.localPosition = Vector3.up * 0.78f;
-            FxSprite hs = FxSprite.Spawn("fx_heal", ha.position, 1.8f, 4, 1, 4, 10f, true);
+            FxSprite hs = FxSprite.Spawn("fx_heal", ha.position, 1.8f, 4, 2, 8, 12f, true);
             if (hs != null) { hs.follow = ha; hs.tint = new Color(1f, 1f, 1f, 0.9f); }
             Destroy(ha.gameObject, 1.5f);
             Flash(c, 0.9f, new Color(1f, 0.72f, 0.3f, 0.35f), 0.5f, false);
