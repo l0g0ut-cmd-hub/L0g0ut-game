@@ -1187,7 +1187,7 @@ namespace BladePath
             Sparks(pos, Random.onUnitSphere, 22, 1f);
             Flash(pos, 0.22f, new Color(1f, 0.8f, 0.5f, 0.85f), 0.09f, true);   // компактная: ядро не заливает полкадра белым (bloom и так расширит)
             SparkLight(pos, new Color(1f, 0.72f, 0.4f), 2.6f, 3.2f, 0.12f);
-            Sheet("fx_clash", pos, 1.3f, 0.3f, Color.white);   // звезда удара сталь о сталь → веер искр
+            Sheet("fx_clash", pos, 1.0f, 0.3f, new Color(1f, 1f, 1f, 0.6f));   // звезда удара сталь о сталь → веер искр
         }
 
         // ---- покадровые эффекты (атласы 19–20): лист 4×1, плоскость к камере
@@ -1199,7 +1199,7 @@ namespace BladePath
         }
 
         /// <summary>Слом равновесия: золотое кольцо защиты трескается и разлетается осколками.</summary>
-        public void GuardBreak(Vector3 pos) { Sheet("fx_guard_break", pos, 2.0f, 0.5f, Color.white); }
+        public void GuardBreak(Vector3 pos) { Sheet("fx_guard_break", pos, 1.6f, 0.5f, new Color(1f, 1f, 1f, 0.7f)); }
 
         /// <summary>Рывок: порыв ветра по ходу и пыль из-под ног.</summary>
         public void DashFx(Vector3 feet, Vector3 dir)
@@ -1226,7 +1226,7 @@ namespace BladePath
             Flash(pos, 0.28f, new Color(1f, 0.92f, 0.78f, 0.9f), 0.12f, true);   // искра, а не белое пятно: мельче ядро, лучи-блик остаются
             SparkLight(pos, new Color(1f, 0.86f, 0.62f), 3.6f, 3.8f, 0.16f);
             Shockwave(pos, 0.7f, new Color(0.6f, 0.85f, 1f, 0.22f), 0.16f);   // едва заметная волна воздуха, не «магическое кольцо»
-            Sheet("fx_perfect_parry", pos, 1.7f, 0.38f, Color.white);   // ледяное кольцо и осколки
+            Sheet("fx_perfect_parry", pos, 1.15f, 0.38f, new Color(0.8f, 0.9f, 1f, 0.5f));   // ледяное кольцо и осколки
         }
 
         Material addMat, glowMat, starMat, ringMat;
