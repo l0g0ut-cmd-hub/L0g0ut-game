@@ -20,6 +20,7 @@ namespace BladePath
         public bool flipX;         // зеркально (удар влево по экрану)
         float Now { get { return unscaled ? Time.unscaledTime : Time.time; } }
         Mesh[] meshes; MeshFilter mf; MeshRenderer mr; float born; MaterialPropertyBlock mpb;
+        int displayedFrame = -1;
         Camera cachedCamera;
         float nextCameraLookup;
         // One immutable quad per atlas frame, shared by every instance of that layout.
@@ -100,7 +101,7 @@ namespace BladePath
         {
             float age = Now - born;
             int fr = loop ? (int)(age * fps) % frames : Mathf.Clamp((int)(age / Mathf.Max(0.01f, life) * frames), 0, frames - 1);
-            mf.sharedMesh = meshes[fr];
+            if (displayedFrame != fr) { mf.sharedMesh = meshes[fr]; displayedFrame = fr; }
             if (follow != null) transform.position = follow.position;
             if (cachedCamera == null && Time.unscaledTime >= nextCameraLookup)
             {
@@ -122,8 +123,8 @@ namespace BladePath
             }
             float k = loop ? 1f : 1f + grow * (age / Mathf.Max(0.01f, life));
             transform.localScale = new Vector3(flipX ? -1f : 1f, 1f, 1f) * (size * k);
-            float fade = loop ? 1f : Mathf.Clamp01((life - age) / (life * 0.35f));
-            mr.GetPropertyBlock(mpb);
+            // A tiny ease-in prevents the first sprite frame from flashing at full power.
+            float fade = loop ? 1f : Mathf.Clamp01(age / (life * 0.08f)) * Mathf.Clamp01((life - age) / (life * 0.35f));
             mpb.SetColor(TintId, new Color(tint.r * 0.5f, tint.g * 0.5f, tint.b * 0.5f, 0.5f * tint.a * fade));
             mr.SetPropertyBlock(mpb);
         }

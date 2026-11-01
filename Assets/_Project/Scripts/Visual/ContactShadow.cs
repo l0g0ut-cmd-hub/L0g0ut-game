@@ -64,7 +64,11 @@ namespace BladePath
 
         void LateUpdate()
         {
-            if (rig == null || rig.footL == null || rig.footR == null || q == null) return;
+            if (rig == null || rig.footL == null || rig.footR == null || q == null)
+            {
+                if (rend != null) rend.enabled = false;
+                return;
+            }
             FighterController f = rig.fighter;
             Vector3 a = rig.footL.position, b = rig.footR.position;
             float gy = f != null ? f.transform.position.y : 0f;
@@ -77,7 +81,7 @@ namespace BladePath
             q.rotation = span.sqrMagnitude > 1e-4f ? Quaternion.LookRotation(Vector3.Cross(Vector3.up, span.normalized), Vector3.up) : (f != null ? f.transform.rotation : Quaternion.identity);
             float shrink = Mathf.Clamp01(1f - lift * 1.6f);
             q.localScale = new Vector3(len, 1f, 0.55f) * Mathf.Lerp(0.6f, 1f, shrink);
-            float alpha = strength * shrink * (f != null && f.Dead ? 0f : 1f);
+            float alpha = strength * shrink * shrink * (f != null && f.Dead ? 0f : 1f);
             rend.enabled = alpha > 0.01f;
             mpb.SetColor("_Color", new Color(0f, 0f, 0f, alpha));
             rend.SetPropertyBlock(mpb);

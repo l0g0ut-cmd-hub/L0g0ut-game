@@ -54,6 +54,7 @@ namespace BladePath
         float midX, midZ, midVx, midVz;
         FighterController[] fighters;
         readonly HashSet<int> camTouches = new HashSet<int>();
+        readonly List<Touch> touchBuffer = new List<Touch>(2);
         float lastTapTime = -10f;
         Vector2 lastTapPos;
         Vector2 lastMouse;
@@ -93,7 +94,8 @@ namespace BladePath
         void ReadTouches()
         {
             int tc = Input.touchCount;
-            List<Touch> mine = null;
+            List<Touch> mine = touchBuffer;
+            mine.Clear();
             for (int i = 0; i < tc; i++)
             {
                 Touch t = Input.GetTouch(i);
@@ -111,11 +113,10 @@ namespace BladePath
                 if (t.phase == TouchPhase.Ended || t.phase == TouchPhase.Canceled) { camTouches.Remove(t.fingerId); continue; }
                 if (camTouches.Contains(t.fingerId))
                 {
-                    if (mine == null) mine = new List<Touch>(2);
                     mine.Add(t);
                 }
             }
-            if (mine == null) return;
+            if (mine.Count == 0) return;
 
             float h = Mathf.Max(1f, Screen.height);
             if (mine.Count == 1)
@@ -264,7 +265,14 @@ namespace BladePath
             }
             if (shakeAmp > 0.0005f)
             {
-                pos += Random.insideUnitSphere * shakeAmp;
+                // Smooth camera impulse: noisy handheld impact rather than
+                // frame-to-frame random jumps that feel harsher at low FPS.
+                float shakeTime = Time.unscaledTime * 31f;
+                Vector3 impulse = new Vector3(
+                    Mathf.PerlinNoise(shakeTime, 17.3f) - 0.5f,
+                    Mathf.PerlinNoise(9.1f, shakeTime) - 0.5f,
+                    Mathf.PerlinNoise(shakeTime, 41.2f) - 0.5f) * (2f * shakeAmp);
+                pos += impulse;
                 shakeAmp *= Mathf.Exp(-14f * Time.unscaledDeltaTime);
             }
             transform.position = pos;

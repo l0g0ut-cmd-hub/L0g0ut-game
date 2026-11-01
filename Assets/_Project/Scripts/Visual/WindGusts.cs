@@ -92,7 +92,7 @@ namespace BladePath
             Shader.SetGlobalVector(WindDirId, new Vector4(Dir.x, 0f, Dir.z, 0f));
             // листья в воздухе и снег сносит по ветру
             Push(petals, 2.2f);
-            if (snow == null && Time.time >= snowLookAt) { snowLookAt = Time.time + 2f; GameObject g = GameObject.Find("Snow"); if (g != null) snow = g.GetComponent<ParticleSystem>(); }   // снег появляется с погодой — ищем редко
+            if (snow == null && Time.time >= snowLookAt) { snowLookAt = Time.time + 3f; GameObject g = GameObject.Find("Snow"); if (g != null) snow = g.GetComponent<ParticleSystem>(); }   // снег появляется с погодой — ищем редко
             Push(snow, 3.5f);
             for (int i = 0; i < fireBits.Length; i++) Push(fireBits[i], fireBits[i].name == "Embers" ? 2.6f : 1.4f);
         }

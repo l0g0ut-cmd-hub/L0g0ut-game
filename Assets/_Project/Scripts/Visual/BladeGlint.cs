@@ -83,7 +83,8 @@ namespace BladePath
             bool day = DayNight.Instance != null && DayNight.Instance.Day;
             Color baseC = day ? (DayNight.Instance.Dawn || DayNight.Instance.Dusk ? new Color(1f, 0.7f, 0.5f) : new Color(1f, 0.96f, 0.85f)) : new Color(0.78f, 0.88f, 1f);   // днём — солнечный блик
             Color c = Color.Lerp(baseC, new Color(0.9f, 0.45f, 0.4f), blood * 0.8f) * (pulse * 0.75f * runPow * (1f - blood * 0.55f));
-            c.a = 0.5f;
+            // Fade the glint on and off instead of holding a hard alpha spike.
+            c.a = Mathf.Clamp01(pulse * 0.5f * runPow * (1f - blood * 0.6f));
             rend.enabled = true;
             mpb.SetColor(TintId, c);
             rend.SetPropertyBlock(mpb);

@@ -280,7 +280,8 @@ namespace BladePath
 
         void StopRain()
         {
-            if (rain != null) { rain.Stop(); splash.Stop(); }
+            if (rain != null) rain.Stop();
+            if (splash != null) splash.Stop();
             if (ripples != null) ripples.Stop();
             if (crowns != null) crowns.Stop();
             if (bolt != null) bolt.gameObject.SetActive(false);
@@ -626,10 +627,29 @@ namespace BladePath
         }
 
         float wetK;
+        float nextParticleBudgetAt;
         static readonly int WetId = Shader.PropertyToID("_BP_Wetness");
 
         void Update()
         {
+            // Retune existing systems at low frequency: keep cinematic rain and snow,
+            // but reduce transparent overdraw when sustained frame time degrades.
+            if (Time.unscaledTime >= nextParticleBudgetAt)
+            {
+                nextParticleBudgetAt = Time.unscaledTime + 1.25f;
+                float scale = MobileVfxBudget.ParticleScale;
+                if (Raining && rain != null)
+                {
+                    var emission = rain.emission;
+                    emission.rateOverTime = (DuelManager.Gfx == 1 ? 520f : 220f) * scale;
+                }
+                if (Snowing && snow != null)
+                {
+                    var emission = snow.emission;
+                    emission.rateOverTime = (DuelManager.Gfx == 1 ? 110f : 48f) *
+                        (HeavySnow ? 1.3f : 0.45f) * scale;
+                }
+            }
             // бойцы промокают под дождём за несколько секунд (шейдер персонажей: ткань темнеет, доспех и кожа блестят)
             wetK = Mathf.MoveTowards(wetK, Raining ? 1f : 0f, Time.deltaTime / (Raining ? 5f : 1f));
             Shader.SetGlobalFloat(WetId, wetK);

@@ -37,6 +37,9 @@ namespace BladePath
             bool rain = w != null && w.Raining, snow = w != null && w.Snowing;
             float wind = WindGusts.Strength;
             off += drift * (1f + 2.5f * wind) * Time.deltaTime;
+            // Keep offsets bounded during multi-hour sessions to prevent precision jitter.
+            off.x = Mathf.Repeat(off.x, 1f);
+            off.y = Mathf.Repeat(off.y, 1f);
             mat.mainTextureOffset = off;
             float target = snow ? 0.08f : calm + 0.35f * wind + (rain ? 0.5f : 0f);
             if (mat.HasProperty(BumpId))

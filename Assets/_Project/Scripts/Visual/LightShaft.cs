@@ -85,7 +85,12 @@ namespace BladePath
                 nextCameraLookup = Time.unscaledTime + 0.5f;
             }
             Camera c = cachedCamera;
-            if (c == null || rend == null) return;
+            if (rend == null) return;
+            if (c == null || strength <= 0.0001f || width <= 0f || length <= 0f)
+            {
+                if (rend.enabled) rend.enabled = false;
+                return;
+            }
             Vector3 ax = dir.sqrMagnitude > 1e-6f ? dir.normalized : Vector3.down;
             Vector3 toCam = c.transform.position - transform.position;
             Vector3 side = Vector3.Cross(ax, toCam);
@@ -98,7 +103,8 @@ namespace BladePath
             float breathe = 0.75f + 0.25f * Mathf.PerlinNoise(Time.time * 0.15f + seed, seed);
             float wet = Weather.Instance != null && Weather.Instance.Raining ? 0.4f : (Weather.Instance != null && Weather.Instance.Snowing ? 0.7f : 1f);   // в дождь луна за тучами
             Color col = color * (strength * breathe * facing * wet); col.a = 0.5f;
-            rend.enabled = true;
+            rend.enabled = strength * breathe * facing * wet > 0.002f;
+            if (!rend.enabled) return;
             mpb.SetColor("_TintColor", col);
             rend.SetPropertyBlock(mpb);
         }

@@ -48,6 +48,12 @@ namespace BladePath
             UiKit.Rect(r, new Color(0.04f, 0.035f, 0.035f, 0.92f));
             if (it != null)
             {
+                // A low-opacity radial tint gives rarity a visual identity without replacing the item art.
+                float glow = rar >= 3 ? 0.15f + 0.045f * Mathf.Sin(Time.unscaledTime * 2f + r.x * 0.01f) : 0.075f;
+                UiKit.Disc(r.center, r.width * 0.43f, new Color(rc.r, rc.g, rc.b, glow));
+            }
+            if (it != null)
+            {
                 bool second = it.icon >= 16, third = it.icon >= 52;
                 Texture2D atlas = UiKit.Tex(third ? "UI/items3" : second ? "UI/items2" : "UI/items");
                 Rect ir = new Rect(r.x + r.width * 0.15f, r.y + r.height * 0.15f, r.width * 0.7f, r.height * 0.7f);   // внутри проёма рамки
@@ -62,7 +68,11 @@ namespace BladePath
                     UiKit.Disc(ir.center, ir.width * 0.42f, new Color(rc.r * 0.35f, rc.g * 0.35f, rc.b * 0.35f, 1f));
                     UiKit.Text(ir, Abbr[Mathf.Clamp(it.slot, 0, 6)], ir.height * 0.36f, rc);
                 }
-                if (it.level > 0) UiKit.Text(new Rect(r.xMax - 30f, r.y + 2f, 28f, 16f), "+" + it.level, 12f, Gold, TextAnchor.UpperRight);
+                if (it.level > 0)
+                {
+                    UiKit.Rect(new Rect(r.xMax - 31f, r.y + 3f, 28f, 17f), new Color(0.045f, 0.035f, 0.025f, 0.72f));
+                    UiKit.Text(new Rect(r.xMax - 30f, r.y + 2f, 28f, 16f), "+" + it.level, 12f, Gold, TextAnchor.UpperRight);
+                }
                 if (Profile.IsEquipped(it)) UiKit.Disc(new Vector2(r.x + 8f, r.y + 8f), 4f, Gold);
             }
             Texture2D sh = rar >= 3 ? UiKit.Tex("UI/shine_frame") : null;
@@ -80,7 +90,14 @@ namespace BladePath
                 UiKit.Rect(new Rect(r.x, r.y, r.width, 2f), bc); UiKit.Rect(new Rect(r.x, r.yMax - 2f, r.width, 2f), bc);
                 UiKit.Rect(new Rect(r.x, r.y, 2f, r.height), bc); UiKit.Rect(new Rect(r.xMax - 2f, r.y, 2f, r.height), bc);
             }
-            if (selected) { UiKit.Rect(new Rect(r.x - 3f, r.y - 3f, r.width + 6f, 3f), Ink); UiKit.Rect(new Rect(r.x - 3f, r.yMax, r.width + 6f, 3f), Ink); UiKit.Rect(new Rect(r.x - 3f, r.y, 3f, r.height), Ink); UiKit.Rect(new Rect(r.xMax, r.y, 3f, r.height), Ink); }
+            if (selected)
+            {
+                Color rim = new Color(1f, 0.87f, 0.57f, 0.95f);
+                UiKit.Rect(new Rect(r.x - 3f, r.y - 3f, r.width + 6f, 3f), rim);
+                UiKit.Rect(new Rect(r.x - 3f, r.yMax, r.width + 6f, 3f), rim);
+                UiKit.Rect(new Rect(r.x - 3f, r.y, 3f, r.height), rim);
+                UiKit.Rect(new Rect(r.xMax, r.y, 3f, r.height), rim);
+            }
         }
 
         /// <summary>Кнопка-доска (для карты похода и других экранов).</summary>

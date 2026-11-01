@@ -37,7 +37,9 @@ namespace BladePath
                 k = 1f + flicker * (Mathf.PerlinNoise(t, seed) - 0.5f) * 2f;
             }
             float hz = noHaze ? 1f : Haze;
-            if (flicker > 0f || hz != 1f) transform.localScale = baseScale * (k * hz);
+            // Restore exactly the original scale when fog clears, including non-flickering halos.
+            Vector3 nextScale = baseScale * (k * hz);
+            if ((transform.localScale - nextScale).sqrMagnitude > 1e-6f) transform.localScale = nextScale;
         }
     }
 }
