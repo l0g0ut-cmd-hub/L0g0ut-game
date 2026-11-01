@@ -27,7 +27,7 @@ namespace BladePath
             public Transform draw, emberAnchor; public Material drawMat;
             public float kv, popAt = -10f, boltAt;
             public float ex, crackAt, beatAt; public Color baseCol;   // ex — ярость (IV ступень) 0…1
-            public Transform rage, ragePillar; public Material rageMat, ragePillarMat; public int ragePillarFrames = 1; public float ragePillarAspect = 1f;   // kv — облик ступени (0…1, догоняет ступень), popAt — вспышка новой ступени
+            public Transform rage, ragePillar; public Material rageMat, ragePillarMat; public int ragePillarFrames = 1; public float ragePillarAspect = 1f; public bool ragePulse;   // kv — облик ступени (0…1, догоняет ступень), popAt — вспышка новой ступени
         }
         readonly Dictionary<FighterController, Charge> active = new Dictionary<FighterController, Charge>();
         readonly Dictionary<FighterController, int> strikeSwing = new Dictionary<FighterController, int>();
@@ -107,7 +107,11 @@ namespace BladePath
                 // ярость: второй, багровый выплеск выше первого, удар по экрану
                 FxSprite e2 = FxSprite.Spawn("eruption", hitAt + Vector3.up * (es * 1.3f * 0.31f), es * 1.3f, 4, 4, 16, 22f, false, 1.1f);
                 if (e2 != null) e2.tint = new Color(1f, 0.15f, 0.1f, 0.9f);
-                GroundFlash.Spawn("FX/crack_glow", hitAt, 4.5f, 5.5f, Crimson, 2.2f, 0f, true);
+                GroundFlash.Spawn("FX/rage_cracks", hitAt, 4.5f, 5.5f, Color.white, 2.2f, 0f, true);
+                FxSprite st = FxSprite.Spawn("rage_star", hitAt + Vector3.up * 1.1f, 3.6f, 1, 1, 1, 1f, false, 0.3f);
+                if (st != null) st.grow = 0.6f;
+                FxSprite em = FxSprite.Spawn("rage_embers", hitAt + Vector3.up * 1.4f, 3.4f, 1, 1, 1, 1f, false, 1.0f);
+                if (em != null) em.grow = 0.6f;
                 PostFX.Kick(0.012f);
                 if (Juice.Instance != null) Juice.Instance.Growl(0.7f);
             }
@@ -155,7 +159,11 @@ namespace BladePath
             c.pool = GroundQuad("ChargePool", Resources.Load<Texture2D>("FX/glow_pool"), add, out c.poolMat);
             // столб ауры: вертикальная плоскость, всегда повёрнута к камере
             // ярость (IV): второй узор и столб — багровые; пока нет своего атласа — огненный лотос и огненный столб
-            c.rage = GroundQuad("ChargeRageSigil", Resources.Load<Texture2D>("FX/sigil_rage") ?? Resources.Load<Texture2D>("FX/sigil_flame"), add, out c.rageMat);
+            Texture2D rs = Resources.Load<Texture2D>("FX/sigil_rage_pulse");   // 4 кадра пульса
+            c.ragePulse = rs != null;
+            if (rs == null) rs = Resources.Load<Texture2D>("FX/sigil_rage") ?? Resources.Load<Texture2D>("FX/sigil_flame");
+            c.rage = GroundQuad("ChargeRageSigil", rs, add, out c.rageMat);
+            if (c.ragePulse && c.rageMat != null) c.rageMat.mainTextureScale = new Vector2(0.25f, 1f);
             Texture2D rp = Resources.Load<Texture2D>("FX/pillar_loop_rage") ?? Resources.Load<Texture2D>("FX/pillar_loop_flame");
             if (rp != null && add != null)
             {
@@ -386,7 +394,8 @@ namespace BladePath
                     c.rage.position = new Vector3(f.transform.position.x, 0.03f, f.transform.position.z);
                     c.rage.localScale = new Vector3(sr, sr, 1f);
                     c.rage.Rotate(0f, 0f, -150f * Time.deltaTime, Space.Self);
-                    c.rageMat.SetColor("_TintColor", new Color(0.8f, 0.32f, 0.3f, 0.5f * c.ex));
+                    c.rageMat.SetColor("_TintColor", c.ragePulse ? new Color(0.62f, 0.5f, 0.5f, 0.5f * c.ex) : new Color(0.8f, 0.32f, 0.3f, 0.5f * c.ex));
+                    if (c.ragePulse) { int pf = (int)(Time.time * 12f) % 6; pf = pf < 4 ? pf : 6 - pf; c.rageMat.mainTextureOffset = new Vector2(pf * 0.25f, 0f); }   // пульс 0-1-2-3-2-1
                 }
                 if (c.ragePillar != null)
                 {
@@ -394,7 +403,7 @@ namespace BladePath
                     c.ragePillar.position = new Vector3(f.transform.position.x, 0f, f.transform.position.z);
                     c.ragePillar.localScale = new Vector3(w2, w2 * c.ragePillarAspect * 1.35f * Mathf.Lerp(0.5f, 1f, c.ex), 1f);
                     if (c.pillar != null) c.ragePillar.rotation = c.pillar.rotation;
-                    c.ragePillarMat.SetColor("_TintColor", new Color(0.75f, 0.35f, 0.32f, 0.5f * 0.7f * c.ex));
+                    c.ragePillarMat.SetColor("_TintColor", new Color(0.62f, 0.5f, 0.5f, 0.5f * 0.75f * c.ex));
                     if (c.ragePillarFrames > 1) c.ragePillarMat.mainTextureOffset = new Vector2(((int)(Time.time * 15f + 2) % c.ragePillarFrames) / (float)c.ragePillarFrames, 0f);
                 }
                 if (c.flame != null) c.flame.size *= 1f + 0.5f * c.ex;
@@ -472,7 +481,10 @@ namespace BladePath
                         // взрыв ярости: рёв, багровая волна с пылью, трещины, удар по экрану
                         if (Juice.Instance != null) { Juice.Instance.Growl(0.75f); Juice.Instance.Taiko(1.2f, 0.7f); Juice.Instance.ChargePulse(f.transform.position, Crimson, 4.5f); }
                         GroundFlash.SpawnSheet("FX/shock_dust", f.transform.position, 4f, 6.5f, Crimson, 0.7f, 4, 1, 4);
-                        GroundFlash.Spawn("FX/crack_glow", f.transform.position, 3.5f, 4.2f, Crimson, 2.5f, 0f, true);
+                        GroundFlash.Spawn("FX/rage_ring", f.transform.position, 1.5f, 7.5f, Color.white, 0.6f, 0f);
+                        GroundFlash.Spawn("FX/rage_cracks", f.transform.position, 3.5f, 4.2f, Color.white, 2.5f, 0f, true);
+                        FxSprite re = FxSprite.Spawn("rage_embers", f.transform.position + Vector3.up * 1.3f, 3.0f, 1, 1, 1, 1f, false, 0.9f);
+                        if (re != null) { re.grow = 0.5f; re.tint = new Color(1f, 1f, 1f, 0.9f); }
                         if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(0.1f); CameraOrbit.Instance.Punch(4f); }
                         PostFX.Kick(0.01f);
                         Haptics.Pulse(140);
@@ -481,7 +493,7 @@ namespace BladePath
                 // ярость держится: багровые молнии чаще, трещины, сердцебиение, земля дрожит
                 if (c.level >= Max)
                 {
-                    if (Time.time >= c.crackAt) { c.crackAt = Time.time + Random.Range(0.6f, 0.9f); GroundFlash.Spawn("FX/crack_glow", f.transform.position + new Vector3(Random.Range(-1.2f, 1.2f), 0f, Random.Range(-1.2f, 1.2f)), 1.4f, 1.8f, Crimson, 1.2f, 0f, true); }
+                    if (Time.time >= c.crackAt) { c.crackAt = Time.time + Random.Range(0.6f, 0.9f); GroundFlash.Spawn("FX/rage_cracks", f.transform.position + new Vector3(Random.Range(-1.2f, 1.2f), 0f, Random.Range(-1.2f, 1.2f)), 1.6f, 2.0f, Color.white, 1.2f, 0f, true); }
                     if (Time.time >= c.beatAt) { c.beatAt = Time.time + 0.55f; if (Juice.Instance != null) Juice.Instance.Heartbeat(); if (f == (dm != null ? dm.player : null)) Haptics.Pulse(20); }
                     if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.012f);
                 }
@@ -489,7 +501,9 @@ namespace BladePath
                 if (c.level >= 2 && Time.time >= c.boltAt)
                 {
                     c.boltAt = Time.time + (c.level >= Max ? Random.Range(0.15f, 0.3f) : Random.Range(0.35f, 0.6f));
-                    GroundFlash.SpawnSheet("FX/lightning_burst", f.transform.position + new Vector3(Random.Range(-0.4f, 0.4f), 0f, Random.Range(-0.4f, 0.4f)), 2.6f, 3.2f, c.col, 0.3f, 4, 1, 4);
+                    Vector3 bp = f.transform.position + new Vector3(Random.Range(-0.4f, 0.4f), 0f, Random.Range(-0.4f, 0.4f));
+                    if (c.level >= Max) GroundFlash.SpawnSheet("FX/rage_lightning", bp, 3.0f, 3.8f, Color.white, 0.3f, 4, 1, 4);
+                    else GroundFlash.SpawnSheet("FX/lightning_burst", bp, 2.6f, 3.2f, c.col, 0.3f, 4, 1, 4);
                 }
                 PoseVisuals(c, f, t);
                 f.SetMoveVector(Vector2.zero);
@@ -511,7 +525,8 @@ namespace BladePath
                     Vector3 at = a.transform.position + a.transform.forward * 0.9f;
                     if (Juice.Instance != null) Juice.Instance.Slam(at);
                     GroundFlash.SpawnSheet("FX/shock_dust", at, rage ? 7f : 5.0f, rage ? 9.5f : 7.0f, wc, 0.7f, 4, 1, 4);
-                    GroundFlash.Spawn("FX/shock_ring", at, 1.0f, rage ? 8.5f : 6.2f, wc, 0.6f, 0f);
+                    if (rage) GroundFlash.Spawn("FX/rage_ring", at, 1.0f, 8.5f, Color.white, 0.6f, 0f);
+                    else GroundFlash.Spawn("FX/shock_ring", at, 1.0f, 6.2f, wc, 0.6f, 0f);
                     GroundFlash.Spawn("FX/glow_pool", at, 2.0f, rage ? 7f : 5.0f, wc, 0.5f, 0f);
                     FighterController t = a.opponent;
                     if (t != null && !t.Dead)
