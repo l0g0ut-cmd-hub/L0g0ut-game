@@ -27,6 +27,7 @@ namespace BladePath
         Modal modal;
         int sel = -1;
         readonly List<int> previewPath = new List<int>(16);
+        int plannedRegion = -1;   // keep a chosen destination across intermediate encounters
         readonly Queue<int> routeQueue = new Queue<int>(16);
         int moveFrom = -1, moveTo = -1; float moveStart;
         const float MoveTime = 1.25f;
@@ -37,7 +38,9 @@ namespace BladePath
 
         void OnShow()
         {
+            int resume = !Campaign.Knocked && Campaign.ClearedRegion < 0 && plannedRegion == Campaign.Region ? sel : -1;
             shownAt = Time.unscaledTime; sel = -1; previewPath.Clear(); moveTo = -1; modal = Modal.None; panU = -1f;
+            if (resume >= 0 && resume < Campaign.Nodes.Count && resume != Campaign.At) SelectNode(resume);
             Campaign.CancelTraining();
             if (Campaign.Knocked) OpenModal(Modal.Knocked);
             else if (Campaign.ClearedRegion >= 0) OpenModal(Modal.RegionClear);
@@ -70,8 +73,13 @@ namespace BladePath
         {
             if (!Campaign.CanGo(i)) return;
             Profile.CostMul = 1f;
+            int destination = sel;
             moveFrom = Campaign.At; moveTo = i; moveStart = Time.unscaledTime; sel = -1; previewPath.Clear(); stockNode = -1;
             Campaign.MoveTo(i);
+            // If the player plotted several waypoints, retain the remaining
+            // route after the next encounter is resolved. Never skip an encounter.
+            if (destination >= 0 && destination != i && destination < Campaign.Nodes.Count)
+                SelectNode(destination);
             if (Juice.Instance != null) Juice.Instance.DashSound();
         }
 
@@ -189,6 +197,7 @@ namespace BladePath
         void SelectNode(int index)
         {
             sel = index;
+            plannedRegion = Campaign.Region;
             previewPath.Clear();
             List<MapNode> nodes = Campaign.Nodes;
             if (index < 0 || index >= nodes.Count) return;
