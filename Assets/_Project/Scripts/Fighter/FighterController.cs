@@ -392,7 +392,7 @@ namespace BladePath
                 {
                     np = o.transform.position + (m > 1e-4f ? d / m : Vector3.right) * r + Vector3.up * np.y;
                     // отброшенный ударом врезался в жаровню: она качается, из чаши взлетает сноп искр
-                    if (knockVel.sqrMagnitude > 4f && Time.time > bumpAt && Juice.Instance != null) { bumpAt = Time.time + 0.7f; Juice.Instance.ObstacleBump(o, knockVel); }
+                    if (knockVel.sqrMagnitude > 4f && Time.time > bumpAt && Juice.Instance != null) { bumpAt = Time.time + 0.7f; Juice.Instance.ObstacleBump(o, knockVel); if (DuelManager.Instance != null) DuelManager.Instance.Burn(this, o.transform.position); }
                 }
             }
 

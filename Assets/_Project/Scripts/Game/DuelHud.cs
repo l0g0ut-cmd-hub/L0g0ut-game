@@ -322,6 +322,20 @@ namespace BladePath
                 }
             }
 
+            // выхват: бойцы замерли; по знаку 斬 — жми удар
+            if (duel.IaiWaiting)
+            {
+                bool cued = duel.IaiCued;
+                UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, cued ? 0.15f : 0.35f));
+                if (!cued) UiKit.Text(new Rect(cx - 300f, 150f, 600f, 40f), "ВЫХВАТ", 34f, new Color(0.95f, 0.9f, 0.8f, 0.9f));
+                UiKit.Text(new Rect(cx - 400f, 196f, 800f, 26f), cued ? "" : "жми удар, как только появится знак — не раньше", 15f, new Color(0.85f, 0.82f, 0.75f, 0.85f));
+                if (cued)
+                {
+                    float k = Mathf.Clamp01((Time.unscaledTime - duel.IaiCueAt) / 0.08f);
+                    DrawBrush("UI/zan", new Vector2(cx, 200f), 220f * (1.25f - 0.25f * k), 1f, 1f);
+                }
+            }
+
             // итог
             if (duel.State == DuelState.PlayerWon || duel.State == DuelState.PlayerLost)
             {

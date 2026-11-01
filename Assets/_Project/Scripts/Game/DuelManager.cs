@@ -270,6 +270,45 @@ namespace BladePath
 
         public float MatchStartedAt { get; private set; }
 
+        // ---------------- выхват (иай) в начале раунда ----------------
+        public bool IaiWaiting { get; private set; }
+        public float IaiCueAt { get; private set; }
+        public bool IaiCued { get { return IaiWaiting && Time.unscaledTime >= IaiCueAt; } }
+        bool iaiDone, iaiRoll, iaiCueSounded;
+        public float IaiResultAt { get; private set; } = -10f;
+        public bool IaiPlayerWon { get; private set; }
+
+        /// <summary>Игрок нажал удар во время выхвата: по знаку (в 0,45 с) — первый удар за ним, раньше знака — за врагом.</summary>
+        public void IaiPress()
+        {
+            if (!IaiWaiting) return;
+            float t = Time.unscaledTime - IaiCueAt;
+            if (t < 0f) ResolveIai(false, false);
+            else ResolveIai(t <= 0.45f, false);
+        }
+
+        void ResolveIai(bool playerWon, bool late)
+        {
+            IaiWaiting = false; iaiDone = true;
+            SetState(DuelState.Fighting); Freeze(false);
+            IaiResultAt = Time.unscaledTime; IaiPlayerWon = playerWon;
+            FighterController a = playerWon ? player : enemy, t = playerWon ? enemy : player;
+            if (a == null || t == null) return;
+            Vector3 d = t.transform.position - a.transform.position; d.y = 0f;
+            // рывок навстречу и молниеносный удар
+            a.Teleport(t.transform.position - d.normalized * 1.0f);
+            if (a.weapon != null) a.weapon.TryStartSwing(AttackType.Slash);
+            float dmg = playerWon ? 14f * Profile.B.dmgMul : (late ? 7f : 10f);
+            ForceHit(t, a, dmg, playerWon ? 30f : 20f, t.transform.position + Vector3.up * 1.2f);
+            t.Stun(playerWon ? 0.7f : 0.5f);
+            if (Juice.Instance != null) { Juice.Instance.Taiko(1f, 0.9f); Juice.Instance.Dust(a.transform.position + Vector3.up * 0.05f, d, 14); }
+            if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Punch(4f); CameraOrbit.Instance.Shake(0.06f); }
+            Slowmo = true; slowUntil = Time.unscaledTime + 0.45f;
+            if (playerWon) { Announce("ИАЙ: ПЕРВЫЙ УДАР", new Color(0.55f, 0.9f, 1f)); player.AddKi(15f); }
+            else Announce(late ? "ПРОМЕДЛИЛ" : "СЛИШКОМ РАНО", new Color(1f, 0.35f, 0.25f), "жми удар, как только появится знак 斬");
+            Haptics.Pulse(80);
+        }
+
         public void ResetMatch()
         {
             MatchStartedAt = Time.unscaledTime;
@@ -313,6 +352,7 @@ namespace BladePath
                 if (Round <= 1) Juice.Instance.Growl(1f / Mathf.Sqrt(Ladder.Current.hpMul));   // чем крепче враг, тем ниже рык
             }
             SetState(DuelState.Intro);
+            IaiWaiting = false; iaiDone = false; iaiRoll = UnityEngine.Random.value < 0.5f;
             saluted = false; answered = false;
             Freeze(true);
         }
@@ -367,9 +407,19 @@ namespace BladePath
             }
             if (State == DuelState.Intro && StateTime >= IntroLength)
             {
-                SetState(DuelState.Fighting); Freeze(false);
-                if (Juice.Instance != null) Juice.Instance.Taiko(1f, 1.1f);
-                Haptics.Pulse(40);
+                // выхват (иай): в первом раунде и через раз в остальных — бойцы замерли, ждут знака; кто первым — тот и рубит
+                if (!IaiWaiting && !iaiDone && (Round == 1 || iaiRoll)) { IaiWaiting = true; IaiCueAt = Time.unscaledTime + UnityEngine.Random.Range(1.0f, 2.4f); iaiCueSounded = false; }
+                if (IaiWaiting)
+                {
+                    if (!iaiCueSounded && Time.unscaledTime >= IaiCueAt) { iaiCueSounded = true; if (Juice.Instance != null) Juice.Instance.Taiko(1f, 1.35f); Haptics.Pulse(30); }
+                    if (Time.unscaledTime >= IaiCueAt + 0.75f) ResolveIai(false, true);   // промедлил — враг первый
+                }
+                else
+                {
+                    SetState(DuelState.Fighting); Freeze(false);
+                    if (Juice.Instance != null) Juice.Instance.Taiko(1f, 1.1f);
+                    Haptics.Pulse(40);
+                }
             }
             if (!postureHooked && player != null && enemy != null)
             {
@@ -1221,6 +1271,15 @@ namespace BladePath
             MatchOver = PlayerWins >= winsToMatch || EnemyWins >= winsToMatch;
             if (MatchOver) { Records.OnMatch(PlayerWins >= winsToMatch, Ladder.Index); GrantReward(); }
             if (Juice.Instance != null) Juice.Instance.Taiko(1f, 0.8f);
+        }
+
+        /// <summary>Отброшен в жаровню: угли и огонь — ожог (урон и равновесие). Загоняй врага к огню тяжёлыми ударами.</summary>
+        public void Burn(FighterController f, Vector3 at)
+        {
+            if (f == null || State != DuelState.Fighting || f.Dead) return;
+            FighterController o = f == player ? enemy : player;
+            ForceHit(f, o, 8f, 15f, at + Vector3.up * 1.0f);
+            Popup bp = new Popup(); bp.world = f.transform.position + Vector3.up * 2.1f; bp.text = "ОЖОГ!"; bp.color = new Color(1f, 0.55f, 0.15f); bp.born = Time.unscaledTime; bp.size = 26f; Popups.Add(bp);
         }
 
         /// <summary>Урон не клинком (удар по земле и т.п.): здоровье и равновесие, без серии и контратаки.</summary>
