@@ -305,7 +305,7 @@ namespace BladePath
             {
                 foreach (int b in ns[a].next)
                 {
-                    bool walked = Campaign.WasTravelled(a, b);
+                    bool walked = Campaign.WasTravelled(a, b) && !(moveFrom == a && moveTo == b);
                     bool open = a == Campaign.At && cur.done && moveTo < 0;
                     float alpha = walked ? 0.95f : open ? 0.7f + 0.3f * Mathf.Sin(Time.unscaledTime * 5f) : Known(ns[b]) ? 0.45f : 0.22f;
                     Color col = walked ? new Color(0.55f, 0.06f, 0.04f, alpha) : new Color(0.05f, 0.04f, 0.04f, alpha);
@@ -402,6 +402,9 @@ namespace BladePath
             Vector2 uv = HeroUV();
             Vector2 p = new Vector2(mapX + (uv.x - u0) * MapFullW, uv.y * MapH);
             bool moving = moveTo >= 0;
+            // Shadow and warm aureole make the tiny animated hero readable over foliage.
+            UiKit.Disc(p + new Vector2(0f, 8f), moving ? 16f : 12f, new Color(0.035f, 0.02f, 0.01f, 0.45f));
+            if (moving) UiKit.Disc(p, 21f + 2f * Mathf.Sin(Time.unscaledTime * 7f), new Color(0.98f, 0.70f, 0.28f, 0.18f));
             if (ic != null && !moving)
             {
                 Color oc = GUI.color; GUI.color = new Color(1f, 1f, 1f, 0.75f + 0.25f * Mathf.Sin(Time.unscaledTime * 3f));
@@ -468,7 +471,29 @@ namespace BladePath
                 string hint = known ? Campaign.TypeHints[n.type] : "Туман скрывает, что ждёт впереди. Подойди ближе.";
                 foreach (string line in Wrap(hint, 34)) { UiKit.Text(new Rect(x, y, w, 17f), line, 12f, Dim, TextAnchor.MiddleLeft, false); y += 17f; }
                 y += 10f;
-                if (Campaign.CanGo(show) && Btn(new Rect(x, y, w, 44f), "ИДТИ", interactive)) Go(show);
+                int nextStep = NextPreviewStep;
+                if (nextStep >= 0)
+                {
+                    int totalMoves = previewPath.Count - 1;
+                    int available = Mathf.Min(Campaign.Steps, totalMoves);
+                    bool enough = totalMoves <= Campaign.Steps;
+                    Color routeColor = enough ? new Color(0.65f, 0.94f, 0.65f) : new Color(1f, 0.61f, 0.48f);
+                    UiKit.Text(new Rect(x, y, w, 18f),
+                        "МАРШРУТ: " + totalMoves + " шаг.   ·   доступно: " + available,
+                        12f, routeColor, TextAnchor.MiddleLeft, false);
+                    y += 20f;
+                    // Travel remains one node at a time, so fight/event encounters
+                    // are never skipped by the route preview.
+                    if (Campaign.CanGo(nextStep) &&
+                        Btn(new Rect(x, y, w, 40f), totalMoves == 1 ? "ИДТИ ПО СЛЕДАМ" : "НАЧАТЬ ПУТЬ (1 / " + totalMoves + ")", interactive))
+                        Go(nextStep);
+                    else
+                        UiKit.Text(new Rect(x, y, w, 18f),
+                            Campaign.Steps == 0 ? "Нужен бросок кости пути" : "Следующий переход пока закрыт",
+                            11f, Dim, TextAnchor.MiddleLeft, false);
+                }
+                else if (Campaign.CanGo(show) && Btn(new Rect(x, y, w, 40f), "ИДТИ", interactive))
+                    Go(show);
             }
             else
             {
