@@ -20,6 +20,8 @@ namespace BladePath
         struct S { public Vector3 a, b; public float t; }
         readonly List<S> samples = new List<S>();
         Mesh mesh;
+        MeshRenderer trailRenderer;
+        const int MaxSamples = 18; // bounded geometry and memory even at very high frame rates
         readonly List<Vector3> verts = new List<Vector3>();
         readonly List<Color> cols = new List<Color>();
         readonly List<Vector2> uvs = new List<Vector2>();
@@ -51,6 +53,8 @@ namespace BladePath
             g.AddComponent<MeshFilter>().sharedMesh = t.mesh = new Mesh { name = "trail" };
             t.mesh.MarkDynamic();
             MeshRenderer r = g.AddComponent<MeshRenderer>();
+            t.trailRenderer = r;
+            r.enabled = false;
             Material tm = TexMat(tex);
             r.sharedMaterial = tm != null ? tm : Mat();
             t.textured = tm != null;
@@ -108,11 +112,26 @@ namespace BladePath
             {
                 Transform br = weapon.bladeRoot;
                 S s; s.a = br.position + br.forward * (weapon.bladeLength * from); s.b = br.position + br.forward * weapon.bladeLength; s.t = now;
-                if (samples.Count == 0 || (samples[samples.Count - 1].b - s.b).sqrMagnitude > 1e-6f) samples.Add(s);
+                if (samples.Count == 0 || (samples[samples.Count - 1].b - s.b).sqrMagnitude > 1e-6f)
+                {
+                    if (samples.Count >= MaxSamples) samples.RemoveAt(0);
+                    samples.Add(s);
+                }
             }
             while (samples.Count > 0 && now - samples[0].t > life) samples.RemoveAt(0);
             transform.position = Vector3.zero; transform.rotation = Quaternion.identity;
             Build(now);
+        }
+
+        void OnDisable()
+        {
+            samples.Clear();
+            if (trailRenderer != null) trailRenderer.enabled = false;
+        }
+
+        void OnDestroy()
+        {
+            if (mesh != null) Destroy(mesh);
         }
 
         static Vector3 CR(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t)
@@ -123,8 +142,13 @@ namespace BladePath
 
         void Build(float now)
         {
+            if (samples.Count < 2)
+            {
+                if (trailRenderer != null && trailRenderer.enabled) trailRenderer.enabled = false;
+                return;
+            }
+            if (trailRenderer != null && !trailRenderer.enabled) trailRenderer.enabled = true;
             mesh.Clear();
-            if (samples.Count < 2) return;
             verts.Clear(); cols.Clear(); uvs.Clear(); tris.Clear();
             const int sub = 4;
             int n = samples.Count;
