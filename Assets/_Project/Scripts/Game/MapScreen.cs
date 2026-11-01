@@ -385,6 +385,13 @@ namespace BladePath
             return r;
         }
 
+        // Generated art pack is optional. Existing Resources assets remain the fallback.
+        static string PackArt(string name, string fallback)
+        {
+            string path = "UI/pack01/" + name;
+            return UiKit.Tex(path) != null ? path : fallback;
+        }
+
         void Picture(Rect r, string tex)
         {
             Texture2D t = UiKit.Tex(tex);
@@ -429,7 +436,7 @@ namespace BladePath
                 case Modal.Shrine:
                 {
                     Rect r = Card(660f, 380f);
-                    Picture(new Rect(r.x, r.y, 260f, r.height), "UI/npc_2");
+                    Picture(new Rect(r.x, r.y, 260f, r.height), PackArt("monk", "UI/npc_2"));
                     float x = r.x + 280f, w = r.width - 300f, y = r.y + 22f;
                     UiKit.Text(new Rect(x, y, w, 26f), "ХРАМ", 20f, Gold, TextAnchor.MiddleLeft); y += 34f;
                     y = Lines(x, y, w, "«Ками этих мест слышат тебя, путник. Выбери, чего просить на следующий бой.»", 40, 13f, Ink) + 12f;
@@ -498,7 +505,7 @@ namespace BladePath
                 case Modal.Rest:
                 {
                     Rect r = Card(660f, 360f);
-                    Picture(new Rect(r.x, r.y, 260f, r.height), "UI/npc_3");
+                    Picture(new Rect(r.x, r.y, 260f, r.height), PackArt("herbalist", "UI/npc_3"));
                     float x = r.x + 280f, w = r.width - 300f, y = r.y + 22f;
                     UiKit.Text(new Rect(x, y, w, 26f), "ПРИВАЛ", 20f, Gold, TextAnchor.MiddleLeft); y += 34f;
                     y = Lines(x, y, w, "У костра греется старый мастер меча. «Отдохни. Или возьми боккэн — покажу, чего тебе не хватает.»", 40, 13f, Ink) + 14f;
@@ -567,7 +574,7 @@ namespace BladePath
         {
             int ev = Mathf.Clamp(n.ev, 0, 3);
             Rect r = Card(720f, 400f);
-            Picture(new Rect(r.x, r.y, 330f, r.height), "UI/event_" + ev);
+            Picture(new Rect(r.x, r.y, 330f, r.height), PackArt("event_" + ev, "UI/event_" + ev));
             float x = r.x + 348f, w = r.width - 366f, y = r.y + 22f;
             UiKit.Text(new Rect(x, y, w, 26f), EvTitle[ev], 19f, Gold, TextAnchor.MiddleLeft); y += 34f;
             Lines(x, y, w, EvText[ev], 38, 13f, Ink);
