@@ -20,7 +20,7 @@ namespace BladePath
         class Charge
         {
             public FighterController f; public float start; public int level; public Color col;
-            public Transform sigil, anchor; public Material sigilMat; public ParticleSystem rise; public FxSprite flame; public Light light;
+            public Transform sigil, anchor, early, pillar, pool; public Material sigilMat, earlyMat, pillarMat, poolMat; public ParticleSystem rise; public FxSprite flame; public Light light; public float pillarAspect = 1.3f;
         }
         readonly Dictionary<FighterController, Charge> active = new Dictionary<FighterController, Charge>();
         readonly Dictionary<FighterController, int> strikeSwing = new Dictionary<FighterController, int>();
@@ -82,6 +82,9 @@ namespace BladePath
             strikeSwing[f] = f.weapon != null ? f.weapon.SwingId : -1;
             strikeLevel[f] = lvl;
             if (lvl >= 2) waveAt[f] = Time.time + 0.18f;
+            Vector3 hitAt = f.transform.position + f.transform.forward * 0.9f;
+            GroundFlash.Spawn("FX/crack_glow", hitAt, 1.4f + 0.9f * lvl, 1.6f + 1.1f * lvl, c.col, 1.3f + 0.3f * lvl, 0f, true);
+            GroundFlash.Spawn("FX/shock_ring", hitAt, 0.6f, 2.5f + 1.5f * lvl, c.col, 0.45f, 0f);
             if (Juice.Instance != null) { Juice.Instance.Taiko(1f, 0.75f + 0.1f * lvl); Juice.Instance.Dust(f.transform.position + Vector3.up * 0.05f, f.transform.forward, 14 + 8 * lvl); }
             if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Punch(2f + 1.5f * lvl); CameraOrbit.Instance.Shake(0.03f + 0.03f * lvl); }
             Haptics.Pulse(50 + 30 * lvl);
@@ -116,6 +119,22 @@ namespace BladePath
                 r.sharedMaterial = c.sigilMat; r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 c.sigil = g.transform;
                 c.sigil.rotation = Quaternion.Euler(90f, 0f, 0f);
+            }
+            // ранняя ступень узора (горит только ядро) — гаснет по мере того, как раскрывается полный
+            c.early = GroundQuad("ChargeSigilEarly", Resources.Load<Texture2D>(SigilFor(c.f) + "_early"), add, out c.earlyMat);
+            // пятно света под ногами
+            c.pool = GroundQuad("ChargePool", Resources.Load<Texture2D>("FX/glow_pool"), add, out c.poolMat);
+            // столб ауры: вертикальная плоскость, всегда повёрнута к камере
+            Texture2D pt = Resources.Load<Texture2D>(PillarFor(c.f));
+            if (pt != null && add != null)
+            {
+                GameObject g = new GameObject("ChargePillar");
+                g.AddComponent<MeshFilter>().sharedMesh = PillarQuad();
+                MeshRenderer r = g.AddComponent<MeshRenderer>();
+                c.pillarMat = new Material(add) { mainTexture = pt };
+                r.sharedMaterial = c.pillarMat; r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                c.pillar = g.transform;
+                c.pillarAspect = pt.height / (float)Mathf.Max(1, pt.width);
             }
             // поднимающаяся энергия: искры и струйки вверх по кругу узора
             GameObject pg = new GameObject("ChargeRise");
@@ -157,6 +176,33 @@ namespace BladePath
             return s == 2 ? "FX/sigil_flame" : s == 3 ? "FX/sigil_sun" : "FX/sigil_storm";
         }
 
+        string PillarFor(FighterController f) { return SigilFor(f).Replace("sigil_", "pillar_"); }
+
+        Transform GroundQuad(string name, Texture2D tex, Shader add, out Material mat)
+        {
+            mat = null;
+            if (tex == null || add == null) return null;
+            GameObject g = new GameObject(name);
+            g.AddComponent<MeshFilter>().sharedMesh = Quad();
+            MeshRenderer r = g.AddComponent<MeshRenderer>();
+            mat = new Material(add) { mainTexture = tex };
+            r.sharedMaterial = mat; r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            g.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+            return g.transform;
+        }
+
+        static Mesh pillarQuad;
+        static Mesh PillarQuad()
+        {
+            if (pillarQuad != null) return pillarQuad;
+            pillarQuad = new Mesh { name = "PillarQuad" };
+            pillarQuad.vertices = new[] { new Vector3(-0.5f, 0f, 0f), new Vector3(0.5f, 0f, 0f), new Vector3(0.5f, 1f, 0f), new Vector3(-0.5f, 1f, 0f) };
+            pillarQuad.uv = new[] { new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(0f, 1f) };
+            pillarQuad.triangles = new[] { 0, 2, 1, 0, 3, 2 };
+            pillarQuad.RecalculateBounds();
+            return pillarQuad;
+        }
+
         static Mesh quad;
         static Mesh Quad()
         {
@@ -177,6 +223,12 @@ namespace BladePath
             if (c.flame != null) Destroy(c.flame.gameObject);
             if (c.light != null) Destroy(c.light.gameObject);
             if (c.anchor != null) Destroy(c.anchor.gameObject);
+            if (c.early != null) Destroy(c.early.gameObject);
+            if (c.earlyMat != null) Destroy(c.earlyMat);
+            if (c.pool != null) Destroy(c.pool.gameObject);
+            if (c.poolMat != null) Destroy(c.poolMat);
+            if (c.pillar != null) Destroy(c.pillar.gameObject);
+            if (c.pillarMat != null) Destroy(c.pillarMat);
         }
 
         float hintCheck;
@@ -203,6 +255,9 @@ namespace BladePath
                     c.level = lvl;
                     // вспышка ступени: кольцо, барабан, дрожь
                     if (Juice.Instance != null) { Juice.Instance.Taiko(0.7f + 0.15f * lvl, 1.2f + 0.15f * lvl); Juice.Instance.ChargePulse(f.transform.position, c.col, 1.2f + 0.8f * lvl); }
+                    GroundFlash.Spawn("FX/shock_ring", f.transform.position, 1.0f, 3.2f + 1.4f * lvl, c.col, 0.5f, 0f);
+                    FxSprite fl = FxSprite.Spawn("charge_flecks", f.transform.position + Vector3.up * 1.0f, 1.6f + 0.6f * lvl, 1, 1, 1, 1f, false, 0.45f);
+                    if (fl != null) { fl.tint = Color.Lerp(c.col, Color.white, 0.4f); fl.grow = 1.5f; }
                     if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.02f + 0.02f * lvl);
                     Haptics.Pulse(25 + 15 * lvl);
                 }
@@ -214,8 +269,40 @@ namespace BladePath
                     c.sigil.position = new Vector3(f.transform.position.x, 0.022f, f.transform.position.z);
                     c.sigil.localScale = new Vector3(s, s, 1f);
                     c.sigil.Rotate(0f, 0f, (40f + 140f * k) * Time.deltaTime, Space.Self);
-                    float a = Mathf.Clamp01(t / 0.25f) * (0.55f + 0.45f * k);
-                    c.sigilMat.SetColor("_TintColor", new Color(c.col.r * 0.5f, c.col.g * 0.5f, c.col.b * 0.5f, 0.5f * a));
+                    // свой цветной узор — без подкраски; запасная печать — в цвет бойца
+                    float a = Mathf.Clamp01(t / 0.25f) * (c.early != null ? Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.25f, 0.75f, k)) : 0.55f + 0.45f * k);
+                    Color tc = c.early != null ? new Color(0.5f, 0.5f, 0.5f, 0.5f) : new Color(c.col.r * 0.5f, c.col.g * 0.5f, c.col.b * 0.5f, 0.5f);
+                    c.sigilMat.SetColor("_TintColor", new Color(tc.r, tc.g, tc.b, tc.a * a * (0.8f + 0.2f * pulse)));
+                    if (c.early != null)
+                    {
+                        c.early.position = c.sigil.position + Vector3.up * 0.002f;
+                        float se = Mathf.Lerp(1.1f, s * 0.62f, k);
+                        c.early.localScale = new Vector3(se, se, 1f);
+                        c.early.Rotate(0f, 0f, -(60f + 90f * k) * Time.deltaTime, Space.Self);   // против хода полного узора
+                        float ea = Mathf.Clamp01(t / 0.2f) * (1f - Mathf.InverseLerp(0.45f, 0.95f, k));
+                        c.earlyMat.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0.5f * ea));
+                    }
+                }
+                if (c.pool != null)
+                {
+                    float sp = Mathf.Lerp(1.6f, 4.6f, k);
+                    c.pool.position = new Vector3(f.transform.position.x, 0.018f, f.transform.position.z);
+                    c.pool.localScale = new Vector3(sp, sp, 1f);
+                    c.poolMat.SetColor("_TintColor", new Color(c.col.r * 0.5f, c.col.g * 0.5f, c.col.b * 0.5f, (0.12f + 0.25f * k) * Mathf.Clamp01(t / 0.3f)));
+                }
+                if (c.pillar != null)
+                {
+                    float w = Mathf.Lerp(0.9f, 2.2f, k) * pulse;
+                    c.pillar.position = new Vector3(f.transform.position.x, 0.0f, f.transform.position.z);
+                    c.pillar.localScale = new Vector3(w, w * c.pillarAspect * Mathf.Lerp(0.7f, 1.25f, k), 1f);
+                    Camera cam = Camera.main;
+                    if (cam != null)
+                    {
+                        Vector3 look = c.pillar.position - cam.transform.position; look.y = 0f;
+                        if (look.sqrMagnitude > 1e-4f) c.pillar.rotation = Quaternion.LookRotation(look.normalized, Vector3.up);
+                    }
+                    float pa = Mathf.Clamp01((t - 0.15f) / 0.4f) * (0.2f + 0.7f * k);
+                    c.pillarMat.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0.5f * pa));
                 }
                 if (c.rise != null)
                 {
@@ -241,6 +328,8 @@ namespace BladePath
                     if (a == null || dm == null) continue;
                     Vector3 at = a.transform.position + a.transform.forward * 0.9f;
                     if (Juice.Instance != null) Juice.Instance.Slam(at);
+                    GroundFlash.Spawn("FX/shock_ring", at, 1.0f, 6.2f, ColorOf(a), 0.6f, 0f);
+                    GroundFlash.Spawn("FX/glow_pool", at, 2.0f, 5.0f, ColorOf(a), 0.5f, 0f);
                     FighterController t = a.opponent;
                     if (t != null && !t.Dead)
                     {
@@ -250,6 +339,60 @@ namespace BladePath
                 }
                 if (done != null) foreach (FighterController f in done) waveAt.Remove(f);
             }
+        }
+    }
+
+    /// <summary>Плоская вспышка на полу (кольцо волны, светящиеся трещины, пятно): растёт от s0 до s1 и гаснет.</summary>
+    public class GroundFlash : MonoBehaviour
+    {
+        static readonly Dictionary<string, Material> mats = new Dictionary<string, Material>();
+        float born, life, s0, s1, spin; Color col; bool hold; MeshRenderer mr; MaterialPropertyBlock mpb;
+        static Mesh quad;
+
+        public static GroundFlash Spawn(string tex, Vector3 pos, float s0, float s1, Color col, float life, float spin, bool hold = false)
+        {
+            Material m;
+            if (!mats.TryGetValue(tex, out m) || m == null)
+            {
+                Texture2D t = Resources.Load<Texture2D>(tex);
+                Shader add = Shader.Find("Legacy Shaders/Particles/Additive");
+                if (t == null || add == null) return null;
+                m = new Material(add) { mainTexture = t }; mats[tex] = m;
+            }
+            if (quad == null)
+            {
+                quad = new Mesh { name = "GroundFlashQuad" };
+                quad.vertices = new[] { new Vector3(-0.5f, -0.5f, 0f), new Vector3(0.5f, -0.5f, 0f), new Vector3(0.5f, 0.5f, 0f), new Vector3(-0.5f, 0.5f, 0f) };
+                quad.uv = new[] { new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(0f, 1f) };
+                quad.triangles = new[] { 0, 2, 1, 0, 3, 2 };
+                quad.RecalculateBounds();
+            }
+            GameObject g = new GameObject("GroundFlash");
+            g.transform.position = new Vector3(pos.x, 0.026f, pos.z);
+            g.transform.rotation = Quaternion.Euler(90f, Random.Range(0f, 360f), 0f);
+            g.AddComponent<MeshFilter>().sharedMesh = quad;
+            GroundFlash f = g.AddComponent<GroundFlash>();
+            f.mr = g.AddComponent<MeshRenderer>(); f.mr.sharedMaterial = m; f.mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            f.mpb = new MaterialPropertyBlock();
+            f.born = Time.time; f.life = Mathf.Max(0.05f, life); f.s0 = s0; f.s1 = s1; f.col = col; f.spin = spin; f.hold = hold;
+            f.Tick();
+            return f;
+        }
+
+        void Update() { Tick(); }
+
+        void Tick()
+        {
+            float k = Mathf.Clamp01((Time.time - born) / life);
+            if (k >= 1f) { Destroy(gameObject); return; }
+            float e = 1f - (1f - k) * (1f - k) * (1f - k);
+            float s = hold ? Mathf.Lerp(s0, s1, Mathf.Clamp01(k * 6f)) : Mathf.Lerp(s0, s1, e);
+            transform.localScale = new Vector3(s, s, 1f);
+            if (spin != 0f) transform.Rotate(0f, 0f, spin * Time.deltaTime, Space.Self);
+            // трещины горят и медленно остывают; кольцо и пятно — быстро гаснут
+            float a = hold ? (k < 0.1f ? k / 0.1f : 1f - Mathf.SmoothStep(0f, 1f, (k - 0.1f) / 0.9f)) : 1f - e;
+            mpb.SetColor("_TintColor", new Color(0.5f * Mathf.Lerp(1f, col.r, 0.8f), 0.5f * Mathf.Lerp(1f, col.g, 0.8f), 0.5f * Mathf.Lerp(1f, col.b, 0.8f), 0.5f * a));
+            mr.SetPropertyBlock(mpb);
         }
     }
 }
