@@ -17,7 +17,8 @@ namespace BladePath
         public static readonly float[] LevelAt = { 0.5f, 1.1f, 1.7f, 2.6f };
         public static readonly float[] KiCost = { 15f, 25f, 40f, 60f };
         public static readonly float[] DmgMul = { 1.5f, 2.0f, 2.6f, 3.4f };
-        public const int Max = 3;   // IV ступень — «ЯРОСТЬ»: аура в багровый, второй узор и столб, гул, молнии и трещины
+        public const int Max = 3;
+        public static float BigReleaseAt = -10f;   // удар с III ступени и выше — для линий скорости на экране   // IV ступень — «ЯРОСТЬ»: аура в багровый, второй узор и столб, гул, молнии и трещины
         static readonly Color Crimson = new Color(1f, 0.07f, 0.05f);
 
         class Charge
@@ -90,7 +91,7 @@ namespace BladePath
             if (!f.Attack(type, lvl >= 1)) return false;   // со второй ступени блок не держит
             strikeSwing[f] = f.weapon != null ? f.weapon.SwingId : -1;
             strikeLevel[f] = lvl;
-            if (lvl >= 2) { waveAt[f] = Time.time + 0.18f; waveLvl[f] = lvl; }
+            if (lvl >= 2) { waveAt[f] = Time.time + 0.18f; waveLvl[f] = lvl; BigReleaseAt = Time.unscaledTime; }
             if (lvl >= 1) slashLvl[f] = new Vector2Int(lvl, f.weapon != null ? f.weapon.SwingId : -1);
             Vector3 hitAt = f.transform.position + f.transform.forward * 0.9f;
             GroundFlash.Spawn("FX/crack_glow", hitAt, 1.4f + 0.9f * lvl, 1.6f + 1.1f * lvl, c.col, 1.3f + 0.3f * lvl, 0f, true);
