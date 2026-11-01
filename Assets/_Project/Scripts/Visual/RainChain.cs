@@ -8,14 +8,16 @@ namespace BladePath
         public ParticleSystem water, splash;
         public Transform chain;
         bool on;
+        float nextQualityCheck;
 
         void Update()
         {
             bool rain = Weather.Instance != null && Weather.Instance.Raining;
-            if (rain != on)
+            if (rain != on || (rain && Time.unscaledTime >= nextQualityCheck))
             {
                 on = rain;
-                float quality = DuelManager.Gfx == 1 ? 1f : 0.5f;
+                nextQualityCheck = Time.unscaledTime + 1.5f;
+                float quality = (DuelManager.Gfx == 1 ? 1f : 0.5f) * MobileVfxBudget.ParticleScale;
                 if (water != null)
                 {
                     var e = water.emission; e.rateOverTime = rain ? 70f * quality : 0f;
