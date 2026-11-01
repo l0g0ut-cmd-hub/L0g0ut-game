@@ -297,7 +297,7 @@ namespace BladePath
             UiKit.Text(new Rect(x + 54f, y, w - 54f, 22f), "КОСТИ ПУТИ: " + Campaign.Rolls, 14f, Ink, TextAnchor.MiddleLeft);
             UiKit.Text(new Rect(x + 54f, y + 22f, w - 54f, 20f), rolling ? "бросок…" : Campaign.Steps > 0 ? "ходов: " + Campaign.Steps : "ход окончен", 12f, Campaign.Steps > 0 ? new Color(0.6f, 0.95f, 0.7f) : Dim, TextAnchor.MiddleLeft, false);
             y += 52f;
-            bool canRoll = Campaign.Rolls > 0 && Campaign.Steps <= 0 && Campaign.Current.done && !Campaign.InFight && !rolling;
+            bool canRoll = Campaign.Rolls > 0 && Campaign.Steps <= 0 && Campaign.Current.done && !Campaign.InFight && !Campaign.Training && !rolling;
             if (canRoll && Btn(new Rect(x, y, w, 42f), "БРОСИТЬ КОСТЬ", interactive, true)) { Campaign.RollDie(); rollAt = Time.unscaledTime; Haptics.Pulse(30); if (Juice.Instance != null) Juice.Instance.Taiko(0.7f, 1.3f); }
             if (canRoll) y += 48f;
             if (Campaign.Stuck && !rolling)

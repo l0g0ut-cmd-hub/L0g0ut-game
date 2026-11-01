@@ -133,17 +133,18 @@ namespace BladePath
         /// <summary>Бросок кости пути: 1–3 хода. Кость тратится.</summary>
         public static int RollDie()
         {
-            if (D.rolls <= 0 || D.steps > 0) return 0;
+            if (D.rolls <= 0 || D.steps > 0 || !Current.done || InFight || D.training) return 0;
             D.rolls--; D.lastRoll = UnityEngine.Random.Range(1, 4); D.steps = D.lastRoll; Save();
             return D.lastRoll;
         }
-        public static void AddRoll(int n = 1) { D.rolls += n; Save(); }
+        public static void AddRoll(int n = 1) { if (n <= 0) return; D.rolls += n; Save(); }
         public static void CancelTraining() { if (D.training) { D.training = false; Save(); } }
         /// <summary>Проводник: кость за моны.</summary>
         public static bool BuyGuide() { if (!Profile.Spend(GuideCost)) return false; AddRoll(); return true; }
         /// <summary>Вызвать странствующего ронина: бой вне узла, победа — кость пути.</summary>
         public static void BeginTraining()
         {
+            if (InFight || D.training || !Current.done) return;
             D.training = true; D.fight = -1;
             Ladder.Index = DuelEnemy(D.region);
             Weather.ForceNight = false;
@@ -301,7 +302,7 @@ namespace BladePath
         }
 
         /// <summary>
-        /// Бой проигран: героя откидывает к ближайшей хижине травницы позади (или к началу области). Благословение пропадает,
+        /// Бой проигран: героя откидывает к хижине травницы минимум за два слоя позади (или к началу области). Благословение пропадает,
         /// проклятие снято, ходы сгорают; если костей нет — травница даёт одну, чтобы не застрять.
         /// </summary>
         public static void LoseFight()
@@ -313,11 +314,11 @@ namespace BladePath
             for (int i = 0; i < D.nodes.Count; i++)
             {
                 MapNode n = D.nodes[i];
-                if (n.Type == NodeType.Herbalist && n.layer < lost.layer && n.layer > D.nodes[cp].layer) cp = i;
+                if (n.Type == NodeType.Herbalist && n.layer <= lost.layer - 2 && n.layer > D.nodes[cp].layer) cp = i;
             }
             D.at = cp; D.nodes[cp].done = true; D.fight = -1; D.steps = 0;
             D.blessing = 0; D.cursed = false; D.knocked = true;
-            if (D.rolls <= 0) D.rolls = 1;
+            if (D.rolls <= 0) D.rolls = 1; // emergency die: defeat must never soft-lock travel
             Weather.ForceNight = false;
             Save();
         }
