@@ -41,7 +41,13 @@ namespace BladePath
             bloodMat = new Material(sh) { name = "FootprintBlood", mainTexture = geta != null ? (Texture)geta : Sole(false), renderQueue = 2458 };
         }
 
-        void OnDestroy() { if (Instance == this) Instance = null; }
+        void OnDestroy()
+        {
+            // Material instances are scene-owned and must not leak between duels.
+            if (snowMat != null) { if (Application.isPlaying) Destroy(snowMat); else DestroyImmediate(snowMat); }
+            if (bloodMat != null) { if (Application.isPlaying) Destroy(bloodMat); else DestroyImmediate(bloodMat); }
+            if (Instance == this) Instance = null;
+        }
 
         /// <summary>Отпечаток: pos — точка стопы на земле, toe — куда смотрит носок, left — левая стопа.</summary>
         public void Add(Vector3 pos, Vector3 toe, bool left, bool blood, float strength)
@@ -87,7 +93,7 @@ namespace BladePath
                 float a = p.alpha * fade * (p.blood ? 1f : Mathf.Clamp01(snow / 0.5f));
                 if (p.blood) a *= Mathf.Lerp(1f, 0.7f, Mathf.Clamp01(age / 8f));   // подсыхает — темнеет и тускнеет
                 Color c = p.blood ? new Color(0.36f, 0.025f, 0.02f, a * 0.85f) : new Color(0.7f, 0.76f, 0.88f, a * 0.55f);   // на телефоне в полную силу следы читались чёрными кляксами
-                p.r.GetPropertyBlock(mpb);
+                // This renderer is owned by Footprints; no external property block to read.
                 mpb.SetColor("_Color", c);
                 p.r.SetPropertyBlock(mpb);
             }
