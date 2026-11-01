@@ -322,7 +322,7 @@ namespace BladePath
                 // свой цветной узор — без подкраски; запасная печать — в цвет бойца
                 float a = Mathf.Clamp01(t / 0.25f) * (c.early != null ? Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.4f, 0.66f, k)) : 0.55f + 0.45f * k);   // II ступень — полный цветной узор
                 Color tc = c.early != null ? new Color(0.5f, 0.5f, 0.5f, 0.5f) : new Color(c.col.r * 0.5f, c.col.g * 0.5f, c.col.b * 0.5f, 0.5f);
-                c.sigilMat.SetColor("_TintColor", new Color(tc.r, tc.g, tc.b, tc.a * a * 0.62f * (0.8f + 0.2f * pulse)));   // без пересвета в центре
+                c.sigilMat.SetColor("_TintColor", new Color(tc.r, tc.g, tc.b, tc.a * a * 0.62f * (0.8f + 0.2f * pulse) * (1f - 0.7f * c.ex)));   // в ярости прежний узор уступает багровому   // без пересвета в центре
                 if (c.early != null)
                 {
                     c.early.position = c.sigil.position + Vector3.up * 0.002f;
@@ -345,7 +345,7 @@ namespace BladePath
                 c.draw.localScale = new Vector3(sd, sd, 1f);
                 if (c.sigil != null) c.draw.rotation = c.sigil.rotation;
                 Color dc = Color.Lerp(c.col, Color.white, 0.35f);
-                c.drawMat.SetColor("_TintColor", new Color(dc.r * 0.5f, dc.g * 0.5f, dc.b * 0.5f, 0.5f * da));
+                c.drawMat.SetColor("_TintColor", new Color(dc.r * 0.5f, dc.g * 0.5f, dc.b * 0.5f, 0.5f * da * (1f - 0.8f * c.ex)));
             }
             if (c.inhale != null) { c.inhale.size = Mathf.Lerp(1.3f, 2.8f, k) * pulse; c.inhale.tint = new Color(c.col.r, c.col.g, c.col.b, 0.2f + 0.3f * k); }
             if (c.embers != null)
@@ -373,7 +373,7 @@ namespace BladePath
                     if (look.sqrMagnitude > 1e-4f) c.pillar.rotation = Quaternion.LookRotation(look.normalized, Vector3.up);
                 }
                 float pa = Mathf.Clamp01((t - 0.15f) / 0.4f) * (0.15f + 0.45f * k);
-                c.pillarMat.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0.5f * pa));
+                c.pillarMat.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0.5f * pa * (1f - 0.75f * c.ex)));
                 if (c.pillarFrames > 1) c.pillarMat.mainTextureOffset = new Vector2(((int)(Time.time * 12f) % c.pillarFrames) / (float)c.pillarFrames, 0f);
             }
             if (c.rise != null)
@@ -384,7 +384,7 @@ namespace BladePath
                 var main = c.rise.main; main.startSpeed = new ParticleSystem.MinMaxCurve(0.8f + 1f * k, 2.2f + 2f * k);
             }
             if (c.flame != null) { c.flame.size = Mathf.Lerp(1.1f, 2.6f, k) * pulse; c.flame.tint = new Color(c.col.r, c.col.g, c.col.b, 0.25f + 0.3f * k); }
-            if (c.light != null) { c.light.color = c.col; c.light.transform.position = f.transform.position + Vector3.up * 0.6f; c.light.intensity = (0.4f + 1.2f * k + 2.0f * c.ex) * pulse; c.light.range = 2.5f + 2.5f * k + 2f * c.ex; }
+            if (c.light != null) { c.light.color = c.col; c.light.transform.position = f.transform.position + Vector3.up * 0.6f; c.light.intensity = (0.4f + 1.2f * k + 1.0f * c.ex) * pulse; c.light.range = 2.5f + 2.5f * k + 2f * c.ex; }
             if (c.ex > 0.001f)
             {
                 float jitter = 1f + 0.05f * Mathf.Sin(Time.time * 37f) + 0.03f * Mathf.Sin(Time.time * 61f);   // ярость дрожит
