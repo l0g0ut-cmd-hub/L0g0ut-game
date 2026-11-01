@@ -15,8 +15,19 @@ namespace BladePath
             if (rain != on)
             {
                 on = rain;
-                if (water != null) { var e = water.emission; e.rateOverTime = rain ? 70f : 0f; }
-                if (splash != null) { var e = splash.emission; e.rateOverTime = rain ? 30f : 0f; }
+                float quality = DuelManager.Gfx == 1 ? 1f : 0.5f;
+                if (water != null)
+                {
+                    var e = water.emission; e.rateOverTime = rain ? 70f * quality : 0f;
+                    if (rain && !water.isPlaying) water.Play();
+                    else if (!rain && water.isPlaying) water.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+                }
+                if (splash != null)
+                {
+                    var e = splash.emission; e.rateOverTime = rain ? 30f * quality : 0f;
+                    if (rain && !splash.isPlaying) splash.Play();
+                    else if (!rain && splash.isPlaying) splash.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+                }
             }
             if (chain != null)
             {

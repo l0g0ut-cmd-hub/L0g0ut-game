@@ -18,6 +18,8 @@ namespace BladePath
         MeshRenderer rend;
         MaterialPropertyBlock mpb;
         float seed;
+        Camera cachedCamera;
+        float nextCameraLookup;
 
         void Awake()
         {
@@ -77,7 +79,12 @@ namespace BladePath
 
         void LateUpdate()
         {
-            Camera c = Camera.main;
+            if (cachedCamera == null && Time.unscaledTime >= nextCameraLookup)
+            {
+                cachedCamera = Camera.main;
+                nextCameraLookup = Time.unscaledTime + 0.5f;
+            }
+            Camera c = cachedCamera;
             if (c == null || rend == null) return;
             Vector3 ax = dir.sqrMagnitude > 1e-6f ? dir.normalized : Vector3.down;
             Vector3 toCam = c.transform.position - transform.position;

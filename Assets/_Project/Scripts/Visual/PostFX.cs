@@ -27,6 +27,9 @@ namespace BladePath
         public float dofRange = 12f;       // м — до полной силы
         [Range(0f, 1f)] public float dofStrength = 0.75f;
         Camera cam;
+        [Header("Мобильная оптимизация")]
+        [Range(1, 6)] public int mobileBloomIterations = 4;
+        [Range(0.25f, 1f)] public float bloomResolutionScale = 0.5f;
 
         static float aberr, desatTarget, desat, edgeBlur;
         /// <summary>Импульс хроматической аберрации (тяжёлый удар, отражение, добивание): сила 0.004…0.015, гаснет за ~0,3 с.</summary>
@@ -73,7 +76,7 @@ namespace BladePath
             // глубина резкости: фокус — на бойцах (точка обзора камеры), дальше — размытая копия кадра в ¼ и ⅛
             if (cam == null) cam = GetComponent<Camera>();
             RenderTexture d1 = null, d2 = null;
-            if (cam != null && dofStrength > 0.001f)
+            if (cam != null && dofStrength > 0.001f && SystemInfo.graphicsMemorySize >= 2048)
             {
                 cam.depthTextureMode |= DepthTextureMode.Depth;
                 float focus = CameraOrbit.Instance != null ? Vector3.Distance(cam.transform.position, CameraOrbit.Instance.Focus) : 6f;
@@ -90,13 +93,16 @@ namespace BladePath
             }
             else material.SetVector("_Dof", Vector4.zero);
 
-            int w = src.width / 2, h = src.height / 2;
+            // Keep the expensive bloom pyramid bounded on high-resolution phones.
+            int w = Mathf.Max(8, Mathf.RoundToInt(src.width * bloomResolutionScale));
+            int h = Mathf.Max(8, Mathf.RoundToInt(src.height * bloomResolutionScale));
             RenderTextureFormat fmt = src.format;
             RenderTexture cur = RenderTexture.GetTemporary(w, h, 0, fmt);
             Graphics.Blit(src, cur, material, 0);
             chain[0] = cur;
             int n = 1;
-            for (; n < iterations && n < chain.Length; n++)
+            int bloomPasses = Mathf.Min(iterations, mobileBloomIterations);
+            for (; n < bloomPasses && n < chain.Length; n++)
             {
                 w /= 2; h /= 2;
                 if (w < 8 || h < 8) break;

@@ -14,14 +14,22 @@ namespace BladePath
         public float speed = 9f;
         Vector3 baseScale;
         float seed;
+        Camera cachedCamera;
+        Transform cachedCameraTransform;
+        float nextCameraLookup;
 
         void Awake() { baseScale = transform.localScale; seed = Random.value * 100f; }
 
         void LateUpdate()
         {
-            Camera c = Camera.main;
-            if (c == null) return;
-            transform.rotation = Quaternion.LookRotation(transform.position - c.transform.position, c.transform.up);
+            if (cachedCamera == null && Time.unscaledTime >= nextCameraLookup)
+            {
+                cachedCamera = Camera.main;
+                cachedCameraTransform = cachedCamera != null ? cachedCamera.transform : null;
+                nextCameraLookup = Time.unscaledTime + 0.5f;
+            }
+            if (cachedCameraTransform == null) return;
+            transform.rotation = Quaternion.LookRotation(transform.position - cachedCameraTransform.position, cachedCameraTransform.up);
             float k = 1f;
             if (flicker > 0f)
             {

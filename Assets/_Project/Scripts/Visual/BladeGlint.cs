@@ -18,6 +18,8 @@ namespace BladePath
         float nextAt, runT = -1f, runDur = 0.45f, runPow = 1f;
         int saluteId = -1;
         FighterController owner;
+        Camera cachedCamera;
+        float nextCameraLookup;
         static readonly int TintId = Shader.PropertyToID("_TintColor");
 
         void Start()
@@ -42,7 +44,12 @@ namespace BladePath
         void LateUpdate()
         {
             if (weapon == null || weapon.bladeRoot == null || q == null) return;
-            Camera cam = Camera.main;
+            if (cachedCamera == null && Time.unscaledTime >= nextCameraLookup)
+            {
+                cachedCamera = Camera.main;
+                nextCameraLookup = Time.unscaledTime + 0.5f;
+            }
+            Camera cam = cachedCamera;
             if (cam == null) return;
             Transform b = weapon.bladeRoot;
             if (owner == null) owner = weapon.GetComponentInParent<FighterController>();
