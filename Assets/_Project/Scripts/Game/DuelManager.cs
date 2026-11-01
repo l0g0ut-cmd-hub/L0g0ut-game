@@ -123,7 +123,8 @@ namespace BladePath
         {
             Breadcrumbs.Mark("бой: Awake");
             Instance = this;
-            ChargeSystem.Ensure(gameObject);   // накопление удара с узором на полу
+            ChargeSystem.Ensure(gameObject);
+            MapScreen.Ensure();   // карта похода между боями
             InventoryScreen.Ensure();   // экран снаряжения и полоса добычи
             // Android по умолчанию держит 30 кадров/с — для файтинга нужно 60
             QualitySettings.vSyncCount = 0;
@@ -149,6 +150,7 @@ namespace BladePath
             ApplyStage();
             if (player != null) player.Gourds = player.gourdMax;
             ResetDuel();
+            if (Application.isPlaying) MapScreen.Show();   // сначала — карта похода: куда идти / какой бой ждёт
             Breadcrumbs.Mark("бой: первый кадр");
         }
 
@@ -158,7 +160,7 @@ namespace BladePath
 
         void OnDestroy() { Time.timeScale = 1f; if (resolver != null) resolver.HitRegistered -= OnHit; if (Instance == this) Instance = null; }
 
-        public float MaxHp(FighterController f) { return f != null && f == enemy ? maxHp * Ladder.Current.hpMul * Profile.CycleHp : maxHp + (f != null && f == player ? Profile.B.hp : 0); }
+        public float MaxHp(FighterController f) { return f != null && f == enemy ? maxHp * Ladder.Current.hpMul * Profile.CycleHp * Campaign.EnemyHpMul : (maxHp + (f != null && f == player ? Profile.B.hp : 0)) * (f != null && f == player ? Campaign.PlayerHpMul : 1f); }
 
         float basePosture = -1f; int baseGourds = -1;
         /// <summary>Снаряжение и характеристики героя → боец (равновесие, глотки тыквы); здоровье — через MaxHp. Вызывается в начале матча и после инвентаря.</summary>
@@ -325,6 +327,9 @@ namespace BladePath
             ApplyStage();
             if (Weather.Instance != null) Weather.Instance.Roll();
             ResetDuel();
+            // карта похода: благословение духа — бой с полным духом; засада — враг с полным духом
+            if (Campaign.StartFullKi && player != null) player.AddKi(player.kiMax);
+            if (Campaign.EnemyFullKi && enemy != null) enemy.AddKi(enemy.kiMax);
         }
 
         /// <summary>Новый раунд: здоровье и позиции сбрасываются, счёт остаётся.</summary>
@@ -397,6 +402,7 @@ namespace BladePath
             }
 
             Breadcrumbs.Frame();
+            if (MapScreen.Open) { if (State == DuelState.Intro) stateStart = Time.unscaledTime; return; }   // на карте бой стоит
             // перед первым раундом враг приветствует клинком
             if (State == DuelState.Intro && Round == 1 && !saluted && StateTime > 0.5f && enemy != null && enemy.weapon != null && enemy.weapon.Phase == SwingPhase.Idle)
             {
@@ -589,7 +595,7 @@ namespace BladePath
         readonly Dictionary<FighterController, float> exhaustedUntil = new Dictionary<FighterController, float>();
         readonly Dictionary<FighterController, float> reviveUntil = new Dictionary<FighterController, float>();
         public int Marks(FighterController f) { int m; return f != null && marks.TryGetValue(f, out m) ? m : 1; }
-        public int MaxMarks(FighterController f) { return f != null && f == enemy ? Mathf.Max(1, Ladder.Current.marks) : 1; }
+        public int MaxMarks(FighterController f) { return f != null && f == enemy ? Mathf.Max(1, Ladder.Current.marks + Campaign.ExtraMarks) : 1; }
         /// <summary>Поднимается после добивания (здоровье наполняется, удары не проходят).</summary>
         public bool Reviving(FighterController f) { float u; return f != null && reviveUntil.TryGetValue(f, out u) && Time.unscaledTime < u; }
         /// <summary>Доля здоровья игрока, которую снимает сокрушающий удар по сломленному равновесию (казнь — только если это добьёт).</summary>
@@ -861,7 +867,7 @@ namespace BladePath
                 return;
             }
             // сбит с ног: урон, равновесие, на колено
-            float dmg = Mathf.Round(18f * (a == enemy ? Ladder.Current.dmgMul * Records.Assist : 1f));
+            float dmg = Mathf.Round(18f * (a == enemy ? Ladder.Current.dmgMul * Records.Assist * Campaign.EnemyDmgMul : 1f));
             ApplyDamage(t, a, dmg, t.transform.position + Vector3.up * 1.1f, true, false, -d.normalized, d.normalized * 4f, null);
             if (!t.Dead)
             {
@@ -1175,7 +1181,7 @@ namespace BladePath
                     }
                 }
             }
-            float dmg = BaseDamage(type) * ZoneMul(r.zone) * (r.glancing ? 0.5f : 1f) * (r.attacker == enemy ? Ladder.Current.dmgMul * Records.Assist : 1f);
+            float dmg = BaseDamage(type) * ZoneMul(r.zone) * (r.glancing ? 0.5f : 1f) * (r.attacker == enemy ? Ladder.Current.dmgMul * Records.Assist * Campaign.EnemyDmgMul : 1f);
             bool iai = r.attacker.SinceDash < 0.6f;   // удар прямо из рывка
             if (iai) dmg *= 1.25f;
             dmg = Mathf.Round(dmg);
@@ -1301,7 +1307,7 @@ namespace BladePath
             bool won = PlayerWins >= winsToMatch;
             Stats p = StatsOf(player), e = StatsOf(enemy);
             int score = (won ? 40 : 0) + p.parries * 6 + p.maxCombo * 4 + p.hits * 2 + p.blocks + p.supers * 3 - e.hits * 5;
-            Profile.Grant(won, Ladder.Index, score, won && Perfect, won && Ladder.IsLast);
+            Profile.Grant(won, Ladder.Index, score, won && Perfect, won && Campaign.FinalBoss, Campaign.RareDrop, Campaign.GoldMul);
         }
 
         void ApplyDamage(FighterController target, FighterController attacker, float dmg, Vector3 point, bool crit, bool chip = false, Vector3 normal = default(Vector3), Vector3 hitDir = default(Vector3), Transform zoneT = null)
@@ -1336,7 +1342,7 @@ namespace BladePath
                 bool lethal = dmg >= Hp(target) - 0.01f;
                 if (attacker == player)
                 {
-                    dmg *= Profile.B.dmgMul;
+                    dmg *= Profile.B.dmgMul * Campaign.PlayerDmgMul;
                     if (UnityEngine.Random.value < Profile.B.crit)
                     {
                         dmg *= 1.5f; crit = true;

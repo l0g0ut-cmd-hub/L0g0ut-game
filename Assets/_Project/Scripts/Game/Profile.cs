@@ -117,7 +117,47 @@ namespace BladePath
         }
 
         public static int SellPrice(Item it) { return Mathf.RoundToInt(15f * (1f + it.rarity * 2f) * (1f + it.level * 0.5f) * (1f + 0.3f * D.cycle)); }
-        public static int UpgradeCost(Item it) { return Mathf.RoundToInt(50f * (it.level + 1) * (1f + it.rarity)); }
+        public static float CostMul = 1f;   // у кузнеца на карте — полцены
+        public static int UpgradeCost(Item it) { return Mathf.RoundToInt(50f * (it.level + 1) * (1f + it.rarity) * CostMul); }
+        public static int BuyPrice(Item it) { return SellPrice(it) * 3; }
+
+        // ---------------- карта похода: моны, опыт, предметы без боя ----------------
+
+        public static bool Spend(int v) { if (v < 0 || D.gold < v) return false; D.gold -= v; Save(); return true; }
+        public static void AddGold(int v) { D.gold = Mathf.Max(0, D.gold + v); Save(); }
+        /// <summary>Опыт вне боя; возвращает, сколько уровней взято.</summary>
+        public static int AddXp(int v)
+        {
+            D.xp += Mathf.Max(0, v); int lv = 0;
+            while (D.xp >= XpToNext) { D.xp -= XpToNext; D.level++; D.points += 2; lv++; }
+            Save(); return lv;
+        }
+        public static void GivePoint() { D.points++; Save(); }
+        /// <summary>Предмет в сумку (пустой слот — сразу надеть). Сумка полна — продаётся; false.</summary>
+        public static bool Give(Item it)
+        {
+            if (it == null) return false;
+            if (D.items.Count >= BagSize) { D.gold += SellPrice(it); Save(); return false; }
+            it.id = D.nextId++; D.items.Add(it);
+            if (it.slot < SlotCount && D.equipped[it.slot] < 0) D.equipped[it.slot] = it.id;
+            Save(); return true;
+        }
+        /// <summary>Свиток с ещё не выученным приёмом (null — все выучены).</summary>
+        public static Item NewScroll() { return TechCount < 6 ? ScrollItem() : null; }
+        /// <summary>Тайник на карте: моны, немного опыта, предмет (иногда два).</summary>
+        public static Reward Treasure(int stage)
+        {
+            Reward r = new Reward();
+            float cyc = 1f + 0.4f * D.cycle;
+            r.gold = Mathf.RoundToInt((35 + 20 * stage) * cyc * B.goldMul * UnityEngine.Random.Range(0.85f, 1.25f));
+            r.xp = Mathf.RoundToInt((20 + 10 * stage) * cyc);
+            int n = 1 + (UnityEngine.Random.value < 0.35f ? 1 : 0);
+            for (int i = 0; i < n; i++) AddLoot(r, Roll(stage, 40, false));
+            D.gold += r.gold; D.xp += r.xp;
+            while (D.xp >= XpToNext) { D.xp -= XpToNext; D.level++; D.points += 2; r.levels++; r.points += 2; }
+            Save();
+            return r;
+        }
         public const int MaxItemLevel = 5;
 
         public static void Sell(Item it)
@@ -227,7 +267,7 @@ namespace BladePath
         public static Reward LastReward { get; private set; }
         public static float LastRewardAt { get; private set; } = -10f;
 
-        public static Reward Grant(bool won, int stage, int score, bool perfect, bool last)
+        public static Reward Grant(bool won, int stage, int score, bool perfect, bool last, bool rareDrop = false, float goldMul = 1f)
         {
             Reward r = new Reward();
             float cyc = 1f + 0.4f * D.cycle;
@@ -236,7 +276,8 @@ namespace BladePath
                 r.xp = Mathf.RoundToInt((60 + 30 * stage + Mathf.Clamp(score, 0, 120) * 0.5f) * cyc);
                 r.gold = Mathf.RoundToInt((30 + 20 * stage) * cyc * B.goldMul * UnityEngine.Random.Range(0.85f, 1.2f));
                 int n = 1 + (UnityEngine.Random.value < 0.35f ? 1 : 0) + (perfect || score >= 95 ? 1 : 0);
-                for (int i = 0; i < n; i++) AddLoot(r, Roll(stage, score, last && i == 0));
+                r.gold = Mathf.RoundToInt(r.gold * goldMul);
+                for (int i = 0; i < n; i++) AddLoot(r, Roll(stage, score, (last || rareDrop) && i == 0));
                 // свиток с приёмом: с шансом, у последнего врага — чаще
                 if (TechCount < 6 && UnityEngine.Random.value < (last ? 0.6f : 0.22f)) AddLoot(r, ScrollItem());
                 if (last) { D.cycle++; r.cycleUp = true; }

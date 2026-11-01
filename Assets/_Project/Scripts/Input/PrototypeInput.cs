@@ -92,7 +92,7 @@ namespace BladePath
 
         void Update()
         {
-            if (InventoryScreen.Open) return;   // снаряжение открыто — бой и кнопки не слушают касания
+            if (InventoryScreen.Open || MapScreen.Open) return;   // снаряжение или карта открыты — бой и кнопки не слушают касания
             Layout();
             Poll();
             if (down[(int)B.Gear] || down[(int)B.OverGear]) { InventoryScreen.Show(0); return; }
@@ -142,7 +142,13 @@ namespace BladePath
             if (menu) { Time.timeScale = 1f; SceneManager.LoadScene(SceneNames.MainMenu); return; }
             if (reset)
             {
-                if (duel != null) { if (Over && down[(int)B.OverAgain] && duel.PlayerWonMatch) duel.NextStage(); else duel.ResetMatch(); }
+                if (duel != null)
+                {
+                    // победа — на карту похода (узел пройден; после владыки — следующая область); поражение — тот же бой ещё раз
+                    if (Over && down[(int)B.OverAgain] && duel.PlayerWonMatch) { Campaign.FinishFight(); Time.timeScale = 1f; MapScreen.Show(); }
+                    else if (Over && down[(int)B.OverAgain] && (Campaign.InFight || Campaign.Training)) { Campaign.LoseFight(); Time.timeScale = 1f; MapScreen.Show(); }   // проиграл — к травнице
+                    else duel.ResetMatch();
+                }
                 else { if (player != null) player.ResetFighter(); if (enemy != null) enemy.ResetFighter(); }
                 return;
             }
@@ -281,7 +287,7 @@ namespace BladePath
             labels[(int)B.Difficulty] = "СЛОЖНОСТЬ: " + EnemyAI.DifficultyName;
             labels[(int)B.CamMode] = "КАМЕРА: " + (CameraOrbit.FreeMode ? "СВОБОДНАЯ" : "БОЕВАЯ");
             labels[(int)B.TimerToggle] = "ТАЙМЕР БОЯ: " + (DuelManager.TimerOn ? "ВКЛ" : "ВЫКЛ");
-            labels[(int)B.OverAgain] = duel != null && duel.PlayerWonMatch ? (Ladder.IsLast ? "С НАЧАЛА" : "ДАЛЕЕ") : "ЕЩЁ РАЗ";
+            labels[(int)B.OverAgain] = duel != null && duel.PlayerWonMatch ? "НА КАРТУ" : Campaign.InFight ? "К ТРАВНИЦЕ" : Campaign.Training ? "НА КАРТУ" : "ЕЩЁ РАЗ";
             labels[(int)B.OverMenu] = "В МЕНЮ";
             labels[(int)B.Gear] = "СНАРЯЖЕНИЕ";
             labels[(int)B.Stats] = "ПРОКАЧКА" + (Profile.Points > 0 ? "  (+" + Profile.Points + ")" : "");
@@ -384,7 +390,7 @@ namespace BladePath
 
         void OnGUI()
         {
-            if (InventoryScreen.Open) return;
+            if (InventoryScreen.Open || MapScreen.Open) return;
             Matrix4x4 old = UiKit.Begin();
             float W = UiKit.Width;
             bool paused = Paused, over = Over;

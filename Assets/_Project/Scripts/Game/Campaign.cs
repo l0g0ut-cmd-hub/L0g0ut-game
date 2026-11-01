@@ -1,0 +1,350 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace BladePath
+{
+    public enum NodeType { Start, Duel, Elite, Boss, Shrine, Smith, Merchant, Treasure, Ambush, Event, Rest, Herbalist }
+
+    [Serializable]
+    public class MapNode
+    {
+        public int layer;
+        public float x, y;          // на карте области, доли ширины и высоты
+        public int type;            // NodeType
+        public int enemy;           // ступень Ladder для боя
+        public int ev = -1;         // событие (0 — раненый ронин, 1 — монах, 2 — разбойники, 3 — кицунэ)
+        public bool done;
+        public List<int> next = new List<int>();
+        public NodeType Type { get { return (NodeType)type; } }
+        public bool IsFight { get { NodeType t = Type; return t == NodeType.Duel || t == NodeType.Elite || t == NodeType.Boss || t == NodeType.Ambush; } }
+    }
+
+    /// <summary>
+    /// Поход между боями: три области (Лес теней → Горы Они → Проклятый сёгунат), на карте каждой — развилки из узлов:
+    /// дуэль, сильный противник, засада, храм, кузнец, торговец, тайник, привал у наставника, событие; в конце — владыка области.
+    /// После третьего владыки — новый круг (враги крепче, добыча богаче) и снова Лес теней. Прогресс хранится между запусками.
+    /// </summary>
+    public static class Campaign
+    {
+        [Serializable]
+        class Data
+        {
+            public int region;
+            public int at;
+            public int fight = -1;      // узел, бой в котором идёт (−1 — не в бою)
+            public int blessing;        // 0 — нет, 1 — клинка (+20% урона), 2 — духа (полный дух в начале), 3 — жизни (+25% здоровья)
+            public bool cursed;         // проклятие кицунэ: −25% здоровья в следующем бою
+            public int clearedRegion = -1;   // только что пройденная область (для плашки на карте)
+            public int rolls = 1;            // кости пути в запасе (кость — за каждую победу)
+            public int steps;                // ходов осталось после броска
+            public int lastRoll;             // что выпало
+            public bool training;            // бой со странствующим ронином (запасной способ добыть кость)
+            public bool knocked;             // проиграл — очнулся у травницы (плашка на карте)
+            public List<MapNode> nodes = new List<MapNode>();
+        }
+
+        public static readonly string[] RegionNames = { "ЛЕС ТЕНЕЙ", "ГОРЫ ОНИ", "ПРОКЛЯТЫЙ СЁГУНАТ" };
+        public static readonly string[] TypeNames = { "НАЧАЛО ПУТИ", "ДУЭЛЬ", "СИЛЬНЫЙ ПРОТИВНИК", "ВЛАДЫКА ОБЛАСТИ", "ХРАМ", "КУЗНЕЦ", "ТОРГОВЕЦ", "ТАЙНИК", "ЗАСАДА", "СОБЫТИЕ", "ПРИВАЛ", "ХИЖИНА ТРАВНИЦЫ" };
+        public static readonly string[] TypeHints =
+        {
+            "Отсюда начинается путь по области.",
+            "Поединок один на один. Опыт, моны и добыча.",
+            "Враг крепче обычного и с лишней жизнью. Зато добыча — не ниже редкой.",
+            "Хозяин этих земель. Победишь — откроется следующая область.",
+            "Жрица дарует благословение на следующий бой.",
+            "Кузнец улучшит снаряжение за полцены.",
+            "Странствующий торговец продаёт снаряжение и свитки.",
+            "Спрятанный сундук: моны и добыча без боя.",
+            "Бой ночью, враг начинает с полным духом. Мон — в полтора раза больше.",
+            "Встреча на дороге. Чем она кончится — решать тебе.",
+            "У костра — старый наставник: тренировка или медитация.",
+            "Здесь выхаживают проигравших. Заглянешь — травница даст кость пути. Проиграешь дальше — очнёшься здесь.",
+        };
+
+        // места узлов на каждой карте (доли ширины/высоты), по слоям от начала (внизу слева) к владыке (вверху справа)
+        static readonly Vector2[][][] Spots =
+        {
+            new[]   // лес теней
+            {
+                new[] { V(27, 66) },
+                new[] { V(22, 47), V(31, 79) },
+                new[] { V(45, 66), V(62, 64) },
+                new[] { V(50, 47), V(68, 47) },
+                new[] { V(58, 37), V(75, 40) },
+                new[] { V(64, 27), V(83, 33) },
+                new[] { V(86, 17) },
+            },
+            new[]   // горы они
+            {
+                new[] { V(22, 72) },
+                new[] { V(28, 47), V(33, 64) },
+                new[] { V(18, 32), V(38, 73) },
+                new[] { V(44, 59), V(57, 48) },
+                new[] { V(63, 36), V(82, 48) },
+                new[] { V(74, 27), V(92, 36) },
+                new[] { V(81, 17) },
+            },
+            new[]   // сёгунат
+            {
+                new[] { V(27, 62) },
+                new[] { V(36, 47), V(38, 76) },
+                new[] { V(22, 34), V(46, 60) },
+                new[] { V(56, 38), V(64, 60) },
+                new[] { V(70, 45), V(83, 58) },
+                new[] { V(68, 28), V(88, 40) },
+                new[] { V(82, 15) },
+            },
+        };
+        static Vector2 V(float x, float y) { return new Vector2(x / 100f, y / 100f); }
+
+        static Data d;
+        static Data D { get { if (d == null) Load(); return d; } }
+
+        static void Load()
+        {
+            string s = PlayerPrefs.GetString("campaign_v1", "");
+            if (!string.IsNullOrEmpty(s)) { try { d = JsonUtility.FromJson<Data>(s); } catch { d = null; } }
+            if (d == null || d.nodes == null || d.nodes.Count == 0) { d = new Data(); Generate(0); }
+            if (d.at < 0 || d.at >= d.nodes.Count) d.at = 0;
+        }
+        public static void Save() { PlayerPrefs.SetString("campaign_v1", JsonUtility.ToJson(D)); PlayerPrefs.Save(); }
+
+        public static int Region { get { return D.region; } }
+        public static List<MapNode> Nodes { get { return D.nodes; } }
+        public static int At { get { return D.at; } }
+        public static MapNode Current { get { return D.nodes[D.at]; } }
+        public static bool InFight { get { return D.fight >= 0 && D.fight < D.nodes.Count; } }
+        public static MapNode FightNode { get { return InFight ? D.nodes[D.fight] : null; } }
+        public static int Blessing { get { return D.blessing; } }
+        public static bool Cursed { get { return D.cursed; } }
+        public static int ClearedRegion { get { return D.clearedRegion; } }
+        public static void AckCleared() { D.clearedRegion = -1; Save(); }
+        public static bool CanGo(int i) { return Current.done && Current.next.Contains(i) && !InFight && !D.training && D.steps > 0; }
+        public static int Rolls { get { return D.rolls; } }
+        public static int Steps { get { return D.steps; } }
+        public static int LastRoll { get { return D.lastRoll; } }
+        public static bool Training { get { return D.training; } }
+        public static bool Knocked { get { return D.knocked; } }
+        public static void AckKnocked() { D.knocked = false; Save(); }
+        public static bool Stuck { get { return D.rolls <= 0 && D.steps <= 0 && Current.done && !InFight; } }
+        public static int GuideCost { get { return Mathf.RoundToInt((40 + 25 * D.region) * (1f + 0.4f * Profile.Cycle)); } }
+
+        /// <summary>Бросок кости пути: 1–3 хода. Кость тратится.</summary>
+        public static int RollDie()
+        {
+            if (D.rolls <= 0 || D.steps > 0) return 0;
+            D.rolls--; D.lastRoll = UnityEngine.Random.Range(1, 4); D.steps = D.lastRoll; Save();
+            return D.lastRoll;
+        }
+        public static void AddRoll(int n = 1) { D.rolls += n; Save(); }
+        public static void CancelTraining() { if (D.training) { D.training = false; Save(); } }
+        /// <summary>Проводник: кость за моны.</summary>
+        public static bool BuyGuide() { if (!Profile.Spend(GuideCost)) return false; AddRoll(); return true; }
+        /// <summary>Вызвать странствующего ронина: бой вне узла, победа — кость пути.</summary>
+        public static void BeginTraining()
+        {
+            D.training = true; D.fight = -1;
+            Ladder.Index = DuelEnemy(D.region);
+            Weather.ForceNight = false;
+            Save();
+        }
+        public static string MapTexture(int region) { return "UI/map_" + Mathf.Clamp(region, 0, 2); }
+
+        // ---------------- генерация карты области ----------------
+
+        static void Generate(int region)
+        {
+            Data dd = d;
+            dd.region = region; dd.nodes.Clear(); dd.at = 0; dd.fight = -1;
+            Vector2[][] spots = Spots[Mathf.Clamp(region, 0, Spots.Length - 1)];
+            int L = spots.Length;
+            List<int>[] layers = new List<int>[L];
+            for (int l = 0; l < L; l++)
+            {
+                layers[l] = new List<int>();
+                Vector2[] c = spots[l];
+                List<int> pick = new List<int>();
+                for (int i = 0; i < c.Length; i++) pick.Add(i);
+                if (c.Length > 1 && l > 1 && l < L - 2 && UnityEngine.Random.value < 0.18f) pick.RemoveAt(UnityEngine.Random.Range(0, pick.Count));   // иногда дорога сходится в одну точку
+                foreach (int i in pick)
+                {
+                    Vector2 p = c[i] + new Vector2(UnityEngine.Random.Range(-0.012f, 0.012f), UnityEngine.Random.Range(-0.012f, 0.012f));
+                    if (l == 0 || l == L - 1) p = c[i];
+                    layers[l].Add(dd.nodes.Count);
+                    dd.nodes.Add(new MapNode { layer = l, x = p.x, y = p.y });
+                }
+            }
+            // дороги: каждый узел ведёт хотя бы в один следующий, в каждый узел ведёт хотя бы одна дорога; иногда — перекрёсток
+            for (int l = 0; l < L - 1; l++)
+            {
+                List<int> A = layers[l], B = layers[l + 1];
+                bool[] hasIn = new bool[B.Count];
+                for (int i = 0; i < A.Count; i++)
+                {
+                    int j = A.Count == 1 ? -1 : Mathf.RoundToInt(i * (B.Count - 1) / (float)(A.Count - 1));
+                    if (j < 0) { for (int k = 0; k < B.Count; k++) { dd.nodes[A[i]].next.Add(B[k]); hasIn[k] = true; } continue; }
+                    dd.nodes[A[i]].next.Add(B[j]); hasIn[j] = true;
+                }
+                for (int k = 0; k < B.Count; k++)
+                {
+                    if (hasIn[k]) continue;
+                    int i = B.Count == 1 ? 0 : Mathf.RoundToInt(k * (A.Count - 1) / (float)(B.Count - 1));
+                    dd.nodes[A[i]].next.Add(B[k]);
+                }
+                if (A.Count > 1 && B.Count > 1 && UnityEngine.Random.value < 0.55f)
+                {
+                    int i = UnityEngine.Random.Range(0, A.Count), k = Mathf.Clamp(i + (UnityEngine.Random.value < 0.5f ? 1 : -1), 0, B.Count - 1);
+                    if (!dd.nodes[A[i]].next.Contains(B[k])) dd.nodes[A[i]].next.Add(B[k]);
+                }
+            }
+            // что в узлах
+            for (int l = 0; l < L; l++)
+            {
+                foreach (int ni in layers[l])
+                {
+                    MapNode n = dd.nodes[ni];
+                    if (l == 0) { n.type = (int)NodeType.Start; n.done = true; continue; }
+                    if (l == L - 1) { n.type = (int)NodeType.Boss; n.enemy = Mathf.Clamp(region + 1, 0, Ladder.Count - 1); continue; }
+                    n.type = (int)RollType(l, L);
+                    n.enemy = DuelEnemy(region);
+                    if (n.Type == NodeType.Elite) n.enemy = Mathf.Clamp(region, 0, Ladder.Count - 1);
+                    if (n.Type == NodeType.Event) n.ev = UnityEngine.Random.Range(0, 4);
+                }
+            }
+            // перед владыкой — хотя бы одна передышка (храм или привал), если есть выбор
+            List<int> pre = layers[L - 2];
+            if (pre.Count > 1)
+            {
+                bool rest = false;
+                foreach (int ni in pre) { NodeType t = dd.nodes[ni].Type; if (t == NodeType.Shrine || t == NodeType.Rest) rest = true; }
+                if (!rest) dd.nodes[pre[UnityEngine.Random.Range(0, pre.Count)]].type = (int)(UnityEngine.Random.value < 0.5f ? NodeType.Shrine : NodeType.Rest);
+            }
+            // хижина травницы посреди области — сюда откидывает после поражения (иначе — к началу пути)
+            List<int> mid = layers[L / 2];
+            dd.nodes[mid[UnityEngine.Random.Range(0, mid.Count)]].type = (int)NodeType.Herbalist;
+            dd.steps = 0; dd.rolls = Mathf.Max(dd.rolls, 1);
+            Save();
+        }
+
+        static int DuelEnemy(int region)
+        {
+            if (region <= 0) return 0;
+            if (region == 1) return UnityEngine.Random.value < 0.5f ? 0 : 1;
+            return UnityEngine.Random.value < 0.5f ? 1 : 2;
+        }
+
+        static NodeType RollType(int l, int L)
+        {
+            if (l == 1) { float r = UnityEngine.Random.value; return r < 0.7f ? NodeType.Duel : r < 0.85f ? NodeType.Event : NodeType.Treasure; }
+            NodeType[] t = { NodeType.Duel, NodeType.Elite, NodeType.Shrine, NodeType.Smith, NodeType.Merchant, NodeType.Treasure, NodeType.Ambush, NodeType.Event, NodeType.Rest };
+            float[] w = { 30f, l >= 3 ? 13f : 0f, 11f, 8f, 9f, 7f, 8f, 12f, 9f };
+            float sum = 0f; foreach (float x in w) sum += x;
+            float v = UnityEngine.Random.value * sum;
+            for (int i = 0; i < t.Length; i++) { if (v < w[i]) return t[i]; v -= w[i]; }
+            return NodeType.Duel;
+        }
+
+        // ---------------- движение и бой ----------------
+
+        /// <summary>Герой пришёл в узел (по дороге из текущего).</summary>
+        public static void MoveTo(int i)
+        {
+            if (i < 0 || i >= D.nodes.Count) return;
+            D.at = i;
+            D.steps = Mathf.Max(0, D.steps - 1);
+            MapNode n = D.nodes[i];
+            if (n.IsFight && !n.done) D.steps = 0;   // бой обрывает ход: остаток сгорает
+            if (n.Type == NodeType.Herbalist && !n.done) D.rolls++;   // травница даёт кость пути
+            if (!n.IsFight && n.Type != NodeType.Event) n.done = true;   // храм, кузнец, торговец, тайник, привал — услуга, путь дальше открыт
+            Save();
+        }
+
+        public static void Complete(int i) { if (i >= 0 && i < D.nodes.Count) { D.nodes[i].done = true; Save(); } }
+
+        /// <summary>Разбойники из события: встреча становится засадой.</summary>
+        public static void TurnToAmbush(int i)
+        {
+            MapNode n = D.nodes[i];
+            n.type = (int)NodeType.Ambush; n.enemy = DuelEnemy(D.region); Save();
+        }
+
+        public static void BeginFight(int i)
+        {
+            D.fight = i;
+            MapNode n = D.nodes[i];
+            Ladder.Index = n.enemy;
+            Weather.ForceNight = n.Type == NodeType.Ambush;
+            Save();
+        }
+
+        /// <summary>Бой в узле выигран: узел пройден; после владыки — следующая область. true — область сменилась.</summary>
+        public static bool FinishFight()
+        {
+            if (D.training) { D.training = false; D.rolls++; Save(); return false; }   // ронин побеждён — кость пути
+            if (!InFight) return false;
+            D.rolls++;   // победа — кость пути
+            MapNode n = D.nodes[D.fight];
+            n.done = true; D.at = D.fight; D.fight = -1;
+            D.blessing = 0; D.cursed = false;
+            Weather.ForceNight = false;
+            if (n.Type == NodeType.Boss)
+            {
+                D.clearedRegion = D.region;
+                Generate((D.region + 1) % RegionNames.Length);
+                return true;
+            }
+            Save();
+            return false;
+        }
+
+        /// <summary>
+        /// Бой проигран: героя откидывает к ближайшей хижине травницы позади (или к началу области). Благословение пропадает,
+        /// проклятие снято, ходы сгорают; если костей нет — травница даёт одну, чтобы не застрять.
+        /// </summary>
+        public static void LoseFight()
+        {
+            if (D.training) { D.training = false; Save(); return; }   // ронину проиграл — просто назад на карту, без кости
+            if (!InFight) return;
+            MapNode lost = D.nodes[D.fight];
+            int cp = 0;
+            for (int i = 0; i < D.nodes.Count; i++)
+            {
+                MapNode n = D.nodes[i];
+                if (n.Type == NodeType.Herbalist && n.layer < lost.layer && n.layer > D.nodes[cp].layer) cp = i;
+            }
+            D.at = cp; D.nodes[cp].done = true; D.fight = -1; D.steps = 0;
+            D.blessing = 0; D.cursed = false; D.knocked = true;
+            if (D.rolls <= 0) D.rolls = 1;
+            Weather.ForceNight = false;
+            Save();
+        }
+
+        public static void SetBlessing(int b) { D.blessing = b; Save(); }
+        public static void Curse() { D.cursed = true; Save(); }
+
+        // ---------------- модификаторы текущего боя (DuelManager) ----------------
+
+        static NodeType FightType { get { MapNode n = FightNode; return n != null ? n.Type : NodeType.Duel; } }
+        public static float EnemyHpMul { get { NodeType t = FightType; return !InFight ? 1f : t == NodeType.Elite ? 1.35f : t == NodeType.Ambush ? 1.1f : 1f; } }
+        public static float EnemyDmgMul { get { return InFight && FightType == NodeType.Elite ? 1.15f : 1f; } }
+        public static int ExtraMarks { get { return InFight && FightType == NodeType.Elite ? 1 : 0; } }
+        public static float PlayerDmgMul { get { return D.blessing == 1 ? 1.2f : 1f; } }
+        public static float PlayerHpMul { get { return (D.blessing == 3 ? 1.25f : 1f) * (D.cursed ? 0.75f : 1f); } }
+        public static bool StartFullKi { get { return D.blessing == 2; } }
+        public static bool EnemyFullKi { get { return InFight && FightType == NodeType.Ambush; } }
+        public static bool RareDrop { get { NodeType t = FightType; return InFight && (t == NodeType.Elite || t == NodeType.Boss); } }
+        public static bool FinalBoss { get { return InFight && FightType == NodeType.Boss && D.region >= RegionNames.Length - 1; } }
+        public static float GoldMul { get { NodeType t = FightType; return D.training ? 0.5f : !InFight ? 1f : t == NodeType.Ambush ? 1.5f : t == NodeType.Elite ? 1.3f : 1f; } }
+
+        public static string BlessingText
+        {
+            get
+            {
+                string s = D.blessing == 1 ? "Благословение клинка: +20% урона" : D.blessing == 2 ? "Благословение духа: бой с полным духом" : D.blessing == 3 ? "Благословение жизни: +25% здоровья" : "";
+                if (D.cursed) s += (s.Length > 0 ? "\n" : "") + "Проклятие лисы: −25% здоровья";
+                return s;
+            }
+        }
+    }
+}

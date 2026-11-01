@@ -83,6 +83,11 @@ namespace BladePath
             if (selected) { UiKit.Rect(new Rect(r.x - 3f, r.y - 3f, r.width + 6f, 3f), Ink); UiKit.Rect(new Rect(r.x - 3f, r.yMax, r.width + 6f, 3f), Ink); UiKit.Rect(new Rect(r.x - 3f, r.y, 3f, r.height), Ink); UiKit.Rect(new Rect(r.xMax, r.y, 3f, r.height), Ink); }
         }
 
+        /// <summary>Кнопка-доска (для карты похода и других экранов).</summary>
+        public static bool Button(Rect r, string label, bool enabled = true, bool red = false) { return Btn(r, label, enabled, red); }
+        /// <summary>Значок предмета в рамке редкости.</summary>
+        public static void ItemIcon(Rect r, Item it) { DrawItem(r, it, false); }
+
         static bool Btn(Rect r, string label, bool enabled = true, bool red = false)
         {
             Texture2D plank = UiKit.Tex(red ? "UI/plank_red" : "UI/plank");

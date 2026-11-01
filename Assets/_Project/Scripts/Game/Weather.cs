@@ -82,6 +82,7 @@ namespace BladePath
         }
 
         /// <summary>Новый матч — новая погода.</summary>
+        public static bool ForceNight;
         public void Roll()
         {
             // время суток: сперва свет и небо, потом — база для погоды
@@ -90,7 +91,7 @@ namespace BladePath
             if (Foggy) StopFog();
             Raining = false; Snowing = false; Foggy = false;
             // ночь не больше двух боёв подряд; ясный (не рассвет/закат) день — не реже раза в четыре боя
-            Daytime = DayNight.Instance != null && (nightStreak >= 2 || Random.value < dayChance);
+            Daytime = DayNight.Instance != null && (nightStreak >= 2 || Random.value < dayChance) && !ForceNight;   // засада на карте — всегда ночью
             Dawn = Daytime && Random.value < dawnShare;
             Dusk = Daytime && !Dawn && Random.value < duskShare;
             if (Daytime && noClearDay >= 4) { Dawn = false; Dusk = false; }
