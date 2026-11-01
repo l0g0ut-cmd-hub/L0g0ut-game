@@ -212,7 +212,18 @@ namespace BladePath
                     {
                         float pop = 1f + 0.18f * Mathf.Max(0f, 0.22f - da) / 0.22f;
                         // косой мазок туши через точку удара — кисть «рассекает» кадр за 0,12 с, тёмно-багровый, тает за секунду
-                        if (da < 1.2f) UiKit.Ink("FX/ink_slash", new Vector2(g.x / UiKit.Scale, (Screen.height - g.y) / UiKit.Scale), 330f, new Color(0.5f, 0.03f, 0.03f, 0.85f * Mathf.Clamp01((1.2f - da) / 0.6f)), Mathf.Clamp01(da / 0.12f));
+                        Texture2D bsl = UiKit.Tex("UI/brush_slash");
+                        if (da < 1.2f && bsl != null)
+                        {
+                            // кисть прочерчивает кадр по диагонали через точку удара (8 кадров за 0,3 с), потом брызги и потёки (ещё 8)
+                            int bf = da < 0.3f ? (int)(da / 0.3f * 8f) : Mathf.Min(15, 8 + (int)((da - 0.3f) / 0.6f * 8f));
+                            Vector2 bc = new Vector2(g.x / UiKit.Scale, (Screen.height - g.y) / UiKit.Scale);
+                            float bs = 360f;
+                            Color boc = GUI.color; GUI.color = new Color(0.9f, 0.35f, 0.3f, Mathf.Clamp01((1.2f - da) / 0.4f));
+                            GUI.DrawTextureWithTexCoords(new Rect(bc.x - bs * 0.5f, bc.y - bs * 0.5f, bs, bs), bsl, new Rect((bf % 4) * 0.25f, 0.75f - (bf / 4) * 0.25f, 0.25f, 0.25f));
+                            GUI.color = boc;
+                        }
+                        else if (da < 1.2f) UiKit.Ink("FX/ink_slash", new Vector2(g.x / UiKit.Scale, (Screen.height - g.y) / UiKit.Scale), 330f, new Color(0.5f, 0.03f, 0.03f, 0.85f * Mathf.Clamp01((1.2f - da) / 0.6f)), Mathf.Clamp01(da / 0.12f));
                         DrawBrush("UI/deathblow", new Vector2(g.x / UiKit.Scale, (Screen.height - g.y) / UiKit.Scale - 70f), 170f * pop, Mathf.Clamp01((1.9f - da) / 0.45f), Mathf.Clamp01(da / 0.22f));
                     }
                 }
