@@ -120,7 +120,7 @@ namespace BladePath
         public static bool Cursed { get { return D.cursed; } }
         public static int ClearedRegion { get { return D.clearedRegion; } }
         public static void AckCleared() { D.clearedRegion = -1; Save(); }
-        public static bool CanGo(int i) { return Current.done && Current.next.Contains(i) && !InFight && !D.training && D.steps > 0; }
+        public static bool CanGo(int i) { return i >= 0 && i < D.nodes.Count && Current.done && Current.next.Contains(i) && !InFight && !D.training && D.steps > 0; }
         public static int Rolls { get { return D.rolls; } }
         public static int Steps { get { return D.steps; } }
         public static int LastRoll { get { return D.lastRoll; } }
@@ -250,7 +250,9 @@ namespace BladePath
         /// <summary>Герой пришёл в узел (по дороге из текущего).</summary>
         public static void MoveTo(int i)
         {
-            if (i < 0 || i >= D.nodes.Count) return;
+            // Проверяем маршрут и доступные ходы здесь, а не только в UI.
+            // Иначе прямой вызов MoveTo обходит ограничения похода.
+            if (!CanGo(i)) return;
             D.at = i;
             D.steps = Mathf.Max(0, D.steps - 1);
             MapNode n = D.nodes[i];
