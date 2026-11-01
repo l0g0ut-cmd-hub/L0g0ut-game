@@ -54,7 +54,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: Library
-          key: Library-Android-${{ env.UNITY_VERSION }}-${{ hashFiles('Assets/**', 'ProjectSettings/**') }}
+          key: Library-Android-${{ env.UNITY_VERSION }}-${{ github.sha }}   # хэш всех Assets/** не успевал за 120 с и валил шаг; восстановление — по префиксу (последний кэш)
           restore-keys: |
             Library-Android-${{ env.UNITY_VERSION }}-
 

@@ -112,7 +112,7 @@ namespace BladePath.EditorTools
             l.rope = Textured("Env_Rope", "rope_albedo.png", "rope_normal.png", new Vector2(1f, 5f), new Color(0.8f, 0.78f, 0.72f), 0f, 0.15f);   // соломенная верёвка симэнава
             l.gateDoor = Textured("Env_GateDoor", "gate_door_albedo.png", "gate_door_normal.png", Vector2.one, new Color(0.7f, 0.68f, 0.66f), 0f, 0.25f);   // створка ворот с железными полосами
             l.cedarBark = Textured("Env_CedarBark", "cedar_bark_albedo.png", "cedar_bark_normal.png", new Vector2(1f, 2f), new Color(0.6f, 0.58f, 0.56f), 0f, 0.1f);   // кора криптомерии
-            l.chochin = Textured("Env_Chochin", "chochin.png", null, new Vector2(2f, 1f), new Color(0.95f, 0.92f, 0.86f), 0f, 0.2f);   // бумажный фонарь с иероглифом 祭
+            l.chochin = Textured("Env_Chochin", "chochin.png", null, new Vector2(-2f, 1f), new Color(0.95f, 0.92f, 0.86f), 0f, 0.2f);   // бумажный фонарь с иероглифом 祭 (u на сфере Unity идёт справа налево — тайлинг −2, иначе знак зеркальный)
             {
                 Texture2D cht = Tex("chochin.png", false);
                 if (cht != null) { l.chochin.SetTexture("_EmissionMap", cht); l.chochin.EnableKeyword("_EMISSION"); l.chochin.SetColor("_EmissionColor", new Color(1.0f, 0.66f, 0.34f)); l.chochin.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None; }
