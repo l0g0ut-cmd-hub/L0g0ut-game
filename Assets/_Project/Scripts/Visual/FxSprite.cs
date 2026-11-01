@@ -19,9 +19,13 @@ namespace BladePath
         static readonly System.Collections.Generic.Dictionary<string, Material> mats = new System.Collections.Generic.Dictionary<string, Material>();
         static readonly int TintId = Shader.PropertyToID("_TintColor");
 
-        public static FxSprite Spawn(string tex, Vector3 pos, float size, int cols, int rows, int frames, float fps, bool loop, float life = 0f)
+        /// <summary>То же, но с обычным смешением по альфе (тёмный дым, пыль, камни — то, что не светится).</summary>
+        public static FxSprite SpawnAlpha(string tex, Vector3 pos, float size, int cols, int rows, int frames, float fps, bool loop, float life = 0f)
+        { return Spawn(tex, pos, size, cols, rows, frames, fps, loop, life, true); }
+
+        public static FxSprite Spawn(string tex, Vector3 pos, float size, int cols, int rows, int frames, float fps, bool loop, float life = 0f, bool alpha = false)
         {
-            Material m = Mat(tex);
+            Material m = Mat(tex, alpha);
             if (m == null) return null;
             GameObject g = new GameObject("Fx_" + tex);
             g.transform.position = pos;
@@ -34,16 +38,17 @@ namespace BladePath
             return f;
         }
 
-        static Material Mat(string tex)
+        static Material Mat(string tex, bool alpha)
         {
             Material m;
-            if (mats.TryGetValue(tex, out m) && m != null) return m;
+            string id = alpha ? "a:" + tex : tex;
+            if (mats.TryGetValue(id, out m) && m != null) return m;
             Texture2D t = Resources.Load<Texture2D>("FX/" + tex);
-            Shader sh = Shader.Find("Legacy Shaders/Particles/Additive");
+            Shader sh = Shader.Find(alpha ? "Legacy Shaders/Particles/Alpha Blended" : "Legacy Shaders/Particles/Additive");
             if (t == null || sh == null) return null;
             m = new Material(sh) { name = "Fx_" + tex, mainTexture = t };
             m.SetColor(TintId, new Color(0.5f, 0.5f, 0.5f, 0.5f));
-            mats[tex] = m;
+            mats[id] = m;
             return m;
         }
 

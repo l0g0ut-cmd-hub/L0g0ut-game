@@ -40,6 +40,7 @@ namespace BladePath
         void Awake()
         {
             Instance = this;
+            LightBraziers();
             voices = new AudioSource[6];
             for (int i = 0; i < voices.Length; i++) { voices[i] = gameObject.AddComponent<AudioSource>(); voices[i].spatialBlend = 0f; voices[i].playOnAwake = false; }
             swish = Swish(); hit = Thump(0.22f, 140f, 55f, 0.55f); hitHeavy = Thump(0.34f, 100f, 38f, 0.9f); clang = Clang(); boom = Thump(1.0f, 70f, 28f, 0.8f);
@@ -853,6 +854,9 @@ namespace BladePath
         public void Slam(Vector3 pos)
         {
             pos.y = 0.02f;
+            // камень лопается: обломки и пыль взлетают и оседают (8 кадров)
+            FxSprite rb = FxSprite.SpawnAlpha("rock_burst", pos + Vector3.up * (2.6f * 0.42f), 2.6f, 4, 2, 8, 12f, false, 0.85f);
+            if (rb != null) rb.tint = new Color(0.62f, 0.6f, 0.58f, 1f);
             Shockwave(pos + Vector3.up * 0.05f, 2.6f, new Color(1f, 0.6f, 0.4f, 0.35f), 0.3f);
             Dust(pos, Vector3.up, 34);
             GroundCrack(pos, 1.6f);
@@ -864,6 +868,9 @@ namespace BladePath
         /// <summary>Уход в дым (Тень клана): клуб тёмного дыма на месте бойца и шорох.</summary>
         public void SmokeVanish(Vector3 pos)
         {
+            // клуб чёрного дыма с перьями в рост человека (8 кадров), поверх — прежние частицы
+            FxSprite sm = FxSprite.SpawnAlpha("smoke_teleport", new Vector3(pos.x, 0f, pos.z) + Vector3.up * (2.3f * 0.43f), 2.3f, 4, 2, 8, 14f, false, 0.75f);
+            if (sm != null) sm.tint = new Color(0.55f, 0.5f, 0.62f, 0.95f);
             if (dustMat == null) return;
             GameObject g = new GameObject("SmokeVanish");
             g.transform.position = pos + Vector3.up * 0.9f;
@@ -1196,6 +1203,25 @@ namespace BladePath
             FxSprite f = FxSprite.Spawn(tex, pos, size, 4, 1, 4, 4f / Mathf.Max(0.05f, life), false, life);
             if (f != null) { f.tint = tint; f.dir = dir; }
             return f;
+        }
+
+        /// <summary>
+        /// Живой огонь в жаровнях: нарисованный цикл из 8 кадров (атлас 24) вместо частиц-языков; сердцевина, искры и дым остаются.
+        /// </summary>
+        void LightBraziers()
+        {
+            if (Resources.Load<Texture2D>("FX/brazier_fire") == null) return;
+            foreach (ArenaObstacle o in FindObjectsByType<ArenaObstacle>(FindObjectsSortMode.None))
+            {
+                if (o == null || !o.name.StartsWith("Brazier") || o.transform.Find("FireSprite") != null) continue;
+                Transform an = new GameObject("FireSprite").transform;
+                an.SetParent(o.transform, false); an.localPosition = new Vector3(0f, 1.36f, 0f);
+                FxSprite f = FxSprite.Spawn("brazier_fire", an.position, 0.88f, 4, 2, 8, 12f, true);
+                if (f == null) { Destroy(an.gameObject); continue; }
+                f.follow = an; f.tint = new Color(1f, 0.92f, 0.82f, 0.85f);
+                Transform old = o.transform.Find("Fire");
+                if (old != null) { ParticleSystemRenderer pr = old.GetComponent<ParticleSystemRenderer>(); if (pr != null) pr.enabled = false; }
+            }
         }
 
         /// <summary>Супер-удар попал: молния с неба в противника и золотой полумесяц по ходу удара.</summary>

@@ -153,6 +153,30 @@ namespace BladePath
         /// Текст в виртуальных единицах, но растеризуется в реальных пикселях (иначе шрифт мылится при масштабе GUI).
         /// Шрифты: крупные надписи — Yeseva One, мелкие — Old Standard, цифры — Russo One (все OFL, Resources/Fonts).
         /// </summary>
+        /// <summary>
+        /// Число кистью (UI/brush_digits: 0–9, «×», «!» в листе 4×3). anchor — по горизонтали: слева, по центру, справа от точки.
+        /// Возвращает false, если листа нет или в строке есть другой знак (тогда пишем шрифтом).
+        /// </summary>
+        public static bool BrushNumber(Vector2 at, string s, float h, float alpha, TextAnchor anchor)
+        {
+            Texture2D t = Tex("UI/brush_digits");
+            if (t == null || string.IsNullOrEmpty(s)) return false;
+            float gw = h * 0.66f, step = h * 0.56f;   // мазки чуть заходят друг на друга, как у каллиграфа
+            for (int i = 0; i < s.Length; i++) if (Glyph(s[i]) < 0) return false;
+            float total = step * (s.Length - 1) + gw;
+            float x = anchor == TextAnchor.MiddleLeft ? at.x : anchor == TextAnchor.MiddleRight ? at.x - total : at.x - total * 0.5f;
+            Color oc = GUI.color; GUI.color = new Color(1f, 1f, 1f, alpha);
+            for (int i = 0; i < s.Length; i++)
+            {
+                int g = Glyph(s[i]);
+                Rect uv = new Rect((g % 4) * 0.25f, 1f - (g / 4 + 1) / 3f, 0.25f, 1f / 3f);
+                GUI.DrawTextureWithTexCoords(new Rect(x + i * step, at.y - h * 0.5f, gw, h), t, uv);
+            }
+            GUI.color = oc;
+            return true;
+        }
+        static int Glyph(char ch) { return ch >= '0' && ch <= '9' ? ch - '0' : ch == '×' || ch == 'x' ? 10 : ch == '!' ? 11 : -1; }
+
         public static void Text(Rect r, string s, float size, Color c, TextAnchor anchor = TextAnchor.MiddleCenter, bool shadow = true)
         {
             Init();

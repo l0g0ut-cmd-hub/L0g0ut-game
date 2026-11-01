@@ -412,7 +412,22 @@ namespace BladePath
             float nr = duel.NextRoundIn;
             if (nr >= 0f && nr < 0.45f) fade = 1f - nr / 0.45f;
             if (duel.State == DuelState.Intro) fade = Mathf.Max(fade, 1f - Mathf.Clamp01(duel.StateTime / (duel.Round > 1 ? 0.4f : 0.8f)));
-            if (fade > 0.001f) UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, fade));
+            if (fade > 0.001f)
+            {
+                // смена раунда — клякса туши: растёт из капли и заливает экран; на новом раунде распадается брызгами
+                Texture2D ink = UiKit.Tex("UI/ink_splash");
+                bool opening = duel.State == DuelState.Intro;
+                if (ink != null)
+                {
+                    int fr = opening ? (fade > 0.55f ? 2 : 3) : (fade < 0.3f ? 0 : fade < 0.6f ? 1 : 2);
+                    float sz = W * (opening ? 1.2f + 1.4f * (1f - fade) : 0.35f + 1.5f * fade);
+                    Color oc = GUI.color; GUI.color = new Color(1f, 1f, 1f, Mathf.Clamp01(fade * 1.6f));
+                    GUI.DrawTextureWithTexCoords(new Rect(W * 0.5f - sz * 0.5f, 270f - sz * 0.5f, sz, sz), ink, new Rect(fr * 0.25f, 0f, 0.25f, 1f));
+                    GUI.color = oc;
+                    UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, Mathf.Clamp01((fade - 0.55f) / 0.45f)));
+                }
+                else UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, fade));
+            }
 
             DrawTutorial(W);
             GUI.matrix = old;
@@ -628,7 +643,13 @@ namespace BladePath
             float pop = 1f + Mathf.Max(0f, 0.2f - age) * 2.5f;
             string word = (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14)) ? "УДАРА" : "УДАРОВ";
             Rect r = anchor == TextAnchor.MiddleLeft ? new Rect(at.x, at.y - 40f, 300f, 80f) : new Rect(at.x - 300f, at.y - 40f, 300f, 80f);
-            UiKit.Text(r, n.ToString(), 64f * pop, new Color(1f, 0.82f, 0.3f, a), anchor);
+            // число серии — кистью, на багровом мазке (чёрная тушь иначе тонет в ночной сцене)
+            Texture2D bs = UiKit.Tex("UI/brush_stroke_red");
+            string num = n.ToString();
+            float hh = 72f * pop, wNum = hh * (0.56f * (num.Length - 1) + 0.66f);
+            float bx = anchor == TextAnchor.MiddleLeft ? at.x - 18f : at.x - wNum - 18f;
+            if (bs != null) { Color oc = GUI.color; GUI.color = new Color(1f, 1f, 1f, 0.85f * a); GUI.DrawTexture(new Rect(bx, at.y - hh * 0.42f, wNum + 36f, hh * 0.84f), bs); GUI.color = oc; }
+            if (!UiKit.BrushNumber(new Vector2(at.x, at.y), num, hh, a, anchor)) UiKit.Text(r, num, 64f * pop, new Color(1f, 0.82f, 0.3f, a), anchor);
             Rect r2 = new Rect(r.x, r.y + 52f, r.width, 30f);
             UiKit.Text(r2, word + " ПОДРЯД", 16f, new Color(1f, 0.95f, 0.85f, a), anchor);
         }
