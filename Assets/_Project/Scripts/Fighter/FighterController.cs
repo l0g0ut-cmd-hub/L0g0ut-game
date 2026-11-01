@@ -102,7 +102,10 @@ namespace BladePath
             knockVel = Vector3.zero; dashLeft = 0f;
         }
 
-        public void AddKi(float v) { Ki = Mathf.Clamp(Ki + v, 0f, kiMax); }
+        public void AddKi(float v) { if (v > 0f && IsPlayer) v *= Profile.B.kiGainMul; Ki = Mathf.Clamp(Ki + v, 0f, kiMax); }
+        /// <summary>Это герой игрока (на него действуют снаряжение, характеристики и приёмы из Profile).</summary>
+        public bool IsPlayer { get { DuelManager dm = DuelManager.Instance; return dm != null && dm.player == this; } }
+        float DashCd { get { return dashCooldown * (IsPlayer ? Profile.B.dashCdMul : 1f); } }
 
         public bool Grounded { get; private set; }
         /// <summary>Боец повержен: не двигается и не бьёт, тело падает (HeroRigDriver).</summary>
@@ -116,7 +119,7 @@ namespace BladePath
         /// <summary>Держит блок: клинок вертикально перед собой, урон сильно режется. Недоступно во время удара, оглушения и смерти.</summary>
         public bool Blocking { get; private set; }
         /// <summary>Окно отражения (парирования) от начала блока: 0,25 с, при частых нажатиях — уже.</summary>
-        public float ParryWindow { get { return 0.25f / (1f + 0.8f * blockSpam); } }
+        public float ParryWindow { get { return 0.25f / (1f + 0.8f * blockSpam) * (IsPlayer ? Profile.B.parryMul : 1f); } }
         int blockSpam; float lastBlockStart = -10f;
         /// <summary>Сколько секунд подряд держится блок (для окна парирования).</summary>
         public float BlockTime { get; private set; }
@@ -200,7 +203,7 @@ namespace BladePath
             return true;
         }
         public void CancelDrink() { drinkUntil = 0f; }
-        public float DashReady01 { get { return Mathf.Clamp01(1f - (dashReadyAt - Time.time) / dashCooldown); } }
+        public float DashReady01 { get { return Mathf.Clamp01(1f - (dashReadyAt - Time.time) / DashCd); } }
         /// <summary>Скорость хода в этом кадре 0…1; знак минус, если идёт спиной к направлению взгляда — для аниматора.</summary>
         public float MoveAxis { get; private set; }
 
@@ -237,7 +240,7 @@ namespace BladePath
             if (d.sqrMagnitude < 1e-6f) d = -transform.forward;
             dashDir = d.normalized;
             dashLeft = dashTime;
-            dashReadyAt = Time.time + dashCooldown;
+            dashReadyAt = Time.time + DashCd;
             if (Dashed != null) Dashed(this, dashDir);
             lastDashAt = Time.time;
             if (Juice.Instance != null) { Juice.Instance.DashSound(); Juice.Instance.Dust(transform.position + Vector3.up * 0.05f, -dashDir, 14); Juice.Instance.LeafKick(transform.position, dashDir); }
@@ -297,7 +300,7 @@ namespace BladePath
         void Update()
         {
             float dt = Time.deltaTime;
-            if (!Dead && !Frozen) AddKi(kiRegen * KiRegenMul * dt);
+            if (!Dead && !Frozen) AddKi(kiRegen * KiRegenMul * dt * (IsPlayer ? Profile.B.kiRegenMul / Profile.B.kiGainMul : 1f));   // AddKi ещё умножит на kiGainMul
 
             bool canBlock = CanAct && Grounded && !Drinking && weapon != null && weapon.Phase == SwingPhase.Idle && !GuardBroken;
             bool wasBlocking = Blocking;
@@ -337,7 +340,7 @@ namespace BladePath
             if (fwd.sqrMagnitude < 1e-6f) fwd = Vector3.forward;
             fwd.Normalize();
 
-            float speed = moveSpeed;
+            float speed = moveSpeed * (IsPlayer ? Profile.B.moveMul : 1f);
             if (weapon != null && weapon.Phase != SwingPhase.Idle) speed *= attackMoveMultiplier;
             if (Blocking) speed *= 0.45f;
             if (Drinking) speed *= 0.35f;   // пьёт — еле переступает

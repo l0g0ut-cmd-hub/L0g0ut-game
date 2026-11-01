@@ -123,6 +123,7 @@ namespace BladePath
         {
             Breadcrumbs.Mark("бой: Awake");
             Instance = this;
+            InventoryScreen.Ensure();   // экран снаряжения и полоса добычи
             // Android по умолчанию держит 30 кадров/с — для файтинга нужно 60
             QualitySettings.vSyncCount = 0;
             Application.targetFrameRate = 60;
@@ -156,7 +157,32 @@ namespace BladePath
 
         void OnDestroy() { Time.timeScale = 1f; if (resolver != null) resolver.HitRegistered -= OnHit; if (Instance == this) Instance = null; }
 
-        public float MaxHp(FighterController f) { return f != null && f == enemy ? maxHp * Ladder.Current.hpMul : maxHp; }
+        public float MaxHp(FighterController f) { return f != null && f == enemy ? maxHp * Ladder.Current.hpMul * Profile.CycleHp : maxHp + (f != null && f == player ? Profile.B.hp : 0); }
+
+        float basePosture = -1f; int baseGourds = -1;
+        /// <summary>Снаряжение и характеристики героя → боец (равновесие, глотки тыквы); здоровье — через MaxHp. Вызывается в начале матча и после инвентаря.</summary>
+        public void ApplyProfile()
+        {
+            if (player == null) return;
+            if (basePosture < 0f) { basePosture = player.maxPosture; baseGourds = player.gourdMax; }
+            Profile.Bonus b = Profile.B;
+            player.maxPosture = basePosture + b.postureMax;
+            int oldMax = player.gourdMax;
+            player.gourdMax = baseGourds + b.gourds;
+            if (player.gourdMax > oldMax) player.Gourds += player.gourdMax - oldMax;
+            player.Gourds = Mathf.Min(player.Gourds, player.gourdMax);
+            if (hp.ContainsKey(player)) { hp[player] = Mathf.Min(hp[player], MaxHp(player)); hpTrail[player] = Mathf.Min(hpTrail[player], MaxHp(player)); }
+        }
+
+        // кровотечение от клинка героя (свойство «кровотечение», приём «Кровопускание»)
+        float bleedUntil;
+        void UpdateBleed(float dt)
+        {
+            if (enemy == null || player == null || Time.time >= bleedUntil || State != DuelState.Fighting || enemy.Dead || !hp.ContainsKey(enemy)) return;
+            float dps = Profile.B.bleedDps;
+            if (dps <= 0f) return;
+            hp[enemy] = Mathf.Max(Mathf.Min(1f, hp[enemy]), hp[enemy] - dps * dt);   // кровь не добивает — только подтачивает
+        }
         public float Hp(FighterController f) { float v; return hp.TryGetValue(f, out v) ? v : MaxHp(f); }
         public float Hp01(FighterController f) { return Mathf.Clamp01(Hp(f) / MaxHp(f)); }
         public float Trail01(FighterController f) { float v; return hpTrail.TryGetValue(f, out v) ? Mathf.Clamp01(v / MaxHp(f)) : 1f; }
@@ -242,10 +268,14 @@ namespace BladePath
 
         public bool PlayerWonMatch { get { return MatchOver && PlayerWins >= winsToMatch; } }
 
+        public float MatchStartedAt { get; private set; }
+
         public void ResetMatch()
         {
+            MatchStartedAt = Time.unscaledTime;
             PlayerWins = 0; EnemyWins = 0; Round = 1; MatchOver = false;
             Resurrections = 1;   // 回生 — раз за матч
+            ApplyProfile();
             if (player != null) player.Gourds = player.gourdMax;   // тыква-горлянка — полная на матч
             firstBlood = false;
             stats.Clear();
@@ -260,7 +290,8 @@ namespace BladePath
             if (Round < 1) Round = 1;
             Time.timeScale = 1f;
             Paused = false; Slowmo = false; hitStopUntil = 0f;
-            if (player != null) { player.ResetFighter(); hp[player] = maxHp; hpTrail[player] = maxHp; lastSwing[player] = -1; }
+            if (player != null) { player.ResetFighter(); hp[player] = MaxHp(player); hpTrail[player] = MaxHp(player); lastSwing[player] = -1; }
+            bleedUntil = 0f;
             if (enemy != null) { enemy.ResetFighter(); hp[enemy] = MaxHp(enemy); hpTrail[enemy] = MaxHp(enemy); lastSwing[enemy] = -1; }
             Popups.Clear();
             if (Juice.Instance != null) Juice.Instance.ClearCracks();
@@ -381,6 +412,7 @@ namespace BladePath
             UpdateSuper();
             UpdateDeathblow();
             UpdateDrink();
+            UpdateBleed(Time.deltaTime);
             UpdateResurrectOffer();
             UpdateBodyTint(player);
             UpdateBodyTint(enemy);
@@ -445,7 +477,7 @@ namespace BladePath
                 {
                     Vector3 hp = t.transform.position + Vector3.up * 1.15f;
                     Freeze(false); t.Frozen = true;   // урон проходит по «живому» бойцу, двигаться он ещё не может
-                    ApplyDamage(t, a, 32f, hp, true, false, -dir, Vector3.Cross(Vector3.up, dir) + dir * 0.4f, null);
+                    ApplyDamage(t, a, 32f * (a == player && Profile.Has(Tech.Thunder) ? 1.5f : 1f), hp, true, false, -dir, Vector3.Cross(Vector3.up, dir) + dir * 0.4f, null);
                     StatsOf(a).supers++;
                     hitStopUntil = Time.unscaledTime + 0.22f;
                     if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.14f);
@@ -721,7 +753,7 @@ namespace BladePath
             if (player.DrinkT < FighterController.DrinkHealAt) return;
             healedDrink = player.DrinkId;
             float before = Hp(player);
-            hp[player] = Mathf.Min(MaxHp(player), before + MaxHp(player) * GourdHeal);
+            hp[player] = Mathf.Min(MaxHp(player), before + MaxHp(player) * GourdHeal * Profile.B.healMul);
             if (hpTrail.ContainsKey(player)) hpTrail[player] = Mathf.Max(hpTrail[player], hp[player]);
             Popup hp_ = new Popup();
             hp_.world = player.transform.position + Vector3.up * 2.0f; hp_.text = "+" + Mathf.RoundToInt(hp[player] - before); hp_.color = new Color(1f, 0.82f, 0.4f);
@@ -1140,8 +1172,8 @@ namespace BladePath
                 }
                 if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(parry ? 0.05f : 0.025f); if (parry) CameraOrbit.Instance.Punch(2.5f); }
                 // равновесие: блок копит урон защитнику, отражение (парирование) — атакующему
-                if (parry) { r.target.AddPosture(4f); r.attacker.AddPosture(PostureDamage(type) * 0.9f); }
-                else r.target.AddPosture(PostureDamage(type) * HeadJumpMul(r.attacker, type));
+                if (parry) { r.target.AddPosture(4f); r.attacker.AddPosture(PostureDamage(type) * 0.9f * (r.target == player ? Profile.B.postureMul : 1f)); }
+                else r.target.AddPosture(PostureDamage(type) * HeadJumpMul(r.attacker, type) * (r.attacker == player ? Profile.B.postureMul : 1f) * (r.target == player ? Profile.B.blockPostureMul : 1f));
                 if (r.target.PostureBroken) return;
                 if (parry)
                 {
@@ -1168,7 +1200,7 @@ namespace BladePath
             }
             lastHitHead = r.zone == BodyZoneId.Head;
             ApplyDamage(r.target, r.attacker, dmg, r.contact.point, r.zone == BodyZoneId.Head, false, r.contact.normal, r.contact.bladeVelocity, r.contact.zone != null ? r.contact.zone.transform : null);
-            if (!r.target.Dead) r.target.AddPosture(dmg * 0.6f * HeadJumpMul(r.attacker, type));   // пропущенный удар тоже сбивает равновесие
+            if (!r.target.Dead) r.target.AddPosture(dmg * 0.6f * HeadJumpMul(r.attacker, type) * (r.attacker == player ? Profile.B.postureMul : 1f));   // пропущенный удар тоже сбивает равновесие
         }
 
         /// <summary>Время раунда вышло: побеждает тот, у кого больше здоровья; при равенстве — переигровка.</summary>
@@ -1187,8 +1219,17 @@ namespace BladePath
             if (playerLost) EnemyWins++; else PlayerWins++;
             Perfect = playerLost ? hpE >= MaxMarks(enemy) - 0.001f : hpP >= 0.999f;
             MatchOver = PlayerWins >= winsToMatch || EnemyWins >= winsToMatch;
-            if (MatchOver) Records.OnMatch(PlayerWins >= winsToMatch, Ladder.Index);
+            if (MatchOver) { Records.OnMatch(PlayerWins >= winsToMatch, Ladder.Index); GrantReward(); }
             if (Juice.Instance != null) Juice.Instance.Taiko(1f, 0.8f);
+        }
+
+        /// <summary>Матч окончен: опыт, монеты, добыча (та же оценка боя, что на экране итогов).</summary>
+        void GrantReward()
+        {
+            bool won = PlayerWins >= winsToMatch;
+            Stats p = StatsOf(player), e = StatsOf(enemy);
+            int score = (won ? 40 : 0) + p.parries * 6 + p.maxCombo * 4 + p.hits * 2 + p.blocks + p.supers * 3 - e.hits * 5;
+            Profile.Grant(won, Ladder.Index, score, won && Perfect, won && Ladder.IsLast);
         }
 
         void ApplyDamage(FighterController target, FighterController attacker, float dmg, Vector3 point, bool crit, bool chip = false, Vector3 normal = default(Vector3), Vector3 hitDir = default(Vector3), Transform zoneT = null)
@@ -1209,10 +1250,24 @@ namespace BladePath
             {
                 // контратака после парирования: ×1,5
                 float cu;
+                // снаряжение и характеристики: урон героя выше, по герою — ниже (броня), на новом круге враг бьёт сильнее;
+                // смертельный удар (добивание) остаётся смертельным
+                bool lethal = dmg >= Hp(target) - 0.01f;
+                if (attacker == player)
+                {
+                    dmg *= Profile.B.dmgMul;
+                    if (UnityEngine.Random.value < Profile.B.crit)
+                    {
+                        dmg *= 1.5f; crit = true;
+                        Popup tp = new Popup(); tp.world = point + Vector3.up * 0.7f; tp.text = "ТОЧНЫЙ УДАР"; tp.color = new Color(1f, 0.9f, 0.5f); tp.born = Time.unscaledTime; tp.size = 22f; Popups.Add(tp);
+                    }
+                    if (Profile.B.bleedDps > 0f) bleedUntil = Time.time + 3f;
+                }
+                else if (target == player && !lethal) dmg *= Profile.B.armorMul * Profile.CycleDmg;
                 if (counterUntil.TryGetValue(attacker, out cu) && Time.unscaledTime < cu)
                 {
                     counterUntil[attacker] = 0f;
-                    dmg = Mathf.Round(dmg * 1.5f);
+                    dmg = Mathf.Round(dmg * (attacker == player && Profile.Has(Tech.Riposte) ? 2f : 1.5f));
                     crit = true;
                     Popup cp = new Popup();
                     cp.world = point + Vector3.up * 0.45f; cp.text = "КОНТРАТАКА!"; cp.color = new Color(1f, 0.55f, 0.2f);
@@ -1237,6 +1292,8 @@ namespace BladePath
                 Haptics.Pulse(target == player ? (dmg >= 20f ? 70 : 40) : 18);
             }
             float before01 = Hp01(target);
+            if (!chip && attacker == player && Profile.Has(Tech.SteelThirst) && hp.ContainsKey(player) && !player.Dead)
+                hp[player] = Mathf.Min(MaxHp(player), hp[player] + Mathf.Min(dmg, Hp(target)) * 0.08f);   // «Жажда стали»
             hp[target] = Mathf.Max(0f, Hp(target) - dmg);
             // финальный противник «Пути» на половине здоровья впадает в ярость
             if (target == enemy && Ladder.IsLast && !Enraged && Marks(enemy) <= 1 && before01 > 0.5f && Hp01(target) <= 0.5f && Hp(target) > 0f)
@@ -1326,7 +1383,7 @@ namespace BladePath
             SetState(playerLost ? DuelState.PlayerLost : DuelState.PlayerWon);
             if (playerLost) EnemyWins++; else PlayerWins++;
             MatchOver = PlayerWins >= winsToMatch || EnemyWins >= winsToMatch;
-            if (MatchOver) Records.OnMatch(PlayerWins >= winsToMatch, Ladder.Index);
+            if (MatchOver) { Records.OnMatch(PlayerWins >= winsToMatch, Ladder.Index); GrantReward(); }
             nextRoundAt = Time.unscaledTime + nextRoundDelay;
             if (attacker != null) attacker.Frozen = true;
             Slowmo = true; slowUntil = Time.unscaledTime + 1.1f;

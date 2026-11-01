@@ -287,7 +287,7 @@ namespace BladePath
                 {
                     // мазок туши под титулом врага (как имя босса в Sekiro): кисть проводит его слева направо
                     DrawBrush("UI/brush_stroke", new Vector2(cx, 292f), 120f, 0.88f * ta, Mathf.Clamp01(duel.StateTime / 0.45f));
-                    UiKit.Text(new Rect(cx - 400f, 262f, 800f, 34f), "ПУТЬ " + (Ladder.Index + 1) + " / " + Ladder.Count + "  ·  " + Ladder.Current.name, 22f, new Color(Gold.r, Gold.g, Gold.b, ta));
+                    UiKit.Text(new Rect(cx - 400f, 262f, 800f, 34f), "ПУТЬ " + (Ladder.Index + 1) + " / " + Ladder.Count + (Profile.Cycle > 0 ? "  ·  КРУГ " + (Profile.Cycle + 1) : "") + "  ·  " + Ladder.Current.name, 22f, new Color(Gold.r, Gold.g, Gold.b, ta));
                     UiKit.Text(new Rect(cx - 400f, 292f, 800f, 24f), Ladder.Current.title, 15f, new Color(0.9f, 0.88f, 0.82f, ta * 0.9f));
                     int mk = duel.MaxMarks(duel.enemy);
                     if (mk > 1) UiKit.Text(new Rect(cx - 400f, 316f, 800f, 24f), "ЖИЗНЕЙ: " + mk + " — СЛОМИ И ДОБЕЙ " + mk + " РАЗА", 15f, new Color(1f, 0.45f, 0.3f, ta * 0.95f));
