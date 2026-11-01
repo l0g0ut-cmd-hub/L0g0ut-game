@@ -7,8 +7,10 @@ namespace BladePath
     public class GroundFlash : MonoBehaviour
     {
         static readonly Dictionary<string, Material> mats = new Dictionary<string, Material>();
-        float born, life, s0, s1, spin; Color col; bool hold; int cols = 1, rows = 1, frames = 1; MeshRenderer mr; MaterialPropertyBlock mpb;
+        float born, life, s0, s1, spin; Color col; bool hold; int cols = 1, rows = 1, frames = 1; MeshRenderer mr; MeshFilter mf; MaterialPropertyBlock mpb;
+        int shownFrame = -1;
         static Mesh quad;
+        static readonly Dictionary<string, Mesh[]> sheetQuads = new Dictionary<string, Mesh[]>();
 
         public static GroundFlash Spawn(string tex, Vector3 pos, float s0, float s1, Color col, float life, float spin, bool hold = false)
         {
@@ -32,8 +34,9 @@ namespace BladePath
             GameObject g = new GameObject("GroundFlash");
             g.transform.position = new Vector3(pos.x, 0.026f, pos.z);
             g.transform.rotation = Quaternion.Euler(90f, Random.Range(0f, 360f), 0f);
-            g.AddComponent<MeshFilter>().sharedMesh = quad;
+            MeshFilter filter = g.AddComponent<MeshFilter>(); filter.sharedMesh = quad;
             GroundFlash f = g.AddComponent<GroundFlash>();
+            f.mf = filter;
             f.mr = g.AddComponent<MeshRenderer>(); f.mr.sharedMaterial = m; f.mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             f.mpb = new MaterialPropertyBlock();
             f.born = Time.time; f.life = Mathf.Max(0.05f, life); f.s0 = s0; f.s1 = s1; f.col = col; f.spin = spin; f.hold = hold;
@@ -45,8 +48,30 @@ namespace BladePath
         public static GroundFlash SpawnSheet(string tex, Vector3 pos, float s0, float s1, Color col, float life, int cols, int rows, int frames)
         {
             GroundFlash f = Spawn(tex, pos, s0, s1, col, life, 0f);
-            if (f != null) { f.cols = Mathf.Max(1, cols); f.rows = Mathf.Max(1, rows); f.frames = Mathf.Max(1, frames); f.Tick(); }
+            if (f != null) { f.cols = Mathf.Max(1, cols); f.rows = Mathf.Max(1, rows); f.frames = Mathf.Clamp(frames, 1, f.cols * f.rows); f.Tick(); }
             return f;
+        }
+
+        static Mesh[] SheetMeshes(int columns, int rowsCount)
+        {
+            string key = columns + "x" + rowsCount;
+            Mesh[] meshes;
+            if (sheetQuads.TryGetValue(key, out meshes)) return meshes;
+            meshes = new Mesh[columns * rowsCount];
+            float du = 1f / columns, dv = 1f / rowsCount;
+            for (int fr = 0; fr < meshes.Length; fr++)
+            {
+                float u = (fr % columns) * du;
+                float v = 1f - (fr / columns + 1) * dv;
+                Mesh mesh = new Mesh { name = "GroundFlash_" + key + "_" + fr };
+                mesh.vertices = new[] { new Vector3(-0.5f, -0.5f, 0f), new Vector3(0.5f, -0.5f, 0f), new Vector3(0.5f, 0.5f, 0f), new Vector3(-0.5f, 0.5f, 0f) };
+                mesh.uv = new[] { new Vector2(u, v), new Vector2(u + du, v), new Vector2(u + du, v + dv), new Vector2(u, v + dv) };
+                mesh.triangles = new[] { 0, 2, 1, 0, 3, 2 };
+                mesh.RecalculateBounds();
+                meshes[fr] = mesh;
+            }
+            sheetQuads.Add(key, meshes);
+            return meshes;
         }
 
         void Update() { Tick(); }
@@ -67,9 +92,15 @@ namespace BladePath
                 int fr = Mathf.Min(frames - 1, (int)(k * frames));
                 a = 1f - k * k * k * k;   // лист сам гаснет к концу
                 mpb.SetColor("_TintColor", new Color(0.5f * Mathf.Lerp(1f, col.r, 0.8f), 0.5f * Mathf.Lerp(1f, col.g, 0.8f), 0.5f * Mathf.Lerp(1f, col.b, 0.8f), 0.5f * a));
-                mpb.SetVector("_MainTex_ST", new Vector4(1f / cols, 1f / rows, (fr % cols) / (float)cols, 1f - (fr / cols + 1) / (float)rows));
+                if (shownFrame != fr && mf != null)
+                {
+                    mf.sharedMesh = SheetMeshes(cols, rows)[fr];
+                    shownFrame = fr;
+                }
             }
-            else mpb.SetVector("_MainTex_ST", new Vector4(1f, 1f, 0f, 0f));
+            // Atlas UV coordinates are baked into cached mesh frames.
+            // Avoid relying on _MainTex_ST, ignored by some additive shaders.
+            mpb.SetVector("_MainTex_ST", new Vector4(1f, 1f, 0f, 0f));
             mr.SetPropertyBlock(mpb);
         }
     }
