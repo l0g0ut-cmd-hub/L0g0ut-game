@@ -90,11 +90,10 @@ namespace BladePath
 
         void Go(int i)
         {
-            if (!Campaign.CanGo(i)) return;
+            if (moveTo >= 0 || modal != Modal.None || Campaign.InFight || !Campaign.CanGo(i)) return;
             Profile.CostMul = 1f;
             int destination = sel;
-            if (destination >= 0 && destination != i && NextPreviewStep == i)
-                routeAutopilot = true;
+            routeAutopilot = destination >= 0 && destination != i && NextPreviewStep == i;
             revisit = Campaign.Nodes[i].done;
             freshTreasure = Campaign.Nodes[i].Type == NodeType.Treasure && !revisit;
             treasure = null;
@@ -350,7 +349,7 @@ namespace BladePath
             plannedRegion = Campaign.Region;
             previewPath.Clear();
             List<MapNode> nodes = Campaign.Nodes;
-            if (index < 0 || index >= nodes.Count) return;
+            if (index < 0 || index >= nodes.Count) { sel = -1; return; }
             int start = Campaign.At;
             if (start == index) { previewPath.Add(start); return; }
 
@@ -369,7 +368,7 @@ namespace BladePath
                     routeQueue.Enqueue(next);
                 }
             }
-            if (parents[index] < 0) return;
+            if (parents[index] < 0) { sel = -1; return; }
             int cur = index;
             while (cur != start)
             {
@@ -902,16 +901,23 @@ namespace BladePath
                     y += 20f;
                     // Travel remains one node at a time, so fight/event encounters
                     // are never skipped by the route preview.
-                    if (Campaign.CanGo(nextStep) &&
-                        Btn(new Rect(x, y, w, 40f), "ДВИГАТЬСЯ", interactive))
+                    // The same stable button remains present while the die is empty.
+                    // Never make the player reselect a marker after rolling.
+                    bool canMove = !rolling && Campaign.CanGo(nextStep);
+                    if (Btn(new Rect(x, y, w, 40f), "ДВИГАТЬСЯ", interactive && canMove))
                         Go(nextStep);
-                    else
-                        UiKit.Text(new Rect(x, y, w, 18f),
-                            Campaign.Steps == 0 ? "Нужен бросок кости пути" : "Следующий переход пока закрыт",
+                    if (!canMove)
+                        UiKit.Text(new Rect(x, y + 41f, w, 18f),
+                            rolling ? "Кость вращается…" : Campaign.Steps == 0
+                                ? "Сначала брось кость пути" : "Следующий переход пока закрыт",
                             11f, Dim, TextAnchor.MiddleLeft, false);
                 }
-                else if (Campaign.CanGo(show) && Btn(new Rect(x, y, w, 40f), "ДВИГАТЬСЯ", interactive))
-                    Go(show);
+                else if (show != Campaign.At && Campaign.Nodes[Campaign.At].next.Contains(show))
+                {
+                    bool canMoveDirect = !rolling && Campaign.CanGo(show);
+                    if (Btn(new Rect(x, y, w, 40f), "ДВИГАТЬСЯ", interactive && canMoveDirect))
+                        Go(show);
+                }
             }
             else
             {
@@ -930,7 +936,7 @@ namespace BladePath
                 Rect illustration = new Rect(x, artTop, w, artHeight);
                 DrawSidebarIllustration(illustration, artwork);
                 Texture2D heroes = UiKit.Tex("UI/selection/characters_difficulties");
-                if (heroes != null)
+                if (heroes != null && heroes.width >= 600 && heroes.height >= 400)
                 {
                     Rect portrait = new Rect(illustration.x + 7f,
                         illustration.y + 7f, 47f, 58f);
@@ -966,8 +972,9 @@ namespace BladePath
 
         static void DrawSidebarIllustration(Rect r, string path)
         {
-            if (UiKit.Tex(path) == null) return;
-            VisualIdentity.Portrait(r, path);
+            // Never leave a blank/flat placeholder in the adventure panel.
+            string art = UiKit.Tex(path) != null ? path : "UI/path_panorama";
+            VisualIdentity.Portrait(r, art);
             // Embossed gold base to match the right-hand panel and give the
             // panorama the same treatment as encounter illustration cards.
             UiKit.Rect(new Rect(r.x + 8f, r.yMax - 9f, r.width - 16f, 2f),
@@ -1034,7 +1041,7 @@ namespace BladePath
 
         void Picture(Rect r, string tex)
         {
-            VisualIdentity.Portrait(r, tex);
+            VisualIdentity.Portrait(r, UiKit.Tex(tex) != null ? tex : "UI/path_panorama");
         }
 
         float Lines(float x, float y, float w, string s, int max, float size, Color c)
