@@ -220,7 +220,9 @@ namespace BladePath
             if (D.nodes[from].next.Contains(to)) return true;
             return D.nodes[to].done && D.nodes[to].next.Contains(from);
         }
-        public static bool CanGo(int i) { return i >= 0 && i < D.nodes.Count && Current.done && Adjacent(D.at, i) && !InFight && !D.training && D.steps > 0; }
+        /// <summary>Шаг на уже пройденное место (назад или по своим следам) — бесплатный: кость тратится только на новые места.</summary>
+        public static bool FreeHop(int i) { return i >= 0 && i < D.nodes.Count && D.nodes[i].done; }
+        public static bool CanGo(int i) { return i >= 0 && i < D.nodes.Count && Current.done && Adjacent(D.at, i) && !InFight && !D.training && (D.steps > 0 || FreeHop(i)); }
         public static int Rolls { get { return D.rolls; } }
         public static int Steps { get { return D.steps; } }
         public static int LastRoll { get { return D.lastRoll; } }
@@ -336,6 +338,12 @@ namespace BladePath
             // хижина травницы посреди области — сюда откидывает после поражения (иначе — к началу пути)
             List<int> mid = layers[L / 2];
             dd.nodes[mid[UnityEngine.Random.Range(0, mid.Count)]].type = (int)NodeType.Herbalist;
+            // кот-хранитель: в первой области похода он встречается всегда (если там есть событие)
+            bool catHere = false; List<int> catSpots = new List<int>();
+            for (int ci = 0; ci < dd.nodes.Count; ci++)
+                if (dd.nodes[ci].Type == NodeType.Event) { catSpots.Add(ci); if (dd.nodes[ci].ev == MapScreen.CatEvent) catHere = true; }
+            if (!catHere && catSpots.Count > 0 && (region == 0 || UnityEngine.Random.value < 0.35f))
+                dd.nodes[catSpots[UnityEngine.Random.Range(0, catSpots.Count)]].ev = MapScreen.CatEvent;
             dd.steps = 0; dd.rolls = Mathf.Max(dd.rolls, 1);
             Save();
         }
@@ -371,8 +379,8 @@ namespace BladePath
             D.travelled.Add(i);
             // Keep the footprint trail bounded, while retaining the current node at the tail.
             if (D.travelled.Count > 48) D.travelled.RemoveRange(0, D.travelled.Count - 48);
-            D.steps = Mathf.Max(0, D.steps - 1);
             MapNode n = D.nodes[i];
+            if (!n.done) D.steps = Mathf.Max(0, D.steps - 1);   // по пройденным местам — без траты хода
             if (n.IsFight && !n.done) D.steps = 0;   // бой обрывает ход: остаток сгорает
             if (n.Type == NodeType.Herbalist && !n.done) D.rolls++;   // травница даёт кость пути
             if (!n.IsFight && n.Type != NodeType.Event) n.done = true;   // храм, кузнец, торговец, тайник, привал — услуга, путь дальше открыт

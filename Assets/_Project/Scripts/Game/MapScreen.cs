@@ -447,6 +447,26 @@ namespace BladePath
             }
             // No forward road from here: the marker stays selected for its description,
             // but there is no route and В ПУТЬ stays disabled.
+            // Вперёд не дойти — значит цель позади или на соседней ветке: путь по своим следам назад
+            // (через пройденные места) и оттуда вперёд. Шаги по пройденным местам бесплатны.
+            if (parents[index] < 0)
+            {
+                for (int i = 0; i < parents.Length; i++) parents[i] = -1;
+                routeQueue.Clear();
+                parents[start] = start;
+                routeQueue.Enqueue(start);
+                while (routeQueue.Count > 0 && parents[index] < 0)
+                {
+                    int at = routeQueue.Dequeue();
+                    for (int next = 0; next < nodes.Count; next++)
+                    {
+                        if (parents[next] >= 0 || !Campaign.Adjacent(at, next)) continue;
+                        if (next != index && !nodes[next].done) continue;   // через неизведанное — только вперёд
+                        parents[next] = at;
+                        routeQueue.Enqueue(next);
+                    }
+                }
+            }
             if (parents[index] < 0) return;
             int cur = index;
             while (cur != start)
@@ -456,6 +476,18 @@ namespace BladePath
             }
             previewPath.Add(start);
             previewPath.Reverse();
+        }
+
+        /// <summary>Сколько ходов кости стоит маршрут до его k-й точки: пройденные места бесплатны.</summary>
+        int PathCost(int k)
+        {
+            int c = 0;
+            for (int i = 1; i <= k && i < previewPath.Count; i++)
+            {
+                int n = previewPath[i];
+                if (n >= 0 && n < Campaign.Nodes.Count && !Campaign.Nodes[n].done) c++;
+            }
+            return c;
         }
 
         int NextPreviewStep
@@ -500,7 +532,7 @@ namespace BladePath
 
             for (int i = 1; i < previewPath.Count; i++)
             {
-                bool withinDie = i <= Campaign.Steps;
+                bool withinDie = PathCost(i) <= Campaign.Steps;
                 Color tint = withinDie && Campaign.Current.done && !Campaign.InFight
                     ? new Color(0.67f, 1f, 0.65f, 0.95f)
                     : new Color(1f, 0.35f, 0.29f, 0.67f);
@@ -669,7 +701,7 @@ namespace BladePath
                 if (routeIndex > 0)
                 {
                     Vector2 chip = p + new Vector2(s * 0.36f, -s * 0.35f);
-                    bool inRange = routeIndex <= Campaign.Steps;
+                    bool inRange = PathCost(routeIndex) <= Campaign.Steps;
                     Color chipColor = inRange ? new Color(0.20f, 0.38f, 0.22f, 0.95f) : new Color(0.46f, 0.12f, 0.10f, 0.94f);
                     UiKit.Disc(chip, 12f, chipColor);
                     UiKit.Text(new Rect(chip.x - 12f, chip.y - 12f, 24f, 24f),
@@ -856,9 +888,9 @@ namespace BladePath
                 DuelManager.Gfx != 1 || !Campaign.Current.done) return;
             List<MapNode> nodes = Campaign.Nodes;
             float clock = Time.unscaledTime;
-            int shown = Mathf.Min(Campaign.Steps, previewPath.Count - 1);
-            for (int i = 1; i <= shown; i++)
+            for (int i = 1; i < previewPath.Count; i++)
             {
+                if (PathCost(i) > Campaign.Steps) break;
                 int from = previewPath[i - 1], to = previewPath[i];
                 if (from < 0 || from >= nodes.Count || to < 0 || to >= nodes.Count) continue;
                 float t = Mathf.Repeat(clock * 0.26f - i * 0.22f, 1f);
@@ -1014,12 +1046,12 @@ namespace BladePath
                     UiKit.Text(new Rect(x, y, w, 18f), "Отсюда дороги туда нет", 12f, new Color(1f, 0.61f, 0.48f), TextAnchor.MiddleLeft, false);
                 if (nextStep >= 0)
                 {
-                    int totalMoves = previewPath.Count - 1;
+                    int totalMoves = PathCost(previewPath.Count - 1);
                     int available = Mathf.Min(Campaign.Steps, totalMoves);
                     bool enough = totalMoves <= Campaign.Steps;
                     Color routeColor = enough ? new Color(0.65f, 0.94f, 0.65f) : new Color(1f, 0.61f, 0.48f);
                     UiKit.Text(new Rect(x, y, w, 18f),
-                        "МАРШРУТ: " + totalMoves + " шаг.   ·   доступно: " + available,
+                        totalMoves == 0 ? "МАРШРУТ по своим следам — бесплатно" : "МАРШРУТ: " + totalMoves + " шаг.   ·   доступно: " + available,
                         12f, routeColor, TextAnchor.MiddleLeft, false);
                     y += 20f;
                     // Travel remains one node at a time, so fight/event encounters
@@ -1041,7 +1073,7 @@ namespace BladePath
             }
             else
             {
-                string tip = Campaign.InFight ? "Бой ещё не окончен." : !Campaign.Current.done ? "Ты на месте." : Campaign.Steps > 0 ? "Выбери цель. Светлые следы — доступные шаги, красные — сверх броска." : "Брось кость пути, чтобы идти дальше.";
+                string tip = Campaign.InFight ? "Бой ещё не окончен." : !Campaign.Current.done ? "Ты на месте." : Campaign.Steps > 0 ? "Выбери цель. Светлые следы — доступные шаги, красные — сверх броска." : "Брось кость пути, чтобы идти дальше. Назад по своим следам — без кости.";
                 foreach (string line in Wrap(tip, 34)) { if (y + 17f > PanelTextBottom) break; UiKit.Text(new Rect(x, y, w, 17f), line, 12f, Dim, TextAnchor.MiddleLeft, false); y += 17f; }
             }
             // The empty lower half of the old sidebar now shows a contextual
