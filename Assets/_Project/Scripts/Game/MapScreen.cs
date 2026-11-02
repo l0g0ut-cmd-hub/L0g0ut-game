@@ -703,9 +703,16 @@ namespace BladePath
             // кости пути: запас, выпавшее, бросок; без костей — проводник за моны или бой с ронином
             bool rolling = Time.unscaledTime - rollAt < RollTime;
             int face = rolling ? 1 + (int)(Time.unscaledTime * 14f) % 3 : Campaign.Steps > 0 ? Campaign.Steps : Mathf.Max(1, Campaign.LastRoll);
-            Die(new Rect(x, y, 44f, 44f), face, rolling ? (Time.unscaledTime * 900f) % 360f : 0f, Campaign.Steps > 0 || rolling);
-            UiKit.Text(new Rect(x + 54f, y, w - 54f, 22f), "КОСТИ ПУТИ: " + Campaign.Rolls, 14f, Ink, TextAnchor.MiddleLeft);
-            UiKit.Text(new Rect(x + 54f, y + 22f, w - 54f, 20f), rolling ? "бросок…" : Campaign.Steps > 0 ? "ходов: " + Campaign.Steps : "ход окончен", 12f, Campaign.Steps > 0 ? new Color(0.6f, 0.95f, 0.7f) : Dim, TextAnchor.MiddleLeft, false);
+            Die(new Rect(x, y, 50f, 50f), face,
+                rolling ? (Time.unscaledTime * 900f) % 360f : 0f,
+                Campaign.Steps > 0 || rolling);
+            UiKit.Text(new Rect(x + 61f, y, w - 61f, 22f),
+                "КОСТИ ПУТИ: " + Campaign.Rolls, 14f, Ink, TextAnchor.MiddleLeft);
+            UiKit.Text(new Rect(x + 61f, y + 22f, w - 61f, 20f),
+                rolling ? "бросок…" : Campaign.Steps > 0
+                    ? "ходов: " + Campaign.Steps : "ход окончен",
+                12f, Campaign.Steps > 0 ? VisualIdentity.Jade : Dim,
+                TextAnchor.MiddleLeft, false);
             // Three-step travel gauge below the die: coloured segments correspond
             // to remaining movement points, matching the trail's range.
             for (int k = 0; k < 3; k++)
@@ -713,9 +720,9 @@ namespace BladePath
                 bool available = k < Campaign.Steps;
                 Color segment = available ? new Color(0.70f, 0.92f, 0.58f, 0.92f)
                     : new Color(0.35f, 0.28f, 0.20f, 0.72f);
-                UiKit.Rect(new Rect(x + 54f + k * 43f, y + 43f, 36f, 4f), segment);
+                UiKit.Rect(new Rect(x + 61f + k * 43f, y + 44f, 36f, 4f), segment);
             }
-            y += 52f;
+            y += 57f;
             bool canRoll = Campaign.Rolls > 0 && Campaign.Steps <= 0 && Campaign.Current.done && !Campaign.InFight && !Campaign.Training && !rolling;
             if (canRoll && Btn(new Rect(x, y, w, 42f), "БРОСИТЬ КОСТЬ", interactive, true)) { Campaign.RollDie(); rollAt = Time.unscaledTime; Haptics.Pulse(30); if (Juice.Instance != null) Juice.Instance.Taiko(0.7f, 1.3f); }
             if (canRoll) y += 48f;
@@ -808,7 +815,7 @@ namespace BladePath
                 case NodeType.Smith: return "UI/npc_1";
                 case NodeType.Merchant: return "UI/npc_0";
                 case NodeType.Rest: return "UI/npc_3";
-                case NodeType.Herbalist: return "UI/pack02/herbalist";
+                case NodeType.Herbalist: return "UI/npc_4";
                 case NodeType.Treasure: return "UI/chest_open";
                 default: return "UI/path_panorama";
             }
@@ -880,19 +887,6 @@ namespace BladePath
             Rect r = new Rect((W - w) * 0.5f, (540f - h) * 0.5f + (1f - a) * 20f, w, h);
             VisualIdentity.Surface(r, a);
             return r;
-        }
-
-        // Generated art pack is optional. Existing Resources assets remain the fallback.
-        static string PackArt(string name, string fallback)
-        {
-            string path = "UI/pack01/" + name;
-            return UiKit.Tex(path) != null ? path : fallback;
-        }
-
-        static string Pack02Art(string name, string fallback)
-        {
-            string path = "UI/pack02/" + name;
-            return UiKit.Tex(path) != null ? path : fallback;
         }
 
         void Picture(Rect r, string tex)
@@ -1020,7 +1014,7 @@ namespace BladePath
                 case Modal.Knocked:
                 {
                     Rect r = Card(640f, 340f);
-                    Picture(new Rect(r.x, r.y, 250f, r.height), Pack02Art("herbalist", UiKit.Tex("UI/npc_4") != null ? "UI/npc_4" : "UI/npc_2"));
+                    Picture(new Rect(r.x, r.y, 250f, r.height), "UI/npc_4");
                     float x = r.x + 270f, w = r.width - 290f, y = r.y + 22f;
                     UiKit.Text(new Rect(x, y, w, 26f), "ХИЖИНА ТРАВНИЦЫ", 20f, Gold, TextAnchor.MiddleLeft); y += 34f;
                     string tx = modal == Modal.Knocked
