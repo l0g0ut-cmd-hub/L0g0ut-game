@@ -160,9 +160,9 @@ namespace BladePath
             {
                 Hub hub = graph.hubs[i];
                 float d = Length(pos - hub.pos);
-                // Approaching the actual bridge is permitted from either bank.
-                if (hub.shore != shore &&
-                    !(hub.shore == 2 && d < 43f)) continue;
+                // Attach to the road on the SAME bank. A nearby bridge waypoint
+                // must not become an off-road shortcut across water.
+                if (hub.shore != shore) continue;
                 if (d < distance) { best = i; distance = d; }
             }
             return best;
@@ -225,7 +225,6 @@ namespace BladePath
             // FOREST OF SHADOWS: riverside rice fields -> actual wooden bridge
             // at x=.408..523, y=.68, then torii clearing and castle approach.
             Graph g = graphs[0] = new Graph();
-            for (int i = 0; i < 24; i++) { } // versioned, explicit authored hubs below
             int w0=g.Add(.27f,.66f,0), w1=g.Add(.23f,.48f,0), w2=g.Add(.30f,.77f,0);
             int w3=g.Add(.34f,.63f,0), w4=g.Add(.375f,.645f,0), w5=g.Add(.406f,.678f,0);
             int b0=g.Add(.429f,.684f,2), b1=g.Add(.460f,.679f,2);
