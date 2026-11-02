@@ -149,7 +149,17 @@ namespace BladePath
         public static bool Cursed { get { return D.cursed; } }
         public static int ClearedRegion { get { return D.clearedRegion; } }
         public static void AckCleared() { D.clearedRegion = -1; Save(); }
-        public static bool CanGo(int i) { return i >= 0 && i < D.nodes.Count && Current.done && Current.next.Contains(i) && !InFight && !D.training && D.steps > 0; }
+        /// <summary>
+        /// Соседние места на карте: вперёд по дороге (next) и назад — к уже пройденному месту,
+        /// откуда дорога ведёт сюда. Шаг назад тратит ход кости, как и шаг вперёд.
+        /// </summary>
+        public static bool Adjacent(int from, int to)
+        {
+            if (from < 0 || to < 0 || from >= D.nodes.Count || to >= D.nodes.Count || from == to) return false;
+            if (D.nodes[from].next.Contains(to)) return true;
+            return D.nodes[to].done && D.nodes[to].next.Contains(from);
+        }
+        public static bool CanGo(int i) { return i >= 0 && i < D.nodes.Count && Current.done && Adjacent(D.at, i) && !InFight && !D.training && D.steps > 0; }
         public static int Rolls { get { return D.rolls; } }
         public static int Steps { get { return D.steps; } }
         public static int LastRoll { get { return D.lastRoll; } }

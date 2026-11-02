@@ -45,6 +45,7 @@ namespace BladePath
         float toastAt = -100f;
         readonly List<string> toastLines = new List<string>(3);
         List<Item> stock; int stockNode = -1;
+        readonly Dictionary<int, KeyValuePair<Vector2, List<Item>>> stocks = new Dictionary<int, KeyValuePair<Vector2, List<Item>>>();
 
         void OnShow()
         {
@@ -67,8 +68,11 @@ namespace BladePath
             MapNode n = Campaign.Nodes[i];
             Profile.CostMul = n.Type == NodeType.Smith ? 0.5f : 1f;
             // Revisiting a cleared road does not repeat paid treasure or defeated enemies.
+            // Shrine blessing and rest training are one-time too: walking back
+            // and forth must not farm them. Smith, merchant and herbalist reopen.
             if (revisit && n.done && !Campaign.InFight &&
-                (n.IsFight || n.Type == NodeType.Treasure || n.Type == NodeType.Event))
+                (n.IsFight || n.Type == NodeType.Treasure || n.Type == NodeType.Event ||
+                 n.Type == NodeType.Shrine || n.Type == NodeType.Rest))
             {
                 modal = Modal.None;
                 return;
@@ -79,7 +83,20 @@ namespace BladePath
                 case NodeType.Shrine: OpenModal(Modal.Shrine); break;
                 case NodeType.Smith: OpenModal(Modal.Smith); break;
                 case NodeType.Merchant:
-                    if (stockNode != i) { stockNode = i; stock = new List<Item>(); for (int k = 0; k < 3; k++) stock.Add(Profile.Roll(Campaign.Region + 1, 60, k == 0 && Random.value < 0.4f)); Item sc = Random.value < 0.5f ? Profile.NewScroll() : null; if (sc != null) stock[2] = sc; }
+                    if (stockNode != i || stock == null)
+                    {
+                        // A merchant keeps the same goods when you come back: revisits
+                        // must not reroll the stock. Position guards against a new map.
+                        KeyValuePair<Vector2, List<Item>> kept;
+                        Vector2 at = new Vector2(n.x, n.y);
+                        if (stocks.TryGetValue(i, out kept) && kept.Key == at) stock = kept.Value;
+                        else
+                        {
+                            stock = new List<Item>(); for (int k = 0; k < 3; k++) stock.Add(Profile.Roll(Campaign.Region + 1, 60, k == 0 && Random.value < 0.4f)); Item sc = Random.value < 0.5f ? Profile.NewScroll() : null; if (sc != null) stock[2] = sc;
+                            stocks[i] = new KeyValuePair<Vector2, List<Item>>(at, stock);
+                        }
+                        stockNode = i;
+                    }
                     OpenModal(Modal.Merchant); break;
                 case NodeType.Treasure: if (treasure != null) OpenModal(Modal.Treasure); else modal = Modal.None; break;
                 case NodeType.Rest: OpenModal(Modal.Rest); break;
@@ -338,8 +355,13 @@ namespace BladePath
 
         bool Known(MapNode n)
         {
-            MapNode c = Campaign.Current;
-            return n.done || n.Type == NodeType.Boss || n.Type == NodeType.Start || n.layer <= c.layer + 1;
+            // Fog lifts up to one layer past the furthest visited place, so walking
+            // back does not hide again what the traveller has already seen.
+            int reach = Campaign.Current.layer;
+            List<MapNode> all = Campaign.Nodes;
+            for (int i = 0; i < all.Count; i++)
+                if (all[i].done && all[i].layer > reach) reach = all[i].layer;
+            return n.done || n.Type == NodeType.Boss || n.Type == NodeType.Start || n.layer <= reach + 1;
         }
 
         // Shortest route through the authored road graph, including future nodes.
@@ -363,9 +385,10 @@ namespace BladePath
             while (routeQueue.Count > 0 && parents[index] < 0)
             {
                 int at = routeQueue.Dequeue();
-                foreach (int next in nodes[at].next)
+                // Forward roads plus roads back to already visited places.
+                for (int next = 0; next < nodes.Count; next++)
                 {
-                    if (next < 0 || next >= parents.Length || parents[next] >= 0) continue;
+                    if (parents[next] >= 0 || !Campaign.Adjacent(at, next)) continue;
                     parents[next] = at;
                     routeQueue.Enqueue(next);
                 }
@@ -415,9 +438,10 @@ namespace BladePath
             // Before selecting a destination, preview available next roads subtly.
             if (previewPath.Count <= 1 && Campaign.Steps > 0 && Campaign.Current.done && !Campaign.InFight)
             {
-                foreach (int next in Campaign.Current.next)
-                    DrawFootprintsOnRoad(Campaign.At, next,
-                        new Color(0.88f, 0.79f, 0.48f, 0.48f), 1f, false);
+                for (int next = 0; next < Campaign.Nodes.Count; next++)
+                    if (Campaign.Adjacent(Campaign.At, next))
+                        DrawFootprintsOnRoad(Campaign.At, next,
+                            new Color(0.88f, 0.79f, 0.48f, 0.48f), 1f, false);
             }
 
             for (int i = 1; i < previewPath.Count; i++)
@@ -475,8 +499,10 @@ namespace BladePath
             {
                 foreach (int b in ns[a].next)
                 {
-                    bool walked = Campaign.WasTravelled(a, b) && !(moveFrom == a && moveTo == b);
-                    bool open = a == Campaign.At && cur.done && moveTo < 0;
+                    bool walked = (Campaign.WasTravelled(a, b) || Campaign.WasTravelled(b, a)) &&
+                        !(moveFrom == a && moveTo == b) && !(moveFrom == b && moveTo == a);
+                    // A road also pulses when it leads back from here to a visited place.
+                    bool open = (a == Campaign.At || (b == Campaign.At && ns[a].done)) && cur.done && moveTo < 0;
                     float alpha = walked ? 0.95f : open ? 0.7f + 0.3f * Mathf.Sin(Time.unscaledTime * 5f) : Known(ns[b]) ? 0.45f : 0.22f;
                     Color col = walked ? new Color(0.55f, 0.06f, 0.04f, alpha) : new Color(0.05f, 0.04f, 0.04f, alpha);
                     TerrainRoads.Path road = TerrainRoads.Route(a, b);
@@ -903,7 +929,15 @@ namespace BladePath
                         HerbalistMark(new Vector2(x + 53f, y + 53f), 11f);
                 }
                 UiKit.Text(new Rect(x + 72f, y + 6f, w - 72f, 24f), known ? Campaign.TypeNames[n.type] : "НЕИЗВЕСТНО", 16f, Ink, TextAnchor.MiddleLeft);
-                if (known && n.IsFight) UiKit.Text(new Rect(x + 72f, y + 32f, w - 72f, 20f), Ladder.Stages[Mathf.Clamp(n.enemy, 0, Ladder.Count - 1)].name, 12f, new Color(1f, 0.6f, 0.45f), TextAnchor.MiddleLeft, false);
+                if (n.done && show != Campaign.At && n.Type != NodeType.Start)
+                {
+                    // Visited place: say what a return trip offers.
+                    bool reusable = n.Type == NodeType.Smith || n.Type == NodeType.Merchant || n.Type == NodeType.Herbalist;
+                    UiKit.Text(new Rect(x + 72f, y + 32f, w - 72f, 20f),
+                        reusable ? "ПРОЙДЕНО · можно вернуться" : "ПРОЙДЕНО · уже пусто", 12f,
+                        reusable ? VisualIdentity.Jade : Dim, TextAnchor.MiddleLeft, false);
+                }
+                else if (known && n.IsFight) UiKit.Text(new Rect(x + 72f, y + 32f, w - 72f, 20f), Ladder.Stages[Mathf.Clamp(n.enemy, 0, Ladder.Count - 1)].name, 12f, new Color(1f, 0.6f, 0.45f), TextAnchor.MiddleLeft, false);
                 y += 72f;
                 string hint = known ? Campaign.TypeHints[n.type] : "Туман скрывает, что ждёт впереди. Подойди ближе.";
                 foreach (string line in Wrap(hint, 34)) { UiKit.Text(new Rect(x, y, w, 17f), line, 12f, Dim, TextAnchor.MiddleLeft, false); y += 17f; }
@@ -1205,7 +1239,9 @@ namespace BladePath
                     UiKit.Text(new Rect(x, y, w, 26f), "ХИЖИНА ТРАВНИЦЫ", 20f, Gold, TextAnchor.MiddleLeft); y += 34f;
                     string tx = modal == Modal.Knocked
                         ? "Ты очнулся на циновке. Пахнет полынью и дымом. «Тебя принесли с дороги еле живого. Отлежался — иди. Вот, возьми на удачу». Травница даёт кость пути."
-                        : "Старая травница помешивает отвар. «Ходят тут всякие с мечами… Если что — несите сюда». Она вкладывает тебе в ладонь кость пути.";
+                        : revisit
+                            ? "Травница поднимает глаза от отвара. «Снова ты? Посиди у огня, переведи дух». Кость пути она уже отдала тебе в прошлый раз."
+                            : "Старая травница помешивает отвар. «Ходят тут всякие с мечами… Если что — несите сюда». Она вкладывает тебе в ладонь кость пути.";
                     Lines(x, y, w, tx, 40, 13f, Ink);
                     if (Btn(new Rect(x, r.yMax - 64f, w, 46f), "В ПУТЬ", ok, true)) { if (modal == Modal.Knocked) Campaign.AckKnocked(); modal = Modal.None; }
                     break;

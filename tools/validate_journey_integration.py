@@ -258,7 +258,14 @@ def check_selection_screens():
     assert '"UI/map_rider_16_hero" + JourneyChoice.Hero' in screen
     check_png("Assets/_Project/Resources/UI/map_icon_herbalist.png", 256, 256)
     assert 'const string HerbalistIcon = "UI/map_icon_herbalist";' in screen
-    print("Selection screens: 2 painted screens, glow, 3 hero faces; 3 map riders; herbalist icon")
+    camp = read("Assets/_Project/Scripts/Game/Campaign.cs")
+    # Backtracking (user request 2026-11-02): back only to visited places;
+    # shrine and rest stay one-time, merchant keeps its stock.
+    assert "return D.nodes[to].done && D.nodes[to].next.Contains(from);" in camp
+    assert "Adjacent(D.at, i)" in camp
+    assert "n.Type == NodeType.Shrine || n.Type == NodeType.Rest))" in screen
+    assert "kept.Key == at) stock = kept.Value;" in screen
+    print("Selection screens: 2 painted screens, glow, 3 hero faces; 3 map riders; herbalist icon; backtracking")
 
 
 def check_heal():

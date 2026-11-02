@@ -43,7 +43,11 @@ assert "FountainDecals(neck, seconds, battleFxGeneration)" in juice
 assert 'w * 0.38f, 48f), "СНАРЯЖЕНИЕ"' not in map_screen
 assert 'Btn(new Rect(x, r.yMax - 64f, w, 44f), "СНАРЯЖЕНИЕ"' in map_screen
 assert 'heroArt = "UI/npc_"' not in map_screen
-assert '"СЕРИЯ УДАРОВ  ×" + hits' in hud
+# Combo counter redesigned (user request 2026-11-02): brush digits, but kept
+# under the life bars and capped in height so it never hides the fight.
+assert 'const float ComboMaxH = 66f;' in hud
+assert 'DrawCombo(duel.player, new Vector2(70f, 121f), TextAnchor.MiddleLeft);' in hud
+assert '"ударов подряд"' in hud
 assert 'JourneyChoice.Names[JourneyChoice.Hero]' in hud
 assert 'pp = JourneyChoice.Portrait(JourneyChoice.Hero)' in hud
 assert 'new Rect(0.035f, 0.742f, 0.365f, 0.250f)' in hud

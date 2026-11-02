@@ -125,9 +125,9 @@ def check_design_system():
             'Btn(new Rect(x, r.yMax - 64f, w, 44f), "СНАРЯЖЕНИЕ"' in map_code and
             'w * 0.38f, 48f), "СНАРЯЖЕНИЕ"' not in map_code,
         "combat combo unified":
-            '"СЕРИЯ УДАРОВ  ×" + hits' in combat and
-            "UiKit.Rect(plate" in combat and
-            "const float width = 171f, height = 29f;" in combat,
+            '"UI/brush_digits_white"' in combat and
+            "const float ComboMaxH = 66f;" in combat and
+            "DrawCombo(duel.enemy, new Vector2(W - 70f, 121f), TextAnchor.MiddleRight);" in combat,
         "menu unified":
             "VisualIdentity.Surface(box" in menu,
         "combat pause unified":

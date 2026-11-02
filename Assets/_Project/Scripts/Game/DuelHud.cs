@@ -293,8 +293,8 @@ namespace BladePath
             }
 
             // серии ударов
-            // Small matching combo capsules under the life bars — not huge floating
-            // ink numbers that obscure the swordfight and announcement banners.
+            // Brush-ink combo counters under the life bars, kept between the ki bars
+            // and the announcement band (see ComboMaxH) so they never hide the fight.
             DrawCombo(duel.player, new Vector2(70f, 121f), TextAnchor.MiddleLeft);
             DrawCombo(duel.enemy, new Vector2(W - 70f, 121f), TextAnchor.MiddleRight);
 
@@ -689,25 +689,117 @@ namespace BladePath
             UiKit.Text(new Rect(mirror ? r.xMax + 24f : r.x - 54f, r.y - 6f, 30f, 18f), "ДУХ", 9f, new Color(0.7f, 0.85f, 1f, 0.9f), mirror ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight, false);
         }
 
+        // ---- Серия ударов: кисточные цифры на брызге туши, подпись на красном мазке ----
+        // Три ступени: 2–4 «СЕРИЯ» (золото), 5–9 «ВИХРЬ КЛИНКА» (огонь, 斬), 10+ «БУРЯ СТАЛИ» (алый, свечение).
+        // Цифра подпрыгивает на каждом ударе; при переходе на ступень выше — всплеск туши.
+        // Вся серия держится между полоской духа (y 94) и полосой объявлений (y 168),
+        // чтобы не закрывать бой и баннеры: ComboMaxH — предел высоты цифр.
+        const float ComboMaxH = 66f;
+        static readonly string[] ComboTitles = { "СЕРИЯ", "ВИХРЬ КЛИНКА", "БУРЯ СТАЛИ" };
+        readonly int[] comboTier = new int[2];
+        readonly float[] comboTierAt = { -10f, -10f };
+
+        static int ComboGlyph(char ch) { return ch >= '0' && ch <= '9' ? ch - '0' : ch == '×' ? 10 : -1; }
+
+        static void DrawComboDigits(Texture2D t, string s, float x, float cy, float h, Color col, float grow)
+        {
+            if (t == null) return;
+            float gw = h * 0.66f, step = h * 0.56f;
+            Color o = GUI.color; GUI.color = col;
+            for (int i = 0; i < s.Length; i++)
+            {
+                int g = ComboGlyph(s[i]);
+                if (g < 0) continue;
+                Rect uv = new Rect((g % 4) * 0.25f, 1f - (g / 4 + 1) / 3f, 0.25f, 1f / 3f);
+                GUI.DrawTextureWithTexCoords(new Rect(x + i * step - grow, cy - h * 0.5f - grow,
+                    gw + grow * 2f, h + grow * 2f), t, uv);
+            }
+            GUI.color = o;
+        }
+
+        static void DrawSplashFrame(Texture2D t, int frame, Vector2 c, float size, Color col)
+        {
+            if (t == null) return;
+            Color o = GUI.color; GUI.color = col;
+            GUI.DrawTextureWithTexCoords(new Rect(c.x - size * 0.5f, c.y - size * 0.5f, size, size), t,
+                new Rect(Mathf.Clamp(frame, 0, 3) * 0.25f, 0f, 0.25f, 1f));
+            GUI.color = o;
+        }
+
         void DrawCombo(FighterController f, Vector2 at, TextAnchor anchor)
         {
-            if (duel.State != DuelState.Fighting) return;
-            int hits = duel.Combo(f);
-            float age = duel.ComboAge(f);
-            if (hits < 2 || age > 1.6f) return;
-            float fade = Mathf.Clamp01((1.6f - age) / 0.4f);
             bool right = anchor == TextAnchor.MiddleRight;
-            Color accent = right ? VisualIdentity.Vermilion : VisualIdentity.BrassLight;
-            const float width = 171f, height = 29f;
-            Rect plate = new Rect(right ? at.x - width : at.x,
-                at.y - height * 0.5f, width, height);
-            UiKit.Rect(plate, new Color(0.05f, 0.04f, 0.035f, 0.80f * fade));
-            UiKit.Rect(new Rect(plate.x, plate.y, 3f, height),
-                new Color(accent.r, accent.g, accent.b, fade));
-            UiKit.Text(new Rect(plate.x + 9f, plate.y + 2f, width - 18f, 24f),
-                "СЕРИЯ УДАРОВ  ×" + hits, 12f,
-                new Color(accent.r, accent.g, accent.b, fade),
-                TextAnchor.MiddleCenter, false);
+            int side = right ? 1 : 0;
+            int hits = duel.State == DuelState.Fighting ? duel.Combo(f) : 0;
+            float age = duel.ComboAge(f);
+            if (hits < 2 || age > 1.6f) { comboTier[side] = 0; return; }
+
+            int tier = hits < 5 ? 0 : hits < 10 ? 1 : 2;
+            if (tier > comboTier[side]) comboTierAt[side] = Time.unscaledTime;
+            comboTier[side] = tier;
+            float fade = Mathf.Clamp01((1.6f - age) / 0.4f);
+            Color accent = tier == 0 ? new Color(0.96f, 0.81f, 0.47f)
+                : tier == 1 ? new Color(1f, 0.50f, 0.20f) : new Color(1f, 0.24f, 0.16f);
+
+            string s = "×" + hits;
+            float pop = 1f + 0.18f * Mathf.Exp(-age * 14f);      // прыжок цифры на каждом ударе
+            float h = (tier == 0 ? 52f : tier == 1 ? 58f : ComboMaxH) * pop;
+            float cy = at.y + 10f;
+            float total = h * 0.56f * (s.Length - 1) + h * 0.66f;
+            float x0 = right ? at.x - total : at.x;
+            Vector2 numC = new Vector2(x0 + total * 0.5f, cy);
+
+            // брызга туши за числом
+            Texture2D splash = UiKit.Tex("UI/ink_splash");
+            DrawSplashFrame(splash, 2, numC, h * 1.9f, new Color(0.03f, 0.015f, 0.015f, 0.8f * fade));
+
+            // мазок кисти под подписью
+            const float labelW = 140f;
+            float lx = right ? x0 - 8f - labelW : x0 + total + 8f;
+            Texture2D stroke = UiKit.Tex("UI/brush_stroke_red");
+            if (stroke != null)
+            {
+                Color o = GUI.color;
+                GUI.color = tier == 0 ? new Color(0.45f, 0.30f, 0.22f, 0.85f * fade)
+                    : new Color(1f, 1f, 1f, (tier == 2 ? 0.9f : 0.78f) * fade);
+                Rect br = new Rect(lx - 18f, cy - 22f, labelW + 36f, 44f);
+                GUI.DrawTextureWithTexCoords(br, stroke, right ? new Rect(1f, 0f, -1f, 1f) : new Rect(0f, 0f, 1f, 1f));
+                GUI.color = o;
+            }
+
+            // всплеск при переходе на новую ступень
+            float up = Time.unscaledTime - comboTierAt[side];
+            if (up < 0.35f && tier > 0)
+                DrawSplashFrame(splash, (int)(up / 0.35f * 4f), numC, h * 2.6f,
+                    new Color(0.55f, 0.05f, 0.04f, (1f - up / 0.35f) * fade));
+
+            Texture2D white = UiKit.Tex("UI/brush_digits_white");
+            if (white == null)
+            {
+                UiKit.Text(new Rect(x0 - 10f, cy - 20f, total + 20f, 40f), s, 30f,
+                    new Color(accent.r, accent.g, accent.b, fade));
+            }
+            else
+            {
+                if (tier > 0)
+                {
+                    float breathe = 0.85f + 0.15f * Mathf.Sin(Time.unscaledTime * 6f);
+                    DrawComboDigits(UiKit.Tex("UI/brush_digits_glow"), s, x0, cy, h,
+                        new Color(accent.r, accent.g, accent.b, (tier == 2 ? 0.75f : 0.4f) * breathe * fade), h * 0.12f);
+                }
+                DrawComboDigits(UiKit.Tex("UI/brush_digits"), s, x0 + 2.5f, cy + 3f, h,
+                    new Color(0f, 0f, 0f, 0.9f * fade), 1.5f);
+                DrawComboDigits(white, s, x0, cy, h, new Color(accent.r, accent.g, accent.b, fade), 0f);
+            }
+
+            TextAnchor ta = right ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft;
+            UiKit.Text(new Rect(lx, cy - 20f, labelW, 22f), ComboTitles[tier], 17f,
+                new Color(0.98f, 0.93f, 0.83f, fade), ta);
+            UiKit.Text(new Rect(lx, cy + 2f, labelW, 16f), "ударов подряд", 11f,
+                new Color(0.92f, 0.84f, 0.72f, fade), ta);
+            if (tier > 0)
+                UiKit.Ink("UI/zan", new Vector2(right ? lx - 22f : lx + labelW + 22f, cy), 42f,
+                    new Color(1f, 1f, 1f, fade));
         }
 
         void DrawPips(Vector2 c, int wins, int total, bool mirror)
