@@ -41,7 +41,7 @@ def crop_sq(o, pad=6):
     return out
 
 # --- пятна на земле: круг, полоса (поток вдоль +v: густо внизу, капли уходят вверх), лужа, россыпь капель
-for k, name, rot in [(1, 'blood_splat', 0), (2, 'blood_streak', 90), (4, 'blood_pool', 0)]   # россыпь капель (ячейка 3) — глянцевые шарики, на земле читались как бусины:
+for k, name, rot in [(1, 'blood_splat', 0), (2, 'blood_streak', 90), (4, 'blood_pool', 0)]:  # россыпь капель (ячейка 3) — глянцевые шарики, на земле читались как бусины:
     o = crop_sq(gloss_mask(*key(cells[k])))
     to_img(o, 256, 256, rot).save(R + 'Resources/FX/' + name + '.png')
 
