@@ -127,8 +127,8 @@ def check_design_system():
         "combat pause unified":
             "VisualIdentity.Surface(pr" in controls or
             "VisualIdentity.Surface(r" in controls,
-        "shared UI content optimized":
-            "sharedTextContent" in kit,
+        "base typography remains intact":
+            "GUI.Label(pr, s, label)" in kit and "label.CalcSize" in kit,
         "theme provides shared assets":
             all(name in theme for name in
                 ("Color Brass", "Color Lacquer", "Color Parchment",
