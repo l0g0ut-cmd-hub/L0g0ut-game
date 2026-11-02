@@ -14,6 +14,7 @@ namespace BladePath
         public static bool Open { get; private set; }
         static InventoryScreen inst;
         Item sel; int page; float openedAt;
+        readonly List<Item> visibleBag = new List<Item>(64);
         int tab;                // 0 — снаряжение, 1 — прокачка
         int[] pending;          // распределение очков, пока не принято
         static readonly Color Gold = new Color(0.86f, 0.70f, 0.38f, 1f);
@@ -154,8 +155,8 @@ namespace BladePath
         {
             UiKit.Text(new Rect(a.x, a.y, a.width, 26f), "УРОВЕНЬ " + Profile.Level + (Profile.Cycle > 0 ? "   ·   КРУГ " + (Profile.Cycle + 1) : ""), 20f, Ink, TextAnchor.MiddleLeft);
             Rect xb = new Rect(a.x, a.y + 30f, a.width, 10f);
-            UiKit.Rect(xb, new Color(0f, 0f, 0f, 0.6f));
-            UiKit.Rect(new Rect(xb.x, xb.y, xb.width * Mathf.Clamp01(Profile.Xp / (float)Profile.XpToNext), xb.height), new Color(0.75f, 0.6f, 0.3f));
+            VisualIdentity.AccentBar(xb, VisualIdentity.Brass,
+                Profile.Xp / (float)Mathf.Max(1, Profile.XpToNext));
             UiKit.Text(new Rect(a.x, a.y + 42f, a.width, 16f), "ОПЫТ " + Profile.Xp + " / " + Profile.XpToNext, 11f, new Color(0.8f, 0.76f, 0.68f), TextAnchor.MiddleLeft);
             int pts = Profile.Points;
             UiKit.Text(new Rect(a.x, a.y + 42f, a.width, 16f), pts > 0 ? "ОЧКОВ: " + pts : "", 13f, Gold, TextAnchor.MiddleRight);
@@ -211,15 +212,17 @@ namespace BladePath
             float lx = 30f, lw = Mathf.Min(560f, W * 0.56f);
             UiKit.Text(new Rect(lx, 62f, lw, 28f), "УРОВЕНЬ " + Profile.Level + "   ·   ОПЫТ " + Profile.Xp + " / " + Profile.XpToNext, 17f, Ink, TextAnchor.MiddleLeft);
             Rect xb = new Rect(lx, 92f, lw, 8f);
-            UiKit.Rect(xb, new Color(0f, 0f, 0f, 0.6f));
-            UiKit.Rect(new Rect(xb.x, xb.y, xb.width * Mathf.Clamp01(Profile.Xp / (float)Profile.XpToNext), xb.height), new Color(0.75f, 0.6f, 0.3f));
+            VisualIdentity.AccentBar(xb, VisualIdentity.Brass,
+                Profile.Xp / (float)Mathf.Max(1, Profile.XpToNext));
             float pulse = free > 0 ? 1f + 0.05f * Mathf.Sin(Time.unscaledTime * 5f) : 1f;
             UiKit.Text(new Rect(lx, 104f, lw, 30f), "СВОБОДНЫХ ОЧКОВ: " + free + "   из " + total, 19f * pulse, free > 0 ? new Color(1f, 0.82f, 0.35f) : new Color(0.8f, 0.76f, 0.68f), TextAnchor.MiddleLeft);
             for (int i = 0; i < Profile.StatCount; i++)
             {
                 float y = 142f + i * 66f;
                 Rect row = new Rect(lx, y, lw, 60f);
-                UiKit.Rect(row, new Color(0f, 0f, 0f, 0.3f));
+                VisualIdentity.Inset(row);
+                UiKit.Rect(new Rect(row.x, row.y, 3f, row.height),
+                    new Color(Gold.r, Gold.g, Gold.b, 0.33f));
                 Texture2D g = UiKit.Tex(Profile.StatGlyph[i]);
                 Rect gr = new Rect(lx + 6f, y + 4f, 52f, 52f);
                 if (g != null) { Color o = GUI.color; GUI.color = new Color(0.95f, 0.82f, 0.55f, 1f); GUI.DrawTexture(gr, g); GUI.color = o; }
@@ -234,8 +237,9 @@ namespace BladePath
             // справа — что изменится
             float rx = lx + lw + 22f, rw = W - rx - 32f;
             Rect rp = new Rect(rx, 62f, rw, 396f);
-            UiKit.Rect(rp, new Color(0f, 0f, 0f, 0.35f));
-            UiKit.Text(new Rect(rx + 12f, 68f, rw - 24f, 26f), changed ? "ЧТО ИЗМЕНИТСЯ" : "ИТОГ", 16f, Gold, TextAnchor.MiddleLeft);
+            VisualIdentity.Inset(rp);
+            VisualIdentity.Heading(new Rect(rx + 12f, 68f, rw - 24f, 30f),
+                changed ? "ЧТО ИЗМЕНИТСЯ" : "ИТОГ");
             Profile.Bonus a = Profile.Compute(cur), b = Profile.Compute(pending);
             string[] names = { "Урон", "Здоровье", "Урон по равновесию", "Накопление духа", "Окно отражения", "Откат рывка", "Скорость" };
             float[] av = { a.dmgMul, 100 + a.hp, a.postureMul, a.kiGainMul, a.parryMul, a.dashCdMul, a.moveMul };
@@ -310,7 +314,7 @@ namespace BladePath
 
         void DrawEquipped(Rect a)
         {
-            UiKit.Text(new Rect(a.x, a.y, a.width, 26f), "НАДЕТО", 16f, Gold);
+            VisualIdentity.Heading(new Rect(a.x, a.y, a.width, 32f), "НАДЕТО");
             for (int s = 0; s < Profile.SlotCount; s++)
             {
                 float x = a.x + (s % 2) * 120f + 8f, y = a.y + 30f + (s / 2) * 136f;
@@ -325,13 +329,15 @@ namespace BladePath
         void DrawBag(Rect a)
         {
             List<Item> all = Profile.Items;
-            List<Item> bag = new List<Item>();
+            List<Item> bag = visibleBag;
+            bag.Clear();
             foreach (Item it in all) if (!Profile.IsEquipped(it)) bag.Add(it);
             const float cell = 58f, gap = 6f;
             int cols = Mathf.Max(3, Mathf.FloorToInt((a.width + gap) / (cell + gap)));
             int per = cols * 4, pages = Mathf.Max(1, Mathf.CeilToInt(bag.Count / (float)per));
             page = Mathf.Clamp(page, 0, pages - 1);
-            UiKit.Text(new Rect(a.x, a.y, a.width, 26f), "СУМКА  " + all.Count + " / " + Profile.BagSize, 16f, Gold, TextAnchor.MiddleLeft);
+            VisualIdentity.Heading(new Rect(a.x, a.y, a.width, 32f),
+                "СУМКА  " + all.Count + " / " + Profile.BagSize);
             if (pages > 1)
             {
                 if (Btn(new Rect(a.xMax - 92f, a.y, 40f, 26f), "<", page > 0)) page--;
