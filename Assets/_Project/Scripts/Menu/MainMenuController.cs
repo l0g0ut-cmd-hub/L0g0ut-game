@@ -256,10 +256,16 @@ namespace BladePath
                 // The experimental six-panel atlas is currently a 6 KB thumbnail.
                 // Render the established high-resolution illustrated portraits
                 // until a verified production atlas is actually checked in.
-                if (UiKit.Tex(art) == null)
-                    art = newJourneyStep == 1 ? "UI/event_" + i : "UI/npc_" + i;
-                if (UiKit.Tex(art) == null) art = "UI/path_panorama";
-                VisualIdentity.Portrait(artRect, art);
+                // Never substitute unrelated encounter/NPC portraits for the
+                // player-authored hero and difficulty art.
+                if (UiKit.Tex(art) != null)
+                    VisualIdentity.Portrait(artRect, art);
+                else
+                {
+                    UiKit.Rect(artRect, new Color(0.10f, 0.07f, 0.06f, 1f));
+                    UiKit.Text(artRect, "ИЛЛЮСТРАЦИЯ НЕ ЗАГРУЖЕНА", 11f,
+                        VisualIdentity.Subdued, TextAnchor.MiddleCenter, false);
+                }
 
                 if (selected)
                 {
