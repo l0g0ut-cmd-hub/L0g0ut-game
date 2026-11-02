@@ -119,7 +119,7 @@ namespace BladePath
             HandleMapPan();
             if (moveTo >= 0)
             {
-                if (Time.unscaledTime - moveStart >= MoveTime)
+                if (Time.unscaledTime - moveStart >= moveDuration)
                 {
                     int i = moveTo; moveTo = -1;
                     if (freshTreasure) treasure = Profile.Treasure(Campaign.Region + 1);
