@@ -49,7 +49,13 @@ namespace BladePath
         public static Texture2D Tex(string path)
         {
             Texture2D t;
-            if (!texCache.TryGetValue(path, out t)) { t = Resources.Load<Texture2D>(path); texCache[path] = t; }
+            if (string.IsNullOrEmpty(path)) return null;
+            if (texCache.TryGetValue(path, out t) && t != null) return t;
+            // A missing reference must never be cached forever: the atlas can
+            // become available after scene initialization or asset reimport.
+            // Existing loaded textures are still retained without allocations.
+            t = Resources.Load<Texture2D>(path);
+            if (t != null) texCache[path] = t;
             return t;
         }
 
