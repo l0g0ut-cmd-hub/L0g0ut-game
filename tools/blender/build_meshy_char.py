@@ -150,12 +150,21 @@ if RIG:
     for sd, side in (('L', 'left'), ('R', 'right')):
         J['sh' + sd] = H(find(side, 'shoulder')); J['arm' + sd] = H(find(side, 'upperarm'))
         J['elb' + sd] = H(find(side, 'lowerarm') or find(side, 'forearm')); J['wri' + sd] = H(find(side, 'hand'))
-        dv = np.array(J['wri' + sd]) - np.array(J['elb' + sd]); dv /= np.linalg.norm(dv)
-        J['hnd' + sd] = tuple(float(x) for x in np.array(J['wri' + sd]) + dv * 0.17 * k)
+        # кончик кисти: конец среднего пальца рига, иначе — самая дальняя от запястья вершина кисти
+        Wv = np.array(J['wri' + sd]); dv = Wv - np.array(J['elb' + sd]); dv /= np.linalg.norm(dv)
+        mid_end = find(side, 'middle', 'end') or find(side, 'middle', 'distal')
+        if mid_end:
+            Tv = np.array(H(mid_end))
+        else:
+            rel = P - Wv; along = rel @ dv; dist = np.linalg.norm(rel, axis=1)
+            cand = (along > 0.02 * k) & (dist < 0.22 * k) & (np.linalg.norm(rel - np.outer(along, dv), axis=1) < 0.07 * k)
+            Tv = P[cand][np.argmax(along[cand])] if cand.sum() > 5 else Wv + dv * 0.17 * k
+        J['hnd' + sd] = tuple(float(x) for x in Tv)
         J['hip' + sd] = H(find(side, 'upperleg') or find(side, 'upleg')); J['knee' + sd] = H(find(side, 'lowerleg') or find(side, 'leg', 'low'))
         J['ank' + sd] = H(find(side, 'foot')); toe = find(side, 'toes') or find(side, 'toe')
         J['toe' + sd] = H(toe) if toe else (J['ank' + sd][0], J['ank' + sd][1] - 0.14 * k, 0.03 * k)
     SPINE0 = spines[0] if spines else None
+    for sd in 'LR': log('кисть', sd, 'запястье', np.round(J['wri' + sd], 3), 'кончик', np.round(J['hnd' + sd], 3))
     log('суставы из рига', {kk: tuple(round(x, 3) for x in v) for kk, v in J.items()})
     if J['armL'][0] < 0: log('ВНИМАНИЕ: левая рука Meshy оказалась на −X')
 
