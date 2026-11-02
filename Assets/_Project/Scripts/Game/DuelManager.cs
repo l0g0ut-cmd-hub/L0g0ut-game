@@ -1338,6 +1338,21 @@ namespace BladePath
 
         void ApplyDamage(FighterController target, FighterController attacker, float dmg, Vector3 point, bool crit, bool chip = false, Vector3 normal = default(Vector3), Vector3 hitDir = default(Vector3), Transform zoneT = null)
         {
+            // благословения кота-хранителя (событие на карте): «Кошачья удача» — 10% удар по герою проходит мимо,
+            // «Девять жизней» — один раз за срок благословения смертельный удар оставляет 1 здоровья
+            if (!chip && target == player && dmg > 0f && Campaign.CatLuck && UnityEngine.Random.value < 0.1f)
+            {
+                Popup lp = new Popup();
+                lp.world = point + Vector3.up * 0.4f; lp.text = "КОШАЧЬЯ УДАЧА"; lp.color = new Color(1f, 0.85f, 0.35f);
+                lp.born = Time.unscaledTime; lp.size = 26f; Popups.Add(lp);
+                return;
+            }
+            if (target == player && dmg >= Hp(player) && Hp(player) > 1f && Campaign.CatNineLives)
+            {
+                dmg = Hp(player) - 1f;
+                Campaign.UseCatLife();
+                Announce("ДЕВЯТЬ ЖИЗНЕЙ", new Color(1f, 0.85f, 0.35f), "кот-хранитель отдал за тебя одну из своих");
+            }
             // удар во время глотка из тыквы: глоток сорван (если ещё не успел подействовать — лечения не будет, тыква потрачена)
             // удар по накапливающему срывает накопление
             if (!chip && target != null && ChargeSystem.Instance != null && ChargeSystem.Instance.IsCharging(target))

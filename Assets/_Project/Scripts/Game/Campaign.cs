@@ -13,7 +13,7 @@ namespace BladePath
         public float x, y;          // на карте области, доли ширины и высоты
         public int type;            // NodeType
         public int enemy;           // ступень Ladder для боя
-        public int ev = -1;         // событие: 0 раненый ронин, 1 монах, 2 разбойники, 3 кицунэ, 4 чайный домик, 5 дева в храме, 6 монах на мосту, 7 беженцы
+        public int ev = -1;         // событие: 0 раненый ронин, 1 монах, 2 разбойники, 3 кицунэ, 4 чайный домик, 5 дева в храме, 6 монах на мосту, 7 беженцы, 8 кот-хранитель
         public bool done;
         public List<int> next = new List<int>();
         public NodeType Type { get { return (NodeType)type; } }
@@ -32,6 +32,9 @@ namespace BladePath
         {
             public int region;
             public int roadsVer;        // 2 — места на новых дорогах (2026-11-03)
+            public int catBuff;         // благословение кота-хранителя: 0 нет, 1 «Кошачья удача», 2 «Девять жизней»
+            public int catFights;       // сколько боёв ещё действует
+            public bool catLifeUsed;    // «Девять жизней» уже спасли
             public int at;
             public int fight = -1;      // узел, бой в котором идёт (−1 — не в бою)
             public int blessing;        // 0 — нет, 1 — клинка (+20% урона), 2 — духа (полный дух в начале), 3 — жизни (+25% здоровья)
@@ -310,7 +313,8 @@ namespace BladePath
                     n.type = (int)RollType(l, L);
                     n.enemy = DuelEnemy(region);
                     if (n.Type == NodeType.Elite) n.enemy = Mathf.Clamp(region, 0, Ladder.Count - 1);
-                    if (n.Type == NodeType.Event) n.ev = UnityEngine.Random.Range(0, MapScreen.EventCount);
+                    // кот-хранитель — редкое событие (~1 из 15), остальные равновероятны
+                    if (n.Type == NodeType.Event) n.ev = UnityEngine.Random.value < 0.07f ? MapScreen.CatEvent : UnityEngine.Random.Range(0, MapScreen.CatEvent);
                 }
             }
             // перед владыкой — хотя бы одна передышка (храм или привал), если есть выбор
@@ -393,7 +397,7 @@ namespace BladePath
             D.rolls++;   // победа — кость пути
             MapNode n = D.nodes[D.fight];
             n.done = true; D.at = D.fight; D.fight = -1;
-            D.blessing = 0; D.cursed = false;
+            D.blessing = 0; D.cursed = false; TickCat();
             Weather.ForceNight = false;
             if (n.Type == NodeType.Boss)
             {
@@ -425,13 +429,21 @@ namespace BladePath
             // Clear previous marks so the map cannot draw an imaginary shortcut.
             if (D.travelled == null) D.travelled = new List<int>();
             D.travelled.Clear(); D.travelled.Add(cp);
-            D.blessing = 0; D.cursed = false; D.knocked = true;
+            D.blessing = 0; D.cursed = false; D.knocked = true; TickCat();
             if (D.rolls <= 0) D.rolls = 1; // emergency die: defeat must never soft-lock travel
             Weather.ForceNight = false;
             Save();
         }
 
         public static void SetBlessing(int b) { D.blessing = b; Save(); }
+
+        // ---- кот-хранитель: одно благословение на 3 боя похода (новое заменяет старое, не копится)
+        public static bool CatBlessed { get { return D.catBuff > 0 && D.catFights > 0; } }
+        public static void SetCatBlessing(int type) { D.catBuff = type; D.catFights = 3; D.catLifeUsed = false; Save(); }
+        public static bool CatLuck { get { return InFight && D.catBuff == 1 && D.catFights > 0; } }
+        public static bool CatNineLives { get { return InFight && D.catBuff == 2 && D.catFights > 0 && !D.catLifeUsed; } }
+        public static void UseCatLife() { D.catLifeUsed = true; D.catBuff = 0; D.catFights = 0; Save(); }
+        static void TickCat() { if (D.catFights > 0 && --D.catFights == 0) D.catBuff = 0; }
         public static void Curse() { D.cursed = true; Save(); }
 
         // ---------------- модификаторы текущего боя (DuelManager) ----------------
@@ -454,6 +466,7 @@ namespace BladePath
             {
                 string s = D.blessing == 1 ? "Благословение клинка: +20% урона" : D.blessing == 2 ? "Благословение духа: бой с полным духом" : D.blessing == 3 ? "Благословение жизни: +25% здоровья" : "";
                 if (D.cursed) s += (s.Length > 0 ? "\n" : "") + "Проклятие лисы: −25% здоровья";
+                if (CatBlessed) s += (s.Length > 0 ? "\n" : "") + (D.catBuff == 1 ? "Кошачья удача: 10% ударов мимо" : "Девять жизней: смертельный удар оставит 1 здоровья") + " (боёв: " + D.catFights + ")";
                 return s;
             }
         }
