@@ -56,6 +56,7 @@ namespace BladePath
         void OnShow()
         {
             int resume = !Campaign.Knocked && Campaign.ClearedRegion < 0 && plannedRegion == Campaign.Region ? sel : -1;
+            Weather.MapSky = -1;   // вне боя с карты (тренировка с ронином) — погода как раньше
             shownAt = Time.unscaledTime; sel = -1; previewPath.Clear(); moveTo = -1; modal = Modal.None; panU = -1f; continueRideAt = -1f;
             routeAutopilot = false; nextRouteAt = 0f; toastLines.Clear();
             manualPan = false; panArmed = false; panDragging = false;
@@ -270,6 +271,7 @@ namespace BladePath
             DrawFog(uw);
             DrawNodes(interactive && modal == Modal.None && moveTo < 0);
             DrawHero();
+            MapClouds.Draw(Campaign.Region, new Rect(mapX, 0f, viewW, MapH), u0, uw);   // погода над областью
             DrawJourneyLegend();
             // туман по краям и название области
             Texture2D fog = SoftSprites.Fog;
@@ -1199,7 +1201,10 @@ namespace BladePath
                     float x = r.x + 280f, w = r.width - 300f, y = r.y + 22f;
                     UiKit.Text(new Rect(x, y, w, 22f), Campaign.TypeNames[n.type], 15f, n.Type == NodeType.Boss ? new Color(1f, 0.4f, 0.3f) : Gold, TextAnchor.MiddleLeft); y += 28f;
                     UiKit.Text(new Rect(x, y, w, 34f), Ladder.Stages[e].name, 26f, Ink, TextAnchor.MiddleLeft); y += 36f;
-                    UiKit.Text(new Rect(x, y, w, 20f), Ladder.Stages[e].title, 13f, Dim, TextAnchor.MiddleLeft, false); y += 30f;
+                    UiKit.Text(new Rect(x, y, w, 20f), Ladder.Stages[e].title, 13f, Dim, TextAnchor.MiddleLeft, false); y += 22f;
+                    int sky = MapClouds.SkyAt(Campaign.Region, new Vector2(n.x, n.y));
+                    UiKit.Text(new Rect(x, y, w, 18f), "Погода: " + MapClouds.SkyName(sky) + (sky == 2 ? " — бой под молниями" : sky == 1 ? " — бой под дождём" : ""),
+                        12f, sky == 2 ? new Color(0.75f, 0.7f, 1f) : sky == 1 ? new Color(0.65f, 0.8f, 1f) : Dim, TextAnchor.MiddleLeft, false); y += 22f;
                     string mods = "";
                     if (n.Type == NodeType.Elite) mods += "Сильнее обычного: +35% здоровья, +15% урона, лишняя жизнь.\nДобыча не ниже редкой, мон больше.\n";
                     if (n.Type == NodeType.Ambush) mods += "Засада: бой ночью, враг начинает с полным духом.\nМон в полтора раза больше.\n";
@@ -1437,6 +1442,9 @@ namespace BladePath
 
         void StartFight(int at)
         {
+            // погода арены — от облака над местом боя в этот момент
+            MapNode fn = Campaign.Nodes[at];
+            Weather.MapSky = MapClouds.SkyAt(Campaign.Region, new Vector2(fn.x, fn.y));
             Campaign.BeginFight(at);
             Hide();
             DuelManager dm = DuelManager.Instance;

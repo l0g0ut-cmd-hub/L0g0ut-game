@@ -83,6 +83,10 @@ namespace BladePath
 
         /// <summary>Новый матч — новая погода.</summary>
         public static bool ForceNight;
+        /// <summary>Погода с карты похода (MapClouds): −1 — как раньше, случайно; 0 — ясно; 1 — дождевое облако; 2 — грозовое.</summary>
+        public static int MapSky = -1;
+        /// <summary>Гроза: дождь с молниями и громом. Дождь от обычного облака — без молний.</summary>
+        public bool Storm { get; private set; }
         public void Roll()
         {
             // время суток: сперва свет и небо, потом — база для погоды
@@ -102,11 +106,17 @@ namespace BladePath
             float r = Random.value;
             Raining = !Daytime && r < rainChance;
             Snowing = !Daytime && !Raining && r < rainChance + snowChance;
+            Storm = Raining;
+            if (MapSky >= 0)
+            {
+                // погоду определило облако над местом боя на карте (время суток — как раньше)
+                Raining = MapSky >= 1; Storm = MapSky == 2; Snowing = false;
+            }
             if (Raining) StartRain(); else StopRain();
             if (Snowing) StartSnow(); else StopSnow();
-            Foggy = !Daytime && !Raining && !Snowing && Random.value < fogChance;
+            Foggy = MapSky < 0 && !Daytime && !Raining && !Snowing && Random.value < fogChance;
             if (Foggy) StartFog(); else StopFog();
-            changeAt = !Daytime && !Raining && !Snowing && Random.value < changeChance ? Time.time + Random.Range(25f, 55f) : -1f;
+            changeAt = MapSky < 0 && !Daytime && !Raining && !Snowing && Random.value < changeChance ? Time.time + Random.Range(25f, 55f) : -1f;
             changeToSnow = Random.value < 0.4f; rumbled = false;
             if (Dawn) EnsureBreaths();   // утро холодное — изо рта пар
             Critters(!Raining && !Snowing && !Daytime);
@@ -671,7 +681,7 @@ namespace BladePath
                 if (Foggy) { Foggy = false; StopFog(); }
                 Critters(false);
                 if (changeToSnow) { Snowing = true; StartSnow(); Leaves(); if (HeavySnow) Windiness = 1.6f; }
-                else { Raining = true; StartRain(); Leaves(); nextFlashAt = Time.time + Random.Range(0.5f, 2f); }
+                else { Raining = true; Storm = true; StartRain(); Leaves(); nextFlashAt = Time.time + Random.Range(0.5f, 2f); }
             }
             if ((Snowing || Dawn) && Time.time >= nextBreathAt)
             {
@@ -685,7 +695,7 @@ namespace BladePath
             if (!Raining) { Restore(); return; }
 
             // молния: двойная вспышка, гром через 0,3…1,8 с
-            if (Time.time >= nextFlashAt)
+            if (Storm && Time.time >= nextFlashAt)
             {
                 flashT = Time.unscaledTime;
                 nextFlashAt = Time.time + Random.Range(7f, 18f);
