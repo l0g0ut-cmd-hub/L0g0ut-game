@@ -61,7 +61,10 @@ namespace BladePath
             if (material == null) { Graphics.Blit(src, dst); return; }
             float knee = threshold * softKnee + 1e-5f;
             material.SetVector("_Filter", new Vector4(threshold, threshold - knee, 2f * knee, 0.25f / knee));
-            material.SetFloat("_Intensity", intensity);
+            // Daylight should preserve painted stone/cloth detail; bloom gets
+            // stronger after sunset, when lanterns and sword sparks stand out.
+            float daylightBloom = DayNight.Instance != null && DayNight.Instance.Day ? 0.78f : 1f;
+            material.SetFloat("_Intensity", intensity * daylightBloom);
             material.SetFloat("_Exposure", exposure);
             material.SetFloat("_Contrast", contrast);
             material.SetFloat("_Saturation", saturation);
@@ -81,7 +84,12 @@ namespace BladePath
             {
                 cam.depthTextureMode |= DepthTextureMode.Depth;
                 float focus = CameraOrbit.Instance != null ? Vector3.Distance(cam.transform.position, CameraOrbit.Instance.Focus) : 6f;
-                material.SetVector("_Dof", new Vector4(focus + dofStart, dofRange, dofStrength, 0f));
+                // Keep regular swordplay crisp; use stronger shallow focus during
+                // finishing strikes and supernatural attacks.
+                DuelManager fight = DuelManager.Instance;
+                bool cinematic = fight != null && (fight.DeathblowActive || fight.SuperActive);
+                float focusPower = dofStrength * (cinematic ? 1f : 0.52f);
+                material.SetVector("_Dof", new Vector4(focus + dofStart, dofRange, focusPower, 0f));
                 d1 = RenderTexture.GetTemporary(Mathf.Max(8, src.width / 4), Mathf.Max(8, src.height / 4), 0, src.format);
                 d2 = RenderTexture.GetTemporary(Mathf.Max(8, src.width / 8), Mathf.Max(8, src.height / 8), 0, src.format);
                 d1.filterMode = FilterMode.Bilinear; d2.filterMode = FilterMode.Bilinear;
