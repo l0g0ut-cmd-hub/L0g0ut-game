@@ -110,7 +110,7 @@ namespace BladePath
             bool healBtn = down[(int)B.Heal];
             if (down[(int)B.CamReset] && CameraOrbit.Instance != null) CameraOrbit.Instance.ResetView();
             if (down[(int)B.DebugToggle] && debugViz != null) debugViz.visible = !debugViz.visible;
-            if (down[(int)B.Vibro]) { Haptics.Enabled = !Haptics.Enabled; PlayerPrefs.SetInt("haptics", Haptics.Enabled ? 1 : 0); Haptics.Pulse(40); }
+            if (down[(int)B.Vibro]) { Haptics.Enabled = !Haptics.Enabled; PlayerPrefs.SetInt("haptics", Haptics.Enabled ? 1 : 0); PlayerPrefs.Save(); if (Haptics.Enabled) Haptics.Pulse(40); }
             if (down[(int)B.Difficulty]) EnemyAI.Difficulty = (EnemyAI.Difficulty + 1) % 3;
             if (down[(int)B.Gfx]) DuelManager.Gfx = 1 - DuelManager.Gfx;
             if (down[(int)B.CamMode]) CameraOrbit.FreeMode = !CameraOrbit.FreeMode;
