@@ -13,11 +13,13 @@ namespace BladePath
 
         float seed;
         Vector3 flameBaseScale;
+        Color originalLightColor;
 
         void Awake()
         {
             seed = Random.value * 100f;
             if (lightSource == null) lightSource = GetComponent<Light>();
+            if (lightSource != null) originalLightColor = lightSource.color;
             if (flame != null) flameBaseScale = flame.localScale;
         }
 
@@ -33,7 +35,15 @@ namespace BladePath
             float n = Mathf.PerlinNoise(seed, Time.time * speed * (1f + 1.5f * g));
             float am = Mathf.Min(1f, amount * (1f + 0.8f * g));
             float k = 1f - am * 0.5f + am * n;
-            if (lightSource != null) lightSource.intensity = baseIntensity * k;
+            if (lightSource != null)
+            {
+                lightSource.intensity = baseIntensity * k;
+                // Subtle amber shifts accompany the embers without hard RGB
+                // flicker; rain cools/dims the flame naturally.
+                float warmth = Mathf.Clamp01(0.10f + 0.08f * n + 0.16f * g);
+                lightSource.color = Color.Lerp(originalLightColor,
+                    new Color(1f, 0.66f, 0.36f), warmth);
+            }
             if (flame != null) flame.localScale = flameBaseScale * (0.9f + 0.2f * n);
             if (!firesFound)
             {
