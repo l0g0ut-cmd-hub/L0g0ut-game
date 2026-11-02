@@ -124,7 +124,8 @@ namespace BladePath
                     samples.Clear(); // new weapon pose/teleport: no full-screen streak
                 if (samples.Count == 0 || (samples[samples.Count - 1].b - s.b).sqrMagnitude > 1e-6f)
                 {
-                    if (samples.Count >= MaxSamples) samples.RemoveAt(0);
+                    int maxSamples = MobileVfxBudget.Level >= 2 ? 12 : MaxSamples;
+                    if (samples.Count >= maxSamples) samples.RemoveAt(0);
                     samples.Add(s);
                 }
             }
@@ -160,7 +161,9 @@ namespace BladePath
             if (trailRenderer != null && !trailRenderer.enabled) trailRenderer.enabled = true;
             mesh.Clear();
             verts.Clear(); cols.Clear(); uvs.Clear(); tris.Clear();
-            const int sub = 4;
+            // At the lowest mobile tier the silhouette remains intact with
+            // half as many Catmull-Rom subdivisions and triangles.
+            int sub = MobileVfxBudget.Level >= 2 ? 2 : 4;
             int n = samples.Count;
             for (int i = 0; i < n - 1; i++)
             {
@@ -173,6 +176,11 @@ namespace BladePath
                     float t = Mathf.Lerp(p1.t, p2.t, u);
                     float age = Mathf.Clamp01((now - t) / Mathf.Max(0.035f, life));
                     // Bright leading edge with a soft, fast-dissolving tail; keep the blade itself visible.
+                    // Old sections collapse towards the blade's back edge. A
+                    // narrowing dry-brush tail reads like a katana arc rather than
+                    // a thick translucent plastic strip at its endpoint.
+                    float taper = Mathf.Lerp(0.24f, 1f, Mathf.Pow(1f - age, 0.75f));
+                    b = Vector3.Lerp(a, b, taper);
                     float alpha = Mathf.Pow(1f - age, 2.4f);
                     float headGlow = 1f - Mathf.SmoothStep(0f, 0.45f, age);
                     Color core = Color.Lerp(color, Color.white, headGlow * 0.8f);
