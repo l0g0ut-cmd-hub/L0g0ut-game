@@ -12,7 +12,7 @@ namespace BladePath
         public GameObject[] models = new GameObject[0];
         public int Active { get; private set; }
 
-        void Awake() { Apply(HeroRoster.Selected); }
+        void Awake() { Apply(JourneyChoice.Hero); }
 
         public void Apply(int index)
         {
@@ -30,7 +30,7 @@ namespace BladePath
                 ? models[index].GetComponent<HeroRigDriver>() : null;
             if (driver != null) driver.ApplyStanceOpen();
             FighterController fighter = GetComponent<FighterController>();
-            if (fighter != null) fighter.displayName = HeroRoster.Names[index];
+            if (fighter != null) fighter.displayName = JourneyChoice.Names[index];
         }
     }
 }
