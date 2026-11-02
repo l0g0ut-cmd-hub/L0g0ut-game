@@ -1,0 +1,38 @@
+name: BladePath Preflight (No APK)
+# Frequent commits must never consume the single Android build slot.
+on:
+  push:
+    branches: [bladepath-development]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preflight-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Python test syntax
+        run: python3 -m compileall -q tools
+      - name: Verify authored visual assets
+        run: python3 tools/validate_visual_assets.py
+      - name: Verify runtime visuals and preferences
+        run: python3 tools/validate_visual_runtime.py
+      - name: Verify UI and artwork consistency
+        run: python3 tools/validate_visual_consistency.py
+      - name: Preserve original art and bounded effects
+        run: python3 tools/validate_additive_visuals.py
+      - name: Verify journey assets, map routing and animation
+        run: python3 tools/validate_journey_integration.py
+      - name: Audit remaining resources
+        run: python3 tools/audit_missing_game_art.py
+      - name: Check duel lifecycle regressions
+        run: python3 tools/validate_duel_lifecycle.py
