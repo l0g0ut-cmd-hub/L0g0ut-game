@@ -92,7 +92,8 @@ namespace BladePath
 
             float barW = Mathf.Clamp(W * 0.5f - 80f - 110f, 200f, 400f);
             float cx = W * 0.5f;
-            DrawBar(new Rect(cx - 80f - barW, 22f, barW, 14f), duel.player, false, playerName, new Color(0.15f, 0.55f, 0.85f));
+            DrawBar(new Rect(cx - 80f - barW, 22f, barW, 14f), duel.player, false,
+                JourneyChoice.Names[JourneyChoice.Hero], new Color(0.15f, 0.55f, 0.85f));
             DrawBar(new Rect(cx + 80f, 22f, barW, 14f), duel.enemy, true, Ladder.Current.name, new Color(0.75f, 0.2f, 0.85f));
             // метки жизни врага (как у боссов Sekiro): энсо под полосой — сколько ещё добиваний; снятая метка гаснет
             int mm = duel.MaxMarks(duel.enemy);
@@ -752,7 +753,9 @@ namespace BladePath
             Vector2 pc = new Vector2(px, r.y + r.height * 0.5f + 4f);
             // портреты: герой — снимок модели героя (CI), враг — по облику: самурай в красном или ронин
             string pp;
-            if (!mirror) pp = UiKit.Tex("UI/portrait_hero") != null ? "UI/portrait_hero" : "UI/portrait_ronin";
+            // Each traveller's approved selection card contains a dedicated
+            // circular face inset. Reuse it here so Akiko/Ren never show Ronin.
+            if (!mirror) pp = JourneyChoice.Portrait(JourneyChoice.Hero);
             else
             {
                 // у каждого врага «Пути» свой портрет (Поверженный, Тень клана, Кровавый они, Проклятый сёгун); нет — по облику модели
@@ -765,7 +768,19 @@ namespace BladePath
             {
                 Color tint = since < 0.18f ? new Color(1f, 0.55f, 0.5f) : Color.white;
                 if (f.Dead) tint = new Color(0.4f, 0.4f, 0.4f);
-                UiKit.Image(pc, 32f, pt, tint);
+                if (!mirror && pp.StartsWith("UI/selection/hero_"))
+                {
+                    // Top-left face inset of each original full-body hero card.
+                    // The crop covers the circular portrait, not the small body.
+                    Rect target = new Rect(pc.x - 32f, pc.y - 32f, 64f, 64f);
+                    Color previous = GUI.color;
+                    GUI.color = tint;
+                    GUI.DrawTextureWithTexCoords(target, pt,
+                        new Rect(0.035f, 0.742f, 0.365f, 0.250f));
+                    GUI.color = previous;
+                    UiKit.Ring(pc, 32f, Gold, true);
+                }
+                else UiKit.Image(pc, 32f, pt, tint);
             }
             else
             {
