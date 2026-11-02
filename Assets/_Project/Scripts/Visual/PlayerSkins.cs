@@ -25,8 +25,14 @@ namespace BladePath
         {
             if (models == null || models.Length == 0) return;
             index = Mathf.Clamp(index, 0, models.Length - 1);
+            GameObject selected = models[index];
+            if (selected == null)
+                for (int i = 0; i < models.Length; i++)
+                    if (models[i] != null) { selected = models[i]; break; }
+            // Multiple entries may reference the same fallback model. Select
+            // by object reference instead of overwriting its active state.
             for (int i = 0; i < models.Length; i++)
-                if (models[i] != null) models[i].SetActive(i == index);
+                if (models[i] != null) models[i].SetActive(models[i] == selected);
             Active = index;
             if (models[index] != null)
             {
