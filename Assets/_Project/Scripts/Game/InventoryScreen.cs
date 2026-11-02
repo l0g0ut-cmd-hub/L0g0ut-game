@@ -14,6 +14,7 @@ namespace BladePath
         public static bool Open { get; private set; }
         static InventoryScreen inst;
         Item sel; int page; float openedAt;
+        readonly List<Item> visibleBag = new List<Item>(64);
         int tab;                // 0 — снаряжение, 1 — прокачка
         int[] pending;          // распределение очков, пока не принято
         static readonly Color Gold = new Color(0.86f, 0.70f, 0.38f, 1f);
@@ -110,16 +111,7 @@ namespace BladePath
 
         static bool Btn(Rect r, string label, bool enabled = true, bool red = false)
         {
-            Texture2D plank = UiKit.Tex(red ? "UI/plank_red" : "UI/plank");
-            Color o = GUI.color;
-            if (plank != null) { GUI.color = enabled ? Color.white : new Color(0.5f, 0.5f, 0.5f, 0.8f); GUI.DrawTexture(r, plank, ScaleMode.StretchToFill); GUI.color = o; }
-            else
-            {
-                UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), Gold * (enabled ? 0.8f : 0.35f));
-                UiKit.Rect(r, red ? new Color(0.35f, 0.08f, 0.06f, 1f) : new Color(0.09f, 0.07f, 0.07f, 0.97f));
-            }
-            UiKit.Text(r, label, Mathf.Min(17f, r.height * 0.46f), enabled ? Ink : new Color(0.6f, 0.58f, 0.55f));
-            return enabled && GUI.Button(r, GUIContent.none, GUIStyle.none);
+            return VisualIdentity.Button(r, label, enabled, red);
         }
 
         // ---------------- экран снаряжения ----------------
@@ -127,12 +119,13 @@ namespace BladePath
         void DrawScreen()
         {
             float W = UiKit.Width;
-            UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, 0.82f));
+            UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, 0.86f));
             Rect panel = new Rect(12f, 10f, W - 24f, 520f);
-            UiKit.Rect(new Rect(panel.x - 2f, panel.y - 2f, panel.width + 4f, panel.height + 4f), Gold * 0.6f);
-            UiKit.Rect(panel, new Color(0.055f, 0.045f, 0.045f, 0.98f));
-            UiKit.Paper(panel, new Color(0.2f, 0.16f, 0.12f, 0.35f));
-            UiKit.Corners(panel, 54f);
+            VisualIdentity.Surface(panel, 1f);
+            // Paper grain becomes a subtle second layer beneath the lacquer.
+            UiKit.Paper(new Rect(panel.x + 10f, panel.y + 60f,
+                panel.width - 20f, panel.height - 72f),
+                new Color(0.24f, 0.19f, 0.13f, 0.13f));
 
             // шапка: вкладки, монеты, «готово»
             if (Btn(new Rect(30f, 18f, 186f, 36f), "СНАРЯЖЕНИЕ", true, tab == 0)) tab = 0;
@@ -144,19 +137,26 @@ namespace BladePath
             UiKit.Text(new Rect(gx + 40f, 16f, 140f, 40f), Profile.Gold + " МОН", 20f, Gold, TextAnchor.MiddleLeft);
             if (Btn(new Rect(W - 160f, 18f, 130f, 36f), "ГОТОВО")) { Hide(); return; }
 
+            VisualIdentity.Divider(new Rect(24f, 60f, W - 48f, 1f), 0.43f);
             if (tab == 1) { DrawUpgrade(W); return; }
             if (tab == 2) { DrawPath(W); return; }
-            DrawStats(new Rect(28f, 64f, 292f, 456f));
-            DrawEquipped(new Rect(332f, 64f, 232f, 456f));
-            DrawBag(new Rect(578f, 64f, W - 578f - 30f, 456f));
+            Rect stats = new Rect(28f, 68f, 292f, 450f);
+            Rect equipped = new Rect(332f, 68f, 232f, 450f);
+            Rect bag = new Rect(578f, 68f, W - 608f, 450f);
+            VisualIdentity.Inset(stats);
+            VisualIdentity.Inset(equipped);
+            VisualIdentity.Inset(bag);
+            DrawStats(new Rect(stats.x + 8f, stats.y + 4f, stats.width - 16f, stats.height - 8f));
+            DrawEquipped(new Rect(equipped.x + 8f, equipped.y + 4f, equipped.width - 16f, equipped.height - 8f));
+            DrawBag(new Rect(bag.x + 8f, bag.y + 4f, bag.width - 16f, bag.height - 8f));
         }
 
         void DrawStats(Rect a)
         {
             UiKit.Text(new Rect(a.x, a.y, a.width, 26f), "УРОВЕНЬ " + Profile.Level + (Profile.Cycle > 0 ? "   ·   КРУГ " + (Profile.Cycle + 1) : ""), 20f, Ink, TextAnchor.MiddleLeft);
             Rect xb = new Rect(a.x, a.y + 30f, a.width, 10f);
-            UiKit.Rect(xb, new Color(0f, 0f, 0f, 0.6f));
-            UiKit.Rect(new Rect(xb.x, xb.y, xb.width * Mathf.Clamp01(Profile.Xp / (float)Profile.XpToNext), xb.height), new Color(0.75f, 0.6f, 0.3f));
+            VisualIdentity.AccentBar(xb, VisualIdentity.Brass,
+                Profile.Xp / (float)Mathf.Max(1, Profile.XpToNext));
             UiKit.Text(new Rect(a.x, a.y + 42f, a.width, 16f), "ОПЫТ " + Profile.Xp + " / " + Profile.XpToNext, 11f, new Color(0.8f, 0.76f, 0.68f), TextAnchor.MiddleLeft);
             int pts = Profile.Points;
             UiKit.Text(new Rect(a.x, a.y + 42f, a.width, 16f), pts > 0 ? "ОЧКОВ: " + pts : "", 13f, Gold, TextAnchor.MiddleRight);
@@ -212,15 +212,17 @@ namespace BladePath
             float lx = 30f, lw = Mathf.Min(560f, W * 0.56f);
             UiKit.Text(new Rect(lx, 62f, lw, 28f), "УРОВЕНЬ " + Profile.Level + "   ·   ОПЫТ " + Profile.Xp + " / " + Profile.XpToNext, 17f, Ink, TextAnchor.MiddleLeft);
             Rect xb = new Rect(lx, 92f, lw, 8f);
-            UiKit.Rect(xb, new Color(0f, 0f, 0f, 0.6f));
-            UiKit.Rect(new Rect(xb.x, xb.y, xb.width * Mathf.Clamp01(Profile.Xp / (float)Profile.XpToNext), xb.height), new Color(0.75f, 0.6f, 0.3f));
+            VisualIdentity.AccentBar(xb, VisualIdentity.Brass,
+                Profile.Xp / (float)Mathf.Max(1, Profile.XpToNext));
             float pulse = free > 0 ? 1f + 0.05f * Mathf.Sin(Time.unscaledTime * 5f) : 1f;
             UiKit.Text(new Rect(lx, 104f, lw, 30f), "СВОБОДНЫХ ОЧКОВ: " + free + "   из " + total, 19f * pulse, free > 0 ? new Color(1f, 0.82f, 0.35f) : new Color(0.8f, 0.76f, 0.68f), TextAnchor.MiddleLeft);
             for (int i = 0; i < Profile.StatCount; i++)
             {
                 float y = 142f + i * 66f;
                 Rect row = new Rect(lx, y, lw, 60f);
-                UiKit.Rect(row, new Color(0f, 0f, 0f, 0.3f));
+                VisualIdentity.Inset(row);
+                UiKit.Rect(new Rect(row.x, row.y, 3f, row.height),
+                    new Color(Gold.r, Gold.g, Gold.b, 0.33f));
                 Texture2D g = UiKit.Tex(Profile.StatGlyph[i]);
                 Rect gr = new Rect(lx + 6f, y + 4f, 52f, 52f);
                 if (g != null) { Color o = GUI.color; GUI.color = new Color(0.95f, 0.82f, 0.55f, 1f); GUI.DrawTexture(gr, g); GUI.color = o; }
@@ -235,8 +237,9 @@ namespace BladePath
             // справа — что изменится
             float rx = lx + lw + 22f, rw = W - rx - 32f;
             Rect rp = new Rect(rx, 62f, rw, 396f);
-            UiKit.Rect(rp, new Color(0f, 0f, 0f, 0.35f));
-            UiKit.Text(new Rect(rx + 12f, 68f, rw - 24f, 26f), changed ? "ЧТО ИЗМЕНИТСЯ" : "ИТОГ", 16f, Gold, TextAnchor.MiddleLeft);
+            VisualIdentity.Inset(rp);
+            VisualIdentity.Heading(new Rect(rx + 12f, 68f, rw - 24f, 30f),
+                changed ? "ЧТО ИЗМЕНИТСЯ" : "ИТОГ");
             Profile.Bonus a = Profile.Compute(cur), b = Profile.Compute(pending);
             string[] names = { "Урон", "Здоровье", "Урон по равновесию", "Накопление духа", "Окно отражения", "Откат рывка", "Скорость" };
             float[] av = { a.dmgMul, 100 + a.hp, a.postureMul, a.kiGainMul, a.parryMul, a.dashCdMul, a.moveMul };
@@ -311,10 +314,10 @@ namespace BladePath
 
         void DrawEquipped(Rect a)
         {
-            UiKit.Text(new Rect(a.x, a.y, a.width, 26f), "НАДЕТО", 16f, Gold);
+            VisualIdentity.Heading(new Rect(a.x, a.y, a.width, 32f), "НАДЕТО");
             for (int s = 0; s < Profile.SlotCount; s++)
             {
-                float x = a.x + (s % 2) * 120f + 8f, y = a.y + 30f + (s / 2) * 136f;
+                float x = a.x + (s % 2) * 110f + 6f, y = a.y + 30f + (s / 2) * 136f;
                 Rect r = new Rect(x, y, 96f, 96f);
                 Item it = Profile.Equipped(s);
                 DrawItem(r, it, it != null && it == sel);
@@ -326,13 +329,15 @@ namespace BladePath
         void DrawBag(Rect a)
         {
             List<Item> all = Profile.Items;
-            List<Item> bag = new List<Item>();
+            List<Item> bag = visibleBag;
+            bag.Clear();
             foreach (Item it in all) if (!Profile.IsEquipped(it)) bag.Add(it);
             const float cell = 58f, gap = 6f;
             int cols = Mathf.Max(3, Mathf.FloorToInt((a.width + gap) / (cell + gap)));
             int per = cols * 4, pages = Mathf.Max(1, Mathf.CeilToInt(bag.Count / (float)per));
             page = Mathf.Clamp(page, 0, pages - 1);
-            UiKit.Text(new Rect(a.x, a.y, a.width, 26f), "СУМКА  " + all.Count + " / " + Profile.BagSize, 16f, Gold, TextAnchor.MiddleLeft);
+            VisualIdentity.Heading(new Rect(a.x, a.y, a.width, 32f),
+                "СУМКА  " + all.Count + " / " + Profile.BagSize);
             if (pages > 1)
             {
                 if (Btn(new Rect(a.xMax - 92f, a.y, 40f, 26f), "<", page > 0)) page--;
@@ -353,12 +358,21 @@ namespace BladePath
         void DrawCard(Rect a)
         {
             if (sel != null && !Profile.Items.Contains(sel)) sel = null;
-            UiKit.Rect(a, new Color(0f, 0f, 0f, 0.35f));
-            if (sel == null) { UiKit.Text(a, "выбери предмет", 13f, new Color(0.7f, 0.66f, 0.6f)); return; }
+            VisualIdentity.Inset(a);
+            if (sel == null)
+            {
+                UiKit.Text(a, "ВЫБЕРИ ПРЕДМЕТ", 13f, VisualIdentity.Subdued);
+                return;
+            }
             Item it = sel;
             Color rc = Profile.RarityColors[it.rarity];
-            UiKit.Text(new Rect(a.x + 10f, a.y + 4f, a.width - 20f, 22f), it.name + (it.level > 0 ? "  +" + it.level : ""), 16f, rc, TextAnchor.MiddleLeft);
-            UiKit.Text(new Rect(a.x + 10f, a.y + 24f, a.width - 20f, 16f), Profile.SlotNames[it.slot] + "  ·  " + Profile.RarityNames[it.rarity], 10.5f, new Color(0.78f, 0.74f, 0.66f), TextAnchor.MiddleLeft, false);
+            UiKit.Rect(new Rect(a.x + 5f, a.y + 4f, 3f, 32f),
+                new Color(rc.r, rc.g, rc.b, 0.92f));
+            UiKit.Text(new Rect(a.x + 14f, a.y + 4f, a.width - 24f, 22f),
+                it.name + (it.level > 0 ? "  +" + it.level : ""), 16f, rc, TextAnchor.MiddleLeft);
+            UiKit.Text(new Rect(a.x + 14f, a.y + 24f, a.width - 24f, 16f),
+                Profile.SlotNames[it.slot] + "  ·  " + Profile.RarityNames[it.rarity],
+                10.5f, VisualIdentity.Subdued, TextAnchor.MiddleLeft, false);
             float y = a.y + 42f;
             if (it.slot == (int)Slot.Scroll)
             {

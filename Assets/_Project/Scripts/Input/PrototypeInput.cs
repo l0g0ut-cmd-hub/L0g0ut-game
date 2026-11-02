@@ -386,7 +386,7 @@ namespace BladePath
 
         // ------------------------------------------------------------------ отрисовка
 
-        static readonly Color Gold = new Color(0.86f, 0.70f, 0.38f, 1f);
+        static readonly Color Gold = VisualIdentity.Brass;
 
         void OnGUI()
         {
@@ -459,10 +459,10 @@ namespace BladePath
                 }
                 else
                 {
-                    UiKit.Rect(new Rect(pr.x - 2f, pr.y - 2f, pr.width + 4f, pr.height + 4f), Gold * 0.6f);
-                    UiKit.Rect(pr, new Color(0.05f, 0.04f, 0.04f, 0.9f));
-                    UiKit.Paper(pr, new Color(0.22f, 0.17f, 0.12f, 0.5f));
-                    UiKit.Text(new Rect(W * 0.5f - 200f, 62f, 400f, 50f), "ПАУЗА", 40f, Gold);
+                    VisualIdentity.Surface(pr, 0.98f);
+                    UiKit.Paper(pr, new Color(0.22f, 0.17f, 0.12f, 0.27f));
+                    UiKit.Text(new Rect(W * 0.5f - 200f, 62f, 400f, 50f),
+                        "ПАУЗА", 40f, Gold);
                 }
                 for (int b = (int)B.Resume; b <= (int)B.ToMenu; b++) DrawRectButton(b);
                 DrawRectButton((int)B.Vibro); DrawRectButton((int)B.Difficulty); DrawRectButton((int)B.Gfx);
@@ -480,9 +480,21 @@ namespace BladePath
         {
             Rect r = rects[b];
             bool h = held[b];
-            UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), Gold * 0.8f);
-            UiKit.Rect(r, h ? new Color(0.55f, 0.2f, 0.08f, 1f) : new Color(0.09f, 0.07f, 0.07f, 0.96f));
-            UiKit.Text(r, labels[b], 22f, h ? Color.white : new Color(0.95f, 0.9f, 0.78f));
+            // Buttons are drawn here, but input is processed by the existing
+            // touch controller. Do not use GUI.Button (would double-activate).
+            Texture2D wood = UiKit.Tex("UI/plank");
+            if (wood != null)
+            {
+                Color old = GUI.color;
+                GUI.color = h ? new Color(1f, 0.86f, 0.68f) : Color.white;
+                GUI.DrawTexture(r, wood, ScaleMode.StretchToFill);
+                GUI.color = old;
+            }
+            else VisualIdentity.Surface(r, 0.98f, false);
+            UiKit.Rect(new Rect(r.x + 7f, r.y + 3f, r.width - 14f, 1.5f),
+                new Color(Gold.r, Gold.g, Gold.b, h ? 0.92f : 0.38f));
+            UiKit.Text(r, labels[b], Mathf.Min(18f, r.height * 0.44f),
+                h ? VisualIdentity.BrassLight : VisualIdentity.Parchment);
         }
 
         void DrawStick()

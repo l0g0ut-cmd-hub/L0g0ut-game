@@ -10,7 +10,7 @@ namespace BladePath
         public string enemyName = "ПОВЕРЖЕННЫЙ";
 
         static readonly Color Frame = new Color(0.04f, 0.03f, 0.03f, 0.92f);
-        static readonly Color Gold = new Color(0.86f, 0.70f, 0.38f, 1f);
+        static readonly Color Gold = VisualIdentity.Brass;
 
         // кровь «на объективе», когда игроку прилетает сильный удар
         struct Splat { public Vector2 p; public float size, born, rot; }
@@ -677,19 +677,20 @@ namespace BladePath
             float alpha = Mathf.Clamp01(age / 0.10f) *
                 Mathf.Clamp01((1.6f - age) / 0.42f);
             float pulse = 1f + 0.05f * Mathf.Clamp01((0.19f - age) / 0.19f);
-            Color accent = enemy ? new Color(0.88f, 0.34f, 0.28f) :
-                new Color(0.91f, 0.72f, 0.39f);
-            Color ink = new Color(0.96f, 0.92f, 0.84f, alpha);
+            Color accent = enemy ? VisualIdentity.Vermilion : VisualIdentity.BrassLight;
+            Color ink = new Color(VisualIdentity.Parchment.r,
+                VisualIdentity.Parchment.g, VisualIdentity.Parchment.b, alpha);
             float w = 155f, h = 48f;
             Rect plate = new Rect(enemy ? at.x - w : at.x, at.y - h * 0.5f, w, h);
 
             // Lacquer plaque: restrained warm outlines; no full-screen brush strokes.
+            VisualIdentity.Inset(plate, accent);
             UiKit.Rect(new Rect(plate.x, plate.y, plate.width, plate.height),
-                new Color(0.035f, 0.026f, 0.024f, 0.79f * alpha));
-            UiKit.Rect(new Rect(plate.x, plate.y, plate.width, 1.5f),
+                new Color(0.035f, 0.026f, 0.024f, 0.15f + (1f - alpha) * 0.6f));
+            UiKit.Rect(new Rect(plate.x + 5f, plate.y + 2f, plate.width - 10f, 1.5f),
                 new Color(accent.r, accent.g, accent.b, 0.70f * alpha));
-            UiKit.Rect(new Rect(plate.x, plate.yMax - 1.5f, plate.width, 1.5f),
-                new Color(accent.r, accent.g, accent.b, 0.28f * alpha));
+            UiKit.Rect(new Rect(plate.x + 5f, plate.yMax - 3f, plate.width - 10f, 1f),
+                new Color(accent.r, accent.g, accent.b, 0.26f * alpha));
 
             float numberX = enemy ? plate.x + plate.width - 56f : plate.x + 7f;
             float detailX = enemy ? plate.x + 8f : plate.x + 63f;
@@ -719,9 +720,12 @@ namespace BladePath
             for (int i = 0; i < total; i++)
             {
                 Vector2 p = new Vector2(c.x + (mirror ? 1f : -1f) * i * 26f, c.y);
-                UiKit.Disc(p, 9f, Frame);
-                UiKit.Disc(p, 6.5f, i < wins ? Gold : new Color(0.2f, 0.17f, 0.12f, 0.9f));
+                UiKit.Disc(p, 9f, VisualIdentity.InsetColor);
+                UiKit.Disc(p, 6.5f, i < wins ? VisualIdentity.BrassLight : VisualIdentity.Raised);
                 UiKit.Ring(p, 9f, new Color(Gold.r, Gold.g, Gold.b, 0.8f), true);
+                if (i < wins)
+                    UiKit.Disc(p + new Vector2(-2f, -2f), 2f,
+                        new Color(1f, 0.97f, 0.82f, 0.72f));
             }
         }
 
@@ -787,7 +791,12 @@ namespace BladePath
                 UiKit.Ring(pc, 24f, Gold);
             }
 
-            UiKit.Text(new Rect(mirror ? r.xMax - 260f : r.x, r.y + 34f, 260f, 18f), name, 13f, new Color(0.9f, 0.85f, 0.7f, 0.95f), mirror ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft);
+            UiKit.Text(new Rect(mirror ? r.xMax - 260f : r.x, r.y + 34f, 260f, 18f),
+                name, 13f, VisualIdentity.Parchment,
+                mirror ? TextAnchor.MiddleRight : TextAnchor.MiddleLeft);
+            UiKit.Rect(new Rect(mirror ? r.xMax - 90f : r.x,
+                r.y + 55f, 90f, 1f),
+                new Color(Gold.r, Gold.g, Gold.b, 0.28f));
         }
 
         static readonly string[] EnemyFullArt = { "UI/enemy_full_fallen", "UI/enemy_full_shadow", "UI/enemy_full_oni", "UI/enemy_full_shogun" };

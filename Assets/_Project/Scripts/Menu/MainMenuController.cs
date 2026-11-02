@@ -232,14 +232,17 @@ namespace BladePath
             float W = UiKit.Width, cx = W * 0.5f;
             UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, 0.6f));
             Rect box = new Rect(cx - 220f, 46f, 440f, 452f);
-            Color gold = new Color(0.86f, 0.70f, 0.38f, 1f);
-            UiKit.Rect(new Rect(box.x - 2f, box.y - 2f, box.width + 4f, box.height + 4f), gold * 0.8f);
-            UiKit.Rect(box, new Color(0.06f, 0.05f, 0.05f, 0.97f));
-            UiKit.Paper(box, new Color(0.2f, 0.16f, 0.12f, 0.55f));   // фактура старой бумаги поверх тёмной подложки
-            UiKit.Corners(box, 58f);   // резные уголки чёрного лака с золотом
+            Color gold = VisualIdentity.Brass;
+            VisualIdentity.Surface(box, 1f);
+            UiKit.Paper(new Rect(box.x + 8f, box.y + 7f,
+                box.width - 16f, box.height - 14f),
+                new Color(0.18f, 0.13f, 0.08f, 0.18f));
             Texture2D br = UiKit.Tex("UI/sakura_branch");
             if (br != null) { Color oc = GUI.color; GUI.color = new Color(1f, 1f, 1f, 0.95f); GUI.DrawTextureWithTexCoords(new Rect(box.xMax - 150f, box.y - 34f, 190f, 190f), br, new Rect(1f, 0f, -1f, 1f)); GUI.color = oc; }   // ветка сакуры с правого угла
-            UiKit.Text(new Rect(box.x, box.y + 10f, box.width, 44f), "НАСТРОЙКИ", 32f, gold);
+            UiKit.Text(new Rect(box.x, box.y + 10f, box.width, 44f),
+                "НАСТРОЙКИ", 30f, gold);
+            VisualIdentity.Divider(new Rect(box.x + 32f, box.y + 56f,
+                box.width - 64f, 1f), 0.48f);
 
             string[] labels =
             {
@@ -256,17 +259,10 @@ namespace BladePath
             for (int i = 0; i < labels.Length; i++)
             {
                 Rect r = new Rect(box.x + 40f, box.y + 62f + i * 54f, box.width - 80f, 44f);
-                UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), gold * 0.7f);
-                UiKit.Rect(r, i == labels.Length - 1 ? new Color(0.35f, 0.08f, 0.06f, 1f) : new Color(0.1f, 0.08f, 0.08f, 1f));
-                Color accent = i == 3 && PlayerPrefs.GetInt("haptics", 0) == 0
-                    ? new Color(0.45f, 0.46f, 0.43f, 0.80f)
-                    : i == labels.Length - 1 ? new Color(1f, 0.46f, 0.32f)
-                    : new Color(0.88f, 0.71f, 0.42f, 0.85f);
-                UiKit.Rect(new Rect(r.x + 6f, r.y + 8f, 3f, r.height - 16f), accent);
-                UiKit.Rect(new Rect(r.x + 14f, r.yMax - 5f, r.width - 28f, 1f),
-                    new Color(gold.r, gold.g, gold.b, 0.13f));
-                UiKit.Text(r, labels[i], 18f, new Color(0.95f, 0.9f, 0.78f));
-                if (GUI.Button(r, GUIContent.none, hitStyle))
+                bool selected = i == 3 && PlayerPrefs.GetInt("haptics", 0) == 1;
+                bool clicked = VisualIdentity.Button(r, labels[i], true,
+                    i == labels.Length - 1, selected);
+                if (clicked)
                 {
                     switch (i)
                     {
