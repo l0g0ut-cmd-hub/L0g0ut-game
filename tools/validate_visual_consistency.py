@@ -121,7 +121,9 @@ def check_design_system():
             "VisualIdentity.Surface(panel" in inventory and
             "VisualIdentity.Heading(" in inventory,
         "combat combo unified":
-            "VisualIdentity.Inset(plate" in combat,
+            '"СЕРИЯ УДАРОВ  ×" + hits' in combat and
+            "UiKit.Rect(plate" in combat and
+            "float width = 171f" not in combat,
         "menu unified":
             "VisualIdentity.Surface(box" in menu,
         "combat pause unified":
