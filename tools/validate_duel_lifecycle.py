@@ -44,4 +44,8 @@ assert 'w * 0.38f, 48f), "СНАРЯЖЕНИЕ"' not in map_screen
 assert 'Btn(new Rect(x, r.yMax - 64f, w, 44f), "СНАРЯЖЕНИЕ"' in map_screen
 assert 'heroArt = "UI/npc_"' not in map_screen
 assert '"СЕРИЯ УДАРОВ  ×" + hits' in hud
+assert 'JourneyChoice.Names[JourneyChoice.Hero]' in hud
+assert 'pp = JourneyChoice.Portrait(JourneyChoice.Hero)' in hud
+assert 'new Rect(0.035f, 0.742f, 0.365f, 0.250f)' in hud
+assert 'pp = UiKit.Tex("UI/portrait_hero")' not in hud
 print("Duel round reset, blood lifecycle, and HUD layout: OK")
