@@ -86,9 +86,12 @@ for sd, sg in (('L', 1), ('R', -1)):
     # рука в A-позе: плечо — по пропорции, кончик кисти — дальняя вершина вдоль направления «вниз-наружу»
     yc = J['chest'][1]
     S = np.array([sg * SHOULDER_X * k, yc, 1.40 * k])
-    cand = (sg * P[:, 0] > 0.24 * k) & (P[:, 2] > 0.45 * k) & (P[:, 2] < 1.35 * k)
-    d0 = np.array([sg * 0.7071, 0.0, -0.7071])
-    T = P[cand][np.argmax((P[cand] - S) @ d0)]
+    # кончик кисти — самая дальняя от оси точка на уровне бёдер и выше (подол и ножны ниже и ближе к телу);
+    # среди точек у этого края берём самую нижнюю — это кончики пальцев
+    cand = (P[:, 2] > 0.62 * k) & (P[:, 2] < 1.30 * k)
+    xm = (sg * P[cand, 0]).max()
+    edge = cand & (sg * P[:, 0] > xm - 0.04 * k)
+    T = P[edge][np.argmin(P[edge, 2])]
     A = T - S
     def on_arm(f):
         q = S + f * A
@@ -153,13 +156,27 @@ log('веса (тепловой метод)', round(time.time() - t, 1), 'с, о
 
 # ------------------------------------------------------------------ 4. поправки весов
 V = get_co(); nv = len(V)
+SEGS = {'Hips': ('hips', 'spine'), 'Spine': ('spine', 'chest'), 'Chest': ('chest', 'neck'), 'Neck': ('neck', 'head'), 'Head': ('head', 'head_end')}
+for sd in 'LR':
+    SEGS.update({'Shoulder.' + sd: ('sh' + sd, 'arm' + sd), 'UpperArm.' + sd: ('arm' + sd, 'elb' + sd), 'Forearm.' + sd: ('elb' + sd, 'wri' + sd),
+                 'Hand.' + sd: ('wri' + sd, 'hnd' + sd), 'UpperLeg.' + sd: ('hip' + sd, 'knee' + sd), 'LowerLeg.' + sd: ('knee' + sd, 'ank' + sd),
+                 'Foot.' + sd: ('ank' + sd, 'toe' + sd)})
 names = [g.name for g in body.vertex_groups]
-for need in ('Hips', 'Spine', 'Chest', 'Neck', 'Head'):
+for need in SEGS:
     if need not in names: body.vertex_groups.new(name=need); names.append(need)
 gix = {nm: i for i, nm in enumerate(names)}
 W = np.zeros((nv, len(names)))
 for v in body.data.vertices:
     for ge in v.groups: W[v.index, ge.group] = ge.weight
+weak = [nm for nm in SEGS if W[:, gix[nm]].sum() < 3.0]
+if weak:
+    # тепловой метод не справился (кость вне объёма меша): веса по расстоянию до костей, как в build_ronin.py
+    log('тепловой метод не дал весов костям', weak, '→ веса по расстоянию')
+    W = np.zeros((nv, len(names)))
+    for nm, (h, tl) in SEGS.items():
+        a = np.array(J[h]); b = np.array(J[tl]); ab = b - a
+        tt = np.clip(((V - a) @ ab) / (ab @ ab), 0, 1)
+        W[:, gix[nm]] = 1.0 / np.maximum(np.linalg.norm(V - (a + np.outer(tt, ab)), axis=1), 0.02) ** 2.5
 W[W.sum(1) <= 1e-6, gix['Hips']] = 1.0
 W /= W.sum(1, keepdims=True)
 def seg_d(a, b):
