@@ -1484,7 +1484,12 @@ namespace BladePath
                 Decal d = decals[i];
                 if (d.t == null) continue;
                 float age = Time.unscaledTime - d.born;
-                if (age < 0f || age > d.life) continue;
+                if (age < 0f) continue;
+                if (age > d.life)
+                {
+                    if (d.t.gameObject.activeSelf) d.t.gameObject.SetActive(false);
+                    continue;
+                }
                 if (!d.t.gameObject.activeSelf) d.t.gameObject.SetActive(true);
                 float a = Mathf.Clamp01((d.life - age) / 6f);       // последние 6 с — растворяется
                 if (d.grow > 0f)
