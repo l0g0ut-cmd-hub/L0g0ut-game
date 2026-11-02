@@ -677,4 +677,17 @@ This is **an existence manifest**, NOT evidence that textures render correctly, 
 
 | Added file | Purpose | Status |
 |---|---|---|
-| `tools/import_approved_selection_art.py` | Lossless ZIP-to-Resources import of six original selection PNGs; SHA-256 and IHDR validation; refuses overwrite of non-original art | `CODE_READY`; PNGs not yet in GitHub |
+| `tools/import_approved_selection_art.py` | Lossless ZIP-to-Resources import with SHA-256/IHDR validation, no overwrite | `CODE_READY`; approved PNGs now imported directly via GitHub blobs (de6b96e2) |
+
+### Six SHA-verified approved originals — commit `de6b96e2`
+
+The original 604-file snapshot above is historical. The following six files have been committed and checked against the exact supplied PNG byte streams. DO NOT REGENERATE or count the old selection JPGs as approved originals.
+
+| Path | Bytes | Git blob SHA-1 |
+|---|---:|---|
+| `Assets/_Project/Resources/UI/selection/approved_hero_0.png` | 346963 | `92813443da833ff9655447858346db50b41f7861` |
+| `Assets/_Project/Resources/UI/selection/approved_hero_1.png` | 337401 | `8eda77ab134e8c6c73c22c012ee233e6803a1194` |
+| `Assets/_Project/Resources/UI/selection/approved_hero_2.png` | 340552 | `4e3d82f97432531f9a4a530631166e170a8e478c` |
+| `Assets/_Project/Resources/UI/selection/approved_difficulty_0.png` | 353455 | `6cd639c01403939149c40303f0f843171eefbaec` |
+| `Assets/_Project/Resources/UI/selection/approved_difficulty_1.png` | 359083 | `b180f9c46d84b3653d57fb16707a88f22130f3aa` |
+| `Assets/_Project/Resources/UI/selection/approved_difficulty_2.png` | 336295 | `6e623a14ee9a9eb3db506619f80050b3faf2d8da` |

@@ -32,7 +32,9 @@ jobs:
         run: python3 tools/validate_additive_visuals.py
       - name: Verify journey assets, map routing and animation
         run: python3 tools/validate_journey_integration.py
-      - name: Audit remaining resources
+      - name: Strictly verify six original selection PNGs
+        env:
+          BLADEPATH_REQUIRE_APPROVED_ART: "1"
         run: python3 tools/audit_missing_game_art.py
       - name: Check duel lifecycle regressions
         run: python3 tools/validate_duel_lifecycle.py
