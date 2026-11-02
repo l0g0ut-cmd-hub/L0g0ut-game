@@ -40,6 +40,8 @@ jobs:
           build akiko  Akiko_Player 1.68 0.975 0.00 0.16
           build oni    Oni_Enemy    1.82 0.955 0.02 0.19
           build shogun Shogun_Enemy 1.74 0.925 0.06 0.18
+          build fallen Fallen_Enemy 1.74 0.935 0.03 0.18
+          build shadow Shadow_Enemy 1.74 0.990 0.00 0.17
 
       - name: Extract textures
         run: |
@@ -47,6 +49,8 @@ jobs:
           python3 tools/meshy_textures.py tools/models/meshy/akiko.glb Akiko out/Art
           python3 tools/meshy_textures.py tools/models/meshy/oni.glb Oni out/Art
           python3 tools/meshy_textures.py tools/models/meshy/shogun.glb Shogun out/Art
+          python3 tools/meshy_textures.py tools/models/meshy/fallen.glb Fallen out/Art
+          python3 tools/meshy_textures.py tools/models/meshy/shadow.glb Shadow out/Art
 
       - name: Publish to meshy-models branch
         if: always()
