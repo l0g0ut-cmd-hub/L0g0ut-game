@@ -123,7 +123,7 @@ def check_design_system():
         "combat combo unified":
             '"СЕРИЯ УДАРОВ  ×" + hits' in combat and
             "UiKit.Rect(plate" in combat and
-            "float width = 171f" not in combat,
+            "const float width = 171f, height = 29f;" in combat,
         "menu unified":
             "VisualIdentity.Surface(box" in menu,
         "combat pause unified":
