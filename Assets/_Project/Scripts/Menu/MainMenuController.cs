@@ -258,6 +258,13 @@ namespace BladePath
                 Rect r = new Rect(box.x + 40f, box.y + 62f + i * 54f, box.width - 80f, 44f);
                 UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), gold * 0.7f);
                 UiKit.Rect(r, i == labels.Length - 1 ? new Color(0.35f, 0.08f, 0.06f, 1f) : new Color(0.1f, 0.08f, 0.08f, 1f));
+                Color accent = i == 3 && PlayerPrefs.GetInt("haptics", 0) == 0
+                    ? new Color(0.45f, 0.46f, 0.43f, 0.80f)
+                    : i == labels.Length - 1 ? new Color(1f, 0.46f, 0.32f)
+                    : new Color(0.88f, 0.71f, 0.42f, 0.85f);
+                UiKit.Rect(new Rect(r.x + 6f, r.y + 8f, 3f, r.height - 16f), accent);
+                UiKit.Rect(new Rect(r.x + 14f, r.yMax - 5f, r.width - 28f, 1f),
+                    new Color(gold.r, gold.g, gold.b, 0.13f));
                 UiKit.Text(r, labels[i], 18f, new Color(0.95f, 0.9f, 0.78f));
                 if (GUI.Button(r, GUIContent.none, hitStyle))
                 {
@@ -266,7 +273,12 @@ namespace BladePath
                         case 0: SetAnimated(!animated); break;
                         case 1: EnemyAI.Difficulty = (EnemyAI.Difficulty + 1) % 3; break;
                         case 2: DuelManager.Gfx = 1 - DuelManager.Gfx; break;
-                        case 3: PlayerPrefs.SetInt("haptics", PlayerPrefs.GetInt("haptics", 0) == 1 ? 0 : 1); Haptics.Enabled = PlayerPrefs.GetInt("haptics", 0) == 1; Haptics.Pulse(40); break;
+                        case 3:
+                            Haptics.Enabled = PlayerPrefs.GetInt("haptics", 0) != 1;
+                            PlayerPrefs.SetInt("haptics", Haptics.Enabled ? 1 : 0);
+                            PlayerPrefs.Save();
+                            if (Haptics.Enabled) Haptics.Pulse(40); // opt-in feedback only
+                            break;
                         case 4: CameraOrbit.FreeMode = !CameraOrbit.FreeMode; break;
                         case 5: DuelManager.TimerOn = !DuelManager.TimerOn; break;
                         default: settingsOpen = false; break;
