@@ -246,7 +246,7 @@ namespace BladePath
                 "АНИМИРОВАННЫЙ ФОН: " + (animated ? "ВКЛ" : "ВЫКЛ"),
                 "СЛОЖНОСТЬ: " + EnemyAI.DifficultyName,
                 "ГРАФИКА: " + (DuelManager.Gfx == 1 ? "ВЫСОКАЯ" : "ЭКОНОМ"),
-                "ВИБРАЦИЯ: " + (PlayerPrefs.GetInt("haptics", 1) == 1 ? "ВКЛ" : "ВЫКЛ"),
+                "ВИБРАЦИЯ: " + (PlayerPrefs.GetInt("haptics", 0) == 1 ? "ВКЛ" : "ВЫКЛ"),
                 "КАМЕРА: " + (CameraOrbit.FreeMode ? "СВОБОДНАЯ" : "БОЕВАЯ"),
                 "ТАЙМЕР БОЯ: " + (DuelManager.TimerOn ? "ВКЛ" : "ВЫКЛ"),
                 "ГОТОВО"
@@ -266,7 +266,7 @@ namespace BladePath
                         case 0: SetAnimated(!animated); break;
                         case 1: EnemyAI.Difficulty = (EnemyAI.Difficulty + 1) % 3; break;
                         case 2: DuelManager.Gfx = 1 - DuelManager.Gfx; break;
-                        case 3: PlayerPrefs.SetInt("haptics", PlayerPrefs.GetInt("haptics", 1) == 1 ? 0 : 1); Haptics.Enabled = PlayerPrefs.GetInt("haptics", 1) == 1; Haptics.Pulse(40); break;
+                        case 3: PlayerPrefs.SetInt("haptics", PlayerPrefs.GetInt("haptics", 0) == 1 ? 0 : 1); Haptics.Enabled = PlayerPrefs.GetInt("haptics", 0) == 1; Haptics.Pulse(40); break;
                         case 4: CameraOrbit.FreeMode = !CameraOrbit.FreeMode; break;
                         case 5: DuelManager.TimerOn = !DuelManager.TimerOn; break;
                         default: settingsOpen = false; break;
