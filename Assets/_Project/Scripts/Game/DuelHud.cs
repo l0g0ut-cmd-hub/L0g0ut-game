@@ -635,6 +635,19 @@ namespace BladePath
                 GUI.DrawTexture(new Rect(r.x - 6f * sx, r.y - 22f * sy, 512f * sx, 64f * sy), pf);
                 GUI.color = o;
             }
+            // Understated danger notches when a fighter is close to losing
+            // posture. Drawn outside the existing ornate bar frame; no extra
+            // lettering or modal flashes competing with sword choreography.
+            if (!broken && k > 0.84f && DuelManager.Gfx == 1)
+            {
+                float danger = Mathf.InverseLerp(0.84f, 1f, k);
+                float breathe = 0.68f + 0.20f *
+                    Mathf.Sin(Time.unscaledTime * 5f);
+                Color warning = new Color(1f, 0.43f, 0.25f,
+                    danger * breathe * 0.55f);
+                UiKit.Rect(new Rect(r.x - 4f, r.y - 2f, 2f, h + 4f), warning);
+                UiKit.Rect(new Rect(r.xMax + 2f, r.y - 2f, 2f, h + 4f), warning);
+            }
             if (broken && f != duel.enemy)   // у врага метка добивания — энсо на груди
             {
                 // знак добивания: красная точка, как в Sekiro
