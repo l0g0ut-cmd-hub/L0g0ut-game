@@ -145,6 +145,7 @@ namespace BladePath
             HandleMapPan();
             if (moveTo >= 0)
             {
+                Campaign.Reveal(HeroUV());   // туман расходится вокруг фигурки прямо на ходу
                 if (Time.unscaledTime - moveStart >= moveDuration)
                 {
                     int i = moveTo; moveTo = -1;
@@ -374,39 +375,26 @@ namespace BladePath
             return Color.white;
         }
 
+        /// <summary>Радиус обзора героя в точках карты 810×540: ворон-спутник видит дальше.</summary>
+        static float SightR { get { return Profile.Companion == Profile.CompanionRaven ? 175f : 125f; } }
+
+        /// <summary>
+        /// Место видно, если туман над ним разошёлся (герой подходил достаточно близко), как в «Героях 3».
+        /// Владыка области виден всегда — это цель похода.
+        /// </summary>
         bool Known(MapNode n)
         {
-            // Fog lifts up to one layer past the furthest visited place, so walking
-            // back does not hide again what the traveller has already seen.
-            int reach = Campaign.Current.layer;
-            List<MapNode> all = Campaign.Nodes;
-            for (int i = 0; i < all.Count; i++)
-                if (all[i].done && all[i].layer > reach) reach = all[i].layer;
-            // the raven companion scouts one layer further ahead
-            int ahead = Profile.Companion == Profile.CompanionRaven ? 2 : 1;
-            return n.done || n.Type == NodeType.Boss || n.Type == NodeType.Start || n.layer <= reach + ahead;
+            if (n.done || n.Type == NodeType.Boss || n.Type == NodeType.Start) return true;
+            return FogOfWar.At(new Vector2(n.x, n.y)) < 0.5f;
         }
 
-        // ---- fog of war (FogOfWar.cs): revealed around known places and along walked roads
-        readonly List<Vector2> fogPoints = new List<Vector2>(32), fogTrail = new List<Vector2>(128);
-        readonly System.Text.StringBuilder fogKey = new System.Text.StringBuilder(64);
+        /// <summary>Соседнее место в тумане: дорога туда видна, а что там — нет (метка «?»).</summary>
+        bool Hinted(int i) { return Campaign.Adjacent(Campaign.At, i); }
+
+        // ---- fog of war (FogOfWar.cs): расходится вокруг героя по мере движения и не возвращается
         void DrawFog(float uw)
         {
-            if (Event.current.type != EventType.Repaint) return;
-            List<MapNode> ns = Campaign.Nodes;
-            fogKey.Length = 0; fogKey.Append(Campaign.Region).Append(':');
-            fogPoints.Clear();
-            for (int i = 0; i < ns.Count; i++)
-                if (Known(ns[i]) && ns[i].Type != NodeType.Boss) { fogPoints.Add(new Vector2(ns[i].x, ns[i].y)); fogKey.Append(i).Append(','); }
-            fogTrail.Clear();
-            IList<int> tr = Campaign.Travelled;
-            fogKey.Append('|').Append(tr.Count).Append(tr.Count > 0 ? tr[tr.Count - 1] : -1);
-            for (int i = 1; i < tr.Count; i++)
-            {
-                TerrainRoads.Path road = TerrainRoads.Route(tr[i - 1], tr[i]);
-                for (int k = 0; k <= 8; k++) fogTrail.Add(road.Position(k / 8f));
-            }
-            FogOfWar.Draw(new Rect(mapX, 0f, viewW, MapH), u0, uw, fogPoints, fogTrail, fogKey.ToString());
+            FogOfWar.Draw(new Rect(mapX, 0f, viewW, MapH), u0, uw, Campaign.Seen, SightR, Campaign.Region + ":" + SightR);
         }
 
         // Shortest route through the authored road graph, including future nodes.
@@ -658,8 +646,8 @@ namespace BladePath
                 if (can) s *= 1f + 0.07f * Mathf.Sin(Time.unscaledTime * 4f + i);
                 if (i == sel) s *= 1.18f;
                 bool known = Known(n);
-                // under the fog of war: unknown places are hidden (the final lord's castle stays visible)
-                if (!known && n.Type != NodeType.Boss) continue;
+                // под туманом войны места скрыты; соседнее место видно как «?» — дорога туда ведёт, а что там — нет
+                if (!known && n.Type != NodeType.Boss && !Hinted(i)) continue;
                 // Focused marker effects use the existing cached UI disc texture:
                 // glowing boss warning, reachable nodes and the hero's current checkpoint.
                 if (known && (can || i == Campaign.At || n.Type == NodeType.Boss) && !n.done)
@@ -680,7 +668,13 @@ namespace BladePath
                 }
                 GUI.color = MapBadgeTint(n, known, i);
                 Texture2D herb = n.Type == NodeType.Herbalist ? UiKit.Tex(HerbalistIcon) : null;
-                if (herb != null)
+                if (!known)
+                {
+                    UiKit.Disc(p, s * 0.4f, new Color(0.10f, 0.08f, 0.13f, 0.88f));
+                    UiKit.Ring(p, s * 0.4f, new Color(0.75f, 0.68f, 0.9f, can ? 0.9f : 0.55f), false);
+                    UiKit.Text(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), "?", s * 0.5f, new Color(0.9f, 0.86f, 1f, 0.95f), TextAnchor.MiddleCenter);
+                }
+                else if (herb != null)
                     GUI.DrawTexture(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), herb);
                 else if (ic != null)
                     GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), ic, Cell(k));
@@ -1008,7 +1002,12 @@ namespace BladePath
                 MapNode n = Campaign.Nodes[show];
                 bool known = Known(n);
                 Texture2D ic = UiKit.Tex("UI/map_icons");
-                if (ic != null)
+                if (!known)
+                {
+                    UiKit.Disc(new Vector2(x + 32f, y + 32f), 28f, new Color(0.10f, 0.08f, 0.13f, 0.9f));
+                    UiKit.Text(new Rect(x, y, 64f, 64f), "?", 34f, new Color(0.9f, 0.86f, 1f, 0.95f), TextAnchor.MiddleCenter);
+                }
+                else if (ic != null)
                 {
                     Color previousTint = GUI.color;
                     GUI.color = MapBadgeTint(n, known, show);

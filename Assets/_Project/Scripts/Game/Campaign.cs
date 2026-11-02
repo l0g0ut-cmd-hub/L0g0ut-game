@@ -48,6 +48,7 @@ namespace BladePath
             public List<MapNode> nodes = new List<MapNode>();
             // Only actual moves, never inferred from completed nodes. Persisted across restarts.
             public List<int> travelled = new List<int>();
+            public List<Vector2> seen = new List<Vector2>();   // туман войны: где побывал герой (доли карты), по ним туман расходится
         }
 
         public static readonly string[] RegionNames = { "ЛЕС ТЕНЕЙ", "ГОРЫ ОНИ", "ПРОКЛЯТЫЙ СЁГУНАТ" };
@@ -196,6 +197,33 @@ namespace BladePath
         public static List<MapNode> Nodes { get { return D.nodes; } }
         public static int At { get { return D.at; } }
         public static IList<int> Travelled { get { return D.travelled; } }
+        /// <summary>Точки, вокруг которых туман войны уже разошёлся (в порядке прохождения).</summary>
+        public static IList<Vector2> Seen
+        {
+            get
+            {
+                if (D.seen == null) D.seen = new List<Vector2>();
+                if (D.seen.Count == 0)   // старое сохранение или новая область: всё пройденное и текущее место
+                {
+                    for (int i = 0; i < D.travelled.Count; i++)
+                    {
+                        if (i > 0) { TerrainRoads.Bind(D.region, D.nodes); TerrainRoads.Path road = TerrainRoads.Route(D.travelled[i - 1], D.travelled[i]); for (int q = 1; q < 8; q++) D.seen.Add(road.Position(q / 8f)); }
+                        MapNode m = D.nodes[D.travelled[i]]; D.seen.Add(new Vector2(m.x, m.y));
+                    }
+                    if (D.seen.Count == 0) D.seen.Add(new Vector2(Current.x, Current.y));
+                }
+                return D.seen;
+            }
+        }
+        /// <summary>Герой здесь: туман вокруг расходится. Точки реже ~12 точек карты не копятся; сохраняется по прибытии.</summary>
+        public static void Reveal(Vector2 p)
+        {
+            IList<Vector2> s = Seen;
+            Vector2 last = s[s.Count - 1];
+            if (((last - p) * new Vector2(810f, 540f)).sqrMagnitude < 144f) return;
+            D.seen.Add(p);
+            if (D.seen.Count > 600) D.seen.RemoveRange(0, D.seen.Count - 600);
+        }
         public static bool WasTravelled(int from, int to)
         {
             List<int> path = D.travelled;
@@ -262,6 +290,8 @@ namespace BladePath
             dd.region = region; dd.nodes.Clear(); dd.at = 0; dd.fight = -1; dd.roadsVer = 2;
             if (dd.travelled == null) dd.travelled = new List<int>();
             dd.travelled.Clear(); dd.travelled.Add(0);
+            if (dd.seen == null) dd.seen = new List<Vector2>();
+            dd.seen.Clear();   // новая область — снова в тумане (первая точка — начало пути, см. Seen)
             Vector2[][] spots = Spots[Mathf.Clamp(region, 0, Spots.Length - 1)];
             int L = spots.Length;
             List<int>[] layers = new List<int>[L];
@@ -445,6 +475,7 @@ namespace BladePath
             // Clear previous marks so the map cannot draw an imaginary shortcut.
             if (D.travelled == null) D.travelled = new List<int>();
             D.travelled.Clear(); D.travelled.Add(cp);
+            if (D.seen != null && D.seen.Count > 0) D.seen.Add(new Vector2(D.nodes[cp].x, D.nodes[cp].y));   // очнулся у травницы — вокруг неё видно
             D.blessing = 0; D.cursed = false; D.knocked = true; TickCat();
             if (D.rolls <= 0) D.rolls = 1; // emergency die: defeat must never soft-lock travel
             Weather.ForceNight = false;
