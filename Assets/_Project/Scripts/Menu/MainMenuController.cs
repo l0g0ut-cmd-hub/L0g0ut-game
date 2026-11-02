@@ -226,8 +226,8 @@ namespace BladePath
             VisualIdentity.Heading(new Rect(board.x + 30f, board.y + 7f, board.width - 60f, 42f), title);
             UiKit.Text(new Rect(board.x + 30f, board.y + 51f, board.width - 60f, 21f),
                 newJourneyStep == 1
-                    ? "Каждое испытание — своя цена победы"
-                    : "Выбери того, чью судьбу пронесёшь через три земли",
+                    ? JourneyChoice.DifficultyDesc[chosenDifficulty]
+                    : JourneyChoice.Biographies[chosenHero],
                 13f, VisualIdentity.Subdued, TextAnchor.MiddleCenter, false);
 
             const float gap = 13f;
@@ -253,9 +253,25 @@ namespace BladePath
                 Rect artRect = new Rect(card.x + 6f, card.y + 6f, card.width - 12f, picH);
                 string art = newJourneyStep == 1
                     ? JourneyChoice.DifficultyArt(i) : JourneyChoice.Portrait(i);
-                if (UiKit.Tex(art) == null)
-                    art = newJourneyStep == 1 ? "UI/event_" + i : "UI/npc_" + i;
-                VisualIdentity.Portrait(artRect, art);
+                Texture2D selectionAtlas = UiKit.Tex("UI/selection/characters_difficulties");
+                if (selectionAtlas != null)
+                {
+                    // One shared 3x2 hand-painted atlas, lower row difficulty
+                    // art; upper row character portraits. Text/buttons remain live.
+                    VisualIdentity.Inset(artRect, accent);
+                    GUI.DrawTextureWithTexCoords(
+                        new Rect(artRect.x + 3f, artRect.y + 3f,
+                            artRect.width - 6f, artRect.height - 6f),
+                        selectionAtlas,
+                        new Rect(i / 3f, newJourneyStep == 1 ? 0f : 0.5f,
+                            1f / 3f, 0.5f));
+                }
+                else
+                {
+                    if (UiKit.Tex(art) == null)
+                        art = newJourneyStep == 1 ? "UI/event_" + i : "UI/npc_" + i;
+                    VisualIdentity.Portrait(artRect, art);
+                }
 
                 if (selected)
                 {
