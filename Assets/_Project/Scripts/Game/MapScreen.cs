@@ -894,7 +894,20 @@ namespace BladePath
             float artTop = Mathf.Max(273f, y + 11f);
             float artHeight = Mathf.Min(136f, 416f - artTop);
             if (artHeight > 45f)
-                DrawSidebarIllustration(new Rect(x, artTop, w, artHeight), artwork);
+            {
+                Rect illustration = new Rect(x, artTop, w, artHeight);
+                DrawSidebarIllustration(illustration, artwork);
+                Texture2D heroes = UiKit.Tex("UI/selection/characters_difficulties");
+                if (heroes != null)
+                {
+                    Rect portrait = new Rect(illustration.x + 7f,
+                        illustration.y + 7f, 47f, 58f);
+                    VisualIdentity.Inset(portrait, JourneyChoice.Accent(JourneyChoice.Hero));
+                    GUI.DrawTextureWithTexCoords(new Rect(portrait.x + 2f, portrait.y + 2f,
+                            portrait.width - 4f, portrait.height - 4f), heroes,
+                        new Rect(JourneyChoice.Hero / 3f, 0.5f, 1f / 3f, 0.5f));
+                }
+            }
             if (Btn(new Rect(x, 540f - 112f, w, 44f), "СНАРЯЖЕНИЕ" + (Profile.Points > 0 ? " (+" + Profile.Points + ")" : ""), interactive)) InventoryScreen.Show(0);
             if (Btn(new Rect(x, 540f - 60f, w, 44f), "В МЕНЮ", interactive)) { Hide(); Time.timeScale = 1f; SceneManager.LoadScene(SceneNames.MainMenu); }
         }
