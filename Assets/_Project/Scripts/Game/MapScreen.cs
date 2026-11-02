@@ -891,20 +891,17 @@ namespace BladePath
                     // are never skipped by the route preview.
                     // The same stable button remains present while the die is empty.
                     // Never make the player reselect a marker after rolling.
-                    bool canMove = !rolling && Campaign.CanGo(nextStep);
-                    if (Btn(new Rect(x, y, w, 40f), "ДВИГАТЬСЯ", interactive && canMove))
-                        Go(nextStep);
-                    if (!canMove)
-                        UiKit.Text(new Rect(x, y + 41f, w, 18f),
-                            rolling ? "Кость вращается…" : Campaign.Steps == 0
-                                ? "Сначала брось кость пути" : "Следующий переход пока закрыт",
-                            11f, Dim, TextAnchor.MiddleLeft, false);
+                    // Movement control is pinned below the illustration; dynamic
+                    // descriptions must never push it below the sidebar viewport.
+                    if (!Campaign.CanGo(nextStep))
+                        UiKit.Text(new Rect(x, y, w, 18f),
+                            Campaign.Steps == 0 ? "Сначала брось кость пути"
+                                : "Следующий переход пока закрыт", 11f, Dim,
+                            TextAnchor.MiddleLeft, false);
                 }
                 else if (show != Campaign.At && Campaign.Nodes[Campaign.At].next.Contains(show))
                 {
-                    bool canMoveDirect = !rolling && Campaign.CanGo(show);
-                    if (Btn(new Rect(x, y, w, 40f), "ДВИГАТЬСЯ", interactive && canMoveDirect))
-                        Go(show);
+                    // Direct destinations use the same fixed bottom travel button.
                 }
             }
             else
@@ -918,7 +915,7 @@ namespace BladePath
             bool revealArt = show < 0 || Known(artNode);
             string artwork = revealArt ? NodePreviewArt(artNode) : "UI/path_panorama";
             float artTop = Mathf.Max(273f, y + 11f);
-            float artHeight = Mathf.Min(136f, 416f - artTop);
+            float artHeight = Mathf.Min(110f, 365f - artTop);
             if (artHeight > 45f)
             {
                 Rect illustration = new Rect(x, artTop, w, artHeight);
@@ -926,14 +923,22 @@ namespace BladePath
                 Rect portrait = new Rect(illustration.x + 7f,
                     illustration.y + 7f, 47f, 58f);
                 string heroArt = JourneyChoice.Portrait(JourneyChoice.Hero);
-                if (UiKit.Tex(heroArt) == null)
-                    heroArt = "UI/npc_" + JourneyChoice.Hero;
-                if (UiKit.Tex(heroArt) == null)
-                    heroArt = "UI/path_panorama";
-                VisualIdentity.Portrait(portrait, heroArt);
+                if (UiKit.Tex(heroArt) != null)
+                    VisualIdentity.Portrait(portrait, heroArt);
                 // Keep portrait colors untouched; accent belongs to the frame.
                 VisualIdentity.Inset(portrait, JourneyChoice.Accent(JourneyChoice.Hero));
             }
+            // Keep the travel action visible at all times, independently of
+            // node descriptions, die availability and illustration height.
+            int travelTarget = NextPreviewStep;
+            if (travelTarget < 0 && sel >= 0 && sel != Campaign.At &&
+                Campaign.Nodes[Campaign.At].next.Contains(sel))
+                travelTarget = sel;
+            bool travelReady = !rolling && moveTo < 0 && travelTarget >= 0 &&
+                Campaign.CanGo(travelTarget);
+            if (Btn(new Rect(x, 540f - 166f, w, 44f), "В ПУТЬ",
+                interactive && travelReady, true))
+                Go(travelTarget);
             if (Btn(new Rect(x, 540f - 112f, w, 44f), "СНАРЯЖЕНИЕ" + (Profile.Points > 0 ? " (+" + Profile.Points + ")" : ""), interactive)) InventoryScreen.Show(0);
             if (Btn(new Rect(x, 540f - 60f, w, 44f), "В МЕНЮ", interactive)) { Hide(); Time.timeScale = 1f; SceneManager.LoadScene(SceneNames.MainMenu); }
         }
