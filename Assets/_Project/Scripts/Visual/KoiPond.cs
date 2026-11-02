@@ -21,6 +21,30 @@ namespace BladePath
         // лягушки у пруда ночью: «керо-керо» сериями (в дождик — охотнее), не в снег и не днём; по общей очереди звуков
         AudioSource frogSrc; static AudioClip kero; float frogAt; int frogLeft; float frogNext;
         ParticleSystem mist; bool mistOn;   // на рассвете и в туман над водой стелется пар
+        Material mistMaterial, ringMaterial;
+        Texture2D ringTexture;
+        float nextMistBudgetAt;
+
+        void OnDestroy()
+        {
+            // Preserve the existing koi/mist artwork. Release only assets that
+            // this pond generated; never destroy shared Resources textures.
+            if (mistMaterial != null)
+            {
+                if (Application.isPlaying) Destroy(mistMaterial);
+                else DestroyImmediate(mistMaterial);
+            }
+            if (ringMaterial != null)
+            {
+                if (Application.isPlaying) Destroy(ringMaterial);
+                else DestroyImmediate(ringMaterial);
+            }
+            if (ringTexture != null)
+            {
+                if (Application.isPlaying) Destroy(ringTexture);
+                else DestroyImmediate(ringTexture);
+            }
+        }
 
         void Start()
         {
@@ -71,8 +95,11 @@ namespace BladePath
             gr.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) }, new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.3f), new GradientAlphaKey(1f, 0.7f), new GradientAlphaKey(0f, 1f) });
             col.color = gr;
             var r = g.GetComponent<ParticleSystemRenderer>();
-            Material m = new Material(Shader.Find("Sprites/Default")) { name = "PondMist", mainTexture = SoftSprites.Fog };
-            r.material = m; r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; r.receiveShadows = false;
+            mistMaterial = new Material(Shader.Find("Sprites/Default"))
+            {
+                name = "PondMist", mainTexture = SoftSprites.Fog
+            };
+            r.sharedMaterial = mistMaterial; r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; r.receiveShadows = false;
             return ps;
         }
 
@@ -145,7 +172,8 @@ namespace BladePath
                     float a = Mathf.Exp(-Mathf.Pow((r - 0.86f) / 0.05f, 2f)) + 0.35f * Mathf.Exp(-Mathf.Pow((r - 0.7f) / 0.04f, 2f));
                     px[y * N + x] = new Color(1f, 1f, 1f, Mathf.Clamp01(a));
                 }
-            tex.SetPixels(px); tex.Apply();
+            tex.SetPixels(px); tex.Apply(false, true);
+            ringTexture = tex;
             GameObject g = new GameObject("KoiRings");
             g.transform.SetParent(transform, false);
             g.transform.localPosition = new Vector3(0f, 0.005f, 0f);
@@ -163,8 +191,11 @@ namespace BladePath
             col.color = gr;
             ParticleSystemRenderer pr = g.GetComponent<ParticleSystemRenderer>();
             pr.renderMode = ParticleSystemRenderMode.HorizontalBillboard;
-            Material m = new Material(Shader.Find("Sprites/Default")) { mainTexture = tex, renderQueue = 3001 };   // поверх воды
-            pr.material = m;
+            ringMaterial = new Material(Shader.Find("Sprites/Default"))
+            {
+                name = "KoiRipple", mainTexture = tex, renderQueue = 3001
+            };   // поверх воды
+            pr.sharedMaterial = ringMaterial;
             pr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; pr.receiveShadows = false;
             ps.Play();
             return ps;
@@ -232,6 +263,14 @@ namespace BladePath
             Weather wm = Weather.Instance;
             bool wantMist = wm != null && (wm.Dawn || wm.Foggy) && !wm.Raining;
             if (mist != null && wantMist != mistOn) { mistOn = wantMist; if (mistOn) mist.Play(); else mist.Stop(); }
+            // Keep the beloved soft pond fog, but avoid transparent overdraw
+            // when the mobile quality governor detects sustained low FPS.
+            if (mist != null && Time.unscaledTime >= nextMistBudgetAt)
+            {
+                nextMistBudgetAt = Time.unscaledTime + 1.5f;
+                var emission = mist.emission;
+                emission.rateOverTime = 4f * MobileVfxBudget.ParticleScale;
+            }
             if (t >= nextRise)
             {
                 nextRise = t + Random.Range(8f, 20f);

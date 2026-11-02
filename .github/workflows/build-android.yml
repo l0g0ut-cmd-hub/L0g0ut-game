@@ -49,6 +49,9 @@ jobs:
       - name: Validate artwork pixels and UI visual consistency
         run: python3 tools/validate_visual_consistency.py
 
+      - name: Preserve original painted visuals and verify additive effects
+        run: python3 tools/validate_additive_visuals.py
+
       - name: Environment info
         run: |
           { echo "== uname"; uname -a; echo "== docker"; docker version 2>&1 | head -20; echo "== df"; df -h /; } 2>&1 | tee "$RUNNER_TEMP/ci.log"
