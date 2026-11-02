@@ -232,7 +232,12 @@ namespace BladePath
             Color oc = GUI.color; GUI.color = new Color(0f, 0f, 0f, 0.55f);
             if (fog != null) { GUI.DrawTexture(new Rect(mapX - 120f, -120f, 300f, 300f), fog); GUI.DrawTexture(new Rect(mapX + viewW - 120f, 360f, 260f, 260f), fog); }
             GUI.color = oc;
-            UiKit.Text(new Rect(mapX + 16f, 8f, 400f, 36f), Campaign.RegionNames[Campaign.Region], 26f, Gold, TextAnchor.MiddleLeft);
+            Texture2D crest = UiKit.Tex("UI/kamon_feather");
+            if (crest != null)
+                UiKit.Image(new Vector2(mapX + 34f, 27f), 19f, crest,
+                    new Color(1f, 0.88f, 0.63f, 0.76f));
+            UiKit.Text(new Rect(mapX + 59f, 8f, 355f, 36f),
+                Campaign.RegionNames[Campaign.Region], 25f, Gold, TextAnchor.MiddleLeft);
             if (Profile.Cycle > 0) UiKit.Text(new Rect(mapX + 18f, 40f, 300f, 20f), "КРУГ " + (Profile.Cycle + 1) + ": враги крепче", 12f, new Color(1f, 0.55f, 0.4f), TextAnchor.MiddleLeft);
             // Only show the re-center control when the map is wider than the screen.
             if (uw < 0.999f && Btn(new Rect(mapX + viewW - 116f, 14f, 104f, 33f),
@@ -776,11 +781,54 @@ namespace BladePath
                 string tip = Campaign.InFight ? "Бой ещё не окончен." : !Campaign.Current.done ? "Ты на месте." : Campaign.Steps > 0 ? "Выбери цель. Светлые следы — доступные шаги, красные — сверх броска." : "Брось кость пути, чтобы идти дальше.";
                 foreach (string line in Wrap(tip, 34)) { UiKit.Text(new Rect(x, y, w, 17f), line, 12f, Dim, TextAnchor.MiddleLeft, false); y += 17f; }
             }
+            // The empty lower half of the old sidebar now shows a contextual
+            // illustrated location preview. Never reveal a fogged node's event art.
+            MapNode artNode = show >= 0 ? Campaign.Nodes[show] : Campaign.Current;
+            bool revealArt = show < 0 || Known(artNode);
+            string artwork = revealArt ? NodePreviewArt(artNode) : "UI/path_panorama";
+            float artTop = Mathf.Max(273f, y + 11f);
+            float artHeight = Mathf.Min(136f, 416f - artTop);
+            if (artHeight > 45f)
+                DrawSidebarIllustration(new Rect(x, artTop, w, artHeight), artwork);
             if (Btn(new Rect(x, 540f - 112f, w, 44f), "СНАРЯЖЕНИЕ" + (Profile.Points > 0 ? " (+" + Profile.Points + ")" : ""), interactive)) InventoryScreen.Show(0);
             if (Btn(new Rect(x, 540f - 60f, w, 44f), "В МЕНЮ", interactive)) { Hide(); Time.timeScale = 1f; SceneManager.LoadScene(SceneNames.MainMenu); }
         }
 
-        static bool Btn(Rect r, string label, bool enabled = true, bool red = false) { return InventoryScreen.Button(r, label, enabled, red); }
+        static string NodePreviewArt(MapNode node)
+        {
+            if (node.IsFight)
+            {
+                int idx = Mathf.Clamp(node.enemy, 0, EnemyFullArt.Length - 1);
+                return EnemyFullArt[idx];
+            }
+            switch (node.Type)
+            {
+                case NodeType.Event: return "UI/event_" + Mathf.Clamp(node.ev, 0, 3);
+                case NodeType.Shrine: return "UI/npc_2";
+                case NodeType.Smith: return "UI/npc_1";
+                case NodeType.Merchant: return "UI/npc_0";
+                case NodeType.Rest: return "UI/npc_3";
+                case NodeType.Herbalist: return "UI/pack02/herbalist";
+                case NodeType.Treasure: return "UI/chest_open";
+                default: return "UI/path_panorama";
+            }
+        }
+
+        static void DrawSidebarIllustration(Rect r, string path)
+        {
+            if (UiKit.Tex(path) == null) return;
+            VisualIdentity.Portrait(r, path);
+            // Embossed gold base to match the right-hand panel and give the
+            // panorama the same treatment as encounter illustration cards.
+            UiKit.Rect(new Rect(r.x + 8f, r.yMax - 9f, r.width - 16f, 2f),
+                new Color(VisualIdentity.Brass.r, VisualIdentity.Brass.g,
+                    VisualIdentity.Brass.b, 0.50f));
+        }
+
+        static bool Btn(Rect r, string label, bool enabled = true, bool red = false)
+        {
+            return VisualIdentity.Button(r, label, enabled, red);
+        }
 
         /// <summary>Кость пути: костяной кубик с точками (1–3), во время броска крутится.</summary>
         static void Die(Rect r, int face, float spin, bool lit)
