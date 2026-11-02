@@ -267,7 +267,8 @@ def check_selection_screens():
     assert "kept.Key == at) stock = kept.Value;" in screen
     # Meshy models (2026-11-02): Akiko player, Oni and Shogun enemies.
     builder = read("Assets/_Project/Scripts/Editor/HeroModelBuilder.cs")
-    for fbx, art in (("Akiko_Player", "Akiko"), ("Oni_Enemy", "Oni"), ("Shogun_Enemy", "Shogun")):
+    for fbx, art in (("Akiko_Player", "Akiko"), ("Oni_Enemy", "Oni"), ("Shogun_Enemy", "Shogun"),
+                     ("Fallen_Enemy", "Fallen"), ("Shadow_Enemy", "Shadow")):
         f = ROOT / ("Assets/_Project/Models/%s.fbx" % fbx)
         assert f.is_file() and f.stat().st_size > 500000, "Missing rigged FBX: " + fbx
         a = ROOT / ("Assets/_Project/Art/%s/%s_albedo.jpg" % (art, art.lower()))

@@ -26,6 +26,8 @@ namespace BladePath.EditorTools
         public const string AkikoFbxPath = "Assets/_Project/Models/Akiko_Player.fbx";     // игрок: Акико, женщина-самурай в красном доспехе
         public const string OniFbxPath = "Assets/_Project/Models/Oni_Enemy.fbx";          // враг 3-й ступени: Кровавый Они
         public const string ShogunFbxPath = "Assets/_Project/Models/Shogun_Enemy.fbx";    // враг 4-й ступени: Проклятый сёгун
+        public const string FallenFbxPath = "Assets/_Project/Models/Fallen_Enemy.fbx";    // враг 1-й ступени: Поверженный (неупокоенный страж)
+        public const string ShadowEnemyFbxPath = "Assets/_Project/Models/Shadow_Enemy.fbx"; // враг 2-й ступени: Тень клана
         const float MeshyScale = 1f;
         public const string UndeadFbxPath = "Assets/_Project/Models/Samurai_Undead.fbx";
         const string ControllerPath = "Assets/_Project/Animation/Hero.controller";
@@ -46,20 +48,26 @@ namespace BladePath.EditorTools
                 string first = Exists(Samurai2FbxPath) ? Samurai2FbxPath : Exists(ShadowFbxPath) ? ShadowFbxPath : UndeadFbxPath;
                 GameObject a = Attach(fighter, bladeRoot, look, true, first, UndeadControllerPath, "Undead_", "UndeadModel");
                 if (a == null) return false;
-                GameObject b = null, oni = null, shogun = null;
+                GameObject b = null, oni = null, shogun = null, fallen = null, shade = null;
                 if (Exists(RoninFbxPath) && first != RoninFbxPath)
                     b = Attach(fighter, bladeRoot, look, true, RoninFbxPath, EnemyRoninControllerPath, "EnemyRonin_", "EnemyRoninModel");
                 if (Exists(OniFbxPath))
                     oni = Attach(fighter, bladeRoot, look, true, OniFbxPath, "Assets/_Project/Animation/EnemyOni.controller", "EnemyOni_", "EnemyOniModel");
                 if (Exists(ShogunFbxPath))
                     shogun = Attach(fighter, bladeRoot, look, true, ShogunFbxPath, "Assets/_Project/Animation/EnemyShogun.controller", "EnemyShogun_", "EnemyShogunModel");
-                if (b != null || oni != null || shogun != null)
+                if (Exists(FallenFbxPath))
+                    fallen = Attach(fighter, bladeRoot, look, true, FallenFbxPath, "Assets/_Project/Animation/EnemyFallen.controller", "EnemyFallen_", "EnemyFallenModel");
+                if (Exists(ShadowEnemyFbxPath))
+                    shade = Attach(fighter, bladeRoot, look, true, ShadowEnemyFbxPath, "Assets/_Project/Animation/EnemyShadow.controller", "EnemyShadow_", "EnemyShadowModel");
+                if (b != null || oni != null || shogun != null || fallen != null || shade != null)
                 {
-                    // слоты = Ladder.Stage.model: 0 самурай в красном, 1 ронин, 2 Они, 3 сёгун; нет FBX — облик соседнего слота
+                    // слоты = Ladder.Stage.model: 0 самурай в красном, 1 ронин, 2 Они, 3 сёгун, 4 Поверженный, 5 Тень клана;
+                    // нет FBX — облик соседнего слота
                     GameObject b2 = b != null ? b : a;
                     EnemySkins sk = fighter.gameObject.AddComponent<EnemySkins>();
-                    sk.models = new[] { a, b2, oni != null ? oni : b2, shogun != null ? shogun : a };
-                    foreach (GameObject extra in new[] { b, oni, shogun }) if (extra != null) extra.SetActive(false);
+                    sk.models = new[] { a, b2, oni != null ? oni : b2, shogun != null ? shogun : a,
+                                        fallen != null ? fallen : a, shade != null ? shade : b2 };
+                    foreach (GameObject extra in new[] { b, oni, shogun, fallen, shade }) if (extra != null) extra.SetActive(false);
                 }
                 return true;
             }
@@ -135,7 +143,7 @@ namespace BladePath.EditorTools
                     model.transform.localRotation = Quaternion.Euler(0f, Vector3.SignedAngle(fwd, Vector3.forward, Vector3.up), 0f);
             }
             else Debug.LogWarning("HeroModelBuilder: не найден Hips/FrontMarker — ориентация модели не скорректирована");
-            bool meshy = fbx == AkikoFbxPath || fbx == OniFbxPath || fbx == ShogunFbxPath;
+            bool meshy = fbx == AkikoFbxPath || fbx == OniFbxPath || fbx == ShogunFbxPath || fbx == FallenFbxPath || fbx == ShadowEnemyFbxPath;
             model.transform.localScale = Vector3.one * (meshy ? MeshyScale : hero3 ? Hero3Scale : samurai ? SamuraiScale : ronin ? RoninScale : ModelScale);
 
             // Материалы: по имени из Blender → наши текстурированные

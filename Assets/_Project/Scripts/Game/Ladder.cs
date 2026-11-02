@@ -14,13 +14,13 @@ namespace BladePath
             public float kiMul, dashBias, heavyBias;   // особенности: копит дух, уходит рывками, любит тяжёлые удары
             public Color tint, aura;
             public int marks;   // метки жизни (как у боссов Sekiro): столько раз нужно добить
-            public int model;   // облик врага (EnemySkins): 0 — самурай в красном доспехе, 1 — ронин, 2 — Они, 3 — сёгун (Meshy)
+            public int model;   // облик врага (EnemySkins): 0 — самурай в красном доспехе, 1 — ронин, 2 — Они, 3 — сёгун, 4 — Поверженный, 5 — Тень клана (Meshy)
         }
 
         public static readonly Stage[] Stages =
         {
-            new Stage { name = "ПОВЕРЖЕННЫЙ", title = "Неупокоенный страж ворот", hpMul = 1.0f, dmgMul = 0.85f, speedMul = 1.0f, aggr = -0.05f, kiMul = 1f, dashBias = 0f, heavyBias = 0f, tint = Color.white, aura = new Color(0.75f, 0.35f, 1f) , marks = 1 },
-            new Stage { name = "ТЕНЬ КЛАНА", title = "Убийца без лица", hpMul = 1.1f, dmgMul = 1.0f, speedMul = 1.12f, aggr = 0.05f, kiMul = 1f, dashBias = 0.35f, heavyBias = 0f, tint = new Color(0.55f, 0.6f, 0.78f), aura = new Color(0.3f, 0.5f, 1f) , marks = 2, model = 1 },
+            new Stage { name = "ПОВЕРЖЕННЫЙ", title = "Неупокоенный страж ворот", hpMul = 1.0f, dmgMul = 0.85f, speedMul = 1.0f, aggr = -0.05f, kiMul = 1f, dashBias = 0f, heavyBias = 0f, tint = Color.white, aura = new Color(0.75f, 0.35f, 1f) , marks = 1, model = 4 },
+            new Stage { name = "ТЕНЬ КЛАНА", title = "Убийца без лица", hpMul = 1.1f, dmgMul = 1.0f, speedMul = 1.12f, aggr = 0.05f, kiMul = 1f, dashBias = 0.35f, heavyBias = 0f, tint = new Color(0.9f, 0.92f, 1f), aura = new Color(0.3f, 0.5f, 1f) , marks = 2, model = 5 },
             new Stage { name = "КРОВАВЫЙ ОНИ", title = "Демон, пьющий сталь", hpMul = 1.3f, dmgMul = 1.1f, speedMul = 1.05f, aggr = 0.1f, kiMul = 1.1f, dashBias = 0f, heavyBias = 0.5f, tint = new Color(1f, 0.9f, 0.86f), aura = new Color(1f, 0.25f, 0.15f) , marks = 2, model = 2 },
             new Stage { name = "ПРОКЛЯТЫЙ СЁГУН", title = "Владыка мёртвого храма", hpMul = 1.6f, dmgMul = 1.2f, speedMul = 1.15f, aggr = 0.2f, kiMul = 1.6f, dashBias = 0.15f, heavyBias = 0.2f, tint = new Color(0.94f, 0.9f, 1f), aura = new Color(1f, 0.85f, 0.3f) , marks = 3, model = 3 },
         };
