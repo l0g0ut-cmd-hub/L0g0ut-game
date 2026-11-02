@@ -697,3 +697,23 @@ The original 604-file snapshot above is historical. The following six files have
 - Local source: `Meshy_AI_Weathered_Shinto_Gate_1102155137_texture.glb` (22,396,528 bytes, 427,094 triangles, 234,804 vertices, one mesh, one 2048×2048 texture; dimensions 1.903 × 1.810 × 0.337 in GLB units).
 - **Not in GitHub; not imported into Unity; not Android-verified.** It is a high-poly optional replacement, **not a missing scene object**: `Assets/_Project/Scripts/Editor/EnvironmentBuilder.cs` already constructs the torii from primitives.
 - Do not request or generate another torii. Before considering replacement, optimize/LOD and verify materials/UVs, scale, collisions and Android FPS. Keep the current procedural torii as fallback.
+
+### Separated Meshy assets — LOCAL ONLY, validated 2026-11-02
+
+These **11 GLB files exist only in the working container**, under `/mnt/data/BladePath_Meshy_Separated/GLB/`. All load as a single textured mesh each, with a 1024×1024 base-color texture; none is present in the GitHub tree or used in Unity. Do not request duplicates. They are **far too dense to import unchanged into an Android scene**.
+
+| File | Triangles | Size (bytes) | Extents (GLB units) |
+|---|---:|---:|---|
+| `toro_01_left.glb` | 114,046 | 4,379,412 | 0.722×1.800×0.675 |
+| `toro_02_middle.glb` | 114,318 | 4,408,572 | 0.675×1.800×0.661 |
+| `toro_03_right.glb` | 117,770 | 4,480,104 | 0.724×1.800×0.674 |
+| `chochin_01_flower.glb` | 199,232 | 6,695,540 | 0.318×0.900×0.324 |
+| `chochin_02_plain.glb` | 124,080 | 4,532,556 | 0.329×0.900×0.321 |
+| `chochin_03_with_bracket.glb` | 225,998 | 7,530,124 | 0.414×0.900×0.341 |
+| `temple_wall_01_straight.glb` | 122,688 | 4,297,680 | 2.370×1.800×0.893 |
+| `temple_wall_02_outer_corner.glb` | 89,602 | 3,305,492 | 1.542×1.800×1.395 |
+| `temple_wall_03_inner_corner.glb` | 138,078 | 4,738,788 | 2.106×1.800×1.766 |
+| `temple_wall_04_endcap.glb` | 49,516 | 2,170,364 | 0.964×1.800×1.000 |
+| `temple_wall_05_gate_section.glb` | 243,502 | 7,897,800 | 2.665×1.800×1.262 |
+
+No Blender executable or decimation backend is available in this container; a pip attempt to install `fast-simplification` failed because DNS/network access is disabled. Preserve source GLBs. Optimize in a Blender-capable environment, preserve UV/PBR, check colliders, then upload and verify Git blobs before Unity integration. Existing procedural environment props remain until an approved replacement is demonstrably better.
