@@ -88,6 +88,11 @@ def check_routes():
     assert 'if (UiKit.Tex(path) == null) return;' not in screen
     menu = read("Assets/_Project/Scripts/Menu/MainMenuController.cs")
     assert 'VisualIdentity.Portrait(artRect, art);' in menu
+    assert 'JourneyChoice.Portrait(JourneyChoice.Hero)' in screen
+    assert 'VisualIdentity.Portrait(portrait, heroArt,' in screen
+    assert 'UI/selection/characters_difficulties' not in screen
+    assert 'if (texCache.TryGetValue(path, out t) && t != null) return t;' in read(
+        "Assets/_Project/Scripts/Game/UiKit.cs")
     assert 'art = newJourneyStep == 1 ? "UI/event_" + i : "UI/npc_" + i;' in menu
     assert "if (hub.shore != shore) continue;" in src
     assert "lengthPixels * easedTravel" in screen
