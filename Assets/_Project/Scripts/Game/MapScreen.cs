@@ -613,9 +613,15 @@ namespace BladePath
             // whenever an art-approved one is available.
             int count = newSheet ? 16 : moving ? 8 : 4;
             int offset = newSheet ? 0 : moving ? 0 : 8;
-            float elapsed = Mathf.Max(0f, Time.unscaledTime - rideCycleAt);
-            float pose = moving ? elapsed * (newSheet ? 14f : 9f)
-                : Time.unscaledTime * 2.5f;
+            // Match hoofbeat frames to the distance actually travelled.
+            // Pauses, slow roads and resumed animations no longer make the
+            // horse gallop in place or skate across the painted terrain.
+            float travelProgress = moving
+                ? Mathf.Clamp01((Time.unscaledTime - moveStart) / Mathf.Max(0.01f, moveDuration))
+                : 0f;
+            float distanceCovered = moving
+                ? TerrainRoads.Route(moveFrom, moveTo).lengthPixels * travelProgress : 0f;
+            float pose = moving ? distanceCovered * (newSheet ? 12f : 9f) / 145f : 0f;
             int first = Mathf.FloorToInt(pose) % count;
             int next = (first + 1) % count;
             float phase = pose - Mathf.Floor(pose);
@@ -631,9 +637,9 @@ namespace BladePath
             if (left) currentUV = new Rect(currentUV.x + currentUV.width, currentUV.y,
                 -currentUV.width, currentUV.height);
             GUI.DrawTextureWithTexCoords(riderRect, ht, currentUV);
-            // Low-opacity interpolation hides the old eight-frame cadence;
-            // blending is capped so individual painted poses stay sharp.
-            float overlay = moving ? Mathf.Sin(phase * Mathf.PI) * 0.22f : 0f;
+            // Adjacent hand-painted poses are discrete drawings: blending them
+            // creates translucent extra legs. Keep the silhouette crisp.
+            float overlay = 0f;
             if (overlay > 0.005f)
             {
                 Color oldColor = GUI.color;
