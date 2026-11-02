@@ -86,6 +86,13 @@ def check_routes():
     assert 'interactive && travelReady, true' in screen
     assert 'if (UiKit.Tex(heroArt) != null)' in screen
     assert 'heroArt = "UI/npc_"' not in screen
+    assert "float artHeight = artSpace >= 94f" in screen
+    heal_source = read("Assets/_Project/Scripts/Game/Juice.cs")
+    assert "public void ClearBattleDecals()" in heal_source
+    assert "if (age > d.life)" in heal_source
+    duel_source = read("Assets/_Project/Scripts/Game/DuelManager.cs")
+    assert "Juice.Instance.ClearBattleDecals();" in duel_source
+    assert "Footprints.Instance.ClearMarks();" in duel_source
     assert 'if (parents[index] < 0) { sel = -1; return; }' in screen
     assert 'if (UiKit.Tex(path) == null) return;' not in screen
     menu = read("Assets/_Project/Scripts/Menu/MainMenuController.cs")
@@ -128,6 +135,17 @@ def check_new_game():
     assert art.is_file() and art.stat().st_size > 2048
     with art.open("rb") as f:
         assert f.read(2) == b"\xff\xd8", "Bad selection JPEG"
+    # Production art is mandatory: a 6 KB design thumbnail is not a portrait.
+    for group in ("hero", "difficulty"):
+        for i in range(3):
+            file = ROOT / ("Assets/_Project/Resources/UI/selection/%s_%d.jpg" % (group, i))
+            assert file.is_file(), "Missing illustrated selection card: " + str(file)
+            assert file.stat().st_size > 30000, "Low-quality or empty card: " + str(file)
+            with file.open("rb") as source:
+                assert source.read(3) == b"\\xff\\xd8\\xff".decode("unicode_escape").encode("latin1"), (
+                    "Not a valid JPEG: " + str(file))
+    check_png("Assets/_Project/Resources/UI/map_rider_16.png", 1024, 1024)
+    print("Approved artwork: six character/difficulty cards and 16-frame rider")
     print("New Game choice: 3 difficulties and 3 player FBX options")
 
 
