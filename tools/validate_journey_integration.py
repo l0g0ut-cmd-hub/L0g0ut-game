@@ -155,14 +155,14 @@ def check_routes():
                   "previous.x != nodes[i].x || previous.y != nodes[i].y",
                   "cachedNodePositions = new Vector2[nodes.Count]"):
         assert token in bind, "Missing route cache mutation guard: " + token
-    assert re.search(r"if \\(changed\\)\\s*\\{\\s*cache\\.Clear\\(\\);", bind), (
+    assert re.search(r"if \(changed\)\s*\{\s*cache\.Clear\(\);", bind), (
         "Route cache not cleared when node coordinates change")
     # The primary travel button must be visible inside the 540px virtual map
     # and must not overlap the inventory/menu actions on narrow Android screens.
     actions = []
     for label in ("В ПУТЬ", "СНАРЯЖЕНИЕ", "В МЕНЮ"):
         match = re.search(
-            r'Btn\\(new Rect\\(x, 540f - (\\d+)f, w, (\\d+)f\\), "' + label,
+            r'Btn\(new Rect\(x, 540f - (\d+)f, w, (\d+)f\), "' + label,
             screen)
         assert match, "Map action missing or no longer pinned: " + label
         top, height = 540 - int(match.group(1)), int(match.group(2))
