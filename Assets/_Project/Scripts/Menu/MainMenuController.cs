@@ -254,7 +254,10 @@ namespace BladePath
                 string art = newJourneyStep == 1
                     ? JourneyChoice.DifficultyArt(i) : JourneyChoice.Portrait(i);
                 Texture2D selectionAtlas = UiKit.Tex("UI/selection/characters_difficulties");
-                if (selectionAtlas != null)
+                // Reject thumbnail-sized atlases; preserve the illustrated
+                // legacy portraits instead of magnifying a broken preview.
+                if (selectionAtlas != null && selectionAtlas.width >= 900 &&
+                    selectionAtlas.height >= 600)
                 {
                     // One shared 3x2 hand-painted atlas, lower row difficulty
                     // art; upper row character portraits. Text/buttons remain live.
@@ -270,6 +273,7 @@ namespace BladePath
                 {
                     if (UiKit.Tex(art) == null)
                         art = newJourneyStep == 1 ? "UI/event_" + i : "UI/npc_" + i;
+                    if (UiKit.Tex(art) == null) art = "UI/path_panorama";
                     VisualIdentity.Portrait(artRect, art);
                 }
 
