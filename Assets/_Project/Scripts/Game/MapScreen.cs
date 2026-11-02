@@ -222,8 +222,10 @@ namespace BladePath
             if (mt != null) GUI.DrawTextureWithTexCoords(new Rect(mapX, 0f, viewW, MapH), mt, new Rect(u0, 0f, uw, 1f));
             DrawPaintedMist();
             DrawLandmarkLights();
+            DrawAmbientLandmarkMotes();
             DrawRoads();
             DrawJourneyFootprints();
+            DrawRouteGlints();
             DrawNodes(interactive && modal == Modal.None && moveTo < 0);
             DrawHero();
             DrawJourneyLegend();
@@ -655,6 +657,70 @@ namespace BladePath
                     : shrine ? new Color(1f, 0.77f, 0.42f, 0.06f + wave * 0.055f)
                     : new Color(1f, 0.80f, 0.32f, 0.05f + wave * 0.045f);
                 UiKit.Disc(point, (boss ? 65f : 48f) + wave * 5f, tint);
+            }
+        }
+
+        // A few slow, hand-placed-looking golden motes make shrines and safe
+        // checkpoints feel alive. They complement the existing illustrated
+        // badges and avoid particles, textures, animations or new renderers.
+        void DrawAmbientLandmarkMotes()
+        {
+            if (Event.current.type != EventType.Repaint ||
+                DuelManager.Gfx != 1 || viewW < 320f) return;
+            List<MapNode> nodes = Campaign.Nodes;
+            float clock = Time.unscaledTime;
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                MapNode node = nodes[i];
+                if (!Known(node) || node.done) continue;
+                bool sanctuary = node.Type == NodeType.Shrine ||
+                                 node.Type == NodeType.Herbalist;
+                bool treasure = node.Type == NodeType.Treasure;
+                if (!sanctuary && !treasure) continue;
+                Vector2 anchor = P(node);
+                if (anchor.x < mapX + 55f || anchor.x > mapX + viewW - 55f) continue;
+                Color accent = node.Type == NodeType.Herbalist
+                    ? VisualIdentity.Jade : VisualIdentity.BrassLight;
+                for (int k = 0; k < 3; k++)
+                {
+                    float phase = clock * (0.38f + k * 0.13f) + i * 4.13f + k * 2.26f;
+                    float x = anchor.x + Mathf.Sin(phase * 0.9f) * (29f + k * 9f);
+                    float y = anchor.y + Mathf.Sin(phase * 1.2f) * 13f -
+                        13f - k * 8f;
+                    if (x < mapX + 6f || x > mapX + viewW - 6f) continue;
+                    float alpha = (0.16f + 0.16f * Mathf.Pow(
+                        Mathf.Sin(phase * 1.6f), 2f)) * (treasure ? 0.72f : 1f);
+                    UiKit.Disc(new Vector2(x, y), 2f + k * 0.45f,
+                        new Color(accent.r, accent.g, accent.b, alpha));
+                }
+            }
+        }
+
+        // A moving light bead follows the *chosen* route, while the original
+        // footsteps remain the navigation guide. Capped to one tiny highlight
+        // per visible edge; avoids obscuring the intricate map art.
+        void DrawRouteGlints()
+        {
+            if (Event.current.type != EventType.Repaint ||
+                previewPath.Count < 2 || moveTo >= 0 ||
+                DuelManager.Gfx != 1 || !Campaign.Current.done) return;
+            List<MapNode> nodes = Campaign.Nodes;
+            float clock = Time.unscaledTime;
+            int shown = Mathf.Min(Campaign.Steps, previewPath.Count - 1);
+            for (int i = 1; i <= shown; i++)
+            {
+                int from = previewPath[i - 1], to = previewPath[i];
+                if (from < 0 || from >= nodes.Count || to < 0 || to >= nodes.Count) continue;
+                float t = Mathf.Repeat(clock * 0.26f - i * 0.22f, 1f);
+                if (t < 0.12f || t > 0.88f) continue;
+                Vector2 a = new Vector2(nodes[from].x, nodes[from].y);
+                Vector2 b = new Vector2(nodes[to].x, nodes[to].y);
+                Vector2 uv = Bez(a, b, Bend(from, to), t);
+                Vector2 point = new Vector2(mapX + (uv.x - u0) * MapFullW,
+                    uv.y * MapH);
+                if (point.x < mapX + 9f || point.x > mapX + viewW - 9f) continue;
+                UiKit.Disc(point, 5f, new Color(0.82f, 1f, 0.65f, 0.14f));
+                UiKit.Disc(point, 2.0f, new Color(0.92f, 1f, 0.77f, 0.50f));
             }
         }
 
