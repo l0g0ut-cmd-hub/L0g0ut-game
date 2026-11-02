@@ -220,6 +220,8 @@ def our_bone(g):
     if 'head' in low: return 'Head'
     if g == SPINE0: return 'Spine'
     if 'spine' in low or 'chest' in low: return 'Chest'
+    # служебные кости Meshy (Bone_0xx: пальцы, полы, пряди) — за ближайшим именованным предком
+    if MPAR.get(g): return our_bone(MPAR[g])
     return 'Hips'
 if RIG:
     t = time.time()
@@ -235,6 +237,7 @@ if RIG:
         if bn not in made: made[bn] = body.vertex_groups.new(name=bn)
         made[bn].add([vi], float(w), 'ADD')
     log('веса из рига Meshy:', {nm: tgt[i] for i, nm in enumerate(src_names)}, round(time.time() - t, 1), 'с')
+    log('служебные кости → предок:', {nm: MPAR.get(nm) for nm in MB if nm.startswith('Bone')})
 t = time.time()
 if RIG: pass
 else:
