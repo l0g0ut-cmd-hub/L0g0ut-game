@@ -938,7 +938,8 @@ namespace BladePath
                 DrawSidebarIllustration(illustration, artwork);
                 Rect portrait = new Rect(illustration.x + 7f,
                     illustration.y + 7f, 47f, 58f);
-                string heroArt = JourneyChoice.Portrait(JourneyChoice.Hero);
+                string heroArt = JourneyChoice.FaceSquare(JourneyChoice.Hero);
+                if (UiKit.Tex(heroArt) == null) heroArt = JourneyChoice.Portrait(JourneyChoice.Hero);
                 if (UiKit.Tex(heroArt) != null)
                     VisualIdentity.Portrait(portrait, heroArt);
                 // Keep portrait colors untouched; accent belongs to the frame.

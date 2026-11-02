@@ -209,7 +209,79 @@ namespace BladePath
             }
         }
 
+        // Экраны выбора сложности и путника — готовые картины 1916x821 (рамки, надписи и кнопки
+        // нарисованы прямо в них) + невидимые зоны нажатия, как в главном меню. Картина заполняет
+        // экран целиком (лишнее по краям обрезается: карточки и кнопки лежат в средних 60% ширины).
+        // Выбранная карточка подсвечивается золотым свечением card_glow.
+        const float SelW = 1916f, SelH = 821f;
+        static Rect SelRect(float x0, float y0, float x1, float y1) { return new Rect(x0, y0, x1 - x0, y1 - y0); }
+        static readonly Rect[] DifficultyCards =
+        {
+            SelRect(428f, 118f, 768f, 660f), SelRect(786f, 118f, 1132f, 660f), SelRect(1152f, 118f, 1492f, 660f)
+        };
+        static readonly Rect DifficultyConfirm = SelRect(535f, 690f, 993f, 765f);
+        static readonly Rect DifficultyBack = SelRect(1027f, 690f, 1353f, 762f);
+        static readonly Rect[] TravellerCards =
+        {
+            SelRect(385f, 97f, 749f, 670f), SelRect(764f, 97f, 1152f, 670f), SelRect(1167f, 97f, 1531f, 670f)
+        };
+        static readonly Rect TravellerStart = SelRect(573f, 698f, 945f, 778f);
+        static readonly Rect TravellerBack = SelRect(988f, 698f, 1310f, 775f);
+
         void DrawJourneySelection()
+        {
+            bool difficulty = newJourneyStep == 1;
+            Texture2D screen = UiKit.Tex(difficulty
+                ? "UI/selection/screen_difficulty" : "UI/selection/screen_traveller");
+            if (screen == null) { DrawJourneySelectionLegacy(); return; }
+
+            float s = Mathf.Max(Screen.width / SelW, Screen.height / SelH);
+            float ox = (Screen.width - SelW * s) * 0.5f, oy = (Screen.height - SelH * s) * 0.5f;
+            GUI.DrawTexture(new Rect(ox, oy, SelW * s, SelH * s), screen, ScaleMode.StretchToFill, false);
+
+            Rect[] cards = difficulty ? DifficultyCards : TravellerCards;
+            int chosen = difficulty ? chosenDifficulty : chosenHero;
+            Texture2D glow = UiKit.Tex("UI/selection/card_glow");
+            for (int i = 0; i < cards.Length; i++)
+            {
+                Rect r = new Rect(ox + cards[i].x * s, oy + cards[i].y * s, cards[i].width * s, cards[i].height * s);
+                if (i == chosen && glow != null)
+                {
+                    float pad = r.width * 0.09f;   // card_glow.png нарисован с таким же полем вокруг карточки
+                    Color prev = GUI.color;
+                    GUI.color = new Color(1f, 1f, 1f, 0.85f + 0.15f * Mathf.Sin(Time.unscaledTime * 3f));
+                    GUI.DrawTexture(new Rect(r.x - pad, r.y - pad, r.width + pad * 2f, r.height + pad * 2f), glow);
+                    GUI.color = prev;
+                }
+                if (GUI.Button(r, GUIContent.none, GUIStyle.none))
+                {
+                    if (difficulty) chosenDifficulty = i;
+                    else chosenHero = i;
+                    Haptics.Pulse(12);
+                }
+            }
+
+            Rect ok = difficulty ? DifficultyConfirm : TravellerStart;
+            Rect back = difficulty ? DifficultyBack : TravellerBack;
+            Color oldBg = GUI.backgroundColor;
+            GUI.backgroundColor = new Color(1f, 0.9f, 0.7f, 0.18f);   // отклик при нажатии (hitStyle.active)
+            bool pressedBack = GUI.Button(new Rect(ox + back.x * s, oy + back.y * s, back.width * s, back.height * s), GUIContent.none, hitStyle);
+            bool pressedOk = GUI.Button(new Rect(ox + ok.x * s, oy + ok.y * s, ok.width * s, ok.height * s), GUIContent.none, hitStyle);
+            GUI.backgroundColor = oldBg;
+            if (pressedBack) newJourneyStep--;
+            else if (pressedOk)
+            {
+                if (difficulty) newJourneyStep = 2;
+                else if (!loading)
+                {
+                    JourneyChoice.BeginNew(chosenDifficulty, chosenHero);
+                    StartCoroutine(LoadBattle());
+                }
+            }
+        }
+
+        /// <summary>Прежний экран выбора (рисуется интерфейсом) — если картины экранов не загрузились.</summary>
+        void DrawJourneySelectionLegacy()
         {
             Matrix4x4 old = UiKit.Begin();
             float W = UiKit.Width;

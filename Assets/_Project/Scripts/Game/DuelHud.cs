@@ -766,7 +766,13 @@ namespace BladePath
             string pp;
             // Each traveller's approved selection card contains a dedicated
             // circular face inset. Reuse it here so Akiko/Ren never show Ronin.
-            if (!mirror) pp = JourneyChoice.Portrait(JourneyChoice.Hero);
+            // Dedicated round face portraits (UI/hero_face_N) come first; the
+            // card inset remains a fallback if a face file is ever missing.
+            if (!mirror)
+            {
+                pp = JourneyChoice.Face(JourneyChoice.Hero);
+                if (UiKit.Tex(pp) == null) pp = JourneyChoice.Portrait(JourneyChoice.Hero);
+            }
             else
             {
                 // у каждого врага «Пути» свой портрет (Поверженный, Тень клана, Кровавый они, Проклятый сёгун); нет — по облику модели
@@ -791,7 +797,11 @@ namespace BladePath
                     GUI.color = previous;
                     UiKit.Ring(pc, 32f, Gold, true);
                 }
-                else UiKit.Image(pc, 32f, pt, tint);
+                else
+                {
+                    UiKit.Image(pc, 32f, pt, tint);
+                    if (!mirror) UiKit.Ring(pc, 32f, Gold, true);   // round hero face: gold rim like the cards
+                }
             }
             else
             {

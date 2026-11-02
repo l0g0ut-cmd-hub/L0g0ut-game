@@ -69,6 +69,16 @@ namespace BladePath
         {
             return ApprovedOrFallback(approvedHeroPaths, "hero", index);
         }
+        /// <summary>Круглый портрет лица героя для боевого интерфейса (PNG с прозрачностью).</summary>
+        public static string Face(int index)
+        {
+            return "UI/hero_face_" + Mathf.Clamp(index, 0, 2);
+        }
+        /// <summary>Квадратный портрет лица героя (боковая панель карты).</summary>
+        public static string FaceSquare(int index)
+        {
+            return "UI/hero_face_sq_" + Mathf.Clamp(index, 0, 2);
+        }
         public static string DifficultyArt(int index)
         {
             return ApprovedOrFallback(approvedDifficultyPaths, "difficulty", index);

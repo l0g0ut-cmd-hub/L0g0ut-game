@@ -225,6 +225,33 @@ def check_new_game():
     print("New Game choice: 3 difficulties and 3 player FBX options")
 
 
+def check_selection_screens():
+    """Full-screen painted selection screens (user-approved 2026-11-02).
+
+    Frames, names and buttons are painted into the image; the menu only adds
+    invisible tap zones and a gold glow on the chosen card. Do not replace
+    this with redrawn UI cards again.
+    """
+    sel = "Assets/_Project/Resources/UI/selection/"
+    for name in ("screen_difficulty.jpg", "screen_traveller.jpg"):
+        f = ROOT / (sel + name)
+        assert f.is_file() and f.stat().st_size > 200000, "Missing selection screen: " + name
+        with f.open("rb") as src:
+            assert src.read(3) == bytes((255, 216, 255)), "Not a JPEG: " + name
+    check_png(sel + "card_glow.png", 320, 480)
+    for i in range(3):
+        check_png("Assets/_Project/Resources/UI/hero_face_%d.png" % i, 256, 256)
+        assert (ROOT / ("Assets/_Project/Resources/UI/hero_face_sq_%d.jpg" % i)).is_file()
+    menu = read("Assets/_Project/Scripts/Menu/MainMenuController.cs")
+    assert '"UI/selection/screen_difficulty"' in menu and '"UI/selection/screen_traveller"' in menu
+    assert "const float SelW = 1916f, SelH = 821f;" in menu
+    assert '"UI/selection/card_glow"' in menu
+    assert "DrawJourneySelectionLegacy();" in menu
+    hud = read("Assets/_Project/Scripts/Game/DuelHud.cs")
+    assert "pp = JourneyChoice.Face(JourneyChoice.Hero);" in hud
+    print("Selection screens: 2 painted screens, glow, 3 hero faces")
+
+
 def check_heal():
     heal = read("Assets/_Project/Scripts/Game/Juice.cs")
     ik = read("Assets/_Project/Scripts/Visual/HeroRigDriver.cs")
@@ -239,5 +266,6 @@ def check_heal():
 if __name__ == "__main__":
     check_routes()
     check_new_game()
+    check_selection_screens()
     check_heal()
     print("Journey integration checks: OK")
