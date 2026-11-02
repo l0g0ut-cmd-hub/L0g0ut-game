@@ -591,8 +591,13 @@ namespace BladePath
         void DrawHero()
         {
             if (Event.current.type != EventType.Repaint) return;
-            Texture2D ht = UiKit.Tex("UI/map_rider_16");
-            if (ht == null) ht = UiKit.Tex("UI/map_hero");
+            Texture2D riderAtlas = UiKit.Tex("UI/map_rider_16");
+            // The new rider sheet must be a four-by-four texture; fall back to
+            // the approved old painted rider if an incomplete atlas is imported.
+            bool newSheet = riderAtlas != null && riderAtlas.width >= 512 &&
+                riderAtlas.height >= 512 && riderAtlas.width == riderAtlas.height &&
+                riderAtlas.width % 4 == 0;
+            Texture2D ht = newSheet ? riderAtlas : UiKit.Tex("UI/map_hero");
             Texture2D ic = UiKit.Tex("UI/map_icons");
             Vector2 uv = HeroUV();
             Vector2 p = new Vector2(mapX + (uv.x - u0) * MapFullW, uv.y * MapH);
@@ -607,10 +612,8 @@ namespace BladePath
                 GUI.color = oc;
             }
             if (ht == null) { UiKit.Disc(p, 10f, Gold); return; }
-            bool newSheet = UiKit.Tex("UI/map_rider_16") != null;
-            // Smooth animation between source poses without replacing the
-            // original hand-painted rider. The optional 16-pose sheet is used
-            // whenever an art-approved one is available.
+            // Preserve the existing painted rider until a complete 4x4 atlas
+            // is imported; the 16-frame artwork is never guessed at runtime.
             int count = newSheet ? 16 : moving ? 8 : 4;
             int offset = newSheet ? 0 : moving ? 0 : 8;
             // Match hoofbeat frames to the distance actually travelled.
