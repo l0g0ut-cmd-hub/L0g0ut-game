@@ -114,7 +114,7 @@ def check_design_system():
         "map NPC art not low-res placeholders":
             'Pack02Art(' not in map_code,
         "map herbalist preview":
-            'case NodeType.Herbalist: return "UI/pack02/herbalist";' in map_code,
+            'case NodeType.Herbalist: return "UI/npc_3";' in map_code,
         "map story cards unified":
             'VisualIdentity.Portrait(r, tex)' in map_code,
         "inventory unified":
