@@ -30,7 +30,7 @@ jobs:
           mkdir -p out/Models out/Art out/preview
           build() {
             MESHY_GLB="tools/models/meshy/$1.glb" MESHY_NAME="$2" MESHY_OUT=out/Models \
-            BODY_H="$3" TOP_FRAC="$4" ARM_PAD="$5" SHOULDER_X="$6" \
+            BODY_H="$3" TOP_FRAC="$4" ARM_PAD="$5" SHOULDER_X="$6" HEAD_Z="${7:-0}" \
               blender -b --factory-startup --python tools/blender/build_meshy_char.py > "out/$2.log" 2>&1 || true
             grep -E "^MZ|Error|Traceback" "out/$2.log" | head -60
             test -f "out/Models/$2.fbx" || { tail -60 "out/$2.log"; exit 1; }

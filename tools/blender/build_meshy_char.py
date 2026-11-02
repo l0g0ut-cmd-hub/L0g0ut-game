@@ -213,6 +213,12 @@ for _ in range(10):
     avg = acc / np.maximum(deg, 1)[:, None]
     W[low] = 0.5 * W[low] + 0.5 * avg[low]
 W /= W.sum(1, keepdims=True)
+# шляпа, её поля, причёска выше HEAD_Z — целиком на голове: поля широкой шляпы иначе тянулись бы за плечами
+HEAD_Z = float(os.environ.get('HEAD_Z', '0'))
+if HEAD_Z > 0:
+    hat = V[:, 2] > HEAD_Z * k
+    W[hat] = 0.0; W[hat, gix['Head']] = 1.0
+    log('выше', HEAD_Z, '— только голова:', int(hat.sum()), 'вершин')
 for g in list(body.vertex_groups): body.vertex_groups.remove(g)
 grp = [body.vertex_groups.new(name=nm) for nm in names]
 for vi in range(nv):
