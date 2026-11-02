@@ -162,6 +162,7 @@ def check_new_game():
     assert "from audit_missing_game_art import APPROVED_SHA256" in importer
     assert 'parser.add_argument("--dry-run"' in importer
     assert "Refusing to overwrite non-original file" in importer
+    assert 'bytes.fromhex("89504e470d0a1a0a")' in importer
     apk = read(".github/workflows/build-android.yml")
     audit = read("tools/audit_missing_game_art.py")
     assert 'BLADEPATH_REQUIRE_APPROVED_ART: "1"' in apk

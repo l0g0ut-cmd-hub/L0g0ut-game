@@ -34,7 +34,7 @@ def verify(archive):
             digest = hashlib.sha256(content).hexdigest()
             if digest != expected:
                 raise ValueError("SHA-256 mismatch for " + name + ": " + digest)
-            if content[:8] != b"\\x89PNG\\r\\n\\x1a\\n" or content[12:16] != b"IHDR":
+            if content[:8] != bytes.fromhex("89504e470d0a1a0a") or content[12:16] != b"IHDR":
                 raise ValueError("Invalid PNG header: " + name)
             width, height = struct.unpack(">II", content[16:24])
             if width < 256 or height < 256:
