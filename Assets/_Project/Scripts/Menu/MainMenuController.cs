@@ -259,7 +259,7 @@ namespace BladePath
                 // Never substitute unrelated encounter/NPC portraits for the
                 // player-authored hero and difficulty art.
                 if (UiKit.Tex(art) != null)
-                    VisualIdentity.Portrait(artRect, art);
+                    VisualIdentity.Portrait(artRect, art, null, true);
                 else
                 {
                     UiKit.Rect(artRect, new Color(0.10f, 0.07f, 0.06f, 1f));

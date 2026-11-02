@@ -142,7 +142,8 @@ namespace BladePath
             return enabled && GUI.Button(r, GUIContent.none, GUIStyle.none);
         }
 
-        public static void Portrait(Rect r, string resourcePath, Color? tint = null)
+        public static void Portrait(Rect r, string resourcePath, Color? tint = null,
+            bool topCrop = false)
         {
             Texture2D t = UiKit.Tex(resourcePath);
             Inset(r, Brass);
@@ -150,8 +151,19 @@ namespace BladePath
             {
                 Color old = GUI.color;
                 GUI.color = tint ?? Color.white;
-                GUI.DrawTexture(new Rect(r.x + 3f, r.y + 3f,
-                    r.width - 6f, r.height - 6f), t, ScaleMode.ScaleAndCrop);
+                Rect imageRect = new Rect(r.x + 3f, r.y + 3f,
+                    r.width - 6f, r.height - 6f);
+                if (topCrop)
+                {
+                    // Hero selection art is a tall full-body illustration.
+                    // Crop its *bottom* instead of losing the character's face.
+                    float slice = Mathf.Clamp01(
+                        (float)t.width * imageRect.height /
+                        Mathf.Max(1f, t.height * imageRect.width));
+                    GUI.DrawTextureWithTexCoords(imageRect, t,
+                        new Rect(0f, 1f - slice, 1f, slice));
+                }
+                else GUI.DrawTexture(imageRect, t, ScaleMode.ScaleAndCrop);
                 GUI.color = old;
             }
             UiKit.Rect(new Rect(r.x + 5f, r.y + 4f, r.width - 10f, 2f),

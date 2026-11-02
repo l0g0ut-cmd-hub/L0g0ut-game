@@ -99,7 +99,7 @@ def check_routes():
     assert 'newJourneyStep == 1 ? "UI/event_"' not in menu
     assert '"UI/npc_" + i' not in menu
     assert '"ИЛЛЮСТРАЦИЯ НЕ ЗАГРУЖЕНА"' in menu
-    assert 'VisualIdentity.Portrait(artRect, art);' in menu
+    assert 'VisualIdentity.Portrait(artRect, art, null, true);' in menu
     assert 'JourneyChoice.Portrait(JourneyChoice.Hero)' in screen
     assert 'VisualIdentity.Portrait(portrait, heroArt);' in screen
     assert 'UI/selection/characters_difficulties' not in screen
