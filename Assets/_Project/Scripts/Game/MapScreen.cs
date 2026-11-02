@@ -927,8 +927,9 @@ namespace BladePath
                     heroArt = "UI/npc_" + JourneyChoice.Hero;
                 if (UiKit.Tex(heroArt) == null)
                     heroArt = "UI/path_panorama";
-                VisualIdentity.Portrait(portrait, heroArt,
-                    JourneyChoice.Accent(JourneyChoice.Hero));
+                VisualIdentity.Portrait(portrait, heroArt);
+                // Keep portrait colors untouched; accent belongs to the frame.
+                VisualIdentity.Inset(portrait, JourneyChoice.Accent(JourneyChoice.Hero));
             }
             if (Btn(new Rect(x, 540f - 112f, w, 44f), "СНАРЯЖЕНИЕ" + (Profile.Points > 0 ? " (+" + Profile.Points + ")" : ""), interactive)) InventoryScreen.Show(0);
             if (Btn(new Rect(x, 540f - 60f, w, 44f), "В МЕНЮ", interactive)) { Hide(); Time.timeScale = 1f; SceneManager.LoadScene(SceneNames.MainMenu); }
