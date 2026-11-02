@@ -54,7 +54,24 @@ def check_routes():
             if hubs[a][2] != hubs[b][2]:
                 assert (hubs[a][2] == 2 or hubs[b][2] == 2), (
                     "Illegal land-to-land river jump on region %s: %s/%s" % (n, a, b))
-        print("Road graph", n, len(hubs), "hubs", len(edges), "edges")
+        adjacency = {key: set() for key in hubs}
+        for a, b in edges:
+            adjacency[a].add(b)
+            adjacency[b].add(a)
+        for a, b in zip(("b0", "b1", "b2"), ("b1", "b2", "b3")):
+            assert b in adjacency[a], "Missing bridge span"
+        assert any(hubs[x][2] == 0 for x in adjacency["b0"])
+        assert any(hubs[x][2] == 1 for x in adjacency["b3"])
+        start = next(name for name in hubs if hubs[name][2] == 0)
+        reached, pending = {start}, [start]
+        while pending:
+            for neighbor in adjacency[pending.pop()]:
+                if neighbor not in reached and hubs[neighbor][2] != 2:
+                    reached.add(neighbor)
+                    pending.append(neighbor)
+        assert not any(hubs[name][2] == 1 for name in reached), (
+            "Road bypasses mandatory bridge")
+        print("Road graph", n, len(hubs), "hubs", len(edges), "edges; bridge mandatory")
 
     screen = read("Assets/_Project/Scripts/Game/MapScreen.cs")
     assert screen.count("TerrainRoads.Route(") >= 8, (
@@ -63,6 +80,9 @@ def check_routes():
                      "DrawHero()", "HeroUV()", "moveDuration"):
         assert required in screen
     assert "MoveTime" not in screen, "Legacy fixed travel duration remains"
+    assert "if (hub.shore != shore) continue;" in src
+    assert "lengthPixels * easedTravel" in screen
+    assert "Direction(easedTravel)" in screen
 
 
 def check_new_game():
