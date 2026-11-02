@@ -142,7 +142,7 @@ def check_new_game():
             assert file.is_file(), "Missing illustrated selection card: " + str(file)
             assert file.stat().st_size > 30000, "Low-quality or empty card: " + str(file)
             with file.open("rb") as source:
-                assert source.read(3) == b"\\xff\\xd8\\xff".decode("unicode_escape").encode("latin1"), (
+                assert source.read(3) == bytes((255, 216, 255)), (
                     "Not a valid JPEG: " + str(file))
     check_png("Assets/_Project/Resources/UI/map_rider_16.png", 1024, 1024)
     print("Approved artwork: six character/difficulty cards and 16-frame rider")
