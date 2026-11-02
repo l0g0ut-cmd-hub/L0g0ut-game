@@ -27,6 +27,8 @@ namespace BladePath
         bool videoEnded;
         bool animated = true;
         bool settingsOpen;
+        int newJourneyStep;    // 0: classic video menu, 1: difficulty, 2: traveller
+        int chosenDifficulty = 1, chosenHero;
         string toast = "";
         float toastUntil;
         GUIStyle hitStyle, boxStyle, labelStyle;
@@ -102,7 +104,12 @@ namespace BladePath
         void Update()
         {
 #if ENABLE_LEGACY_INPUT_MANAGER
-            if (Input.GetKeyDown(KeyCode.Escape)) QuitGame();
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                if (newJourneyStep > 0) newJourneyStep--;
+                else if (settingsOpen) settingsOpen = false;
+                else QuitGame();
+            }
 #endif
         }
 
@@ -163,6 +170,7 @@ namespace BladePath
             GUI.DrawTexture(vr, tex, ScaleMode.StretchToFill, false);
 
             if (crashLog != null) { DrawCrash(); return; }
+            if (newJourneyStep > 0) { DrawJourneySelection(); return; }
             if (settingsOpen) { DrawSettings(); return; }
 
             float k = vr.width / CW;
@@ -187,14 +195,112 @@ namespace BladePath
         {
             switch (index)
             {
-                case 0: Ladder.Index = 0; StartCoroutine(LoadBattle()); break;   // новый «Путь» с первого противника
+                case 0:
+                    chosenDifficulty = EnemyAI.Difficulty;
+                    chosenHero = JourneyChoice.Hero;
+                    newJourneyStep = 1;
+                    break;
                 case 1:
-                    if (Ladder.Index > 0 || Records.Wins > 0 || Records.Losses > 0) StartCoroutine(LoadBattle());   // продолжить с текущей ступени
+                    if (JourneyChoice.CanContinue) StartCoroutine(LoadBattle());
                     else Say("Сохранённого пути нет — начните новую игру");
                     break;
                 case 2: settingsOpen = true; break;
                 default: QuitGame(); break;
             }
+        }
+
+        void DrawJourneySelection()
+        {
+            Matrix4x4 old = UiKit.Begin();
+            float W = UiKit.Width;
+            const float H = 540f;
+            Texture2D landscape = UiKit.Tex("UI/map_0");
+            if (landscape != null)
+                GUI.DrawTexture(new Rect(0f, 0f, W, H), landscape, ScaleMode.ScaleAndCrop);
+            UiKit.Rect(new Rect(0f, 0f, W, H), new Color(0.015f, 0.013f, 0.027f, 0.66f));
+            float boardW = Mathf.Min(W - 24f, 1020f);
+            float boardX = (W - boardW) * 0.5f;
+            Rect board = new Rect(boardX, 16f, boardW, 508f);
+            VisualIdentity.Surface(board, 0.98f);
+            string title = newJourneyStep == 1 ? "ВЫБОР СЛОЖНОСТИ" : "ВЫБОР ПУТНИКА";
+            VisualIdentity.Heading(new Rect(board.x + 30f, board.y + 7f, board.width - 60f, 42f), title);
+            UiKit.Text(new Rect(board.x + 30f, board.y + 51f, board.width - 60f, 21f),
+                newJourneyStep == 1
+                    ? "Каждое испытание — своя цена победы"
+                    : "Выбери того, чью судьбу пронесёшь через три земли",
+                13f, VisualIdentity.Subdued, TextAnchor.MiddleCenter, false);
+
+            const float gap = 13f;
+            float side = 22f;
+            float cw = (board.width - side * 2f - 2f * gap) / 3f;
+            float cardY = board.y + 83f;
+            float cardH = 339f;
+            for (int i = 0; i < 3; i++)
+            {
+                Rect card = new Rect(board.x + side + i * (cw + gap), cardY, cw, cardH);
+                bool selected = newJourneyStep == 1 ? chosenDifficulty == i : chosenHero == i;
+                Color accent = newJourneyStep == 1
+                    ? i == 0 ? VisualIdentity.Jade :
+                      i == 1 ? VisualIdentity.BrassLight : VisualIdentity.Vermilion
+                    : JourneyChoice.Accent(i);
+
+                UiKit.Rect(new Rect(card.x - 2f, card.y - 2f,
+                    card.width + 4f, card.height + 4f),
+                    new Color(accent.r, accent.g, accent.b,
+                        selected ? 1f : 0.33f));
+                VisualIdentity.Surface(card, 1f, false);
+                float picH = card.height - 93f;
+                Rect artRect = new Rect(card.x + 6f, card.y + 6f, card.width - 12f, picH);
+                string art = newJourneyStep == 1
+                    ? JourneyChoice.DifficultyArt(i) : JourneyChoice.Portrait(i);
+                if (UiKit.Tex(art) == null)
+                    art = newJourneyStep == 1 ? "UI/event_" + i : "UI/npc_" + i;
+                VisualIdentity.Portrait(artRect, art);
+
+                if (selected)
+                {
+                    Color glow = new Color(accent.r, accent.g, accent.b,
+                        0.18f + 0.12f * Mathf.Sin(Time.unscaledTime * 3.8f));
+                    UiKit.Rect(new Rect(card.x + 8f, artRect.yMax - 5f,
+                        card.width - 16f, 3f), glow);
+                }
+                string name = newJourneyStep == 1
+                    ? JourneyChoice.DifficultyNames[i] : JourneyChoice.Names[i];
+                UiKit.Text(new Rect(card.x + 5f, card.yMax - 87f,
+                        card.width - 10f, 34f), name, 22f, accent);
+                UiKit.Text(new Rect(card.x + 7f, card.yMax - 55f,
+                        card.width - 14f, 20f),
+                    newJourneyStep == 1
+                        ? i == 0 ? "ЩАДЯЩИЙ ПУТЬ" : i == 1 ? "ПУТЬ ВОИНА" : "ПУТЬ МАСТЕРА"
+                        : JourneyChoice.Specialties[i],
+                    12f, VisualIdentity.Parchment);
+                if (newJourneyStep == 2)
+                    UiKit.Text(new Rect(card.x + 7f, card.yMax - 34f,
+                        card.width - 14f, 20f),
+                        JourneyChoice.Titles[i], 10f, VisualIdentity.Subdued);
+                if (GUI.Button(card, GUIContent.none, GUIStyle.none))
+                {
+                    if (newJourneyStep == 1) chosenDifficulty = i;
+                    else chosenHero = i;
+                    Haptics.Pulse(12);
+                }
+            }
+
+            Rect back = new Rect(board.x + 36f, board.yMax - 65f, 205f, 44f);
+            Rect proceed = new Rect(board.xMax - 296f, board.yMax - 65f, 260f, 44f);
+            if (VisualIdentity.Button(back, "НАЗАД")) newJourneyStep--;
+            if (VisualIdentity.Button(proceed,
+                newJourneyStep == 1 ? "ВЫБРАТЬ" : "НАЧАТЬ ПУТЬ", true, true))
+            {
+                if (newJourneyStep == 1)
+                    newJourneyStep = 2;
+                else if (!loading)
+                {
+                    JourneyChoice.BeginNew(chosenDifficulty, chosenHero);
+                    StartCoroutine(LoadBattle());
+                }
+            }
+            GUI.matrix = old;
         }
 
         string crashLog;
