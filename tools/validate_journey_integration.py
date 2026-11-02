@@ -98,7 +98,7 @@ def check_routes():
     assert 'UI/selection/characters_difficulties' not in screen
     assert 'if (texCache.TryGetValue(path, out t) && t != null) return t;' in read(
         "Assets/_Project/Scripts/Game/UiKit.cs")
-    assert 'art = newJourneyStep == 1 ? "UI/event_" + i : "UI/npc_" + i;' in menu
+    assert 'art = newJourneyStep == 1 ? "UI/event_" + i : "UI/npc_" + i;' not in menu
     assert "if (hub.shore != shore) continue;" in src
     assert "lengthPixels * easedTravel" in screen
     assert "Direction(easedTravel)" in screen
