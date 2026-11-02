@@ -35,6 +35,14 @@ namespace BladePath
             if (splats.Count > 24) splats.RemoveRange(0, splats.Count - 24);
         }
 
+        void OnDestroy()
+        {
+            if (hooked && duel != null)
+                duel.Damaged -= OnDamaged;
+            hooked = false;
+            splats.Clear();
+        }
+
         void DrawSplats()
         {
             for (int i = splats.Count - 1; i >= 0; i--)
@@ -88,6 +96,9 @@ namespace BladePath
             GUI.DrawTexture(new Rect(0f, 0f, W, 540f), vignette);
             GUI.color = Color.white;
 
+            // Camera blood belongs to the previous exchange, never the next
+            // round's opening. Reset it before drawing the intro HUD.
+            if (duel.State == DuelState.Intro) splats.Clear();
             DrawSplats();
 
             float barW = Mathf.Clamp(W * 0.5f - 80f - 110f, 200f, 400f);
