@@ -125,6 +125,8 @@ def check_new_game():
     assert "JourneyChoice.BeginNew(chosenDifficulty, chosenHero)" in menu
     assert 'PlayerPrefs.SetInt("journey_hero"' in choice
     assert "EnemyAI.Difficulty =" in choice
+    assert '"UI/selection/approved_"' in choice
+    assert "Resources.Load<Texture2D>(approved)" in choice
     assert "TryAttachVariants(" in builder
     assert "PlayerSkins selector =" in builder
     assert "void Start()" in skins, "Skin activation before serialized models ready"
@@ -145,7 +147,8 @@ def check_new_game():
                 assert source.read(3) == bytes((255, 216, 255)), (
                     "Not a valid JPEG: " + str(file))
     check_png("Assets/_Project/Resources/UI/map_rider_16.png", 1024, 1024)
-    print("Approved artwork: six character/difficulty cards and 16-frame rider")
+    print("Legacy selection JPGs present; six approved original PNGs checked separately by audit")
+    print("16-frame rider atlas present (visual frame quality still requires APK review)")
     print("New Game choice: 3 difficulties and 3 player FBX options")
 
 
