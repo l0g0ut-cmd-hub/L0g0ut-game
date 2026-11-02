@@ -57,6 +57,37 @@ namespace BladePath.EditorTools
             return Attach(fighter, bladeRoot, look, false, heroFbx, ControllerPath, "Hero_", null) != null;
         }
 
+        /// <summary>
+        /// Bundle all three existing FBX rigs into the scene and select at runtime.
+        /// Build-time PlayerPrefs must never decide which hero ships in the APK.
+        /// Separate controller and mocap paths avoid destructive clip overwrites.
+        /// </summary>
+        public static bool TryAttachVariants(FighterController fighter,
+            Transform bladeRoot, Look look)
+        {
+            string[] variants = { RoninFbxPath, Samurai2FbxPath, Hero3FbxPath };
+            string[] names = { "HeroDzin", "HeroAkiko", "HeroRen" };
+            GameObject[] models = new GameObject[3];
+            for (int i = 0; i < variants.Length; i++)
+            {
+                if (!Exists(variants[i])) continue;
+                string ctrl = "Assets/_Project/Animation/HeroVariant_" + i + ".controller";
+                models[i] = Attach(fighter, bladeRoot, look, false, variants[i],
+                    ctrl, "HeroVariant_" + i + "_", names[i]);
+            }
+            GameObject fallback = null;
+            for (int i = 0; i < models.Length; i++)
+                if (models[i] != null) { fallback = models[i]; break; }
+            if (fallback == null) return TryAttach(fighter, bladeRoot, look, false);
+            // Missing FBX is never a blank player: use an existing alternative.
+            for (int i = 0; i < models.Length; i++)
+                if (models[i] == null) models[i] = fallback;
+
+            PlayerSkins selector = fighter.gameObject.AddComponent<PlayerSkins>();
+            selector.models = models;
+            return true;
+        }
+
         static GameObject Attach(FighterController fighter, Transform bladeRoot, Look look, bool undead, string fbx, string ctrlPath, string clipPrefix, string modelName)
         {
             bool hero3 = fbx == Hero3FbxPath;
