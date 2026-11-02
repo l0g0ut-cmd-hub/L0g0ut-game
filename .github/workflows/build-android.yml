@@ -1,10 +1,11 @@
 name: Build Android APK
 
-# Запуск: вручную (Actions → Build Android APK → Run workflow) и при пуше в main.
+# Build only after a reviewed batch is explicitly promoted to apk-build.
+# Editing main must not queue/cancel expensive Unity builds.
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [apk-build]
 
 # Одна сборка за раз: лицензия Personal — одно место, параллельные запуски упираются друг в друга.
 concurrency:
