@@ -281,8 +281,10 @@ namespace BladePath
             }
 
             // серии ударов
-            DrawCombo(duel.player, new Vector2(70f, 150f), TextAnchor.MiddleLeft);
-            DrawCombo(duel.enemy, new Vector2(W - 70f, 150f), TextAnchor.MiddleRight);
+            // Small matching combo capsules under the life bars — not huge floating
+            // ink numbers that obscure the swordfight and announcement banners.
+            DrawCombo(duel.player, new Vector2(70f, 121f), TextAnchor.MiddleLeft);
+            DrawCombo(duel.enemy, new Vector2(W - 70f, 121f), TextAnchor.MiddleRight);
 
             // счёт раундов: по два ромба под полосками
             DrawPips(new Vector2(cx - 92f, 64f), duel.PlayerWins, duel.winsToMatch, false);
@@ -667,19 +669,46 @@ namespace BladePath
             int n = duel.Combo(f);
             float age = duel.ComboAge(f);
             if (n < 2 || age > 1.6f) return;
-            float a = Mathf.Clamp01((1.6f - age) * 2.5f);
-            float pop = 1f + Mathf.Max(0f, 0.2f - age) * 2.5f;
-            string word = (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14)) ? "УДАРА" : "УДАРОВ";
-            Rect r = anchor == TextAnchor.MiddleLeft ? new Rect(at.x, at.y - 40f, 300f, 80f) : new Rect(at.x - 300f, at.y - 40f, 300f, 80f);
-            // число серии — кистью, на багровом мазке (чёрная тушь иначе тонет в ночной сцене)
-            Texture2D bs = UiKit.Tex("UI/brush_stroke_red");
-            string num = n.ToString();
-            float hh = 72f * pop, wNum = hh * (0.56f * (num.Length - 1) + 0.66f);
-            float bx = anchor == TextAnchor.MiddleLeft ? at.x - 18f : at.x - wNum - 18f;
-            if (bs != null) { Color oc = GUI.color; GUI.color = new Color(1f, 1f, 1f, 0.85f * a); GUI.DrawTexture(new Rect(bx, at.y - hh * 0.42f, wNum + 36f, hh * 0.84f), bs); GUI.color = oc; }
-            if (!UiKit.BrushNumber(new Vector2(at.x, at.y), num, hh, a, anchor)) UiKit.Text(r, num, 64f * pop, new Color(1f, 0.82f, 0.3f, a), anchor);
-            Rect r2 = new Rect(r.x, r.y + 52f, r.width, 30f);
-            UiKit.Text(r2, word + " ПОДРЯД", 16f, new Color(1f, 0.95f, 0.85f, a), anchor);
+
+            bool enemy = anchor == TextAnchor.MiddleRight;
+            float alpha = Mathf.Clamp01(age / 0.10f) *
+                Mathf.Clamp01((1.6f - age) / 0.42f);
+            float pulse = 1f + 0.05f * Mathf.Clamp01((0.19f - age) / 0.19f);
+            Color accent = enemy ? new Color(0.88f, 0.34f, 0.28f) :
+                new Color(0.91f, 0.72f, 0.39f);
+            Color ink = new Color(0.96f, 0.92f, 0.84f, alpha);
+            float w = 155f, h = 48f;
+            Rect plate = new Rect(enemy ? at.x - w : at.x, at.y - h * 0.5f, w, h);
+
+            // Lacquer plaque: restrained warm outlines; no full-screen brush strokes.
+            UiKit.Rect(new Rect(plate.x, plate.y, plate.width, plate.height),
+                new Color(0.035f, 0.026f, 0.024f, 0.79f * alpha));
+            UiKit.Rect(new Rect(plate.x, plate.y, plate.width, 1.5f),
+                new Color(accent.r, accent.g, accent.b, 0.70f * alpha));
+            UiKit.Rect(new Rect(plate.x, plate.yMax - 1.5f, plate.width, 1.5f),
+                new Color(accent.r, accent.g, accent.b, 0.28f * alpha));
+
+            float numberX = enemy ? plate.x + plate.width - 56f : plate.x + 7f;
+            float detailX = enemy ? plate.x + 8f : plate.x + 63f;
+            UiKit.Text(new Rect(numberX, plate.y + 3f, 49f, 36f), n.ToString(),
+                30f * pulse, new Color(accent.r, accent.g, accent.b, alpha),
+                TextAnchor.MiddleCenter, false);
+            UiKit.Rect(new Rect(enemy ? plate.x + 60f : plate.x + 56f,
+                plate.y + 8f, 1f, 31f),
+                new Color(accent.r, accent.g, accent.b, 0.38f * alpha));
+            UiKit.Text(new Rect(detailX, plate.y + 5f, 86f, 18f),
+                "СЕРИЯ УДАРОВ", 10f, ink,
+                enemy ? TextAnchor.MiddleLeft : TextAnchor.MiddleLeft, false);
+
+            // Five thin marks indicate the chain's intensity without competing
+            // with health, posture and spirit gauges.
+            for (int i = 0; i < 5; i++)
+            {
+                float strength = i < Mathf.Min(n, 5) ? 0.70f + 0.16f *
+                    Mathf.Sin(Time.unscaledTime * 6f + i * 0.45f) : 0.20f;
+                UiKit.Rect(new Rect(detailX + i * 17f, plate.y + 31f, 12f, 3f),
+                    new Color(accent.r, accent.g, accent.b, strength * alpha));
+            }
         }
 
         void DrawPips(Vector2 c, int wins, int total, bool mirror)
