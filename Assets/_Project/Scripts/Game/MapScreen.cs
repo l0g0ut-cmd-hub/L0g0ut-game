@@ -727,8 +727,16 @@ namespace BladePath
                     if (x < mapX + 6f || x > mapX + viewW - 6f) continue;
                     float alpha = (0.16f + 0.16f * Mathf.Pow(
                         Mathf.Sin(phase * 1.6f), 2f)) * (treasure ? 0.72f : 1f);
-                    UiKit.Disc(new Vector2(x, y), 2f + k * 0.45f,
-                        new Color(accent.r, accent.g, accent.b, alpha));
+                    // Atlas-backed firefly with 16 continuous shimmer phases.
+                    Texture2D mote = MapMoteAtlas.Texture;
+                    int frame = Mathf.FloorToInt(Mathf.Repeat(phase * 2.5f, 16f));
+                    float size = 10f + k * 1.8f;
+                    Color previous = GUI.color;
+                    GUI.color = new Color(accent.r, accent.g, accent.b, alpha);
+                    GUI.DrawTextureWithTexCoords(
+                        new Rect(x - size * 0.5f, y - size * 0.5f, size, size),
+                        mote, MapMoteAtlas.Uv(frame));
+                    GUI.color = previous;
                 }
             }
         }
