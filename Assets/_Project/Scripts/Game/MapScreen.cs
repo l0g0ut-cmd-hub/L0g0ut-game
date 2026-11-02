@@ -224,6 +224,7 @@ namespace BladePath
             DrawJourneyFootprints();
             DrawNodes(interactive && modal == Modal.None && moveTo < 0);
             DrawHero();
+            DrawJourneyLegend();
             // туман по краям и название области
             Texture2D fog = SoftSprites.Fog;
             Color oc = GUI.color; GUI.color = new Color(0f, 0f, 0f, 0.55f);
@@ -419,6 +420,8 @@ namespace BladePath
 
         void DrawRoads()
         {
+            // Static path decoration needs only Repaint, not IMGUI Layout / input passes.
+            if (Event.current.type != EventType.Repaint) return;
             Texture2D ic = UiKit.Tex("UI/map_icons");
             if (ic == null) return;
             List<MapNode> ns = Campaign.Nodes;
@@ -491,6 +494,11 @@ namespace BladePath
                 }
                 int k = !known ? 11 : (n.done && n.Type != NodeType.Start && i != Campaign.At) ? 10 : IconOf(n.Type);
                 if (i == sel && ic != null) { GUI.color = Color.white; GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.75f, p.y - s * 0.5f, s * 1.5f, s), ic, Cell(12)); }
+                if (i == sel && Event.current.type == EventType.Repaint)
+                {
+                    float halo = s * (0.58f + 0.025f * Mathf.Sin(Time.unscaledTime * 4f));
+                    UiKit.Ring(p, halo, new Color(1f, 0.81f, 0.40f, 0.80f), true);
+                }
                 GUI.color = !known ? new Color(1f, 1f, 1f, 0.85f) : n.done && i != Campaign.At && n.Type != NodeType.Start ? new Color(0.8f, 0.78f, 0.74f, 0.9f) : Color.white;
                 Texture2D special = SpecialNodeIcon(n.Type, !known, n.done && i != Campaign.At);
                 if (special != null)
@@ -531,6 +539,7 @@ namespace BladePath
 
         void DrawHero()
         {
+            if (Event.current.type != EventType.Repaint) return;
             Texture2D ht = UiKit.Tex("UI/map_hero"), ic = UiKit.Tex("UI/map_icons");
             Vector2 uv = HeroUV();
             Vector2 p = new Vector2(mapX + (uv.x - u0) * MapFullW, uv.y * MapH);
@@ -551,6 +560,28 @@ namespace BladePath
             if (left) uvr = new Rect(uvr.x + uvr.width, uvr.y, -uvr.width, uvr.height);
             float s = 92f, bob = moving ? Mathf.Abs(Mathf.Sin(Time.unscaledTime * 12f)) * 2f : 0f;
             GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.5f, p.y - s * 0.78f - bob, s, s), ht, uvr);
+        }
+
+        // Low-profile route legend: never obscures the map or interactive cards.
+        void DrawJourneyLegend()
+        {
+            if (Event.current.type != EventType.Repaint || viewW < 350f) return;
+            const float h = 31f;
+            float w = Mathf.Min(viewW - 20f, 373f);
+            Rect bar = new Rect(mapX + 10f, MapH - h - 9f, w, h);
+            UiKit.Rect(bar, new Color(0.035f, 0.025f, 0.020f, 0.79f));
+            UiKit.Rect(new Rect(bar.x, bar.y, 2f, h), new Color(Gold.r, Gold.g, Gold.b, 0.65f));
+            string[] labels = { "ПРОЙДЕНО", "В ПРЕДЕЛАХ ХОДА", "НЕДОСТУПНО" };
+            Color[] colors = { new Color(0.72f, 0.42f, 0.22f), new Color(0.70f, 0.95f, 0.62f), new Color(1f, 0.39f, 0.31f) };
+            float[] widths = { 105f, 151f, 111f };
+            float px = bar.x + 10f;
+            for (int i = 0; i < labels.Length; i++)
+            {
+                UiKit.Disc(new Vector2(px + 5f, bar.y + 15f), 5f, colors[i]);
+                UiKit.Text(new Rect(px + 15f, bar.y + 5f, widths[i] - 14f, 21f),
+                    labels[i], 9.2f, Dim, TextAnchor.MiddleLeft, false);
+                px += widths[i];
+            }
         }
 
         // ------------------------------------------------------------------ панель справа
@@ -574,6 +605,15 @@ namespace BladePath
             Die(new Rect(x, y, 44f, 44f), face, rolling ? (Time.unscaledTime * 900f) % 360f : 0f, Campaign.Steps > 0 || rolling);
             UiKit.Text(new Rect(x + 54f, y, w - 54f, 22f), "КОСТИ ПУТИ: " + Campaign.Rolls, 14f, Ink, TextAnchor.MiddleLeft);
             UiKit.Text(new Rect(x + 54f, y + 22f, w - 54f, 20f), rolling ? "бросок…" : Campaign.Steps > 0 ? "ходов: " + Campaign.Steps : "ход окончен", 12f, Campaign.Steps > 0 ? new Color(0.6f, 0.95f, 0.7f) : Dim, TextAnchor.MiddleLeft, false);
+            // Three-step travel gauge below the die: coloured segments correspond
+            // to remaining movement points, matching the trail's range.
+            for (int k = 0; k < 3; k++)
+            {
+                bool available = k < Campaign.Steps;
+                Color segment = available ? new Color(0.70f, 0.92f, 0.58f, 0.92f)
+                    : new Color(0.35f, 0.28f, 0.20f, 0.72f);
+                UiKit.Rect(new Rect(x + 54f + k * 43f, y + 43f, 36f, 4f), segment);
+            }
             y += 52f;
             bool canRoll = Campaign.Rolls > 0 && Campaign.Steps <= 0 && Campaign.Current.done && !Campaign.InFight && !Campaign.Training && !rolling;
             if (canRoll && Btn(new Rect(x, y, w, 42f), "БРОСИТЬ КОСТЬ", interactive, true)) { Campaign.RollDie(); rollAt = Time.unscaledTime; Haptics.Pulse(30); if (Juice.Instance != null) Juice.Instance.Taiko(0.7f, 1.3f); }
