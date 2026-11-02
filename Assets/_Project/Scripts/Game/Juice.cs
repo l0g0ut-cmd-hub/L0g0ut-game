@@ -1847,17 +1847,16 @@ namespace BladePath
             // зелёно-золотые огоньки и листья спиралью вокруг пьющего (цикл, ~1,5 с)
             Transform ha = new GameObject("HealFx").transform;
             ha.SetParent(f.transform, false); ha.localPosition = Vector3.up * 0.78f;
-            // A single 32-frame one-shot arc, not the old eight-frame
-            // looping sprite (which visibly restarted halfway through).
+            // 24 unique frames on a 6x4 atlas, played once to avoid looping.
             FxSprite hs = FxSprite.Spawn("fx_heal_hd", ha.position,
-                1.68f, 4, 8, 32, 27f, false, 1.20f);
+                1.55f, 6, 4, 24, 24f, false, 1.03f);
             if (hs != null)
             {
                 hs.follow = ha;
                 hs.tint = new Color(0.90f, 1f, 0.83f, 0.92f);
                 hs.grow = 0.24f;
             }
-            Destroy(ha.gameObject, 1.28f);
+            Destroy(ha.gameObject, 1.12f);
             Flash(c, 0.9f, new Color(1f, 0.72f, 0.3f, 0.35f), 0.5f, false);
             SparkLight(c, new Color(1f, 0.75f, 0.4f), 1.6f, 3f, 0.5f);
             if (softMat == null) return;
