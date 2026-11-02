@@ -87,8 +87,8 @@ def check_routes():
     assert 'if (parents[index] < 0) { sel = -1; return; }' in screen
     assert 'if (UiKit.Tex(path) == null) return;' not in screen
     menu = read("Assets/_Project/Scripts/Menu/MainMenuController.cs")
-    assert 'selectionAtlas.width >= 900' in menu
-    assert 'selectionAtlas.height >= 600' in menu
+    assert 'VisualIdentity.Portrait(artRect, art);' in menu
+    assert 'art = newJourneyStep == 1 ? "UI/event_" + i : "UI/npc_" + i;' in menu
     assert "if (hub.shore != shore) continue;" in src
     assert "lengthPixels * easedTravel" in screen
     assert "Direction(easedTravel)" in screen
