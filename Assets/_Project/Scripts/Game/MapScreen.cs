@@ -18,9 +18,9 @@ namespace BladePath
         public static void Show() { Ensure(); Open = true; inst.OnShow(); }
         static void Hide() { Open = false; Profile.CostMul = 1f; }
 
-        static readonly Color Gold = new Color(0.86f, 0.70f, 0.38f, 1f);
-        static readonly Color Ink = new Color(0.95f, 0.9f, 0.8f, 1f);
-        static readonly Color Dim = new Color(0.72f, 0.66f, 0.58f, 1f);
+        static readonly Color Gold = VisualIdentity.Brass;
+        static readonly Color Ink = VisualIdentity.Parchment;
+        static readonly Color Dim = VisualIdentity.Subdued;
         static readonly string[] EnemyFullArt = { "UI/enemy_full_fallen", "UI/enemy_full_shadow", "UI/enemy_full_oni", "UI/enemy_full_shogun" };
 
         enum Modal { None, Fight, Shrine, Smith, Merchant, Treasure, Rest, Event, RegionClear, Herbalist, Knocked }
@@ -684,10 +684,10 @@ namespace BladePath
 
         void DrawPanel(Rect r, bool interactive)
         {
-            UiKit.Rect(r, new Color(0.06f, 0.045f, 0.04f, 0.97f));
-            UiKit.Rect(new Rect(r.x, r.y, 2f, r.height), new Color(Gold.r, Gold.g, Gold.b, 0.7f));
-            float x = r.x + 14f, w = r.width - 28f, y = 12f;
-            UiKit.Text(new Rect(x, y, w, 26f), "ПОХОД", 20f, Gold, TextAnchor.MiddleLeft); y += 30f;
+            VisualIdentity.Surface(r, 1f, false);
+            float x = r.x + 16f, w = r.width - 32f, y = 12f;
+            VisualIdentity.Heading(new Rect(x, y, w, 36f), "ПОХОД");
+            y += 38f;
             UiKit.Text(new Rect(x, y, w, 18f), "Уровень " + Profile.Level + (Profile.Points > 0 ? "   · очков: " + Profile.Points : ""), 13f, Ink, TextAnchor.MiddleLeft, false); y += 20f;
             Texture2D coins = UiKit.Tex("UI/coins");
             if (coins != null) GUI.DrawTexture(new Rect(x - 2f, y - 1f, 20f, 20f), coins);
@@ -723,7 +723,7 @@ namespace BladePath
                 if (Btn(new Rect(x, y, w, 40f), "ВЫЗВАТЬ РОНИНА НА БОЙ", interactive, true)) { Campaign.BeginTraining(); Hide(); if (DuelManager.Instance != null) DuelManager.Instance.ResetMatch(); }
                 y += 46f;
             }
-            UiKit.Rect(new Rect(x, y, w, 1f), new Color(Gold.r, Gold.g, Gold.b, 0.35f)); y += 10f;
+            VisualIdentity.Divider(new Rect(x, y, w, 1f)); y += 11f;
 
             int show = sel >= 0 ? sel : -1;
             if (show >= 0)
@@ -822,14 +822,10 @@ namespace BladePath
         Rect Card(float w, float h)
         {
             float a = Mathf.Clamp01((Time.unscaledTime - modalAt) / 0.2f);
-            UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, 0.55f * a));
+            UiKit.Rect(new Rect(0f, 0f, W, 540f),
+                new Color(0.015f, 0.012f, 0.012f, 0.65f * a));
             Rect r = new Rect((W - w) * 0.5f, (540f - h) * 0.5f + (1f - a) * 20f, w, h);
-            UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), new Color(Gold.r, Gold.g, Gold.b, 0.8f));
-            UiKit.Rect(r, new Color(0.07f, 0.05f, 0.045f, 0.98f));
-            // Thin inset lines make the modal read as a lacquered, gold-trimmed panel.
-            UiKit.Rect(new Rect(r.x + 7f, r.y + 7f, r.width - 14f, 1f), new Color(Gold.r, Gold.g, Gold.b, 0.35f * a));
-            UiKit.Rect(new Rect(r.x + 7f, r.yMax - 8f, r.width - 14f, 1f), new Color(Gold.r, Gold.g, Gold.b, 0.22f * a));
-            UiKit.Corners(r, 18f, 0.9f);
+            VisualIdentity.Surface(r, a);
             return r;
         }
 
@@ -848,16 +844,7 @@ namespace BladePath
 
         void Picture(Rect r, string tex)
         {
-            Texture2D t = UiKit.Tex(tex);
-            if (t != null)
-            {
-                GUI.DrawTexture(r, t, ScaleMode.ScaleAndCrop);
-                // Dark scrim keeps silhouettes atmospheric without washing out the image.
-                UiKit.Rect(new Rect(r.x, r.y, r.width, 10f), new Color(0.015f, 0.012f, 0.012f, 0.40f));
-                UiKit.Rect(new Rect(r.x, r.yMax - 16f, r.width, 16f), new Color(0.015f, 0.012f, 0.012f, 0.50f));
-                UiKit.Rect(new Rect(r.x + 5f, r.y + 5f, 2f, r.height - 10f), new Color(Gold.r, Gold.g, Gold.b, 0.38f));
-            }
-            UiKit.Rect(new Rect(r.xMax - 1f, r.y, 1f, r.height), new Color(Gold.r, Gold.g, Gold.b, 0.6f));
+            VisualIdentity.Portrait(r, tex);
         }
 
         float Lines(float x, float y, float w, string s, int max, float size, Color c)
@@ -897,7 +884,7 @@ namespace BladePath
                 case Modal.Shrine:
                 {
                     Rect r = Card(660f, 380f);
-                    Picture(new Rect(r.x, r.y, 260f, r.height), Pack02Art("shrine", PackArt("monk", "UI/npc_2")));
+                    Picture(new Rect(r.x, r.y, 260f, r.height), "UI/npc_2");
                     float x = r.x + 280f, w = r.width - 300f, y = r.y + 22f;
                     UiKit.Text(new Rect(x, y, w, 26f), "ХРАМ", 20f, Gold, TextAnchor.MiddleLeft); y += 34f;
                     y = Lines(x, y, w, "«Ками этих мест слышат тебя, путник. Выбери, чего просить на следующий бой.»", 40, 13f, Ink) + 12f;
@@ -920,7 +907,7 @@ namespace BladePath
                 case Modal.Merchant:
                 {
                     Rect r = Card(720f, 400f);
-                    Picture(new Rect(r.x, r.y, 230f, r.height), Pack02Art("merchant", "UI/npc_0"));
+                    Picture(new Rect(r.x, r.y, 230f, r.height), "UI/npc_0");
                     float x = r.x + 248f, w = r.width - 266f, y = r.y + 18f;
                     UiKit.Text(new Rect(x, y, w, 26f), "ТОРГОВЕЦ", 20f, Gold, TextAnchor.MiddleLeft);
                     UiKit.Text(new Rect(x, y, w, 26f), Profile.Gold + " мон", 15f, Gold, TextAnchor.MiddleRight); y += 32f;
@@ -966,7 +953,7 @@ namespace BladePath
                 case Modal.Rest:
                 {
                     Rect r = Card(660f, 360f);
-                    Picture(new Rect(r.x, r.y, 260f, r.height), Pack02Art("camp", PackArt("herbalist", "UI/npc_3")));
+                    Picture(new Rect(r.x, r.y, 260f, r.height), "UI/npc_3");
                     float x = r.x + 280f, w = r.width - 300f, y = r.y + 22f;
                     UiKit.Text(new Rect(x, y, w, 26f), "ПРИВАЛ", 20f, Gold, TextAnchor.MiddleLeft); y += 34f;
                     y = Lines(x, y, w, "У костра греется старый мастер меча. «Отдохни. Или возьми боккэн — покажу, чего тебе не хватает.»", 40, 13f, Ink) + 14f;
@@ -1026,8 +1013,9 @@ namespace BladePath
             float w = Mathf.Min(460f, viewW - 30f);
             float h = 26f + toastLines.Count * 19f;
             Rect r = new Rect(mapX + 15f, 540f - h - 15f, w, h);
-            UiKit.Rect(r, new Color(0.06f, 0.04f, 0.035f, 0.88f * fade));
-            UiKit.Rect(new Rect(r.x, r.y, 3f, r.height), new Color(Gold.r, Gold.g, Gold.b, fade));
+            VisualIdentity.Surface(r, fade, false);
+            UiKit.Rect(new Rect(r.x, r.y, 3f, r.height),
+                new Color(Gold.r, Gold.g, Gold.b, fade));
             for (int i = 0; i < toastLines.Count; i++)
                 UiKit.Text(new Rect(r.x + 12f, r.y + 8f + i * 19f, r.width - 22f, 19f),
                     toastLines[i], 12f, new Color(Ink.r, Ink.g, Ink.b, fade),
@@ -1053,14 +1041,14 @@ namespace BladePath
             "На замшелом камне сидит белая лиса с девятью хвостами. Вокруг пляшут синие огоньки и зовут за собой в чащу.",
         };
 
-        static readonly string[] Pack02Events = { "wounded_ronin", "shrine", "bandits", "fox" };
-
-        void DrawEvent(MapNode n, int at, bool ok)
+         void DrawEvent(MapNode n, int at, bool ok)
         {
             int ev = Mathf.Clamp(n.ev, 0, 3);
             Rect r = Card(720f, 400f);
-            string fallback = PackArt("event_" + ev, "UI/event_" + ev);
-            Picture(new Rect(r.x, r.y, 330f, r.height), Pack02Art(Pack02Events[ev], fallback));
+            // The authored illustrated event series is a real painted asset set.
+            // The old pack02 variants were tiny procedural placeholders that
+            // made all four encounters appear almost identical.
+            Picture(new Rect(r.x, r.y, 330f, r.height), "UI/event_" + ev);
             float x = r.x + 348f, w = r.width - 366f, y = r.y + 22f;
             UiKit.Text(new Rect(x, y, w, 26f), EvTitle[ev], 19f, Gold, TextAnchor.MiddleLeft); y += 34f;
             Lines(x, y, w, EvText[ev], 38, 13f, Ink);
