@@ -115,8 +115,11 @@ jobs:
 
       # APK в ветку apk-latest (один коммит, перезаписывается): артефакты Actions не скачать из песочницы ассистента,
       # а git — можно; нужен для разбора содержимого сборки (UnityPy) без телефона.
+      # GitHub rejects files over 100 MB; the APK artifact above is the real deliverable,
+      # so a too-large copy here must never mark the build as failed.
       - name: Publish APK to apk-latest branch
         if: success()
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
