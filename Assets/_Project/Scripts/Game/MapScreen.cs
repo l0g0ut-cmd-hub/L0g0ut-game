@@ -833,7 +833,12 @@ namespace BladePath
         /// <summary>Кость пути: костяной кубик с точками (1–3), во время броска крутится.</summary>
         static void Die(Rect r, int face, float spin, bool lit)
         {
-            Texture2D dice = JourneyDiceArt.Atlas;
+            // Reviewed isometric artwork: distinct 1/2/3-pip faces, bevelled
+            // ivory, warm bronze sides and a transparent silhouette.
+            // The old flat procedural square is only a safety fallback;
+            // Android CI verifies the illustrated PNG is included.
+            Texture2D dice = UiKit.Tex("UI/map_dice_3d");
+            if (dice == null) dice = JourneyDiceArt.Atlas;
             Matrix4x4 previous = GUI.matrix;
             UiKit.Disc(r.center + new Vector2(0f, 3f), r.width * 0.58f,
                 new Color(0.01f, 0.01f, 0.01f, 0.42f));
