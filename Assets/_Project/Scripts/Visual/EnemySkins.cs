@@ -15,7 +15,10 @@ namespace BladePath
         {
             if (models == null || models.Length == 0) return;
             index = Mathf.Clamp(index, 0, models.Length - 1);
-            for (int i = 0; i < models.Length; i++) if (models[i] != null) models[i].SetActive(i == index);
+            // A slot may reuse a neighbour's model when its FBX is missing: compare by
+            // reference, otherwise the shared model would be switched off again.
+            GameObject chosen = models[index];
+            for (int i = 0; i < models.Length; i++) if (models[i] != null) models[i].SetActive(models[i] == chosen);
             Active = index;
             // у облика — свой разворот корпуса в стойке (оружие у бойца общее)
             HeroRigDriver d = models[index] != null ? models[index].GetComponent<HeroRigDriver>() : null;

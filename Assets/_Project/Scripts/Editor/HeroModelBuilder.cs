@@ -22,6 +22,11 @@ namespace BladePath.EditorTools
         public const string Samurai2FbxPath = "Assets/_Project/Models/Samurai2_Player.fbx"; // игрок: самурай в красном доспехе с текстурами (tools/blender/build_samurai_m2.py)
         public const string ShadowFbxPath = "Assets/_Project/Models/Samurai_Shadow.fbx";    // враг: самурай в рогатом шлеме (CGTrader, Rigify → наш скелет, tools/blender/build_samurai_cg.py), тёмная раскраска
         const float SamuraiScale = 1f;                                                       // обе собраны в метрах: макушка 1.72 м
+        // лёгкие модели из Meshy (tools/blender/build_meshy_char.py, задача «Build Meshy models»), собраны в метрах
+        public const string AkikoFbxPath = "Assets/_Project/Models/Akiko_Player.fbx";     // игрок: Акико, женщина-самурай в красном доспехе
+        public const string OniFbxPath = "Assets/_Project/Models/Oni_Enemy.fbx";          // враг 3-й ступени: Кровавый Они
+        public const string ShogunFbxPath = "Assets/_Project/Models/Shogun_Enemy.fbx";    // враг 4-й ступени: Проклятый сёгун
+        const float MeshyScale = 1f;
         public const string UndeadFbxPath = "Assets/_Project/Models/Samurai_Undead.fbx";
         const string ControllerPath = "Assets/_Project/Animation/Hero.controller";
         const string UndeadControllerPath = "Assets/_Project/Animation/Undead.controller";
@@ -41,15 +46,20 @@ namespace BladePath.EditorTools
                 string first = Exists(Samurai2FbxPath) ? Samurai2FbxPath : Exists(ShadowFbxPath) ? ShadowFbxPath : UndeadFbxPath;
                 GameObject a = Attach(fighter, bladeRoot, look, true, first, UndeadControllerPath, "Undead_", "UndeadModel");
                 if (a == null) return false;
+                GameObject b = null, oni = null, shogun = null;
                 if (Exists(RoninFbxPath) && first != RoninFbxPath)
+                    b = Attach(fighter, bladeRoot, look, true, RoninFbxPath, EnemyRoninControllerPath, "EnemyRonin_", "EnemyRoninModel");
+                if (Exists(OniFbxPath))
+                    oni = Attach(fighter, bladeRoot, look, true, OniFbxPath, "Assets/_Project/Animation/EnemyOni.controller", "EnemyOni_", "EnemyOniModel");
+                if (Exists(ShogunFbxPath))
+                    shogun = Attach(fighter, bladeRoot, look, true, ShogunFbxPath, "Assets/_Project/Animation/EnemyShogun.controller", "EnemyShogun_", "EnemyShogunModel");
+                if (b != null || oni != null || shogun != null)
                 {
-                    GameObject b = Attach(fighter, bladeRoot, look, true, RoninFbxPath, EnemyRoninControllerPath, "EnemyRonin_", "EnemyRoninModel");
-                    if (b != null)
-                    {
-                        EnemySkins sk = fighter.gameObject.AddComponent<EnemySkins>();
-                        sk.models = new[] { a, b };
-                        b.SetActive(false);
-                    }
+                    // слоты = Ladder.Stage.model: 0 самурай в красном, 1 ронин, 2 Они, 3 сёгун; нет FBX — облик соседнего слота
+                    GameObject b2 = b != null ? b : a;
+                    EnemySkins sk = fighter.gameObject.AddComponent<EnemySkins>();
+                    sk.models = new[] { a, b2, oni != null ? oni : b2, shogun != null ? shogun : a };
+                    foreach (GameObject extra in new[] { b, oni, shogun }) if (extra != null) extra.SetActive(false);
                 }
                 return true;
             }
@@ -68,7 +78,8 @@ namespace BladePath.EditorTools
         public static bool TryAttachVariants(FighterController fighter,
             Transform bladeRoot, Look look)
         {
-            string[] variants = { RoninFbxPath, Samurai2FbxPath, Hero3FbxPath };
+            // Akiko: her own female FBX from Meshy; the red-armoured Samurai2 only as fallback.
+            string[] variants = { RoninFbxPath, Exists(AkikoFbxPath) ? AkikoFbxPath : Samurai2FbxPath, Hero3FbxPath };
             string[] names = { "HeroDzin", "HeroAkiko", "HeroRen" };
             GameObject[] models = new GameObject[3];
             for (int i = 0; i < variants.Length; i++)
@@ -124,7 +135,8 @@ namespace BladePath.EditorTools
                     model.transform.localRotation = Quaternion.Euler(0f, Vector3.SignedAngle(fwd, Vector3.forward, Vector3.up), 0f);
             }
             else Debug.LogWarning("HeroModelBuilder: не найден Hips/FrontMarker — ориентация модели не скорректирована");
-            model.transform.localScale = Vector3.one * (hero3 ? Hero3Scale : samurai ? SamuraiScale : ronin ? RoninScale : ModelScale);
+            bool meshy = fbx == AkikoFbxPath || fbx == OniFbxPath || fbx == ShogunFbxPath;
+            model.transform.localScale = Vector3.one * (meshy ? MeshyScale : hero3 ? Hero3Scale : samurai ? SamuraiScale : ronin ? RoninScale : ModelScale);
 
             // Материалы: по имени из Blender → наши текстурированные
             foreach (SkinnedMeshRenderer smr in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
@@ -270,6 +282,11 @@ namespace BladePath.EditorTools
             if (name.StartsWith("SAM_")) return VisualMaterials.CharacterRim(VisualMaterials.Samurai(name.Substring(4), shadowLook), shadowLook);
             if (name == "M2_Body") return VisualMaterials.CharacterRim(VisualMaterials.Samurai2(), undead);
             if (name == "H3_Body") return VisualMaterials.CharacterRim(VisualMaterials.Hero3(), false);
+            if (name.StartsWith("MZ_"))   // MZ_Akiko_Player → Art/Akiko, MZ_Oni_Enemy → Art/Oni …
+            {
+                string key = name.Substring(3); int cut = key.IndexOf('_'); if (cut > 0) key = key.Substring(0, cut);
+                return VisualMaterials.CharacterRim(VisualMaterials.Meshy(key), undead);
+            }
             switch (name)
             {
                 case "Skin": return undead ? look.deadSkin : look.skin;

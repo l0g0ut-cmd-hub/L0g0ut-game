@@ -509,6 +509,27 @@ namespace BladePath.EditorTools
             return m;
         }
 
+        /// <summary>
+        /// Лёгкие модели из Meshy (tools/blender/build_meshy_char.py): один материал «MZ_&lt;Имя&gt;_…»,
+        /// цвет из Assets/_Project/Art/&lt;Имя&gt;/&lt;имя&gt;_albedo.jpg; металл и гладкость — умеренные постоянные.
+        /// </summary>
+        public static Material Meshy(string key)
+        {
+            string dir = "Assets/_Project/Art/" + key + "/";
+            Shader sh = Shader.Find("Standard");
+            string path = MatFolder + "Meshy_" + key + ".mat";
+            Material m = AssetDatabase.LoadAssetAtPath<Material>(path);
+            bool isNew = m == null;
+            if (isNew) m = new Material(sh);
+            m.color = Color.white;
+            Texture2D a = LoadTex(dir + key.ToLowerInvariant() + "_albedo.jpg", false, true, 2048);
+            if (a != null) m.mainTexture = a;
+            m.SetFloat("_Metallic", 0.15f); m.SetFloat("_Glossiness", 0.35f);
+            if (isNew) AssetDatabase.CreateAsset(m, path);
+            EnableRuntimeEmission(m);
+            return m;
+        }
+
         /// <summary>Игрок: один материал на весь доспех — base color, нормали, металл (R) + гладкость (A) из FBX модели.</summary>
         public static Material Samurai2()
         {
