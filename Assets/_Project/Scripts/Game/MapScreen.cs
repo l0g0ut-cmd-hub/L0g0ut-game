@@ -915,8 +915,11 @@ namespace BladePath
             bool revealArt = show < 0 || Known(artNode);
             string artwork = revealArt ? NodePreviewArt(artNode) : "UI/path_panorama";
             float artTop = Mathf.Max(273f, y + 11f);
-            float artHeight = Mathf.Min(110f, 365f - artTop);
-            if (artHeight > 45f)
+            float artSpace = 365f - artTop;
+            // A 45-pixel letterbox was cutting an enemy in half above В ПУТЬ.
+            // Show an intact preview or no preview; never a thin cropped strip.
+            float artHeight = artSpace >= 94f ? Mathf.Min(110f, artSpace) : 0f;
+            if (artHeight >= 94f)
             {
                 Rect illustration = new Rect(x, artTop, w, artHeight);
                 DrawSidebarIllustration(illustration, artwork);

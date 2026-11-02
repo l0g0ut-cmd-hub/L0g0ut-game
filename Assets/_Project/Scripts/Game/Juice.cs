@@ -925,6 +925,23 @@ namespace BladePath
         /// <summary>Новый раунд: трещины заделаны.</summary>
         public void ClearCracks() { for (int i = 0; i < cracks.Count; i++) if (cracks[i] != null) cracks[i].gameObject.SetActive(false); }
 
+        // Blood belongs to one duel, not to the persistent arena scene.
+        // Invalidate pooled marks so LateUpdate cannot re-enable stale decals.
+        public void ClearBattleDecals()
+        {
+            for (int i = 0; i < decals.Count; i++)
+            {
+                Decal d = decals[i];
+                if (d.t == null) continue;
+                d.born = float.PositiveInfinity;
+                d.life = 0f;
+                d.t.gameObject.SetActive(false);
+                decals[i] = d;
+            }
+            for (int i = 0; i < tracked.Count; i++)
+                tracked[i].bloodSteps = 0;
+        }
+
         void Mist(Vector3 pos, Vector3 dir, int count, float life)
         {
             GameObject g = new GameObject("BloodMist");
@@ -1467,7 +1484,7 @@ namespace BladePath
                 Decal d = decals[i];
                 if (d.t == null) continue;
                 float age = Time.unscaledTime - d.born;
-                if (age < 0f) continue;
+                if (age < 0f || age > d.life) continue;
                 if (!d.t.gameObject.activeSelf) d.t.gameObject.SetActive(true);
                 float a = Mathf.Clamp01((d.life - age) / 6f);       // последние 6 с — растворяется
                 if (d.grow > 0f)

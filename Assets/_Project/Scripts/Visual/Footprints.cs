@@ -95,6 +95,15 @@ namespace BladePath
             prints[next] = p;
         }
 
+        // Reuse the existing pooled meshes next round; do not leave previous
+        // combat's bloody footsteps underneath the fresh arena.
+        public void ClearMarks()
+        {
+            for (int i = 0; i < prints.Count; i++)
+                if (prints[i].t != null) prints[i].t.gameObject.SetActive(false);
+            next = 0;
+        }
+
         void LateUpdate()
         {
             if (mpb == null) return;

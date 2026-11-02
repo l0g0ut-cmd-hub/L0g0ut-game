@@ -679,53 +679,23 @@ namespace BladePath
 
         void DrawCombo(FighterController f, Vector2 at, TextAnchor anchor)
         {
-            // Keep the count exclusive to active swordplay; never overlay the
-            // victory, defeat, intro, or end-of-round cinematics.
             if (duel.State != DuelState.Fighting) return;
-            int n = duel.Combo(f);
+            int hits = duel.Combo(f);
             float age = duel.ComboAge(f);
-            if (n < 2 || age > 1.6f) return;
-
-            bool enemy = anchor == TextAnchor.MiddleRight;
-            float alpha = Mathf.Clamp01(age / 0.10f) *
-                Mathf.Clamp01((1.6f - age) / 0.42f);
-            float pulse = 1f + 0.05f * Mathf.Clamp01((0.19f - age) / 0.19f);
-            Color accent = enemy ? VisualIdentity.Vermilion : VisualIdentity.BrassLight;
-            Color ink = new Color(VisualIdentity.Parchment.r,
-                VisualIdentity.Parchment.g, VisualIdentity.Parchment.b, alpha);
-            float w = 155f, h = 48f;
-            Rect plate = new Rect(enemy ? at.x - w : at.x, at.y - h * 0.5f, w, h);
-
-            // Lacquer plaque: restrained warm outlines; no full-screen brush strokes.
-            VisualIdentity.Inset(plate, accent);
-            UiKit.Rect(new Rect(plate.x, plate.y, plate.width, plate.height),
-                new Color(0.035f, 0.026f, 0.024f, 0.15f + (1f - alpha) * 0.6f));
-            UiKit.Rect(new Rect(plate.x + 5f, plate.y + 2f, plate.width - 10f, 1.5f),
-                new Color(accent.r, accent.g, accent.b, 0.70f * alpha));
-            UiKit.Rect(new Rect(plate.x + 5f, plate.yMax - 3f, plate.width - 10f, 1f),
-                new Color(accent.r, accent.g, accent.b, 0.26f * alpha));
-
-            float numberX = enemy ? plate.x + plate.width - 56f : plate.x + 7f;
-            float detailX = enemy ? plate.x + 8f : plate.x + 63f;
-            UiKit.Text(new Rect(numberX, plate.y + 3f, 49f, 36f), n.ToString(),
-                30f * pulse, new Color(accent.r, accent.g, accent.b, alpha),
+            if (hits < 2 || age > 1.6f) return;
+            float fade = Mathf.Clamp01((1.6f - age) / 0.4f);
+            bool right = anchor == TextAnchor.MiddleRight;
+            Color accent = right ? VisualIdentity.Vermilion : VisualIdentity.BrassLight;
+            const float width = 171f, height = 29f;
+            Rect plate = new Rect(right ? at.x - width : at.x,
+                at.y - height * 0.5f, width, height);
+            UiKit.Rect(plate, new Color(0.05f, 0.04f, 0.035f, 0.80f * fade));
+            UiKit.Rect(new Rect(plate.x, plate.y, 3f, height),
+                new Color(accent.r, accent.g, accent.b, fade));
+            UiKit.Text(new Rect(plate.x + 9f, plate.y + 2f, width - 18f, 24f),
+                "СЕРИЯ УДАРОВ  ×" + hits, 12f,
+                new Color(accent.r, accent.g, accent.b, fade),
                 TextAnchor.MiddleCenter, false);
-            UiKit.Rect(new Rect(enemy ? plate.x + 60f : plate.x + 56f,
-                plate.y + 8f, 1f, 31f),
-                new Color(accent.r, accent.g, accent.b, 0.38f * alpha));
-            UiKit.Text(new Rect(detailX, plate.y + 5f, 86f, 18f),
-                "СЕРИЯ УДАРОВ", 10f, ink,
-                enemy ? TextAnchor.MiddleLeft : TextAnchor.MiddleLeft, false);
-
-            // Five thin marks indicate the chain's intensity without competing
-            // with health, posture and spirit gauges.
-            for (int i = 0; i < 5; i++)
-            {
-                float strength = i < Mathf.Min(n, 5) ? 0.70f + 0.16f *
-                    Mathf.Sin(Time.unscaledTime * 6f + i * 0.45f) : 0.20f;
-                UiKit.Rect(new Rect(detailX + i * 17f, plate.y + 31f, 12f, 3f),
-                    new Color(accent.r, accent.g, accent.b, strength * alpha));
-            }
         }
 
         void DrawPips(Vector2 c, int wins, int total, bool mirror)

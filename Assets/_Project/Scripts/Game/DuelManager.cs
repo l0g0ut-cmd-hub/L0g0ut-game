@@ -342,7 +342,12 @@ namespace BladePath
             bleedUntil = 0f;
             if (enemy != null) { enemy.ResetFighter(); hp[enemy] = MaxHp(enemy); hpTrail[enemy] = MaxHp(enemy); lastSwing[enemy] = -1; }
             Popups.Clear();
-            if (Juice.Instance != null) Juice.Instance.ClearCracks();
+            if (Juice.Instance != null)
+            {
+                Juice.Instance.ClearCracks();
+                Juice.Instance.ClearBattleDecals();
+            }
+            if (Footprints.Instance != null) Footprints.Instance.ClearMarks();
             combo.Clear(); comboTime.Clear(); counterUntil.Clear(); PerilAt.Clear(); perilSwing.Clear(); jumpedSweep.Clear(); sweepJumpAt.Clear(); DeathblowAt = -10f;
             Enraged = false;
             ApplyStage();   // скорость врага к базовой ступени (сброс ярости)
