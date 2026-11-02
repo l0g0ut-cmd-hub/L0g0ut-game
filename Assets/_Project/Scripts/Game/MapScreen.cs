@@ -23,7 +23,7 @@ namespace BladePath
         static readonly Color Dim = new Color(0.72f, 0.66f, 0.58f, 1f);
         static readonly string[] EnemyFullArt = { "UI/enemy_full_fallen", "UI/enemy_full_shadow", "UI/enemy_full_oni", "UI/enemy_full_shogun" };
 
-        enum Modal { None, Fight, Shrine, Smith, Merchant, Treasure, Rest, Event, Result, RegionClear, Herbalist, Knocked }
+        enum Modal { None, Fight, Shrine, Smith, Merchant, Treasure, Rest, Event, RegionClear, Herbalist, Knocked }
         Modal modal;
         int sel = -1;
         readonly List<int> previewPath = new List<int>(16);
@@ -33,13 +33,19 @@ namespace BladePath
         const float MoveTime = 1.25f;
         float panU = -1f, shownAt, modalAt, rollAt = -10f;
         const float RollTime = 0.9f;
-        string resultText; Reward treasure;
+        Reward treasure;
+        bool freshTreasure, revisit;
+        bool routeAutopilot;
+        float nextRouteAt;
+        float toastAt = -100f;
+        readonly List<string> toastLines = new List<string>(3);
         List<Item> stock; int stockNode = -1;
 
         void OnShow()
         {
             int resume = !Campaign.Knocked && Campaign.ClearedRegion < 0 && plannedRegion == Campaign.Region ? sel : -1;
             shownAt = Time.unscaledTime; sel = -1; previewPath.Clear(); moveTo = -1; modal = Modal.None; panU = -1f;
+            routeAutopilot = false; nextRouteAt = 0f; toastLines.Clear();
             if (resume >= 0 && resume < Campaign.Nodes.Count && resume != Campaign.At) SelectNode(resume);
             Campaign.CancelTraining();
             if (Campaign.Knocked) OpenModal(Modal.Knocked);
@@ -53,6 +59,12 @@ namespace BladePath
         {
             MapNode n = Campaign.Nodes[i];
             Profile.CostMul = n.Type == NodeType.Smith ? 0.5f : 1f;
+            // Revisiting a cleared road does not repeat paid treasure or defeated enemies.
+            if (revisit && (n.IsFight || n.Type == NodeType.Treasure || n.Type == NodeType.Event))
+            {
+                modal = Modal.None;
+                return;
+            }
             switch (n.Type)
             {
                 case NodeType.Duel: case NodeType.Elite: case NodeType.Boss: case NodeType.Ambush: OpenModal(Modal.Fight); break;
@@ -61,7 +73,7 @@ namespace BladePath
                 case NodeType.Merchant:
                     if (stockNode != i) { stockNode = i; stock = new List<Item>(); for (int k = 0; k < 3; k++) stock.Add(Profile.Roll(Campaign.Region + 1, 60, k == 0 && Random.value < 0.4f)); Item sc = Random.value < 0.5f ? Profile.NewScroll() : null; if (sc != null) stock[2] = sc; }
                     OpenModal(Modal.Merchant); break;
-                case NodeType.Treasure: OpenModal(Modal.Treasure); break;
+                case NodeType.Treasure: if (treasure != null) OpenModal(Modal.Treasure); else modal = Modal.None; break;
                 case NodeType.Rest: OpenModal(Modal.Rest); break;
                 case NodeType.Event: OpenModal(Modal.Event); break;
                 case NodeType.Herbalist: OpenModal(Modal.Herbalist); break;
@@ -74,6 +86,11 @@ namespace BladePath
             if (!Campaign.CanGo(i)) return;
             Profile.CostMul = 1f;
             int destination = sel;
+            if (destination >= 0 && destination != i && NextPreviewStep == i)
+                routeAutopilot = true;
+            revisit = Campaign.Nodes[i].done;
+            freshTreasure = Campaign.Nodes[i].Type == NodeType.Treasure && !revisit;
+            treasure = null;
             moveFrom = Campaign.At; moveTo = i; moveStart = Time.unscaledTime; sel = -1; previewPath.Clear(); stockNode = -1;
             Campaign.MoveTo(i);
             // If the player plotted several waypoints, retain the remaining
@@ -85,14 +102,31 @@ namespace BladePath
 
         void Update()
         {
-            if (!Open || moveTo < 0) return;
-            if (Time.unscaledTime - moveStart >= MoveTime)
+            if (!Open) return;
+            if (moveTo >= 0)
             {
-                int i = moveTo; moveTo = -1;
-                if (Campaign.Nodes[i].Type == NodeType.Treasure) treasure = Profile.Treasure(Campaign.Region + 1);   // сундук открывается один раз
-                if (Juice.Instance != null) Juice.Instance.Taiko(0.6f, 1.25f);
-                Haptics.Pulse(20);
-                OpenNode(i);
+                if (Time.unscaledTime - moveStart >= MoveTime)
+                {
+                    int i = moveTo; moveTo = -1;
+                    if (freshTreasure) treasure = Profile.Treasure(Campaign.Region + 1);
+                    freshTreasure = false; // rollback/revisit must not grant a second chest
+                    if (Juice.Instance != null) Juice.Instance.Taiko(0.6f, 1.25f);
+                    Haptics.Pulse(20);
+                    OpenNode(i);
+                    nextRouteAt = Time.unscaledTime + 0.45f;
+                }
+                return;
+            }
+            // Auto-walk only after a completed encounter and only while the die has steps.
+            // Every encounter card still interrupts until the player deals with it.
+            if (routeAutopilot && modal == Modal.None && !InventoryScreen.Open &&
+                Time.unscaledTime >= nextRouteAt)
+            {
+                int next = NextPreviewStep;
+                if (next >= 0 && Campaign.CanGo(next))
+                    Go(next);
+                else if (next < 0 || Campaign.Steps <= 0 || !Campaign.Current.done)
+                    routeAutopilot = false;
             }
         }
 
@@ -135,6 +169,7 @@ namespace BladePath
             if (Profile.Cycle > 0) UiKit.Text(new Rect(mapX + 18f, 40f, 300f, 20f), "КРУГ " + (Profile.Cycle + 1) + ": враги крепче", 12f, new Color(1f, 0.55f, 0.4f), TextAnchor.MiddleLeft);
             DrawPanel(new Rect(W - panel, 0f, panel, 540f), interactive && modal == Modal.None && moveTo < 0);
             if (modal != Modal.None) DrawModal(interactive);
+            else if (interactive) DrawToast();
             GUI.matrix = old;
         }
 
@@ -741,13 +776,6 @@ namespace BladePath
                     if (Btn(new Rect(x, r.yMax - 64f, w, 46f), "В ПУТЬ", ok, true)) { if (modal == Modal.Knocked) Campaign.AckKnocked(); modal = Modal.None; }
                     break;
                 }
-                case Modal.Result:
-                {
-                    Rect r = Card(520f, 240f);
-                    float y = Lines(r.x + 26f, r.y + 30f, r.width - 52f, resultText, 52, 14f, Ink);
-                    if (Btn(new Rect(r.center.x - 90f, r.yMax - 60f, 180f, 44f), "ДАЛЕЕ", ok)) modal = Modal.None;
-                    break;
-                }
                 case Modal.RegionClear:
                 {
                     Rect r = Card(600f, 260f);
@@ -761,7 +789,36 @@ namespace BladePath
             }
         }
 
-        void Result(string s) { resultText = s; Campaign.Complete(Campaign.At); OpenModal(Modal.Result); }
+        void Result(string message)
+        {
+            Campaign.Complete(Campaign.At);
+            toastLines.Clear();
+            foreach (string line in Wrap(message, 48))
+            {
+                if (toastLines.Count >= 3) break;
+                toastLines.Add(line);
+            }
+            toastAt = Time.unscaledTime;
+            modal = Modal.None; // narrative rewards no longer demand an extra "ДАЛЕЕ" tap
+            nextRouteAt = Time.unscaledTime + 1.0f;
+        }
+
+        void DrawToast()
+        {
+            if (toastLines.Count == 0) return;
+            float age = Time.unscaledTime - toastAt;
+            if (age < 0f || age >= 4.5f) return;
+            float fade = Mathf.Clamp01(age / 0.2f) * Mathf.Clamp01((4.5f - age) / 0.7f);
+            float w = Mathf.Min(460f, viewW - 30f);
+            float h = 26f + toastLines.Count * 19f;
+            Rect r = new Rect(mapX + 15f, 540f - h - 15f, w, h);
+            UiKit.Rect(r, new Color(0.06f, 0.04f, 0.035f, 0.88f * fade));
+            UiKit.Rect(new Rect(r.x, r.y, 3f, r.height), new Color(Gold.r, Gold.g, Gold.b, fade));
+            for (int i = 0; i < toastLines.Count; i++)
+                UiKit.Text(new Rect(r.x + 12f, r.y + 8f + i * 19f, r.width - 22f, 19f),
+                    toastLines[i], 12f, new Color(Ink.r, Ink.g, Ink.b, fade),
+                    TextAnchor.MiddleLeft, false);
+        }
 
         void StartFight(int at)
         {
