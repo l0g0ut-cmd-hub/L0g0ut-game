@@ -666,6 +666,9 @@ namespace BladePath
 
         void DrawCombo(FighterController f, Vector2 at, TextAnchor anchor)
         {
+            // Keep the count exclusive to active swordplay; never overlay the
+            // victory, defeat, intro, or end-of-round cinematics.
+            if (duel.State != DuelState.Fighting) return;
             int n = duel.Combo(f);
             float age = duel.ComboAge(f);
             if (n < 2 || age > 1.6f) return;
