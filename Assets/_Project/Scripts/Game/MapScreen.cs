@@ -220,6 +220,8 @@ namespace BladePath
             u0 = panU;
             Texture2D mt = UiKit.Tex(Campaign.MapTexture(Campaign.Region));
             if (mt != null) GUI.DrawTextureWithTexCoords(new Rect(mapX, 0f, viewW, MapH), mt, new Rect(u0, 0f, uw, 1f));
+            DrawPaintedMist();
+            DrawLandmarkLights();
             DrawRoads();
             DrawJourneyFootprints();
             DrawNodes(interactive && modal == Modal.None && moveTo < 0);
@@ -597,6 +599,68 @@ namespace BladePath
             GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.5f, p.y - s * 0.78f - bob, s, s), ht, uvr);
         }
 
+        // Panoramic mist layers drift slowly over the painted forest but do not
+        // obscure routes or medallions. One 256x128 texture, three draw calls.
+        void DrawPaintedMist()
+        {
+            if (Event.current.type != EventType.Repaint || viewW < 160f) return;
+            Texture2D mist = JourneyMistArt.Texture;
+            if (mist == null) return;
+            Color previous = GUI.color;
+            GUI.BeginGroup(new Rect(mapX, 0f, viewW, MapH));
+            float clock = Time.unscaledTime;
+            Color baseTint = Campaign.Region == 2
+                ? new Color(0.97f, 0.65f, 0.62f, 0.14f)
+                : Campaign.Region == 1
+                    ? new Color(0.79f, 0.87f, 1f, 0.13f)
+                    : new Color(0.95f, 0.94f, 0.86f, 0.12f);
+            for (int i = 0; i < 3; i++)
+            {
+                float u = Mathf.Repeat(0.09f + i * 0.34f + clock * (0.0018f + i * 0.0007f), 1.2f);
+                float x = (u - u0) * MapFullW;
+                float y = i == 0 ? 85f : i == 1 ? 260f : 402f;
+                GUI.color = baseTint;
+                GUI.DrawTexture(new Rect(x - 195f, y - 55f, 390f, 115f),
+                    mist, ScaleMode.StretchToFill, true);
+            }
+            GUI.EndGroup();
+            GUI.color = previous;
+        }
+
+        // Landmarks are lit gently without new Light objects or full-screen bloom.
+        void DrawLandmarkLights()
+        {
+            if (Event.current.type != EventType.Repaint) return;
+            List<MapNode> nodes = Campaign.Nodes;
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                MapNode n = nodes[i];
+                if (n.done || !Known(n)) continue;
+                bool boss = n.Type == NodeType.Boss;
+                bool shrine = n.Type == NodeType.Shrine;
+                bool herb = n.Type == NodeType.Herbalist;
+                bool treasure = n.Type == NodeType.Treasure;
+                if (!boss && !shrine && !herb && !treasure) continue;
+                Vector2 point = P(n);
+                if (point.x < mapX + 24f || point.x > mapX + viewW - 24f) continue;
+                float wave = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime *
+                    (boss ? 1.9f : 2.8f) + i * 1.2f);
+                Color tint = boss ? new Color(1f, 0.20f, 0.08f, 0.09f + wave * 0.06f)
+                    : herb ? new Color(0.50f, 1f, 0.35f, 0.08f + wave * 0.05f)
+                    : shrine ? new Color(1f, 0.77f, 0.42f, 0.06f + wave * 0.055f)
+                    : new Color(1f, 0.80f, 0.32f, 0.05f + wave * 0.045f);
+                UiKit.Disc(point, (boss ? 65f : 48f) + wave * 5f, tint);
+            }
+        }
+
+        static readonly string[] JourneyLegendNames =
+            { "ПРОЙДЕНО", "В ПРЕДЕЛАХ ХОДА", "НЕДОСТУПНО" };
+        static readonly Color[] JourneyLegendColors =
+            { new Color(0.72f, 0.42f, 0.22f),
+              new Color(0.70f, 0.95f, 0.62f),
+              new Color(1f, 0.39f, 0.31f) };
+        static readonly float[] JourneyLegendWidths = { 105f, 151f, 111f };
+
         // Low-profile route legend: never obscures the map or interactive cards.
         void DrawJourneyLegend()
         {
@@ -606,16 +670,13 @@ namespace BladePath
             Rect bar = new Rect(mapX + 10f, MapH - h - 9f, w, h);
             UiKit.Rect(bar, new Color(0.035f, 0.025f, 0.020f, 0.79f));
             UiKit.Rect(new Rect(bar.x, bar.y, 2f, h), new Color(Gold.r, Gold.g, Gold.b, 0.65f));
-            string[] labels = { "ПРОЙДЕНО", "В ПРЕДЕЛАХ ХОДА", "НЕДОСТУПНО" };
-            Color[] colors = { new Color(0.72f, 0.42f, 0.22f), new Color(0.70f, 0.95f, 0.62f), new Color(1f, 0.39f, 0.31f) };
-            float[] widths = { 105f, 151f, 111f };
             float px = bar.x + 10f;
-            for (int i = 0; i < labels.Length; i++)
+            for (int i = 0; i < JourneyLegendNames.Length; i++)
             {
-                UiKit.Disc(new Vector2(px + 5f, bar.y + 15f), 5f, colors[i]);
-                UiKit.Text(new Rect(px + 15f, bar.y + 5f, widths[i] - 14f, 21f),
-                    labels[i], 9.2f, Dim, TextAnchor.MiddleLeft, false);
-                px += widths[i];
+                UiKit.Disc(new Vector2(px + 5f, bar.y + 15f), 5f, JourneyLegendColors[i]);
+                UiKit.Text(new Rect(px + 15f, bar.y + 5f, JourneyLegendWidths[i] - 14f, 21f),
+                    JourneyLegendNames[i], 9.2f, Dim, TextAnchor.MiddleLeft, false);
+                px += JourneyLegendWidths[i];
             }
         }
 
