@@ -23,6 +23,17 @@ namespace BladePath
         const int MaxDecals = 220;
         readonly List<Decal> decals = new List<Decal>();
         int decalIdx;
+        // Per-round blood particle sources are separate from pooled ground decals.
+        // They must not survive a reset or spawn new stains in the next round.
+        readonly List<GameObject> transientBloodFx = new List<GameObject>();
+        int battleFxGeneration;
+        void TrackBloodFx(GameObject source)
+        {
+            if (source == null) return;
+            if (transientBloodFx.Count > 256)
+                transientBloodFx.RemoveAll(fx => fx == null);
+            transientBloodFx.Add(source);
+        }
         struct Decal { public Transform t; public Renderer r; public float born, life, size, grow; }
         MaterialPropertyBlock mpb;
 
@@ -929,6 +940,20 @@ namespace BladePath
         // Invalidate pooled marks so LateUpdate cannot re-enable stale decals.
         public void ClearBattleDecals()
         {
+            // Invalidate coroutines (especially FountainDecals) before clearing
+            // marks: otherwise the old execution can repaint the clean arena.
+            battleFxGeneration++;
+            for (int i = 0; i < transientBloodFx.Count; i++)
+            {
+                GameObject effect = transientBloodFx[i];
+                if (effect == null) continue;
+                ParticleSystem emitter = effect.GetComponent<ParticleSystem>();
+                if (emitter != null)
+                    emitter.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                effect.SetActive(false);
+                Destroy(effect);
+            }
+            transientBloodFx.Clear();
             for (int i = 0; i < decals.Count; i++)
             {
                 Decal d = decals[i];
@@ -945,6 +970,7 @@ namespace BladePath
         void Mist(Vector3 pos, Vector3 dir, int count, float life)
         {
             GameObject g = new GameObject("BloodMist");
+            TrackBloodFx(g);
             g.transform.position = pos;
             g.transform.rotation = Quaternion.LookRotation(dir);
             ParticleSystem ps = g.AddComponent<ParticleSystem>();
@@ -977,6 +1003,7 @@ namespace BladePath
         {
             if (softMat == null || at == null) return;
             GameObject g = new GameObject("Bleed");
+            TrackBloodFx(g);
             g.transform.SetParent(at, false);
             g.transform.localPosition = Vector3.zero;
             ParticleSystem ps = g.AddComponent<ParticleSystem>();
@@ -1002,6 +1029,7 @@ namespace BladePath
         {
             if (softMat == null || neck == null) return;
             GameObject g = new GameObject("Fountain");
+            TrackBloodFx(g);
             g.transform.SetParent(neck, false);
             g.transform.localPosition = Vector3.zero;
             g.transform.rotation = Quaternion.LookRotation(Vector3.up);
@@ -1023,14 +1051,14 @@ namespace BladePath
             rend.material = softMat; rend.renderMode = ParticleSystemRenderMode.Stretch; rend.velocityScale = 0.05f; rend.lengthScale = 2f;
             ps.Play();
             Play(hitHeavy, 1f, 0.55f);
-            StartCoroutine(FountainDecals(neck, seconds));
+            StartCoroutine(FountainDecals(neck, seconds, battleFxGeneration));
             StartCoroutine(StopBleed(ps, g, seconds));
         }
 
-        System.Collections.IEnumerator FountainDecals(Transform neck, float seconds)
+        System.Collections.IEnumerator FountainDecals(Transform neck, float seconds, int generation)
         {
             float end = Time.time + seconds;
-            while (Time.time < end && neck != null)
+            while (generation == battleFxGeneration && Time.time < end && neck != null)
             {
                 Vector3 p = neck.position + new Vector3(Random.Range(-0.6f, 0.6f), 0f, Random.Range(-0.6f, 0.6f));
                 AddDecal(new Vector3(p.x, 0.012f, p.z), Random.Range(0.08f, 0.2f), Random.insideUnitCircle, 60f, 0.3f, 0.2f);
