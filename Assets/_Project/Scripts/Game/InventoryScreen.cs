@@ -317,7 +317,7 @@ namespace BladePath
             VisualIdentity.Heading(new Rect(a.x, a.y, a.width, 32f), "НАДЕТО");
             for (int s = 0; s < Profile.SlotCount; s++)
             {
-                float x = a.x + (s % 2) * 120f + 8f, y = a.y + 30f + (s / 2) * 136f;
+                float x = a.x + (s % 2) * 110f + 6f, y = a.y + 30f + (s / 2) * 136f;
                 Rect r = new Rect(x, y, 96f, 96f);
                 Item it = Profile.Equipped(s);
                 DrawItem(r, it, it != null && it == sel);
