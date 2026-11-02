@@ -146,6 +146,30 @@ def check_routes():
         "Assets/_Project/Scripts/Game/UiKit.cs")
     assert 'art = newJourneyStep == 1 ? "UI/event_" + i : "UI/npc_" + i;' not in menu
     assert "if (hub.shore != shore) continue;" in src
+    # Cache must be invalidated when regenerated node coordinates change in
+    # place. Checking only List reference/region silently reuses old roads.
+    bind = src.split("public static void Bind(int region, List<MapNode> nodes)", 1)[1]
+    bind = bind.split("public static Path Route(int from, int to)", 1)[0]
+    for token in ("cachedNodePositions", "!ReferenceEquals(nodes, activeNodes)",
+                  "cachedNodePositions.Length != nodes.Count",
+                  "previous.x != nodes[i].x || previous.y != nodes[i].y",
+                  "cachedNodePositions = new Vector2[nodes.Count]"):
+        assert token in bind, "Missing route cache mutation guard: " + token
+    assert re.search(r"if \\(changed\\)\\s*\\{\\s*cache\\.Clear\\(\\);", bind), (
+        "Route cache not cleared when node coordinates change")
+    # The primary travel button must be visible inside the 540px virtual map
+    # and must not overlap the inventory/menu actions on narrow Android screens.
+    actions = []
+    for label in ("В ПУТЬ", "СНАРЯЖЕНИЕ", "В МЕНЮ"):
+        match = re.search(
+            r'Btn\\(new Rect\\(x, 540f - (\\d+)f, w, (\\d+)f\\), "' + label,
+            screen)
+        assert match, "Map action missing or no longer pinned: " + label
+        top, height = 540 - int(match.group(1)), int(match.group(2))
+        assert 0 <= top and top + height <= 540, "Map action off-screen: " + label
+        actions.append((top, top + height))
+    assert all(a[1] < b[0] for a, b in zip(actions, actions[1:])), (
+        "Map action hitboxes overlap")
     assert "lengthPixels * easedTravel" in screen
     assert "Direction(easedTravel)" in screen
     # Optional replacement art must not silently become a broken 16-frame rider.
