@@ -158,6 +158,10 @@ def check_routes():
 
 def check_new_game():
     choice = read("Assets/_Project/Scripts/Game/JourneyChoice.cs")
+    importer = read("tools/import_approved_selection_art.py")
+    assert "from audit_missing_game_art import APPROVED_SHA256" in importer
+    assert 'parser.add_argument("--dry-run"' in importer
+    assert "Refusing to overwrite non-original file" in importer
     apk = read(".github/workflows/build-android.yml")
     audit = read("tools/audit_missing_game_art.py")
     assert 'BLADEPATH_REQUIRE_APPROVED_ART: "1"' in apk

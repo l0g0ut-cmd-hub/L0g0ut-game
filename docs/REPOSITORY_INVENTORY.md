@@ -671,3 +671,10 @@ This is **an existence manifest**, NOT evidence that textures render correctly, 
 | `docs/generated-visual-pack-02.md` | 1568 | `0e94c433ab84` |
 | `ProjectSettings/ProjectVersion.txt` | 29 | `5a1c878301d8` |
 | `README.md` | 14807 | `159056e59f99` |
+
+
+## Post-snapshot delta (2026-11-02; original 604-file inventory remains historical)
+
+| Added file | Purpose | Status |
+|---|---|---|
+| `tools/import_approved_selection_art.py` | Lossless ZIP-to-Resources import of six original selection PNGs; SHA-256 and IHDR validation; refuses overwrite of non-original art | `CODE_READY`; PNGs not yet in GitHub |
