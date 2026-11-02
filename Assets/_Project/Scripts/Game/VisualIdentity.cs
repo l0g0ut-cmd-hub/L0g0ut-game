@@ -155,13 +155,10 @@ namespace BladePath
                     r.width - 6f, r.height - 6f);
                 if (topCrop)
                 {
-                    // Hero selection art is a tall full-body illustration.
-                    // Crop its *bottom* instead of losing the character's face.
-                    float slice = Mathf.Clamp01(
-                        (float)t.width * imageRect.height /
-                        Mathf.Max(1f, t.height * imageRect.width));
-                    GUI.DrawTextureWithTexCoords(imageRect, t,
-                        new Rect(0f, 1f - slice, 1f, slice));
+                    // Show the COMPLETE approved character/difficulty artwork.
+                    // Cropping the tall paintings to a wide viewport used to
+                    // cut off feet, weapons and decorative frames.
+                    GUI.DrawTexture(imageRect, t, ScaleMode.ScaleToFit);
                 }
                 else GUI.DrawTexture(imageRect, t, ScaleMode.ScaleAndCrop);
                 GUI.color = old;

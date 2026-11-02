@@ -92,8 +92,10 @@ namespace BladePath
         {
             if (moveTo >= 0 || modal != Modal.None || Campaign.InFight || !Campaign.CanGo(i)) return;
             Profile.CostMul = 1f;
-            int destination = sel;
-            routeAutopilot = destination >= 0 && destination != i && NextPreviewStep == i;
+            // A tap on a distant destination is a route preview, not permission
+            // to visit a different checkpoint. Require the EXACT selected node.
+            if (sel != i) return;
+            routeAutopilot = false;
             revisit = Campaign.Nodes[i].done;
             freshTreasure = Campaign.Nodes[i].Type == NodeType.Treasure && !revisit;
             treasure = null;
@@ -104,11 +106,9 @@ namespace BladePath
             rideCycleAt = Time.unscaledTime;
             sel = -1; previewPath.Clear(); stockNode = -1;
             manualPan = false; // resume following the animated samurai as the journey proceeds
-            Campaign.MoveTo(i);
-            // If the player plotted several waypoints, retain the remaining
-            // route after the next encounter is resolved. Never skip an encounter.
-            if (destination >= 0 && destination != i && destination < Campaign.Nodes.Count)
-                SelectNode(destination);
+            // Campaign.MoveTo must run ON ARRIVAL, not at departure: updating
+            // Campaign.At early made the marker, map selection and save disagree
+            // with the rider visibly travelling between nodes.
             if (Juice.Instance != null) Juice.Instance.DashSound();
         }
 
@@ -121,6 +121,7 @@ namespace BladePath
                 if (Time.unscaledTime - moveStart >= moveDuration)
                 {
                     int i = moveTo; moveTo = -1;
+                    Campaign.MoveTo(i); // persist only after the rider arrives
                     if (freshTreasure) treasure = Profile.Treasure(Campaign.Region + 1);
                     freshTreasure = false; // rollback/revisit must not grant a second chest
                     if (Juice.Instance != null) Juice.Instance.Taiko(0.6f, 1.25f);
@@ -130,17 +131,8 @@ namespace BladePath
                 }
                 return;
             }
-            // Auto-walk only after a completed encounter and only while the die has steps.
-            // Every encounter card still interrupts until the player deals with it.
-            if (routeAutopilot && modal == Modal.None && !InventoryScreen.Open &&
-                Time.unscaledTime >= nextRouteAt)
-            {
-                int next = NextPreviewStep;
-                if (next >= 0 && Campaign.CanGo(next))
-                    Go(next);
-                else if (next < 0 || Campaign.Steps <= 0 || !Campaign.Current.done)
-                    routeAutopilot = false;
-            }
+            // Never silently continue to another marker after a finished
+            // encounter. Each hop requires an explicit selection and tap.
         }
 
         // Finger/mouse drag moves the world map; a small recenter button
@@ -513,6 +505,27 @@ namespace BladePath
             Texture2D ic = UiKit.Tex("UI/map_icons");
             List<MapNode> ns = Campaign.Nodes;
             Color oc = GUI.color;
+            // Marker hit rectangles overlap on dense maps. Only the nearest
+            // visible medal can accept this touch, never another one behind it.
+            int hitNode = -1;
+            if (interactive && !panDragging)
+            {
+                Vector3 mouse = Input.mousePosition;
+                Vector2 point = new Vector2(mouse.x / UiKit.Scale,
+                    (Screen.height - mouse.y) / UiKit.Scale);
+                float nearestSq = 32f * 32f;
+                if (point.x >= mapX && point.x <= mapX + viewW &&
+                    point.y >= 0f && point.y <= MapH)
+                {
+                    for (int candidate = 0; candidate < ns.Count; candidate++)
+                    {
+                        Vector2 position = P(ns[candidate]);
+                        if (position.x < mapX || position.x > mapX + viewW) continue;
+                        float d2 = (position - point).sqrMagnitude;
+                        if (d2 < nearestSq) { nearestSq = d2; hitNode = candidate; }
+                    }
+                }
+            }
             for (int i = 0; i < ns.Count; i++)
             {
                 MapNode n = ns[i];
@@ -567,12 +580,12 @@ namespace BladePath
                     UiKit.Text(new Rect(chip.x - 12f, chip.y - 12f, 24f, 24f),
                         routeIndex.ToString(), 12f, Ink, TextAnchor.MiddleCenter);
                 }
-                if (!interactive) continue;
-                Rect hit = new Rect(p.x - 34f, p.y - 34f, 68f, 68f);
+                if (!interactive || i != hitNode || panDragging) continue;
+                Rect hit = new Rect(p.x - 32f, p.y - 32f, 64f, 64f);
                 if (GUI.Button(hit, GUIContent.none, GUIStyle.none))
                 {
-                    // Selecting a marker never launches movement. One tap selects;
-                    // the explicit ДВИГАТЬСЯ button in the sidebar starts the trip.
+                    // Selecting a marker never launches movement. The sidebar
+                    // confirms exactly that selected node, no surprise detours.
                     if (i == Campaign.At && (n.Type == NodeType.Smith || n.Type == NodeType.Merchant)) OpenNode(i);
                     else { SelectNode(i); Haptics.Pulse(10); }
                 }
@@ -893,11 +906,11 @@ namespace BladePath
                     // Never make the player reselect a marker after rolling.
                     // Movement control is pinned below the illustration; dynamic
                     // descriptions must never push it below the sidebar viewport.
-                    if (!Campaign.CanGo(nextStep))
-                        UiKit.Text(new Rect(x, y, w, 18f),
+                    if (!Campaign.CanGo(show))
+                        UiKit.Text(new Rect(x, y, w, 28f),
                             Campaign.Steps == 0 ? "Сначала брось кость пути"
-                                : "Следующий переход пока закрыт", 11f, Dim,
-                            TextAnchor.MiddleLeft, false);
+                                : "Цель далеко: сначала выбери соседний узел",
+                            11f, Dim, TextAnchor.MiddleLeft, false);
                 }
                 else if (show != Campaign.At && Campaign.Nodes[Campaign.At].next.Contains(show))
                 {
@@ -933,10 +946,10 @@ namespace BladePath
             }
             // Keep the travel action visible at all times, independently of
             // node descriptions, die availability and illustration height.
-            int travelTarget = NextPreviewStep;
-            if (travelTarget < 0 && sel >= 0 && sel != Campaign.At &&
-                Campaign.Nodes[Campaign.At].next.Contains(sel))
-                travelTarget = sel;
+            // Never substitute the first BFS waypoint for the selected target.
+            // A distant node remains a PREVIEW until the user chooses an adjacent
+            // medal, preventing accidental trips to a different location.
+            int travelTarget = sel >= 0 && Campaign.CanGo(sel) ? sel : -1;
             bool travelReady = !rolling && moveTo < 0 && travelTarget >= 0 &&
                 Campaign.CanGo(travelTarget);
             if (Btn(new Rect(x, 540f - 166f, w, 44f), "В ПУТЬ",

@@ -84,6 +84,11 @@ def check_routes():
     assert 'if (can && sel == i) Go(i);' not in screen
     assert 'Btn(new Rect(x, 540f - 166f, w, 44f), "В ПУТЬ"' in screen
     assert 'interactive && travelReady, true' in screen
+    assert 'int travelTarget = sel >= 0 && Campaign.CanGo(sel) ? sel : -1;' in screen
+    assert 'if (sel != i) return;' in screen
+    assert 'Campaign.MoveTo(i); // persist only after the rider arrives' in screen
+    assert 'if (!interactive || i != hitNode || panDragging) continue;' in screen
+    assert 'Go(next);' not in screen, "Unattended travel to a different node reintroduced"
     assert 'if (UiKit.Tex(heroArt) != null)' in screen
     assert 'heroArt = "UI/npc_"' not in screen
     assert "float artHeight = artSpace >= 94f" in screen
@@ -100,6 +105,9 @@ def check_routes():
     assert '"UI/npc_" + i' not in menu
     assert '"ИЛЛЮСТРАЦИЯ НЕ ЗАГРУЖЕНА"' in menu
     assert 'VisualIdentity.Portrait(artRect, art, null, true);' in menu
+    visuals = read("Assets/_Project/Scripts/Game/VisualIdentity.cs")
+    assert 'GUI.DrawTexture(imageRect, t, ScaleMode.ScaleToFit);' in visuals
+    assert 'new Rect(0f, 1f - slice, 1f, slice)' not in visuals
     assert 'JourneyChoice.Portrait(JourneyChoice.Hero)' in screen
     assert 'VisualIdentity.Portrait(portrait, heroArt);' in screen
     assert 'UI/selection/characters_difficulties' not in screen
