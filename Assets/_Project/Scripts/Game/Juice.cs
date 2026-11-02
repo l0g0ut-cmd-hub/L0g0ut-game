@@ -337,6 +337,7 @@ namespace BladePath
             if (petals == null) { GameObject g = GameObject.Find("Petals"); if (g != null) petals = g.GetComponent<ParticleSystem>(); }
             if (Weather.LeafMode == 0) return;   // сильный снег — листьев нет
             if (Weather.LeafMode == 3) n = Mathf.Max(1, n / 4);   // последние листья
+            n = Mathf.Clamp(Mathf.RoundToInt(n * MobileVfxBudget.ParticleScale), 1, 64);
             if (petals != null) petals.Emit(n);
         }
         /// <summary>Стук сердца на низком здоровье.</summary>
@@ -454,7 +455,23 @@ namespace BladePath
         /// <summary>Попадание. dir — направление удара (скорость клинка), strength ~0.4…2 (урон/крит/убийство).</summary>
         public void OnHit(Vector3 point, Vector3 normal, Vector3 dir, float strength, bool blocked, bool kill, Transform bleedAt)
         {
-            if (blocked) { Play(clang, 0.8f, Random.Range(0.9f, 1.2f)); Sparks(point, normal, 22, 0.8f); Flash(point, 0.22f, new Color(1f, 0.82f, 0.5f, 0.8f), 0.07f, false); Sheet("fx_clash", point, 0.8f, 0.24f, new Color(1f, 0.95f, 0.85f, 0.9f)); return; }
+            if (blocked)
+            {
+                Play(clang, 0.8f, Random.Range(0.9f, 1.2f));
+                Sparks(point, normal, 22, 0.8f);
+                Flash(point, 0.22f, new Color(1f, 0.82f, 0.5f, 0.8f), 0.07f, false);
+                Sheet("fx_clash", point, 0.8f, 0.24f, new Color(1f, 0.95f, 0.85f, 0.9f));
+                // A single brief gold burst emphasizes a clean steel-on-steel
+                // contact without making every block a full-screen explosion.
+                if (DuelManager.Gfx == 1 && MobileVfxBudget.Level < 2)
+                {
+                    FxSprite metal = FxSprite.Spawn("sparks_gold", point, 0.38f,
+                        6, 1, 6, 24f, false, 0.22f);
+                    if (metal != null)
+                        metal.tint = new Color(1f, 0.73f, 0.38f, 0.57f);
+                }
+                return;
+            }
             Vector3 hd = dir;
             Sheet("fx_slash_hit", point, 0.9f + 0.35f * Mathf.Clamp(strength, 0f, 2f), 0.26f, new Color(1f, 0.96f, 0.92f, 0.85f), () => hd);   // полумесяц рассечения по ходу удара
             Play(strength > 1f ? hitHeavy : hit, 0.95f, Random.Range(0.92f, 1.08f));
@@ -1193,6 +1210,8 @@ namespace BladePath
         {
             Play(clang, 0.9f, 1.3f);
             Sparks(pos, Vector3.up, 24);
+            Flash(pos, 0.23f, new Color(0.68f, 0.87f, 1f, 0.88f), 0.11f, true);
+            SparkLight(pos, new Color(0.6f, 0.8f, 1f), 2.2f, 3f, 0.12f);
             TrailRenderer[] trs = null;
             foreach (EnergyProjectile e in FindObjectsByType<EnergyProjectile>(FindObjectsSortMode.None))
                 if (e.owner == by) { trs = e.GetComponents<TrailRenderer>(); foreach (TrailRenderer tr in trs) tr.Clear(); }
