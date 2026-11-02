@@ -80,6 +80,15 @@ def check_routes():
                      "DrawHero()", "HeroUV()", "moveDuration"):
         assert required in screen
     assert "MoveTime" not in screen, "Legacy fixed travel duration remains"
+    # No second tap: every marker selects; only the sidebar button travels.
+    assert 'if (can && sel == i) Go(i);' not in screen
+    assert 'Btn(new Rect(x, y, w, 40f), "ДВИГАТЬСЯ"' in screen
+    assert 'bool canMove = !rolling && Campaign.CanGo(nextStep);' in screen
+    assert 'if (parents[index] < 0) { sel = -1; return; }' in screen
+    assert 'if (UiKit.Tex(path) == null) return;' not in screen
+    menu = read("Assets/_Project/Scripts/Menu/MainMenuController.cs")
+    assert 'selectionAtlas.width >= 900' in menu
+    assert 'selectionAtlas.height >= 600' in menu
     assert "if (hub.shore != shore) continue;" in src
     assert "lengthPixels * easedTravel" in screen
     assert "Direction(easedTravel)" in screen
