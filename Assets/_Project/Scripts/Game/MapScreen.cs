@@ -279,17 +279,23 @@ namespace BladePath
             return 11;
         }
 
-        // Art-driven node badges use individually imported PNGs, retaining the existing atlas as fallback.
-        // Only a subset has dedicated badges; the other nodes keep their original symbols.
-        static Texture2D SpecialNodeIcon(NodeType type, bool unknown, bool completed)
+        // Keep all map badges on the SAME high-detail illustrated atlas.
+        // Pack02's placeholders reused the same clouds/medallions for different
+        // locations; the authored map_icons atlas has a distinct glyph per type.
+        // Fog of war still hides the description but no longer substitutes every
+        // destination's silhouette with the same grey cloud.
+        static int MapBadgeCell(MapNode n, int index)
         {
-            if (completed) return null;
-            string id = unknown ? "node_unknown" :
-                type == NodeType.Duel ? "node_duel" :
-                type == NodeType.Elite || type == NodeType.Boss ? "node_elite" :
-                type == NodeType.Treasure ? "node_treasure_node" :
-                type == NodeType.Rest || type == NodeType.Herbalist ? "node_camp_node" : null;
-            return id != null ? UiKit.Tex("UI/pack02/" + id) : null;
+            if (n.done && index != Campaign.At && n.Type != NodeType.Start) return 10;
+            return IconOf(n.Type);
+        }
+
+        static Color MapBadgeTint(MapNode n, bool known, int index)
+        {
+            if (!known) return new Color(0.56f, 0.65f, 0.70f, 0.80f);
+            if (n.done && index != Campaign.At && n.Type != NodeType.Start)
+                return new Color(0.68f, 0.69f, 0.67f, 0.75f);
+            return Color.white;
         }
 
         bool Known(MapNode n)
@@ -492,18 +498,15 @@ namespace BladePath
                         : new Color(0.92f, 0.58f, 0.2f, reach);
                     UiKit.Disc(p, s * (0.64f + wave * 0.12f), halo);
                 }
-                int k = !known ? 11 : (n.done && n.Type != NodeType.Start && i != Campaign.At) ? 10 : IconOf(n.Type);
+                int k = MapBadgeCell(n, i);
                 if (i == sel && ic != null) { GUI.color = Color.white; GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.75f, p.y - s * 0.5f, s * 1.5f, s), ic, Cell(12)); }
                 if (i == sel && Event.current.type == EventType.Repaint)
                 {
                     float halo = s * (0.58f + 0.025f * Mathf.Sin(Time.unscaledTime * 4f));
                     UiKit.Ring(p, halo, new Color(1f, 0.81f, 0.40f, 0.80f), true);
                 }
-                GUI.color = !known ? new Color(1f, 1f, 1f, 0.85f) : n.done && i != Campaign.At && n.Type != NodeType.Start ? new Color(0.8f, 0.78f, 0.74f, 0.9f) : Color.white;
-                Texture2D special = SpecialNodeIcon(n.Type, !known, n.done && i != Campaign.At);
-                if (special != null)
-                    GUI.DrawTexture(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), special, ScaleMode.ScaleToFit, true);
-                else if (ic != null)
+                GUI.color = MapBadgeTint(n, known, i);
+                if (ic != null)
                     GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), ic, Cell(k));
                 else UiKit.Disc(p, s * 0.45f, can ? Gold : Dim);
                 GUI.color = oc;
@@ -635,9 +638,14 @@ namespace BladePath
                 MapNode n = Campaign.Nodes[show];
                 bool known = Known(n);
                 Texture2D ic = UiKit.Tex("UI/map_icons");
-                Texture2D special = SpecialNodeIcon(n.Type, !known, n.done && show != Campaign.At);
-                if (special != null) GUI.DrawTexture(new Rect(x, y, 64f, 64f), special, ScaleMode.ScaleToFit, true);
-                else if (ic != null) GUI.DrawTextureWithTexCoords(new Rect(x, y, 64f, 64f), ic, Cell(known ? IconOf(n.Type) : 11));
+                if (ic != null)
+                {
+                    Color previousTint = GUI.color;
+                    GUI.color = MapBadgeTint(n, known, show);
+                    GUI.DrawTextureWithTexCoords(new Rect(x, y, 64f, 64f), ic,
+                        Cell(MapBadgeCell(n, show)));
+                    GUI.color = previousTint;
+                }
                 UiKit.Text(new Rect(x + 72f, y + 6f, w - 72f, 24f), known ? Campaign.TypeNames[n.type] : "НЕИЗВЕСТНО", 16f, Ink, TextAnchor.MiddleLeft);
                 if (known && n.IsFight) UiKit.Text(new Rect(x + 72f, y + 32f, w - 72f, 20f), Ladder.Stages[Mathf.Clamp(n.enemy, 0, Ladder.Count - 1)].name, 12f, new Color(1f, 0.6f, 0.45f), TextAnchor.MiddleLeft, false);
                 y += 72f;
