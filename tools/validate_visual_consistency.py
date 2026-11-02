@@ -116,7 +116,7 @@ def check_design_system():
         "map herbalist preview":
             'case NodeType.Herbalist: return "UI/npc_3";' in map_code,
         "map story cards unified":
-            'VisualIdentity.Portrait(r, tex)' in map_code,
+            'VisualIdentity.Portrait(r, UiKit.Tex(tex) != null ? tex : "UI/path_panorama")' in map_code,
         "inventory unified":
             "VisualIdentity.Surface(panel" in inventory and
             "VisualIdentity.Heading(" in inventory,
