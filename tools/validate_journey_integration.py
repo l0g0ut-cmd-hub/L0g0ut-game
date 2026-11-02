@@ -249,7 +249,11 @@ def check_selection_screens():
     assert "DrawJourneySelectionLegacy();" in menu
     hud = read("Assets/_Project/Scripts/Game/DuelHud.cs")
     assert "pp = JourneyChoice.Face(JourneyChoice.Hero);" in hud
-    print("Selection screens: 2 painted screens, glow, 3 hero faces")
+    for i in (1, 2):
+        check_png("Assets/_Project/Resources/UI/map_rider_16_hero%d.png" % i, 1024, 1024)
+    screen = read("Assets/_Project/Scripts/Game/MapScreen.cs")
+    assert '"UI/map_rider_16_hero" + JourneyChoice.Hero' in screen
+    print("Selection screens: 2 painted screens, glow, 3 hero faces; 3 map riders")
 
 
 def check_heal():

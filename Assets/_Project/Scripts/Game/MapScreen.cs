@@ -604,7 +604,11 @@ namespace BladePath
         void DrawHero()
         {
             if (Event.current.type != EventType.Repaint) return;
-            Texture2D riderAtlas = UiKit.Tex("UI/map_rider_16");
+            // Each traveller rides their own 16-frame sheet: Dzin map_rider_16,
+            // Akiko map_rider_16_hero1, Ren map_rider_16_hero2 (Dzin as fallback).
+            Texture2D riderAtlas = JourneyChoice.Hero > 0
+                ? UiKit.Tex("UI/map_rider_16_hero" + JourneyChoice.Hero) : null;
+            if (riderAtlas == null) riderAtlas = UiKit.Tex("UI/map_rider_16");
             // The new rider sheet must be a four-by-four texture; fall back to
             // the approved old painted rider if an incomplete atlas is imported.
             bool newSheet = riderAtlas != null && riderAtlas.width >= 512 &&
