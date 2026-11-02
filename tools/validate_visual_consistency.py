@@ -114,7 +114,7 @@ def check_design_system():
         "map NPC art not low-res placeholders":
             'Pack02Art(' not in map_code,
         "map herbalist preview":
-            'case NodeType.Herbalist: return "UI/npc_4";' in map_code,
+            'case NodeType.Herbalist: return "UI/pack02/herbalist";' in map_code,
         "map story cards unified":
             'VisualIdentity.Portrait(r, tex)' in map_code,
         "inventory unified":
@@ -139,15 +139,20 @@ def check_design_system():
             raise AssertionError(f"Visual regression: {key}")
         print("UI OK", key)
 
-    required = [
-        "event_0.png", "event_1.png", "event_2.png", "event_3.png",
-        "npc_0.png", "npc_1.png", "npc_2.png", "npc_3.png", "npc_4.png",
-        "plank.png", "plank_red.png", "map_icons.png", "path_panorama.png",
+    authored_jpegs = [
+        "event_0.jpg", "event_1.jpg", "event_2.jpg", "event_3.jpg",
+        "npc_0.jpg", "npc_1.jpg", "npc_2.jpg", "npc_3.jpg",
     ]
-    for name in required:
+    originals = ["plank.png", "plank_red.png", "map_icons.png",
+                 "path_panorama.png", "map_dice_3d.png"]
+    for name in authored_jpegs + originals:
         if not (UI / name).is_file():
             raise AssertionError(f"Required original UI art missing: {name}")
-    print(f"AUTHORED ART OK: {len(required)} source illustrations and UI ornaments")
+    herbalist = ROOT / "Assets/Resources/UI/pack02/herbalist.png"
+    if not herbalist.is_file():
+        raise AssertionError("Herbalist fallback art is missing")
+    print(f"AUTHORED ART OK: {len(authored_jpegs)} portraits/events and "
+          f"{len(originals)} ornaments, 1 herbalist resource")
 
 
 if __name__ == "__main__":
