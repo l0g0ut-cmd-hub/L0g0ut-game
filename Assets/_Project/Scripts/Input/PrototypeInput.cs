@@ -64,7 +64,7 @@ namespace BladePath
 
         void Start()
         {
-            Haptics.Enabled = PlayerPrefs.GetInt("haptics", 1) == 1;
+            Haptics.Enabled = PlayerPrefs.GetInt("haptics", 0) == 1;
             duel = FindFirstObjectByType<DuelManager>();
             ai = FindFirstObjectByType<EnemyAI>();
             debugViz = FindFirstObjectByType<CombatDebugVisualizer>();
