@@ -5,7 +5,9 @@ namespace BladePath
     /// <summary>Короткая вибрация на Android (длительность в мс). В редакторе и на других платформах — пусто.</summary>
     public static class Haptics
     {
-        public static bool Enabled = true;
+        // New installs are silent until the player enables vibration.
+        // Existing PlayerPrefs choice is restored by input/menu.
+        public static bool Enabled = false;
 #if UNITY_ANDROID && !UNITY_EDITOR
         static AndroidJavaObject vibrator;
         static bool tried;
@@ -35,6 +37,6 @@ namespace BladePath
         }
 
         // Ссылка на Handheld.Vibrate нужна только затем, чтобы Unity добавил в манифест разрешение VIBRATE.
-        public static void LongBuzz() { Handheld.Vibrate(); }
+        public static void LongBuzz() { if (Enabled) Handheld.Vibrate(); }
     }
 }
