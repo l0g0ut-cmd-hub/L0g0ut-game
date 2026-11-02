@@ -33,7 +33,24 @@ def log(*a): print('MZ', NAME, *a, flush=True)
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 sc = bpy.context.scene; sc.render.fps = 30
-bpy.ops.import_scene.gltf(filepath=SRC)
+# Два входа: GLB без скелета (наш скелет + тепловые веса) или FBX с автоматическим ригом Meshy (Unity Humanoid):
+# тогда суставы берутся из костей Meshy, а веса переносятся с них на наши кости по именам — привязка ткани
+# у Meshy намного аккуратнее (рукава, полы, наплечники не растягиваются «крыльями»).
+RIG = SRC.lower().endswith('.fbx')
+MB = {}; MPAR = {}
+if RIG:
+    bpy.ops.import_scene.fbx(filepath=SRC, automatic_bone_orientation=False, ignore_leaf_bones=False)
+    arm = [o for o in bpy.data.objects if o.type == 'ARMATURE'][0]
+    arm.data.pose_position = 'REST'; arm.animation_data_clear(); bpy.context.view_layer.update()
+    for b in arm.data.bones:
+        MB[b.name] = (arm.matrix_world @ b.head_local, arm.matrix_world @ b.tail_local)
+        MPAR[b.name] = b.parent.name if b.parent else None
+    for o in bpy.data.objects:
+        if o.type == 'MESH':
+            for mm in list(o.modifiers): o.modifiers.remove(mm)
+    log('риг Meshy: костей', len(MB), sorted(MB))
+else:
+    bpy.ops.import_scene.gltf(filepath=SRC)
 meshes = [o for o in bpy.data.objects if o.type == 'MESH']
 for o in meshes:   # всё в мировые координаты, без родителей
     mw = o.matrix_world.copy(); o.parent = None; o.data.transform(mw); o.matrix_world = Matrix.Identity(4)
@@ -44,6 +61,7 @@ if len(meshes) > 1:
 body = meshes[0]
 for o in list(bpy.data.objects):
     if o != body: bpy.data.objects.remove(o, do_unlink=True)
+for act in list(bpy.data.actions): bpy.data.actions.remove(act)
 body.name = NAME + '_Body'; body.data.name = NAME + '_Mesh'
 
 # ------------------------------------------------------------------ 1. масштаб, центр, лицом в −Y
@@ -54,15 +72,18 @@ zmin, zmax = P[:, 2].min(), P[:, 2].max()
 s = BODY_H / (TOP_FRAC * (zmax - zmin))
 P = np.stack([P[:, 0] * s, P[:, 1] * s, (P[:, 2] - zmin) * s], 1)
 band = (P[:, 2] > 0.95 * k) & (P[:, 2] < 1.35 * k)
-P[:, 0] -= np.median(P[band, 0]); P[:, 1] -= np.median(P[band, 1])
+cx, cy = np.median(P[band, 0]), np.median(P[band, 1]); FLIP = 1.0
+P[:, 0] -= cx; P[:, 1] -= cy
 # носки стоп смотрят вперёд: у стопы вылет вперёд от голени больше, чем назад
 shin = (P[:, 2] > 0.25 * k) & (P[:, 2] < 0.35 * k)
 foot = P[:, 2] < 0.04 * k
 shin_y = np.median(P[shin, 1])
 ahead_neg, ahead_pos = shin_y - P[foot, 1].min(), P[foot, 1].max() - shin_y
 if ahead_pos > 1.2 * ahead_neg:
-    P[:, 0] *= -1; P[:, 1] *= -1
+    P[:, 0] *= -1; P[:, 1] *= -1; FLIP = -1.0
     log('развёрнута на 180°: носки смотрели в +Y')
+def tf(v):   # точка исходной модели → в систему меша после масштаба, центровки и разворота
+    return np.array([FLIP * (v[0] * s - cx), FLIP * (v[1] * s - cy), (v[2] - zmin) * s])
 log('масштаб', round(s, 4), 'вершин', len(P), 'полная высота', round(P[:, 2].max(), 3), 'стопы вперёд/назад', round(ahead_neg, 3), round(ahead_pos, 3))
 body.data.vertices.foreach_set('co', P.ravel()); body.data.update()
 
@@ -72,37 +93,71 @@ def mid_y(z0, z1, xmax, side=0):
     if side: m &= side * P[:, 0] > 0
     return float(np.median(P[m, 1])) if m.sum() > 5 else 0.0
 J = {}
-for nm, z in (('hips', 0.92), ('spine', 1.08), ('chest', 1.26), ('neck', 1.47), ('head', 1.56)):
-    J[nm] = (0.0, mid_y((z - 0.03) * k, (z + 0.03) * k, 0.12 * k), z * k)
-J['head_end'] = (0.0, J['head'][1], 1.76 * k)
-for sd, sg in (('L', 1), ('R', -1)):
-    # стопа: центр по X, пятка и носок по Y
-    F = P[(P[:, 2] < 0.06 * k) & (sg * P[:, 0] > 0.01)]
-    fx = float(np.median(F[:, 0])); fy0, fy1 = np.percentile(F[:, 1], 2), np.percentile(F[:, 1], 98)
-    J['ank' + sd] = (fx, float(fy1 - 0.30 * (fy1 - fy0)), 0.10 * k)
-    J['toe' + sd] = (fx, float(fy0 + 0.03 * k), 0.03 * k)
-    J['hip' + sd] = (sg * 0.10 * k, mid_y(0.86 * k, 0.96 * k, 0.20 * k, sg), 0.91 * k)
-    J['knee' + sd] = (0.5 * (J['hip' + sd][0] + fx), mid_y(0.45 * k, 0.51 * k, 0.40 * k, sg) - 0.01 * k, 0.48 * k)
-    # рука в A-позе: плечо — по пропорции, кончик кисти — дальняя вершина вдоль направления «вниз-наружу»
-    yc = J['chest'][1]
-    S = np.array([sg * SHOULDER_X * k, yc, 1.40 * k])
-    # кончик кисти — самая дальняя от оси точка на уровне бёдер и выше (подол и ножны ниже и ближе к телу);
-    # среди точек у этого края берём самую нижнюю — это кончики пальцев
-    cand = (P[:, 2] > 0.62 * k) & (P[:, 2] < 1.30 * k)
-    xm = (sg * P[cand, 0]).max()
-    edge = cand & (sg * P[:, 0] > xm - 0.04 * k)
-    T = P[edge][np.argmin(P[edge, 2])]
-    A = T - S
-    def on_arm(f):
-        q = S + f * A
-        m = (sg * P[:, 0] > 0.2 * k) & (np.abs(P[:, 0] - q[0]) < 0.05 * k) & (np.abs(P[:, 2] - q[2]) < 0.05 * k)
-        if m.sum() > 3: q[1] = float(np.median(P[m, 1]))
-        return tuple(float(v) for v in q)
-    J['sh' + sd] = (sg * 0.04 * k, yc, 1.40 * k)
-    J['arm' + sd] = tuple(float(v) for v in S)
-    J['elb' + sd] = on_arm(0.42); J['wri' + sd] = on_arm(0.77); J['hnd' + sd] = tuple(float(v) for v in T)
-    log('рука', sd, 'кончик', np.round(T, 3), 'угол к вертикали', round(math.degrees(math.atan2(abs(A[0]), -A[2])), 1),
-        '| стопа x', round(fx, 3), 'пятка/носок', round(fy1, 3), round(fy0, 3))
+SPINE0 = None
+if not RIG:   # суставы по замерам меша (у рига Meshy они свои)
+    for nm, z in (('hips', 0.92), ('spine', 1.08), ('chest', 1.26), ('neck', 1.47), ('head', 1.56)):
+        J[nm] = (0.0, mid_y((z - 0.03) * k, (z + 0.03) * k, 0.12 * k), z * k)
+    J['head_end'] = (0.0, J['head'][1], 1.76 * k)
+    for sd, sg in (('L', 1), ('R', -1)):
+        # стопа: центр по X, пятка и носок по Y
+        F = P[(P[:, 2] < 0.06 * k) & (sg * P[:, 0] > 0.01)]
+        fx = float(np.median(F[:, 0])); fy0, fy1 = np.percentile(F[:, 1], 2), np.percentile(F[:, 1], 98)
+        J['ank' + sd] = (fx, float(fy1 - 0.30 * (fy1 - fy0)), 0.10 * k)
+        J['toe' + sd] = (fx, float(fy0 + 0.03 * k), 0.03 * k)
+        J['hip' + sd] = (sg * 0.10 * k, mid_y(0.86 * k, 0.96 * k, 0.20 * k, sg), 0.91 * k)
+        J['knee' + sd] = (0.5 * (J['hip' + sd][0] + fx), mid_y(0.45 * k, 0.51 * k, 0.40 * k, sg) - 0.01 * k, 0.48 * k)
+        # рука в A-позе: плечо — по пропорции, кончик кисти — дальняя вершина вдоль направления «вниз-наружу»
+        yc = J['chest'][1]
+        S = np.array([sg * SHOULDER_X * k, yc, 1.40 * k])
+        # кончик кисти — самая дальняя от оси точка на уровне бёдер и выше (подол и ножны ниже и ближе к телу);
+        # среди точек у этого края берём самую нижнюю — это кончики пальцев
+        cand = (P[:, 2] > 0.62 * k) & (P[:, 2] < 1.30 * k)
+        xm = (sg * P[cand, 0]).max()
+        edge = cand & (sg * P[:, 0] > xm - 0.04 * k)
+        T = P[edge][np.argmin(P[edge, 2])]
+        A = T - S
+        def on_arm(f):
+            q = S + f * A
+            m = (sg * P[:, 0] > 0.2 * k) & (np.abs(P[:, 0] - q[0]) < 0.05 * k) & (np.abs(P[:, 2] - q[2]) < 0.05 * k)
+            if m.sum() > 3: q[1] = float(np.median(P[m, 1]))
+            return tuple(float(v) for v in q)
+        J['sh' + sd] = (sg * 0.04 * k, yc, 1.40 * k)
+        J['arm' + sd] = tuple(float(v) for v in S)
+        J['elb' + sd] = on_arm(0.42); J['wri' + sd] = on_arm(0.77); J['hnd' + sd] = tuple(float(v) for v in T)
+        log('рука', sd, 'кончик', np.round(T, 3), 'угол к вертикали', round(math.degrees(math.atan2(abs(A[0]), -A[2])), 1),
+            '| стопа x', round(fx, 3), 'пятка/носок', round(fy1, 3), round(fy0, 3))
+
+if RIG:
+    # суставы — из костей Meshy (Unity Humanoid: Hips, Spine…, Neck, Head, Left/Right Shoulder, UpperArm, LowerArm, Hand,
+    # UpperLeg, LowerLeg, Foot, Toes). Позвоночник — цепочка от шеи вниз до таза.
+    def H(nm): return tuple(float(x) for x in tf(MB[nm][0]))
+    def find(*keys):
+        for nm in MB:
+            low = nm.lower().replace('_', '')
+            if all(kk in low for kk in keys): return nm
+        return None
+    neck = find('neck'); head = find('head') if find('head') != find('headend') else None
+    head = next((nm for nm in MB if nm.lower() == 'head'), head)
+    chain = []; cur = MPAR.get(neck)
+    while cur: chain.append(cur); cur = MPAR.get(cur)
+    chain.reverse()   # Hips, Spine, Spine1…
+    hipsB = chain[0]; spines = chain[1:]
+    J['hips'] = H(hipsB); J['spine'] = H(spines[0]) if spines else J['hips']
+    J['chest'] = H(spines[-1]) if len(spines) >= 2 else tuple((np.array(J['spine']) + np.array(H(neck))) * 0.5)
+    J['neck'] = H(neck); J['head'] = H(head)
+    hend = find('headend') or find('headtop')
+    J['head_end'] = H(hend) if hend else (J['head'][0], J['head'][1], max(J['head'][2] + 0.18 * k, 1.74 * k))
+    for sd, side in (('L', 'left'), ('R', 'right')):
+        J['sh' + sd] = H(find(side, 'shoulder')); J['arm' + sd] = H(find(side, 'upperarm'))
+        J['elb' + sd] = H(find(side, 'lowerarm') or find(side, 'forearm')); J['wri' + sd] = H(find(side, 'hand'))
+        dv = np.array(J['wri' + sd]) - np.array(J['elb' + sd]); dv /= np.linalg.norm(dv)
+        J['hnd' + sd] = tuple(float(x) for x in np.array(J['wri' + sd]) + dv * 0.17 * k)
+        J['hip' + sd] = H(find(side, 'upperleg') or find(side, 'upleg')); J['knee' + sd] = H(find(side, 'lowerleg') or find(side, 'leg', 'low'))
+        J['ank' + sd] = H(find(side, 'foot')); toe = find(side, 'toes') or find(side, 'toe')
+        J['toe' + sd] = H(toe) if toe else (J['ank' + sd][0], J['ank' + sd][1] - 0.14 * k, 0.03 * k)
+    SPINE0 = spines[0] if spines else None
+    log('суставы из рига', {kk: tuple(round(x, 3) for x in v) for kk, v in J.items()})
+    if J['armL'][0] < 0: log('ВНИМАНИЕ: левая рука Meshy оказалась на −X')
 
 # ------------------------------------------------------------------ 2б. пальцы в кулак (у Meshy ладони раскрыты)
 # Пальцы сгибаются в трёх суставах вокруг поперечной оси кисти к ладони (ладонь в A-позе — к бедру),
@@ -150,37 +205,69 @@ for sd in 'LR':
 bpy.ops.object.mode_set(mode='OBJECT')
 
 # ------------------------------------------------------------------ 3. веса: тепловой метод на воксельном прокси
+def our_bone(g):
+    low = g.lower().replace('_', '')
+    sd = '.L' if low.startswith('left') else '.R' if low.startswith('right') else ''
+    if sd:
+        if 'shoulder' in low: return 'Shoulder' + sd
+        if 'upperarm' in low: return 'UpperArm' + sd
+        if 'lowerarm' in low or 'forearm' in low: return 'Forearm' + sd
+        if 'hand' in low or any(f in low for f in ('thumb', 'index', 'middle', 'ring', 'pinky', 'finger')): return 'Hand' + sd
+        if 'upperleg' in low or 'upleg' in low or 'thigh' in low: return 'UpperLeg' + sd
+        if 'lowerleg' in low or 'calf' in low or low.endswith('leg'): return 'LowerLeg' + sd
+        if 'foot' in low or 'toe' in low: return 'Foot' + sd
+    if 'neck' in low: return 'Neck'
+    if 'head' in low: return 'Head'
+    if g == SPINE0: return 'Spine'
+    if 'spine' in low or 'chest' in low: return 'Chest'
+    return 'Hips'
+if RIG:
+    t = time.time()
+    src_names = [g.name for g in body.vertex_groups]
+    tgt = {i: our_bone(nm) for i, nm in enumerate(src_names)}
+    acc = {}
+    for v in body.data.vertices:
+        for ge in v.groups:
+            key = (v.index, tgt[ge.group]); acc[key] = acc.get(key, 0.0) + ge.weight
+    for g in list(body.vertex_groups): body.vertex_groups.remove(g)
+    made = {}
+    for (vi, bn), w in acc.items():
+        if bn not in made: made[bn] = body.vertex_groups.new(name=bn)
+        made[bn].add([vi], float(w), 'ADD')
+    log('веса из рига Meshy:', {nm: tgt[i] for i, nm in enumerate(src_names)}, round(time.time() - t, 1), 'с')
 t = time.time()
-proxy = body.copy(); proxy.data = body.data.copy(); proxy.name = 'Proxy'; sc.collection.objects.link(proxy)
-rm = proxy.modifiers.new('rm', 'REMESH'); rm.mode = 'VOXEL'; rm.voxel_size = VOXEL
-bpy.ops.object.select_all(action='DESELECT'); proxy.select_set(True); bpy.context.view_layer.objects.active = proxy
-bpy.ops.object.modifier_apply(modifier='rm')
-bm = bmesh.new(); bm.from_mesh(proxy.data); bm.verts.ensure_lookup_table()
-comp = [-1] * len(bm.verts); sizes = []
-for v in bm.verts:
-    if comp[v.index] >= 0: continue
-    cid = len(sizes); comp[v.index] = cid; st = [v]; cnt = 0
-    while st:
-        x = st.pop(); cnt += 1
-        for e in x.link_edges:
-            o = e.other_vert(x)
-            if comp[o.index] < 0: comp[o.index] = cid; st.append(o)
-    sizes.append(cnt)
-big = max(range(len(sizes)), key=lambda i: sizes[i])
-bmesh.ops.delete(bm, geom=[v for v in bm.verts if comp[v.index] != big], context='VERTS')
-bm.to_mesh(proxy.data); bm.free()
-bpy.ops.object.select_all(action='DESELECT'); proxy.select_set(True); rig.select_set(True); bpy.context.view_layer.objects.active = rig
-bpy.ops.object.parent_set(type='ARMATURE_AUTO')
-for mm in list(proxy.modifiers): proxy.modifiers.remove(mm)
-proxy.parent = None; proxy.matrix_world = Matrix.Identity(4)
-for g in proxy.vertex_groups: body.vertex_groups.new(name=g.name)
-dt = body.modifiers.new('dt', 'DATA_TRANSFER'); dt.object = proxy; dt.use_vert_data = True
-dt.data_types_verts = {'VGROUP_WEIGHTS'}; dt.vert_mapping = 'POLYINTERP_NEAREST'
-dt.layers_vgroup_select_src = 'ALL'; dt.layers_vgroup_select_dst = 'NAME'
-bpy.ops.object.select_all(action='DESELECT'); body.select_set(True); bpy.context.view_layer.objects.active = body
-bpy.ops.object.modifier_apply(modifier='dt')
-bpy.data.objects.remove(proxy, do_unlink=True)
-log('веса (тепловой метод)', round(time.time() - t, 1), 'с, островов прокси', len(sizes), 'вершин прокси в главном', sizes[big])
+if RIG: pass
+else:
+    proxy = body.copy(); proxy.data = body.data.copy(); proxy.name = 'Proxy'; sc.collection.objects.link(proxy)
+    rm = proxy.modifiers.new('rm', 'REMESH'); rm.mode = 'VOXEL'; rm.voxel_size = VOXEL
+    bpy.ops.object.select_all(action='DESELECT'); proxy.select_set(True); bpy.context.view_layer.objects.active = proxy
+    bpy.ops.object.modifier_apply(modifier='rm')
+    bm = bmesh.new(); bm.from_mesh(proxy.data); bm.verts.ensure_lookup_table()
+    comp = [-1] * len(bm.verts); sizes = []
+    for v in bm.verts:
+        if comp[v.index] >= 0: continue
+        cid = len(sizes); comp[v.index] = cid; st = [v]; cnt = 0
+        while st:
+            x = st.pop(); cnt += 1
+            for e in x.link_edges:
+                o = e.other_vert(x)
+                if comp[o.index] < 0: comp[o.index] = cid; st.append(o)
+        sizes.append(cnt)
+    big = max(range(len(sizes)), key=lambda i: sizes[i])
+    bmesh.ops.delete(bm, geom=[v for v in bm.verts if comp[v.index] != big], context='VERTS')
+    bm.to_mesh(proxy.data); bm.free()
+    bpy.ops.object.select_all(action='DESELECT'); proxy.select_set(True); rig.select_set(True); bpy.context.view_layer.objects.active = rig
+    bpy.ops.object.parent_set(type='ARMATURE_AUTO')
+    for mm in list(proxy.modifiers): proxy.modifiers.remove(mm)
+    proxy.parent = None; proxy.matrix_world = Matrix.Identity(4)
+    for g in proxy.vertex_groups: body.vertex_groups.new(name=g.name)
+    dt = body.modifiers.new('dt', 'DATA_TRANSFER'); dt.object = proxy; dt.use_vert_data = True
+    dt.data_types_verts = {'VGROUP_WEIGHTS'}; dt.vert_mapping = 'POLYINTERP_NEAREST'
+    dt.layers_vgroup_select_src = 'ALL'; dt.layers_vgroup_select_dst = 'NAME'
+    bpy.ops.object.select_all(action='DESELECT'); body.select_set(True); bpy.context.view_layer.objects.active = body
+    bpy.ops.object.modifier_apply(modifier='dt')
+    bpy.data.objects.remove(proxy, do_unlink=True)
+    log('веса (тепловой метод)', round(time.time() - t, 1), 'с, островов прокси', len(sizes), 'вершин прокси в главном', sizes[big])
 
 # ------------------------------------------------------------------ 4. поправки весов
 V = get_co(); nv = len(V)
@@ -197,7 +284,7 @@ W = np.zeros((nv, len(names)))
 for v in body.data.vertices:
     for ge in v.groups: W[v.index, ge.group] = ge.weight
 weak = [nm for nm in SEGS if W[:, gix[nm]].sum() < 3.0]
-if weak:
+if weak and not RIG:
     # тепловой метод не справился (кость вне объёма меша): веса по расстоянию до костей, как в build_ronin.py
     log('тепловой метод не дал весов костям', weak, '→ веса по расстоянию')
     W = np.zeros((nv, len(names)))
@@ -212,7 +299,8 @@ def seg_d(a, b):
     tt = np.clip(((V - a) @ ab) / (ab @ ab), 0, 1)
     return np.linalg.norm(V - (a + np.outer(tt, ab)), axis=1)
 # руки двигают только то, что в «капсуле» руки: иначе полы, ножны и наплечники улетают за кистью, когда она поднимает катану
-for sd in 'LR':
+# (у рига Meshy привязка рукавов своя и аккуратная — не трогаем)
+for sd in ('' if RIG else 'LR'):
     dist = np.minimum.reduce([seg_d(J['sh' + sd], J['arm' + sd]) - (0.05 * k + ARM_PAD), seg_d(J['arm' + sd], J['elb' + sd]) - (0.10 * k + ARM_PAD),
                               seg_d(J['elb' + sd], J['wri' + sd]) - (0.09 * k + ARM_PAD), seg_d(J['wri' + sd], J['hnd' + sd]) - (0.08 * k + 0.5 * ARM_PAD)])
     outside = (dist > 0.0) & (V[:, 2] < 1.32 * k)

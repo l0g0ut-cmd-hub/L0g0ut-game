@@ -29,7 +29,7 @@ jobs:
           set -e
           mkdir -p out/Models out/Art out/preview
           build() {
-            MESHY_GLB="tools/models/meshy/$1.glb" MESHY_NAME="$2" MESHY_OUT=out/Models \
+            MESHY_GLB="$(ls tools/models/meshy/$1.fbx tools/models/meshy/$1.glb 2>/dev/null | head -1)" MESHY_NAME="$2" MESHY_OUT=out/Models \
             BODY_H="$3" TOP_FRAC="$4" ARM_PAD="$5" SHOULDER_X="$6" HEAD_Z="${7:-0}" \
               blender -b --factory-startup --python tools/blender/build_meshy_char.py > "out/$2.log" 2>&1 || true
             grep -E "^MZ|Error|Traceback" "out/$2.log" | head -60
@@ -37,7 +37,7 @@ jobs:
             mv out/Models/$2_*.png out/preview/ 2>/dev/null || true
             rm -f out/Models/$2.blend out/Models/$2.blend1
           }
-          build akiko  Akiko_Player 1.68 0.975 0.00 0.16
+          build akiko_rig Akiko_Player 1.68 0.975 0.00 0.16
           build oni    Oni_Enemy    1.82 0.955 0.02 0.19
           build shogun Shogun_Enemy 1.74 0.925 0.06 0.18
           build fallen Fallen_Enemy 1.74 0.935 0.03 0.18
@@ -48,7 +48,7 @@ jobs:
       - name: Extract textures
         run: |
           python3 -m pip install -q pillow
-          python3 tools/meshy_textures.py tools/models/meshy/akiko.glb Akiko out/Art
+          mkdir -p out/Art/Akiko && cp tools/models/meshy/akiko_rig_albedo.jpg out/Art/Akiko/akiko_albedo.jpg
           python3 tools/meshy_textures.py tools/models/meshy/oni.glb Oni out/Art
           python3 tools/meshy_textures.py tools/models/meshy/shogun.glb Shogun out/Art
           python3 tools/meshy_textures.py tools/models/meshy/fallen.glb Fallen out/Art
