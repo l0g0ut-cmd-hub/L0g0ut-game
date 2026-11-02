@@ -752,39 +752,33 @@ namespace BladePath
             return ps;
         }
 
+        // Scene-local, capped reuse of the exact old soft dust/snow effect.
+        // No new look or atlas: it retains the current dustMat/fogMat palette.
+        readonly List<DustBurstPool> dustPuffs = new List<DustBurstPool>(10);
+
         /// <summary>Пыль из-под ног: рывок, отбрасывание, падение.</summary>
         public void Dust(Vector3 pos, Vector3 dir, int count)
         {
-            if (softMat == null) return;
-            GameObject g = new GameObject("Dust");
-            g.transform.position = pos;
-            Vector3 d = (dir.normalized * 0.8f + Vector3.up * 0.6f);
-            g.transform.rotation = Quaternion.LookRotation(d.sqrMagnitude > 1e-4f ? d : Vector3.up);
-            ParticleSystem ps = g.AddComponent<ParticleSystem>();
-            ps.Stop();
-            var main = ps.main;
-            main.loop = false; main.duration = 0.1f;
-            main.startLifetime = new ParticleSystem.MinMaxCurve(0.5f, 1.1f);
-            main.startSpeed = new ParticleSystem.MinMaxCurve(0.2f, 0.9f);
-            main.startSize = new ParticleSystem.MinMaxCurve(0.05f, 0.12f);
-            bool snowDust = Shader.GetGlobalFloat(SnowId) > 0.3f && !(Weather.Instance != null && Weather.Instance.Raining);
-            main.startColor = snowDust ? new Color(0.8f, 0.85f, 0.94f, 0.42f) : new Color(0.38f, 0.34f, 0.3f, 0.3f);   // в снег — снежная пыль, иначе тёплая серо-бурая
-            main.gravityModifier = -0.02f;
-            main.simulationSpace = ParticleSystemSimulationSpace.World;
-            main.stopAction = ParticleSystemStopAction.Destroy;
-            var em = ps.emission; em.rateOverTime = 0f;
-            em.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, (short)count) });
-            var sp = ps.shape; sp.shapeType = ParticleSystemShapeType.Cone; sp.angle = 70f; sp.radius = 0.12f;
-            var col = ps.colorOverLifetime; col.enabled = true;
-            Gradient gr = new Gradient();
-            gr.SetKeys(new GradientColorKey[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
-                       new GradientAlphaKey[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0f, 1f) });
-            col.color = gr;
-            var sz = ps.sizeOverLifetime; sz.enabled = true;
-            sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.7f), new Keyframe(1f, 1.3f)));
-            main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
-            g.GetComponent<ParticleSystemRenderer>().material = dustMat != null ? dustMat : (fogMat != null ? fogMat : softMat);
-            ps.Play();
+            if (softMat == null || count <= 0) return;
+            DustBurstPool puff = null;
+            for (int i = 0; i < dustPuffs.Count; i++)
+            {
+                DustBurstPool p = dustPuffs[i];
+                if (p != null && !p.Busy) { puff = p; break; }
+            }
+            if (puff == null)
+            {
+                // A hard budget avoids overlapping clouds hiding the fighters.
+                if (dustPuffs.Count >= 10) return;
+                puff = DustBurstPool.Create(transform,
+                    dustMat != null ? dustMat : (fogMat != null ? fogMat : softMat));
+                if (puff == null) return;
+                dustPuffs.Add(puff);
+            }
+            bool snowDust = Shader.GetGlobalFloat(SnowId) > 0.3f &&
+                            !(Weather.Instance != null && Weather.Instance.Raining);
+            int density = Mathf.RoundToInt(count * MobileVfxBudget.ParticleScale);
+            puff.Burst(pos, dir, Mathf.Clamp(density, 1, 64), snowDust);
         }
 
         // трещины в камне под сокрушительным ударом (добивание сверху, удар духа): тёмная паутина трещин, держится до конца раунда
