@@ -794,16 +794,30 @@ namespace BladePath
         }
 
         // ---- глоток из тыквы-горлянки: левая рука с тыквой поднимается ко рту, тыква наклоняется, голова запрокидывается
-        float drinkW, pourW;
+        float drinkW, pourW, drinkVelocity, pourVelocity;
         Transform gourd;
         void DrinkPose(Transform ft, float ys, float dt)
         {
             bool dr = fighter != null && fighter.Drinking;
             float t = dr ? fighter.DrinkT : 9f;
-            float raise = dr ? Smooth(Mathf.Clamp01(t / 0.28f)) * (1f - Smooth(Mathf.Clamp01((t - 0.92f) / 0.23f))) : 0f;
-            float pour = dr ? Smooth(Mathf.Clamp01((t - 0.3f) / 0.15f)) * (1f - Smooth(Mathf.Clamp01((t - 0.78f) / 0.14f))) : 0f;
-            drinkW = Mathf.MoveTowards(drinkW, raise, dt / 0.08f);   // сорвали глоток — рука плавно возвращается на рукоять
-            pourW = Mathf.MoveTowards(pourW, pour, dt / 0.06f);
+            // Smooth continuous motion (sampled at every render frame, not
+            // snapped to keyframes): reach -> raise -> sip -> swallow -> lower.
+            // Sipping starts before DrinkHealAt, and the hand releases the
+            // bottle only after the healing has actually been applied.
+            float raise = dr
+                ? Smooth(Mathf.Clamp01(t / 0.34f)) *
+                  (1f - Smooth(Mathf.Clamp01((t - 0.88f) / 0.27f)))
+                : 0f;
+            float pour = dr
+                ? Smooth(Mathf.Clamp01((t - 0.32f) / 0.22f)) *
+                  (1f - Smooth(Mathf.Clamp01((t - 0.79f) / 0.30f)))
+                : 0f;
+            // SmoothDamp keeps elbow and neck from snapping on early
+            // interruption (taking damage cancels the drink).
+            drinkW = Mathf.SmoothDamp(drinkW, raise, ref drinkVelocity,
+                0.055f, Mathf.Infinity, dt);
+            pourW = Mathf.SmoothDamp(pourW, pour, ref pourVelocity,
+                0.055f, Mathf.Infinity, dt);
             if (drinkW < 0.001f || handL == null || head == null || upperArmL == null || forearmL == null)
             {
                 if (gourd != null && gourd.gameObject.activeSelf) gourd.gameObject.SetActive(false);
@@ -812,7 +826,10 @@ namespace BladePath
             Vector3 up = Vector3.up, fwd = ft.forward, right = ft.right;
             float sc = transform.lossyScale.y;
             // голова запрокидывается на глотке
-            head.rotation = Quaternion.AngleAxis(-28f * pourW, right) * head.rotation;
+            float swallow = dr ? Mathf.Sin(Mathf.Clamp01((t - 0.54f) / 0.42f) *
+                Mathf.PI * 2f) * pourW : 0f;
+            head.rotation = Quaternion.AngleAxis(
+                -23f * pourW + 1.6f * swallow, right) * head.rotation;
             // рот: по кадрам CI кость головы у этой модели — на уровне ушей; рот чуть ниже и впереди
             Vector3 mouth = head.position - up * (0.07f * sc) + fwd * (0.095f * sc);   // по кадру 32: горлышко было у носа — ниже и ближе к губам
             // тыква: сперва поднята к подбородку стоймя, на глотке — дном вверх-вперёд, горлышко у губ
