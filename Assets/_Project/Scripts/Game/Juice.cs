@@ -535,7 +535,11 @@ namespace BladePath
             if (dir.sqrMagnitude < 1e-4f) dir = -normal;
             dir.Normalize();
             Vector3 cone = (dir * 0.75f + normal * 0.45f + Vector3.up * 0.35f).normalized;
-            int count = Mathf.RoundToInt(Mathf.Lerp(50f, 150f, Mathf.Clamp01(strength - 0.3f)) * (kill ? 1.6f : 1f));
+            // Mobile quality budget reduces distant droplets, keeping the main spray
+            // and impact silhouette legible even when the GPU is overloaded.
+            float budget = DuelManager.Gfx == 1 ? MobileVfxBudget.ParticleScale : 0.52f;
+            int count = Mathf.Clamp(Mathf.RoundToInt(Mathf.Lerp(50f, 150f,
+                Mathf.Clamp01(strength - 0.3f)) * (kill ? 1.6f : 1f) * budget), 20, 160);
 
             // 1) струя брызг: вытянутые капли по ходу полёта
             Spray(pos, cone, count, 3.5f * Mathf.Lerp(0.9f, 1.4f, Mathf.Clamp01(strength - 0.5f)), 36f);
@@ -545,7 +549,7 @@ namespace BladePath
             Mist(pos, cone, 10 + Mathf.RoundToInt(10 * strength), 0.9f);
             BloodBurst(pos, (dir * 0.85f + Vector3.up * 0.3f).normalized, (0.42f + 0.28f * Mathf.Clamp01(strength)) * (kill ? 1.35f : 1f));
             // 4) пятна на земле там, куда долетели капли
-            int splats = Mathf.RoundToInt(14 * strength) + (kill ? 18 : 0);
+            int splats = Mathf.Clamp(Mathf.RoundToInt((14 * strength + (kill ? 18 : 0)) * budget), 2, 38);
             for (int i = 0; i < splats; i++)
             {
                 Vector3 v = (Quaternion.AngleAxis(Random.Range(-35f, 35f), Vector3.up) * Quaternion.AngleAxis(Random.Range(-20f, 25f), Vector3.Cross(Vector3.up, cone)) * cone) * Random.Range(1.5f, 6.5f);
@@ -1367,37 +1371,19 @@ namespace BladePath
             Burst1(pos, size, c, life, Additive(ref ringMat, ringTex), 0f, true);
         }
 
+        // A pool shared by all bursts in this arena; cleared automatically on scene unload.
+        CinematicFlashPool flashPool;
+
         void Burst1(Vector3 pos, float size, Color c, float life, Material m, float rotDeg, bool grow = false)
         {
-            if (m == null) return;
-            GameObject g = new GameObject("Flash");
-            g.transform.position = pos;
-            ParticleSystem ps = g.AddComponent<ParticleSystem>();
-            ps.Stop();
-            var main = ps.main;
-            main.loop = false; main.duration = 0.05f;
-            main.startLifetime = life; main.startSpeed = 0f; main.startSize = size;
-            main.startRotation = rotDeg * Mathf.Deg2Rad;
-            main.startColor = c;
-            main.simulationSpace = ParticleSystemSimulationSpace.World;
-            main.stopAction = ParticleSystemStopAction.Destroy;
-            main.useUnscaledTime = true;   // вспышка не застывает в хит-стопе
-            var em = ps.emission; em.rateOverTime = 0f;
-            em.SetBursts(new ParticleSystem.Burst[] { new ParticleSystem.Burst(0f, (short)1) });
-            var sh = ps.shape; sh.enabled = false;
-            var sz = ps.sizeOverLifetime; sz.enabled = true;
-            sz.size = grow ? new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.15f, 0f, 4f), new Keyframe(1f, 1f, 0f, 0f)))
-                           : new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.55f, 0f, 5f), new Keyframe(0.25f, 1f), new Keyframe(1f, 0.75f)));
-            var col = ps.colorOverLifetime; col.enabled = true;
-            Gradient gr = new Gradient();
-            gr.SetKeys(new GradientColorKey[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
-                       new GradientAlphaKey[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0.85f, 0.3f), new GradientAlphaKey(0f, 1f) });
-            col.color = gr;
-            ParticleSystemRenderer r = g.GetComponent<ParticleSystemRenderer>();
-            r.material = m; r.renderMode = ParticleSystemRenderMode.Billboard;
-            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; r.receiveShadows = false;
-            r.sortingFudge = -10f;   // поверх искр и крови
-            ps.Play();
+            if (m == null || size <= 0f) return;
+            if (flashPool == null)
+            {
+                GameObject owner = new GameObject("CinematicFlashPool");
+                owner.transform.SetParent(transform, false);
+                flashPool = owner.AddComponent<CinematicFlashPool>();
+            }
+            flashPool.Emit(pos, size, c, life, m, rotDeg, grow);
         }
 
         // искры: раскалённые (белое → оранжевое → тёмно-красное), тают и тормозят в воздухе, отскакивают от земли
@@ -1406,7 +1392,9 @@ namespace BladePath
         void Sparks(Vector3 pos, Vector3 normal, int count, float power = 1f)
         {
             if (softMat == null) return;
-            count = Mathf.Clamp(count, 1, DuelManager.Gfx == 1 ? 28 : 14);
+            int budget = Mathf.RoundToInt((DuelManager.Gfx == 1 ? 28f : 14f) *
+                MobileVfxBudget.ParticleScale);
+            count = Mathf.Clamp(count, 1, Mathf.Max(6, budget));
             ImpactSparkPool.Emit(pos, normal, count, power,
                 Additive(ref addMat, SoftSprites.Disc), transform);
         }
