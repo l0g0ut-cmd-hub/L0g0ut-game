@@ -19,6 +19,7 @@ namespace BladePath
         static Color32[] px;
         static float[] fa;               // альфа тумана 0..1 по пикселям маски
         static string key; static int done;   // область/радиус и сколько точек уже учтено
+        static float beaconDone;              // до какого радиуса уже открыт круг смотровой башни
         static bool dirty;
         static readonly List<Vector3> puffs = new List<Vector3>(64);   // x, y (0..1 карты), фаза
 
@@ -47,7 +48,7 @@ namespace BladePath
                     px[i] = tilePx[((y * 2 * tileH / MH) % tileH) * tileW + (x * 3 * tileW / MW) % tileW];   // плитка: 3×2 по карте
                     fa[i] = 1f;
                 }
-            done = 0; dirty = true;
+            done = 0; beaconDone = 0f; dirty = true;
         }
 
         /// <summary>Открыть круг радиуса r (точки карты 810×540) вокруг p (доли карты): альфа только убывает.</summary>
@@ -98,12 +99,14 @@ namespace BladePath
 
         /// <summary>
         /// Нарисовать туман поверх карты (после дорог, до мест). seen — точки, где побывал герой, r — радиус обзора;
-        /// stateKey меняется при смене области или радиуса (тогда маска считается заново).
+        /// stateKey меняется при смене области или радиуса (тогда маска считается заново). beacon/beaconR — смотровая башня (0 — не горит).
         /// </summary>
-        public static void Draw(Rect view, float u0, float uw, IList<Vector2> seen, float r, string stateKey)
+        public static void Draw(Rect view, float u0, float uw, IList<Vector2> seen, float r, string stateKey, Vector2 beacon, float beaconR)
         {
             if (mask == null || stateKey != key || seen.Count < done) { key = stateKey; Reset(); }
             for (; done < seen.Count; done++) Open(seen[done], r);
+            // смотровая башня: круг растёт, пока огонь разгорается (альфа только убывает — можно открывать по кусочку)
+            if (beaconR > beaconDone + 2f || (beaconR > 0f && beaconDone == 0f)) { Open(beacon, beaconR); beaconDone = beaconR; }
             if (Event.current.type != EventType.Repaint) return;
             if (dirty) Upload();
             GUI.DrawTextureWithTexCoords(view, mask, new Rect(u0, 0f, uw, 1f));

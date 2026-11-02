@@ -270,6 +270,7 @@ namespace BladePath
             DrawJourneyFootprints();
             DrawRouteGlints();
             DrawFog(uw);
+            DrawTower();
             DrawNodes(interactive && modal == Modal.None && moveTo < 0);
             DrawHero();
             MapClouds.Draw(Campaign.Region, new Rect(mapX, 0f, viewW, MapH), u0, uw);   // погода над областью
@@ -384,17 +385,75 @@ namespace BladePath
         /// </summary>
         bool Known(MapNode n)
         {
+            if (!JourneyChoice.FogEnabled) return true;   // туман войны выключен на экране сложности — всё видно
             if (n.done || n.Type == NodeType.Boss || n.Type == NodeType.Start) return true;
             return FogOfWar.At(new Vector2(n.x, n.y)) < 0.5f;
         }
 
         /// <summary>Соседнее место в тумане: дорога туда видна, а что там — нет (метка «?»).</summary>
-        bool Hinted(int i) { return Campaign.Adjacent(Campaign.At, i); }
+        bool Hinted(int i) { return JourneyChoice.FogEnabled && Campaign.Adjacent(Campaign.At, i); }
+
+        const float TowerR = 290f;   // смотровая башня открывает вокруг себя, точки карты 810×540
+        float towerLitAt = -100f; bool towerWasLit;
+
+        /// <summary>Радиус, открытый башней сейчас: огонь разгорается за 1,8 с (если зажжён при открытой карте).</summary>
+        float TowerReveal()
+        {
+            if (!Campaign.TowerLit) { towerWasLit = false; return 0f; }
+            if (!towerWasLit) { towerWasLit = true; towerLitAt = shownAt > Time.unscaledTime - 0.2f ? -100f : Time.unscaledTime; }
+            float k = Mathf.Clamp01((Time.unscaledTime - towerLitAt) / 1.8f);
+            return TowerR * (1f - (1f - k) * (1f - k));
+        }
+
+        /// <summary>
+        /// Смотровая башня на карте: силуэт башни (UI/map_watchtower, если есть) у места; пока огонь не зажжён —
+        /// тлеющая искра, видная даже сквозь туман; зажжённая — сигнальный костёр с ореолом.
+        /// </summary>
+        void DrawTower()
+        {
+            if (!JourneyChoice.FogEnabled || Event.current.type != EventType.Repaint || Campaign.Nodes.Count == 0) return;
+            MapNode n = Campaign.Nodes[Campaign.Tower];
+            Vector2 p = P(n) + new Vector2(30f, -30f);
+            if (p.x < mapX - 60f || p.x > mapX + viewW + 60f) return;
+            bool lit = Campaign.TowerLit;
+            float t = Time.unscaledTime;
+            Color oc = GUI.color;
+            Texture2D glow = UiKit.Tex("FX/glow_pool"), fire = UiKit.Tex("FX/brazier_fire"), tower = UiKit.Tex("UI/map_watchtower");
+            float pulse = 0.5f + 0.5f * Mathf.Sin(t * 3.1f) * Mathf.Sin(t * 1.7f + 1f);
+            if (glow != null)
+            {
+                float g = lit ? 78f + 10f * pulse : 40f + 6f * pulse;
+                GUI.color = new Color(1f, 0.62f, 0.22f, lit ? 0.5f : 0.32f);
+                GUI.DrawTexture(new Rect(p.x - g, p.y - 26f - g, g * 2f, g * 2f), glow);
+            }
+            if (tower != null) { GUI.color = Color.white; GUI.DrawTexture(new Rect(p.x - 30f, p.y - 62f, 60f, 72f), tower); }
+            else
+            {   // запасной силуэт: деревянная вышка из линий
+                Color wood = new Color(0.22f, 0.14f, 0.08f, 0.95f);
+                UiKit.Line(new Vector2(p.x - 13f, p.y + 6f), new Vector2(p.x - 7f, p.y - 34f), 3f, wood);
+                UiKit.Line(new Vector2(p.x + 13f, p.y + 6f), new Vector2(p.x + 7f, p.y - 34f), 3f, wood);
+                UiKit.Line(new Vector2(p.x - 11f, p.y - 8f), new Vector2(p.x + 11f, p.y - 8f), 2f, wood);
+                UiKit.Line(new Vector2(p.x - 12f, p.y - 8f), new Vector2(p.x + 9f, p.y - 24f), 1.6f, wood);
+                UiKit.Rect(new Rect(p.x - 12f, p.y - 38f, 24f, 5f), wood);
+            }
+            if (fire != null)
+            {
+                int f = (int)(t * 12f) % 8;
+                float fs = lit ? 34f : 16f;
+                GUI.color = lit ? Color.white : new Color(1f, 0.7f, 0.5f, 0.75f);
+                GUI.DrawTextureWithTexCoords(new Rect(p.x - fs * 0.5f, p.y - (tower != null ? 58f : 36f) - fs * 0.9f, fs, fs), fire,
+                    new Rect((f % 4) * 0.25f, f < 4 ? 0.5f : 0f, 0.25f, 0.5f));
+            }
+            GUI.color = oc;
+        }
 
         // ---- fog of war (FogOfWar.cs): расходится вокруг героя по мере движения и не возвращается
         void DrawFog(float uw)
         {
-            FogOfWar.Draw(new Rect(mapX, 0f, viewW, MapH), u0, uw, Campaign.Seen, SightR, Campaign.Region + ":" + SightR);
+            if (!JourneyChoice.FogEnabled) return;
+            MapNode tw = Campaign.Nodes.Count > 0 ? Campaign.Nodes[Campaign.Tower] : null;
+            FogOfWar.Draw(new Rect(mapX, 0f, viewW, MapH), u0, uw, Campaign.Seen, SightR, Campaign.Region + ":" + SightR,
+                tw != null ? new Vector2(tw.x, tw.y) : Vector2.zero, TowerReveal());
         }
 
         // Shortest route through the authored road graph, including future nodes.

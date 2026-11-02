@@ -28,6 +28,13 @@ namespace BladePath
             "Без права на ошибку. Враги умнее и опаснее."
         };
 
+        /// <summary>Туман войны на карте похода (и смотровые башни). Выбирается на экране сложности; по умолчанию выключен.</summary>
+        public static bool FogEnabled
+        {
+            get { return PlayerPrefs.GetInt("fog_of_war", 0) == 1; }
+            set { PlayerPrefs.SetInt("fog_of_war", value ? 1 : 0); PlayerPrefs.Save(); }
+        }
+
         public static int Hero
         {
             get { return Mathf.Clamp(PlayerPrefs.GetInt("journey_hero", 0), 0, 2); }

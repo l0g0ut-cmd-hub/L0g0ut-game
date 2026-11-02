@@ -48,7 +48,9 @@ namespace BladePath
             public List<MapNode> nodes = new List<MapNode>();
             // Only actual moves, never inferred from completed nodes. Persisted across restarts.
             public List<int> travelled = new List<int>();
-            public List<Vector2> seen = new List<Vector2>();   // туман войны: где побывал герой (доли карты), по ним туман расходится
+            public List<Vector2> seen = new List<Vector2>();
+            public int tower = -1;          // смотровая башня (место, с которого видно далеко); −1 — ещё не выбрана
+            public bool towerLit;           // на башне зажжён огонь: туман вокруг неё разошёлся   // туман войны: где побывал герой (доли карты), по ним туман расходится
         }
 
         public static readonly string[] RegionNames = { "ЛЕС ТЕНЕЙ", "ГОРЫ ОНИ", "ПРОКЛЯТЫЙ СЁГУНАТ" };
@@ -215,11 +217,39 @@ namespace BladePath
                 return D.seen;
             }
         }
+        /// <summary>Смотровая башня области: место в середине пути (не начало, не владыка, не травница).</summary>
+        public static int Tower
+        {
+            get
+            {
+                if (D.tower < 0 || D.tower >= D.nodes.Count)
+                {
+                    int L = 0; foreach (MapNode n in D.nodes) L = Mathf.Max(L, n.layer + 1);
+                    List<int> pick = new List<int>();
+                    for (int i = 0; i < D.nodes.Count; i++)
+                    {
+                        MapNode n = D.nodes[i];
+                        if (n.layer >= 2 && n.layer <= L - 3 && n.Type != NodeType.Herbalist && n.Type != NodeType.Boss) pick.Add(i);
+                    }
+                    if (pick.Count == 0) for (int i = 1; i < D.nodes.Count - 1; i++) pick.Add(i);
+                    D.tower = pick.Count > 0 ? pick[(D.region * 7 + D.nodes.Count) % pick.Count] : 0;
+                    Save();
+                }
+                return D.tower;
+            }
+        }
+        public static bool TowerLit { get { return D.towerLit; } }
+
         /// <summary>Герой здесь: туман вокруг расходится. Точки реже ~12 точек карты не копятся; сохраняется по прибытии.</summary>
         public static void Reveal(Vector2 p)
         {
             IList<Vector2> s = Seen;
             Vector2 last = s[s.Count - 1];
+            if (!D.towerLit && D.nodes.Count > 0)
+            {   // герой у подножия смотровой башни — на ней загорается сигнальный огонь
+                MapNode tw = D.nodes[Tower];
+                if (((new Vector2(tw.x, tw.y) - p) * new Vector2(810f, 540f)).sqrMagnitude < 30f * 30f) { D.towerLit = true; Save(); }
+            }
             if (((last - p) * new Vector2(810f, 540f)).sqrMagnitude < 144f) return;
             D.seen.Add(p);
             if (D.seen.Count > 600) D.seen.RemoveRange(0, D.seen.Count - 600);
@@ -291,6 +321,7 @@ namespace BladePath
             if (dd.travelled == null) dd.travelled = new List<int>();
             dd.travelled.Clear(); dd.travelled.Add(0);
             if (dd.seen == null) dd.seen = new List<Vector2>();
+            dd.tower = -1; dd.towerLit = false;
             dd.seen.Clear();   // новая область — снова в тумане (первая точка — начало пути, см. Seen)
             Vector2[][] spots = Spots[Mathf.Clamp(region, 0, Spots.Length - 1)];
             int L = spots.Length;

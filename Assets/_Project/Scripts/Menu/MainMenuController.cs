@@ -263,6 +263,12 @@ namespace BladePath
                 }
             }
 
+            if (difficulty)
+            {
+                Rect fr = SelRect(1372f, 694f, 1540f, 762f);
+                DrawFogToggle(new Rect(ox + fr.x * s, oy + fr.y * s, fr.width * s, fr.height * s));
+            }
+
             Rect ok = difficulty ? DifficultyConfirm : TravellerStart;
             Rect back = difficulty ? DifficultyBack : TravellerBack;
             Color oldBg = GUI.backgroundColor;
@@ -280,6 +286,28 @@ namespace BladePath
                     StartCoroutine(LoadBattle());
                 }
             }
+        }
+
+        /// <summary>
+        /// Переключатель «Туман войны» на экране сложности (rect — в пикселях экрана). Выключено по умолчанию:
+        /// тогда вся карта похода открыта, без смотровых башен и меток «?».
+        /// </summary>
+        void DrawFogToggle(Rect screenRect)
+        {
+            Matrix4x4 old = UiKit.Begin();
+            float k = UiKit.Scale;
+            Rect r = new Rect(screenRect.x / k, screenRect.y / k, screenRect.width / k, screenRect.height / k);
+            bool on = JourneyChoice.FogEnabled;
+            UiKit.Rect(r, new Color(0.05f, 0.035f, 0.03f, 0.82f));
+            UiKit.Rect(new Rect(r.x, r.yMax - 2f, r.width, 2f), on ? VisualIdentity.BrassLight : new Color(0.4f, 0.34f, 0.28f, 0.8f));
+            Vector2 box = new Vector2(r.x + 16f, r.center.y);
+            UiKit.Ring(box, 8f, VisualIdentity.BrassLight, true);
+            if (on) UiKit.Disc(box, 5f, VisualIdentity.BrassLight);
+            UiKit.Text(new Rect(r.x + 28f, r.y + 2f, r.width - 30f, r.height * 0.5f), "ТУМАН ВОЙНЫ", 11f, VisualIdentity.Parchment, TextAnchor.MiddleLeft, false);
+            UiKit.Text(new Rect(r.x + 28f, r.center.y - 1f, r.width - 30f, r.height * 0.5f), on ? "включён" : "выключен", 10f,
+                on ? VisualIdentity.BrassLight : VisualIdentity.Subdued, TextAnchor.MiddleLeft, false);
+            if (GUI.Button(r, GUIContent.none, GUIStyle.none)) { JourneyChoice.FogEnabled = !on; Haptics.Pulse(12); }
+            GUI.matrix = old;
         }
 
         /// <summary>Прежний экран выбора (рисуется интерфейсом) — если картины экранов не загрузились.</summary>
@@ -370,6 +398,13 @@ namespace BladePath
                 }
             }
 
+            if (newJourneyStep == 1)
+            {
+                GUI.matrix = old;
+                float k = UiKit.Scale;
+                DrawFogToggle(new Rect((board.x + 255f) * k, (board.yMax - 65f) * k, 170f * k, 44f * k));
+                UiKit.Begin();
+            }
             Rect back = new Rect(board.x + 36f, board.yMax - 65f, 205f, 44f);
             Rect proceed = new Rect(board.xMax - 296f, board.yMax - 65f, 260f, 44f);
             if (VisualIdentity.Button(back, "НАЗАД")) newJourneyStep--;

@@ -70,28 +70,48 @@ namespace BladePath
 
         public static string SkyName(int sky) { return sky == 2 ? "гроза" : sky == 1 ? "дождь" : "ясно"; }
 
-        static Rect Cell(int row, int col) { return new Rect(col * 0.5f, row == 0 ? 0.5f : 0f, 0.5f, 0.5f); }   // UI/map_clouds: сверху дождевые, снизу грозовые
-
-        /// <summary>
-        /// Один слой облака: клетка атласа, повёрнутая и растянутая по-своему. Облако — это два слоя двух разных форм,
-        /// которые медленно вращаются навстречу и перетекают друг в друга, поэтому силуэт всё время меняется.
-        /// </summary>
-        static void Layer(Texture2D tex, Rect cell, Vector2 c, float w, float h, float angle, Color col)
+        static Rect Cell(int row, int col, bool flip)
         {
-            if (col.a <= 0.01f) return;
-            Matrix4x4 m = GUI.matrix;
-            GUIUtility.RotateAroundPivot(angle, c * UiKit.Scale);
-            GUI.color = col;
-            GUI.DrawTextureWithTexCoords(new Rect(c.x - w * 0.5f, c.y - h * 0.5f, w, h), tex, cell);
-            GUI.matrix = m;
+            // UI/map_clouds: сверху дождевые, снизу грозовые; flip — зеркально (больше разных форм из четырёх клеток)
+            return flip ? new Rect(col * 0.5f + 0.5f, row == 0 ? 0.5f : 0f, -0.5f, 0.5f) : new Rect(col * 0.5f, row == 0 ? 0.5f : 0f, 0.5f, 0.5f);
         }
 
-        /// <summary>Нарисовать облака поверх карты (после мест и героя): тень на земле, дождь, само облако и молнии.</summary>
+        static float Hash(float a) { float x = Mathf.Sin(a * 12.9898f) * 43758.5453f; return x - Mathf.Floor(x); }
+
+        const int Puffs = 7;   // клубов в облаке: ядро + 6 живых клубов
+
+        /// <summary>
+        /// Клуб облака k в момент t: смещение от центра (в ширинах облака), размер, прозрачность, клетка и зеркальность.
+        /// Каждый клуб живёт 16–28 с: рождается прозрачным и маленьким, набухает и дрейфует наружу, тает —
+        /// и рождается снова в другом месте облака. Жизни клубов сдвинуты, поэтому облако всегда плотное,
+        /// а его силуэт всё время медленно клубится и перестраивается.
+        /// </summary>
+        static void Puff(int ci, int k, float t, out Vector2 off, out float size, out float alpha, out int col, out bool flip)
+        {
+            if (k == 0)
+            {   // ядро: держит форму облака
+                off = new Vector2(0.03f * Mathf.Sin(t * 0.05f + ci), 0.02f * Mathf.Cos(t * 0.04f + ci));
+                size = 0.78f + 0.05f * Mathf.Sin(t * 0.06f + ci * 2f); alpha = 0.9f; col = ci % 2; flip = ci % 3 == 0; return;
+            }
+            float life = 16f + 12f * Hash(ci * 7.1f + k * 1.3f);
+            float tt = t / life + k / (float)(Puffs - 1) + Hash(ci * 3.3f + k);
+            float cycle = Mathf.Floor(tt), ph = tt - cycle;
+            float seed = ci * 31.7f + k * 5.9f + cycle * 1.618f;
+            float ang = Hash(seed) * 6.2832f, rad = 0.12f + 0.2f * Hash(seed + 1.7f);
+            Vector2 dir = new Vector2(Mathf.Cos(ang), Mathf.Sin(ang) * 0.62f);
+            off = dir * (rad + 0.09f * ph);                          // дрейф наружу за жизнь
+            size = (0.42f + 0.22f * Hash(seed + 2.9f)) * (0.78f + 0.34f * ph);   // набухает
+            alpha = Mathf.Sin(ph * Mathf.PI); alpha = alpha * alpha * (3f - 2f * alpha) * 0.85f;
+            col = Hash(seed + 4.1f) < 0.5f ? 0 : 1; flip = Hash(seed + 5.3f) < 0.5f;
+        }
+
+        /// <summary>Нарисовать облака поверх карты (после мест и героя): тень на земле, дождь, клубящееся облако и молнии.</summary>
         public static void Draw(int r, Rect view, float u0, float uw)
         {
             if (Event.current.type != EventType.Repaint) return;
             Ensure(r);
-            Texture2D atlas = UiKit.Tex("UI/map_clouds"), old = UiKit.Tex("FX/cloud"), bolt = UiKit.Tex("FX/lightning"), shade = SoftSprites.Fog;
+            Texture2D atlas = UiKit.Tex("UI/map_clouds"), old = UiKit.Tex("FX/cloud"), bolt = UiKit.Tex("FX/lightning"),
+                glow = UiKit.Tex("FX/glow_pool"), shade = SoftSprites.Fog;
             Color oc = GUI.color;
             float t = Time.realtimeSinceStartup;
             for (int i = 0; i < clouds.Length; i++)
@@ -102,56 +122,79 @@ namespace BladePath
                 float sx = view.x + (cp.x - u0) / uw * view.width, sy = cp.y * view.height;
                 float w = c.size * view.width / uw * k;
                 if (sx + w < view.x || sx - w > view.xMax) continue;
-                // тень облака на земле — она и показывает, где пойдёт дождь
+                Vector2 cc = new Vector2(sx, sy - w * 0.2f);   // облако висит над своей тенью
+                // тень на земле — мягкая, смещена от солнца; по ней видно, где пойдёт дождь
                 if (shade != null)
                 {
-                    GUI.color = new Color(0.02f, 0.02f, 0.06f, Mathf.Lerp(0.3f, 0.48f, storm));
-                    GUI.DrawTexture(new Rect(sx - w * 0.45f, sy - w * 0.1f, w * 0.9f, w * 0.6f), shade);
+                    GUI.color = new Color(0.02f, 0.02f, 0.06f, Mathf.Lerp(0.26f, 0.42f, storm));
+                    GUI.DrawTexture(new Rect(sx - w * 0.48f + w * 0.04f, sy - w * 0.14f, w * 0.96f, w * 0.62f), shade);
                 }
-                // косые полосы дождя под облаком, гуще в грозу
-                Color rain = new Color(0.7f, 0.78f, 0.95f, Mathf.Lerp(0.36f, 0.55f, storm));
-                int drops = storm > 0.5f ? 20 : 14;
+                // дождь: косые струи разной длины и яркости, падают из-под облака до тени, гуще в грозу
+                int drops = Mathf.RoundToInt(Mathf.Lerp(22f, 40f, storm));
                 for (int q = 0; q < drops; q++)
                 {
-                    float fx = sx + (q / (drops - 1f) - 0.5f) * w * 0.6f + 6f * Mathf.Sin(q * 3.1f);
-                    float ph = Mathf.Repeat(t * 1.6f + q * 0.37f, 1f);
-                    float fy = sy - w * 0.05f + ph * w * 0.32f;
-                    UiKit.Line(new Vector2(fx, fy), new Vector2(fx - 4f, fy + 12f), 1.2f, rain);
+                    float hq = Hash(i * 13.1f + q * 0.77f);
+                    float speed = 1.1f + 0.6f * Hash(q * 3.7f + i);
+                    float ph = Mathf.Repeat(t * speed + hq * 5f, 1f);
+                    float fx = sx + (hq - 0.5f) * w * 0.72f;
+                    float y0 = cc.y + w * 0.12f, y1 = sy + w * 0.2f;
+                    float fy = Mathf.Lerp(y0, y1, ph);
+                    float len = 9f + 9f * Hash(q * 1.9f + i * 0.3f);
+                    float a = Mathf.Lerp(0.28f, 0.5f, storm) * Mathf.Sin(ph * Mathf.PI) * (0.6f + 0.4f * Hash(q + i * 2f));
+                    UiKit.Line(new Vector2(fx + len * 0.3f, fy - len), new Vector2(fx, fy), 1.1f, new Color(0.78f, 0.84f, 0.98f, a));
                 }
-                Vector2 cc = new Vector2(sx, sy - w * 0.18f);
                 if (atlas != null)
                 {
-                    // две формы перетекают друг в друга (период ~40–60 с), каждая медленно вращается и дышит по-своему
-                    float morph = 0.5f + 0.5f * Mathf.Sin(t * (0.11f + 0.02f * i) + c.phase);
-                    float a1 = t * (1.6f + 0.4f * i) + c.phase * 30f, a2 = -t * (1.3f + 0.3f * i) + c.phase * 50f;
-                    float st1 = 1f + 0.08f * Mathf.Sin(t * 0.09f + i), st2 = 1f + 0.08f * Mathf.Cos(t * 0.08f + i * 2f);
-                    for (int row = 0; row < 2; row++)
-                    {
-                        float rowA = row == 1 ? storm : 1f - storm;   // дождевое ↔ грозовое — тоже плавно
-                        if (rowA <= 0.01f) continue;
-                        Layer(atlas, Cell(row, i % 2), cc, w * st1, w * 0.86f / st1, a1, new Color(1f, 1f, 1f, 0.92f * rowA * (1f - 0.55f * morph)));
-                        Layer(atlas, Cell(row, 1 - i % 2), cc + new Vector2(w * 0.05f * Mathf.Sin(t * 0.05f + i), 0f), w * 0.95f * st2, w * 0.82f / st2, a2,
-                            new Color(1f, 1f, 1f, 0.92f * rowA * (0.45f + 0.55f * morph)));
-                    }
+                    // клубы: сначала дальние (тёмные, ниже), сверху — освещённые
+                    for (int pass = 0; pass < 2; pass++)
+                        for (int pk = 0; pk < Puffs; pk++)
+                        {
+                            Puff(i, pk, t, out Vector2 off, out float ps, out float pa, out int col, out bool flip);
+                            if (pa <= 0.02f) continue;
+                            Vector2 pc = cc + new Vector2(off.x * w, off.y * w + (pass == 0 ? w * 0.04f : 0f));
+                            float pw = w * ps * (pass == 0 ? 1.04f : 1f), ph2 = pw * 0.86f;
+                            float shadeK = pass == 0 ? 0.55f : 1f;
+                            for (int row = 0; row < 2; row++)
+                            {
+                                float rowA = row == 1 ? storm : 1f - storm;   // дождевое ↔ грозовое — плавно
+                                if (rowA <= 0.01f) continue;
+                                GUI.color = new Color(shadeK, shadeK, shadeK * 1.05f, pa * rowA * (pass == 0 ? 0.55f : 0.9f));
+                                GUI.DrawTextureWithTexCoords(new Rect(pc.x - pw * 0.5f, pc.y - ph2 * 0.5f, pw, ph2), atlas, Cell(row, col, flip));
+                            }
+                        }
                 }
                 else if (old != null)
                 {
                     GUI.color = Color.Lerp(new Color(0.72f, 0.74f, 0.82f, 0.78f), new Color(0.36f, 0.32f, 0.46f, 0.85f), storm);
                     GUI.DrawTexture(new Rect(cc.x - w * 0.5f, cc.y - w * 0.25f, w, w * 0.5f), old);
                 }
-                // молния у грозового облака: короткая вспышка раз в несколько секунд
+                // гроза: вспышка внутри облака (подсвечивает клубы изнутри), иногда — разряд до земли и отблеск на ней
                 if (storm > 0.5f)
                 {
-                    float cyc = Mathf.Repeat(t + i * 1.7f, 4.5f);
-                    if (cyc < 0.18f)
+                    float period = 3.2f + 2.4f * Hash(i * 9.1f);
+                    float cyc = Mathf.Repeat(t + i * 1.7f, period);
+                    int strike = Mathf.FloorToInt((t + i * 1.7f) / period);
+                    if (cyc < 0.32f)
                     {
-                        float a = cyc < 0.06f || (cyc > 0.1f && cyc < 0.14f) ? 1f : 0.35f;
-                        if (bolt != null)
+                        float a = cyc < 0.05f ? 1f : cyc < 0.1f ? 0.25f : cyc < 0.16f ? 0.85f : 0.85f * (1f - (cyc - 0.16f) / 0.16f);
+                        Vector2 fp = cc + new Vector2((Hash(strike * 1.3f + i) - 0.5f) * w * 0.5f, (Hash(strike * 2.1f + i) - 0.5f) * w * 0.2f);
+                        if (glow != null)
                         {
-                            GUI.color = new Color(0.85f, 0.9f, 1f, 0.9f * a);
-                            GUI.DrawTexture(new Rect(sx - w * 0.06f + (i % 2 == 0 ? -w * 0.1f : w * 0.08f), sy - w * 0.12f, w * 0.12f, w * 0.34f), bolt);
+                            GUI.color = new Color(0.6f, 0.75f, 1f, 0.55f * a);
+                            GUI.DrawTexture(new Rect(fp.x - w * 0.32f, fp.y - w * 0.22f, w * 0.64f, w * 0.44f), glow);
                         }
-                        if (atlas != null) Layer(atlas, Cell(1, i % 2), cc, w, w * 0.86f, t * (1.6f + 0.4f * i) + c.phase * 30f, new Color(0.75f, 0.85f, 1f, 0.35f * a));
+                        if (bolt != null && Hash(strike * 4.7f + i) < 0.6f)   // не каждая вспышка бьёт в землю
+                        {
+                            float bh = (sy + w * 0.2f) - fp.y, bw = bh * 0.38f;
+                            GUI.color = new Color(0.85f, 0.92f, 1f, 0.95f * a);
+                            GUI.DrawTextureWithTexCoords(new Rect(fp.x - bw * 0.5f, fp.y, bw, bh), bolt,
+                                Hash(strike * 6.1f) < 0.5f ? new Rect(0f, 0f, 1f, 1f) : new Rect(1f, 0f, -1f, 1f));
+                            if (glow != null)
+                            {
+                                GUI.color = new Color(0.7f, 0.82f, 1f, 0.35f * a);
+                                GUI.DrawTexture(new Rect(fp.x - w * 0.2f, sy + w * 0.2f - w * 0.08f, w * 0.4f, w * 0.16f), glow);
+                            }
+                        }
                     }
                 }
             }
