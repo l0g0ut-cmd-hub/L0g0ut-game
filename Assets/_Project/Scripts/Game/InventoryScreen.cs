@@ -110,16 +110,7 @@ namespace BladePath
 
         static bool Btn(Rect r, string label, bool enabled = true, bool red = false)
         {
-            Texture2D plank = UiKit.Tex(red ? "UI/plank_red" : "UI/plank");
-            Color o = GUI.color;
-            if (plank != null) { GUI.color = enabled ? Color.white : new Color(0.5f, 0.5f, 0.5f, 0.8f); GUI.DrawTexture(r, plank, ScaleMode.StretchToFill); GUI.color = o; }
-            else
-            {
-                UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), Gold * (enabled ? 0.8f : 0.35f));
-                UiKit.Rect(r, red ? new Color(0.35f, 0.08f, 0.06f, 1f) : new Color(0.09f, 0.07f, 0.07f, 0.97f));
-            }
-            UiKit.Text(r, label, Mathf.Min(17f, r.height * 0.46f), enabled ? Ink : new Color(0.6f, 0.58f, 0.55f));
-            return enabled && GUI.Button(r, GUIContent.none, GUIStyle.none);
+            return VisualIdentity.Button(r, label, enabled, red);
         }
 
         // ---------------- экран снаряжения ----------------
@@ -127,12 +118,13 @@ namespace BladePath
         void DrawScreen()
         {
             float W = UiKit.Width;
-            UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, 0.82f));
+            UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, 0.86f));
             Rect panel = new Rect(12f, 10f, W - 24f, 520f);
-            UiKit.Rect(new Rect(panel.x - 2f, panel.y - 2f, panel.width + 4f, panel.height + 4f), Gold * 0.6f);
-            UiKit.Rect(panel, new Color(0.055f, 0.045f, 0.045f, 0.98f));
-            UiKit.Paper(panel, new Color(0.2f, 0.16f, 0.12f, 0.35f));
-            UiKit.Corners(panel, 54f);
+            VisualIdentity.Surface(panel, 1f);
+            // Paper grain becomes a subtle second layer beneath the lacquer.
+            UiKit.Paper(new Rect(panel.x + 10f, panel.y + 60f,
+                panel.width - 20f, panel.height - 72f),
+                new Color(0.24f, 0.19f, 0.13f, 0.13f));
 
             // шапка: вкладки, монеты, «готово»
             if (Btn(new Rect(30f, 18f, 186f, 36f), "СНАРЯЖЕНИЕ", true, tab == 0)) tab = 0;
@@ -144,11 +136,18 @@ namespace BladePath
             UiKit.Text(new Rect(gx + 40f, 16f, 140f, 40f), Profile.Gold + " МОН", 20f, Gold, TextAnchor.MiddleLeft);
             if (Btn(new Rect(W - 160f, 18f, 130f, 36f), "ГОТОВО")) { Hide(); return; }
 
+            VisualIdentity.Divider(new Rect(24f, 60f, W - 48f, 1f), 0.43f);
             if (tab == 1) { DrawUpgrade(W); return; }
             if (tab == 2) { DrawPath(W); return; }
-            DrawStats(new Rect(28f, 64f, 292f, 456f));
-            DrawEquipped(new Rect(332f, 64f, 232f, 456f));
-            DrawBag(new Rect(578f, 64f, W - 578f - 30f, 456f));
+            Rect stats = new Rect(28f, 68f, 292f, 450f);
+            Rect equipped = new Rect(332f, 68f, 232f, 450f);
+            Rect bag = new Rect(578f, 68f, W - 608f, 450f);
+            VisualIdentity.Inset(stats);
+            VisualIdentity.Inset(equipped);
+            VisualIdentity.Inset(bag);
+            DrawStats(new Rect(stats.x + 8f, stats.y + 4f, stats.width - 16f, stats.height - 8f));
+            DrawEquipped(new Rect(equipped.x + 8f, equipped.y + 4f, equipped.width - 16f, equipped.height - 8f));
+            DrawBag(new Rect(bag.x + 8f, bag.y + 4f, bag.width - 16f, bag.height - 8f));
         }
 
         void DrawStats(Rect a)
@@ -353,12 +352,21 @@ namespace BladePath
         void DrawCard(Rect a)
         {
             if (sel != null && !Profile.Items.Contains(sel)) sel = null;
-            UiKit.Rect(a, new Color(0f, 0f, 0f, 0.35f));
-            if (sel == null) { UiKit.Text(a, "выбери предмет", 13f, new Color(0.7f, 0.66f, 0.6f)); return; }
+            VisualIdentity.Inset(a);
+            if (sel == null)
+            {
+                UiKit.Text(a, "ВЫБЕРИ ПРЕДМЕТ", 13f, VisualIdentity.Subdued);
+                return;
+            }
             Item it = sel;
             Color rc = Profile.RarityColors[it.rarity];
-            UiKit.Text(new Rect(a.x + 10f, a.y + 4f, a.width - 20f, 22f), it.name + (it.level > 0 ? "  +" + it.level : ""), 16f, rc, TextAnchor.MiddleLeft);
-            UiKit.Text(new Rect(a.x + 10f, a.y + 24f, a.width - 20f, 16f), Profile.SlotNames[it.slot] + "  ·  " + Profile.RarityNames[it.rarity], 10.5f, new Color(0.78f, 0.74f, 0.66f), TextAnchor.MiddleLeft, false);
+            UiKit.Rect(new Rect(a.x + 5f, a.y + 4f, 3f, 32f),
+                new Color(rc.r, rc.g, rc.b, 0.92f));
+            UiKit.Text(new Rect(a.x + 14f, a.y + 4f, a.width - 24f, 22f),
+                it.name + (it.level > 0 ? "  +" + it.level : ""), 16f, rc, TextAnchor.MiddleLeft);
+            UiKit.Text(new Rect(a.x + 14f, a.y + 24f, a.width - 24f, 16f),
+                Profile.SlotNames[it.slot] + "  ·  " + Profile.RarityNames[it.rarity],
+                10.5f, VisualIdentity.Subdued, TextAnchor.MiddleLeft, false);
             float y = a.y + 42f;
             if (it.slot == (int)Slot.Scroll)
             {
