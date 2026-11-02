@@ -14,10 +14,14 @@ namespace BladePath
         public GameObject[] models;
         public int Active { get; private set; }
 
-        void Awake()
+        void Start()
         {
+            // The editor builder adds this component before assigning models.
+            // Awake runs immediately on AddComponent in the editor, when its
+            // model array is still empty. Start applies the saved choice after
+            // deserialization and works in the Android player as well.
             int index = PlayerPrefs.GetInt("journey_started", 0) == 1
-                ? JourneyChoice.Hero : 2; // keep the existing Hero3 appearance on legacy saves
+                ? JourneyChoice.Hero : 2; // preserve legacy Hero3 appearance
             Apply(index);
         }
 
