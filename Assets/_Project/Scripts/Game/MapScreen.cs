@@ -724,20 +724,20 @@ namespace BladePath
         /// <summary>Кость пути: костяной кубик с точками (1–3), во время броска крутится.</summary>
         static void Die(Rect r, int face, float spin, bool lit)
         {
-            Texture2D dt = UiKit.Tex("UI/map_dice");
-            Matrix4x4 m = GUI.matrix;
-            if (spin != 0f) GUIUtility.RotateAroundPivot(spin, r.center * UiKit.Scale);
-            if (dt != null) GUI.DrawTextureWithTexCoords(r, dt, new Rect(((face - 1) % 4) * 0.25f, 0.75f, 0.25f, 0.25f));
-            else
+            Texture2D dice = JourneyDiceArt.Atlas;
+            Matrix4x4 previous = GUI.matrix;
+            UiKit.Disc(r.center + new Vector2(0f, 3f), r.width * 0.58f,
+                new Color(0.01f, 0.01f, 0.01f, 0.42f));
+            if (lit)
             {
-                UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), lit ? Gold : new Color(0.4f, 0.35f, 0.3f));
-                UiKit.Rect(r, new Color(0.93f, 0.89f, 0.8f));
-                Vector2 c = r.center; float o = r.width * 0.26f, pr = r.width * 0.09f;
-                Color pc = new Color(0.55f, 0.06f, 0.05f);
-                if (face == 1 || face == 3) UiKit.Disc(c, pr * (face == 1 ? 1.5f : 1f), pc);
-                if (face >= 2) { UiKit.Disc(c + new Vector2(-o, -o), pr, pc); UiKit.Disc(c + new Vector2(o, o), pr, pc); }
+                float glow = 0.17f + 0.05f * Mathf.Sin(Time.unscaledTime * 4f);
+                UiKit.Disc(r.center, r.width * 0.72f,
+                    new Color(0.90f, 0.62f, 0.25f, glow));
             }
-            GUI.matrix = m;
+            if (spin != 0f) GUIUtility.RotateAroundPivot(spin, r.center * UiKit.Scale);
+            int index = Mathf.Clamp(face, 1, 3) - 1;
+            GUI.DrawTextureWithTexCoords(r, dice, new Rect(index / 3f, 0f, 1f / 3f, 1f));
+            GUI.matrix = previous;
         }
 
         static List<string> Wrap(string s, int max)
