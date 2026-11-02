@@ -97,6 +97,12 @@ def check_routes():
     assert "if (hub.shore != shore) continue;" in src
     assert "lengthPixels * easedTravel" in screen
     assert "Direction(easedTravel)" in screen
+    # Optional replacement art must not silently become a broken 16-frame rider.
+    rider = ROOT / "Assets/_Project/Resources/UI/map_rider_16.png"
+    if rider.is_file():
+        check_png("Assets/_Project/Resources/UI/map_rider_16.png", 1024, 1024)
+    assert 'riderAtlas.width >= 512' in screen
+    assert 'riderAtlas.width % 4 == 0' in screen
 
 
 def check_new_game():
