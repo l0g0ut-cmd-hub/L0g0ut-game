@@ -253,32 +253,13 @@ namespace BladePath
                 Rect artRect = new Rect(card.x + 6f, card.y + 6f, card.width - 12f, picH);
                 string art = newJourneyStep == 1
                     ? JourneyChoice.DifficultyArt(i) : JourneyChoice.Portrait(i);
-                Texture2D selectionAtlas = UiKit.Tex("UI/selection/characters_difficulties");
-                // Reject thumbnail-sized atlases; preserve the illustrated
-                // legacy portraits instead of magnifying a broken preview.
-                // The current checked-in 6 KB atlas is an unfinished preview,
-                // not six production-grade portraits. Do not show it until
-                // actual full-quality approved art replaces that resource.
-                if (false && selectionAtlas != null && selectionAtlas.width >= 900 &&
-                    selectionAtlas.height >= 600)
-                {
-                    // One shared 3x2 hand-painted atlas, lower row difficulty
-                    // art; upper row character portraits. Text/buttons remain live.
-                    VisualIdentity.Inset(artRect, accent);
-                    GUI.DrawTextureWithTexCoords(
-                        new Rect(artRect.x + 3f, artRect.y + 3f,
-                            artRect.width - 6f, artRect.height - 6f),
-                        selectionAtlas,
-                        new Rect(i / 3f, newJourneyStep == 1 ? 0f : 0.5f,
-                            1f / 3f, 0.5f));
-                }
-                else
-                {
-                    if (UiKit.Tex(art) == null)
-                        art = newJourneyStep == 1 ? "UI/event_" + i : "UI/npc_" + i;
-                    if (UiKit.Tex(art) == null) art = "UI/path_panorama";
-                    VisualIdentity.Portrait(artRect, art);
-                }
+                // The experimental six-panel atlas is currently a 6 KB thumbnail.
+                // Render the established high-resolution illustrated portraits
+                // until a verified production atlas is actually checked in.
+                if (UiKit.Tex(art) == null)
+                    art = newJourneyStep == 1 ? "UI/event_" + i : "UI/npc_" + i;
+                if (UiKit.Tex(art) == null) art = "UI/path_panorama";
+                VisualIdentity.Portrait(artRect, art);
 
                 if (selected)
                 {
