@@ -1,0 +1,64 @@
+name: Build Meshy models
+
+# Blender on the runner: Meshy GLB (tools/models/meshy) → rigged FBX + albedo + previews.
+# Results go to the meshy-models branch; they are copied into Assets after review.
+on:
+  workflow_dispatch:
+  push:
+    branches: [meshy-build]
+
+permissions:
+  contents: write
+
+jobs:
+  blender:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Blender 4.2 LTS
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libxkbcommon0 libsm6 libice6 libegl1 >/dev/null
+          curl -sSfL https://download.blender.org/release/Blender4.2/blender-4.2.3-linux-x64.tar.xz | tar -xJ -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/blender-4.2.3-linux-x64" >> "$GITHUB_PATH"
+
+      - name: Build rigged models
+        run: |
+          set -e
+          mkdir -p out/Models out/Art out/preview
+          build() {
+            MESHY_GLB="tools/models/meshy/$1.glb" MESHY_NAME="$2" MESHY_OUT=out/Models \
+            BODY_H="$3" TOP_FRAC="$4" ARM_PAD="$5" SHOULDER_X="$6" \
+              blender -b --factory-startup --python tools/blender/build_meshy_char.py > "out/$2.log" 2>&1 || true
+            grep -E "^MZ|Error|Traceback" "out/$2.log" | head -60
+            test -f "out/Models/$2.fbx" || { tail -60 "out/$2.log"; exit 1; }
+            mv out/Models/$2_*.png out/preview/ 2>/dev/null || true
+            rm -f out/Models/$2.blend out/Models/$2.blend1
+          }
+          build akiko  Akiko_Player 1.68 0.975 0.00 0.16
+          build oni    Oni_Enemy    1.82 0.955 0.02 0.19
+          build shogun Shogun_Enemy 1.74 0.925 0.06 0.18
+
+      - name: Extract textures
+        run: |
+          python3 -m pip install -q pillow
+          python3 tools/meshy_textures.py tools/models/meshy/akiko.glb Akiko out/Art
+          python3 tools/meshy_textures.py tools/models/meshy/oni.glb Oni out/Art
+          python3 tools/meshy_textures.py tools/models/meshy/shogun.glb Shogun out/Art
+
+      - name: Publish to meshy-models branch
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          D="$RUNNER_TEMP/models"; rm -rf "$D"; mkdir -p "$D"
+          cp -r out/. "$D/"
+          cd "$D"
+          echo "run ${GITHUB_RUN_NUMBER} sha ${GITHUB_SHA}" > info.txt
+          git init -q; git checkout -q -b meshy-models
+          git -c user.name=ci -c user.email=ci@local add -A
+          git -c user.name=ci -c user.email=ci@local commit -qm "meshy models run ${GITHUB_RUN_NUMBER}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" meshy-models
