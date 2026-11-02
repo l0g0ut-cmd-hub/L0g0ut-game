@@ -32,6 +32,9 @@ namespace BladePath
         int moveFrom = -1, moveTo = -1; float moveStart;
         const float MoveTime = 1.25f;
         float panU = -1f, shownAt, modalAt, rollAt = -10f;
+        bool manualPan, panArmed, panDragging;
+        Vector2 panTouchOrigin;
+        float panAtOrigin;
         const float RollTime = 0.9f;
         Reward treasure;
         bool freshTreasure, revisit;
@@ -46,6 +49,7 @@ namespace BladePath
             int resume = !Campaign.Knocked && Campaign.ClearedRegion < 0 && plannedRegion == Campaign.Region ? sel : -1;
             shownAt = Time.unscaledTime; sel = -1; previewPath.Clear(); moveTo = -1; modal = Modal.None; panU = -1f;
             routeAutopilot = false; nextRouteAt = 0f; toastLines.Clear();
+            manualPan = false; panArmed = false; panDragging = false;
             if (resume >= 0 && resume < Campaign.Nodes.Count && resume != Campaign.At) SelectNode(resume);
             Campaign.CancelTraining();
             if (Campaign.Knocked) OpenModal(Modal.Knocked);
@@ -60,7 +64,8 @@ namespace BladePath
             MapNode n = Campaign.Nodes[i];
             Profile.CostMul = n.Type == NodeType.Smith ? 0.5f : 1f;
             // Revisiting a cleared road does not repeat paid treasure or defeated enemies.
-            if (revisit && (n.IsFight || n.Type == NodeType.Treasure || n.Type == NodeType.Event))
+            if (revisit && n.done && !Campaign.InFight &&
+                (n.IsFight || n.Type == NodeType.Treasure || n.Type == NodeType.Event))
             {
                 modal = Modal.None;
                 return;
@@ -92,6 +97,7 @@ namespace BladePath
             freshTreasure = Campaign.Nodes[i].Type == NodeType.Treasure && !revisit;
             treasure = null;
             moveFrom = Campaign.At; moveTo = i; moveStart = Time.unscaledTime; sel = -1; previewPath.Clear(); stockNode = -1;
+            manualPan = false; // resume following the animated samurai as the journey proceeds
             Campaign.MoveTo(i);
             // If the player plotted several waypoints, retain the remaining
             // route after the next encounter is resolved. Never skip an encounter.
@@ -103,6 +109,7 @@ namespace BladePath
         void Update()
         {
             if (!Open) return;
+            HandleMapPan();
             if (moveTo >= 0)
             {
                 if (Time.unscaledTime - moveStart >= MoveTime)
@@ -130,6 +137,61 @@ namespace BladePath
             }
         }
 
+        // Finger/mouse drag moves the world map; a small recenter button
+        // restores the normal Heroes-style camera following the samurai.
+        void HandleMapPan()
+        {
+            if (modal != Modal.None || InventoryScreen.Open || moveTo >= 0 || viewW <= 0f)
+            {
+                panArmed = false;
+                panDragging = false;
+                return;
+            }
+            Vector3 mouse = Input.mousePosition;
+            Vector2 pt = new Vector2(mouse.x / UiKit.Scale,
+                (Screen.height - mouse.y) / UiKit.Scale);
+            if (Input.GetMouseButtonDown(0))
+            {
+                panArmed = pt.x >= mapX + 4f && pt.x <= mapX + viewW - 4f &&
+                    pt.y >= 5f && pt.y <= MapH - 5f;
+                // Tapping a destination medal should select the node, not start dragging.
+                if (panArmed)
+                {
+                    foreach (MapNode node in Campaign.Nodes)
+                    {
+                        if ((P(node) - pt).sqrMagnitude < 38f * 38f)
+                        {
+                            panArmed = false;
+                            break;
+                        }
+                    }
+                }
+                if (panArmed)
+                {
+                    panTouchOrigin = pt;
+                    panAtOrigin = panU;
+                    panDragging = false;
+                }
+            }
+            if (panArmed && Input.GetMouseButton(0))
+            {
+                if (!panDragging && (pt - panTouchOrigin).sqrMagnitude > 9f * 9f)
+                {
+                    panDragging = true;
+                    manualPan = true;
+                    routeAutopilot = false;
+                }
+                if (panDragging)
+                    panU = Mathf.Clamp(panAtOrigin - (pt.x - panTouchOrigin.x) / MapFullW,
+                        0f, Mathf.Max(0f, 1f - viewW / MapFullW));
+            }
+            if (Input.GetMouseButtonUp(0))
+            {
+                panArmed = false;
+                panDragging = false;
+            }
+        }
+
         // ------------------------------------------------------------------ отрисовка
 
         float W, mapX, mapW, viewW, u0;   // карта: 810×540 при высоте экрана 540; видимое окно — [u0, u0 + viewW/810]
@@ -152,7 +214,9 @@ namespace BladePath
             // окно карты едет за всадником
             Vector2 hu = HeroUV();
             float target = Mathf.Clamp(hu.x - uw * 0.45f, 0f, 1f - uw);
-            panU = panU < 0f ? target : Mathf.Lerp(panU, target, Mathf.Clamp01(Time.unscaledDeltaTime * 3f));
+            panU = panU < 0f ? target : manualPan ? panU :
+                Mathf.Lerp(panU, target, Mathf.Clamp01(Time.unscaledDeltaTime * 3f));
+            panU = Mathf.Clamp(panU, 0f, Mathf.Max(0f, 1f - uw));
             u0 = panU;
             Texture2D mt = UiKit.Tex(Campaign.MapTexture(Campaign.Region));
             if (mt != null) GUI.DrawTextureWithTexCoords(new Rect(mapX, 0f, viewW, MapH), mt, new Rect(u0, 0f, uw, 1f));
@@ -167,6 +231,13 @@ namespace BladePath
             GUI.color = oc;
             UiKit.Text(new Rect(mapX + 16f, 8f, 400f, 36f), Campaign.RegionNames[Campaign.Region], 26f, Gold, TextAnchor.MiddleLeft);
             if (Profile.Cycle > 0) UiKit.Text(new Rect(mapX + 18f, 40f, 300f, 20f), "КРУГ " + (Profile.Cycle + 1) + ": враги крепче", 12f, new Color(1f, 0.55f, 0.4f), TextAnchor.MiddleLeft);
+            // Only show the re-center control when the map is wider than the screen.
+            if (uw < 0.999f && Btn(new Rect(mapX + viewW - 116f, 14f, 104f, 33f),
+                manualPan ? "К ГЕРОЮ" : "ОБЗОР", interactive && modal == Modal.None && moveTo < 0))
+            {
+                manualPan = !manualPan;
+                if (!manualPan) panU = -1f;
+            }
             DrawPanel(new Rect(W - panel, 0f, panel, 540f), interactive && modal == Modal.None && moveTo < 0);
             if (modal != Modal.None) DrawModal(interactive);
             else if (interactive) DrawToast();
