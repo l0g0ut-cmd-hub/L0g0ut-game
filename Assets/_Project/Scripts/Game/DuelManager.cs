@@ -359,7 +359,12 @@ namespace BladePath
             lastStandShown = false; tenSecShown = false;
             if (EnemyEnraged && Juice.Instance != null && enemy != null) Juice.Instance.SetAuraColor(enemy, Ladder.Current.aura);
             EnemyEnraged = false;
-            TimeLeft = roundSeconds + 30f * (MaxMarks(enemy) - 1); TimedOut = false;   // больше жизней у врага — больше времени LastDraw = false; Perfect = false;
+            // More enemy health marks grant extra round time. Always reset the
+            // previous round outcome, even when the same arena scene is reused.
+            TimeLeft = roundSeconds + 30f * (MaxMarks(enemy) - 1);
+            TimedOut = false;
+            LastDraw = false;
+            Perfect = false;
             if (Juice.Instance != null)
             {
                 Juice.Instance.Taiko(0.9f, 0.95f);
