@@ -53,8 +53,40 @@ namespace BladePath.EditorTools
                 }
                 return true;
             }
-            string heroFbx = Exists(Hero3FbxPath) ? Hero3FbxPath : Exists(Samurai2FbxPath) ? Samurai2FbxPath : Exists(RoninFbxPath) ? RoninFbxPath : FbxPath;
-            return Attach(fighter, bladeRoot, look, false, heroFbx, ControllerPath, "Hero_", null) != null;
+            // Three real, already-included player FBX variants. The user chooses
+            // at runtime, so the Editor build prepares all skins only once.
+            // Legacy installations with missing models still use the old path.
+            string[] selected = { RoninFbxPath, Samurai2FbxPath, Hero3FbxPath };
+            string[] ctrl = { "Assets/_Project/Animation/Hero_Jin.controller",
+                              "Assets/_Project/Animation/Hero_Akiko.controller",
+                              "Assets/_Project/Animation/Hero_Ren.controller" };
+            string[] prefix = { "HeroJin_", "HeroAkiko_", "HeroRen_" };
+            GameObject[] models = new GameObject[3];
+            int prepared = 0;
+            for (int i = 0; i < selected.Length; i++)
+            {
+                if (!Exists(selected[i])) continue;
+                models[i] = Attach(fighter, bladeRoot, look, false, selected[i],
+                    ctrl[i], prefix[i], "PlayerSkin_" + i);
+                if (models[i] != null)
+                {
+                    prepared++;
+                    // The active selection is assigned by HeroSkins on Awake.
+                    // Keeping other models inactive avoids duplicate Animator work.
+                    if (i != 0) models[i].SetActive(false);
+                }
+            }
+            if (prepared > 0)
+            {
+                HeroSkins skinSelector = fighter.gameObject.AddComponent<HeroSkins>();
+                skinSelector.models = models;
+                return true;
+            }
+            string heroFbx = Exists(Hero3FbxPath) ? Hero3FbxPath :
+                Exists(Samurai2FbxPath) ? Samurai2FbxPath :
+                Exists(RoninFbxPath) ? RoninFbxPath : FbxPath;
+            return Attach(fighter, bladeRoot, look, false, heroFbx,
+                ControllerPath, "Hero_", null) != null;
         }
 
         /// <summary>
