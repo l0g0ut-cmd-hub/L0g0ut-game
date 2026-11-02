@@ -25,7 +25,7 @@ EXISTING = {
 def png_size(path):
     with path.open("rb") as f:
         header = f.read(24)
-    if len(header) < 24 or header[:8] != b"\\x89PNG\\r\\n\\x1a\\n":
+    if len(header) < 24 or header[:8] != b"\x89PNG\r\n\x1a\n":
         return None
     return struct.unpack(">II", header[16:24])
 
