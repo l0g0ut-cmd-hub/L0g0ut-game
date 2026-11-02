@@ -314,7 +314,15 @@ namespace BladePath
                     n.enemy = DuelEnemy(region);
                     if (n.Type == NodeType.Elite) n.enemy = Mathf.Clamp(region, 0, Ladder.Count - 1);
                     // кот-хранитель — редкое событие (~1 из 15), остальные равновероятны
-                    if (n.Type == NodeType.Event) n.ev = UnityEngine.Random.value < 0.07f ? MapScreen.CatEvent : UnityEngine.Random.Range(0, MapScreen.CatEvent);
+                    if (n.Type == NodeType.Event)
+                    {
+                        // кот-хранитель ~7%, встречи со спутниками ~12% (не тот, что уже с героем), остальное — обычные события
+                        float r = UnityEngine.Random.value;
+                        int comp = UnityEngine.Random.Range(0, 3);
+                        n.ev = r < 0.07f ? MapScreen.CatEvent
+                            : r < 0.19f && comp != Profile.Companion ? MapScreen.CompanionEvent + comp
+                            : UnityEngine.Random.Range(0, MapScreen.CatEvent);
+                    }
                 }
             }
             // перед владыкой — хотя бы одна передышка (храм или привал), если есть выбор

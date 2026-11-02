@@ -111,6 +111,21 @@ namespace BladePath
             DrawBar(new Rect(cx - 80f - barW, 22f, barW, 14f), duel.player, false,
                 JourneyChoice.Names[JourneyChoice.Hero], new Color(0.15f, 0.55f, 0.85f));
             DrawBar(new Rect(cx + 80f, 22f, barW, 14f), duel.enemy, true, Ladder.Current.name, new Color(0.75f, 0.2f, 0.85f));
+            // спутник героя: маленький портрет под портретом героя, кольцо — откат налёта
+            if (Profile.Companion >= 0)
+            {
+                Texture2D ct = UiKit.Tex("UI/companion_" + (Profile.Companion == 0 ? "raven" : Profile.Companion == 1 ? "wolf" : "snake"));
+                Vector2 cc = new Vector2(cx - 80f - barW - 66f + 34f, 70f);
+                float rk = duel.CompanionReady01;
+                UiKit.Disc(cc, 17f, new Color(0f, 0f, 0f, 0.6f));
+                if (ct != null) UiKit.Image(cc, 15f, ct, rk >= 0.98f ? Color.white : new Color(0.55f, 0.55f, 0.55f, 1f));
+                for (int k = 0; k < 24; k++)
+                {
+                    float ang = -Mathf.PI * 0.5f + k / 24f * Mathf.PI * 2f;
+                    bool lit = k < Mathf.RoundToInt(rk * 24f);
+                    UiKit.Disc(cc + new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * 17.5f, 1.6f, lit ? new Color(1f, 0.85f, 0.45f, 0.95f) : new Color(0f, 0f, 0f, 0.35f));
+                }
+            }
             // метки жизни врага (как у боссов Sekiro): энсо под полосой — сколько ещё добиваний; снятая метка гаснет
             int mm = duel.MaxMarks(duel.enemy);
             if (mm > 1)

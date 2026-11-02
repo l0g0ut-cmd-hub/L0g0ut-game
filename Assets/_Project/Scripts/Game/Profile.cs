@@ -19,6 +19,8 @@ namespace BladePath
     public class Item
     {
         public int id, slot, rarity, level, icon, tech = -1;
+        public int set = -1;    // комплект клана: 0 Ворон, 1 Волк, 2 Змея (клинок, цуба, облачение, маска)
+        public int rune = -1;   // руна в клинке (вставляет кузнец): Profile.RuneNames
         public string name;
         public List<Mod> mods = new List<Mod>();
         public float Value(Mod m) { return m.value * (1f + 0.12f * level); }   // улучшение у кузнеца: +12 % к каждому свойству за уровень
@@ -46,6 +48,7 @@ namespace BladePath
             public int level = 1, xp, points, gold, cycle, nextId = 1, techMask;
             public int[] stats = new int[5];
             public int[] equipped = { -1, -1, -1, -1, -1, -1 };
+            public int companion = -1;   // спутник: 0 ворон, 1 волк, 2 змея (−1 — нет)
             public List<Item> items = new List<Item>();
         }
 
@@ -191,6 +194,7 @@ namespace BladePath
         public struct Bonus
         {
             public float dmgMul, postureMul, armorMul, kiGainMul, kiRegenMul, parryMul, dashCdMul, moveMul, healMul, goldMul, bleedDps, crit, blockPostureMul;
+            public float lifesteal;   // руна «Вампиризм»: доля урона, возвращаемая здоровьем
             public int hp, gourds, postureMax;
         }
         static Bonus cache; static bool dirty = true;
@@ -254,6 +258,26 @@ namespace BladePath
                 b.gourds = Mathf.RoundToInt(ModSum(ModId.Gourd)) + (Has(Tech.SecondWind) ? 1 : 0);
                 b.postureMax = Mathf.RoundToInt(ModSum(ModId.PostureMax));
                 b.blockPostureMul = Has(Tech.StoneGuard) ? 0.7f : 1f;
+                // комплекты кланов (2 и 4 предмета) и руна клинка
+                for (int set = 0; set < 3; set++)
+                {
+                    int c = SetPieces(set);
+                    if (set == 0) { if (c >= 2) b.crit = Mathf.Min(0.5f, b.crit + 0.08f); if (c >= 4) b.dmgMul += 0.15f; }
+                    if (set == 1) { if (c >= 2) b.hp += 20; if (c >= 4) b.armorMul *= 0.9f; }
+                    if (set == 2) { if (c >= 2) b.bleedDps += 2f; if (c >= 4) { b.postureMul += 0.12f; b.kiGainMul += 0.1f; } }
+                }
+                Item blade = Equipped((int)Slot.Blade);
+                switch (blade != null ? blade.rune : -1)
+                {
+                    case 0: b.bleedDps += 2.5f; break;
+                    case 1: b.dmgMul += 0.06f; break;
+                    case 2: b.bleedDps += 1.2f; b.postureMul += 0.05f; break;
+                    case 3: b.lifesteal += 0.06f; break;
+                    case 4: b.parryMul = Mathf.Min(2f, b.parryMul + 0.15f); break;
+                    case 5: b.crit = Mathf.Min(0.5f, b.crit + 0.06f); break;
+                    case 6: b.postureMul += 0.12f; break;
+                    case 7: b.goldMul += 0.2f; break;
+                }
                 // Starting identities grant small, legible differences:
                 // Dzin: flexible sword technique; Akiko: survivability;
                 // Ren: nimble movement. Existing equipment/stat rules remain.
@@ -368,6 +392,43 @@ namespace BladePath
         static T Pick<T>(T[] a) { return a[UnityEngine.Random.Range(0, a.Length)]; }
 
         /// <summary>Новый предмет: редкость зависит от ступени, круга и оценки боя; у последнего врага — не ниже редкого.</summary>
+        // ---------------- комплекты кланов, руны, спутники ----------------
+
+        public static readonly string[] SetNames = { "клана Ворона", "клана Волка", "клана Змеи" };
+        static readonly string[] SetBases = { "Катана", "Цуба", "Доспех", "Мэнпо" };
+        public static readonly string[] SetBonus2 = { "+8% к шансу точного удара", "+20 к здоровью", "кровотечение +2 ед/с" };
+        public static readonly string[] SetBonus4 = { "+15% к урону", "−10% получаемого урона", "+12% к урону по равновесию, +10% к накоплению духа" };
+        /// <summary>Сколько предметов комплекта надето (клинок, цуба, облачение, маска).</summary>
+        public static int SetPieces(int set)
+        {
+            int c = 0;
+            for (int i = 0; i < 4; i++) { Item it = Equipped(i); if (it != null && it.set == set) c++; }
+            return c;
+        }
+
+        public static readonly string[] RuneNames = { "КРОВОТЕЧЕНИЕ", "ОГОНЬ", "ЯД", "ВАМПИРИЗМ", "ЛЁД", "ГРОМ", "ЛОМКА СТОЙКИ", "УДАЧА" };
+        public static readonly string[] RuneHints = { "кровотечение +2,5 ед/с", "+6% к урону", "кровотечение +1,2 ед/с, +5% по равновесию", "6% урона возвращается здоровьем",
+                                                      "+15% к окну отражения", "+6% к шансу точного удара", "+12% к урону по равновесию", "+20% монет за бой" };
+        public static int RuneCost { get { return Mathf.RoundToInt(120f * (1f + 0.3f * D.cycle) * CostMul); } }
+        public static bool SetRune(Item it, int rune)
+        {
+            if (it == null || it.slot != (int)Slot.Blade || rune < 0 || rune >= RuneNames.Length || it.rune == rune) return false;
+            if (!Spend(RuneCost)) return false;
+            it.rune = rune; Save();
+            return true;
+        }
+
+        public const int CompanionRaven = 0, CompanionWolf = 1, CompanionSnake = 2;
+        public static readonly string[] CompanionNames = { "ВОРОН", "ВОЛК", "ЗМЕЯ" };
+        public static readonly string[] CompanionHints =
+        {
+            "Разведчик: туман войны отступает на шаг дальше. В бою раз в 20 с пикирует на врага и сбивает замах.",
+            "Боец: в бою раз в 15 с кусает врага — урон и удар по равновесию.",
+            "Яд: в бою раз в 12 с жалит врага — яд и равновесие врага восстанавливается вдвое медленнее 5 с.",
+        };
+        public static int Companion { get { return D.companion; } }
+        public static void SetCompanion(int c) { D.companion = Mathf.Clamp(c, -1, 2); Save(); }
+
         public static Item Roll(int stage, int score, bool bossDrop)
         {
             float shift = stage * 0.6f + D.cycle * 1.2f + Mathf.Clamp(score, 0, 120) / 60f;
@@ -377,7 +438,14 @@ namespace BladePath
             while (rarity < 3 && x > w[rarity]) { x -= w[rarity]; rarity++; }
             if (bossDrop) rarity = Mathf.Max(rarity, 2);
             int slot = UnityEngine.Random.Range(0, SlotCount);
-            return Make(slot, rarity, 1f + 0.22f * stage + 0.4f * D.cycle);
+            Item made = Make(slot, rarity, 1f + 0.22f * stage + 0.4f * D.cycle);
+            // предмет комплекта клана: не ниже «добротного», только клинок, цуба, облачение, маска
+            if (slot <= (int)Slot.Mask && rarity >= 1 && UnityEngine.Random.value < (bossDrop ? 0.35f : 0.14f))
+            {
+                made.set = UnityEngine.Random.Range(0, 3);
+                made.name = SetBases[slot] + " " + SetNames[made.set];
+            }
+            return made;
         }
 
         public static Item Make(int slot, int rarity, float power)

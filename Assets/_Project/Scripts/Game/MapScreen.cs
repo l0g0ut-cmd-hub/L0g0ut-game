@@ -28,7 +28,7 @@ namespace BladePath
         static readonly Color Dim = VisualIdentity.Subdued;
         static readonly string[] EnemyFullArt = { "UI/enemy_full_fallen", "UI/enemy_full_shadow", "UI/enemy_full_oni", "UI/enemy_full_shogun" };
 
-        enum Modal { None, Fight, Shrine, Smith, Merchant, Treasure, Rest, Event, RegionClear, Herbalist, Knocked }
+        enum Modal { None, Fight, Shrine, Smith, Merchant, Treasure, Rest, Event, RegionClear, Herbalist, Knocked, Camp }
         Modal modal;
         int sel = -1;
         readonly List<int> previewPath = new List<int>(16);
@@ -267,6 +267,7 @@ namespace BladePath
             DrawRoads();
             DrawJourneyFootprints();
             DrawRouteGlints();
+            DrawFog(uw);
             DrawNodes(interactive && modal == Modal.None && moveTo < 0);
             DrawHero();
             DrawJourneyLegend();
@@ -290,7 +291,7 @@ namespace BladePath
                 if (!manualPan) panU = -1f;
             }
             DrawPanel(new Rect(W - panel, 0f, panel, 540f), interactive && modal == Modal.None && moveTo < 0);
-            if (modal != Modal.None) DrawModal(interactive);
+            if (modal != Modal.None) { DrawModal(interactive); if (modal == Modal.Camp && interactive) DrawToast(); }
             else if (interactive) DrawToast();
             GUI.matrix = old;
         }
@@ -379,7 +380,31 @@ namespace BladePath
             List<MapNode> all = Campaign.Nodes;
             for (int i = 0; i < all.Count; i++)
                 if (all[i].done && all[i].layer > reach) reach = all[i].layer;
-            return n.done || n.Type == NodeType.Boss || n.Type == NodeType.Start || n.layer <= reach + 1;
+            // the raven companion scouts one layer further ahead
+            int ahead = Profile.Companion == Profile.CompanionRaven ? 2 : 1;
+            return n.done || n.Type == NodeType.Boss || n.Type == NodeType.Start || n.layer <= reach + ahead;
+        }
+
+        // ---- fog of war (FogOfWar.cs): revealed around known places and along walked roads
+        readonly List<Vector2> fogPoints = new List<Vector2>(32), fogTrail = new List<Vector2>(128);
+        readonly System.Text.StringBuilder fogKey = new System.Text.StringBuilder(64);
+        void DrawFog(float uw)
+        {
+            if (Event.current.type != EventType.Repaint) return;
+            List<MapNode> ns = Campaign.Nodes;
+            fogKey.Length = 0; fogKey.Append(Campaign.Region).Append(':');
+            fogPoints.Clear();
+            for (int i = 0; i < ns.Count; i++)
+                if (Known(ns[i]) && ns[i].Type != NodeType.Boss) { fogPoints.Add(new Vector2(ns[i].x, ns[i].y)); fogKey.Append(i).Append(','); }
+            fogTrail.Clear();
+            IList<int> tr = Campaign.Travelled;
+            fogKey.Append('|').Append(tr.Count).Append(tr.Count > 0 ? tr[tr.Count - 1] : -1);
+            for (int i = 1; i < tr.Count; i++)
+            {
+                TerrainRoads.Path road = TerrainRoads.Route(tr[i - 1], tr[i]);
+                for (int k = 0; k <= 8; k++) fogTrail.Add(road.Position(k / 8f));
+            }
+            FogOfWar.Draw(new Rect(mapX, 0f, viewW, MapH), u0, uw, fogPoints, fogTrail, fogKey.ToString());
         }
 
         // Shortest route through the authored road graph, including future nodes.
@@ -599,6 +624,8 @@ namespace BladePath
                 if (can) s *= 1f + 0.07f * Mathf.Sin(Time.unscaledTime * 4f + i);
                 if (i == sel) s *= 1.18f;
                 bool known = Known(n);
+                // under the fog of war: unknown places are hidden (the final lord's castle stays visible)
+                if (!known && n.Type != NodeType.Boss) continue;
                 // Focused marker effects use the existing cached UI disc texture:
                 // glowing boss warning, reachable nodes and the hero's current checkpoint.
                 if (known && (can || i == Campaign.At || n.Type == NodeType.Boss) && !n.done)
@@ -1286,6 +1313,7 @@ namespace BladePath
                     if (Btn(new Rect(x, r.yMax - 64f, w, 46f), "В ПУТЬ", ok, true)) { if (modal == Modal.Knocked) Campaign.AckKnocked(); modal = Modal.None; }
                     break;
                 }
+                case Modal.Camp: DrawCamp(ok); break;
                 case Modal.RegionClear:
                 {
                     int prev = Mathf.Clamp(Campaign.ClearedRegion, 0, 2);
@@ -1301,16 +1329,77 @@ namespace BladePath
                         UiKit.Text(new Rect(0f, 362f, W, 24f), "ОБЛАСТЬ ПРОЙДЕНА", 16f, new Color(Gold.r, Gold.g, Gold.b, a));
                         UiKit.Text(new Rect(0f, 386f, W, 42f), Campaign.RegionNames[prev], 32f, new Color(Ink.r, Ink.g, Ink.b, a));
                         UiKit.Text(new Rect(0f, 430f, W, 22f), "Впереди — " + Campaign.RegionNames[Campaign.Region] + (Campaign.Region == 0 ? " (новый круг: враги крепче, добыча богаче)" : ""), 13f, new Color(Dim.r, Dim.g, Dim.b, a));
-                        if (Btn(new Rect(W * 0.5f - 100f, 466f, 200f, 48f), "В ПУТЬ", ok && a >= 1f, true)) { Campaign.AckCleared(); modal = Modal.None; }
+                        if (Btn(new Rect(W * 0.5f - 100f, 466f, 200f, 48f), "В ЛАГЕРЬ", ok && a >= 1f, true)) { Campaign.AckCleared(); OpenCamp(); }
                         break;
                     }
                     Rect r = Card(600f, 260f);
                     UiKit.Text(new Rect(r.x, r.y + 26f, r.width, 24f), "ОБЛАСТЬ ПРОЙДЕНА", 16f, Gold);
                     UiKit.Text(new Rect(r.x, r.y + 56f, r.width, 40f), Campaign.RegionNames[prev], 30f, Ink);
                     UiKit.Text(new Rect(r.x, r.y + 110f, r.width, 22f), "Впереди — " + Campaign.RegionNames[Campaign.Region] + (Campaign.Region == 0 ? " (новый круг: враги крепче, добыча богаче)" : ""), 13f, Dim);
-                    if (Btn(new Rect(r.center.x - 100f, r.yMax - 66f, 200f, 48f), "В ПУТЬ", ok, true)) { Campaign.AckCleared(); modal = Modal.None; }
+                    if (Btn(new Rect(r.center.x - 100f, r.yMax - 66f, 200f, 48f), "В ЛАГЕРЬ", ok, true)) { Campaign.AckCleared(); OpenCamp(); }
                     break;
                 }
+            }
+        }
+
+        // ---------------- лагерь между областями (UI/camp: картина 1915×821 с надписями, зоны нажатия) ----------------
+        // Кузница — снаряжение за полцены и руны; алтарь — благословение на бой; тренировка — +1 очко;
+        // доска заданий — одна награда на выбор. Каждая услуга — один раз за лагерь.
+        const float CampW = 1915f, CampH = 821f;
+        static readonly Rect CampForge = new Rect(60f, 40f, 640f, 360f), CampAltar = new Rect(40f, 400f, 560f, 380f),
+            CampTrain = new Rect(1180f, 390f, 700f, 390f), CampBoard = new Rect(1380f, 40f, 510f, 340f), CampGo = new Rect(712f, 686f, 488f, 89f);
+        int campSub;          // 0 — лагерь, 1 — алтарь, 2 — доска заданий
+        bool campAltar, campTrain, campBoard;
+        void OpenCamp()
+        {
+            campSub = 0; campAltar = campTrain = campBoard = false;
+            if (UiKit.Tex("UI/camp") == null) { modal = Modal.None; return; }
+            OpenModal(Modal.Camp);
+        }
+        Rect CampRect(Rect z, float s, float ox, float oy) { return new Rect(ox + z.x * s, oy + z.y * s, z.width * s, z.height * s); }
+        void DrawCamp(bool ok)
+        {
+            Texture2D art = UiKit.Tex("UI/camp");
+            float s = Mathf.Max(W / CampW, 540f / CampH), ox = (W - CampW * s) * 0.5f, oy = (540f - CampH * s) * 0.5f;
+            if (art != null) GUI.DrawTexture(new Rect(ox, oy, CampW * s, CampH * s), art, ScaleMode.StretchToFill, false);
+            if (campSub == 1)
+            {
+                Rect r = Card(560f, 300f);
+                float x = r.x + 24f, w = r.width - 48f, y = r.y + 20f;
+                UiKit.Text(new Rect(x, y, w, 26f), "АЛТАРЬ", 20f, Gold); y += 40f;
+                string[] names = { "КЛИНОК: +20% УРОНА", "ДУХ: ПОЛНЫЙ ДУХ В НАЧАЛЕ", "ЖИЗНЬ: +25% ЗДОРОВЬЯ" };
+                for (int k = 0; k < 3; k++)
+                    if (Btn(new Rect(x, y + k * 54f, w, 46f), names[k], ok, k == 0)) { Campaign.SetBlessing(k + 1); campAltar = true; campSub = 0; Haptics.Pulse(30); }
+                if (Btn(new Rect(r.center.x - 70f, r.yMax - 52f, 140f, 40f), "НАЗАД", ok)) campSub = 0;
+                return;
+            }
+            if (campSub == 2)
+            {
+                Rect r = Card(560f, 300f);
+                float x = r.x + 24f, w = r.width - 48f, y = r.y + 20f;
+                UiKit.Text(new Rect(x, y, w, 26f), "ДОСКА ЗАДАНИЙ", 20f, Gold); y += 40f;
+                int gold = 60 + 30 * Campaign.Region + 40 * Profile.Cycle;
+                if (Btn(new Rect(x, y, w, 46f), "ПРОВОДИТЬ КАРАВАН: +1 КОСТЬ ПУТИ", ok, true)) { Campaign.AddRoll(); campBoard = true; campSub = 0; }
+                if (Btn(new Rect(x, y + 54f, w, 46f), "НАЙТИ БЕГЛЕЦА: +" + gold + " МОН", ok)) { Profile.AddGold(gold); campBoard = true; campSub = 0; }
+                if (Btn(new Rect(x, y + 108f, w, 46f), "ОХОТА НА ОБОРОТНЯ: ПРЕДМЕТ", ok)) { Profile.Give(Profile.Roll(Campaign.Region + 1, 80, false)); campBoard = true; campSub = 0; }
+                if (Btn(new Rect(r.center.x - 70f, r.yMax - 52f, 140f, 40f), "НАЗАД", ok)) campSub = 0;
+                return;
+            }
+            // зоны: уже использованные приглушены, нажатие — тёплая вспышка
+            Rect forge = CampRect(CampForge, s, ox, oy), altar = CampRect(CampAltar, s, ox, oy), train = CampRect(CampTrain, s, ox, oy),
+                 board = CampRect(CampBoard, s, ox, oy), go = CampRect(CampGo, s, ox, oy);
+            if (campAltar) UiKit.Rect(altar, new Color(0f, 0f, 0f, 0.45f));
+            if (campTrain) UiKit.Rect(train, new Color(0f, 0f, 0f, 0.45f));
+            if (campBoard) UiKit.Rect(board, new Color(0f, 0f, 0f, 0.45f));
+            if (!ok || InventoryScreen.Open) return;
+            if (GUI.Button(go, GUIContent.none, GUIStyle.none)) { Profile.CostMul = 1f; modal = Modal.None; Haptics.Pulse(20); return; }
+            if (GUI.Button(forge, GUIContent.none, GUIStyle.none)) { Profile.CostMul = 0.5f; InventoryScreen.Show(0); return; }
+            if (!campAltar && GUI.Button(altar, GUIContent.none, GUIStyle.none)) { campSub = 1; return; }
+            if (!campBoard && GUI.Button(board, GUIContent.none, GUIStyle.none)) { campSub = 2; return; }
+            if (!campTrain && GUI.Button(train, GUIContent.none, GUIStyle.none))
+            {
+                Profile.GivePoint(); campTrain = true; Haptics.Pulse(30);
+                toastLines.Clear(); toastLines.Add("Тренировка у соломенных чучел: +1 очко характеристик."); toastAt = Time.unscaledTime;
             }
         }
 
@@ -1356,9 +1445,10 @@ namespace BladePath
 
         // ---------------- события на дороге ----------------
 
-        public const int EventCount = 9, CatEvent = 8;
+        public const int EventCount = 12, CatEvent = 8, CompanionEvent = 9;   // 9 ворон, 10 волк, 11 змея
         static readonly string[] EvTitle = { "РАНЕНЫЙ РОНИН", "СТАРЫЙ МОНАХ", "РАЗБОЙНИКИ", "БЕЛАЯ ЛИСА",
-                                             "ЧАЙНЫЙ ДОМИК", "ДЕВА В ХРАМЕ", "МОНАХ НА МОСТУ", "БЕЖЕНЦЫ", "ХРАНИТЕЛЬ ДЕВЯТИ ЖИЗНЕЙ" };
+                                             "ЧАЙНЫЙ ДОМИК", "ДЕВА В ХРАМЕ", "МОНАХ НА МОСТУ", "БЕЖЕНЦЫ", "ХРАНИТЕЛЬ ДЕВЯТИ ЖИЗНЕЙ",
+                                             "ВОРОН НА ПОЛЕ БИТВЫ", "ВОЛК В КАПКАНЕ", "ЗМЕЯ У АЛТАРЯ" };
         static readonly string[] EvText =
         {
             "У каменного фонаря сидит раненый ронин, зажимая бок. «Перевяжи меня, путник… я не останусь в долгу».",
@@ -1370,6 +1460,9 @@ namespace BladePath
             "На узком мосту стоит исполин-монах с нагинатой. За спиной — гора отнятых мечей. «Ещё один клинок в мою коллекцию? Проходи — если сможешь».",
             "Под дождём беженцы бьются над сломанной повозкой: мать с ребёнком и старик. Из кустов на них глядят жёлтые глаза волка.",
             "На ступенях заброшенного святилища сидит огромный пушистый кот, рядом — пустая миска для подношений. Он лениво щурится: кажется, о твоём пути он знает больше, чем должен.",
+            "Старое поле битвы на закате. На рукояти воткнутого в землю меча сидит огромный ворон с красными глазами и смотрит прямо на тебя, будто выбирает хозяина.",
+            "На снежной тропе раненый волк попал в капкан и скалит зубы. Из тумана за ним следят горящие глаза стаи.",
+            "В бамбуковой чаще вокруг статуи божества обвилась изумрудная змея с золотым узором. На алтаре — пустая чаша для подношений.",
         };
 
          void DrawEvent(MapNode n, int at, bool ok)
@@ -1480,6 +1573,29 @@ namespace BladePath
                         Result("Кот лапой сталкивает монету в миску, а из-под ступени выкатывается свёрток: «" + it.name + "».");
                     }
                     if (Btn(c4, "ПРОЙТИ МИМО", ok)) Result("Кот провожает тебя долгим презрительным взглядом.");
+                    break;
+                }
+                case 9: case 10: case 11:   // спутники: ворон, волк, змея (одновременно — только один)
+                {
+                    int comp = ev - CompanionEvent;
+                    int had = Profile.Companion;
+                    string swap = had >= 0 && had != comp ? " (вместо: " + Profile.CompanionNames[had].ToLower() + ")" : "";
+                    string[] take = { "ПРОТЯНУТЬ РУКУ", "ОСВОБОДИТЬ ИЗ КАПКАНА", "ОСТАВИТЬ ПОДНОШЕНИЕ (−30 МОН)" };
+                    bool can = had != comp && (comp != 2 || Profile.Gold >= 30);
+                    if (Btn(b1, take[comp] + swap, ok && can, true) && (comp != 2 || Profile.Spend(30)))
+                    {
+                        Profile.SetCompanion(comp);
+                        if (comp == 0) Result("Ворон каркает и садится тебе на плечо. Теперь он твой спутник: " + Profile.CompanionHints[0]);
+                        else if (comp == 1)
+                        {
+                            bool bite = Random.value < 0.3f;
+                            if (bite) Campaign.Curse();
+                            Result((bite ? "Освобождённый волк в испуге хватает тебя за руку (−25% здоровья в следующем бою), но потом идёт следом. " : "Волк долго смотрит тебе в глаза и идёт следом. ") + Profile.CompanionHints[1]);
+                        }
+                        else Result("Змея пробует подношение языком и обвивается вокруг твоих ножен. " + Profile.CompanionHints[2]);
+                    }
+                    if (had == comp) UiKit.Text(new Rect(b1.x, b1.y - 22f, b1.width, 18f), "Этот спутник уже с тобой", 11f, Dim, TextAnchor.MiddleLeft, false);
+                    if (Btn(b2, "ПРОЙТИ МИМО", ok)) Result("Ты идёшь дальше своей дорогой.");
                     break;
                 }
                 case 7:   // беженцы: кость пути за помощь или благословение за деньги

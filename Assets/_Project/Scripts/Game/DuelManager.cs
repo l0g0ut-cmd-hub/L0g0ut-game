@@ -338,6 +338,7 @@ namespace BladePath
             if (Round < 1) Round = 1;
             Time.timeScale = 1f;
             Paused = false; Slowmo = false; hitStopUntil = 0f;
+            companionAt = -1f; poisonUntil = 0f;
             if (player != null) { player.ResetFighter(); hp[player] = MaxHp(player); hpTrail[player] = MaxHp(player); lastSwing[player] = -1; }
             bleedUntil = 0f;
             if (enemy != null) { enemy.ResetFighter(); hp[enemy] = MaxHp(enemy); hpTrail[enemy] = MaxHp(enemy); lastSwing[enemy] = -1; }
@@ -468,6 +469,7 @@ namespace BladePath
             {
                 // равновесие восстанавливается, когда по бойцу не бьют: медленнее при низком здоровье, быстрее в блоке
                 RegenPosture(player); RegenPosture(enemy);
+                UpdateCompanion();
                 UpdateLives(Time.unscaledDeltaTime);
                 if (TimerOn && !SuperActive && !DeathblowActive && !ResurrectOffered) TimeLeft = Mathf.Max(0f, TimeLeft - Time.deltaTime);
                 if (TimerOn && TimeLeft <= 0f) TimeUp();
@@ -1120,7 +1122,47 @@ namespace BladePath
         void RegenPosture(FighterController f)
         {
             if (f != null && f.SincePostureHit > 1.0f)
-                f.RecoverPosture(Time.deltaTime * 14f * (0.35f + 0.65f * Hp01(f)) * (f.Blocking ? 1.6f : 1f));
+                f.RecoverPosture(Time.deltaTime * 14f * (0.35f + 0.65f * Hp01(f)) * (f.Blocking ? 1.6f : 1f)
+                    * (f == enemy && Time.time < poisonUntil ? 0.5f : 1f));   // яд змеи-спутника
+        }
+
+        // ---- спутник героя (ворон, волк, змея): сам нападает на врага по таймеру боевого времени
+        float companionAt = -1f, poisonUntil;
+        public float CompanionReady01 { get { float cd = CompanionCooldown; return cd <= 0f || companionAt < 0f ? 0f : Mathf.Clamp01(1f - (companionAt - Time.time) / cd); } }
+        static float CompanionCooldown { get { int c = Profile.Companion; return c == Profile.CompanionRaven ? 20f : c == Profile.CompanionWolf ? 15f : c == Profile.CompanionSnake ? 12f : 0f; } }
+        void CompanionPopup(string text, Color col, Vector3 at)
+        {
+            Popup p = new Popup { world = at + Vector3.up * 0.6f, text = text, color = col, born = Time.unscaledTime, size = 24f };
+            Popups.Add(p);
+        }
+        void UpdateCompanion()
+        {
+            int c = Profile.Companion;
+            if (c < 0 || enemy == null || player == null || enemy.Dead || player.Dead || DeathblowActive) return;
+            if (companionAt < 0f) { companionAt = Time.time + CompanionCooldown * 0.6f; return; }   // первый налёт — чуть раньше полного отката
+            if (Time.time < companionAt) return;
+            companionAt = Time.time + CompanionCooldown;
+            Vector3 chest = enemy.transform.position + Vector3.up * 1.15f;
+            if (c == Profile.CompanionRaven)
+            {
+                FxSprite.SpawnAlpha("companion_raven", chest + Vector3.up * 0.5f, 2.2f, 4, 4, 16, 22f, false);
+                if (enemy.weapon != null && enemy.weapon.Phase == SwingPhase.Windup) enemy.weapon.ResetState();   // сбил замах
+                ForceHit(enemy, player, 5f, 18f, chest);
+                CompanionPopup("ВОРОН!", new Color(0.75f, 0.6f, 1f), chest);
+            }
+            else if (c == Profile.CompanionWolf)
+            {
+                FxSprite.Spawn("companion_wolf", chest, 2.4f, 4, 4, 16, 22f, false);
+                ForceHit(enemy, player, 10f, 22f, chest);
+                CompanionPopup("ВОЛК!", new Color(0.6f, 0.75f, 1f), chest);
+            }
+            else
+            {
+                FxSprite.Spawn("companion_snake", chest - Vector3.up * 0.3f, 2.2f, 4, 4, 16, 22f, false);
+                ForceHit(enemy, player, 5f, 8f, chest);
+                poisonUntil = Time.time + 5f;
+                CompanionPopup("ЯД ЗМЕИ", new Color(0.55f, 1f, 0.45f), chest);
+            }
         }
         void OnPostureBreak(FighterController f)
         {
@@ -1440,6 +1482,8 @@ namespace BladePath
             float before01 = Hp01(target);
             if (!chip && attacker == player && Profile.Has(Tech.SteelThirst) && hp.ContainsKey(player) && !player.Dead)
                 hp[player] = Mathf.Min(MaxHp(player), hp[player] + Mathf.Min(dmg, Hp(target)) * 0.08f);   // «Жажда стали»
+            if (!chip && attacker == player && Profile.B.lifesteal > 0f && hp.ContainsKey(player) && !player.Dead)
+                hp[player] = Mathf.Min(MaxHp(player), hp[player] + Mathf.Min(dmg, Hp(target)) * Profile.B.lifesteal);   // руна «Вампиризм»
             hp[target] = Mathf.Max(0f, Hp(target) - dmg);
             // финальный противник «Пути» на половине здоровья впадает в ярость
             if (target == enemy && Ladder.IsLast && !Enraged && Marks(enemy) <= 1 && before01 > 0.5f && Hp01(target) <= 0.5f && Hp(target) > 0f)

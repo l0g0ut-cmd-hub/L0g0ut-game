@@ -66,7 +66,13 @@ namespace BladePath
                 bool second = it.icon >= 16, third = it.icon >= 52;
                 Texture2D atlas = UiKit.Tex(third ? "UI/items3" : second ? "UI/items2" : "UI/items");
                 Rect ir = new Rect(r.x + r.width * 0.15f, r.y + r.height * 0.15f, r.width * 0.7f, r.height * 0.7f);   // внутри проёма рамки
-                if (atlas != null)
+                Texture2D setAtlas = it.set >= 0 && it.slot <= 3 ? UiKit.Tex("UI/set_items") : null;
+                if (setAtlas != null)
+                {
+                    // комплекты кланов: атлас 4×3 — строка клана, столбец ячейки (клинок, цуба, облачение, маска)
+                    GUI.DrawTextureWithTexCoords(ir, setAtlas, new Rect(it.slot * 0.25f, 1f - (it.set + 1) / 3f, 0.25f, 1f / 3f));
+                }
+                else if (atlas != null)
                 {
                     int n = second ? 6 : 4, k = third ? it.icon - 52 : second ? it.icon - 16 : it.icon;
                     float u = 1f / n;
@@ -76,6 +82,12 @@ namespace BladePath
                 {
                     UiKit.Disc(ir.center, ir.width * 0.42f, new Color(rc.r * 0.35f, rc.g * 0.35f, rc.b * 0.35f, 1f));
                     UiKit.Text(ir, Abbr[Mathf.Clamp(it.slot, 0, 6)], ir.height * 0.36f, rc);
+                }
+                if (it.rune >= 0)
+                {
+                    Texture2D rt = UiKit.Tex("UI/runes");
+                    if (rt != null) GUI.DrawTextureWithTexCoords(new Rect(r.x + 2f, r.yMax - r.height * 0.36f - 2f, r.width * 0.36f, r.height * 0.36f), rt,
+                        new Rect((it.rune % 4) * 0.25f, it.rune < 4 ? 0.5f : 0f, 0.25f, 0.5f));
                 }
                 if (it.level > 0)
                 {
@@ -112,6 +124,7 @@ namespace BladePath
         /// <summary>Кнопка-доска (для карты похода и других экранов).</summary>
         public static bool Button(Rect r, string label, bool enabled = true, bool red = false) { return Btn(r, label, enabled, red); }
         /// <summary>Значок предмета в рамке редкости.</summary>
+        static readonly Color Dimmed = new Color(0.62f, 0.58f, 0.52f);
         public static void ItemIcon(Rect r, Item it) { DrawItem(r, it, false); }
 
         static bool Btn(Rect r, string label, bool enabled = true, bool red = false)
@@ -403,6 +416,38 @@ namespace BladePath
                     }
                     UiKit.Text(new Rect(a.x + 10f, y, a.width - 20f, 15f), Profile.ModText((ModId)m.stat, v), 11.5f, mc, TextAnchor.MiddleLeft, false);
                     y += 15f;
+                }
+                // комплект клана: сколько надето и что даёт
+                if (it.set >= 0)
+                {
+                    int have = Profile.SetPieces(it.set);
+                    Color sc = new Color(0.95f, 0.78f, 0.35f);
+                    UiKit.Text(new Rect(a.x + 10f, y + 2f, a.width - 20f, 15f), "Комплект " + Profile.SetNames[it.set] + ": " + have + "/4", 11.5f, sc, TextAnchor.MiddleLeft, false); y += 16f;
+                    UiKit.Text(new Rect(a.x + 16f, y, a.width - 26f, 15f), "2: " + Profile.SetBonus2[it.set], 11f, have >= 2 ? sc : Dimmed, TextAnchor.MiddleLeft, false); y += 15f;
+                    UiKit.Text(new Rect(a.x + 16f, y, a.width - 26f, 15f), "4: " + Profile.SetBonus4[it.set], 11f, have >= 4 ? sc : Dimmed, TextAnchor.MiddleLeft, false); y += 15f;
+                }
+                // руна клинка: у кузнеца (на карте или в лагере) — вставить или заменить
+                if (it.slot == (int)Slot.Blade)
+                {
+                    if (it.rune >= 0)
+                    {
+                        UiKit.Text(new Rect(a.x + 10f, y + 2f, a.width - 20f, 15f), "Руна «" + Profile.RuneNames[it.rune] + "»: " + Profile.RuneHints[it.rune], 11.5f, new Color(0.7f, 0.85f, 1f), TextAnchor.MiddleLeft, false);
+                        y += 17f;
+                    }
+                    if (Profile.CostMul < 1f)
+                    {
+                        UiKit.Text(new Rect(a.x + 10f, y + 2f, a.width - 20f, 14f), "Кузнец вставит руну: " + Profile.RuneCost + " мон", 11f, Dimmed, TextAnchor.MiddleLeft, false);
+                        y += 16f;
+                        Texture2D rt = UiKit.Tex("UI/runes");
+                        float rs = Mathf.Min(34f, (a.width - 20f) / 8f - 4f);
+                        for (int k = 0; k < Profile.RuneNames.Length; k++)
+                        {
+                            Rect rr = new Rect(a.x + 10f + k * (rs + 4f), y, rs, rs);
+                            if (it.rune == k) UiKit.Rect(new Rect(rr.x - 2f, rr.y - 2f, rr.width + 4f, rr.height + 4f), new Color(1f, 0.85f, 0.4f, 0.9f));
+                            if (rt != null) GUI.DrawTextureWithTexCoords(rr, rt, new Rect((k % 4) * 0.25f, k < 4 ? 0.5f : 0f, 0.25f, 0.5f));
+                            if (GUI.Button(rr, GUIContent.none, GUIStyle.none) && Profile.Gold >= Profile.RuneCost) Profile.SetRune(it, k);
+                        }
+                    }
                 }
             }
             // кнопки
