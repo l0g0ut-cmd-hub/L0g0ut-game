@@ -48,4 +48,6 @@ assert 'JourneyChoice.Names[JourneyChoice.Hero]' in hud
 assert 'pp = JourneyChoice.Portrait(JourneyChoice.Hero)' in hud
 assert 'new Rect(0.035f, 0.742f, 0.365f, 0.250f)' in hud
 assert 'pp = UiKit.Tex("UI/portrait_hero")' not in hud
+assert 'if (duel.State == DuelState.Intro) splats.Clear();' in hud
+assert 'duel.Damaged -= OnDamaged;' in hud
 print("Duel round reset, blood lifecycle, and HUD layout: OK")
