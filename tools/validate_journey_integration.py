@@ -158,6 +158,11 @@ def check_routes():
 
 def check_new_game():
     choice = read("Assets/_Project/Scripts/Game/JourneyChoice.cs")
+    apk = read(".github/workflows/build-android.yml")
+    audit = read("tools/audit_missing_game_art.py")
+    assert 'BLADEPATH_REQUIRE_APPROVED_ART: "1"' in apk
+    assert 'if missing and os.environ.get("BLADEPATH_REQUIRE_APPROVED_ART") == "1":' in audit
+    assert "APK release blocked: missing or SHA-mismatched original PNGs" in audit
     menu = read("Assets/_Project/Scripts/Menu/MainMenuController.cs")
     skins = read("Assets/_Project/Scripts/Visual/PlayerSkins.cs")
     builder = read("Assets/_Project/Scripts/Editor/HeroModelBuilder.cs")

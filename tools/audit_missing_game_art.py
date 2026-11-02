@@ -130,6 +130,11 @@ def main():
             out.write("\n")
     if missing and os.environ.get("GITHUB_ACTIONS"):
         print("::warning title=Approved art missing::" + ", ".join(missing))
+    # The Android release workflow explicitly opts into strict validation.
+    # Avoid burning the Unity build slot on known-wrong substitute JPG art.
+    if missing and os.environ.get("BLADEPATH_REQUIRE_APPROVED_ART") == "1":
+        raise SystemExit("APK release blocked: missing or SHA-mismatched original PNGs: " +
+                         ", ".join(missing))
 
 if __name__ == "__main__":
     main()
