@@ -1248,8 +1248,23 @@ namespace BladePath
                 }
                 case Modal.RegionClear:
                 {
-                    Rect r = Card(600f, 260f);
                     int prev = Mathf.Clamp(Campaign.ClearedRegion, 0, 2);
+                    Texture2D victory = UiKit.Tex("UI/region_clear_" + prev);
+                    if (victory != null)
+                    {
+                        // Full-screen painting of the freed region; text on a dark band below.
+                        float a = Mathf.Clamp01((Time.unscaledTime - modalAt) / 0.6f);
+                        Color oc = GUI.color; GUI.color = new Color(1f, 1f, 1f, a);
+                        GUI.DrawTexture(new Rect(0f, 0f, W, 540f), victory, ScaleMode.ScaleAndCrop);
+                        GUI.color = oc;
+                        UiKit.Rect(new Rect(0f, 352f, W, 188f), new Color(0.01f, 0.008f, 0.008f, 0.62f * a));
+                        UiKit.Text(new Rect(0f, 362f, W, 24f), "ОБЛАСТЬ ПРОЙДЕНА", 16f, new Color(Gold.r, Gold.g, Gold.b, a));
+                        UiKit.Text(new Rect(0f, 386f, W, 42f), Campaign.RegionNames[prev], 32f, new Color(Ink.r, Ink.g, Ink.b, a));
+                        UiKit.Text(new Rect(0f, 430f, W, 22f), "Впереди — " + Campaign.RegionNames[Campaign.Region] + (Campaign.Region == 0 ? " (новый круг: враги крепче, добыча богаче)" : ""), 13f, new Color(Dim.r, Dim.g, Dim.b, a));
+                        if (Btn(new Rect(W * 0.5f - 100f, 466f, 200f, 48f), "В ПУТЬ", ok && a >= 1f, true)) { Campaign.AckCleared(); modal = Modal.None; }
+                        break;
+                    }
+                    Rect r = Card(600f, 260f);
                     UiKit.Text(new Rect(r.x, r.y + 26f, r.width, 24f), "ОБЛАСТЬ ПРОЙДЕНА", 16f, Gold);
                     UiKit.Text(new Rect(r.x, r.y + 56f, r.width, 40f), Campaign.RegionNames[prev], 30f, Ink);
                     UiKit.Text(new Rect(r.x, r.y + 110f, r.width, 22f), "Впереди — " + Campaign.RegionNames[Campaign.Region] + (Campaign.Region == 0 ? " (новый круг: враги крепче, добыча богаче)" : ""), 13f, Dim);
