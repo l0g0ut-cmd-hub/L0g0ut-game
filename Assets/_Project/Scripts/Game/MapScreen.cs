@@ -572,9 +572,10 @@ namespace BladePath
                 Rect hit = new Rect(p.x - 34f, p.y - 34f, 68f, 68f);
                 if (GUI.Button(hit, GUIContent.none, GUIStyle.none))
                 {
-                    if (can && sel == i) Go(i);
-                    else if (i == Campaign.At && (n.Type == NodeType.Smith || n.Type == NodeType.Merchant)) OpenNode(i);
-                    else { SelectNode(i); Haptics.Pulse(10); }   // preview route before choosing to move
+                    // Selecting a marker never launches movement. One tap selects;
+                    // the explicit ДВИГАТЬСЯ button in the sidebar starts the trip.
+                    if (i == Campaign.At && (n.Type == NodeType.Smith || n.Type == NodeType.Merchant)) OpenNode(i);
+                    else { SelectNode(i); Haptics.Pulse(10); }
                 }
             }
             // знамя в начале пути
@@ -902,14 +903,14 @@ namespace BladePath
                     // Travel remains one node at a time, so fight/event encounters
                     // are never skipped by the route preview.
                     if (Campaign.CanGo(nextStep) &&
-                        Btn(new Rect(x, y, w, 40f), totalMoves == 1 ? "ИДТИ ПО СЛЕДАМ" : "НАЧАТЬ ПУТЬ (1 / " + totalMoves + ")", interactive))
+                        Btn(new Rect(x, y, w, 40f), "ДВИГАТЬСЯ", interactive))
                         Go(nextStep);
                     else
                         UiKit.Text(new Rect(x, y, w, 18f),
                             Campaign.Steps == 0 ? "Нужен бросок кости пути" : "Следующий переход пока закрыт",
                             11f, Dim, TextAnchor.MiddleLeft, false);
                 }
-                else if (Campaign.CanGo(show) && Btn(new Rect(x, y, w, 40f), "ИДТИ", interactive))
+                else if (Campaign.CanGo(show) && Btn(new Rect(x, y, w, 40f), "ДВИГАТЬСЯ", interactive))
                     Go(show);
             }
             else
@@ -957,7 +958,7 @@ namespace BladePath
                 case NodeType.Smith: return "UI/npc_1";
                 case NodeType.Merchant: return "UI/npc_0";
                 case NodeType.Rest: return "UI/npc_3";
-                case NodeType.Herbalist: return "UI/pack02/herbalist";
+                case NodeType.Herbalist: return "UI/npc_3";
                 case NodeType.Treasure: return "UI/chest_open";
                 default: return "UI/path_panorama";
             }
@@ -1156,7 +1157,7 @@ namespace BladePath
                 case Modal.Knocked:
                 {
                     Rect r = Card(640f, 340f);
-                    Picture(new Rect(r.x, r.y, 250f, r.height), "UI/pack02/herbalist");
+                    Picture(new Rect(r.x, r.y, 250f, r.height), "UI/npc_3");
                     float x = r.x + 270f, w = r.width - 290f, y = r.y + 22f;
                     UiKit.Text(new Rect(x, y, w, 26f), "ХИЖИНА ТРАВНИЦЫ", 20f, Gold, TextAnchor.MiddleLeft); y += 34f;
                     string tx = modal == Modal.Knocked
