@@ -286,8 +286,29 @@ namespace BladePath
         // destination's silhouette with the same grey cloud.
         static int MapBadgeCell(MapNode n, int index)
         {
-            if (n.done && index != Campaign.At && n.Type != NodeType.Start) return 10;
+            // Do not replace completed or distant locations with a universal cloud.
+            // A shrine remains a shrine, a duel stays crossed swords, etc.
             return IconOf(n.Type);
+        }
+
+        static readonly string[] ShortTypeNames =
+        {
+            "НАЧАЛО", "ДУЭЛЬ", "ЭЛИТА", "БОСС", "ХРАМ", "КУЗНЕЦ",
+            "ТОРГОВЕЦ", "СУНДУК", "ЗАСАДА", "СОБЫТИЕ", "ПРИВАЛ", "ТРАВНИЦА"
+        };
+
+        static void HerbalistMark(Vector2 c, float radius)
+        {
+            // A green herbal stamp distinguishes the healer from the starting flag.
+            UiKit.Disc(c, radius, new Color(0.07f, 0.17f, 0.12f, 0.95f));
+            UiKit.Ring(c, radius, new Color(0.58f, 0.80f, 0.46f, 0.85f), true);
+            UiKit.Line(c + new Vector2(0f, radius * 0.58f),
+                c + new Vector2(0f, -radius * 0.56f), 2.1f,
+                new Color(0.83f, 0.94f, 0.58f, 0.95f));
+            UiKit.Disc(c + new Vector2(-radius * 0.35f, -radius * 0.12f),
+                radius * 0.30f, new Color(0.43f, 0.80f, 0.39f, 0.98f));
+            UiKit.Disc(c + new Vector2(radius * 0.35f, -radius * 0.30f),
+                radius * 0.27f, new Color(0.48f, 0.81f, 0.43f, 0.98f));
         }
 
         static Color MapBadgeTint(MapNode n, bool known, int index)
@@ -510,6 +531,17 @@ namespace BladePath
                     GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), ic, Cell(k));
                 else UiKit.Disc(p, s * 0.45f, can ? Gold : Dim);
                 GUI.color = oc;
+                if (n.Type == NodeType.Herbalist)
+                    HerbalistMark(p + new Vector2(s * 0.26f, s * 0.27f), 10f);
+                // Only nearby / selected nodes show labels. Avoid crowding the panorama.
+                if ((can || i == sel) && known && n.Type != NodeType.Start)
+                {
+                    float tw = 90f;
+                    Rect label = new Rect(p.x - tw * 0.5f, p.y + s * 0.45f + 3f, tw, 18f);
+                    UiKit.Rect(label, new Color(0.028f, 0.023f, 0.02f, 0.75f));
+                    UiKit.Text(label, ShortTypeNames[(int)n.Type], 10.5f,
+                        new Color(0.96f, 0.88f, 0.68f, 0.98f), TextAnchor.MiddleCenter, false);
+                }
                 int routeIndex = previewPath.IndexOf(i);
                 if (routeIndex > 0)
                 {
@@ -645,6 +677,8 @@ namespace BladePath
                     GUI.DrawTextureWithTexCoords(new Rect(x, y, 64f, 64f), ic,
                         Cell(MapBadgeCell(n, show)));
                     GUI.color = previousTint;
+                    if (n.Type == NodeType.Herbalist)
+                        HerbalistMark(new Vector2(x + 53f, y + 53f), 11f);
                 }
                 UiKit.Text(new Rect(x + 72f, y + 6f, w - 72f, 24f), known ? Campaign.TypeNames[n.type] : "НЕИЗВЕСТНО", 16f, Ink, TextAnchor.MiddleLeft);
                 if (known && n.IsFight) UiKit.Text(new Rect(x + 72f, y + 32f, w - 72f, 20f), Ladder.Stages[Mathf.Clamp(n.enemy, 0, Ladder.Count - 1)].name, 12f, new Color(1f, 0.6f, 0.45f), TextAnchor.MiddleLeft, false);
