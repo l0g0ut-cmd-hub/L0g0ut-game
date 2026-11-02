@@ -147,6 +147,7 @@ def check_design_system():
 
     authored_jpegs = [
         "event_0.jpg", "event_1.jpg", "event_2.jpg", "event_3.jpg",
+        "event_4.jpg", "event_5.jpg", "event_6.jpg", "event_7.jpg",
         "npc_0.jpg", "npc_1.jpg", "npc_2.jpg", "npc_3.jpg", "npc_4.jpg",
     ]
     originals = ["plank.png", "plank_red.png", "map_icons.png",

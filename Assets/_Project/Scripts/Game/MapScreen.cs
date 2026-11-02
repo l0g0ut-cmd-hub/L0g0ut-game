@@ -1025,7 +1025,7 @@ namespace BladePath
             }
             switch (node.Type)
             {
-                case NodeType.Event: return "UI/event_" + Mathf.Clamp(node.ev, 0, 3);
+                case NodeType.Event: return "UI/event_" + Mathf.Clamp(node.ev, 0, EventCount - 1);
                 case NodeType.Shrine: return "UI/npc_2";
                 case NodeType.Smith: return "UI/npc_1";
                 case NodeType.Merchant: return "UI/npc_0";
@@ -1301,18 +1301,24 @@ namespace BladePath
 
         // ---------------- события на дороге ----------------
 
-        static readonly string[] EvTitle = { "РАНЕНЫЙ РОНИН", "СТАРЫЙ МОНАХ", "РАЗБОЙНИКИ", "БЕЛАЯ ЛИСА" };
+        public const int EventCount = 8;
+        static readonly string[] EvTitle = { "РАНЕНЫЙ РОНИН", "СТАРЫЙ МОНАХ", "РАЗБОЙНИКИ", "БЕЛАЯ ЛИСА",
+                                             "ЧАЙНЫЙ ДОМИК", "ДЕВА В ХРАМЕ", "МОНАХ НА МОСТУ", "БЕЖЕНЦЫ" };
         static readonly string[] EvText =
         {
             "У каменного фонаря сидит раненый ронин, зажимая бок. «Перевяжи меня, путник… я не останусь в долгу».",
             "У горного святилища старый монах протягивает тебе свиток. «Путь клинка — это путь духа. Возьми — или попроси благословения».",
             "Из бамбука с факелами выскакивают разбойники. Копья нацелены тебе в грудь: «Кошель — или жизнь!»",
             "На замшелом камне сидит белая лиса с девятью хвостами. Вокруг пляшут синие огоньки и зовут за собой в чащу.",
+            "У дороги — чайный домик. Слепой старик с белыми глазами разливает чай в две чаши: «Садись, путник. Я слышал твои шаги ещё у моста».",
+            "В разрушенном храме над поверженным Буддой парит дева в белом. У её ног — старый меч в ножнах. «Он ждал хозяина сто лет…»",
+            "На узком мосту стоит исполин-монах с нагинатой. За спиной — гора отнятых мечей. «Ещё один клинок в мою коллекцию? Проходи — если сможешь».",
+            "Под дождём беженцы бьются над сломанной повозкой: мать с ребёнком и старик. Из кустов на них глядят жёлтые глаза волка.",
         };
 
          void DrawEvent(MapNode n, int at, bool ok)
         {
-            int ev = Mathf.Clamp(n.ev, 0, 3);
+            int ev = Mathf.Clamp(n.ev, 0, EventCount - 1);
             Rect r = Card(720f, 400f);
             // The authored illustrated event series is a real painted asset set.
             // The old pack02 variants were tiny procedural placeholders that
@@ -1360,6 +1366,53 @@ namespace BladePath
                         else { Campaign.Curse(); Result("Огни кружат тебя до рассвета. Лиса смеётся. Проклятие: −25% здоровья в следующем бою."); }
                     }
                     if (Btn(b2, "ОСТАВИТЬ ПОДНОШЕНИЕ (−25 МОН)", ok && Profile.Gold >= 25) && Profile.Spend(25)) { Campaign.SetBlessing(3); Result("Лиса берёт моны и исчезает. Тепло разливается по телу: +25% здоровья в следующем бою."); }
+                    break;
+                case 4:   // чайный домик слепого мастера: дух или очко характеристик
+                    if (Btn(b1, "ВЫПИТЬ ЧАЙ", ok, true))
+                    {
+                        Campaign.SetBlessing(2);
+                        int lv = Profile.AddXp(40 * stage);
+                        Result("Горький чай проясняет голову. В следующем бою — полный дух, +" + (40 * stage) + " опыта" + (lv > 0 ? " и новый уровень!" : "."));
+                    }
+                    if (Btn(b2, "СПРОСИТЬ О ПУТИ МЕЧА", ok))
+                    {
+                        Profile.GivePoint();
+                        Result("«Глаза лгут, клинок — нет». До темноты он учит тебя слушать сталь: +1 очко характеристик.");
+                    }
+                    break;
+                case 5:   // дева-призрак: меч ценой проклятия или благословение за свечи
+                    if (Btn(b1, "ВЗЯТЬ МЕЧ", ok, true))
+                    {
+                        Item it = Profile.Make(0, Random.value < 0.4f ? 3 : 2, 1f + 0.25f * stage + 0.4f * Profile.Cycle);
+                        Profile.Give(it);
+                        Campaign.Curse();
+                        Result("Меч твой: «" + it.name + "». Но дева идёт следом. Проклятие: −25% здоровья в следующем бою.");
+                    }
+                    if (Btn(b2, "ЗАЖЕЧЬ СВЕЧИ (−20 МОН)", ok && Profile.Gold >= 20) && Profile.Spend(20))
+                    {
+                        Campaign.SetBlessing(1);
+                        Result("Дева склоняет голову и тает в лунном свете. Её сила с тобой: +20% урона в следующем бою.");
+                    }
+                    break;
+                case 6:   // монах на мосту: бой или поклон
+                    if (Btn(b1, "ПРИНЯТЬ ВЫЗОВ", ok, true)) { Campaign.TurnToAmbush(at); OpenModal(Modal.Fight); }
+                    if (Btn(b2, "ПОКЛОНИТЬСЯ И УЙТИ", ok))
+                    {
+                        int lv = Profile.AddXp(30 * stage);
+                        Result("Монах хохочет: «Мудрый, кто знает свой предел!» Ты переходишь реку вброд: +" + (30 * stage) + " опыта" + (lv > 0 ? ", новый уровень!" : "."));
+                    }
+                    break;
+                case 7:   // беженцы: кость пути за помощь или благословение за деньги
+                    if (Btn(b1, "ПОМОЧЬ С ПОВОЗКОЙ", ok, true))
+                    {
+                        Campaign.AddRoll();
+                        Result("Вы ставите колесо, волк уходит в чащу. Старик отдаёт тебе кость пути: «Тебе нужнее».");
+                    }
+                    if (Btn(b2, "ДАТЬ ДЕНЕГ (−40 МОН)", ok && Profile.Gold >= 40) && Profile.Spend(40))
+                    {
+                        Campaign.SetBlessing(3);
+                        Result("Мать прячет моны за пазуху и молится за тебя. +25% здоровья в следующем бою.");
+                    }
                     break;
             }
         }

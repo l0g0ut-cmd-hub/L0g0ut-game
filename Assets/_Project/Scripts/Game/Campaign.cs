@@ -13,7 +13,7 @@ namespace BladePath
         public float x, y;          // на карте области, доли ширины и высоты
         public int type;            // NodeType
         public int enemy;           // ступень Ladder для боя
-        public int ev = -1;         // событие (0 — раненый ронин, 1 — монах, 2 — разбойники, 3 — кицунэ)
+        public int ev = -1;         // событие: 0 раненый ронин, 1 монах, 2 разбойники, 3 кицунэ, 4 чайный домик, 5 дева в храме, 6 монах на мосту, 7 беженцы
         public bool done;
         public List<int> next = new List<int>();
         public NodeType Type { get { return (NodeType)type; } }
@@ -251,7 +251,7 @@ namespace BladePath
                     n.type = (int)RollType(l, L);
                     n.enemy = DuelEnemy(region);
                     if (n.Type == NodeType.Elite) n.enemy = Mathf.Clamp(region, 0, Ladder.Count - 1);
-                    if (n.Type == NodeType.Event) n.ev = UnityEngine.Random.Range(0, 4);
+                    if (n.Type == NodeType.Event) n.ev = UnityEngine.Random.Range(0, MapScreen.EventCount);
                 }
             }
             // перед владыкой — хотя бы одна передышка (храм или привал), если есть выбор
