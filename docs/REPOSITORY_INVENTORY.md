@@ -691,3 +691,9 @@ The original 604-file snapshot above is historical. The following six files have
 | `Assets/_Project/Resources/UI/selection/approved_difficulty_0.png` | 353455 | `6cd639c01403939149c40303f0f843171eefbaec` |
 | `Assets/_Project/Resources/UI/selection/approved_difficulty_1.png` | 359083 | `b180f9c46d84b3653d57fb16707a88f22130f3aa` |
 | `Assets/_Project/Resources/UI/selection/approved_difficulty_2.png` | 336295 | `6e623a14ee9a9eb3db506619f80050b3faf2d8da` |
+
+### User-supplied Meshy torii — LOCAL ONLY (2026-11-02)
+
+- Local source: `Meshy_AI_Weathered_Shinto_Gate_1102155137_texture.glb` (22,396,528 bytes, 427,094 triangles, 234,804 vertices, one mesh, one 2048×2048 texture; dimensions 1.903 × 1.810 × 0.337 in GLB units).
+- **Not in GitHub; not imported into Unity; not Android-verified.** It is a high-poly optional replacement, **not a missing scene object**: `Assets/_Project/Scripts/Editor/EnvironmentBuilder.cs` already constructs the torii from primitives.
+- Do not request or generate another torii. Before considering replacement, optimize/LOD and verify materials/UVs, scale, collisions and Android FPS. Keep the current procedural torii as fallback.
