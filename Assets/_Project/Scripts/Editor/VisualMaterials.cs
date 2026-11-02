@@ -521,10 +521,12 @@ namespace BladePath.EditorTools
             Material m = AssetDatabase.LoadAssetAtPath<Material>(path);
             bool isNew = m == null;
             if (isNew) m = new Material(sh);
-            m.color = Color.white;
+            // текстуры Meshy запечены тёмными (тени в альбедо): лица уходили в черноту под ночным светом арены —
+            // чуть поднятый тон и почти нулевой металл (металл гасит рассеянный свет)
+            m.color = new Color(1.18f, 1.15f, 1.12f, 1f);
             Texture2D a = LoadTex(dir + key.ToLowerInvariant() + "_albedo.jpg", false, true, 2048);
             if (a != null) m.mainTexture = a;
-            m.SetFloat("_Metallic", 0.15f); m.SetFloat("_Glossiness", 0.35f);
+            m.SetFloat("_Metallic", 0.04f); m.SetFloat("_Glossiness", 0.3f);
             if (isNew) AssetDatabase.CreateAsset(m, path);
             EnableRuntimeEmission(m);
             return m;

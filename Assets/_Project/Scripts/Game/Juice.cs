@@ -1012,14 +1012,15 @@ namespace BladePath
             main.loop = true; main.duration = seconds;
             main.startLifetime = new ParticleSystem.MinMaxCurve(0.4f, 0.9f);
             main.startSpeed = new ParticleSystem.MinMaxCurve(0.2f, 1.2f);
-            main.startSize = new ParticleSystem.MinMaxCurve(0.025f, 0.055f);
-            main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.4f, 0f, 0.02f), new Color(0.8f, 0.03f, 0.04f));
+            // мелкие тёмные капли: крупные ярко-красные с сильным растяжением падали «иглами» вокруг раненого
+            main.startSize = new ParticleSystem.MinMaxCurve(0.012f, 0.028f);
+            main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.22f, 0f, 0.01f), new Color(0.45f, 0.02f, 0.03f));
             main.gravityModifier = 1.3f;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
-            var em = ps.emission; em.rateOverTime = Mathf.Lerp(18f, 55f, Mathf.Clamp01(strength - 0.4f));
-            var sp = ps.shape; sp.shapeType = ParticleSystemShapeType.Sphere; sp.radius = 0.08f;
+            var em = ps.emission; em.rateOverTime = Mathf.Lerp(8f, 22f, Mathf.Clamp01(strength - 0.4f));
+            var sp = ps.shape; sp.shapeType = ParticleSystemShapeType.Sphere; sp.radius = 0.06f;
             var rend = g.GetComponent<ParticleSystemRenderer>();
-            rend.material = softMat; rend.renderMode = ParticleSystemRenderMode.Stretch; rend.velocityScale = 0.04f; rend.lengthScale = 2f;
+            rend.material = softMat; rend.renderMode = ParticleSystemRenderMode.Stretch; rend.velocityScale = 0.018f; rend.lengthScale = 1.1f;
             ps.Play();
             StartCoroutine(StopBleed(ps, g, seconds));
         }
@@ -1039,8 +1040,8 @@ namespace BladePath
             main.loop = true; main.duration = seconds;
             main.startLifetime = new ParticleSystem.MinMaxCurve(0.5f, 1.1f);
             main.startSpeed = new ParticleSystem.MinMaxCurve(1.8f, 3.6f);
-            main.startSize = new ParticleSystem.MinMaxCurve(0.03f, 0.07f);
-            main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.45f, 0f, 0.02f), new Color(0.85f, 0.04f, 0.05f));
+            main.startSize = new ParticleSystem.MinMaxCurve(0.02f, 0.045f);
+            main.startColor = new ParticleSystem.MinMaxGradient(new Color(0.3f, 0f, 0.015f), new Color(0.55f, 0.03f, 0.04f));
             main.gravityModifier = 1.4f;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             main.maxParticles = 600;
@@ -1048,7 +1049,7 @@ namespace BladePath
             em.rateOverTime = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 160f), new Keyframe(0.3f, 90f), new Keyframe(1f, 10f)));
             var sp = ps.shape; sp.shapeType = ParticleSystemShapeType.Cone; sp.angle = 14f; sp.radius = 0.03f;
             var rend = g.GetComponent<ParticleSystemRenderer>();
-            rend.material = softMat; rend.renderMode = ParticleSystemRenderMode.Stretch; rend.velocityScale = 0.05f; rend.lengthScale = 2f;
+            rend.material = softMat; rend.renderMode = ParticleSystemRenderMode.Stretch; rend.velocityScale = 0.025f; rend.lengthScale = 1.3f;
             ps.Play();
             Play(hitHeavy, 1f, 0.55f);
             StartCoroutine(FountainDecals(neck, seconds, battleFxGeneration));

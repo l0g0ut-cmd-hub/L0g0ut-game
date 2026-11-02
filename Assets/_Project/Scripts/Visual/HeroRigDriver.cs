@@ -198,6 +198,7 @@ namespace BladePath
 
         void Start()
         {
+            useGUILayout = false;   // GUILayout нигде не используется: без лишнего прохода Layout IMGUI вдвое дешевле
             if (gameObject.activeInHierarchy) ApplyStanceOpen();
             Cache(upperArmL, forearmL, handL, out l1L, out l2L);
             Cache(upperArmR, forearmR, handR, out l1R, out l2R);

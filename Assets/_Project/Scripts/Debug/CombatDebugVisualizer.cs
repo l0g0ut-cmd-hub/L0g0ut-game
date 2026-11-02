@@ -33,7 +33,7 @@ namespace BladePath
 
         bool Active { get { return visible && (Debug.isDebugBuild || forceEnableInRelease); } }
 
-        void OnEnable() { if (resolver != null) resolver.HitRegistered += OnHit; }
+        void OnEnable() { useGUILayout = false; if (resolver != null) resolver.HitRegistered += OnHit; }
         void OnDisable() { if (resolver != null) resolver.HitRegistered -= OnHit; }
 
         void OnHit(HitResult r)

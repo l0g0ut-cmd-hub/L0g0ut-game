@@ -24,7 +24,11 @@ namespace BladePath
         const float StickRadius = 84f;
 
         public static PrototypeInput Instance { get; private set; }
-        void Awake() { Instance = this; Breadcrumbs.Mark("ввод: Awake"); }
+        void Awake()
+        {
+            useGUILayout = false;   // GUILayout нигде не используется: без лишнего прохода Layout IMGUI вдвое дешевле
+            Instance = this; Breadcrumbs.Mark("ввод: Awake");
+        }
 
         static readonly AttackType[] EnemyTypes = { AttackType.Overhead, AttackType.Rising, AttackType.LegSweep, AttackType.Thrust, AttackType.Slash, AttackType.Energy };
 
@@ -245,7 +249,9 @@ namespace BladePath
             p = At(252f, 200f); Circle(B.Jump, p.x, p.y, 24f);
             p = At(281f, 198f); Circle(B.Energy, p.x, p.y, 22f);
             p = At(166f, 198f); Circle(B.Heal, p.x, p.y, 22f);
-            p = At(238f, 286f); Circle(B.Super, p.x, p.y, 30f);
+            // «дух» — рядом с дугой внизу, под большим пальцем: на месте над дугой (238°, 286) кнопка
+            // висела посреди экрана поверх боя
+            p = At(186f, 292f); Circle(B.Super, p.x, p.y, 30f);
             Circle(B.Pause, W * 0.5f, 88f, 18f);   // под таймером раунда
 
             float cx = W * 0.5f;

@@ -11,6 +11,11 @@ namespace BladePath
     /// </summary>
     public class InventoryScreen : MonoBehaviour
     {
+        void Awake()
+        {
+            useGUILayout = false;   // GUILayout нигде не используется: без лишнего прохода Layout IMGUI вдвое дешевле
+        }
+
         public static bool Open { get; private set; }
         static InventoryScreen inst;
         Item sel; int page; float openedAt;

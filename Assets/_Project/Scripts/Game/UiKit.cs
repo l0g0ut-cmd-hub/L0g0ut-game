@@ -188,8 +188,32 @@ namespace BladePath
         }
         static int Glyph(char ch) { return ch >= '0' && ch <= '9' ? ch - '0' : ch == '×' || ch == 'x' ? 10 : ch == '!' ? 11 : -1; }
 
+        // Ширина надписи для ужатия по рамке: CalcSize дорог (раскладка текста, GUIContent) и звался
+        // для каждой надписи каждый кадр. Кэш по (текст, шрифт, кегль) — те же надписи кадр за кадром.
+        struct WidthKey : System.IEquatable<WidthKey>
+        {
+            public string s; public Font f; public int size;
+            public bool Equals(WidthKey o) { return size == o.size && ReferenceEquals(f, o.f) && string.Equals(s, o.s); }
+            public override int GetHashCode() { return (s.GetHashCode() * 31 + size) * 31 + (f != null ? f.GetInstanceID() : 0); }
+        }
+        static readonly System.Collections.Generic.Dictionary<WidthKey, float> widthCache = new System.Collections.Generic.Dictionary<WidthKey, float>(512);
+        static readonly GUIContent measure = new GUIContent();
+        static float TextWidth(string s)
+        {
+            WidthKey key = new WidthKey { s = s, f = label.font, size = label.fontSize };
+            float w;
+            if (widthCache.TryGetValue(key, out w)) return w;
+            if (widthCache.Count > 4000) widthCache.Clear();   // меняющиеся числа (таймеры, моны) не копятся без конца
+            measure.text = s;
+            w = label.CalcSize(measure).x;
+            widthCache[key] = w;
+            return w;
+        }
+
         public static void Text(Rect r, string s, float size, Color c, TextAnchor anchor = TextAnchor.MiddleCenter, bool shadow = true)
         {
+            // надписи только рисуются (GUI.Label без ввода): вне Repaint им делать нечего
+            if (Event.current != null && Event.current.type != EventType.Repaint) return;
             Init();
             LoadFonts();
             Font f = IsNumeric(s) ? digits : (size >= 26f ? display : body);
@@ -203,7 +227,7 @@ namespace BladePath
             // не вылезать за рамку: длинная надпись ужимается по ширине (не мельче 55 %)
             if (pr.width > 24f && !string.IsNullOrEmpty(s))
             {
-                float w = label.CalcSize(new GUIContent(s)).x, room = pr.width - 4f * k;
+                float w = TextWidth(s), room = pr.width - 4f * k;
                 if (w > room) label.fontSize = Mathf.Max(6, Mathf.RoundToInt(label.fontSize * Mathf.Max(0.55f, room / w)));
             }
             if (shadow)

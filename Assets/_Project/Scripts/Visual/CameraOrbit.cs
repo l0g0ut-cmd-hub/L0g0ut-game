@@ -61,6 +61,7 @@ namespace BladePath
 
         void Awake()
         {
+            useGUILayout = false;   // GUILayout нигде не используется: без лишнего прохода Layout IMGUI вдвое дешевле
             Breadcrumbs.Mark("камера: Awake");
             Instance = this;
             ResetView(true);

@@ -5,6 +5,11 @@ namespace BladePath
     /// <summary>HUD дуэли: полоски здоровья, имена, «БОЙ!», цифры урона, итоговый экран. Только рисует; кнопки обрабатывает PrototypeInput.</summary>
     public class DuelHud : MonoBehaviour
     {
+        void Awake()
+        {
+            useGUILayout = false;   // GUILayout нигде не используется: без лишнего прохода Layout IMGUI вдвое дешевле
+        }
+
         public DuelManager duel;
         public string playerName = "РОНИН";
         public string enemyName = "ПОВЕРЖЕННЫЙ";
@@ -160,7 +165,9 @@ namespace BladePath
             {
                 Vector3 ehp = duel.enemy.transform.position + Vector3.up * 2.05f;
                 Vector3 esp = cam.WorldToScreenPoint(ehp);
-                if (esp.z > 0f) DrawPosture(new Vector2(esp.x / UiKit.Scale, (Screen.height - esp.y) / UiKit.Scale), 130f, duel.enemy);
+                // над головой врага, но не выше полосок духа (y 88..94) и подписей: когда враг близко к камере,
+                // голова уходит под верх экрана, и полоса ложилась прямо на «ДУХ»
+                if (esp.z > 0f) DrawPosture(new Vector2(Mathf.Clamp(esp.x / UiKit.Scale, 80f, W - 80f), Mathf.Max((Screen.height - esp.y) / UiKit.Scale, 128f)), 130f, duel.enemy);
                 DrawPosture(new Vector2(cx, 470f), 230f, duel.player);
             }
 

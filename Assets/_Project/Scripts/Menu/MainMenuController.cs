@@ -35,6 +35,7 @@ namespace BladePath
 
         void Start()
         {
+            useGUILayout = false;   // GUILayout нигде не используется: без лишнего прохода Layout IMGUI вдвое дешевле
             string crash = Breadcrumbs.TakeReport();
             if (crash != null)
             {

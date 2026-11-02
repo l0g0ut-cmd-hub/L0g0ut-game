@@ -11,6 +11,11 @@ namespace BladePath
     /// </summary>
     public class MapScreen : MonoBehaviour
     {
+        void Awake()
+        {
+            useGUILayout = false;   // GUILayout нигде не используется: без лишнего прохода Layout IMGUI вдвое дешевле
+        }
+
         public static bool Open { get; private set; }
         static MapScreen inst;
 
