@@ -114,6 +114,10 @@ namespace BladePath
         static Graph[] graphs;
         static int activeRegion = -1;
         static List<MapNode> activeNodes;
+        // Route cache keys are node indices. A campaign can regenerate node
+        // coordinates in the same List instance; reference equality alone
+        // does not prove that cached geometry is still valid.
+        static Vector2[] cachedNodePositions;
         static readonly Dictionary<long, Path> cache = new Dictionary<long, Path>(160);
 
         static float Length(Vector2 uv)
@@ -124,9 +128,35 @@ namespace BladePath
         public static void Bind(int region, List<MapNode> nodes)
         {
             if (graphs == null) MakeGraphs();
-            if (region != activeRegion || !ReferenceEquals(nodes, activeNodes))
+            int clampedRegion = Mathf.Clamp(region, 0, 2);
+            bool changed = clampedRegion != activeRegion ||
+                !ReferenceEquals(nodes, activeNodes) ||
+                (nodes == null ? cachedNodePositions != null :
+                    cachedNodePositions == null || cachedNodePositions.Length != nodes.Count);
+            if (!changed && nodes != null)
+            {
+                for (int i = 0; i < nodes.Count; i++)
+                {
+                    Vector2 previous = cachedNodePositions[i];
+                    if (previous.x != nodes[i].x || previous.y != nodes[i].y)
+                    {
+                        changed = true;
+                        break;
+                    }
+                }
+            }
+            if (changed)
+            {
                 cache.Clear();
-            activeRegion = Mathf.Clamp(region, 0, 2);
+                if (nodes == null) cachedNodePositions = null;
+                else
+                {
+                    cachedNodePositions = new Vector2[nodes.Count];
+                    for (int i = 0; i < nodes.Count; i++)
+                        cachedNodePositions[i] = new Vector2(nodes[i].x, nodes[i].y);
+                }
+            }
+            activeRegion = clampedRegion;
             activeNodes = nodes;
         }
 
