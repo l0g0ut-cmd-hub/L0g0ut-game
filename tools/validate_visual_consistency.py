@@ -120,6 +120,10 @@ def check_design_system():
         "inventory unified":
             "VisualIdentity.Surface(panel" in inventory and
             "VisualIdentity.Heading(" in inventory,
+        "duel actions have room for full Russian labels":
+            'Btn(new Rect(x, r.yMax - 116f, w, 44f), "В БОЙ"' in map_code and
+            'Btn(new Rect(x, r.yMax - 64f, w, 44f), "СНАРЯЖЕНИЕ"' in map_code and
+            'w * 0.38f, 48f), "СНАРЯЖЕНИЕ"' not in map_code,
         "combat combo unified":
             '"СЕРИЯ УДАРОВ  ×" + hits' in combat and
             "UiKit.Rect(plate" in combat and
