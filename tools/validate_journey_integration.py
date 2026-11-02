@@ -115,8 +115,11 @@ def check_routes():
     assert 'if (can && sel == i) Go(i);' not in screen
     assert 'Btn(new Rect(x, 540f - 166f, w, 44f), "В ПУТЬ"' in screen
     assert 'interactive && travelReady, true' in screen
-    assert 'int travelTarget = sel >= 0 && Campaign.CanGo(sel) ? sel : -1;' in screen
-    assert 'if (sel != i) return;' in screen
+    # В ПУТЬ to a distant node = one tapped hop along the highlighted route
+    # (user decision 2026-11-02); the goal stays selected, no autopilot.
+    assert ': sel >= 0 && Campaign.CanGo(NextPreviewStep) ? NextPreviewStep : -1;' in screen
+    assert 'if (sel != i && NextPreviewStep != i) return;' in screen
+    assert 'if (goal >= 0 && goal != Campaign.At && goal < Campaign.Nodes.Count) SelectNode(goal);' in screen
     assert 'Campaign.MoveTo(i); // persist only after the rider arrives' in screen
     assert 'if (!interactive || i != hitNode || panDragging) continue;' in screen
     assert 'Go(next);' not in screen, "Unattended travel to a different node reintroduced"

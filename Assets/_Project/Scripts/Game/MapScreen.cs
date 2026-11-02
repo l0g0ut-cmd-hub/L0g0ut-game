@@ -30,6 +30,7 @@ namespace BladePath
         int plannedRegion = -1;   // keep a chosen destination across intermediate encounters
         readonly Queue<int> routeQueue = new Queue<int>(16);
         int moveFrom = -1, moveTo = -1; float moveStart;
+        int routeGoal = -1;   // distant selected node while travelling one hop towards it
         float moveDuration = 1.25f;
         float rideCycleAt;
         float panU = -1f, shownAt, modalAt, rollAt = -10f;
@@ -92,9 +93,11 @@ namespace BladePath
         {
             if (moveTo >= 0 || modal != Modal.None || Campaign.InFight || !Campaign.CanGo(i)) return;
             Profile.CostMul = 1f;
-            // A tap on a distant destination is a route preview, not permission
-            // to visit a different checkpoint. Require the EXACT selected node.
-            if (sel != i) return;
+            // Travel goes either to the selected node itself or ONE hop along the
+            // highlighted route towards a distant selected node. Each hop still
+            // needs its own tap on В ПУТЬ; encounters on the way are never skipped.
+            if (sel != i && NextPreviewStep != i) return;
+            routeGoal = sel != i ? sel : -1;   // remember the distant goal for the next hop
             routeAutopilot = false;
             revisit = Campaign.Nodes[i].done;
             freshTreasure = Campaign.Nodes[i].Type == NodeType.Treasure && !revisit;
@@ -127,6 +130,10 @@ namespace BladePath
                     if (Juice.Instance != null) Juice.Instance.Taiko(0.6f, 1.25f);
                     Haptics.Pulse(20);
                     OpenNode(i);
+                    // Keep the distant goal selected so the next tap continues the route.
+                    // Selection only: the rider never moves without a tap on В ПУТЬ.
+                    int goal = routeGoal; routeGoal = -1;
+                    if (goal >= 0 && goal != Campaign.At && goal < Campaign.Nodes.Count) SelectNode(goal);
                     nextRouteAt = Time.unscaledTime + 0.45f;
                 }
                 return;
@@ -913,7 +920,7 @@ namespace BladePath
                     if (!Campaign.CanGo(show))
                         UiKit.Text(new Rect(x, y, w, 28f),
                             Campaign.Steps == 0 ? "Сначала брось кость пути"
-                                : "Цель далеко: сначала выбери соседний узел",
+                                : "«В ПУТЬ» — шаг к цели по следам",
                             11f, Dim, TextAnchor.MiddleLeft, false);
                 }
                 else if (show != Campaign.At && Campaign.Nodes[Campaign.At].next.Contains(show))
@@ -954,7 +961,10 @@ namespace BladePath
             // Never substitute the first BFS waypoint for the selected target.
             // A distant node remains a PREVIEW until the user chooses an adjacent
             // medal, preventing accidental trips to a different location.
-            int travelTarget = sel >= 0 && Campaign.CanGo(sel) ? sel : -1;
+            // A distant selected node travels one hop along the highlighted route
+            // (NextPreviewStep); the goal stays selected for the next tap.
+            int travelTarget = sel >= 0 && Campaign.CanGo(sel) ? sel
+                : sel >= 0 && Campaign.CanGo(NextPreviewStep) ? NextPreviewStep : -1;
             bool travelReady = !rolling && moveTo < 0 && travelTarget >= 0 &&
                 Campaign.CanGo(travelTarget);
             if (Btn(new Rect(x, 540f - 166f, w, 44f), "В ПУТЬ",
