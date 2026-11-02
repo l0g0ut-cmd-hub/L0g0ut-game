@@ -8,9 +8,6 @@ namespace BladePath
         public const float VirtualHeight = 540f;
         static Texture2D white, disc, ring, ringThin;
         static GUIStyle label;
-        // One mutable IMGUI content object replaces thousands of per-label
-        // GUIContent allocations across map, inventory and battle HUD.
-        static readonly GUIContent sharedTextContent = new GUIContent();
 
         public static float Scale { get { return Mathf.Max(0.01f, Screen.height / VirtualHeight); } }
         public static float Width { get { return Screen.width / Scale; } }
@@ -192,21 +189,20 @@ namespace BladePath
             Rect pr = new Rect(r.x * k, r.y * k, r.width * k, r.height * k);
             label.fontSize = Mathf.Max(6, Mathf.RoundToInt(size * k));
             label.alignment = anchor;
-            sharedTextContent.text = s ?? string.Empty;
             // не вылезать за рамку: длинная надпись ужимается по ширине (не мельче 55 %)
             if (pr.width > 24f && !string.IsNullOrEmpty(s))
             {
-                float w = label.CalcSize(sharedTextContent).x, room = pr.width - 4f * k;
+                float w = label.CalcSize(new GUIContent(s)).x, room = pr.width - 4f * k;
                 if (w > room) label.fontSize = Mathf.Max(6, Mathf.RoundToInt(label.fontSize * Mathf.Max(0.55f, room / w)));
             }
             if (shadow)
             {
                 label.normal.textColor = new Color(0f, 0f, 0f, 0.85f * c.a);
                 Rect sr = pr; sr.x += 1.5f * k; sr.y += 1.5f * k;
-                GUI.Label(sr, sharedTextContent, label);
+                GUI.Label(sr, s, label);
             }
             label.normal.textColor = c;
-            GUI.Label(pr, sharedTextContent, label);
+            GUI.Label(pr, s, label);
             GUI.matrix = m;
         }
 
