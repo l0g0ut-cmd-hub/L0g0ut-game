@@ -619,15 +619,17 @@ namespace BladePath
             float travelProgress = moving
                 ? Mathf.Clamp01((Time.unscaledTime - moveStart) / Mathf.Max(0.01f, moveDuration))
                 : 0f;
+            // HeroUV uses cubic ease-in/out, so the gait must sample the same
+            // travelled arc-length rather than an unsmoothed clock fraction.
+            float easedTravel = travelProgress * travelProgress * (3f - 2f * travelProgress);
             float distanceCovered = moving
-                ? TerrainRoads.Route(moveFrom, moveTo).lengthPixels * travelProgress : 0f;
+                ? TerrainRoads.Route(moveFrom, moveTo).lengthPixels * easedTravel : 0f;
             float pose = moving ? distanceCovered * (newSheet ? 12f : 9f) / 145f : 0f;
             int first = Mathf.FloorToInt(pose) % count;
             int next = (first + 1) % count;
             float phase = pose - Mathf.Floor(pose);
             Vector2 direction = moving
-                ? TerrainRoads.Route(moveFrom, moveTo).Direction(
-                    Mathf.Clamp01((Time.unscaledTime - moveStart) / moveDuration))
+                ? TerrainRoads.Route(moveFrom, moveTo).Direction(easedTravel)
                 : Vector2.right;
             bool left = moving && direction.x < -0.10f;
             float size = newSheet ? 104f : 92f;
