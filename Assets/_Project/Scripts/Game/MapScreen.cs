@@ -608,20 +608,43 @@ namespace BladePath
             }
             if (ht == null) { UiKit.Disc(p, 10f, Gold); return; }
             bool newSheet = UiKit.Tex("UI/map_rider_16") != null;
-            int f = newSheet
-                ? moving ? (int)((Time.unscaledTime - rideCycleAt) * 12f) % 16 : 0
-                : moving ? (int)(Time.unscaledTime * 12f) % 8
-                    : 8 + (int)(Time.unscaledTime * 5f) % 4;
+            // Smooth animation between source poses without replacing the
+            // original hand-painted rider. The optional 16-pose sheet is used
+            // whenever an art-approved one is available.
+            int count = newSheet ? 16 : moving ? 8 : 4;
+            int offset = newSheet ? 0 : moving ? 0 : 8;
+            float elapsed = Mathf.Max(0f, Time.unscaledTime - rideCycleAt);
+            float pose = moving ? elapsed * (newSheet ? 14f : 9f)
+                : Time.unscaledTime * 2.5f;
+            int first = Mathf.FloorToInt(pose) % count;
+            int next = (first + 1) % count;
+            float phase = pose - Mathf.Floor(pose);
             Vector2 direction = moving
                 ? TerrainRoads.Route(moveFrom, moveTo).Direction(
                     Mathf.Clamp01((Time.unscaledTime - moveStart) / moveDuration))
                 : Vector2.right;
             bool left = moving && direction.x < -0.10f;
-            Rect uvr = Cell(f);
-            if (left) uvr = new Rect(uvr.x + uvr.width, uvr.y, -uvr.width, uvr.height);
-            float s = newSheet ? 104f : 92f;
-            float bob = moving ? Mathf.Abs(Mathf.Sin((Time.unscaledTime - rideCycleAt) * 14f)) * 1.1f : 0f;
-            GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.5f, p.y - s * 0.78f - bob, s, s), ht, uvr);
+            float size = newSheet ? 104f : 92f;
+            float bob = moving ? (0.5f - 0.5f * Mathf.Cos(pose * Mathf.PI)) * 1.25f : 0f;
+            Rect riderRect = new Rect(p.x - size * 0.5f, p.y - size * 0.78f - bob, size, size);
+            Rect currentUV = Cell(offset + first);
+            if (left) currentUV = new Rect(currentUV.x + currentUV.width, currentUV.y,
+                -currentUV.width, currentUV.height);
+            GUI.DrawTextureWithTexCoords(riderRect, ht, currentUV);
+            // Low-opacity interpolation hides the old eight-frame cadence;
+            // blending is capped so individual painted poses stay sharp.
+            float overlay = moving ? Mathf.Sin(phase * Mathf.PI) * 0.22f : 0f;
+            if (overlay > 0.005f)
+            {
+                Color oldColor = GUI.color;
+                GUI.color = new Color(oldColor.r, oldColor.g, oldColor.b,
+                    oldColor.a * overlay);
+                Rect nextUV = Cell(offset + next);
+                if (left) nextUV = new Rect(nextUV.x + nextUV.width, nextUV.y,
+                    -nextUV.width, nextUV.height);
+                GUI.DrawTextureWithTexCoords(riderRect, ht, nextUV);
+                GUI.color = oldColor;
+            }
         }
 
         // Panoramic mist layers drift slowly over the painted forest but do not
