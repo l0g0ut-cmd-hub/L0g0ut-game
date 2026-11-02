@@ -758,6 +758,20 @@ namespace BladePath
             VisualIdentity.Surface(r, 1f, false);
             float x = r.x + 16f, w = r.width - 32f, y = 12f;
             VisualIdentity.Heading(new Rect(x, y, w, 36f), "ПОХОД");
+            // Quiet progress caption in the existing heading's unused right side;
+            // no panel resize, no new button and no changes to the original art.
+            if (w >= 210f)
+            {
+                int visited = 0;
+                List<MapNode> regionNodes = Campaign.Nodes;
+                for (int i = 0; i < regionNodes.Count; i++)
+                    if (regionNodes[i].done) visited++;
+                string journeyStatus = routeAutopilot && moveTo >= 0
+                    ? "В ПУТИ" : visited + " / " + regionNodes.Count + " УЗЛОВ";
+                UiKit.Text(new Rect(x + w - 118f, y + 5f, 117f, 24f),
+                    journeyStatus, 10.5f, VisualIdentity.Subdued,
+                    TextAnchor.MiddleRight, false);
+            }
             y += 38f;
             UiKit.Text(new Rect(x, y, w, 18f), "Уровень " + Profile.Level + (Profile.Points > 0 ? "   · очков: " + Profile.Points : ""), 13f, Ink, TextAnchor.MiddleLeft, false); y += 20f;
             Texture2D coins = UiKit.Tex("UI/coins");
