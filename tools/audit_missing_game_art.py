@@ -7,15 +7,30 @@ The check is non-destructive and does not block the running Android build.
 from pathlib import Path
 import json
 import struct
+import hashlib
 
 ROOT = Path(__file__).resolve().parents[1]
 UI = ROOT / "Assets/_Project/Resources/UI"
+# SHA-256 hashes from the six user-approved PNGs in
+# bladepath_selection_originals.zip (2026-11-02). JPGs in the repository
+# are different compositions and MUST NOT count as the approved originals.
+# Distinct approved_* basenames avoid Unity Resources JPG/PNG collisions.
+APPROVED_SHA256 = {
+    "selection/approved_hero_0.png": "76d4661eb36dcfde341c166e6060d18f672d17a44dd0e4f45ce936deeeb59811",
+    "selection/approved_hero_1.png": "d7cb45486efc734ff87dfae9120bc326ff3c21eb354a978dd02823414d53b075",
+    "selection/approved_hero_2.png": "0e5b04ec47eb8366dbc2d3b748ba8cf9c208dc3a980ed9d0635fbe40ea3c9c48",
+    "selection/approved_difficulty_0.png": "171b5dc83e4bf7734a7cbb9df7f25c6efbbba0d1ff9b637c3ac702be0c77e161",
+    "selection/approved_difficulty_1.png": "c18e8b4a3514484ee1d2ace20899dd0493c4bac9e3c95db99176b99e878e0c84",
+    "selection/approved_difficulty_2.png": "099c9a25264350beefad6aa14e3b6dbc946fc33864cf9b0694badce1708ca207",
+}
 REQUIRED = {
-    "travellers": [f"selection/hero_{i}.jpg" for i in range(3)],
-    "difficulties": [f"selection/difficulty_{i}.jpg" for i in range(3)],
+    "approved_travellers": [f"selection/approved_hero_{i}.png" for i in range(3)],
+    "approved_difficulties": [f"selection/approved_difficulty_{i}.png" for i in range(3)],
     "rider": ["map_rider_16.png"],
 }
 EXISTING = {
+    "legacy_travellers": [f"selection/hero_{i}.jpg" for i in range(3)],
+    "legacy_difficulties": [f"selection/difficulty_{i}.jpg" for i in range(3)],
     "maps": [f"map_{i}.jpg" for i in range(3)],
     "events": [f"event_{i}.jpg" for i in range(4)],
     "npc": [f"npc_{i}.jpg" for i in range(4)],
@@ -74,9 +89,15 @@ def check(group, paths):
             enough = resolution is not None and resolution[0] >= 256 and resolution[1] >= 256
         if present and rel == "map_rider_16.png":
             enough = resolution == (1024, 1024)
+        expected_hash = APPROVED_SHA256.get(rel)
+        actual_hash = hashlib.sha256(file.read_bytes()).hexdigest() if present and expected_hash else None
+        if expected_hash is not None:
+            enough = enough and actual_hash == expected_hash
         items.append({"resource": rel, "present": present,
                       "quality_gate": enough if present else False,
-                      "pixels": resolution})
+                      "pixels": resolution,
+                      "approved_sha256": expected_hash,
+                      "actual_sha256": actual_hash})
     return items
 
 def main():
@@ -105,7 +126,7 @@ def main():
                 for item in missing:
                     out.write(f"- `{item}`\n")
             else:
-                out.write("All seven original art resources are present.\n")
+                out.write("All six SHA-256 verified original selection PNGs and rider atlas are present.\n")
             out.write("\n")
     if missing and os.environ.get("GITHUB_ACTIONS"):
         print("::warning title=Approved art missing::" + ", ".join(missing))
