@@ -82,11 +82,16 @@ def check_routes():
     assert "MoveTime" not in screen, "Legacy fixed travel duration remains"
     # No second tap: every marker selects; only the sidebar button travels.
     assert 'if (can && sel == i) Go(i);' not in screen
-    assert 'Btn(new Rect(x, y, w, 40f), "ДВИГАТЬСЯ"' in screen
-    assert 'bool canMove = !rolling && Campaign.CanGo(nextStep);' in screen
+    assert 'Btn(new Rect(x, 540f - 166f, w, 44f), "В ПУТЬ"' in screen
+    assert 'interactive && travelReady, true' in screen
+    assert 'if (UiKit.Tex(heroArt) != null)' in screen
+    assert 'heroArt = "UI/npc_"' not in screen
     assert 'if (parents[index] < 0) { sel = -1; return; }' in screen
     assert 'if (UiKit.Tex(path) == null) return;' not in screen
     menu = read("Assets/_Project/Scripts/Menu/MainMenuController.cs")
+    assert 'newJourneyStep == 1 ? "UI/event_"' not in menu
+    assert '"UI/npc_" + i' not in menu
+    assert '"ИЛЛЮСТРАЦИЯ НЕ ЗАГРУЖЕНА"' in menu
     assert 'VisualIdentity.Portrait(artRect, art);' in menu
     assert 'JourneyChoice.Portrait(JourneyChoice.Hero)' in screen
     assert 'VisualIdentity.Portrait(portrait, heroArt);' in screen
