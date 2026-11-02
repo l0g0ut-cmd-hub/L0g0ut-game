@@ -41,13 +41,37 @@ namespace BladePath
                 default: return VisualIdentity.BrassLight;
             }
         }
+        // The six user-approved PNGs are distinct from older JPG illustrations.
+        // Keep different Resources basenames: Unity does not guarantee which
+        // texture is returned when hero_0.jpg and hero_0.png share a path.
+        static readonly string[] approvedHeroPaths = new string[3];
+        static readonly string[] approvedDifficultyPaths = new string[3];
+
+        static string ApprovedOrFallback(string[] cache, string kind, int index)
+        {
+            index = Mathf.Clamp(index, 0, 2);
+            if (cache[index] == null)
+            {
+                string approved = "UI/selection/approved_" + kind + "_" + index;
+                // Do not report a JPG fallback as an imported approved original.
+                if (Resources.Load<Texture2D>(approved) != null)
+                    cache[index] = approved;
+                else
+                {
+                    cache[index] = "UI/selection/" + kind + "_" + index;
+                    Debug.LogWarning("BladePath: approved selection art missing: " +
+                        approved + ". Showing existing legacy JPG until PNG is imported.");
+                }
+            }
+            return cache[index];
+        }
         public static string Portrait(int index)
         {
-            return "UI/selection/hero_" + Mathf.Clamp(index, 0, 2);
+            return ApprovedOrFallback(approvedHeroPaths, "hero", index);
         }
         public static string DifficultyArt(int index)
         {
-            return "UI/selection/difficulty_" + Mathf.Clamp(index, 0, 2);
+            return ApprovedOrFallback(approvedDifficultyPaths, "difficulty", index);
         }
         public static void BeginNew(int difficulty, int hero)
         {
