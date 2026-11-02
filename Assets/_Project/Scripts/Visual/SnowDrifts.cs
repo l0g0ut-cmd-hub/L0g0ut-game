@@ -15,8 +15,30 @@ namespace BladePath
         readonly List<Drift> icicles = new List<Drift>();   // сосульки со свеса крыши храма и колпаков стен
         static Mesh cone;
         Transform root;
+        Material driftMaterial, iceMaterial;
         float shown = -1f;
         static readonly int SnowId = Shader.PropertyToID("_BP_Snow");
+
+        void OnDestroy()
+        {
+            // These objects were created at scene-root level by Build().
+            // Dispose them with the owner, not at an unpredictable future GC pass.
+            if (root != null)
+            {
+                if (Application.isPlaying) Destroy(root.gameObject);
+                else DestroyImmediate(root.gameObject);
+            }
+            if (driftMaterial != null)
+            {
+                if (Application.isPlaying) Destroy(driftMaterial);
+                else DestroyImmediate(driftMaterial);
+            }
+            if (iceMaterial != null)
+            {
+                if (Application.isPlaying) Destroy(iceMaterial);
+                else DestroyImmediate(iceMaterial);
+            }
+        }
 
         void Update()
         {
@@ -75,7 +97,10 @@ namespace BladePath
         void Build()
         {
             root = new GameObject("SnowDrifts").transform;
-            Material m = new Material(Shader.Find("Standard")) { name = "SnowDrift", color = new Color(0.66f, 0.7f, 0.78f) };   // тон снега Env под луной (белее — «подушки»)
+            Material m = driftMaterial = new Material(Shader.Find("Standard"))
+            {
+                name = "SnowDrift", color = new Color(0.66f, 0.7f, 0.78f)
+            };   // сохранить прежний тон снега на камне
             m.SetFloat("_Glossiness", 0.2f);
             System.Random r = new System.Random(19);
             System.Func<float> R = () => (float)r.NextDouble();
@@ -89,7 +114,10 @@ namespace BladePath
                     Add(m, new Vector3(side * x, -7.34f + 0.04f * R()), 0.85f + 0.5f * R(), 0.07f + 0.05f * R() + (x > 5.3f ? 0.04f : 0f), 0.34f + 0.14f * R(), 90f);
             // сосульки: свес крыши храма (кромка y ≈ 2,44, z ≈ 3,92; углы загнуты — только прямой участок) и колпаки боковых стен
             if (cone == null) cone = Cone();
-            Material ice = new Material(Shader.Find("Standard")) { name = "Ice", color = new Color(0.72f, 0.8f, 0.9f) };
+            Material ice = iceMaterial = new Material(Shader.Find("Standard"))
+            {
+                name = "Ice", color = new Color(0.72f, 0.8f, 0.9f)
+            };
             ice.SetFloat("_Glossiness", 0.9f);
             for (float x = -4.5f; x < 2.9f; x += 0.16f + 0.3f * R())
                 if (R() < 0.75f) Icicle(ice, new Vector3(x, 2.45f, 3.93f), 0.08f + 0.32f * R() * R() + (R() < 0.12f ? 0.25f : 0f), 0.025f + 0.025f * R());
