@@ -254,6 +254,18 @@ namespace BladePath
                 b.gourds = Mathf.RoundToInt(ModSum(ModId.Gourd)) + (Has(Tech.SecondWind) ? 1 : 0);
                 b.postureMax = Mathf.RoundToInt(ModSum(ModId.PostureMax));
                 b.blockPostureMul = Has(Tech.StoneGuard) ? 0.7f : 1f;
+                // Starting identities grant small, legible differences:
+                // Dzin: flexible sword technique; Akiko: survivability;
+                // Ren: nimble movement. Existing equipment/stat rules remain.
+                switch (JourneyChoice.Hero)
+                {
+                    case 0: b.dmgMul *= 1.03f; break;
+                    case 1: b.hp += 6; b.armorMul *= 0.93f; break;
+                    case 2:
+                        b.moveMul = Mathf.Min(1.38f, b.moveMul * 1.06f);
+                        b.dashCdMul *= 0.94f;
+                        break;
+                }
                 return b;
             }
         }

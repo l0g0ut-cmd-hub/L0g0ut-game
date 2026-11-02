@@ -794,16 +794,37 @@ namespace BladePath
         }
 
         // ---- глоток из тыквы-горлянки: левая рука с тыквой поднимается ко рту, тыква наклоняется, голова запрокидывается
-        float drinkW, pourW;
+        float drinkW, pourW, drinkVelocity, pourVelocity;
         Transform gourd;
+
+        static float SipEase(float t)
+        {
+            t = Mathf.Clamp01(t);
+            return t * t * t * (t * (6f * t - 15f) + 10f);
+        }
         void DrinkPose(Transform ft, float ys, float dt)
         {
             bool dr = fighter != null && fighter.Drinking;
             float t = dr ? fighter.DrinkT : 9f;
-            float raise = dr ? Smooth(Mathf.Clamp01(t / 0.28f)) * (1f - Smooth(Mathf.Clamp01((t - 0.92f) / 0.23f))) : 0f;
-            float pour = dr ? Smooth(Mathf.Clamp01((t - 0.3f) / 0.15f)) * (1f - Smooth(Mathf.Clamp01((t - 0.78f) / 0.14f))) : 0f;
-            drinkW = Mathf.MoveTowards(drinkW, raise, dt / 0.08f);   // сорвали глоток — рука плавно возвращается на рукоять
-            pourW = Mathf.MoveTowards(pourW, pour, dt / 0.06f);
+            // Smooth continuous motion (sampled at every render frame, not
+            // snapped to keyframes): reach -> raise -> sip -> swallow -> lower.
+            // Sipping starts before DrinkHealAt, and the hand releases the
+            // bottle only after the healing has actually been applied.
+            float raise = dr
+                ? SipEase(t / 0.34f) *
+                  (1f - SipEase((t - 0.88f) / 0.27f))
+                : 0f;
+            float pour = dr
+                ? SipEase((t - 0.32f) / 0.22f) *
+                  (1f - SipEase((t - 0.79f) / 0.30f))
+                : 0f;
+            // SmoothDamp keeps elbow and neck from snapping on early
+            // interruption (taking damage cancels the drink).
+            float smoothDelta = Mathf.Clamp(dt, 0.0001f, 0.05f);
+            drinkW = Mathf.SmoothDamp(drinkW, raise, ref drinkVelocity,
+                0.050f, Mathf.Infinity, smoothDelta);
+            pourW = Mathf.SmoothDamp(pourW, pour, ref pourVelocity,
+                0.052f, Mathf.Infinity, smoothDelta);
             if (drinkW < 0.001f || handL == null || head == null || upperArmL == null || forearmL == null)
             {
                 if (gourd != null && gourd.gameObject.activeSelf) gourd.gameObject.SetActive(false);
@@ -812,7 +833,10 @@ namespace BladePath
             Vector3 up = Vector3.up, fwd = ft.forward, right = ft.right;
             float sc = transform.lossyScale.y;
             // голова запрокидывается на глотке
-            head.rotation = Quaternion.AngleAxis(-28f * pourW, right) * head.rotation;
+            float swallow = dr ? Mathf.Sin(Mathf.Clamp01((t - 0.54f) / 0.42f) *
+                Mathf.PI * 2f) * pourW : 0f;
+            head.rotation = Quaternion.AngleAxis(
+                -23f * pourW + 1.6f * swallow, right) * head.rotation;
             // рот: по кадрам CI кость головы у этой модели — на уровне ушей; рот чуть ниже и впереди
             Vector3 mouth = head.position - up * (0.07f * sc) + fwd * (0.095f * sc);   // по кадру 32: горлышко было у носа — ниже и ближе к губам
             // тыква: сперва поднята к подбородку стоймя, на глотке — дном вверх-вперёд, горлышко у губ
@@ -841,7 +865,9 @@ namespace BladePath
             Vector3 gc = handL.position + (framesReady ? handL.rotation * Quaternion.Inverse(q) * off : off);   // где теперь центр кулака
             gourd.rotation = Quaternion.FromToRotation(Vector3.up, axis);
             gourd.position = gc - axis * 0.09f;   // перехват тыквы — в кулаке
-            gourd.localScale = Vector3.one * Mathf.Lerp(0.6f, 1f, Mathf.Clamp01(drinkW * 3f));
+            // Constant physical size. The previous 0.6→1.0 jump looked like
+            // the healing flask appeared and inflated in the character's hand.
+            gourd.localScale = Vector3.one;
         }
 
         /// <summary>Тыква-горлянка: тело вращения (две доли с перехватом, горлышко, пробка), лак цвета мёда.</summary>
@@ -883,6 +909,7 @@ namespace BladePath
             Mesh m = new Mesh { name = "gourd" };
             m.SetVertices(v); m.SetNormals(n); m.SetTriangles(tri, 0); m.RecalculateBounds();
             GameObject g = new GameObject("Gourd");
+            g.transform.SetParent(transform, false);
             g.AddComponent<MeshFilter>().sharedMesh = m;
             MeshRenderer mr = g.AddComponent<MeshRenderer>();
             Material mat = new Material(sh) { name = "Gourd" };

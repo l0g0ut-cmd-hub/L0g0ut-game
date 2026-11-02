@@ -117,6 +117,19 @@ namespace BladePath
             }
         }
         public static void Save() { PlayerPrefs.SetString("campaign_v1", JsonUtility.ToJson(D)); PlayerPrefs.Save(); }
+        public static void Restart()
+        {
+            d = new Data();
+            Generate(0);
+            d.rolls = 1;
+            d.steps = 0;
+            d.knocked = false;
+            d.training = false;
+            d.clearedRegion = -1;
+            d.fight = -1;
+            Save();
+        }
+
 
         public static int Region { get { return D.region; } }
         public static List<MapNode> Nodes { get { return D.nodes; } }

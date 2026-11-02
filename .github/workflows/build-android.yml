@@ -52,6 +52,9 @@ jobs:
       - name: Preserve original painted visuals and verify additive effects
         run: python3 tools/validate_additive_visuals.py
 
+      - name: Validate bridge routes, hero choices and 24-frame healing art
+        run: python3 tools/validate_journey_integration.py
+
       - name: Environment info
         run: |
           { echo "== uname"; uname -a; echo "== docker"; docker version 2>&1 | head -20; echo "== df"; df -h /; } 2>&1 | tee "$RUNNER_TEMP/ci.log"

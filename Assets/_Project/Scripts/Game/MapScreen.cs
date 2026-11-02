@@ -30,7 +30,8 @@ namespace BladePath
         int plannedRegion = -1;   // keep a chosen destination across intermediate encounters
         readonly Queue<int> routeQueue = new Queue<int>(16);
         int moveFrom = -1, moveTo = -1; float moveStart;
-        const float MoveTime = 1.25f;
+        float moveDuration = 1.25f;
+        float rideCycleAt;
         float panU = -1f, shownAt, modalAt, rollAt = -10f;
         bool manualPan, panArmed, panDragging;
         Vector2 panTouchOrigin;
@@ -51,6 +52,7 @@ namespace BladePath
             routeAutopilot = false; nextRouteAt = 0f; toastLines.Clear();
             manualPan = false; panArmed = false; panDragging = false;
             if (resume >= 0 && resume < Campaign.Nodes.Count && resume != Campaign.At) SelectNode(resume);
+            TerrainRoads.Bind(Campaign.Region, Campaign.Nodes);
             Campaign.CancelTraining();
             if (Campaign.Knocked) OpenModal(Modal.Knocked);
             else if (Campaign.ClearedRegion >= 0) OpenModal(Modal.RegionClear);
@@ -96,7 +98,12 @@ namespace BladePath
             revisit = Campaign.Nodes[i].done;
             freshTreasure = Campaign.Nodes[i].Type == NodeType.Treasure && !revisit;
             treasure = null;
-            moveFrom = Campaign.At; moveTo = i; moveStart = Time.unscaledTime; sel = -1; previewPath.Clear(); stockNode = -1;
+            moveFrom = Campaign.At; moveTo = i; moveStart = Time.unscaledTime;
+            TerrainRoads.Bind(Campaign.Region, Campaign.Nodes);
+            moveDuration = Mathf.Clamp(TerrainRoads.Route(moveFrom, moveTo).lengthPixels / 145f,
+                0.85f, 7.5f);
+            rideCycleAt = Time.unscaledTime;
+            sel = -1; previewPath.Clear(); stockNode = -1;
             manualPan = false; // resume following the animated samurai as the journey proceeds
             Campaign.MoveTo(i);
             // If the player plotted several waypoints, retain the remaining
@@ -112,7 +119,7 @@ namespace BladePath
             HandleMapPan();
             if (moveTo >= 0)
             {
-                if (Time.unscaledTime - moveStart >= MoveTime)
+                if (Time.unscaledTime - moveStart >= moveDuration)
                 {
                     int i = moveTo; moveTo = -1;
                     if (freshTreasure) treasure = Profile.Treasure(Campaign.Region + 1);
@@ -212,6 +219,7 @@ namespace BladePath
             mapX = Mathf.Max(0f, (W - panel - MapFullW) * 0.5f);
             float uw = viewW / MapFullW;
             // окно карты едет за всадником
+            TerrainRoads.Bind(Campaign.Region, Campaign.Nodes);
             Vector2 hu = HeroUV();
             float target = Mathf.Clamp(hu.x - uw * 0.45f, 0f, 1f - uw);
             panU = panU < 0f ? target : manualPan ? panU :
@@ -259,10 +267,9 @@ namespace BladePath
             List<MapNode> ns = Campaign.Nodes;
             if (moveTo >= 0 && moveFrom >= 0)
             {
-                float t = Mathf.Clamp01((Time.unscaledTime - moveStart) / MoveTime);
+                float t = Mathf.Clamp01((Time.unscaledTime - moveStart) / moveDuration);
                 t = t * t * (3f - 2f * t);
-                Vector2 a = new Vector2(ns[moveFrom].x, ns[moveFrom].y), b = new Vector2(ns[moveTo].x, ns[moveTo].y);
-                return Bez(a, b, Bend(moveFrom, moveTo), t);
+                return TerrainRoads.Route(moveFrom, moveTo).Position(t);
             }
             MapNode c = Campaign.Current; return new Vector2(c.x, c.y);
         }
@@ -391,7 +398,7 @@ namespace BladePath
                 int a = trail[i - 1], b = trail[i];
                 if (a < 0 || a >= nodes.Count || b < 0 || b >= nodes.Count) continue;
                 float progress = (moveTo == b && moveFrom == a && i == trail.Count - 1)
-                    ? Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((Time.unscaledTime - moveStart) / MoveTime))
+                    ? Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((Time.unscaledTime - moveStart) / moveDuration))
                     : 1f;
                 DrawFootprintsOnRoad(a, b, new Color(0.64f, 0.33f, 0.16f, 0.68f), progress, false);
             }
@@ -400,7 +407,7 @@ namespace BladePath
             {
                 DrawFootprintsOnRoad(moveFrom, moveTo,
                     new Color(1f, 0.84f, 0.43f, 0.92f),
-                    Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((Time.unscaledTime - moveStart) / MoveTime)), true);
+                    Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((Time.unscaledTime - moveStart) / moveDuration)), true);
                 return;
             }
 
@@ -428,8 +435,7 @@ namespace BladePath
             if (from < 0 || from >= nodes.Count || to < 0 || to >= nodes.Count || progress <= 0f) return;
             Vector2 a = new Vector2(nodes[from].x, nodes[from].y);
             Vector2 b = new Vector2(nodes[to].x, nodes[to].y);
-            float len = Vector2.Distance(new Vector2(a.x * MapFullW, a.y * MapH),
-                                          new Vector2(b.x * MapFullW, b.y * MapH));
+            float len = TerrainRoads.Route(from, to).lengthPixels;
             int count = Mathf.Clamp(Mathf.RoundToInt(len / 17f), 5, 22);
             Texture2D feet = JourneyFootprintArt.Footsteps;
             Color prev = GUI.color;
@@ -438,11 +444,12 @@ namespace BladePath
             {
                 float t = j / (float)count;
                 if (t < 0.13f || t > 0.87f || t > progress) continue;
-                Vector2 uv = Bez(a, b, Bend(from, to), t);
+                Vector2 uv = TerrainRoads.Route(from, to).Position(t);
                 Vector2 point = new Vector2(mapX + (uv.x - u0) * MapFullW, uv.y * MapH);
                 if (point.x < mapX + 7f || point.x > mapX + viewW - 7f) continue;
-                Vector2 back = Bez(a, b, Bend(from, to), Mathf.Max(0f, t - 0.025f));
-                Vector2 ahead = Bez(a, b, Bend(from, to), Mathf.Min(1f, t + 0.025f));
+                TerrainRoads.Path road = TerrainRoads.Route(from, to);
+                Vector2 back = road.Position(Mathf.Max(0f, t - 0.015f));
+                Vector2 ahead = road.Position(Mathf.Min(1f, t + 0.015f));
                 Vector2 tangent = new Vector2((ahead.x - back.x) * MapFullW, (ahead.y - back.y) * MapH);
                 float angle = Mathf.Atan2(tangent.y, tangent.x) * Mathf.Rad2Deg + 90f;
                 float pulse = shimmer ? 0.84f + 0.16f * Mathf.Sin(Time.unscaledTime * 4.5f - j * 0.55f) : 1f;
@@ -471,14 +478,14 @@ namespace BladePath
                     bool open = a == Campaign.At && cur.done && moveTo < 0;
                     float alpha = walked ? 0.95f : open ? 0.7f + 0.3f * Mathf.Sin(Time.unscaledTime * 5f) : Known(ns[b]) ? 0.45f : 0.22f;
                     Color col = walked ? new Color(0.55f, 0.06f, 0.04f, alpha) : new Color(0.05f, 0.04f, 0.04f, alpha);
-                    Vector2 A = new Vector2(ns[a].x, ns[a].y), B = new Vector2(ns[b].x, ns[b].y);
-                    float len = ((B - A) * new Vector2(MapFullW, MapH)).magnitude;
+                    TerrainRoads.Path road = TerrainRoads.Route(a, b);
+                    float len = road.lengthPixels;
                     int dots = Mathf.Max(3, (int)(len / 14f));
                     for (int k = 1; k < dots; k++)
                     {
                         float t = k / (float)dots;
                         if (t < 0.12f || t > 0.88f) continue;   // не залезать на медальоны
-                        Vector2 p = Bez(A, B, Bend(a, b), t);
+                        Vector2 p = road.Position(t);
                         Vector2 s = new Vector2(mapX + (p.x - u0) * MapFullW, p.y * MapH);
                         if (s.x < mapX - 6f || s.x > mapX + viewW + 6f) continue;
                         float r = walked ? 4.2f : 3.4f;
@@ -488,7 +495,7 @@ namespace BladePath
                     if (open)
                     {
                         // стрелка тушью ближе к концу открытой дороги
-                        Vector2 p1 = Bez(A, B, Bend(a, b), 0.74f), p2 = Bez(A, B, Bend(a, b), 0.8f);
+                        Vector2 p1 = road.Position(0.74f), p2 = road.Position(0.8f);
                         Vector2 s1 = new Vector2(mapX + (p1.x - u0) * MapFullW, p1.y * MapH), s2 = new Vector2(mapX + (p2.x - u0) * MapFullW, p2.y * MapH);
                         float ang = Mathf.Atan2(s2.y - s1.y, s2.x - s1.x) * Mathf.Rad2Deg;
                         Matrix4x4 m = GUI.matrix;
@@ -584,7 +591,9 @@ namespace BladePath
         void DrawHero()
         {
             if (Event.current.type != EventType.Repaint) return;
-            Texture2D ht = UiKit.Tex("UI/map_hero"), ic = UiKit.Tex("UI/map_icons");
+            Texture2D ht = UiKit.Tex("UI/map_rider_16");
+            if (ht == null) ht = UiKit.Tex("UI/map_hero");
+            Texture2D ic = UiKit.Tex("UI/map_icons");
             Vector2 uv = HeroUV();
             Vector2 p = new Vector2(mapX + (uv.x - u0) * MapFullW, uv.y * MapH);
             bool moving = moveTo >= 0;
@@ -598,12 +607,44 @@ namespace BladePath
                 GUI.color = oc;
             }
             if (ht == null) { UiKit.Disc(p, 10f, Gold); return; }
-            int f = moving ? (int)(Time.unscaledTime * 12f) % 8 : 8 + (int)(Time.unscaledTime * 5f) % 4;
-            bool left = moving && Campaign.Nodes[moveTo].x < Campaign.Nodes[moveFrom].x;
-            Rect uvr = Cell(f);
-            if (left) uvr = new Rect(uvr.x + uvr.width, uvr.y, -uvr.width, uvr.height);
-            float s = 92f, bob = moving ? Mathf.Abs(Mathf.Sin(Time.unscaledTime * 12f)) * 2f : 0f;
-            GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.5f, p.y - s * 0.78f - bob, s, s), ht, uvr);
+            bool newSheet = UiKit.Tex("UI/map_rider_16") != null;
+            // Smooth animation between source poses without replacing the
+            // original hand-painted rider. The optional 16-pose sheet is used
+            // whenever an art-approved one is available.
+            int count = newSheet ? 16 : moving ? 8 : 4;
+            int offset = newSheet ? 0 : moving ? 0 : 8;
+            float elapsed = Mathf.Max(0f, Time.unscaledTime - rideCycleAt);
+            float pose = moving ? elapsed * (newSheet ? 14f : 9f)
+                : Time.unscaledTime * 2.5f;
+            int first = Mathf.FloorToInt(pose) % count;
+            int next = (first + 1) % count;
+            float phase = pose - Mathf.Floor(pose);
+            Vector2 direction = moving
+                ? TerrainRoads.Route(moveFrom, moveTo).Direction(
+                    Mathf.Clamp01((Time.unscaledTime - moveStart) / moveDuration))
+                : Vector2.right;
+            bool left = moving && direction.x < -0.10f;
+            float size = newSheet ? 104f : 92f;
+            float bob = moving ? (0.5f - 0.5f * Mathf.Cos(pose * Mathf.PI)) * 1.25f : 0f;
+            Rect riderRect = new Rect(p.x - size * 0.5f, p.y - size * 0.78f - bob, size, size);
+            Rect currentUV = Cell(offset + first);
+            if (left) currentUV = new Rect(currentUV.x + currentUV.width, currentUV.y,
+                -currentUV.width, currentUV.height);
+            GUI.DrawTextureWithTexCoords(riderRect, ht, currentUV);
+            // Low-opacity interpolation hides the old eight-frame cadence;
+            // blending is capped so individual painted poses stay sharp.
+            float overlay = moving ? Mathf.Sin(phase * Mathf.PI) * 0.22f : 0f;
+            if (overlay > 0.005f)
+            {
+                Color oldColor = GUI.color;
+                GUI.color = new Color(oldColor.r, oldColor.g, oldColor.b,
+                    oldColor.a * overlay);
+                Rect nextUV = Cell(offset + next);
+                if (left) nextUV = new Rect(nextUV.x + nextUV.width, nextUV.y,
+                    -nextUV.width, nextUV.height);
+                GUI.DrawTextureWithTexCoords(riderRect, ht, nextUV);
+                GUI.color = oldColor;
+            }
         }
 
         // Panoramic mist layers drift slowly over the painted forest but do not
@@ -715,7 +756,7 @@ namespace BladePath
                 if (t < 0.12f || t > 0.88f) continue;
                 Vector2 a = new Vector2(nodes[from].x, nodes[from].y);
                 Vector2 b = new Vector2(nodes[to].x, nodes[to].y);
-                Vector2 uv = Bez(a, b, Bend(from, to), t);
+                Vector2 uv = TerrainRoads.Route(from, to).Position(t);
                 Vector2 point = new Vector2(mapX + (uv.x - u0) * MapFullW,
                     uv.y * MapH);
                 if (point.x < mapX + 9f || point.x > mapX + viewW - 9f) continue;
@@ -876,7 +917,20 @@ namespace BladePath
             float artTop = Mathf.Max(273f, y + 11f);
             float artHeight = Mathf.Min(136f, 416f - artTop);
             if (artHeight > 45f)
-                DrawSidebarIllustration(new Rect(x, artTop, w, artHeight), artwork);
+            {
+                Rect illustration = new Rect(x, artTop, w, artHeight);
+                DrawSidebarIllustration(illustration, artwork);
+                Texture2D heroes = UiKit.Tex("UI/selection/characters_difficulties");
+                if (heroes != null)
+                {
+                    Rect portrait = new Rect(illustration.x + 7f,
+                        illustration.y + 7f, 47f, 58f);
+                    VisualIdentity.Inset(portrait, JourneyChoice.Accent(JourneyChoice.Hero));
+                    GUI.DrawTextureWithTexCoords(new Rect(portrait.x + 2f, portrait.y + 2f,
+                            portrait.width - 4f, portrait.height - 4f), heroes,
+                        new Rect(JourneyChoice.Hero / 3f, 0.5f, 1f / 3f, 0.5f));
+                }
+            }
             if (Btn(new Rect(x, 540f - 112f, w, 44f), "СНАРЯЖЕНИЕ" + (Profile.Points > 0 ? " (+" + Profile.Points + ")" : ""), interactive)) InventoryScreen.Show(0);
             if (Btn(new Rect(x, 540f - 60f, w, 44f), "В МЕНЮ", interactive)) { Hide(); Time.timeScale = 1f; SceneManager.LoadScene(SceneNames.MainMenu); }
         }
