@@ -30,79 +30,57 @@ def check_png(rel, width, height):
 
 
 def check_routes():
+    """Roads follow the painted paths (tools/map_roads.json → gen_map_roads.py).
+
+    Every place sits exactly on a road hub; every pair of neighbouring layers is
+    connected; the far bank is reachable ONLY across the bridge hubs.
+    """
+    import json
     src = read("Assets/_Project/Scripts/Game/TerrainRoads.cs")
+    camp = read("Assets/_Project/Scripts/Game/Campaign.cs")
     assert "public static class TerrainRoads" in src
     assert "public static Path Route(int from, int to)" in src
     assert "lengthPixels" in src and "public Vector2 Direction(float progress)" in src
-    blocks = [
-        src.split("// FOREST OF SHADOWS:")[1].split("// ONI MOUNTAINS:")[0],
-        src.split("// ONI MOUNTAINS:")[1].split("// SHOGUNATE:")[0],
-        src.split("// SHOGUNATE:")[1].split("// Diagnostics")[0],
-    ]
-    for n, block in enumerate(blocks):
-        hubs = {}
-        for variable, x, y, shore in re.findall(
-                r"(\w+)\s*=\s*g\.Add\(\s*([.\d]+)f?,\s*([.\d]+)f?,\s*(\d)\)", block):
-            hubs[variable] = (float(x), float(y), int(shore))
-        edges = re.findall(r"g\.Link\((\w+),(\w+)\)", block)
-        # The code reuses variables across regions but every region defines all
-        # bridge hub names (b0..b3), and every crossing must use the bridge chain.
-        assert len(edges) >= 15, "Region %s has too few road segments" % n
-        assert "b0" in hubs and "b3" in hubs
-        for a, b in edges:
-            assert a in hubs and b in hubs, "Road connects to missing hub in region %s" % n
-            if hubs[a][2] != hubs[b][2]:
-                assert (hubs[a][2] == 2 or hubs[b][2] == 2), (
-                    "Illegal land-to-land river jump on region %s: %s/%s" % (n, a, b))
-        adjacency = {key: set() for key in hubs}
-        for a, b in edges:
-            adjacency[a].add(b)
-            adjacency[b].add(a)
-        for a, b in zip(("b0", "b1", "b2"), ("b1", "b2", "b3")):
-            assert b in adjacency[a], "Missing bridge span"
-        assert any(hubs[x][2] == 0 for x in adjacency["b0"])
-        assert any(hubs[x][2] == 1 for x in adjacency["b3"])
-        start = next(name for name in hubs if hubs[name][2] == 0)
-        reached, pending = {start}, [start]
-        while pending:
-            for neighbor in adjacency[pending.pop()]:
-                if neighbor not in reached and hubs[neighbor][2] != 2:
-                    reached.add(neighbor)
-                    pending.append(neighbor)
-        assert not any(hubs[name][2] == 1 for name in reached), (
-            "Road bypasses mandatory bridge")
-        print("Road graph", n, len(hubs), "hubs", len(edges), "edges; bridge mandatory")
+    assert "// ROADS-GRAPH BEGIN" in src and "// ROADS-SPOTS BEGIN" in camp
+    assert "UnityEngine.Random.Range(-0.012f, 0.012f)" not in camp, "Places must not be jittered off the roads"
+    assert "MigrateSpots(d);" in camp
+    data = json.loads((ROOT / "tools/map_roads.json").read_text(encoding="utf-8"))
+    for r in "012":
+        m = data[r]
+        pos = {}
+        for layer in m["spots"]:
+            for n, x, y in layer:
+                pos[n] = (x, y)
+        pos.update({k: tuple(v) for k, v in m["points"].items()})
+        adj = {}
+        cnt = 0
+        for a, mids, b in m["roads"]:
+            prev = a
+            for p in mids:
+                cnt += 1
+                k = "_%d" % cnt
+                adj.setdefault(prev, set()).add(k); adj.setdefault(k, set()).add(prev)
+                prev = k
+            adj.setdefault(prev, set()).add(b); adj.setdefault(b, set()).add(prev)
 
-    # All three painted maps have a campaign node ON their bridge.
-    # The nearest hub must be on the bridge, not on the opposite river bank:
-    # otherwise the rider crosses the river, overshoots and doubles back.
-    # Read the C# bounds rather than trusting a duplicate hardcoded test.
-    bridge_bounds = re.findall(
-        r"if \(region == (\d) && p\.x >= ([\d.]+)f && p\.x <= ([\d.]+)f &&"
-        r"\s*p\.y >= ([\d.]+)f && p\.y <= ([\d.]+)f\) return 2;",
-        src)
-    assert len(bridge_bounds) == 3, "Expected one explicit bridge anchor per region"
-    authored_bridge_nodes = [(0, .45, .66), (1, .57, .48), (2, .46, .60)]
-    for region, x, y in authored_bridge_nodes:
-        b = next((v for v in bridge_bounds if int(v[0]) == region), None)
-        assert b is not None, "Missing bridge anchor in region %d" % region
-        _, xmin, xmax, ymin, ymax = b
-        # Include the full authored jitter +/- 0.012 around each checkpoint.
-        assert float(xmin) <= x - .012 and float(xmax) >= x + .012, (
-            "Bridge anchor does not cover randomized node X in region %d" % region)
-        assert float(ymin) <= y - .012 and float(ymax) >= y + .012, (
-            "Bridge anchor does not cover randomized node Y in region %d" % region)
-        hubs = {}
-        for name, hx, hy, shore in re.findall(
-                r"(\w+)\s*=\s*g\.Add\(\s*([.\d]+)f?,\s*([.\d]+)f?,\s*(\d)\)",
-                blocks[region]):
-            if int(shore) == 2:
-                hubs[name] = (float(hx), float(hy))
-        assert len(hubs) == 4
-        nearest = min((((hx-x)*810)**2 + ((hy-y)*540)**2)**.5
-                      for hx, hy in hubs.values())
-        assert nearest < 45, "Bridge checkpoint is too far from bridge road"
-    print("Bridge checkpoint anchoring: 3/3 regions; procedural jitter covered")
+        def reach(src_, blocked=()):
+            seen, todo = {src_}, [src_]
+            while todo:
+                for nb in adj.get(todo.pop(), ()):
+                    if nb not in seen and nb not in blocked:
+                        seen.add(nb); todo.append(nb)
+            return seen
+        spots = m["spots"]
+        for l in range(len(spots) - 1):
+            for a in spots[l]:
+                got = reach(a[0])
+                for b in spots[l + 1]:
+                    assert b[0] in got, "No road %s -> %s on map %s" % (a[0], b[0], r)
+        start, boss = spots[0][0][0], spots[-1][0][0]
+        assert boss not in reach(start, set(m["bridge"])), "Map %s: far bank reachable without the bridge" % r
+        for n, x, y in (s_ for layer in spots for s_ in layer):
+            assert ("new Vector2(%s" % (("%.3f" % x).rstrip("0").rstrip(".") + "f")) in camp, "Spot %s not generated" % n
+        print("Road map", r, len(adj), "hubs; all layer pairs connected; bridge mandatory")
 
     screen = read("Assets/_Project/Scripts/Game/MapScreen.cs")
     assert screen.count("TerrainRoads.Route(") >= 8, (
@@ -119,10 +97,12 @@ def check_routes():
     # (user decision 2026-11-02); the goal stays selected, no autopilot.
     assert ': sel >= 0 && Campaign.CanGo(NextPreviewStep) ? NextPreviewStep : -1;' in screen
     assert 'if (sel != i && NextPreviewStep != i) return;' in screen
-    assert 'if (goal >= 0 && goal != Campaign.At && goal < Campaign.Nodes.Count) SelectNode(goal);' in screen
+    assert 'if (goal >= 0 && goal != Campaign.At && goal < Campaign.Nodes.Count)' in screen
     assert 'Campaign.MoveTo(i); // persist only after the rider arrives' in screen
     assert 'if (!interactive || i != hitNode || panDragging) continue;' in screen
-    assert 'Go(next);' not in screen, "Unattended travel to a different node reintroduced"
+    # One В ПУТЬ tap rides the whole route but stops at every new encounter.
+    assert 'if (modal == Modal.None && !Campaign.InFight && Campaign.CanGo(hop)) Go(hop);' in screen
+    assert 'foreach (int next in nodes[at].next)' in screen, "Route preview must be forward-only"
     assert 'if (UiKit.Tex(heroArt) != null)' in screen
     assert 'heroArt = "UI/npc_"' not in screen
     assert "float artHeight = artSpace >= 94f" in screen
@@ -132,7 +112,7 @@ def check_routes():
     duel_source = read("Assets/_Project/Scripts/Game/DuelManager.cs")
     assert "Juice.Instance.ClearBattleDecals();" in duel_source
     assert "Footprints.Instance.ClearMarks();" in duel_source
-    assert 'if (parents[index] < 0) { sel = -1; return; }' in screen
+    assert 'if (parents[index] < 0) return;' in screen
     assert 'if (UiKit.Tex(path) == null) return;' not in screen
     menu = read("Assets/_Project/Scripts/Menu/MainMenuController.cs")
     assert 'newJourneyStep == 1 ? "UI/event_"' not in menu
@@ -148,7 +128,7 @@ def check_routes():
     assert 'if (texCache.TryGetValue(path, out t) && t != null) return t;' in read(
         "Assets/_Project/Scripts/Game/UiKit.cs")
     assert 'art = newJourneyStep == 1 ? "UI/event_" + i : "UI/npc_" + i;' not in menu
-    assert "if (hub.shore != shore) continue;" in src
+    assert "static int Nearest(Graph graph, Vector2 pos, int region)" in src
     # Cache must be invalidated when regenerated node coordinates change in
     # place. Checking only List reference/region silently reuses old roads.
     bind = src.split("public static void Bind(int region, List<MapNode> nodes)", 1)[1]

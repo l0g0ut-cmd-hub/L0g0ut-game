@@ -104,6 +104,34 @@ for sd, sg in (('L', 1), ('R', -1)):
     log('рука', sd, 'кончик', np.round(T, 3), 'угол к вертикали', round(math.degrees(math.atan2(abs(A[0]), -A[2])), 1),
         '| стопа x', round(fx, 3), 'пятка/носок', round(fy1, 3), round(fy0, 3))
 
+# ------------------------------------------------------------------ 2б. пальцы в кулак (у Meshy ладони раскрыты)
+# Пальцы сгибаются в трёх суставах вокруг поперечной оси кисти к ладони (ладонь в A-позе — к бедру),
+# в кулаке остаётся отверстие под рукоять. Центр хвата пишется в пустышку GripPoint.* на кости кисти:
+# HeroRigDriver ставит запястье так, чтобы рукоять прошла ровно через неё.
+CURL = [float(v) for v in os.environ.get('CURL', '68,88,55').split(',')]
+GRIP = {}
+def rot(v, axis, a):
+    axis = axis / np.linalg.norm(axis)
+    ca, sa = np.cos(a)[:, None], np.sin(a)[:, None]
+    return v * ca + np.cross(axis, v) * sa + np.outer(v @ axis, axis) * (1 - ca)
+for sd, sg in (('L', 1), ('R', -1)):
+    Wp = np.array(J['wri' + sd]); Tp = np.array(J['hnd' + sd])
+    L = np.linalg.norm(Tp - Wp); D = (Tp - Wp) / L
+    N = np.array([-sg, 0.0, 0.0]); N -= D * (N @ D); N /= np.linalg.norm(N)
+    Lt = np.cross(D, N)
+    rel = P - Wp; s_ = rel @ D; radial = np.linalg.norm(rel - np.outer(s_, D), axis=1)
+    hand = (s_ > -0.02 * k) & (s_ < L + 0.03 * k) & (radial < 0.075 * k) & (sg * P[:, 0] > 0.2 * k)
+    F = P[hand].copy(); s0 = (F - Wp) @ D
+    for frac, ang in reversed(list(zip((0.42, 0.66, 0.84), CURL))):
+        sj = frac * L
+        kk = np.clip((s0 - sj + 0.006 * k) / (0.012 * k), 0, 1); kk = kk * kk * (3 - 2 * kk)
+        J0 = Wp + D * sj + N * 0.012 * k
+        F = J0 + rot(F - J0, Lt, np.radians(ang) * kk)
+    P[hand] = F
+    GRIP[sd] = Wp + D * (0.46 * L) + N * (0.035 * k)
+    log('кулак', sd, 'вершин', int(hand.sum()), 'длина кисти', round(L, 3), 'центр хвата', np.round(GRIP[sd], 3))
+body.data.vertices.foreach_set('co', P.ravel()); body.data.update()
+
 bpy.ops.object.armature_add(enter_editmode=True, location=(0, 0, 0))
 rig = bpy.context.object; rig.name = NAME + '_Rig'; rig.data.name = NAME + '_Armature'
 for b in list(rig.data.edit_bones): rig.data.edit_bones.remove(b)
@@ -230,6 +258,13 @@ body.parent = rig
 am = body.modifiers.new('Armature', 'ARMATURE'); am.object = rig
 marker = bpy.data.objects.new('FrontMarker', None); marker.location = (0, -0.5, 0.92 * k)
 sc.collection.objects.link(marker); marker.parent = rig
+bpy.context.view_layer.update()
+grips = []
+for sd in 'LR':
+    e = bpy.data.objects.new('GripPoint.' + sd, None); sc.collection.objects.link(e)
+    e.parent = rig; e.parent_type = 'BONE'; e.parent_bone = 'Hand.' + sd
+    e.matrix_world = Matrix.Translation(Vector(tuple(GRIP[sd])))
+    grips.append(e)
 for mt in body.data.materials:
     if mt: mt.name = 'MZ_' + NAME
 log('групп весов', len(body.vertex_groups), 'материалов', len(body.data.materials))
@@ -242,7 +277,7 @@ anim = src_ronin[src_ronin.index('# --------------------------------------------
 exec(anim, {'bpy': bpy, 'math': math, 'Vector': Vector, 'Quaternion': Quaternion, 'Matrix': Matrix, 'rig': rig, 'sc': sc})
 bpy.ops.wm.save_as_mainfile(filepath=BLEND_PATH)
 bpy.ops.object.select_all(action='DESELECT')
-for o in (rig, marker, body): o.select_set(True)
+for o in [rig, marker, body] + grips: o.select_set(True)
 bpy.context.view_layer.objects.active = rig
 bpy.ops.export_scene.fbx(
     filepath=FBX_PATH, use_selection=True, object_types={'ARMATURE', 'MESH', 'EMPTY'},

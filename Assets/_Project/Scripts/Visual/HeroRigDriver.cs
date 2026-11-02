@@ -228,11 +228,28 @@ namespace BladePath
                 if (handR != null) gripLocalR = handR.InverseTransformPoint(handR.position + Vector3.down * gripDown - sideR * ftr.right * gripIn);
             }
             CacheHandFrame(handR, forearmR, out bindR, out sideR);
+            // Модели из Meshy (build_meshy_char.py) несут точку хвата GripPoint.L/R на кости кисти —
+            // центр согнутого кулака из Blender. Она точнее приближения «вниз от запястья».
+            Transform gpL = FindGrip(handL, "grippointl"), gpR = FindGrip(handR, "grippointr");
+            if (gpL != null && gpR != null)
+            {
+                gripFromBind = true;
+                gripLocalL = handL.InverseTransformPoint(gpL.position);
+                gripLocalR = handR.InverseTransformPoint(gpR.position);
+            }
             if (useRagdoll && legsReady && fighter != null)
             {
                 rag = new FighterRagdoll(this, fighter.transform);
                 if (!rag.Ready) rag = null;
             }
+        }
+
+        static Transform FindGrip(Transform hand, string key)
+        {
+            if (hand == null) return null;
+            foreach (Transform c in hand)
+                if (c.name.Replace(".", "").Replace("_", "").ToLowerInvariant().EndsWith(key)) return c;
+            return null;
         }
 
         static void Cache(Transform u, Transform f, Transform h, out float a, out float b)

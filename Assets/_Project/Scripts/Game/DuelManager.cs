@@ -400,6 +400,19 @@ namespace BladePath
                 resolver = CombatResolver.Instance;
                 resolver.HitRegistered += OnHit;
             }
+            if (Paused)
+            {
+                // Пауза: бой стоит целиком. Таймеры на реальном времени (вступление, выхват,
+                // следующий раунд, стоп-кадр) сдвигаются вперёд, чтобы после паузы ничего не
+                // «досчиталось»: раньше под паузой шло вступление и враг рубил первым на выхвате.
+                float pd = Time.unscaledDeltaTime;
+                stateStart += pd; nextRoundAt += pd;
+                if (IaiWaiting) IaiCueAt += pd;
+                if (hitStopUntil > Time.unscaledTime) hitStopUntil += pd;
+                if (slowUntil > Time.unscaledTime) slowUntil += pd;
+                ApplyTimeScale();
+                return;
+            }
 
             // «шлейф» полоски здоровья догоняет текущее значение с задержкой
             float dt = Time.unscaledDeltaTime;
@@ -429,6 +442,9 @@ namespace BladePath
             {
                 // выхват (иай): в первом раунде и через раз в остальных — бойцы замерли, ждут знака; кто первым — тот и рубит
                 if (!IaiWaiting && !iaiDone && (Round == 1 || iaiRoll) && EnemyAiOn()) { IaiWaiting = true; IaiCueAt = Time.unscaledTime + UnityEngine.Random.Range(1.0f, 2.4f); iaiCueSounded = false; }
+                // ИИ выключили, пока бойцы ждали знака (кнопка ИИ в меню паузы): выхват отменяется,
+                // иначе после паузы «промедливший» игрок получал рывок с ударом от стоящего врага
+                if (IaiWaiting && !EnemyAiOn()) { IaiWaiting = false; iaiDone = true; }
                 if (IaiWaiting)
                 {
                     if (!iaiCueSounded && Time.unscaledTime >= IaiCueAt) { iaiCueSounded = true; if (Juice.Instance != null) Juice.Instance.Taiko(1f, 1.35f); Haptics.Pulse(30); }

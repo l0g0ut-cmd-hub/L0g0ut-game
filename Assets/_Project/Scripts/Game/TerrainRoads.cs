@@ -175,36 +175,15 @@ namespace BladePath
             return result;
         }
 
-        static int Shore(int region, Vector2 p)
-        {
-            // Authored map checkpoints can sit ON the painted bridge itself.
-            // The old two-bank classification incorrectly snapped these nodes
-            // to a far-bank road hub, forcing the horse to travel past the
-            // checkpoint and double back across the river/lava. Attach those
-            // markers to a bridge hub (shore 2), never to a bank.
-            // Bounds include the +/-0.012 procedural node jitter.
-            if (region == 0 && p.x >= 0.415f && p.x <= 0.525f &&
-                p.y >= 0.625f && p.y <= 0.715f) return 2;
-            if (region == 1 && p.x >= 0.492f && p.x <= 0.675f &&
-                p.y >= 0.460f && p.y <= 0.550f) return 2;
-            if (region == 2 && p.x >= 0.395f && p.x <= 0.545f &&
-                p.y >= 0.570f && p.y <= 0.665f) return 2;
-            if (region == 0) return p.x < (p.y > 0.58f ? 0.385f : 0.365f) ? 0 : 1;
-            if (region == 1) return p.x < 0.49f ? 0 : 1;
-            return p.x < (p.y > 0.52f ? 0.425f : 0.43f) ? 0 : 1;
-        }
-
+        // Places on the map sit exactly on road hubs (tools/map_roads.json), so the nearest
+        // hub is the place itself; old saves are moved onto the new places on load.
         static int Nearest(Graph graph, Vector2 pos, int region)
         {
-            int shore = Shore(region, pos), best = -1;
+            int best = -1;
             float distance = float.PositiveInfinity;
             for (int i = 0; i < graph.hubs.Count; i++)
             {
-                Hub hub = graph.hubs[i];
-                float d = Length(pos - hub.pos);
-                // Attach to the road on the SAME bank. A nearby bridge waypoint
-                // must not become an off-road shortcut across water.
-                if (hub.shore != shore) continue;
+                float d = Length(pos - graph.hubs[i].pos);
                 if (d < distance) { best = i; distance = d; }
             }
             return best;
@@ -261,63 +240,68 @@ namespace BladePath
             return new Path(points);
         }
 
+        static Graph Make(float[] hubs, int[] links)
+        {
+            Graph g = new Graph();
+            for (int i = 0; i + 2 < hubs.Length; i += 3) g.Add(hubs[i], hubs[i + 1], (int)hubs[i + 2]);
+            for (int i = 0; i + 1 < links.Length; i += 2) g.Link(links[i], links[i + 1]);
+            return g;
+        }
+
+        // ROADS-GRAPH BEGIN (сгенерировано tools/gen_map_roads.py из tools/map_roads.json — правьте JSON)
         static void MakeGraphs()
         {
             graphs = new Graph[3];
-            // FOREST OF SHADOWS: riverside rice fields -> actual wooden bridge
-            // at x=.408..523, y=.68, then torii clearing and castle approach.
-            Graph g = graphs[0] = new Graph();
-            int w0=g.Add(.27f,.66f,0), w1=g.Add(.23f,.48f,0), w2=g.Add(.30f,.77f,0);
-            int w3=g.Add(.34f,.63f,0), w4=g.Add(.375f,.645f,0), w5=g.Add(.406f,.678f,0);
-            int b0=g.Add(.429f,.684f,2), b1=g.Add(.460f,.679f,2);
-            int b2=g.Add(.494f,.672f,2), b3=g.Add(.522f,.663f,2);
-            int e0=g.Add(.55f,.646f,1), e1=g.Add(.62f,.64f,1), e2=g.Add(.68f,.54f,1);
-            int e3=g.Add(.68f,.47f,1), e4=g.Add(.61f,.46f,1), e5=g.Add(.55f,.48f,1);
-            int e6=g.Add(.58f,.38f,1), e7=g.Add(.65f,.36f,1), e8=g.Add(.74f,.40f,1);
-            int e9=g.Add(.81f,.35f,1), e10=g.Add(.83f,.25f,1), e11=g.Add(.86f,.17f,1);
-            g.Link(w0,w1);g.Link(w0,w2);g.Link(w0,w3);g.Link(w2,w3);g.Link(w1,w3);
-            g.Link(w3,w4);g.Link(w4,w5);
-            g.Link(w5,b0);g.Link(b0,b1);g.Link(b1,b2);g.Link(b2,b3);g.Link(b3,e0);
-            g.Link(e0,e1);g.Link(e1,e2);g.Link(e0,e5);g.Link(e5,e4);
-            g.Link(e4,e3);g.Link(e4,e6);g.Link(e6,e7);g.Link(e7,e8);
-            g.Link(e3,e8);g.Link(e2,e3);g.Link(e8,e9);g.Link(e9,e10);
-            g.Link(e10,e11);g.Link(e7,e10);
-
-            // ONI MOUNTAINS: village stairways -> suspension bridge over lava
-            // x=.48..67 at y=.50 -> volcanic plateau -> demon gate.
-            g = graphs[1] = new Graph();
-            w0=g.Add(.22f,.72f,0);w1=g.Add(.34f,.68f,0);w2=g.Add(.38f,.58f,0);
-            w3=g.Add(.29f,.48f,0);w4=g.Add(.20f,.33f,0);w5=g.Add(.35f,.39f,0);
-            int w6=g.Add(.43f,.45f,0), w7=g.Add(.476f,.504f,0);
-            b0=g.Add(.505f,.509f,2);b1=g.Add(.55f,.521f,2);
-            b2=g.Add(.605f,.512f,2);b3=g.Add(.658f,.494f,2);
-            e0=g.Add(.705f,.481f,1);e1=g.Add(.80f,.47f,1);e2=g.Add(.75f,.35f,1);
-            e3=g.Add(.85f,.32f,1);e4=g.Add(.83f,.25f,1);e5=g.Add(.81f,.17f,1);
-            e6=g.Add(.91f,.36f,1);e7=g.Add(.62f,.36f,1);
-            g.Link(w0,w1);g.Link(w1,w2);g.Link(w2,w3);g.Link(w3,w4);
-            g.Link(w3,w5);g.Link(w4,w5);g.Link(w5,w6);g.Link(w2,w6);g.Link(w6,w7);
-            g.Link(w7,b0);g.Link(b0,b1);g.Link(b1,b2);g.Link(b2,b3);g.Link(b3,e0);
-            g.Link(e0,e1);g.Link(e0,e7);g.Link(e1,e2);g.Link(e7,e2);
-            g.Link(e2,e3);g.Link(e3,e4);g.Link(e4,e5);g.Link(e3,e6);
-
-            // SHOGUNATE: castle-town / tea garden -> stone arched bridge
-            // x=.38..54 at y=.61 -> pagoda / cemetery -> final fortress.
-            g = graphs[2] = new Graph();
-            w0=g.Add(.27f,.62f,0);w1=g.Add(.36f,.47f,0);w2=g.Add(.29f,.36f,0);
-            w3=g.Add(.38f,.75f,0);w4=g.Add(.34f,.58f,0);w5=g.Add(.378f,.617f,0);
-            b0=g.Add(.405f,.625f,2);b1=g.Add(.447f,.617f,2);
-            b2=g.Add(.490f,.612f,2);b3=g.Add(.530f,.612f,2);
-            e0=g.Add(.57f,.60f,1);e1=g.Add(.64f,.60f,1);e2=g.Add(.65f,.49f,1);
-            e3=g.Add(.56f,.39f,1);e4=g.Add(.70f,.45f,1);e5=g.Add(.79f,.58f,1);
-            e6=g.Add(.75f,.36f,1);e7=g.Add(.86f,.40f,1);e8=g.Add(.80f,.23f,1);
-            e9=g.Add(.82f,.15f,1);
-            g.Link(w0,w1);g.Link(w0,w3);g.Link(w0,w4);g.Link(w1,w2);
-            g.Link(w1,w4);g.Link(w4,w5);g.Link(w3,w5);
-            g.Link(w5,b0);g.Link(b0,b1);g.Link(b1,b2);g.Link(b2,b3);g.Link(b3,e0);
-            g.Link(e0,e1);g.Link(e1,e2);g.Link(e2,e3);g.Link(e2,e4);
-            g.Link(e3,e4);g.Link(e4,e5);g.Link(e4,e6);g.Link(e5,e7);
-            g.Link(e6,e7);g.Link(e6,e8);g.Link(e8,e9);
+            // лес теней: 45 узлов дорог, 47 отрезков; мост — BW, A2, BE
+            graphs[0] = Make(new float[] {
+                0.215f, 0.722f, 0, 0.225f, 0.585f, 0, 0.3f, 0.885f, 0, 0.465f, 0.66f, 2, 0.575f, 0.615f, 0, 0.52f, 0.52f, 0,
+                0.67f, 0.55f, 0, 0.605f, 0.462f, 0, 0.715f, 0.445f, 0, 0.785f, 0.395f, 0, 0.875f, 0.3f, 0, 0.858f, 0.16f, 0,
+                0.29f, 0.615f, 0, 0.412f, 0.672f, 2, 0.52f, 0.645f, 2, 0.25f, 0.712f, 0, 0.272f, 0.68f, 0, 0.288f, 0.645f, 0,
+                0.258f, 0.597f, 0, 0.33f, 0.636f, 0, 0.37f, 0.655f, 0, 0.398f, 0.668f, 0, 0.55f, 0.625f, 0, 0.212f, 0.76f, 0,
+                0.215f, 0.8f, 0, 0.212f, 0.835f, 0, 0.235f, 0.868f, 0, 0.268f, 0.882f, 0, 0.53f, 0.6f, 0, 0.52f, 0.56f, 0,
+                0.55f, 0.58f, 0, 0.62f, 0.58f, 0, 0.55f, 0.48f, 0, 0.585f, 0.47f, 0, 0.65f, 0.5f, 0, 0.63f, 0.47f, 0,
+                0.7f, 0.5f, 0, 0.65f, 0.455f, 0, 0.69f, 0.45f, 0, 0.75f, 0.425f, 0, 0.82f, 0.36f, 0, 0.85f, 0.33f, 0,
+                0.885f, 0.265f, 0, 0.878f, 0.205f, 0, 0.866f, 0.18f, 0,
+            }, new int[] {
+                0, 15, 15, 16, 16, 17, 17, 12, 1, 18, 18, 12, 12, 19, 19, 20, 20, 21, 21, 13,
+                13, 3, 3, 14, 14, 22, 22, 4, 0, 23, 23, 24, 24, 25, 25, 26, 26, 27, 27, 2,
+                14, 28, 28, 29, 29, 5, 4, 30, 30, 5, 4, 31, 31, 6, 5, 32, 32, 33, 33, 7,
+                6, 34, 34, 35, 35, 7, 6, 36, 36, 8, 7, 37, 37, 38, 38, 8, 8, 39, 39, 9,
+                9, 40, 40, 41, 41, 10, 10, 42, 42, 43, 43, 44, 44, 11,
+            });
+            // горы они: 40 узлов дорог, 40 отрезков; мост — BW, B3, BE
+            graphs[1] = Make(new float[] {
+                0.19f, 0.67f, 0, 0.272f, 0.555f, 0, 0.345f, 0.805f, 0, 0.195f, 0.415f, 0, 0.37f, 0.445f, 0, 0.445f, 0.47f, 0,
+                0.58f, 0.535f, 2, 0.66f, 0.37f, 0, 0.73f, 0.465f, 0, 0.76f, 0.35f, 0, 0.89f, 0.43f, 0, 0.805f, 0.235f, 0,
+                0.3f, 0.442f, 0, 0.488f, 0.508f, 2, 0.685f, 0.478f, 2, 0.735f, 0.395f, 0, 0.232f, 0.64f, 0, 0.262f, 0.605f, 0,
+                0.29f, 0.505f, 0, 0.3f, 0.47f, 0, 0.25f, 0.43f, 0, 0.335f, 0.44f, 0, 0.235f, 0.675f, 0, 0.275f, 0.69f, 0,
+                0.31f, 0.735f, 0, 0.305f, 0.775f, 0, 0.32f, 0.8f, 0, 0.41f, 0.452f, 0, 0.468f, 0.488f, 0, 0.53f, 0.53f, 0,
+                0.63f, 0.515f, 0, 0.715f, 0.476f, 0, 0.73f, 0.42f, 0, 0.7f, 0.385f, 0, 0.79f, 0.4f, 0, 0.84f, 0.405f, 0,
+                0.79f, 0.28f, 0, 0.8f, 0.258f, 0, 0.84f, 0.38f, 0, 0.8f, 0.36f, 0,
+            }, new int[] {
+                0, 16, 16, 17, 17, 1, 1, 18, 18, 19, 19, 12, 12, 20, 20, 3, 12, 21, 21, 4,
+                0, 22, 22, 23, 23, 24, 24, 25, 25, 26, 26, 2, 4, 27, 27, 5, 5, 28, 28, 13,
+                13, 29, 29, 6, 6, 30, 30, 14, 14, 31, 31, 8, 8, 32, 32, 15, 15, 33, 33, 7,
+                15, 9, 15, 34, 34, 35, 35, 10, 9, 36, 36, 37, 37, 11, 10, 38, 38, 39, 39, 9,
+            });
+            // сёгунат: 40 узлов дорог, 41 отрезков; мост — BW, B2, BE
+            graphs[2] = Make(new float[] {
+                0.335f, 0.665f, 0, 0.13f, 0.46f, 0, 0.375f, 0.79f, 0, 0.19f, 0.378f, 0, 0.465f, 0.612f, 2, 0.588f, 0.455f, 0,
+                0.63f, 0.58f, 0, 0.72f, 0.42f, 0, 0.78f, 0.6f, 0, 0.9f, 0.468f, 0, 0.86f, 0.585f, 0, 0.87f, 0.19f, 0,
+                0.388f, 0.628f, 2, 0.548f, 0.6f, 2, 0.15f, 0.415f, 0, 0.585f, 0.592f, 0, 0.615f, 0.53f, 0, 0.6f, 0.49f, 0,
+                0.63f, 0.462f, 0, 0.68f, 0.44f, 0, 0.665f, 0.52f, 0, 0.7f, 0.47f, 0, 0.7f, 0.588f, 0, 0.8f, 0.432f, 0,
+                0.86f, 0.45f, 0, 0.82f, 0.595f, 0, 0.89f, 0.505f, 0, 0.915f, 0.4f, 0, 0.91f, 0.33f, 0, 0.895f, 0.27f, 0,
+                0.88f, 0.22f, 0, 0.345f, 0.635f, 0, 0.32f, 0.595f, 0, 0.28f, 0.575f, 0, 0.24f, 0.545f, 0, 0.2f, 0.525f, 0,
+                0.155f, 0.5f, 0, 0.365f, 0.648f, 0, 0.35f, 0.7f, 0, 0.362f, 0.75f, 0,
+            }, new int[] {
+                1, 14, 14, 3, 12, 4, 4, 13, 13, 15, 15, 6, 6, 16, 16, 17, 17, 5, 5, 18,
+                18, 19, 19, 7, 6, 20, 20, 21, 21, 7, 6, 22, 22, 8, 7, 23, 23, 24, 24, 9,
+                8, 25, 25, 10, 10, 26, 26, 9, 9, 27, 27, 28, 28, 29, 29, 30, 30, 11, 0, 31,
+                31, 32, 32, 33, 33, 34, 34, 35, 35, 36, 36, 1, 0, 37, 37, 12, 0, 38, 38, 39,
+                39, 2,
+            });
         }
+        // ROADS-GRAPH END
 
         // Diagnostics for build-time and debug tests: road crossings MUST contain
         // an actual bridge waypoint. Public inspection never modifies route data.

@@ -134,7 +134,7 @@ namespace BladePath
             if (self != null && (self.Stunned || self.Dead)) stringLeft = 0;   // оглушён (сломлено равновесие, микири) — серия сорвана
             if (self != null) self.InString = stringLeft > 0;
             if (!aiEnabled || self == null || target == null || !self.CanAct) return;
-            if (DuelManager.Instance != null && DuelManager.Instance.State != DuelState.Fighting) return;
+            if (DuelManager.Instance != null && (DuelManager.Instance.State != DuelState.Fighting || DuelManager.Instance.Paused)) return;   // под паузой ИИ не думает
             if (DuelManager.Instance != null && DuelManager.Instance.Round == 1 && lastPhase > 1 && Phase == 1) lastPhase = 1;   // новый матч
 
             float agg = Mathf.Clamp01(aggression - 0.2f + 0.2f * Difficulty + 0.12f * Mathf.Max(0, Level) + Ladder.Current.aggr

@@ -126,7 +126,10 @@ jobs:
           set -e
           D="$RUNNER_TEMP/apkdrop"; rm -rf "$D"; mkdir -p "$D"; cd "$D"
           git init -q; git checkout -q -b apk-latest
-          sudo cp "$GITHUB_WORKSPACE"/build/Android/*.apk ./BladePath.apk; sudo chown "$(id -u)" BladePath.apk
+          # APK > 95 МБ GitHub в ветку не примет: тогда в ветке только снимки сцены и info.txt,
+          # а сам APK — в Artifacts. Снимки нужны для разбора моделей и интерфейса.
+          A=$(ls "$GITHUB_WORKSPACE"/build/Android/*.apk | head -1)
+          if [ "$(stat -c %s "$A")" -lt 99000000 ]; then sudo cp "$A" ./BladePath.apk; sudo chown "$(id -u)" BladePath.apk; else echo "APK $(stat -c %s "$A") bytes: only in Artifacts" > apk_in_artifacts.txt; fi
           if [ -f "$GITHUB_WORKSPACE/build/probe.txt" ]; then sudo cp "$GITHUB_WORKSPACE/build/probe.txt" ./probe.txt; sudo chown "$(id -u)" probe.txt; fi
           if ls "$GITHUB_WORKSPACE"/build/shots/*.jpg >/dev/null 2>&1; then mkdir -p shots; sudo cp "$GITHUB_WORKSPACE"/build/shots/*.jpg shots/; sudo cp "$GITHUB_WORKSPACE"/build/shots/*.png shots/ 2>/dev/null || true; sudo chown -R "$(id -u)" shots; fi
           echo "run ${GITHUB_RUN_NUMBER} sha ${GITHUB_SHA}" > info.txt

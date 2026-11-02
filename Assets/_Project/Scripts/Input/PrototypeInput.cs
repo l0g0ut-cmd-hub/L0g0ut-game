@@ -138,7 +138,7 @@ namespace BladePath
             pauseBtn |= Input.GetKeyDown(KeyCode.Escape);
             if (Input.GetKeyDown(KeyCode.F1) && debugViz != null) { /* сам визуализатор переключает видимость по F1 */ }
 #endif
-            if (duel != null && duel.IaiWaiting && (aOver || aRise || aLegs || aThrust || aSlash)) { duel.IaiPress(); return; }   // выхват
+            if (duel != null && duel.IaiWaiting && !Paused && (aOver || aRise || aLegs || aThrust || aSlash)) { duel.IaiPress(); return; }   // выхват (под паузой — нет)
             if (menu) { Time.timeScale = 1f; SceneManager.LoadScene(SceneNames.MainMenu); return; }
             if (reset)
             {

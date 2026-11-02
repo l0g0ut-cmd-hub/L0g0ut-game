@@ -31,6 +31,7 @@ namespace BladePath
         class Data
         {
             public int region;
+            public int roadsVer;        // 2 — места на новых дорогах (2026-11-03)
             public int at;
             public int fight = -1;      // узел, бой в котором идёт (−1 — не в бою)
             public int blessing;        // 0 — нет, 1 — клинка (+20% урона), 2 — духа (полный дух в начале), 3 — жизни (+25% здоровья)
@@ -65,7 +66,43 @@ namespace BladePath
         };
 
         // места узлов на каждой карте (доли ширины/высоты), по слоям от начала (внизу слева) к владыке (вверху справа)
+        // ROADS-SPOTS BEGIN (сгенерировано tools/gen_map_roads.py из tools/map_roads.json — правьте JSON)
         static readonly Vector2[][][] Spots =
+        {
+            new[]   // лес теней
+            {
+                new[] { new Vector2(0.215f, 0.722f) },
+                new[] { new Vector2(0.225f, 0.585f), new Vector2(0.3f, 0.885f) },
+                new[] { new Vector2(0.465f, 0.66f), new Vector2(0.575f, 0.615f) },
+                new[] { new Vector2(0.52f, 0.52f), new Vector2(0.67f, 0.55f) },
+                new[] { new Vector2(0.605f, 0.462f), new Vector2(0.715f, 0.445f) },
+                new[] { new Vector2(0.785f, 0.395f), new Vector2(0.875f, 0.3f) },
+                new[] { new Vector2(0.858f, 0.16f) },
+            },
+            new[]   // горы они
+            {
+                new[] { new Vector2(0.19f, 0.67f) },
+                new[] { new Vector2(0.272f, 0.555f), new Vector2(0.345f, 0.805f) },
+                new[] { new Vector2(0.195f, 0.415f), new Vector2(0.37f, 0.445f) },
+                new[] { new Vector2(0.445f, 0.47f), new Vector2(0.58f, 0.535f) },
+                new[] { new Vector2(0.66f, 0.37f), new Vector2(0.73f, 0.465f) },
+                new[] { new Vector2(0.76f, 0.35f), new Vector2(0.89f, 0.43f) },
+                new[] { new Vector2(0.805f, 0.235f) },
+            },
+            new[]   // сёгунат
+            {
+                new[] { new Vector2(0.335f, 0.665f) },
+                new[] { new Vector2(0.13f, 0.46f), new Vector2(0.375f, 0.79f) },
+                new[] { new Vector2(0.19f, 0.378f), new Vector2(0.465f, 0.612f) },
+                new[] { new Vector2(0.588f, 0.455f), new Vector2(0.63f, 0.58f) },
+                new[] { new Vector2(0.72f, 0.42f), new Vector2(0.78f, 0.6f) },
+                new[] { new Vector2(0.9f, 0.468f), new Vector2(0.86f, 0.585f) },
+                new[] { new Vector2(0.87f, 0.19f) },
+            },
+        };
+        // ROADS-SPOTS END
+        // Места до перекладки дорог (2026-11-03): по ним старые сохранения переносятся на новые места.
+        static readonly Vector2[][][] OldSpots =
         {
             new[]   // лес теней
             {
@@ -109,12 +146,33 @@ namespace BladePath
             if (!string.IsNullOrEmpty(s)) { try { d = JsonUtility.FromJson<Data>(s); } catch { d = null; } }
             if (d == null || d.nodes == null || d.nodes.Count == 0) { d = new Data(); Generate(0); }
             if (d.at < 0 || d.at >= d.nodes.Count) d.at = 0;
+            MigrateSpots(d);
             // Old campaign_v1 saves have no travel history: start from the current position.
             if (d.travelled == null) d.travelled = new List<int>();
             if (d.travelled.Count == 0 || d.travelled[d.travelled.Count - 1] != d.at)
             {
                 d.travelled.Clear(); d.travelled.Add(d.at);
             }
+        }
+        /// <summary>Старое сохранение: каждое место переезжает на новое место своего слоя (ближайшее старое → тот же номер).</summary>
+        static void MigrateSpots(Data dd)
+        {
+            if (dd.roadsVer >= 2) return;
+            int r = Mathf.Clamp(dd.region, 0, Spots.Length - 1);
+            foreach (MapNode n in dd.nodes)
+            {
+                int l = Mathf.Clamp(n.layer, 0, Mathf.Min(OldSpots[r].Length, Spots[r].Length) - 1);
+                Vector2[] olds = OldSpots[r][l], news = Spots[r][l];
+                int best = 0; float bd = float.MaxValue;
+                for (int k = 0; k < olds.Length; k++)
+                {
+                    float dist = (olds[k] - new Vector2(n.x, n.y)).sqrMagnitude;
+                    if (dist < bd) { bd = dist; best = k; }
+                }
+                Vector2 p = news[Mathf.Min(best, news.Length - 1)];
+                n.x = p.x; n.y = p.y;
+            }
+            dd.roadsVer = 2;
         }
         public static void Save() { PlayerPrefs.SetString("campaign_v1", JsonUtility.ToJson(D)); PlayerPrefs.Save(); }
         public static void Restart()
@@ -196,7 +254,7 @@ namespace BladePath
         static void Generate(int region)
         {
             Data dd = d;
-            dd.region = region; dd.nodes.Clear(); dd.at = 0; dd.fight = -1;
+            dd.region = region; dd.nodes.Clear(); dd.at = 0; dd.fight = -1; dd.roadsVer = 2;
             if (dd.travelled == null) dd.travelled = new List<int>();
             dd.travelled.Clear(); dd.travelled.Add(0);
             Vector2[][] spots = Spots[Mathf.Clamp(region, 0, Spots.Length - 1)];
@@ -211,8 +269,9 @@ namespace BladePath
                 if (c.Length > 1 && l > 1 && l < L - 2 && UnityEngine.Random.value < 0.18f) pick.RemoveAt(UnityEngine.Random.Range(0, pick.Count));   // иногда дорога сходится в одну точку
                 foreach (int i in pick)
                 {
-                    Vector2 p = c[i] + new Vector2(UnityEngine.Random.Range(-0.012f, 0.012f), UnityEngine.Random.Range(-0.012f, 0.012f));
-                    if (l == 0 || l == L - 1) p = c[i];
+                    // Места стоят точно на нарисованных дорогах (tools/map_roads.json): без случайного сдвига,
+                    // иначе последний отрезок пути съезжает с тропы.
+                    Vector2 p = c[i];
                     layers[l].Add(dd.nodes.Count);
                     dd.nodes.Add(new MapNode { layer = l, x = p.x, y = p.y });
                 }

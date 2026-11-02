@@ -31,6 +31,7 @@ namespace BladePath
         readonly Queue<int> routeQueue = new Queue<int>(16);
         int moveFrom = -1, moveTo = -1; float moveStart;
         int routeGoal = -1;   // distant selected node while travelling one hop towards it
+        float continueRideAt = -1f;   // next hop of a multi-step ride (after a short pause on a passed place)
         float moveDuration = 1.25f;
         float rideCycleAt;
         float panU = -1f, shownAt, modalAt, rollAt = -10f;
@@ -50,7 +51,7 @@ namespace BladePath
         void OnShow()
         {
             int resume = !Campaign.Knocked && Campaign.ClearedRegion < 0 && plannedRegion == Campaign.Region ? sel : -1;
-            shownAt = Time.unscaledTime; sel = -1; previewPath.Clear(); moveTo = -1; modal = Modal.None; panU = -1f;
+            shownAt = Time.unscaledTime; sel = -1; previewPath.Clear(); moveTo = -1; modal = Modal.None; panU = -1f; continueRideAt = -1f;
             routeAutopilot = false; nextRouteAt = 0f; toastLines.Clear();
             manualPan = false; panArmed = false; panDragging = false;
             if (resume >= 0 && resume < Campaign.Nodes.Count && resume != Campaign.At) SelectNode(resume);
@@ -110,9 +111,9 @@ namespace BladePath
         {
             if (moveTo >= 0 || modal != Modal.None || Campaign.InFight || !Campaign.CanGo(i)) return;
             Profile.CostMul = 1f;
-            // Travel goes either to the selected node itself or ONE hop along the
-            // highlighted route towards a distant selected node. Each hop still
-            // needs its own tap on В ПУТЬ; encounters on the way are never skipped.
+            // Travel goes to the selected node or along the highlighted route towards it.
+            // One tap on В ПУТЬ rides the whole route; the rider stops at every place
+            // that opens an encounter (fight, event, chest, service) and when steps run out.
             if (sel != i && NextPreviewStep != i) return;
             routeGoal = sel != i ? sel : -1;   // remember the distant goal for the next hop
             routeAutopilot = false;
@@ -146,17 +147,29 @@ namespace BladePath
                     freshTreasure = false; // rollback/revisit must not grant a second chest
                     if (Juice.Instance != null) Juice.Instance.Taiko(0.6f, 1.25f);
                     Haptics.Pulse(20);
-                    OpenNode(i);
-                    // Keep the distant goal selected so the next tap continues the route.
-                    // Selection only: the rider never moves without a tap on В ПУТЬ.
                     int goal = routeGoal; routeGoal = -1;
-                    if (goal >= 0 && goal != Campaign.At && goal < Campaign.Nodes.Count) SelectNode(goal);
+                    bool passing = goal >= 0 && goal != i && revisit;
+                    // Riding THROUGH an already visited place does not reopen its smith or
+                    // merchant; a new place always opens its encounter and ends the ride.
+                    if (!passing) OpenNode(i); else modal = Modal.None;
+                    if (goal >= 0 && goal != Campaign.At && goal < Campaign.Nodes.Count)
+                    {
+                        SelectNode(goal);
+                        // nothing to resolve here: continue the same ride to the goal
+                        if (modal == Modal.None && Campaign.CanGo(NextPreviewStep)) continueRideAt = Time.unscaledTime + 0.3f;
+                    }
                     nextRouteAt = Time.unscaledTime + 0.45f;
                 }
                 return;
             }
-            // Never silently continue to another marker after a finished
-            // encounter. Each hop requires an explicit selection and tap.
+            // Continue a ride started by one В ПУТЬ tap, but only while nothing is open:
+            // an encounter on the way always stops the rider.
+            if (continueRideAt > 0f && Time.unscaledTime >= continueRideAt)
+            {
+                continueRideAt = -1f;
+                int hop = NextPreviewStep;
+                if (modal == Modal.None && !Campaign.InFight && Campaign.CanGo(hop)) Go(hop);
+            }
         }
 
         // Finger/mouse drag moves the world map; a small recenter button
@@ -377,6 +390,14 @@ namespace BladePath
             int start = Campaign.At;
             if (start == index) { previewPath.Add(start); return; }
 
+            // A step back is only ever a direct hop to a NEIGHBOURING visited place the
+            // player tapped. Longer routes go FORWARD only: a forward-and-back search made
+            // taps on distant markers send the rider back through already passed places.
+            if (!nodes[start].next.Contains(index) && Campaign.Adjacent(start, index))
+            {
+                previewPath.Add(start); previewPath.Add(index);
+                return;
+            }
             int[] parents = new int[nodes.Count];
             for (int i = 0; i < parents.Length; i++) parents[i] = -1;
             routeQueue.Clear();
@@ -385,15 +406,16 @@ namespace BladePath
             while (routeQueue.Count > 0 && parents[index] < 0)
             {
                 int at = routeQueue.Dequeue();
-                // Forward roads plus roads back to already visited places.
-                for (int next = 0; next < nodes.Count; next++)
+                foreach (int next in nodes[at].next)
                 {
-                    if (parents[next] >= 0 || !Campaign.Adjacent(at, next)) continue;
+                    if (next < 0 || next >= parents.Length || parents[next] >= 0) continue;
                     parents[next] = at;
                     routeQueue.Enqueue(next);
                 }
             }
-            if (parents[index] < 0) { sel = -1; return; }
+            // No forward road from here: the marker stays selected for its description,
+            // but there is no route and В ПУТЬ stays disabled.
+            if (parents[index] < 0) return;
             int cur = index;
             while (cur != start)
             {
@@ -625,6 +647,7 @@ namespace BladePath
                 {
                     // Selecting a marker never launches movement. The sidebar
                     // confirms exactly that selected node, no surprise detours.
+                    continueRideAt = -1f;   // a new tap always takes over from an ongoing ride
                     if (i == Campaign.At && (n.Type == NodeType.Smith || n.Type == NodeType.Merchant)) OpenNode(i);
                     else { SelectNode(i); Haptics.Pulse(10); }
                 }
@@ -846,6 +869,9 @@ namespace BladePath
 
         // ------------------------------------------------------------------ панель справа
 
+        // Bottom of the panel's text area: the fixed В ПУТЬ button starts at 540 − 166.
+        const float PanelTextBottom = 540f - 166f - 6f;
+
         void DrawPanel(Rect r, bool interactive)
         {
             VisualIdentity.Surface(r, 1f, false);
@@ -940,9 +966,18 @@ namespace BladePath
                 else if (known && n.IsFight) UiKit.Text(new Rect(x + 72f, y + 32f, w - 72f, 20f), Ladder.Stages[Mathf.Clamp(n.enemy, 0, Ladder.Count - 1)].name, 12f, new Color(1f, 0.6f, 0.45f), TextAnchor.MiddleLeft, false);
                 y += 72f;
                 string hint = known ? Campaign.TypeHints[n.type] : "Туман скрывает, что ждёт впереди. Подойди ближе.";
-                foreach (string line in Wrap(hint, 34)) { UiKit.Text(new Rect(x, y, w, 17f), line, 12f, Dim, TextAnchor.MiddleLeft, false); y += 17f; }
-                y += 10f;
+                // Text never runs under the fixed В ПУТЬ button: the route line has a reserved
+                // slot just above it and the description is cut to the space that is left.
+                const float routeSlot = PanelTextBottom - 40f;
+                foreach (string line in Wrap(hint, 34))
+                {
+                    if (y + 17f > routeSlot - 4f) break;
+                    UiKit.Text(new Rect(x, y, w, 17f), line, 12f, Dim, TextAnchor.MiddleLeft, false); y += 17f;
+                }
+                y = Mathf.Min(y + 10f, routeSlot);
                 int nextStep = NextPreviewStep;
+                if (nextStep < 0 && show != Campaign.At && previewPath.Count <= 1)
+                    UiKit.Text(new Rect(x, y, w, 18f), "Отсюда дороги туда нет", 12f, new Color(1f, 0.61f, 0.48f), TextAnchor.MiddleLeft, false);
                 if (nextStep >= 0)
                 {
                     int totalMoves = previewPath.Count - 1;
@@ -960,9 +995,9 @@ namespace BladePath
                     // Movement control is pinned below the illustration; dynamic
                     // descriptions must never push it below the sidebar viewport.
                     if (!Campaign.CanGo(show))
-                        UiKit.Text(new Rect(x, y, w, 28f),
+                        UiKit.Text(new Rect(x, y, w, 18f),
                             Campaign.Steps == 0 ? "Сначала брось кость пути"
-                                : "«В ПУТЬ» — шаг к цели по следам",
+                                : enough ? "«В ПУТЬ» — доедешь до цели" : "«В ПУТЬ» — пройдёшь " + available + " шаг. к цели",
                             11f, Dim, TextAnchor.MiddleLeft, false);
                 }
                 else if (show != Campaign.At && Campaign.Nodes[Campaign.At].next.Contains(show))
@@ -973,7 +1008,7 @@ namespace BladePath
             else
             {
                 string tip = Campaign.InFight ? "Бой ещё не окончен." : !Campaign.Current.done ? "Ты на месте." : Campaign.Steps > 0 ? "Выбери цель. Светлые следы — доступные шаги, красные — сверх броска." : "Брось кость пути, чтобы идти дальше.";
-                foreach (string line in Wrap(tip, 34)) { UiKit.Text(new Rect(x, y, w, 17f), line, 12f, Dim, TextAnchor.MiddleLeft, false); y += 17f; }
+                foreach (string line in Wrap(tip, 34)) { if (y + 17f > PanelTextBottom) break; UiKit.Text(new Rect(x, y, w, 17f), line, 12f, Dim, TextAnchor.MiddleLeft, false); y += 17f; }
             }
             // The empty lower half of the old sidebar now shows a contextual
             // illustrated location preview. Never reveal a fogged node's event art.
