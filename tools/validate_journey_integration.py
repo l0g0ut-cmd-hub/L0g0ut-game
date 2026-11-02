@@ -73,6 +73,37 @@ def check_routes():
             "Road bypasses mandatory bridge")
         print("Road graph", n, len(hubs), "hubs", len(edges), "edges; bridge mandatory")
 
+    # All three painted maps have a campaign node ON their bridge.
+    # The nearest hub must be on the bridge, not on the opposite river bank:
+    # otherwise the rider crosses the river, overshoots and doubles back.
+    # Read the C# bounds rather than trusting a duplicate hardcoded test.
+    bridge_bounds = re.findall(
+        r"if \(region == (\d) && p\.x >= ([\d.]+)f && p\.x <= ([\d.]+)f &&"
+        r"\s*p\.y >= ([\d.]+)f && p\.y <= ([\d.]+)f\) return 2;",
+        src)
+    assert len(bridge_bounds) == 3, "Expected one explicit bridge anchor per region"
+    authored_bridge_nodes = [(0, .45, .66), (1, .57, .48), (2, .46, .60)]
+    for region, x, y in authored_bridge_nodes:
+        b = next((v for v in bridge_bounds if int(v[0]) == region), None)
+        assert b is not None, "Missing bridge anchor in region %d" % region
+        _, xmin, xmax, ymin, ymax = b
+        # Include the full authored jitter +/- 0.012 around each checkpoint.
+        assert float(xmin) <= x - .012 and float(xmax) >= x + .012, (
+            "Bridge anchor does not cover randomized node X in region %d" % region)
+        assert float(ymin) <= y - .012 and float(ymax) >= y + .012, (
+            "Bridge anchor does not cover randomized node Y in region %d" % region)
+        hubs = {}
+        for name, hx, hy, shore in re.findall(
+                r"(\w+)\s*=\s*g\.Add\(\s*([.\d]+)f?,\s*([.\d]+)f?,\s*(\d)\)",
+                blocks[region]):
+            if int(shore) == 2:
+                hubs[name] = (float(hx), float(hy))
+        assert len(hubs) == 4
+        nearest = min((((hx-x)*810)**2 + ((hy-y)*540)**2)**.5
+                      for hx, hy in hubs.values())
+        assert nearest < 45, "Bridge checkpoint is too far from bridge road"
+    print("Bridge checkpoint anchoring: 3/3 regions; procedural jitter covered")
+
     screen = read("Assets/_Project/Scripts/Game/MapScreen.cs")
     assert screen.count("TerrainRoads.Route(") >= 8, (
         "One of the route render/movement components was not unified")

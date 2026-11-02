@@ -147,6 +147,18 @@ namespace BladePath
 
         static int Shore(int region, Vector2 p)
         {
+            // Authored map checkpoints can sit ON the painted bridge itself.
+            // The old two-bank classification incorrectly snapped these nodes
+            // to a far-bank road hub, forcing the horse to travel past the
+            // checkpoint and double back across the river/lava. Attach those
+            // markers to a bridge hub (shore 2), never to a bank.
+            // Bounds include the +/-0.012 procedural node jitter.
+            if (region == 0 && p.x >= 0.415f && p.x <= 0.525f &&
+                p.y >= 0.625f && p.y <= 0.715f) return 2;
+            if (region == 1 && p.x >= 0.492f && p.x <= 0.675f &&
+                p.y >= 0.460f && p.y <= 0.550f) return 2;
+            if (region == 2 && p.x >= 0.395f && p.x <= 0.545f &&
+                p.y >= 0.570f && p.y <= 0.665f) return 2;
             if (region == 0) return p.x < (p.y > 0.58f ? 0.385f : 0.365f) ? 0 : 1;
             if (region == 1) return p.x < 0.49f ? 0 : 1;
             return p.x < (p.y > 0.52f ? 0.425f : 0.43f) ? 0 : 1;
