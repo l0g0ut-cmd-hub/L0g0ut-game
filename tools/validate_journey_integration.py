@@ -89,7 +89,7 @@ def check_routes():
     menu = read("Assets/_Project/Scripts/Menu/MainMenuController.cs")
     assert 'VisualIdentity.Portrait(artRect, art);' in menu
     assert 'JourneyChoice.Portrait(JourneyChoice.Hero)' in screen
-    assert 'VisualIdentity.Portrait(portrait, heroArt,' in screen
+    assert 'VisualIdentity.Portrait(portrait, heroArt);' in screen
     assert 'UI/selection/characters_difficulties' not in screen
     assert 'if (texCache.TryGetValue(path, out t) && t != null) return t;' in read(
         "Assets/_Project/Scripts/Game/UiKit.cs")
