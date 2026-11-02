@@ -1070,8 +1070,12 @@ namespace BladePath
                     if (Campaign.BlessingText.Length > 0) mods += Campaign.BlessingText + "\n";
                     if (mods.Length == 0) mods = "Честный поединок.";
                     y = Lines(x, y, w, mods.TrimEnd('\n'), 40, 12.5f, new Color(0.9f, 0.85f, 0.75f));
-                    if (Btn(new Rect(x, r.yMax - 64f, w * 0.58f, 48f), "В БОЙ", ok, true)) StartFight(at);
-                    if (Btn(new Rect(x + w * 0.62f, r.yMax - 64f, w * 0.38f, 48f), "СНАРЯЖЕНИЕ", ok)) InventoryScreen.Show(0);
+                    // Both actions need the full panel width. The old 38%-wide
+                    // equipment button clipped its label and spilled outside the modal.
+                    if (Btn(new Rect(x, r.yMax - 116f, w, 44f), "В БОЙ", ok, true))
+                        StartFight(at);
+                    if (Btn(new Rect(x, r.yMax - 64f, w, 44f), "СНАРЯЖЕНИЕ", ok))
+                        InventoryScreen.Show(0);
                     break;
                 }
                 case Modal.Shrine:
