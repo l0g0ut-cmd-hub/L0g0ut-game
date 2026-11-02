@@ -23,7 +23,9 @@ namespace BladePath.EditorTools
         public const string ShadowFbxPath = "Assets/_Project/Models/Samurai_Shadow.fbx";    // враг: самурай в рогатом шлеме (CGTrader, Rigify → наш скелет, tools/blender/build_samurai_cg.py), тёмная раскраска
         const float SamuraiScale = 1f;                                                       // обе собраны в метрах: макушка 1.72 м
         // лёгкие модели из Meshy (tools/blender/build_meshy_char.py, задача «Build Meshy models»), собраны в метрах
+        public const string DzinFbxPath = "Assets/_Project/Models/Dzin_Player.fbx";       // игрок: Дзин, странник в соломенной шляпе с красным шарфом
         public const string AkikoFbxPath = "Assets/_Project/Models/Akiko_Player.fbx";     // игрок: Акико, женщина-самурай в красном доспехе
+        public const string RenFbxPath = "Assets/_Project/Models/Ren_Player.fbx";         // игрок: Рэн, молодой мечник с высоким хвостом
         public const string OniFbxPath = "Assets/_Project/Models/Oni_Enemy.fbx";          // враг 3-й ступени: Кровавый Они
         public const string ShogunFbxPath = "Assets/_Project/Models/Shogun_Enemy.fbx";    // враг 4-й ступени: Проклятый сёгун
         public const string FallenFbxPath = "Assets/_Project/Models/Fallen_Enemy.fbx";    // враг 1-й ступени: Поверженный (неупокоенный страж)
@@ -86,8 +88,11 @@ namespace BladePath.EditorTools
         public static bool TryAttachVariants(FighterController fighter,
             Transform bladeRoot, Look look)
         {
-            // Akiko: her own female FBX from Meshy; the red-armoured Samurai2 only as fallback.
-            string[] variants = { RoninFbxPath, Exists(AkikoFbxPath) ? AkikoFbxPath : Samurai2FbxPath, Hero3FbxPath };
+            // Each traveller has their own Meshy FBX matching the selection card;
+            // the older models (Ronin, Samurai2, Hero3) remain only as fallbacks.
+            string[] variants = { Exists(DzinFbxPath) ? DzinFbxPath : RoninFbxPath,
+                                  Exists(AkikoFbxPath) ? AkikoFbxPath : Samurai2FbxPath,
+                                  Exists(RenFbxPath) ? RenFbxPath : Hero3FbxPath };
             string[] names = { "HeroDzin", "HeroAkiko", "HeroRen" };
             GameObject[] models = new GameObject[3];
             for (int i = 0; i < variants.Length; i++)
@@ -143,7 +148,7 @@ namespace BladePath.EditorTools
                     model.transform.localRotation = Quaternion.Euler(0f, Vector3.SignedAngle(fwd, Vector3.forward, Vector3.up), 0f);
             }
             else Debug.LogWarning("HeroModelBuilder: не найден Hips/FrontMarker — ориентация модели не скорректирована");
-            bool meshy = fbx == AkikoFbxPath || fbx == OniFbxPath || fbx == ShogunFbxPath || fbx == FallenFbxPath || fbx == ShadowEnemyFbxPath;
+            bool meshy = fbx == DzinFbxPath || fbx == RenFbxPath || fbx == AkikoFbxPath || fbx == OniFbxPath || fbx == ShogunFbxPath || fbx == FallenFbxPath || fbx == ShadowEnemyFbxPath;
             model.transform.localScale = Vector3.one * (meshy ? MeshyScale : hero3 ? Hero3Scale : samurai ? SamuraiScale : ronin ? RoninScale : ModelScale);
 
             // Материалы: по имени из Blender → наши текстурированные

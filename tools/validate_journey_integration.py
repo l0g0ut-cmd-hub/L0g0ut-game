@@ -268,13 +268,16 @@ def check_selection_screens():
     # Meshy models (2026-11-02): Akiko player, Oni and Shogun enemies.
     builder = read("Assets/_Project/Scripts/Editor/HeroModelBuilder.cs")
     for fbx, art in (("Akiko_Player", "Akiko"), ("Oni_Enemy", "Oni"), ("Shogun_Enemy", "Shogun"),
-                     ("Fallen_Enemy", "Fallen"), ("Shadow_Enemy", "Shadow")):
+                     ("Fallen_Enemy", "Fallen"), ("Shadow_Enemy", "Shadow"),
+                     ("Dzin_Player", "Dzin"), ("Ren_Player", "Ren")):
         f = ROOT / ("Assets/_Project/Models/%s.fbx" % fbx)
         assert f.is_file() and f.stat().st_size > 500000, "Missing rigged FBX: " + fbx
         a = ROOT / ("Assets/_Project/Art/%s/%s_albedo.jpg" % (art, art.lower()))
         assert a.is_file() and a.stat().st_size > 200000, "Missing albedo: " + str(a)
         assert '"Assets/_Project/Models/%s.fbx"' % fbx in builder
     assert "Exists(AkikoFbxPath) ? AkikoFbxPath : Samurai2FbxPath" in builder
+    assert "Exists(DzinFbxPath) ? DzinFbxPath : RoninFbxPath" in builder
+    assert "Exists(RenFbxPath) ? RenFbxPath : Hero3FbxPath" in builder
     assert "models[i].SetActive(models[i] == chosen)" in read("Assets/_Project/Scripts/Visual/EnemySkins.cs")
     print("Selection screens: 2 painted screens, glow, 3 hero faces; 3 map riders; herbalist icon; backtracking; Meshy models")
 
