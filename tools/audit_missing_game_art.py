@@ -33,7 +33,7 @@ EXISTING = {
     "legacy_difficulties": [f"selection/difficulty_{i}.jpg" for i in range(3)],
     "maps": [f"map_{i}.jpg" for i in range(3)],
     "events": [f"event_{i}.jpg" for i in range(4)],
-    "npc": [f"npc_{i}.jpg" for i in range(4)],
+    "npc": [f"npc_{i}.jpg" for i in range(5)],
     "healing": ["../FX/fx_heal_hd.png"],
 }
 

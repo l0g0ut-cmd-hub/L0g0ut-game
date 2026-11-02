@@ -114,7 +114,7 @@ def check_design_system():
         "map NPC art not low-res placeholders":
             'Pack02Art(' not in map_code,
         "map herbalist preview":
-            'case NodeType.Herbalist: return "UI/npc_3";' in map_code,
+            'case NodeType.Herbalist: return "UI/npc_4";' in map_code,
         "map story cards unified":
             'VisualIdentity.Portrait(r, UiKit.Tex(tex) != null ? tex : "UI/path_panorama")' in map_code,
         "inventory unified":
@@ -147,7 +147,7 @@ def check_design_system():
 
     authored_jpegs = [
         "event_0.jpg", "event_1.jpg", "event_2.jpg", "event_3.jpg",
-        "npc_0.jpg", "npc_1.jpg", "npc_2.jpg", "npc_3.jpg",
+        "npc_0.jpg", "npc_1.jpg", "npc_2.jpg", "npc_3.jpg", "npc_4.jpg",
     ]
     originals = ["plank.png", "plank_red.png", "map_icons.png",
                  "path_panorama.png", "map_dice_3d.png"]

@@ -1030,7 +1030,7 @@ namespace BladePath
                 case NodeType.Smith: return "UI/npc_1";
                 case NodeType.Merchant: return "UI/npc_0";
                 case NodeType.Rest: return "UI/npc_3";
-                case NodeType.Herbalist: return "UI/npc_3";
+                case NodeType.Herbalist: return "UI/npc_4";   // своя травница (до 2026-11-02 был мастер с привала)
                 case NodeType.Treasure: return "UI/chest_open";
                 default: return "UI/path_panorama";
             }
@@ -1234,7 +1234,7 @@ namespace BladePath
                 case Modal.Knocked:
                 {
                     Rect r = Card(640f, 340f);
-                    Picture(new Rect(r.x, r.y, 250f, r.height), "UI/npc_3");
+                    Picture(new Rect(r.x, r.y, 250f, r.height), "UI/npc_4");   // хижина травницы и пробуждение после поражения
                     float x = r.x + 270f, w = r.width - 290f, y = r.y + 22f;
                     UiKit.Text(new Rect(x, y, w, 26f), "ХИЖИНА ТРАВНИЦЫ", 20f, Gold, TextAnchor.MiddleLeft); y += 34f;
                     string tx = modal == Modal.Knocked
