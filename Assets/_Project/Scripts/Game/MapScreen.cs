@@ -626,8 +626,6 @@ namespace BladePath
                 ? TerrainRoads.Route(moveFrom, moveTo).lengthPixels * easedTravel : 0f;
             float pose = moving ? distanceCovered * (newSheet ? 12f : 9f) / 145f : 0f;
             int first = Mathf.FloorToInt(pose) % count;
-            int next = (first + 1) % count;
-            float phase = pose - Mathf.Floor(pose);
             Vector2 direction = moving
                 ? TerrainRoads.Route(moveFrom, moveTo).Direction(easedTravel)
                 : Vector2.right;
@@ -639,20 +637,7 @@ namespace BladePath
             if (left) currentUV = new Rect(currentUV.x + currentUV.width, currentUV.y,
                 -currentUV.width, currentUV.height);
             GUI.DrawTextureWithTexCoords(riderRect, ht, currentUV);
-            // Adjacent hand-painted poses are discrete drawings: blending them
-            // creates translucent extra legs. Keep the silhouette crisp.
-            float overlay = 0f;
-            if (overlay > 0.005f)
-            {
-                Color oldColor = GUI.color;
-                GUI.color = new Color(oldColor.r, oldColor.g, oldColor.b,
-                    oldColor.a * overlay);
-                Rect nextUV = Cell(offset + next);
-                if (left) nextUV = new Rect(nextUV.x + nextUV.width, nextUV.y,
-                    -nextUV.width, nextUV.height);
-                GUI.DrawTextureWithTexCoords(riderRect, ht, nextUV);
-                GUI.color = oldColor;
-            }
+
         }
 
         // Panoramic mist layers drift slowly over the painted forest but do not
