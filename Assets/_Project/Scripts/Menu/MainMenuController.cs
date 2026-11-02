@@ -169,6 +169,7 @@ namespace BladePath
             else tex = posterFirst != null ? (Texture)posterFirst : Texture2D.blackTexture;
             GUI.DrawTexture(vr, tex, ScaleMode.StretchToFill, false);
 
+            if (loading && DrawLoading()) return;
             if (crashLog != null) { DrawCrash(); return; }
             if (newJourneyStep > 0) { DrawJourneySelection(); return; }
             if (settingsOpen) { DrawSettings(); return; }
@@ -383,6 +384,33 @@ namespace BladePath
                 }
             }
             GUI.matrix = old;
+        }
+
+        // Экран загрузки: путник идёт к замку (UI/loading, 1914x822), снизу — название и совет.
+        // Рисуется в кадрах между остановкой видео и загрузкой сцены боя.
+        static readonly string[] LoadingTips =
+        {
+            "Удар по ногам проходит под высокой защитой.",
+            "Сломленного врага добивают — смотри на красную метку.",
+            "Кость пути даёт от одного до трёх шагов. Бой сжигает остаток.",
+            "К кузнецу, торговцу и травнице можно вернуться по пройденной дороге.",
+            "Серия из десяти ударов — это уже буря стали.",
+        };
+        int loadingTip = -1;
+        bool DrawLoading()
+        {
+            Texture2D art = UiKit.Tex("UI/loading");
+            if (art == null) return false;
+            if (loadingTip < 0) loadingTip = Random.Range(0, LoadingTips.Length);
+            GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), art, ScaleMode.ScaleAndCrop);
+            Matrix4x4 old = UiKit.Begin();
+            float W = UiKit.Width;
+            UiKit.Text(new Rect(0f, 430f, W, 40f), "ПУТЬ КЛИНКА", 30f, VisualIdentity.BrassLight);
+            UiKit.Text(new Rect(0f, 470f, W, 22f), LoadingTips[loadingTip], 14f, VisualIdentity.Parchment);
+            float dots = Time.unscaledTime * 3f % 3f;
+            UiKit.Text(new Rect(0f, 500f, W, 20f), "загрузка" + (dots < 1f ? "." : dots < 2f ? ".." : "..."), 12f, VisualIdentity.Subdued);
+            GUI.matrix = old;
+            return true;
         }
 
         string crashLog;
