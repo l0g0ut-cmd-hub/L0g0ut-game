@@ -256,7 +256,9 @@ def check_selection_screens():
         check_png("Assets/_Project/Resources/UI/map_rider_16_hero%d.png" % i, 1024, 1024)
     screen = read("Assets/_Project/Scripts/Game/MapScreen.cs")
     assert '"UI/map_rider_16_hero" + JourneyChoice.Hero' in screen
-    print("Selection screens: 2 painted screens, glow, 3 hero faces; 3 map riders")
+    check_png("Assets/_Project/Resources/UI/map_icon_herbalist.png", 256, 256)
+    assert 'const string HerbalistIcon = "UI/map_icon_herbalist";' in screen
+    print("Selection screens: 2 painted screens, glow, 3 hero faces; 3 map riders; herbalist icon")
 
 
 def check_heal():

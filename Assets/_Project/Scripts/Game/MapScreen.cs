@@ -311,6 +311,9 @@ namespace BladePath
             "ТОРГОВЕЦ", "СУНДУК", "ЗАСАДА", "СОБЫТИЕ", "ПРИВАЛ", "ТРАВНИЦА"
         };
 
+        // Painted herbalist medallion (same style as map_icons). The drawn green
+        // stamp over the start flag remains only as a fallback.
+        const string HerbalistIcon = "UI/map_icon_herbalist";
         static void HerbalistMark(Vector2 c, float radius)
         {
             // A green herbal stamp distinguishes the healer from the starting flag.
@@ -562,11 +565,14 @@ namespace BladePath
                     UiKit.Ring(p, halo, new Color(1f, 0.81f, 0.40f, 0.80f), true);
                 }
                 GUI.color = MapBadgeTint(n, known, i);
-                if (ic != null)
+                Texture2D herb = n.Type == NodeType.Herbalist ? UiKit.Tex(HerbalistIcon) : null;
+                if (herb != null)
+                    GUI.DrawTexture(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), herb);
+                else if (ic != null)
                     GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), ic, Cell(k));
                 else UiKit.Disc(p, s * 0.45f, can ? Gold : Dim);
                 GUI.color = oc;
-                if (n.Type == NodeType.Herbalist)
+                if (n.Type == NodeType.Herbalist && herb == null)
                     HerbalistMark(p + new Vector2(s * 0.26f, s * 0.27f), 10f);
                 // Only nearby / selected nodes show labels. Avoid crowding the panorama.
                 if ((can || i == sel) && known && n.Type != NodeType.Start)
@@ -888,10 +894,12 @@ namespace BladePath
                 {
                     Color previousTint = GUI.color;
                     GUI.color = MapBadgeTint(n, known, show);
-                    GUI.DrawTextureWithTexCoords(new Rect(x, y, 64f, 64f), ic,
+                    Texture2D herb = n.Type == NodeType.Herbalist ? UiKit.Tex(HerbalistIcon) : null;
+                    if (herb != null) GUI.DrawTexture(new Rect(x, y, 64f, 64f), herb);
+                    else GUI.DrawTextureWithTexCoords(new Rect(x, y, 64f, 64f), ic,
                         Cell(MapBadgeCell(n, show)));
                     GUI.color = previousTint;
-                    if (n.Type == NodeType.Herbalist)
+                    if (n.Type == NodeType.Herbalist && herb == null)
                         HerbalistMark(new Vector2(x + 53f, y + 53f), 11f);
                 }
                 UiKit.Text(new Rect(x + 72f, y + 6f, w - 72f, 24f), known ? Campaign.TypeNames[n.type] : "НЕИЗВЕСТНО", 16f, Ink, TextAnchor.MiddleLeft);
