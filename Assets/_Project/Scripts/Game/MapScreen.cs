@@ -23,7 +23,7 @@ namespace BladePath
         static readonly Color Dim = new Color(0.72f, 0.66f, 0.58f, 1f);
         static readonly string[] EnemyFullArt = { "UI/enemy_full_fallen", "UI/enemy_full_shadow", "UI/enemy_full_oni", "UI/enemy_full_shogun" };
 
-        enum Modal { None, Fight, Shrine, Smith, Merchant, Treasure, Rest, Event, Result, RegionClear, Herbalist, Knocked }
+        enum Modal { None, Fight, Shrine, Smith, Merchant, Treasure, Rest, Event, RegionClear, Herbalist, Knocked }
         Modal modal;
         int sel = -1;
         readonly List<int> previewPath = new List<int>(16);
@@ -32,14 +32,24 @@ namespace BladePath
         int moveFrom = -1, moveTo = -1; float moveStart;
         const float MoveTime = 1.25f;
         float panU = -1f, shownAt, modalAt, rollAt = -10f;
+        bool manualPan, panArmed, panDragging;
+        Vector2 panTouchOrigin;
+        float panAtOrigin;
         const float RollTime = 0.9f;
-        string resultText; Reward treasure;
+        Reward treasure;
+        bool freshTreasure, revisit;
+        bool routeAutopilot;
+        float nextRouteAt;
+        float toastAt = -100f;
+        readonly List<string> toastLines = new List<string>(3);
         List<Item> stock; int stockNode = -1;
 
         void OnShow()
         {
             int resume = !Campaign.Knocked && Campaign.ClearedRegion < 0 && plannedRegion == Campaign.Region ? sel : -1;
             shownAt = Time.unscaledTime; sel = -1; previewPath.Clear(); moveTo = -1; modal = Modal.None; panU = -1f;
+            routeAutopilot = false; nextRouteAt = 0f; toastLines.Clear();
+            manualPan = false; panArmed = false; panDragging = false;
             if (resume >= 0 && resume < Campaign.Nodes.Count && resume != Campaign.At) SelectNode(resume);
             Campaign.CancelTraining();
             if (Campaign.Knocked) OpenModal(Modal.Knocked);
@@ -53,6 +63,13 @@ namespace BladePath
         {
             MapNode n = Campaign.Nodes[i];
             Profile.CostMul = n.Type == NodeType.Smith ? 0.5f : 1f;
+            // Revisiting a cleared road does not repeat paid treasure or defeated enemies.
+            if (revisit && n.done && !Campaign.InFight &&
+                (n.IsFight || n.Type == NodeType.Treasure || n.Type == NodeType.Event))
+            {
+                modal = Modal.None;
+                return;
+            }
             switch (n.Type)
             {
                 case NodeType.Duel: case NodeType.Elite: case NodeType.Boss: case NodeType.Ambush: OpenModal(Modal.Fight); break;
@@ -61,7 +78,7 @@ namespace BladePath
                 case NodeType.Merchant:
                     if (stockNode != i) { stockNode = i; stock = new List<Item>(); for (int k = 0; k < 3; k++) stock.Add(Profile.Roll(Campaign.Region + 1, 60, k == 0 && Random.value < 0.4f)); Item sc = Random.value < 0.5f ? Profile.NewScroll() : null; if (sc != null) stock[2] = sc; }
                     OpenModal(Modal.Merchant); break;
-                case NodeType.Treasure: OpenModal(Modal.Treasure); break;
+                case NodeType.Treasure: if (treasure != null) OpenModal(Modal.Treasure); else modal = Modal.None; break;
                 case NodeType.Rest: OpenModal(Modal.Rest); break;
                 case NodeType.Event: OpenModal(Modal.Event); break;
                 case NodeType.Herbalist: OpenModal(Modal.Herbalist); break;
@@ -74,7 +91,13 @@ namespace BladePath
             if (!Campaign.CanGo(i)) return;
             Profile.CostMul = 1f;
             int destination = sel;
+            if (destination >= 0 && destination != i && NextPreviewStep == i)
+                routeAutopilot = true;
+            revisit = Campaign.Nodes[i].done;
+            freshTreasure = Campaign.Nodes[i].Type == NodeType.Treasure && !revisit;
+            treasure = null;
             moveFrom = Campaign.At; moveTo = i; moveStart = Time.unscaledTime; sel = -1; previewPath.Clear(); stockNode = -1;
+            manualPan = false; // resume following the animated samurai as the journey proceeds
             Campaign.MoveTo(i);
             // If the player plotted several waypoints, retain the remaining
             // route after the next encounter is resolved. Never skip an encounter.
@@ -85,14 +108,87 @@ namespace BladePath
 
         void Update()
         {
-            if (!Open || moveTo < 0) return;
-            if (Time.unscaledTime - moveStart >= MoveTime)
+            if (!Open) return;
+            HandleMapPan();
+            if (moveTo >= 0)
             {
-                int i = moveTo; moveTo = -1;
-                if (Campaign.Nodes[i].Type == NodeType.Treasure) treasure = Profile.Treasure(Campaign.Region + 1);   // сундук открывается один раз
-                if (Juice.Instance != null) Juice.Instance.Taiko(0.6f, 1.25f);
-                Haptics.Pulse(20);
-                OpenNode(i);
+                if (Time.unscaledTime - moveStart >= MoveTime)
+                {
+                    int i = moveTo; moveTo = -1;
+                    if (freshTreasure) treasure = Profile.Treasure(Campaign.Region + 1);
+                    freshTreasure = false; // rollback/revisit must not grant a second chest
+                    if (Juice.Instance != null) Juice.Instance.Taiko(0.6f, 1.25f);
+                    Haptics.Pulse(20);
+                    OpenNode(i);
+                    nextRouteAt = Time.unscaledTime + 0.45f;
+                }
+                return;
+            }
+            // Auto-walk only after a completed encounter and only while the die has steps.
+            // Every encounter card still interrupts until the player deals with it.
+            if (routeAutopilot && modal == Modal.None && !InventoryScreen.Open &&
+                Time.unscaledTime >= nextRouteAt)
+            {
+                int next = NextPreviewStep;
+                if (next >= 0 && Campaign.CanGo(next))
+                    Go(next);
+                else if (next < 0 || Campaign.Steps <= 0 || !Campaign.Current.done)
+                    routeAutopilot = false;
+            }
+        }
+
+        // Finger/mouse drag moves the world map; a small recenter button
+        // restores the normal Heroes-style camera following the samurai.
+        void HandleMapPan()
+        {
+            if (modal != Modal.None || InventoryScreen.Open || moveTo >= 0 || viewW <= 0f)
+            {
+                panArmed = false;
+                panDragging = false;
+                return;
+            }
+            Vector3 mouse = Input.mousePosition;
+            Vector2 pt = new Vector2(mouse.x / UiKit.Scale,
+                (Screen.height - mouse.y) / UiKit.Scale);
+            if (Input.GetMouseButtonDown(0))
+            {
+                panArmed = pt.x >= mapX + 4f && pt.x <= mapX + viewW - 4f &&
+                    pt.y >= 5f && pt.y <= MapH - 5f;
+                // Tapping a destination medal should select the node, not start dragging.
+                if (panArmed)
+                {
+                    foreach (MapNode node in Campaign.Nodes)
+                    {
+                        if ((P(node) - pt).sqrMagnitude < 38f * 38f)
+                        {
+                            panArmed = false;
+                            break;
+                        }
+                    }
+                }
+                if (panArmed)
+                {
+                    panTouchOrigin = pt;
+                    panAtOrigin = panU;
+                    panDragging = false;
+                }
+            }
+            if (panArmed && Input.GetMouseButton(0))
+            {
+                if (!panDragging && (pt - panTouchOrigin).sqrMagnitude > 9f * 9f)
+                {
+                    panDragging = true;
+                    manualPan = true;
+                    routeAutopilot = false;
+                }
+                if (panDragging)
+                    panU = Mathf.Clamp(panAtOrigin - (pt.x - panTouchOrigin.x) / MapFullW,
+                        0f, Mathf.Max(0f, 1f - viewW / MapFullW));
+            }
+            if (Input.GetMouseButtonUp(0))
+            {
+                panArmed = false;
+                panDragging = false;
             }
         }
 
@@ -118,7 +214,9 @@ namespace BladePath
             // окно карты едет за всадником
             Vector2 hu = HeroUV();
             float target = Mathf.Clamp(hu.x - uw * 0.45f, 0f, 1f - uw);
-            panU = panU < 0f ? target : Mathf.Lerp(panU, target, Mathf.Clamp01(Time.unscaledDeltaTime * 3f));
+            panU = panU < 0f ? target : manualPan ? panU :
+                Mathf.Lerp(panU, target, Mathf.Clamp01(Time.unscaledDeltaTime * 3f));
+            panU = Mathf.Clamp(panU, 0f, Mathf.Max(0f, 1f - uw));
             u0 = panU;
             Texture2D mt = UiKit.Tex(Campaign.MapTexture(Campaign.Region));
             if (mt != null) GUI.DrawTextureWithTexCoords(new Rect(mapX, 0f, viewW, MapH), mt, new Rect(u0, 0f, uw, 1f));
@@ -126,6 +224,7 @@ namespace BladePath
             DrawJourneyFootprints();
             DrawNodes(interactive && modal == Modal.None && moveTo < 0);
             DrawHero();
+            DrawJourneyLegend();
             // туман по краям и название области
             Texture2D fog = SoftSprites.Fog;
             Color oc = GUI.color; GUI.color = new Color(0f, 0f, 0f, 0.55f);
@@ -133,8 +232,16 @@ namespace BladePath
             GUI.color = oc;
             UiKit.Text(new Rect(mapX + 16f, 8f, 400f, 36f), Campaign.RegionNames[Campaign.Region], 26f, Gold, TextAnchor.MiddleLeft);
             if (Profile.Cycle > 0) UiKit.Text(new Rect(mapX + 18f, 40f, 300f, 20f), "КРУГ " + (Profile.Cycle + 1) + ": враги крепче", 12f, new Color(1f, 0.55f, 0.4f), TextAnchor.MiddleLeft);
+            // Only show the re-center control when the map is wider than the screen.
+            if (uw < 0.999f && Btn(new Rect(mapX + viewW - 116f, 14f, 104f, 33f),
+                manualPan ? "К ГЕРОЮ" : "ОБЗОР", interactive && modal == Modal.None && moveTo < 0))
+            {
+                manualPan = !manualPan;
+                if (!manualPan) panU = -1f;
+            }
             DrawPanel(new Rect(W - panel, 0f, panel, 540f), interactive && modal == Modal.None && moveTo < 0);
             if (modal != Modal.None) DrawModal(interactive);
+            else if (interactive) DrawToast();
             GUI.matrix = old;
         }
 
@@ -172,17 +279,44 @@ namespace BladePath
             return 11;
         }
 
-        // Art-driven node badges use individually imported PNGs, retaining the existing atlas as fallback.
-        // Only a subset has dedicated badges; the other nodes keep their original symbols.
-        static Texture2D SpecialNodeIcon(NodeType type, bool unknown, bool completed)
+        // Keep all map badges on the SAME high-detail illustrated atlas.
+        // Pack02's placeholders reused the same clouds/medallions for different
+        // locations; the authored map_icons atlas has a distinct glyph per type.
+        // Fog of war still hides the description but no longer substitutes every
+        // destination's silhouette with the same grey cloud.
+        static int MapBadgeCell(MapNode n, int index)
         {
-            if (completed) return null;
-            string id = unknown ? "node_unknown" :
-                type == NodeType.Duel ? "node_duel" :
-                type == NodeType.Elite || type == NodeType.Boss ? "node_elite" :
-                type == NodeType.Treasure ? "node_treasure_node" :
-                type == NodeType.Rest || type == NodeType.Herbalist ? "node_camp_node" : null;
-            return id != null ? UiKit.Tex("UI/pack02/" + id) : null;
+            // Do not replace completed or distant locations with a universal cloud.
+            // A shrine remains a shrine, a duel stays crossed swords, etc.
+            return IconOf(n.Type);
+        }
+
+        static readonly string[] ShortTypeNames =
+        {
+            "НАЧАЛО", "ДУЭЛЬ", "ЭЛИТА", "БОСС", "ХРАМ", "КУЗНЕЦ",
+            "ТОРГОВЕЦ", "СУНДУК", "ЗАСАДА", "СОБЫТИЕ", "ПРИВАЛ", "ТРАВНИЦА"
+        };
+
+        static void HerbalistMark(Vector2 c, float radius)
+        {
+            // A green herbal stamp distinguishes the healer from the starting flag.
+            UiKit.Disc(c, radius, new Color(0.07f, 0.17f, 0.12f, 0.95f));
+            UiKit.Ring(c, radius, new Color(0.58f, 0.80f, 0.46f, 0.85f), true);
+            UiKit.Line(c + new Vector2(0f, radius * 0.58f),
+                c + new Vector2(0f, -radius * 0.56f), 2.1f,
+                new Color(0.83f, 0.94f, 0.58f, 0.95f));
+            UiKit.Disc(c + new Vector2(-radius * 0.35f, -radius * 0.12f),
+                radius * 0.30f, new Color(0.43f, 0.80f, 0.39f, 0.98f));
+            UiKit.Disc(c + new Vector2(radius * 0.35f, -radius * 0.30f),
+                radius * 0.27f, new Color(0.48f, 0.81f, 0.43f, 0.98f));
+        }
+
+        static Color MapBadgeTint(MapNode n, bool known, int index)
+        {
+            if (!known) return new Color(0.56f, 0.65f, 0.70f, 0.80f);
+            if (n.done && index != Campaign.At && n.Type != NodeType.Start)
+                return new Color(0.68f, 0.69f, 0.67f, 0.75f);
+            return Color.white;
         }
 
         bool Known(MapNode n)
@@ -313,6 +447,8 @@ namespace BladePath
 
         void DrawRoads()
         {
+            // Static path decoration needs only Repaint, not IMGUI Layout / input passes.
+            if (Event.current.type != EventType.Repaint) return;
             Texture2D ic = UiKit.Tex("UI/map_icons");
             if (ic == null) return;
             List<MapNode> ns = Campaign.Nodes;
@@ -383,16 +519,29 @@ namespace BladePath
                         : new Color(0.92f, 0.58f, 0.2f, reach);
                     UiKit.Disc(p, s * (0.64f + wave * 0.12f), halo);
                 }
-                int k = !known ? 11 : (n.done && n.Type != NodeType.Start && i != Campaign.At) ? 10 : IconOf(n.Type);
+                int k = MapBadgeCell(n, i);
                 if (i == sel && ic != null) { GUI.color = Color.white; GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.75f, p.y - s * 0.5f, s * 1.5f, s), ic, Cell(12)); }
-                GUI.color = !known ? new Color(1f, 1f, 1f, 0.85f) : n.done && i != Campaign.At && n.Type != NodeType.Start ? new Color(0.8f, 0.78f, 0.74f, 0.9f) : Color.white;
-                Texture2D special = SpecialNodeIcon(n.Type, !known, n.done && i != Campaign.At);
-                if (special != null)
-                    GUI.DrawTexture(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), special, ScaleMode.ScaleToFit, true);
-                else if (ic != null)
+                if (i == sel && Event.current.type == EventType.Repaint)
+                {
+                    float halo = s * (0.58f + 0.025f * Mathf.Sin(Time.unscaledTime * 4f));
+                    UiKit.Ring(p, halo, new Color(1f, 0.81f, 0.40f, 0.80f), true);
+                }
+                GUI.color = MapBadgeTint(n, known, i);
+                if (ic != null)
                     GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), ic, Cell(k));
                 else UiKit.Disc(p, s * 0.45f, can ? Gold : Dim);
                 GUI.color = oc;
+                if (n.Type == NodeType.Herbalist)
+                    HerbalistMark(p + new Vector2(s * 0.26f, s * 0.27f), 10f);
+                // Only nearby / selected nodes show labels. Avoid crowding the panorama.
+                if ((can || i == sel) && known && n.Type != NodeType.Start)
+                {
+                    float tw = 90f;
+                    Rect label = new Rect(p.x - tw * 0.5f, p.y + s * 0.45f + 3f, tw, 18f);
+                    UiKit.Rect(label, new Color(0.028f, 0.023f, 0.02f, 0.75f));
+                    UiKit.Text(label, ShortTypeNames[(int)n.Type], 10.5f,
+                        new Color(0.96f, 0.88f, 0.68f, 0.98f), TextAnchor.MiddleCenter, false);
+                }
                 int routeIndex = previewPath.IndexOf(i);
                 if (routeIndex > 0)
                 {
@@ -425,6 +574,7 @@ namespace BladePath
 
         void DrawHero()
         {
+            if (Event.current.type != EventType.Repaint) return;
             Texture2D ht = UiKit.Tex("UI/map_hero"), ic = UiKit.Tex("UI/map_icons");
             Vector2 uv = HeroUV();
             Vector2 p = new Vector2(mapX + (uv.x - u0) * MapFullW, uv.y * MapH);
@@ -445,6 +595,28 @@ namespace BladePath
             if (left) uvr = new Rect(uvr.x + uvr.width, uvr.y, -uvr.width, uvr.height);
             float s = 92f, bob = moving ? Mathf.Abs(Mathf.Sin(Time.unscaledTime * 12f)) * 2f : 0f;
             GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.5f, p.y - s * 0.78f - bob, s, s), ht, uvr);
+        }
+
+        // Low-profile route legend: never obscures the map or interactive cards.
+        void DrawJourneyLegend()
+        {
+            if (Event.current.type != EventType.Repaint || viewW < 350f) return;
+            const float h = 31f;
+            float w = Mathf.Min(viewW - 20f, 373f);
+            Rect bar = new Rect(mapX + 10f, MapH - h - 9f, w, h);
+            UiKit.Rect(bar, new Color(0.035f, 0.025f, 0.020f, 0.79f));
+            UiKit.Rect(new Rect(bar.x, bar.y, 2f, h), new Color(Gold.r, Gold.g, Gold.b, 0.65f));
+            string[] labels = { "ПРОЙДЕНО", "В ПРЕДЕЛАХ ХОДА", "НЕДОСТУПНО" };
+            Color[] colors = { new Color(0.72f, 0.42f, 0.22f), new Color(0.70f, 0.95f, 0.62f), new Color(1f, 0.39f, 0.31f) };
+            float[] widths = { 105f, 151f, 111f };
+            float px = bar.x + 10f;
+            for (int i = 0; i < labels.Length; i++)
+            {
+                UiKit.Disc(new Vector2(px + 5f, bar.y + 15f), 5f, colors[i]);
+                UiKit.Text(new Rect(px + 15f, bar.y + 5f, widths[i] - 14f, 21f),
+                    labels[i], 9.2f, Dim, TextAnchor.MiddleLeft, false);
+                px += widths[i];
+            }
         }
 
         // ------------------------------------------------------------------ панель справа
@@ -468,6 +640,15 @@ namespace BladePath
             Die(new Rect(x, y, 44f, 44f), face, rolling ? (Time.unscaledTime * 900f) % 360f : 0f, Campaign.Steps > 0 || rolling);
             UiKit.Text(new Rect(x + 54f, y, w - 54f, 22f), "КОСТИ ПУТИ: " + Campaign.Rolls, 14f, Ink, TextAnchor.MiddleLeft);
             UiKit.Text(new Rect(x + 54f, y + 22f, w - 54f, 20f), rolling ? "бросок…" : Campaign.Steps > 0 ? "ходов: " + Campaign.Steps : "ход окончен", 12f, Campaign.Steps > 0 ? new Color(0.6f, 0.95f, 0.7f) : Dim, TextAnchor.MiddleLeft, false);
+            // Three-step travel gauge below the die: coloured segments correspond
+            // to remaining movement points, matching the trail's range.
+            for (int k = 0; k < 3; k++)
+            {
+                bool available = k < Campaign.Steps;
+                Color segment = available ? new Color(0.70f, 0.92f, 0.58f, 0.92f)
+                    : new Color(0.35f, 0.28f, 0.20f, 0.72f);
+                UiKit.Rect(new Rect(x + 54f + k * 43f, y + 43f, 36f, 4f), segment);
+            }
             y += 52f;
             bool canRoll = Campaign.Rolls > 0 && Campaign.Steps <= 0 && Campaign.Current.done && !Campaign.InFight && !Campaign.Training && !rolling;
             if (canRoll && Btn(new Rect(x, y, w, 42f), "БРОСИТЬ КОСТЬ", interactive, true)) { Campaign.RollDie(); rollAt = Time.unscaledTime; Haptics.Pulse(30); if (Juice.Instance != null) Juice.Instance.Taiko(0.7f, 1.3f); }
@@ -489,9 +670,16 @@ namespace BladePath
                 MapNode n = Campaign.Nodes[show];
                 bool known = Known(n);
                 Texture2D ic = UiKit.Tex("UI/map_icons");
-                Texture2D special = SpecialNodeIcon(n.Type, !known, n.done && show != Campaign.At);
-                if (special != null) GUI.DrawTexture(new Rect(x, y, 64f, 64f), special, ScaleMode.ScaleToFit, true);
-                else if (ic != null) GUI.DrawTextureWithTexCoords(new Rect(x, y, 64f, 64f), ic, Cell(known ? IconOf(n.Type) : 11));
+                if (ic != null)
+                {
+                    Color previousTint = GUI.color;
+                    GUI.color = MapBadgeTint(n, known, show);
+                    GUI.DrawTextureWithTexCoords(new Rect(x, y, 64f, 64f), ic,
+                        Cell(MapBadgeCell(n, show)));
+                    GUI.color = previousTint;
+                    if (n.Type == NodeType.Herbalist)
+                        HerbalistMark(new Vector2(x + 53f, y + 53f), 11f);
+                }
                 UiKit.Text(new Rect(x + 72f, y + 6f, w - 72f, 24f), known ? Campaign.TypeNames[n.type] : "НЕИЗВЕСТНО", 16f, Ink, TextAnchor.MiddleLeft);
                 if (known && n.IsFight) UiKit.Text(new Rect(x + 72f, y + 32f, w - 72f, 20f), Ladder.Stages[Mathf.Clamp(n.enemy, 0, Ladder.Count - 1)].name, 12f, new Color(1f, 0.6f, 0.45f), TextAnchor.MiddleLeft, false);
                 y += 72f;
@@ -536,20 +724,20 @@ namespace BladePath
         /// <summary>Кость пути: костяной кубик с точками (1–3), во время броска крутится.</summary>
         static void Die(Rect r, int face, float spin, bool lit)
         {
-            Texture2D dt = UiKit.Tex("UI/map_dice");
-            Matrix4x4 m = GUI.matrix;
-            if (spin != 0f) GUIUtility.RotateAroundPivot(spin, r.center * UiKit.Scale);
-            if (dt != null) GUI.DrawTextureWithTexCoords(r, dt, new Rect(((face - 1) % 4) * 0.25f, 0.75f, 0.25f, 0.25f));
-            else
+            Texture2D dice = JourneyDiceArt.Atlas;
+            Matrix4x4 previous = GUI.matrix;
+            UiKit.Disc(r.center + new Vector2(0f, 3f), r.width * 0.58f,
+                new Color(0.01f, 0.01f, 0.01f, 0.42f));
+            if (lit)
             {
-                UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), lit ? Gold : new Color(0.4f, 0.35f, 0.3f));
-                UiKit.Rect(r, new Color(0.93f, 0.89f, 0.8f));
-                Vector2 c = r.center; float o = r.width * 0.26f, pr = r.width * 0.09f;
-                Color pc = new Color(0.55f, 0.06f, 0.05f);
-                if (face == 1 || face == 3) UiKit.Disc(c, pr * (face == 1 ? 1.5f : 1f), pc);
-                if (face >= 2) { UiKit.Disc(c + new Vector2(-o, -o), pr, pc); UiKit.Disc(c + new Vector2(o, o), pr, pc); }
+                float glow = 0.17f + 0.05f * Mathf.Sin(Time.unscaledTime * 4f);
+                UiKit.Disc(r.center, r.width * 0.72f,
+                    new Color(0.90f, 0.62f, 0.25f, glow));
             }
-            GUI.matrix = m;
+            if (spin != 0f) GUIUtility.RotateAroundPivot(spin, r.center * UiKit.Scale);
+            int index = Mathf.Clamp(face, 1, 3) - 1;
+            GUI.DrawTextureWithTexCoords(r, dice, new Rect(index / 3f, 0f, 1f / 3f, 1f));
+            GUI.matrix = previous;
         }
 
         static List<string> Wrap(string s, int max)
@@ -741,13 +929,6 @@ namespace BladePath
                     if (Btn(new Rect(x, r.yMax - 64f, w, 46f), "В ПУТЬ", ok, true)) { if (modal == Modal.Knocked) Campaign.AckKnocked(); modal = Modal.None; }
                     break;
                 }
-                case Modal.Result:
-                {
-                    Rect r = Card(520f, 240f);
-                    float y = Lines(r.x + 26f, r.y + 30f, r.width - 52f, resultText, 52, 14f, Ink);
-                    if (Btn(new Rect(r.center.x - 90f, r.yMax - 60f, 180f, 44f), "ДАЛЕЕ", ok)) modal = Modal.None;
-                    break;
-                }
                 case Modal.RegionClear:
                 {
                     Rect r = Card(600f, 260f);
@@ -761,7 +942,36 @@ namespace BladePath
             }
         }
 
-        void Result(string s) { resultText = s; Campaign.Complete(Campaign.At); OpenModal(Modal.Result); }
+        void Result(string message)
+        {
+            Campaign.Complete(Campaign.At);
+            toastLines.Clear();
+            foreach (string line in Wrap(message, 48))
+            {
+                if (toastLines.Count >= 3) break;
+                toastLines.Add(line);
+            }
+            toastAt = Time.unscaledTime;
+            modal = Modal.None; // narrative rewards no longer demand an extra "ДАЛЕЕ" tap
+            nextRouteAt = Time.unscaledTime + 1.0f;
+        }
+
+        void DrawToast()
+        {
+            if (toastLines.Count == 0) return;
+            float age = Time.unscaledTime - toastAt;
+            if (age < 0f || age >= 4.5f) return;
+            float fade = Mathf.Clamp01(age / 0.2f) * Mathf.Clamp01((4.5f - age) / 0.7f);
+            float w = Mathf.Min(460f, viewW - 30f);
+            float h = 26f + toastLines.Count * 19f;
+            Rect r = new Rect(mapX + 15f, 540f - h - 15f, w, h);
+            UiKit.Rect(r, new Color(0.06f, 0.04f, 0.035f, 0.88f * fade));
+            UiKit.Rect(new Rect(r.x, r.y, 3f, r.height), new Color(Gold.r, Gold.g, Gold.b, fade));
+            for (int i = 0; i < toastLines.Count; i++)
+                UiKit.Text(new Rect(r.x + 12f, r.y + 8f + i * 19f, r.width - 22f, 19f),
+                    toastLines[i], 12f, new Color(Ink.r, Ink.g, Ink.b, fade),
+                    TextAnchor.MiddleLeft, false);
+        }
 
         void StartFight(int at)
         {
