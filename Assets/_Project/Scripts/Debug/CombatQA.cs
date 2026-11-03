@@ -171,6 +171,9 @@ namespace BladePath
                 if (f.weapon != null) f.weapon.SnapRest();
                 f.ResetPosture(); f.SetMoveVector(Vector2.zero);
             }
+            // здоровье — заново: бессмертный враг застревает на 1 ед., и урон следующих ударов читался как 0
+            Dictionary<FighterController, float> hp = typeof(DuelManager).GetField("hp", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(dm) as Dictionary<FighterController, float>;
+            if (hp != null) { hp[player] = dm.MaxHp(player); hp[enemy] = dm.MaxHp(enemy); }
             Vector3 c = new Vector3(0f, home.y, 0f);   // центр арены: у края Teleport упирался в границу и ставил дальше нужного
             enemy.Teleport(c + fwd * (dist * 0.5f));
             player.Teleport(c - fwd * (dist * 0.5f));
@@ -307,11 +310,14 @@ namespace BladePath
                     bool ok = player.Attack(t);
                     if (!ok) { Fail("attack|player|" + t + "|d" + dist.ToString("F1") + "|удар не начался"); continue; }
                     Strip strip = dist < 1.5f && (t == AttackType.Overhead || t == AttackType.SlashBack || t == AttackType.Charge) ? new Strip(this, player, "attack_" + t + "_d" + dist.ToString("F1"), 3) : null;
+                    traceSwing = dist < 1.5f && t == AttackType.SlashBack; traceHasPrev = false;
                     yield return RunSwing(player, st, null, strip);
+                    traceSwing = false;
                     if (strip != null) strip.Save();
                     string s = "attack|player|" + t + "|d" + dist.ToString("F1") + "|" + Outcome(st);
-                    // ближняя дистанция обязана попадать; дальняя — для сведения
-                    bool bad = st.phantomStrike > PhantomMax || (dist < 1.5f && contacts == 0);
+                    // ближняя дистанция обязана попадать; дальняя — для сведения. Натиск бьёт телом (клинок не проверяется) — по урону
+                    bool landed = contacts > 0 || (SwingProfile.Get(t).scripted && dmg > 0f);
+                    bool bad = st.phantomStrike > PhantomMax || (dist < 1.5f && !landed);
                     if (bad) Fail(s); else Line(s + "|PASS");
                 }
             attackerNow = null;
@@ -392,8 +398,12 @@ namespace BladePath
                     ResetCounters(enemy);
                     SwingStat st = new SwingStat();
                     if (!enemy.Attack(t)) { Fail("enemy|" + i + "|" + name + "|" + t + "|удар не начался"); continue; }
-                    Strip strip = t == AttackType.Overhead ? new Strip(this, enemy, "enemy_" + i + "_" + name + "_overhead", 4) : null;
+                    bool shogun = name.Contains("Shogun");
+                    Strip strip = t == AttackType.Overhead || (shogun && t == AttackType.Slash) ? new Strip(this, enemy, "enemy_" + i + "_" + name + "_" + t, 4) : null;
+                    traceSwing = shogun && t != AttackType.Thrust; traceHasPrev = false;
+                    if (traceSwing) Line("trace_start|" + name + "|" + t + "|дистанция " + Vector3.Distance(Flat(player.transform.position), Flat(enemy.transform.position)).ToString("F2"));
                     yield return RunSwing(enemy, st, null, strip);
+                    traceSwing = false;
                     if (strip != null) strip.Save();
                     string s = "enemy|" + i + "|" + name + "|" + t + "|" + Outcome(st);
                     if (st.phantomStrike > PhantomMax || contacts == 0) Fail(s); else Line(s + "|PASS");
