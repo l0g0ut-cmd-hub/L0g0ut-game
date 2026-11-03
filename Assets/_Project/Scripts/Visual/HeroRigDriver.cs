@@ -204,6 +204,7 @@ namespace BladePath
             if (gameObject.activeInHierarchy) ApplyStanceOpen();
             Cache(upperArmL, forearmL, handL, out l1L, out l2L);
             Cache(upperArmR, forearmR, handR, out l1R, out l2R);
+            CacheArmRest();
             // естественный поворот кисти к предплечью — из позы покоя модели (Start: Animator ещё не трогал кости)
             if (forearmR != null && forearmL != null && handR != null && handL != null)
             { relR = Quaternion.Inverse(forearmR.rotation) * handR.rotation; relL = Quaternion.Inverse(forearmL.rotation) * handL.rotation; relInit = true; }
@@ -490,6 +491,9 @@ namespace BladePath
                     return;
                 }
             }
+            // кости рук клипы не анимируют (руки ведёт IK), поэтому Animator их не сбрасывает: без возврата в позу покоя
+            // повороты IK, скрутки предплечья и ключицы накапливались кадр за кадром — руки и плечи «уплывали» и ломались
+            ResetArmBones();
             Vector3 right = ft.right, up = ft.up, fwd = ft.forward;
 
             if (weapon != null && weapon.pivot != null) weapon.pivot.localPosition = weapon.PureLocalPosition;   // снять прошлую поправку досягаемости
@@ -1344,6 +1348,25 @@ namespace BladePath
             float a = Mathf.Clamp(ang * clavicleShare, -clavicleMax, clavicleMax) * w;
             if (Mathf.Abs(a) < 0.1f || ax.sqrMagnitude < 1e-6f) return;
             cl.rotation = Quaternion.AngleAxis(a, ax) * cl.rotation;
+        }
+
+        // поза покоя костей рук (локальные повороты), включая ключицы — в неё руки возвращаются каждый кадр до IK
+        Transform[] armBones; Quaternion[] armRest;
+        void CacheArmRest()
+        {
+            List<Transform> list = new List<Transform>();
+            foreach (Transform t in new[] { upperArmR, forearmR, handR, upperArmL, forearmL, handL })
+                if (t != null) list.Add(t);
+            foreach (Transform u in new[] { upperArmR, upperArmL })
+                if (u != null && u.parent != null && u.parent != chest && u.parent != spine && u.parent != hips) list.Add(u.parent);   // ключица
+            armBones = list.ToArray();
+            armRest = new Quaternion[armBones.Length];
+            for (int i = 0; i < armBones.Length; i++) armRest[i] = armBones[i].localRotation;
+        }
+        void ResetArmBones()
+        {
+            if (armBones == null) return;
+            for (int i = 0; i < armBones.Length; i++) if (armBones[i] != null) armBones[i].localRotation = armRest[i];
         }
 
         bool relInit; Quaternion relR = Quaternion.identity, relL = Quaternion.identity;
