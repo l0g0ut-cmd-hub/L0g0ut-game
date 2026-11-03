@@ -18,8 +18,8 @@ namespace BladePath
         public FighterController enemy;
 
         enum B { Stick, Jump, Dash, Overhead, Rising, Legs, Energy, Thrust, Slash, Pause,
-                 Resume, Restart, CamReset, AiToggle, DebugToggle, ToMenu, OverAgain, OverMenu, Block, Vibro, Difficulty, Super, Gfx, Heal, CamMode, TimerToggle, Gear, OverGear, Stats, AutoBattle, Immortal, DevMenu, DevBack, AutoLevel, EnemyImmortal, WinFight, Clavicle, Twist, Arena, Ally }
-        const int Count = 40;
+                 Resume, Restart, CamReset, AiToggle, DebugToggle, ToMenu, OverAgain, OverMenu, Block, Vibro, Difficulty, Super, Gfx, Heal, CamMode, TimerToggle, Gear, OverGear, Stats, AutoBattle, Immortal, DevMenu, DevBack, AutoLevel, EnemyImmortal, WinFight, Clavicle, Twist, Arena, Ally, AllyFeature }
+        const int Count = 41;
         bool devOpen;   // пауза: открыто «меню разработчика»
 
         const float StickRadius = 84f;
@@ -169,6 +169,7 @@ namespace BladePath
             if (down[(int)B.Twist]) { float[] tw = { 0f, 0.25f, 0.45f, 0.6f }; int ti = 0; for (int k = 0; k < tw.Length; k++) if (Mathf.Abs(tw[k] - HeroRigDriver.DebugTwistShare) < 0.01f) ti = k; HeroRigDriver.DebugTwistShare = tw[(ti + 1) % tw.Length]; }
             if (down[(int)B.AutoBattle]) DuelManager.AutoBattle = !DuelManager.AutoBattle;
             if (down[(int)B.Arena]) ArenaVariants.Toggle();   // тест цельной арены из Meshy
+            if (down[(int)B.AllyFeature]) { SideDuel.Enabled = !SideDuel.Enabled; if (duel != null) { devOpen = false; duel.SetPaused(false); duel.ResetMatch(); } return; }
             if (down[(int)B.Ally]) { Profile.SetAlly(Profile.Ally >= 0 && !Profile.AllyDown ? -1 : 0); if (duel != null) { devOpen = false; duel.SetPaused(false); duel.ResetMatch(); } return; }
             // автобой (отладка): игроком управляет тот же ИИ, что и врагом
             if (player != null && (DuelManager.AutoBattle || playerAi != null))
@@ -303,6 +304,7 @@ namespace BladePath
             Box(B.Twist, rx, 320f, 300f, 40f);
             Box(B.Arena, lx, 320f, 300f, 40f);
             Box(B.Ally, rx, 370f, 300f, 40f);
+            Box(B.AllyFeature, lx, 370f, 300f, 40f);
             Box(B.DevBack, cx - 150f, 420f, 300f, 40f);
             Box(B.OverAgain, cx - 210f, 300f, 200f, 56f);
             Box(B.OverMenu, cx + 10f, 300f, 200f, 56f);
@@ -314,7 +316,7 @@ namespace BladePath
             if (play && player != null && player.KiFull) active[(int)B.Super] = true;
             if (!paused) devOpen = false;
             if (paused && devOpen)
-                foreach (B b in new[] { B.AiToggle, B.DebugToggle, B.EnemyImmortal, B.AutoBattle, B.AutoLevel, B.Immortal, B.WinFight, B.Clavicle, B.Twist, B.Arena, B.Ally, B.DevBack }) active[(int)b] = true;
+                foreach (B b in new[] { B.AiToggle, B.DebugToggle, B.EnemyImmortal, B.AutoBattle, B.AutoLevel, B.Immortal, B.WinFight, B.Clavicle, B.Twist, B.Arena, B.Ally, B.AllyFeature, B.DevBack }) active[(int)b] = true;
             else if (paused)
                 foreach (B b in new[] { B.Resume, B.Restart, B.Difficulty, B.Gfx, B.Vibro, B.CamReset, B.ToMenu, B.CamMode, B.TimerToggle, B.Gear, B.Stats, B.DevMenu }) active[(int)b] = true;
             if (over) { active[(int)B.OverAgain] = true; active[(int)B.OverMenu] = true; active[(int)B.OverGear] = true; }
@@ -331,6 +333,7 @@ namespace BladePath
             labels[(int)B.DevMenu] = "МЕНЮ РАЗРАБОТЧИКА";
             labels[(int)B.DevBack] = "НАЗАД";
             labels[(int)B.WinFight] = "ВЫИГРАТЬ БОЙ";
+            labels[(int)B.AllyFeature] = "СОРАТНИКИ: " + (SideDuel.Enabled ? "ВКЛ" : "ВЫКЛ");
             labels[(int)B.Ally] = "СОРАТНИК: " + (Profile.Ally < 0 ? "НЕТ" : Profile.AllyDown ? "ПАЛ" : "ЕСТЬ");
             labels[(int)B.Arena] = "АРЕНА: " + ArenaVariants.Names[Mathf.Clamp(ArenaVariants.Current, 0, ArenaVariants.Names.Length - 1)];
             labels[(int)B.Clavicle] = "РУКИ: " + (HeroRigDriver.DebugAnimSword ? "МОКАП" : "СТАРЫЙ IK");
@@ -522,7 +525,7 @@ namespace BladePath
                 {
                     UiKit.Rect(new Rect(W * 0.5f - 200f, 64f, 400f, 46f), new Color(0.12f, 0.05f, 0.03f, 0.9f));
                     UiKit.Text(new Rect(W * 0.5f - 200f, 64f, 400f, 46f), "МЕНЮ РАЗРАБОТЧИКА", 24f, Gold);
-                    foreach (B b in new[] { B.AiToggle, B.DebugToggle, B.EnemyImmortal, B.AutoBattle, B.AutoLevel, B.Immortal, B.WinFight, B.Clavicle, B.Twist, B.Arena, B.Ally, B.DevBack }) DrawRectButton((int)b);
+                    foreach (B b in new[] { B.AiToggle, B.DebugToggle, B.EnemyImmortal, B.AutoBattle, B.AutoLevel, B.Immortal, B.WinFight, B.Clavicle, B.Twist, B.Arena, B.Ally, B.AllyFeature, B.DevBack }) DrawRectButton((int)b);
                 }
                 else
                 {

@@ -525,7 +525,7 @@ namespace BladePath
 
         void DrawDev(bool ok)
         {
-            Rect r = Card(520f, 420f);
+            Rect r = Card(520f, 470f);
             float x = r.x + 24f, w = r.width - 48f, y = r.y + 18f;
             UiKit.Text(new Rect(x, y, w, 26f), "МЕНЮ РАЗРАБОТЧИКА", 20f, Gold); y += 38f;
             float bw = (w - 10f) * 0.5f;
@@ -542,6 +542,8 @@ namespace BladePath
             if (Btn(new Rect(x + bw + 10f, y, bw, 44f), JourneyChoice.FogEnabled ? "ТУМАН: ВКЛ" : "ТУМАН: ВЫКЛ", ok)) { JourneyChoice.FogEnabled = !JourneyChoice.FogEnabled; }
             y += 52f;
             if (Btn(new Rect(x, y, w, 44f), "ВЫБРОСИТЬ КОСТЬ: 3 ХОДА", ok)) { Campaign.DebugSteps(3); }
+            y += 52f;
+            if (Btn(new Rect(x, y, w, 44f), SideDuel.Enabled ? "СОРАТНИКИ: ВКЛ" : "СОРАТНИКИ: ВЫКЛ", ok)) { SideDuel.Enabled = !SideDuel.Enabled; }
             if (Btn(new Rect(r.center.x - 80f, r.yMax - 52f, 160f, 40f), "ЗАКРЫТЬ", ok)) modal = Modal.None;
         }
 
@@ -1641,7 +1643,7 @@ namespace BladePath
                             ? "Травница поднимает глаза от отвара. «Снова ты? Посиди у огня, переведи дух». Кость пути она уже отдала тебе в прошлый раз."
                             : "Старая травница помешивает отвар. «Ходят тут всякие с мечами… Если что — несите сюда». Она вкладывает тебе в ладонь кость пути.";
                     y = Lines(x, y, w, tx, 40, 13f, Ink) + 8f;
-                    if (Profile.Ally >= 0 && Profile.AllyDown && Btn(new Rect(x, y, w, 42f), "ВЫХОДИТЬ СОРАТНИКА", ok))
+                    if (SideDuel.Enabled && Profile.Ally >= 0 && Profile.AllyDown && Btn(new Rect(x, y, w, 42f), "ВЫХОДИТЬ СОРАТНИКА", ok))
                     {
                         Profile.SetAllyDown(false);
                         TavToast("Травница промывает раны соратника отваром полыни. К утру он снова на ногах и берётся за меч.");
@@ -1837,7 +1839,7 @@ namespace BladePath
             if (!tavKeeper && GUI.Button(keeper, GUIContent.none, GUIStyle.none)) { tavSub = 1; return; }
             if (!tavDice && GUI.Button(dice, GUIContent.none, GUIStyle.none)) { tavSub = 2; TavernDiceGame.Enter(tavDiceFresh); tavDiceFresh = false; return; }
             if (!tavBoard && GUI.Button(board, GUIContent.none, GUIStyle.none)) { tavSub = 3; return; }
-            if (!tavDrunk && GUI.Button(drunk, GUIContent.none, GUIStyle.none)) { tavSub = 4; return; }
+            if (!tavDrunk && GUI.Button(drunk, GUIContent.none, GUIStyle.none)) { if (SideDuel.Enabled) tavSub = 4; else DrunkRoninTalk(); return; }
             if (!tavHearth && GUI.Button(hearth, GUIContent.none, GUIStyle.none))
             {
                 tavHearth = true;

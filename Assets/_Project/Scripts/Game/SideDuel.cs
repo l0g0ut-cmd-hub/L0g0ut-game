@@ -17,6 +17,12 @@ namespace BladePath
     public class SideDuel : MonoBehaviour
     {
         public static SideDuel Instance { get; private set; }
+        /// <summary>Нововведение целиком (меню разработчика): выключено — ни найма в трактире, ни второй пары на арене.</summary>
+        public static bool Enabled
+        {
+            get { return PlayerPrefs.GetInt("allies", 1) == 1; }
+            set { PlayerPrefs.SetInt("allies", value ? 1 : 0); PlayerPrefs.Save(); }
+        }
 
         public FighterController ally, foe;
         public EnemyAI allyAi, foeAi;
@@ -71,7 +77,7 @@ namespace BladePath
             Takeover = false; sideWinner = null; mainLoser = null; foeEnterAt = -1f;
             dm.player.opponent = dm.enemy; dm.enemy.opponent = dm.player;
             EnemyAI ea = MainAi(); if (ea != null) ea.target = dm.player;
-            On = ally != null && foe != null && Profile.Ally >= 0 && !Profile.AllyDown;
+            On = Enabled && ally != null && foe != null && Profile.Ally >= 0 && !Profile.AllyDown;
             if (ally != null) ally.gameObject.SetActive(On);
             if (foe != null) foe.gameObject.SetActive(On);
             FighterController[] all = On ? new[] { dm.player, dm.enemy, ally, foe } : null;
