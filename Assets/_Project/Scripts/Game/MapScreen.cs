@@ -273,11 +273,11 @@ namespace BladePath
             DrawFog(uw);
             // погода над областью — под значками мест и героем: облака не закрывают, куда нажимать
             MapClouds.Draw(Campaign.Region, new Rect(mapX, 0f, viewW, MapH), u0, uw);
-            MapBirds.Draw(new Rect(mapX, 0f, viewW, MapH), u0, uw);   // иногда пролетают ворон или стайка цапель
             DrawBuildings();
             DrawTower();
             DrawNodes(interactive && modal == Modal.None && moveTo < 0);
             DrawHero();
+            MapBirds.Draw(new Rect(mapX, 0f, viewW, MapH), u0, uw);   // ворон или стайка цапель пролетают над всем — и над значками (под ними значки видно, это не облака)
             DrawJourneyLegend();
             // туман по краям и название области
             Texture2D fog = SoftSprites.Fog;
@@ -431,7 +431,8 @@ namespace BladePath
         }
 
         // место здания у значка: из нескольких сторон выбирается та, что дальше всего от дорог, воды (мост!) и других мест
-        static readonly Vector2[] BuildingSpots = { new Vector2(38f, 0f), new Vector2(-38f, 0f), new Vector2(30f, -22f), new Vector2(-30f, -22f), new Vector2(0f, -34f), new Vector2(34f, 24f), new Vector2(-34f, 24f) };
+        static readonly Vector2[] BuildingSpots = { new Vector2(38f, 0f), new Vector2(-38f, 0f), new Vector2(30f, -22f), new Vector2(-30f, -22f), new Vector2(0f, -34f), new Vector2(34f, 24f), new Vector2(-34f, 24f),
+                                                    new Vector2(54f, -12f), new Vector2(-54f, -12f), new Vector2(42f, -40f), new Vector2(-42f, -40f) };   // дальние — когда у ближних вода
         readonly Dictionary<int, Vector2> buildingOff = new Dictionary<int, Vector2>();
         string buildingKey;
         Vector2 BuildingOffset(int i, int tower)
@@ -459,9 +460,14 @@ namespace BladePath
                 if (i == tower && sp.x > 10f && sp.y < 5f) continue;   // справа-сверху стоит смотровая башня
                 Vector2 basePt = Vector2.Scale(np, k) + sp, center = basePt + new Vector2(0f, -26f);
                 float dRoad = 1e9f; foreach (Vector2 rp in road) dRoad = Mathf.Min(dRoad, Mathf.Min((rp - basePt).magnitude, (rp - center).magnitude));
-                float dWater = Mathf.Min(MapLife.DistToWater(Campaign.Region, new Vector2(basePt.x / 810f, basePt.y / 540f)), MapLife.DistToWater(Campaign.Region, new Vector2(center.x / 810f, center.y / 540f)));
+                float dWater = 1e9f;   // по основанию, центру и бокам спрайта (74 точки шириной)
+                foreach (Vector2 wp in new[] { basePt, center, basePt + new Vector2(-30f, -8f), basePt + new Vector2(30f, -8f) })
+                    dWater = Mathf.Min(dWater, MapLife.DistToWater(Campaign.Region, new Vector2(wp.x / 810f, wp.y / 540f)));
                 float dNode = 1e9f; for (int o = 0; o < ns.Count; o++) if (o != i) dNode = Mathf.Min(dNode, (Vector2.Scale(new Vector2(ns[o].x, ns[o].y), k) - center).magnitude);
-                float score = Mathf.Min(dRoad, 40f) + 1.5f * Mathf.Min(dWater, 45f) + 0.8f * Mathf.Min(dNode, 60f) - (sp == BuildingSpots[0] ? 0f : 3f);
+                // река широкая (линия — её середина): ближе ~60 точек к середине здание стоит на воде или на самом берегу — сильный штраф
+                float far = sp.magnitude > 50f ? 6f : 0f;
+                float score = Mathf.Min(dRoad, 40f) + 2.5f * Mathf.Min(dWater, 80f) + 0.8f * Mathf.Min(dNode, 60f) - (sp == BuildingSpots[0] ? 0f : 3f) - far
+                              - (dWater < 60f ? (60f - dWater) * 6f : 0f);
                 if (score > bestScore) { bestScore = score; best = sp; }
             }
             buildingOff[i] = best;

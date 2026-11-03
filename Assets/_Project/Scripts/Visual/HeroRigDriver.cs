@@ -850,6 +850,8 @@ namespace BladePath
         // Удары без клипа (укол, добивания) — по-старому, через IK; переход плавный.
         public SwordAnimSet swordSet;
         public static bool DebugAnimSword = true;
+        public float leanCut = 0.7f;      // доля наклона корпуса вперёд, которая срезается (мокап сутулый)
+        public float uprightLean = 6f;    // этот наклон (градусы) оставляем — стойка не должна быть «палкой»
         Transform[] swBones;
         Quaternion[] swIdle, swAtk, swBlock, swTarget, swSmooth;
         bool swInit;
@@ -918,6 +920,19 @@ namespace BladePath
                 Transform b = swBones[i];
                 if (b == null) continue;
                 b.rotation = Quaternion.Slerp(b.rotation, fr * swSmooth[i], swW);
+            }
+            // осанка: у мокапа (двуручный меч) корпус сильно наклонён вперёд — в стойке и в ударах выходил «горбун».
+            // Наклон корпуса (поясница → голова) вперёд срезается на leanCut; руки и меч идут за корпусом
+            if (head != null && swBones[0] != null && leanCut > 0f)
+            {
+                Vector3 v = Quaternion.Inverse(ft.rotation) * (head.position - swBones[0].position);
+                float pitch = Mathf.Atan2(v.z, v.y) * Mathf.Rad2Deg;   // + — вперёд
+                float corr = -Mathf.Max(0f, pitch - uprightLean) * leanCut * swW;
+                if (Mathf.Abs(corr) > 0.01f)
+                {
+                    Rot(swBones[0], corr * 0.45f, ft.right);
+                    if (swBones[1] != null) Rot(swBones[1], corr * 0.55f, ft.right);
+                }
             }
             if (head != null && deadK < 0.01f) head.rotation = headW;
 
