@@ -38,7 +38,7 @@ namespace BladePath
             // «great sword attack» оказался не резом: кисти идут вперёд, а клинок смотрит вбок (автотест: остриё ни разу не вышло вперёд,
             // 0 контактов). Берём «great sword slash (4)»: кадры 0–12 — клинок за правым плечом, 12–20 — рез справа налево к цели;
             // дальше в клипе прыжок с ударом сверху — восстановление коротко, к стойке
-            new Spec("SlashBack", "great sword slash (4)", (int)AttackType.SlashBack, 0, 12, 20, 23, 27),
+            new Spec("SlashBack", "great sword slash (4)", (int)AttackType.SlashBack, 0, 17, 24, 27, 32),   // по логу автотеста: клинок выходит к цели на 22–24
             new Spec("LegSweep", "great sword slash (5)", (int)AttackType.LegSweep, 0, 11, 16, 19, 43),
             new Spec("Rising", "great sword slash (2)", (int)AttackType.Rising, 62, 75, 83, 86, 106),
             // в воздухе — клип удара сверху: «great sword jump attack» по CI-логу ведёт клинок кругом вокруг самого бойца

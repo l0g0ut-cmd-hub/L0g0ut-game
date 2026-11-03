@@ -117,6 +117,9 @@ namespace BladePath
                 case AttackType.SlashBack:      // то же зеркально: от левого плеча вправо
                     p.label = "РЕЗ <";
                     p.windupTime = 0.36f; p.strikeTime = 0.14f; p.followTime = 0.14f; p.recoveryTime = 0.44f;
+                    // в клипе Mixamo боец на резе шагает вперёд на ~0,5 м, а смещение корня мы не берём — без рывка клинок
+                    // не доставал до цели на 0,35 м (автотест)
+                    p.lungeSpeed = 3.5f;
                     //        t      руки x,y,z              клинок p,y,r      таз F,D        таз yaw,pitch  грудь yaw,pitch  стопы F,R,пятка
                     p.KReady(0f);
                     p.KMirror(0.14f, 0.2f, -0.1f, 0.2f, -35f, 70f, -60f, -0.03f, 0.07f, 8f, 6f, 6f, 4f, 0f, 0f, 0f);   // руки уходят к левому плечу, вес назад
