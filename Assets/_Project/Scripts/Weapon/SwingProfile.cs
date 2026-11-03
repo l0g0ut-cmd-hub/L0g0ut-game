@@ -302,7 +302,9 @@ namespace BladePath
                     p.strikeEndEuler = new Vector3(55f, -10f, 0f);
                     p.followEuler = new Vector3(70f, -12f, 0f);
                     p.windupTime = 0.18f; p.strikeTime = 0.13f; p.followTime = 0.08f; p.recoveryTime = 0.30f;
-                    p.lungeSpeed = 2.5f;
+                    // было 2.5 — за 0.13с фазы удара это всего ~32см сближения, прыжок почти не долетал до цели;
+                    // для сравнения у "Натиска" (тоже рывковый удар) 6.5 на 0.3с ≈ 1.95м
+                    p.lungeSpeed = 6f;
                     p.bodyStep = 0f; p.strideDeg = 0f;
                     break;
                 case AttackType.Energy:      // шар духа: клинок вскинут вверх остриём, энергия собирается и срывается вперёд

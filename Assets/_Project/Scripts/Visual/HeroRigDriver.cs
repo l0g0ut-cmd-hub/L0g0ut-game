@@ -875,8 +875,13 @@ namespace BladePath
             SwordAnimSet.Clip atk = null;
             bool swinging = weapon.Phase != SwingPhase.Idle && weapon.CurrentProfile != null;
             if (swinging) atk = swordSet.ForAttack(weapon.CurrentProfile.type);
-            bool on = DebugAnimSword && !fighter.Dead && drinkW < 0.01f && (!swinging || atk != null);
-            swW = Mathf.MoveTowards(swW, on ? 1f : 0f, dt / 0.12f);
+            // удар без мокап-клипа уже пошёл через старую процедурную систему (WeaponController.ApplyPose) —
+            // здесь обрываем вес мгновенно, а не за 0.12с: иначе эти 120мс код ниже (строки 961+) ещё тащит
+            // weapon.pivot/bladeRoot к позе стойки ПРОШЛОГО удара поверх уже идущего нового — хитбокс и трейл
+            // клинка на миг оказываются оторваны от бойца («фантомный взмах»)
+            bool noClipSwing = swinging && atk == null;
+            bool on = DebugAnimSword && !fighter.Dead && drinkW < 0.01f && !noClipSwing;
+            swW = noClipSwing ? 0f : Mathf.MoveTowards(swW, on ? 1f : 0f, dt / 0.12f);
             if (swW <= 0.001f) { swInit = false; return; }
 
             // стойка (петля), поверх — удар по фазам WeaponController, поверх — блок
