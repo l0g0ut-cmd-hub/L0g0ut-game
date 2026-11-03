@@ -12,7 +12,7 @@ namespace BladePath
     /// </summary>
     public class StudioSplash : MonoBehaviour
     {
-        const float FadeIn = 0.8f, Hold = 3.6f, FadeOut = 1.0f;   // всего ~5,4 с, полностью видна ~4,4 с
+        const float FadeIn = 0.8f, Hold = 5.6f, FadeOut = 1.4f;   // полностью видна ~5,6 с, плавно гаснет 1,4 с
         static bool shown;
         Texture2D art;
         float start;
@@ -44,16 +44,25 @@ namespace BladePath
             version = "ПУТЬ КЛИНКА  ·  версия " + Application.version + (num.Length > 0 ? "  ·  сборка #" + num : "");
         }
 
+        float fadeAt = -1f;   // когда началось угасание (−1 — ещё держится)
+
         void Update()
         {
             float t = Time.unscaledTime - start;
 #if ENABLE_LEGACY_INPUT_MANAGER
             bool skip = t > 0.4f && (Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began || Input.GetMouseButtonDown(0));
-            if (skip && t < FadeIn + Hold) { start = Time.unscaledTime - (FadeIn + Hold); t = FadeIn + Hold; }
+            if (skip && fadeAt < 0f && t < FadeIn + Hold - 1.2f) { start = Time.unscaledTime - (FadeIn + Hold - 1.2f); t = FadeIn + Hold - 1.2f; }
 #endif
-            // меню включается в начале угасания: ролик успевает подготовиться и проступает сквозь гаснущую заставку
-            if (t >= FadeIn + Hold && menu != null && !menu.enabled) menu.enabled = true;
-            if (t >= FadeIn + Hold + FadeOut) Finish();
+            // меню включается за 1,2 с до угасания (под заставкой): ролик успевает подготовиться и уже идёт, когда заставка гаснет
+            if (t >= FadeIn + Hold - 1.2f && menu != null && !menu.enabled) menu.enabled = true;
+            if (fadeAt < 0f && t >= FadeIn + Hold)
+            {
+                // ролик меню ещё не показал кадр — держим заставку (до 2 с), иначе вместо плавного перехода был бы чёрный экран
+                UnityEngine.Video.VideoPlayer vp = menu != null ? menu.GetComponent<UnityEngine.Video.VideoPlayer>() : null;
+                bool ready = vp == null || (vp.isPlaying && vp.frame > 0) || t >= FadeIn + Hold + 2f;
+                if (ready) fadeAt = t;
+            }
+            if (fadeAt >= 0f && t >= fadeAt + FadeOut) Finish();
         }
 
         void Finish()
@@ -67,11 +76,11 @@ namespace BladePath
             GUI.depth = -1000;
             if (Event.current.type != EventType.Repaint) return;
             float t = Time.unscaledTime - start;
-            float a = t < FadeIn ? Mathf.SmoothStep(0f, 1f, t / FadeIn) : t < FadeIn + Hold ? 1f : 1f - Mathf.SmoothStep(0f, 1f, (t - FadeIn - Hold) / FadeOut);
+            float a = t < FadeIn ? Mathf.SmoothStep(0f, 1f, t / FadeIn) : fadeAt < 0f ? 1f : 1f - Mathf.SmoothStep(0f, 1f, (t - fadeAt) / FadeOut);
             Rect screen = new Rect(0f, 0f, Screen.width, Screen.height);
             Color oc = GUI.color;
             // фон держится чёрным до конца проявления меню: гаснет только картина, затем — сам чёрный экран
-            GUI.color = new Color(0f, 0f, 0f, t < FadeIn + Hold ? 1f : a);
+            GUI.color = new Color(0f, 0f, 0f, fadeAt < 0f ? 1f : a);
             GUI.DrawTexture(screen, Texture2D.whiteTexture);
             if (art != null)
             {
