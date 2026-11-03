@@ -101,7 +101,8 @@ namespace BladePath
             }
             // заряд есть не у всех и не всегда: слабые — только сильным противником на карте, остальные — по силе и уровню
             bool strongNode = Campaign.InFight && (Campaign.FightType == NodeType.Elite || Campaign.FightType == NodeType.Boss);
-            bool can = StageIdx >= 2 || (StageIdx == 1 && Level >= 1) || strongNode || Level >= 3;
+            // мастер (и автобой игрока со «воина») копит на любой ступени — раньше слабые ступени не копили до 4-го уровня
+            bool can = StageIdx >= 2 || (StageIdx == 1 && Level >= 1) || strongNode || Level >= 3 || Diff >= 2 || (autoPlayer && Diff >= 1);
             if (!can || busy || self.Ki < ChargeSystem.KiCost[0]) return false;
             // игрок копит — иногда копим навстречу (кто сильнее, тот и пробьёт)
             if (target != null && cs.IsCharging(target))
@@ -116,10 +117,19 @@ namespace BladePath
                 return true;
             }
             answerChecked = false;
-            if (Time.time < chargeAt || dist < 1.8f || dist > 4.2f) return false;
-            if (Random.value > 0.015f + 0.005f * Level) return false;
+            if (Time.time < chargeAt || dist > 4.2f) return false;
+            // копить можно только с дистанции, а бойцы держатся вплотную (1,15 м) — поэтому накопления не было вовсе:
+            // решил копить — сперва отходит
+            if (dist < 1.8f)
+            {
+                if (!busy && Time.time > dashAt && Random.value < 0.04f) { Vector3 away = self.transform.position - target.transform.position; away.y = 0f; self.Dash(XZ(away)); dashAt = Time.time + 1.5f; }   // противник идёт следом — шаг назад не помогал
+                else if (Time.time > retreatUntil) retreatUntil = Time.time + 0.6f;
+                return false;
+            }
+            if (Random.value > 0.05f + 0.01f * Level) return false;
             chargeAt = Time.time + Random.Range(6f, 10f) - Level * 0.6f;
             int goal = StageIdx == 2 ? (Random.value < 0.25f ? 3 : Random.value < 0.6f ? 2 : 1) : (StageIdx == 3 && Phase >= 3 ? 3 : StageIdx == 3 ? 2 : Random.Range(0, 2));   // ярость (IV) — они иногда, сёгун в 3-й фазе всегда
+            if (Diff >= 2 || autoPlayer) { float gr = Random.value; goal = Mathf.Max(goal, gr < 0.4f ? 3 : gr < 0.75f ? 2 : 1); }   // мастер и автобой доходят и до ярости (IV)
             while (goal > 0 && self.Ki < ChargeSystem.KiCost[goal]) goal--;
             if (!cs.Begin(self)) return false;
             chargeStart = Time.time; chargeGoal = goal; chargeEarly = Random.value < 0.5f;
@@ -177,7 +187,7 @@ namespace BladePath
             {
                 strafeUntil = Time.time + Random.Range(0.8f, 1.8f);
                 strafeDir = Random.value < 0.5f ? -1f : 1f;
-                strafeK = Random.value < 0.4f ? Random.Range(0.18f, 0.3f) : 0f;
+                strafeK = Random.value < 0.25f ? Random.Range(0.12f, 0.22f) : 0f;   // кружили слишком часто
             }
             // уводит в глубину арены (к ступеням храма или к камере) — обходим в сторону центра
             {
@@ -262,7 +272,9 @@ namespace BladePath
                     if (Level >= 2 && Random.value < 0.35f + 0.1f * Level) parrySwing = pw.SwingId;
                     else blockUntil = Time.time + Random.Range(0.45f, 0.75f);
                 }
-                else if (r < 0.5f + 0.08f * Level + Ladder.Current.dashBias && Time.time > dashAt) { self.Dash(XZ(-dir + side * strafeDir)); dashAt = Time.time + 1.5f; }
+                // рывок прочь — реже (два ИИ вечно уходили друг от друга рывками и кружили); мастер отвечает встречным уколом
+                else if (r < 0.32f + 0.1f * Level + 0.12f + Ladder.Current.dashBias && Time.time > dashAt) { self.Dash(XZ(-dir + side * strafeDir)); dashAt = Time.time + 2.2f; }
+                else if (Level >= 2 && dist < 1.4f && Random.value < 0.5f && self.Attack(AttackType.Thrust)) { nextAttackAt = Time.time + 0.6f; return; }
             }
             if (pw != null && parrySwing == pw.SwingId && pw.Phase == SwingPhase.Strike) { parrySwing = -1; blockUntil = Time.time + 0.35f; }
             if (Time.time < blockUntil && !busy) self.SetBlock(true);
@@ -330,6 +342,8 @@ namespace BladePath
             // Тень издалека иногда сама уходит в дым к игроку
             if (canVanish && !busy && dist > 2.4f && Random.value < 0.006f && TryVanish(dir)) return;
 
+            // мастер, отбив удар, сразу отвечает (раньше стоял в блоке до конца таймера и не нападал)
+            if (Level >= 2 && pw != null && pw.Phase == SwingPhase.Recovery && Time.time < blockUntil && dist < 1.4f) blockUntil = 0f;
             if (!busy && Time.time >= nextAttackAt && Time.time >= blockUntil && dist < 1.35f)
             {
                 bool quick = Time.time - nextAttackAt < 0.4f && DuelManager.Instance != null && DuelManager.Instance.Combo(self) > 0 && DuelManager.Instance.ComboAge(self) < 1.2f;
@@ -352,7 +366,7 @@ namespace BladePath
                         DuelManager.Instance.PerilAt[self] = Time.unscaledTime;   // знак 危 над головой
                     }
                     if (self.weapon != null && Random.value < 0.65f) { self.weapon.stance = 0; stanceAt = Time.time + Random.Range(2f, 5f); }   // после удара — обычно назад в тюдан
-                    nextAttackAt = Time.time + Mathf.Lerp(2.4f, 0.8f, agg) + Random.Range(0f, 0.7f);
+                    nextAttackAt = Time.time + Mathf.Lerp(1.9f, 0.5f, agg) + Random.Range(0f, 0.45f);   // было 2,4…0,8 + 0,7: бил редко
                     // серия: с уровня «воин», не после опасной атаки и не шаром
                     if (!peril && !quick && Level >= 1 && t != AttackType.Energy && Random.value < 0.18f + 0.08f * Level)
                     {
@@ -360,7 +374,7 @@ namespace BladePath
                         stringLast = t; stringDelay = Level >= 3 && Random.value < 0.35f; stringPauseUntil = 0f; self.InString = true;
                     }
                     else if (!peril && !quick && t != AttackType.Energy && (StageIdx == 1 ? Level >= 1 && Random.value < 0.25f : Level >= 2 && Random.value < 0.08f * (Level - 1))) feintSwing = self.weapon.SwingId;   // Тень — мастер финтов
-                    else if (Random.value < 0.45f - 0.08f * Level) retreatUntil = Time.time + 0.9f;
+                    else if (Random.value < 0.3f - 0.08f * Level) retreatUntil = Time.time + 0.7f;
                 }
             }
             if (!busy && dist < 1.0f && Time.time > dashAt && Random.value < 0.01f) { self.Dash(XZ(-dir + side * strafeDir)); dashAt = Time.time + 2f; }

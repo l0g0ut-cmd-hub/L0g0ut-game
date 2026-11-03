@@ -539,8 +539,12 @@ namespace BladePath
             airK = Mathf.MoveTowards(airK, airT, dt / (airT < airK ? 0.06f : 0.08f));
             lean = Mathf.MoveTowards(lean, pitchTarget, 140f * dt);
             yawS = Mathf.SmoothDampAngle(yawS, yawTarget, ref yawV, 0.05f);
-            bS = Mathf.SmoothDamp(bS, bTarget, ref bV, 0.04f);
-            crouchS = Mathf.SmoothDamp(crouchS, crouchTarget, ref crouchV, 0.07f);
+            // свой шаг и не ноль: на игровом времени в паузе SmoothDamp при достигнутой цели делит 0 на 0 (NaN в позе)
+            if (dt > 1e-5f)
+            {
+                bS = Mathf.SmoothDamp(bS, bTarget, ref bV, 0.04f, Mathf.Infinity, dt);
+                crouchS = Mathf.SmoothDamp(crouchS, crouchTarget, ref crouchV, 0.07f, Mathf.Infinity, dt);
+            }
             // пружина отдачи (полунеявный Эйлер — устойчив при dt до 1/30)
             kickV += (-hitStiffness * hitStiffness * kick - 2f * hitDamping * hitStiffness * kickV) * dt;
             kick = Mathf.Clamp(kick + kickV * dt, -0.45f, 1.3f);

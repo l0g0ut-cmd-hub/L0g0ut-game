@@ -175,23 +175,36 @@ namespace BladePath
             g.normal.textColor = Color.cyan; GUI.Label(new Rect(10, Screen.height * 0.36f, Screen.width, 40), t, g);
         }
 
+        static bool Bad(float v) { return float.IsNaN(v) || float.IsInfinity(v); }
+
         void LateUpdate()
         {
             bool free = FreeMode;
-            yaw = Mathf.SmoothDamp(yaw, yawT, ref yawV, smoothTime);
-            pan = Vector3.SmoothDamp(pan, panT, ref panV, smoothTime * 1.5f, Mathf.Infinity, Time.unscaledDeltaTime);
-            pitch = Mathf.SmoothDamp(pitch, pitchT, ref pitchV, smoothTime);
-            dist = Mathf.SmoothDamp(dist, distT, ref distV, smoothTime);
+            // сглаживание — по реальному времени и с шагом больше нуля: Mathf.SmoothDamp на игровом времени в паузе (dt = 0)
+            // при камере, уже стоящей в цели (переключение режима сбрасывает цель в 0), делит 0 на 0 — скорость NaN,
+            // позиция камеры NaN, чёрный экран навсегда (автобой + свободная камера из меню паузы)
+            float sdt = Mathf.Max(Time.unscaledDeltaTime, 1e-4f);
+            yaw = Mathf.SmoothDamp(yaw, yawT, ref yawV, smoothTime, Mathf.Infinity, sdt);
+            pan = Vector3.SmoothDamp(pan, panT, ref panV, smoothTime * 1.5f, Mathf.Infinity, sdt);
+            pitch = Mathf.SmoothDamp(pitch, pitchT, ref pitchV, smoothTime, Mathf.Infinity, sdt);
+            dist = Mathf.SmoothDamp(dist, distT, ref distV, smoothTime, Mathf.Infinity, sdt);
 
             float targetX = 0f, targetZ = 0f;
             if (fighters != null && fighters.Length > 0)
             {
                 float sx = 0f, sz = 0f; int n = 0;
-                for (int i = 0; i < fighters.Length; i++) if (fighters[i] != null) { sx += fighters[i].transform.position.x; sz += fighters[i].transform.position.z; n++; }
+                for (int i = 0; i < fighters.Length; i++)
+                    if (fighters[i] != null) { Vector3 fp = fighters[i].transform.position; if (Bad(fp.x) || Bad(fp.z)) continue; sx += fp.x; sz += fp.z; n++; }
                 if (n > 0) { targetX = sx / n * followMidpoint; targetZ = sz / n * followMidpoint; }
             }
-            midX = Mathf.SmoothDamp(midX, targetX, ref midVx, 0.25f);
-            midZ = Mathf.SmoothDamp(midZ, targetZ, ref midVz, 0.25f);
+            midX = Mathf.SmoothDamp(midX, targetX, ref midVx, 0.25f, Mathf.Infinity, sdt);
+            midZ = Mathf.SmoothDamp(midZ, targetZ, ref midVz, 0.25f, Mathf.Infinity, sdt);
+            // страховка: что-то всё-таки стало NaN — камера возвращается в обычный вид, а не показывает чёрный экран
+            if (Bad(yaw) || Bad(pitch) || Bad(dist) || Bad(midX) || Bad(midZ) || Bad(pan.x) || Bad(pan.z) || Bad(yawV) || Bad(pitchV) || Bad(distV) || Bad(midVx) || Bad(midVz))
+            {
+                ResetView(true); yawV = pitchV = distV = midVx = midVz = 0f; panV = Vector3.zero; midX = targetX; midZ = targetZ;
+                autoD = 0f; autoV = 0f; koK = 0f; cineYaw = 0f; dbK = 0f; superK = 0f; shakeAmp = 0f;
+            }
 
             // KO: камера медленно облетает бойцов и подходит ближе
             DuelManager dm = DuelManager.Instance;
@@ -221,7 +234,7 @@ namespace BladePath
                 sep = dd.magnitude;
             }
             float want = free ? 0f : Mathf.Max(0f, 2.4f + sep * 1.35f - dist);
-            autoD = Mathf.SmoothDamp(autoD, want, ref autoV, 0.35f, Mathf.Infinity, udt);
+            autoD = Mathf.SmoothDamp(autoD, want, ref autoV, 0.35f, Mathf.Infinity, sdt);
             // супер-удар: наезд на атакующего
             float sk = 0f;
             if (!free && dm != null && dm.SuperActive && dm.SuperTime < DuelManager.SuperWindup)
