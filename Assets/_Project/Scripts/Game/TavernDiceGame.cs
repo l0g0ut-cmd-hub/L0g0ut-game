@@ -14,7 +14,8 @@ namespace BladePath
         enum St { Bet, Throw, Bump, Result }
         static St st;
         static bool betEven, win, bumped;
-        static int rounds, bet, mood;          // mood: 0 спокоен, 1 хохочет (ты проиграл), 2 в ярости (ты выиграл)
+        static int rounds, bet, mood, betIdx;
+        static readonly int[] BetMul = { 1, 2, 4, 8, 16 };   // ставка — кратная базовой (по области)          // mood: 0 спокоен, 1 хохочет (ты проиграл), 2 в ярости (ты выиграл)
         static float stAt, moodAt, shakeAt = -9f;
         static string say = ""; static float sayAt;
         static Vector2 headPos = new Vector2(480f, 160f);
@@ -96,7 +97,8 @@ namespace BladePath
         {
             TavernDiceTable t = TavernDiceTable.Ensure();
             float now = Time.unscaledTime;
-            bet = 25 + 15 * Campaign.Region;
+            int baseBet = 25 + 15 * Campaign.Region;
+            if (st == St.Bet) bet = baseBet * BetMul[Mathf.Clamp(betIdx, 0, BetMul.Length - 1)];   // во время броска ставка не меняется
 
             // тряска экрана от удара кулаком / локтем
             float sk = Mathf.Clamp01(1f - (now - shakeAt) / 0.35f);
@@ -189,7 +191,19 @@ namespace BladePath
                         bool can = ok && RoundsLeft > 0 && Profile.Gold >= bet;
                         float bw = 170f, y = 540f - 70f;
                         if (RoundsLeft <= 0) UiKit.Text(new Rect(0f, y - 34f, W, 24f), "Жулик сгребает кости: «На сегодня хватит, самурай»", 14f, dim);
-                        else if (Profile.Gold < bet) UiKit.Text(new Rect(0f, y - 34f, W, 24f), "Не хватает монет на ставку", 14f, new Color(1f, 0.6f, 0.45f));
+                        else if (Profile.Gold < bet) UiKit.Text(new Rect(0f, y - 84f, W, 24f), "Не хватает монет на ставку", 14f, new Color(1f, 0.6f, 0.45f));
+                        // выбор ставки: − / + (кратно базовой; больше, чем есть монет, не поднять)
+                        if (RoundsLeft > 0)
+                        {
+                            float sy = y - 50f, cw = 190f;
+                            Rect lab = new Rect(W * 0.5f - cw * 0.5f, sy, cw, 40f);
+                            GUI.DrawTexture(lab, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0f, new Color(0.03f, 0.025f, 0.03f, 0.85f), 0f, 10f);
+                            UiKit.Text(lab, "СТАВКА: " + bet + " МОН", 15f, gold);
+                            bool canUp = betIdx < BetMul.Length - 1 && Profile.Gold >= baseBet * BetMul[betIdx + 1];
+                            if (VisualIdentity.Button(new Rect(lab.x - 52f, sy, 46f, 40f), "−", ok && betIdx > 0)) { betIdx--; Haptics.Pulse(15); }
+                            if (VisualIdentity.Button(new Rect(lab.xMax + 6f, sy, 46f, 40f), "+", ok && canUp)) { betIdx++; Haptics.Pulse(15); }
+                            while (betIdx > 0 && Profile.Gold < baseBet * BetMul[betIdx]) betIdx--;   // монет стало меньше — ставка опускается сама
+                        }
                         for (int k = 0; k < 2; k++)
                             if (VisualIdentity.Button(new Rect(W * 0.5f - bw - 6f + k * (bw + 12f), y, bw, 48f), k == 0 ? "ЧЁТ" : "НЕЧЕТ", can, k == 0))
                             {
