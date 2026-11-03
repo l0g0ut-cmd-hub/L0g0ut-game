@@ -440,6 +440,17 @@ namespace BladePath
                     }
                 }
                 float took = Time.unscaledTime - t0;
+                // последний кадр целиком, с прозрачностью — для наложения на арт стола
+                if (t.RT != null)
+                {
+                    t.RenderNow();
+                    RenderTexture prev = RenderTexture.active; RenderTexture.active = t.RT;
+                    Texture2D last = new Texture2D(t.RT.width, t.RT.height, TextureFormat.RGBA32, false);
+                    last.ReadPixels(new Rect(0, 0, t.RT.width, t.RT.height), 0, 0); last.Apply();
+                    RenderTexture.active = prev;
+                    File.WriteAllBytes(Path.Combine(OutDir, "dice_final_" + (n + 1) + ".png"), last.EncodeToPNG());
+                    Destroy(last);
+                }
                 bool ok = t.Settled && t.D1 >= 1 && t.D1 <= 6 && t.D2 >= 1 && t.D2 <= 6 && took < 6f;
                 string s = "dice|бросок " + (n + 1) + "|выпало " + t.D1 + " и " + t.D2 + "|остановились за " + took.ToString("F2") + " с|кадров " + f;
                 if (ok) Line(s + "|PASS"); else Fail(s);
