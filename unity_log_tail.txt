@@ -1,0 +1,1903 @@
+BladePath.CombatQA/<JumpStrikes>d__56:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:354)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|jump|d1.3|t0.25|высота 0.70|контакт да (Zone_ArmRight) попаданий 1 урон 19|фантом удар 0.038 весь 0.038 м|JumpStrike|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<JumpStrikes>d__56:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:354)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|jump|d1.3|t0.35|высота 0.70|контакт да (Zone_Head) попаданий 4 урон 48|фантом удар 0.038 весь 0.038 м|JumpStrike|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<JumpStrikes>d__56:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:354)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|jump_summary|d1.3|попаданий 3 из 4
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<JumpStrikes>d__56:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:357)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|jump|d1.7|t0.05|высота 0.70|контакт НЕТ (-) попаданий 0 урон 0|фантом удар 0.038 весь 0.038 м|JumpStrike|MISS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<JumpStrikes>d__56:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:354)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|jump|d1.7|t0.15|высота 0.70|контакт да (Zone_ArmRight) попаданий 1 урон 19|фантом удар 0.038 весь 0.038 м|JumpStrike|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<JumpStrikes>d__56:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:354)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|jump|d1.7|t0.25|высота 0.70|контакт да (Zone_Head) попаданий 3 урон 48|фантом удар 0.038 весь 0.038 м|JumpStrike|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<JumpStrikes>d__56:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:354)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|jump|d1.7|t0.35|высота 0.70|контакт да (Zone_Head) попаданий 4 урон 43|фантом удар 0.038 весь 0.038 м|JumpStrike|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<JumpStrikes>d__56:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:354)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|jump_summary|d1.7|попаданий 3 из 4
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<JumpStrikes>d__56:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:357)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|chain|Slash>SlashBack>Overhead|прошло 3 из 3|контакт да (Zone_ArmRight) попаданий 7 урон 67|фантом удар 0.038 весь 0.038 м|Slash>SlashBack>Overhead|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<Chains>d__57:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:385)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|chain|Overhead>Thrust|прошло 2 из 2|контакт да (Zone_ArmLeft) попаданий 5 урон 40|фантом удар 0.038 весь 0.038 м|Overhead>Thrust|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<Chains>d__57:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:385)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|chain|Rising>Overhead|прошло 2 из 2|контакт да (Zone_ArmRight) попаданий 5 урон 38|фантом удар 0.038 весь 0.038 м|Rising>Overhead|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<Chains>d__57:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:385)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|chain|LegSweep>Slash|прошло 2 из 2|контакт да (Zone_Torso) попаданий 5 урон 25|фантом удар 0.038 весь 0.038 м|LegSweep>Slash|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<Chains>d__57:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:385)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|chain|Thrust>Rising|прошло 2 из 2|контакт да (Zone_Torso) попаданий 2 урон 23|фантом удар 0.038 весь 0.497 м|Thrust>Rising|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<Chains>d__57:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:385)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|enemy|0|UndeadModel|Overhead|контакт да (Zone_ArmLeft) попаданий 3 урон 14|фантом удар 0.082 весь 0.082 м|Overhead|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<EnemyAttacks>d__58:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:414)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|enemy|0|UndeadModel|Slash|контакт да (Zone_ArmRight) попаданий 3 урон 10|фантом удар 0.082 весь 0.082 м|Slash|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<EnemyAttacks>d__58:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:414)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|place|дистанция 2.00 вместо 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<Place>d__44:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:189)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|enemy|0|UndeadModel|Thrust|удар не начался|FAIL
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Fail (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:110)
+BladePath.CombatQA/<EnemyAttacks>d__58:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:405)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|enemy|1|EnemyRoninModel|Overhead|контакт да (Zone_ArmLeft) попаданий 3 урон 14|фантом удар 0.080 весь 0.080 м|Overhead|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<EnemyAttacks>d__58:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:414)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|enemy|1|EnemyRoninModel|Slash|контакт да (Zone_ArmRight) попаданий 2 урон 10|фантом удар 0.080 весь 0.080 м|Slash|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<EnemyAttacks>d__58:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:414)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|enemy|1|EnemyRoninModel|Thrust|контакт да (Zone_Torso) попаданий 1 урон 16|фантом удар 0.062 весь 0.062 м|Thrust|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<EnemyAttacks>d__58:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:414)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|enemy|2|EnemyOniModel|Overhead|контакт да (Zone_ArmLeft) попаданий 3 урон 14|фантом удар 0.039 весь 0.039 м|Overhead|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<EnemyAttacks>d__58:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:414)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|enemy|2|EnemyOniModel|Slash|контакт да (Zone_ArmRight) попаданий 3 урон 10|фантом удар 0.039 весь 0.039 м|Slash|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<EnemyAttacks>d__58:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:414)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|enemy|2|EnemyOniModel|Thrust|контакт да (Zone_Torso) попаданий 1 урон 16|фантом удар 0.000 весь 0.000 м|Thrust|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<EnemyAttacks>d__58:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:414)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace_start|EnemyShogunModel|Overhead|дистанция 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<EnemyAttacks>d__58:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:409)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.00|окно нет|остриё вбок 0.99 вперёд -0.04 вверх 1.47 м над землёй 1.47|v 0.0|до врага 1.012 (Zone_Torso)|боец y 0.00|кисть R 0.23 1.14 0.22 плечо R 0.17 1.34 0.02|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.05|окно нет|остриё вбок 0.94 вперёд -0.45 вверх 1.23 м над землёй 1.23|v 28.7|до врага 1.166 (Zone_Torso)|боец y 0.00|кисть R 0.29 1.17 0.13 плечо R 0.16 1.34 -0.03|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.09|окно нет|остриё вбок 0.81 вперёд -0.64 вверх 1.02 м над землёй 1.02|v 18.5|до врага 1.275 (Zone_Torso)|боец y 0.00|кисть R 0.31 1.20 0.05 плечо R 0.13 1.34 -0.06|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.14|окно нет|остриё вбок 0.69 вперёд -0.70 вверх 0.88 м над землёй 0.88|v 11.7|до врага 1.342 (Zone_Torso)|боец y 0.00|кисть R 0.31 1.23 0.00 плечо R 0.11 1.35 -0.08|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.19|окно нет|остриё вбок 0.60 вперёд -0.71 вверх 0.80 м над землёй 0.80|v 7.2|до врага 1.375 (Zone_Torso)|боец y 0.00|кисть R 0.30 1.26 -0.03 плечо R 0.09 1.35 -0.07|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.23|окно нет|остриё вбок 0.55 вперёд -0.68 вверх 0.76 м над землёй 0.76|v 4.4|до врага 1.380 (Zone_Torso)|боец y 0.00|кисть R 0.28 1.29 -0.04 плечо R 0.07 1.35 -0.06|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.28|окно нет|остриё вбок 0.52 вперёд -0.65 вверх 0.74 м над землёй 0.74|v 3.1|до врага 1.368 (Zone_Torso)|боец y 0.00|кисть R 0.27 1.30 -0.03 плечо R 0.06 1.35 -0.03|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.32|окно нет|остриё вбок 0.50 вперёд -0.62 вверх 0.74 м над землёй 0.74|v 1.8|до врага 1.354 (Zone_Torso)|боец y 0.00|кисть R 0.26 1.32 -0.02 плечо R 0.05 1.34 -0.01|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.37|окно нет|остриё вбок 0.50 вперёд -0.61 вверх 0.76 м над землёй 0.76|v 1.5|до врага 1.348 (Zone_Torso)|боец y 0.00|кисть R 0.25 1.34 -0.01 плечо R 0.05 1.34 0.00|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.42|окно нет|остриё вбок 0.51 вперёд -0.61 вверх 0.80 м над землёй 0.80|v 2.3|до врага 1.342 (Zone_Torso)|боец y 0.00|кисть R 0.24 1.37 0.00 плечо R 0.05 1.34 0.01|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.46|окно нет|остриё вбок 0.52 вперёд -0.61 вверх 0.85 м над землёй 0.85|v 3.0|до врага 1.334 (Zone_Torso)|боец y 0.00|кисть R 0.24 1.39 0.01 плечо R 0.04 1.35 0.01|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.51|окно нет|остриё вбок 0.53 вперёд -0.62 вверх 0.90 м над землёй 0.90|v 3.4|до врага 1.323 (Zone_Torso)|боец y 0.00|кисть R 0.23 1.42 0.02 плечо R 0.05 1.35 0.02|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.56|окно нет|остриё вбок 0.55 вперёд -0.61 вверх 0.96 м над землёй 0.96|v 3.7|до врага 1.306 (Zone_Torso)|боец y 0.00|кисть R 0.23 1.44 0.04 плечо R 0.05 1.35 0.03|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.60|окно нет|остриё вбок 0.56 вперёд -0.61 вверх 1.02 м над землёй 1.02|v 3.6|до врага 1.284 (Zone_Torso)|боец y 0.00|кисть R 0.23 1.46 0.07 плечо R 0.06 1.35 0.04|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.65|окно нет|остриё вбок 0.58 вперёд -0.59 вверх 1.07 м над землёй 1.07|v 3.6|до врага 1.257 (Zone_Torso)|боец y 0.00|кисть R 0.23 1.47 0.10 плечо R 0.06 1.35 0.04|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.69|окно нет|остриё вбок 0.60 вперёд -0.57 вверх 1.13 м над землёй 1.13|v 3.7|до врага 1.225 (Zone_Torso)|боец y 0.00|кисть R 0.22 1.48 0.13 плечо R 0.07 1.35 0.06|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.74|окно нет|остриё вбок 0.62 вперёд -0.53 вверх 1.18 м над землёй 1.18|v 4.0|до врага 1.186 (Zone_Torso)|боец y 0.00|кисть R 0.22 1.48 0.17 плечо R 0.08 1.34 0.07|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.79|окно нет|остриё вбок 0.65 вперёд -0.49 вверх 1.22 м над землёй 1.22|v 4.3|до врага 1.141 (Zone_Torso)|боец y 0.00|кисть R 0.21 1.49 0.22 плечо R 0.09 1.33 0.09|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.83|окно нет|остриё вбок 0.68 вперёд -0.43 вверх 1.26 м над землёй 1.26|v 4.6|до врага 1.093 (Zone_Torso)|боец y 0.00|кисть R 0.20 1.48 0.27 плечо R 0.09 1.33 0.11|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.88|окно нет|остриё вбок 0.72 вперёд -0.35 вверх 1.30 м над землёй 1.30|v 5.4|до врага 1.039 (Zone_Torso)|боец y 0.00|кисть R 0.19 1.48 0.32 плечо R 0.10 1.32 0.13|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.93|окно нет|остриё вбок 0.76 вперёд -0.26 вверх 1.33 м над землёй 1.33|v 6.2|до врага 0.981 (Zone_Torso)|боец y 0.00|кисть R 0.17 1.46 0.37 плечо R 0.10 1.31 0.15|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.97|окно нет|остриё вбок 0.80 вперёд -0.16 вверх 1.35 м над землёй 1.35|v 6.9|до врага 0.919 (Zone_Torso)|боец y 0.00|кисть R 0.15 1.45 0.42 плечо R 0.10 1.30 0.18|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.05|окно ДА|остриё вбок 0.88 вперёд 0.19 вверх 1.37 м над землёй 1.37|v 21.6|до врага 0.744 (Zone_Torso)|боец y 0.00|кисть R 0.08 1.39 0.54 плечо R 0.09 1.29 0.25|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.18|окно ДА|остриё вбок 0.89 вперёд 0.48 вверх 1.34 м над землёй 1.34|v 17.7|до врага 0.626 (Zone_Torso)|боец y 0.00|кисть R 0.02 1.32 0.61 плечо R 0.07 1.28 0.29|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.31|окно ДА|остриё вбок 0.84 вперёд 0.75 вверх 1.27 м над землёй 1.27|v 16.4|до врага 0.543 (Zone_Torso)|боец y 0.00|кисть R -0.03 1.25 0.64 плечо R 0.05 1.26 0.32|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.44|окно ДА|остриё вбок 0.74 вперёд 0.97 вверх 1.18 м над землёй 1.18|v 15.6|до врага 0.463 (Zone_Torso)|боец y 0.00|кисть R -0.07 1.16 0.65 плечо R 0.03 1.24 0.35|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.56|окно ДА|остриё вбок 0.62 вперёд 1.13 вверх 1.04 м над землёй 1.04|v 15.0|до врага 0.363 (Zone_Torso)|боец y 0.00|кисть R -0.11 1.08 0.65 плечо R 0.01 1.23 0.37|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.69|окно ДА|остриё вбок 0.48 вперёд 1.22 вверх 0.86 м над землёй 0.86|v 14.3|до врага 0.243 (Zone_ArmLeft)|боец y 0.00|кисть R -0.15 1.01 0.63 плечо R -0.01 1.21 0.39|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.82|окно ДА|остриё вбок 0.36 вперёд 1.22 вверх 0.69 м над землёй 0.69|v 12.5|до врага 0.224 (Zone_LegLeft)|боец y 0.00|кисть R -0.19 0.95 0.60 плечо R -0.03 1.19 0.41|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.95|окно ДА|остриё вбок 0.28 вперёд 1.18 вверх 0.54 м над землёй 0.54|v 10.5|до врага 0.195 (Zone_LegLeft)|боец y 0.00|кисть R -0.22 0.90 0.56 плечо R -0.06 1.17 0.43|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.07|окно ДА|остриё вбок 0.26 вперёд 1.16 вверх 0.50 м над землёй 0.50|v 2.9|до врага 0.195 (Zone_LegLeft)|боец y 0.00|кисть R -0.23 0.89 0.55 плечо R -0.06 1.16 0.43|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.18|окно ДА|остриё вбок 0.22 вперёд 1.14 вверх 0.46 м над землёй 0.46|v 3.4|до врага 0.199 (Zone_LegLeft)|боец y 0.00|кисть R -0.25 0.88 0.53 плечо R -0.07 1.15 0.44|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.29|окно ДА|остриё вбок 0.19 вперёд 1.11 вверх 0.42 м над землёй 0.42|v 3.8|до врага 0.212 (Zone_LegLeft)|боец y 0.00|кисть R -0.26 0.86 0.51 плечо R -0.09 1.15 0.44|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.40|окно ДА|остриё вбок 0.14 вперёд 1.08 вверх 0.38 м над землёй 0.38|v 3.8|до врага 0.232 (Zone_LegLeft)|боец y 0.00|кисть R -0.27 0.85 0.48 плечо R -0.10 1.14 0.44|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.51|окно ДА|остриё вбок 0.09 вперёд 1.06 вверх 0.35 м над землёй 0.35|v 3.8|до врага 0.256 (Zone_LegLeft)|боец y 0.00|кисть R -0.28 0.84 0.45 плечо R -0.11 1.13 0.45|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.62|окно ДА|остриё вбок 0.04 вперёд 1.03 вверх 0.32 м над землёй 0.32|v 3.8|до врага 0.287 (Zone_LegLeft)|боец y 0.00|кисть R -0.30 0.84 0.42 плечо R -0.13 1.12 0.45|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.73|окно ДА|остриё вбок -0.01 вперёд 1.01 вверх 0.30 м над землёй 0.30|v 3.4|до врага 0.317 (Zone_LegRight)|боец y 0.00|кисть R -0.30 0.84 0.39 плечо R -0.14 1.12 0.45|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.84|окно ДА|остриё вбок -0.05 вперёд 0.99 вверх 0.29 м над землёй 0.29|v 2.9|до врага 0.327 (Zone_LegRight)|боец y 0.00|кисть R -0.31 0.84 0.36 плечо R -0.15 1.11 0.45|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.96|окно ДА|остриё вбок -0.09 вперёд 0.97 вверх 0.29 м над землёй 0.29|v 2.5|до врага 0.341 (Zone_LegRight)|боец y 0.00|кисть R -0.31 0.84 0.33 плечо R -0.15 1.11 0.44|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.02|окно нет|остриё вбок -0.11 вперёд 0.96 вверх 0.30 м над землёй 0.30|v 1.8|до врага 0.352 (Zone_LegRight)|боец y 0.00|кисть R -0.31 0.84 0.31 плечо R -0.16 1.11 0.44|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.06|окно нет|остриё вбок -0.13 вперёд 0.96 вверх 0.31 м над землёй 0.31|v 1.4|до врага 0.357 (Zone_LegRight)|боец y 0.00|кисть R -0.31 0.85 0.29 плечо R -0.16 1.11 0.44|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.09|окно нет|остриё вбок -0.13 вперёд 0.96 вверх 0.34 м над землёй 0.34|v 1.6|до врага 0.352 (Zone_LegRight)|боец y 0.00|кисть R -0.31 0.85 0.28 плечо R -0.15 1.11 0.44|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.13|окно нет|остриё вбок -0.11 вперёд 0.98 вверх 0.38 м над землёй 0.38|v 2.4|до врага 0.338 (Zone_LegRight)|боец y 0.00|кисть R -0.31 0.86 0.27 плечо R -0.15 1.11 0.43|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.17|окно нет|остриё вбок -0.09 вперёд 1.00 вверх 0.42 м над землёй 0.42|v 3.5|до врага 0.314 (Zone_LegRight)|боец y 0.00|кисть R -0.30 0.86 0.28 плечо R -0.14 1.12 0.43|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.20|окно нет|остриё вбок -0.06 вперёд 1.03 вверх 0.48 м над землёй 0.48|v 4.5|до врага 0.286 (Zone_LegRight)|боец y 0.00|кисть R -0.29 0.87 0.29 плечо R -0.13 1.13 0.43|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.24|окно нет|остриё вбок -0.02 вперёд 1.07 вверх 0.56 м над землёй 0.56|v 5.6|до врага 0.257 (Zone_LegRight)|боец y 0.00|кисть R -0.28 0.88 0.30 плечо R -0.11 1.14 0.43|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.28|окно нет|остриё вбок 0.03 вперёд 1.11 вверх 0.65 м над землёй 0.65|v 6.6|до врага 0.220 (Zone_LegLeft)|боец y 0.00|кисть R -0.27 0.90 0.32 плечо R -0.09 1.16 0.42|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.31|окно нет|остриё вбок 0.08 вперёд 1.14 вверх 0.76 м над землёй 0.76|v 7.6|до врага 0.154 (Zone_Torso)|боец y 0.00|кисть R -0.25 0.92 0.35 плечо R -0.07 1.18 0.41|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.35|окно нет|остриё вбок 0.14 вперёд 1.16 вверх 0.89 м над землёй 0.89|v 8.5|до врага 0.107 (Zone_Torso)|боец y 0.00|кисть R -0.24 0.95 0.37 плечо R -0.05 1.20 0.41|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.38|окно нет|остриё вбок 0.20 вперёд 1.16 вверх 1.02 м над землёй 1.02|v 8.8|до врага 0.135 (Zone_Torso)|боец y 0.00|кисть R -0.22 0.98 0.39 плечо R -0.03 1.22 0.39|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.42|окно нет|остриё вбок 0.27 вперёд 1.14 вверх 1.16 м над землёй 1.16|v 9.0|до врага 0.191 (Zone_Torso)|боец y 0.00|кисть R -0.20 1.01 0.41 плечо R -0.01 1.24 0.38|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.46|окно нет|остриё вбок 0.33 вперёд 1.11 вверх 1.28 м над землёй 1.28|v 8.6|до врага 0.245 (Zone_ArmLeft)|боец y 0.00|кисть R -0.17 1.05 0.43 плечо R 0.01 1.25 0.36|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.49|окно нет|остриё вбок 0.38 вперёд 1.06 вверх 1.40 м над землёй 1.40|v 8.0|до врага 0.312 (Zone_ArmLeft)|боец y 0.00|кисть R -0.15 1.08 0.44 плечо R 0.02 1.27 0.35|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.53|окно нет|остриё вбок 0.43 вперёд 1.01 вверх 1.49 м над землёй 1.49|v 7.0|до врага 0.399 (Zone_ArmLeft)|боец y 0.00|кисть R -0.12 1.12 0.45 плечо R 0.04 1.29 0.33|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.57|окно нет|остриё вбок 0.48 вперёд 0.96 вверх 1.56 м над землёй 1.56|v 6.1|до врага 0.488 (Zone_ArmLeft)|боец y 0.00|кисть R -0.10 1.15 0.45 плечо R 0.05 1.30 0.31|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.60|окно нет|остриё вбок 0.51 вперёд 0.91 вверх 1.62 м над землёй 1.62|v 5.1|до врага 0.561 (Zone_ArmLeft)|боец y 0.00|кисть R -0.07 1.17 0.45 плечо R 0.07 1.31 0.29|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.64|окно нет|остриё вбок 0.55 вперёд 0.87 вверх 1.66 м над землёй 1.66|v 4.2|до врага 0.612 (Zone_Torso)|боец y 0.00|кисть R -0.05 1.18 0.44 плечо R 0.08 1.32 0.28|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.67|окно нет|остриё вбок 0.59 вперёд 0.82 вверх 1.68 м над землёй 1.68|v 3.6|до врага 0.651 (Zone_Torso)|боец y 0.00|кисть R -0.02 1.19 0.43 плечо R 0.09 1.33 0.26|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.71|окно нет|остриё вбок 0.63 вперёд 0.79 вверх 1.69 м над землёй 1.69|v 3.4|до врага 0.681 (Zone_Torso)|боец y 0.00|кисть R 0.00 1.19 0.42 плечо R 0.11 1.33 0.24|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.75|окно нет|остриё вбок 0.66 вперёд 0.75 вверх 1.68 м над землёй 1.68|v 3.0|до врага 0.707 (Zone_Torso)|боец y 0.00|кисть R 0.03 1.19 0.41 плечо R 0.13 1.34 0.21|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.78|окно нет|остриё вбок 0.70 вперёд 0.72 вверх 1.66 м над землёй 1.66|v 2.8|до врага 0.731 (Zone_Torso)|боец y 0.00|кисть R 0.05 1.18 0.39 плечо R 0.14 1.34 0.19|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.82|окно нет|остриё вбок 0.72 вперёд 0.70 вверх 1.64 м над землёй 1.64|v 2.4|до врага 0.753 (Zone_Torso)|боец y 0.00|кисть R 0.07 1.17 0.37 плечо R 0.16 1.34 0.18|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.86|окно нет|остриё вбок 0.75 вперёд 0.68 вверх 1.63 м над землёй 1.63|v 2.1|до врага 0.772 (Zone_Torso)|боец y 0.00|кисть R 0.08 1.15 0.36 плечо R 0.17 1.34 0.16|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.89|окно нет|остриё вбок 0.76 вперёд 0.66 вверх 1.61 м над землёй 1.61|v 1.7|до врага 0.789 (Zone_Torso)|боец y 0.00|кисть R 0.10 1.14 0.34 плечо R 0.17 1.34 0.14|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.93|окно нет|остриё вбок 0.77 вперёд 0.65 вверх 1.60 м над землёй 1.60|v 1.3|до врага 0.802 (Zone_Torso)|боец y 0.00|кисть R 0.11 1.13 0.33 плечо R 0.18 1.34 0.13|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.96|окно нет|остриё вбок 0.78 вперёд 0.64 вверх 1.59 м над землёй 1.59|v 1.0|до врага 0.813 (Zone_Torso)|боец y 0.00|кисть R 0.11 1.13 0.32 плечо R 0.18 1.34 0.12|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|enemy|3|EnemyShogunModel|Overhead|контакт НЕТ (-) попаданий 0 урон 0|фантом удар 0.032 весь 0.032 м|Overhead|FAIL
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Fail (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:110)
+BladePath.CombatQA/<EnemyAttacks>d__58:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:414)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace_start|EnemyShogunModel|Slash|дистанция 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<EnemyAttacks>d__58:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:409)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.00|окно нет|остриё вбок 0.78 вперёд 0.62 вверх 1.57 м над землёй 1.57|v 0.0|до врага 0.831 (Zone_Torso)|боец y 0.00|кисть R 0.10 1.12 0.30 плечо R 0.17 1.35 0.10|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.05|окно нет|остриё вбок 0.78 вперёд 0.62 вверх 1.56 м над землёй 1.56|v 0.7|до врага 0.824 (Zone_Torso)|боец y 0.00|кисть R 0.09 1.12 0.30 плечо R 0.17 1.35 0.11|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.09|окно нет|остриё вбок 0.77 вперёд 0.64 вверх 1.53 м над землёй 1.53|v 1.6|до врага 0.809 (Zone_Torso)|боец y 0.00|кисть R 0.08 1.12 0.31 плечо R 0.16 1.34 0.11|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.14|окно нет|остриё вбок 0.76 вперёд 0.67 вверх 1.50 м над землёй 1.50|v 2.8|до врага 0.782 (Zone_Torso)|боец y 0.00|кисть R 0.06 1.12 0.33 плечо R 0.15 1.34 0.13|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.19|окно нет|остриё вбок 0.74 вперёд 0.73 вверх 1.47 м над землёй 1.47|v 4.2|до врага 0.740 (Zone_Torso)|боец y 0.00|кисть R 0.03 1.13 0.35 плечо R 0.14 1.34 0.15|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.23|окно нет|остриё вбок 0.69 вперёд 0.81 вверх 1.45 м над землёй 1.45|v 5.9|до врага 0.669 (Zone_Torso)|боец y 0.00|кисть R -0.01 1.15 0.38 плечо R 0.13 1.34 0.18|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.28|окно нет|остриё вбок 0.63 вперёд 0.91 вверх 1.44 м над землёй 1.44|v 7.2|до врага 0.566 (Zone_ArmLeft)|боец y 0.00|кисть R -0.05 1.18 0.43 плечо R 0.11 1.34 0.23|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.32|окно нет|остриё вбок 0.55 вперёд 1.01 вверх 1.48 м над землёй 1.48|v 7.9|до врага 0.458 (Zone_ArmLeft)|боец y 0.00|кисть R -0.09 1.22 0.47 плечо R 0.09 1.34 0.28|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.37|окно нет|остриё вбок 0.45 вперёд 1.07 вверх 1.58 м над землёй 1.58|v 9.1|до врага 0.406 (Zone_ArmLeft)|боец y 0.00|кисть R -0.14 1.27 0.51 плечо R 0.07 1.35 0.31|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.42|окно нет|остриё вбок 0.36 вперёд 1.09 вверх 1.70 м над землёй 1.70|v 9.5|до врага 0.386 (Zone_Head)|боец y 0.00|кисть R -0.19 1.32 0.52 плечо R 0.05 1.36 0.35|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.46|окно нет|остриё вбок 0.26 вперёд 1.08 вверх 1.83 м над землёй 1.83|v 9.6|до врага 0.401 (Zone_Head)|боец y 0.00|кисть R -0.23 1.37 0.52 плечо R 0.02 1.37 0.37|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.51|окно нет|остриё вбок 0.17 вперёд 1.03 вверх 1.95 м над землёй 1.95|v 9.4|до врага 0.471 (Zone_Head)|боец y 0.00|кисть R -0.28 1.42 0.51 плечо R -0.01 1.38 0.40|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.56|окно нет|остриё вбок 0.09 вперёд 0.98 вверх 2.04 м над землёй 2.04|v 8.1|до врага 0.556 (Zone_Head)|боец y 0.00|кисть R -0.32 1.45 0.49 плечо R -0.05 1.38 0.43|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.60|окно нет|остриё вбок 0.02 вперёд 0.91 вверх 2.10 м над землёй 2.10|v 6.9|до врага 0.636 (Zone_Head)|боец y 0.00|кисть R -0.36 1.46 0.46 плечо R -0.10 1.37 0.46|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.65|окно нет|остриё вбок -0.05 вперёд 0.82 вверх 2.13 м над землёй 2.13|v 6.9|до врага 0.721 (Zone_Head)|боец y 0.00|кисть R -0.40 1.45 0.40 плечо R -0.15 1.35 0.45|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.69|окно нет|остриё вбок -0.10 вперёд 0.73 вверх 2.12 м над землёй 2.12|v 6.4|до врага 0.796 (Zone_Head)|боец y 0.00|кисть R -0.44 1.42 0.33 плечо R -0.20 1.33 0.44|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.74|окно нет|остриё вбок -0.12 вперёд 0.62 вверх 2.09 м над землёй 2.09|v 6.5|до врага 0.860 (Zone_Head)|боец y 0.00|кисть R -0.47 1.38 0.27 плечо R -0.25 1.29 0.42|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.79|окно нет|остриё вбок -0.11 вперёд 0.52 вверх 2.04 м над землёй 2.04|v 7.1|до врага 0.919 (Zone_Head)|боец y 0.00|кисть R -0.50 1.32 0.21 плечо R -0.29 1.25 0.40|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.83|окно нет|остриё вбок -0.09 вперёд 0.40 вверх 1.98 м над землёй 1.98|v 8.0|до врага 0.991 (Zone_Head)|боец y 0.00|кисть R -0.52 1.25 0.18 плечо R -0.32 1.20 0.38|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.88|окно нет|остриё вбок -0.11 вперёд 0.27 вверх 1.93 м над землёй 1.93|v 8.5|до врага 1.094 (Zone_Head)|боец y 0.00|кисть R -0.54 1.18 0.17 плечо R -0.33 1.16 0.37|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.93|окно нет|остриё вбок -0.25 вперёд 0.13 вверх 1.92 м над землёй 1.92|v 11.8|до врага 1.174 (Zone_Torso)|боец y 0.00|кисть R -0.56 1.11 0.20 плечо R -0.34 1.13 0.37|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.97|окно нет|остриё вбок -0.53 вперёд 0.06 вверх 1.89 м над землёй 1.89|v 17.8|до врага 1.160 (Zone_Torso)|боец y 0.00|кисть R -0.57 1.04 0.26 плечо R -0.33 1.11 0.38|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.05|окно ДА|остриё вбок -1.18 вперёд 0.54 вверх 1.51 м над землёй 1.51|v 53.3|до врага 0.930 (Zone_Torso)|боец y 0.00|кисть R -0.52 0.94 0.46 плечо R -0.29 1.10 0.40|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.17|окно ДА|остриё вбок -1.09 вперёд 0.96 вверх 1.33 м над землёй 1.33|v 27.8|до врага 0.765 (Zone_ArmRight)|боец y 0.00|кисть R -0.45 0.91 0.54 плечо R -0.27 1.10 0.41|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.29|окно ДА|остриё вбок -0.85 вперёд 1.21 вверх 1.33 м над землёй 1.33|v 20.5|до врага 0.541 (Zone_ArmRight)|боец y 0.00|кисть R -0.40 0.90 0.59 плечо R -0.25 1.10 0.42|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.40|окно ДА|остриё вбок -0.56 вперёд 1.32 вверх 1.40 м над землёй 1.40|v 19.3|до врага 0.271 (Zone_ArmRight)|боец y 0.00|кисть R -0.35 0.90 0.63 плечо R -0.22 1.10 0.43|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.52|окно ДА|остриё вбок -0.24 вперёд 1.27 вверх 1.52 м над землёй 1.52|v 20.7|до врага 0.160 (Zone_ArmRight)|боец y 0.00|кисть R -0.29 0.91 0.65 плечо R -0.20 1.11 0.43|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.64|окно ДА|остриё вбок 0.05 вперёд 1.07 вверх 1.65 м над землёй 1.65|v 22.3|до врага 0.244 (Zone_Head)|боец y 0.00|кисть R -0.23 0.94 0.65 плечо R -0.18 1.12 0.41|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.76|окно ДА|остриё вбок 0.26 вперёд 0.77 вверх 1.72 м над землёй 1.72|v 22.4|до врага 0.517 (Zone_Torso)|боец y 0.00|кисть R -0.16 0.96 0.63 плечо R -0.16 1.14 0.40|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.88|окно ДА|остриё вбок 0.38 вперёд 0.42 вверх 1.70 м над землёй 1.70|v 21.9|до врага 0.608 (Zone_Torso)|боец y 0.00|кисть R -0.10 0.99 0.60 плечо R -0.14 1.15 0.39|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.00|окно ДА|остриё вбок 0.40 вперёд 0.30 вверх 1.66 м над землёй 1.66|v 8.1|до врага 0.632 (Zone_Torso)|боец y 0.00|кисть R -0.08 1.00 0.59 плечо R -0.13 1.16 0.38|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.12|окно ДА|остриё вбок 0.41 вперёд 0.16 вверх 1.62 м над землёй 1.62|v 8.7|до врага 0.660 (Zone_Torso)|боец y 0.00|кисть R -0.06 1.01 0.58 плечо R -0.12 1.17 0.37|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.24|окно ДА|остриё вбок 0.41 вперёд 0.02 вверх 1.55 м над землёй 1.55|v 9.1|до врага 0.693 (Zone_Torso)|боец y 0.00|кисть R -0.03 1.02 0.56 плечо R -0.11 1.18 0.36|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.36|окно ДА|остриё вбок 0.39 вперёд -0.11 вверх 1.48 м над землёй 1.48|v 9.1|до врага 0.728 (Zone_Torso)|боец y 0.00|кисть R 0.00 1.03 0.54 плечо R -0.10 1.19 0.35|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.48|окно ДА|остриё вбок 0.37 вперёд -0.21 вверх 1.39 м над землёй 1.39|v 8.4|до врага 0.762 (Zone_Torso)|боец y 0.00|кисть R 0.03 1.04 0.51 плечо R -0.09 1.20 0.34|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.60|окно ДА|остриё вбок 0.33 вперёд -0.30 вверх 1.30 м над землёй 1.30|v 7.9|до врага 0.796 (Zone_Torso)|боец y 0.00|кисть R 0.06 1.05 0.49 плечо R -0.08 1.21 0.33|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.71|окно ДА|остриё вбок 0.30 вперёд -0.37 вверх 1.21 м над землёй 1.21|v 7.2|до врага 0.829 (Zone_Torso)|боец y 0.00|кисть R 0.08 1.06 0.46 плечо R -0.07 1.22 0.32|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.83|окно ДА|остриё вбок 0.27 вперёд -0.42 вверх 1.12 м над землёй 1.12|v 6.2|до врага 0.860 (Zone_Torso)|боец y 0.00|кисть R 0.11 1.07 0.44 плечо R -0.06 1.24 0.31|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.95|окно ДА|остриё вбок 0.25 вперёд -0.45 вверх 1.03 м над землёй 1.03|v 5.4|до врага 0.890 (Zone_Torso)|боец y 0.00|кисть R 0.13 1.08 0.41 плечо R -0.05 1.25 0.29|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.02|окно нет|остриё вбок 0.25 вперёд -0.48 вверх 0.96 м над землёй 0.96|v 4.9|до врага 0.927 (Zone_Torso)|боец y 0.00|кисть R 0.15 1.10 0.38 плечо R -0.03 1.27 0.27|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.06|окно нет|остриё вбок 0.26 вперёд -0.51 вверх 0.89 м над землёй 0.89|v 4.5|до врага 0.981 (Zone_Torso)|боец y 0.00|кисть R 0.18 1.12 0.33 плечо R -0.02 1.28 0.24|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.10|окно нет|остриё вбок 0.29 вперёд -0.53 вверх 0.85 м над землёй 0.85|v 3.7|до врага 1.035 (Zone_Torso)|боец y 0.00|кисть R 0.20 1.15 0.28 плечо R 0.00 1.30 0.20|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.14|окно нет|остриё вбок 0.35 вперёд -0.56 вверх 0.83 м над землёй 0.83|v 3.6|до врага 1.085 (Zone_Torso)|боец y 0.00|кисть R 0.22 1.18 0.24 плечо R 0.02 1.32 0.17|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.17|окно нет|остриё вбок 0.42 вперёд -0.58 вверх 0.86 м над землёй 0.86|v 4.7|до врага 1.128 (Zone_Torso)|боец y 0.00|кисть R 0.24 1.21 0.20 плечо R 0.04 1.34 0.14|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.21|окно нет|остриё вбок 0.50 вперёд -0.61 вверх 0.91 м над землёй 0.91|v 6.3|до врага 1.165 (Zone_Torso)|боец y 0.00|кисть R 0.26 1.24 0.16 плечо R 0.06 1.35 0.11|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.25|окно нет|остриё вбок 0.59 вперёд -0.63 вверх 1.01 м над землёй 1.01|v 8.0|до врага 1.193 (Zone_Torso)|боец y 0.00|кисть R 0.27 1.27 0.14 плечо R 0.08 1.36 0.09|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.29|окно нет|остриё вбок 0.68 вперёд -0.64 вверх 1.14 м над землёй 1.14|v 9.3|до врага 1.212 (Zone_Torso)|боец y 0.00|кисть R 0.28 1.29 0.12 плечо R 0.10 1.36 0.07|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.33|окно нет|остриё вбок 0.75 вперёд -0.64 вверх 1.29 м над землёй 1.29|v 10.0|до врага 1.220 (Zone_Torso)|боец y 0.00|кисть R 0.29 1.31 0.11 плечо R 0.12 1.36 0.06|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.36|окно нет|остриё вбок 0.79 вперёд -0.60 вверх 1.45 м над землёй 1.45|v 10.1|до врага 1.217 (Zone_Torso)|боец y 0.00|кисть R 0.30 1.33 0.11 плечо R 0.14 1.37 0.05|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.40|окно нет|остриё вбок 0.82 вперёд -0.54 вверх 1.59 м над землёй 1.59|v 9.7|до врага 1.202 (Zone_Torso)|боец y 0.00|кисть R 0.30 1.34 0.11 плечо R 0.15 1.37 0.05|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.44|окно нет|остриё вбок 0.84 вперёд -0.45 вверх 1.71 м над землёй 1.71|v 9.1|до врага 1.177 (Zone_Torso)|боец y 0.00|кисть R 0.30 1.34 0.13 плечо R 0.16 1.37 0.05|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.48|окно нет|остриё вбок 0.86 вперёд -0.34 вверх 1.80 м над землёй 1.80|v 8.4|до врага 1.145 (Zone_Torso)|боец y 0.00|кисть R 0.30 1.34 0.15 плечо R 0.17 1.37 0.05|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.52|окно нет|остриё вбок 0.87 вперёд -0.22 вверх 1.85 м над землёй 1.85|v 7.7|до врага 1.109 (Zone_Torso)|боец y 0.00|кисть R 0.29 1.33 0.17 плечо R 0.18 1.37 0.05|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.55|окно нет|остриё вбок 0.87 вперёд -0.11 вверх 1.88 м над землёй 1.88|v 7.0|до врага 1.073 (Zone_Torso)|боец y 0.00|кисть R 0.27 1.32 0.19 плечо R 0.19 1.37 0.05|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.59|окно нет|остриё вбок 0.88 вперёд 0.00 вверх 1.88 м над землёй 1.88|v 6.4|до врага 1.039 (Zone_Torso)|боец y 0.00|кисть R 0.26 1.30 0.21 плечо R 0.20 1.37 0.05|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.63|окно нет|остриё вбок 0.87 вперёд 0.10 вверх 1.87 м над землёй 1.87|v 5.9|до врага 1.010 (Zone_Torso)|боец y 0.00|кисть R 0.24 1.28 0.22 плечо R 0.20 1.37 0.05|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.67|окно нет|остриё вбок 0.87 вперёд 0.19 вверх 1.84 м над землёй 1.84|v 5.6|до врага 0.980 (Zone_Torso)|боец y 0.00|кисть R 0.23 1.25 0.24 плечо R 0.21 1.36 0.06|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.70|окно нет|остриё вбок 0.86 вперёд 0.27 вверх 1.81 м над землёй 1.81|v 5.3|до врага 0.953 (Zone_Torso)|боец y 0.00|кисть R 0.21 1.23 0.25 плечо R 0.21 1.36 0.06|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.74|окно нет|остриё вбок 0.86 вперёд 0.34 вверх 1.77 м над землёй 1.77|v 4.9|до врага 0.929 (Zone_Torso)|боец y 0.00|кисть R 0.20 1.21 0.26 плечо R 0.21 1.36 0.07|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.78|окно нет|остриё вбок 0.85 вперёд 0.41 вверх 1.74 м над землёй 1.74|v 4.5|до врага 0.908 (Zone_Torso)|боец y 0.00|кисть R 0.18 1.19 0.28 плечо R 0.21 1.35 0.08|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.82|окно нет|остриё вбок 0.84 вперёд 0.46 вверх 1.70 м над землёй 1.70|v 4.0|до врага 0.892 (Zone_Torso)|боец y 0.00|кисть R 0.17 1.17 0.28 плечо R 0.21 1.35 0.08|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.86|окно нет|остриё вбок 0.83 вперёд 0.51 вверх 1.67 м над землёй 1.67|v 3.4|до врага 0.879 (Zone_Torso)|боец y 0.00|кисть R 0.16 1.15 0.29 плечо R 0.21 1.35 0.09|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.89|окно нет|остриё вбок 0.82 вперёд 0.54 вверх 1.64 м над землёй 1.64|v 2.6|до врага 0.868 (Zone_Torso)|боец y 0.00|кисть R 0.15 1.14 0.30 плечо R 0.20 1.35 0.10|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.93|окно нет|остриё вбок 0.82 вперёд 0.57 вверх 1.62 м над землёй 1.62|v 2.0|до врага 0.858 (Zone_Torso)|боец y 0.00|кисть R 0.15 1.13 0.30 плечо R 0.20 1.34 0.10|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.97|окно нет|остриё вбок 0.82 вперёд 0.58 вверх 1.60 м над землёй 1.60|v 1.4|до врага 0.853 (Zone_Torso)|боец y 0.00|кисть R 0.14 1.12 0.30 плечо R 0.20 1.34 0.10|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|enemy|3|EnemyShogunModel|Slash|контакт НЕТ (-) попаданий 0 урон 0|фантом удар 0.032 весь 0.032 м|Slash|FAIL
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Fail (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:110)
+BladePath.CombatQA/<EnemyAttacks>d__58:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:414)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|enemy|3|EnemyShogunModel|Thrust|контакт да (Zone_Torso) попаданий 1 урон 16|фантом удар 0.000 весь 0.000 м|Thrust|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<EnemyAttacks>d__58:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:414)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|enemy|4|EnemyFallenModel|Overhead|контакт да (Zone_ArmLeft) попаданий 2 урон 14|фантом удар 0.038 весь 0.038 м|Overhead|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<EnemyAttacks>d__58:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:414)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|enemy|4|EnemyFallenModel|Slash|контакт да (Zone_ArmRight) попаданий 2 урон 10|фантом удар 0.038 весь 0.038 м|Slash|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<EnemyAttacks>d__58:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:414)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|enemy|4|EnemyFallenModel|Thrust|контакт да (Zone_Torso) попаданий 1 урон 16|фантом удар 0.000 весь 0.000 м|Thrust|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<EnemyAttacks>d__58:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:414)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace_start|EnemyShadowModel|Overhead|дистанция 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<EnemyAttacks>d__58:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:409)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.00|окно нет|остриё вбок 0.96 вперёд 0.09 вверх 1.64 м над землёй 1.64|v 0.0|до врага 0.954 (Zone_Torso)|боец y 0.00|кисть R 0.29 1.09 0.28 плечо R 0.22 1.33 0.01|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.05|окно нет|остриё вбок 0.97 вперёд -0.41 вверх 1.42 м над землёй 1.42|v 32.9|до врага 1.146 (Zone_Torso)|боец y 0.00|кисть R 0.37 1.12 0.17 плечо R 0.20 1.33 -0.04|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.09|окно нет|остриё вбок 0.86 вперёд -0.68 вверх 1.20 м над землёй 1.20|v 21.7|до врага 1.285 (Zone_Torso)|боец y 0.00|кисть R 0.40 1.16 0.08 плечо R 0.18 1.33 -0.08|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.14|окно нет|остриё вбок 0.73 вперёд -0.80 вверх 1.05 м над землёй 1.05|v 14.0|до врага 1.372 (Zone_Torso)|боец y 0.00|кисть R 0.41 1.20 0.01 плечо R 0.15 1.34 -0.09|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.19|окно нет|остриё вбок 0.63 вперёд -0.84 вверх 0.95 м над землёй 0.95|v 8.9|до врага 1.418 (Zone_Torso)|боец y 0.00|кисть R 0.40 1.24 -0.03 плечо R 0.13 1.34 -0.09|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.23|окно нет|остриё вбок 0.55 вперёд -0.84 вверх 0.90 м над землёй 0.90|v 5.4|до врага 1.431 (Zone_Torso)|боец y 0.00|кисть R 0.39 1.27 -0.04 плечо R 0.12 1.35 -0.07|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.28|окно нет|остриё вбок 0.50 вперёд -0.81 вверх 0.88 м над землёй 0.88|v 3.7|до врага 1.424 (Zone_Torso)|боец y 0.00|кисть R 0.37 1.30 -0.04 плечо R 0.10 1.35 -0.04|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.32|окно нет|остриё вбок 0.47 вперёд -0.79 вверх 0.88 м над землёй 0.88|v 2.5|до врага 1.413 (Zone_Torso)|боец y 0.00|кисть R 0.36 1.33 -0.03 плечо R 0.09 1.34 -0.02|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.37|окно нет|остриё вбок 0.45 вперёд -0.78 вверх 0.89 м над землёй 0.89|v 1.7|до врага 1.408 (Zone_Torso)|боец y 0.00|кисть R 0.35 1.36 -0.03 плечо R 0.09 1.34 -0.01|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.42|окно нет|остриё вбок 0.44 вперёд -0.77 вверх 0.93 м над землёй 0.93|v 2.2|до врага 1.402 (Zone_Torso)|боец y 0.00|кисть R 0.34 1.39 -0.02 плечо R 0.08 1.34 -0.01|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.46|окно нет|остриё вбок 0.44 вперёд -0.77 вверх 0.98 м над землёй 0.98|v 2.8|до врага 1.394 (Zone_Torso)|боец y 0.00|кисть R 0.33 1.42 -0.01 плечо R 0.08 1.35 0.00|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.51|окно нет|остриё вбок 0.44 вперёд -0.77 вверх 1.03 м над землёй 1.03|v 3.3|до врага 1.382 (Zone_Torso)|боец y 0.00|кисть R 0.32 1.45 0.01 плечо R 0.09 1.35 0.00|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.56|окно нет|остриё вбок 0.45 вперёд -0.76 вверх 1.09 м над землёй 1.09|v 3.4|до врага 1.363 (Zone_Torso)|боец y 0.00|кисть R 0.32 1.47 0.03 плечо R 0.09 1.35 0.01|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.60|окно нет|остриё вбок 0.46 вперёд -0.75 вверх 1.14 м над землёй 1.14|v 3.6|до врага 1.338 (Zone_Torso)|боец y 0.00|кисть R 0.31 1.49 0.06 плечо R 0.09 1.35 0.02|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.65|окно нет|остриё вбок 0.47 вперёд -0.73 вверх 1.20 м над землёй 1.20|v 3.8|до врага 1.308 (Zone_Torso)|боец y 0.00|кисть R 0.31 1.51 0.09 плечо R 0.10 1.35 0.03|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.69|окно нет|остриё вбок 0.49 вперёд -0.70 вверх 1.26 м над землёй 1.26|v 4.1|до врага 1.272 (Zone_Torso)|боец y 0.00|кисть R 0.30 1.52 0.13 плечо R 0.11 1.34 0.04|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.74|окно нет|остриё вбок 0.51 вперёд -0.66 вверх 1.32 м над землёй 1.32|v 4.5|до врага 1.229 (Zone_Torso)|боец y 0.00|кисть R 0.29 1.53 0.18 плечо R 0.12 1.34 0.05|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.79|окно нет|остриё вбок 0.55 вперёд -0.61 вверх 1.38 м над землёй 1.38|v 4.9|до врага 1.180 (Zone_Torso)|боец y 0.00|кисть R 0.28 1.54 0.23 плечо R 0.13 1.33 0.07|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.83|окно нет|остриё вбок 0.58 вперёд -0.54 вверх 1.43 м над землёй 1.43|v 5.3|до врага 1.127 (Zone_Torso)|боец y 0.00|кисть R 0.26 1.54 0.28 плечо R 0.13 1.33 0.09|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.88|окно нет|остриё вбок 0.63 вперёд -0.47 вверх 1.48 м над землёй 1.48|v 6.2|до врага 1.067 (Zone_Torso)|боец y 0.00|кисть R 0.25 1.53 0.34 плечо R 0.14 1.32 0.11|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.93|окно нет|остриё вбок 0.68 вперёд -0.37 вверх 1.52 м над землёй 1.52|v 7.0|до врага 1.002 (Zone_Torso)|боец y 0.00|кисть R 0.22 1.52 0.39 плечо R 0.14 1.31 0.14|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.97|окно нет|остриё вбок 0.73 вперёд -0.26 вверх 1.56 м над землёй 1.56|v 7.8|до врага 0.933 (Zone_Torso)|боец y 0.00|кисть R 0.20 1.50 0.45 плечо R 0.14 1.30 0.16|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.05|окно ДА|остриё вбок 0.85 вперёд 0.14 вверх 1.63 м над землёй 1.63|v 24.9|до врага 0.731 (Zone_Torso)|боец y 0.00|кисть R 0.11 1.44 0.60 плечо R 0.12 1.29 0.23|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.18|окно ДА|остриё вбок 0.87 вперёд 0.48 вверх 1.62 м над землёй 1.62|v 20.9|до врага 0.585 (Zone_Torso)|боец y 0.00|кисть R 0.04 1.36 0.67 плечо R 0.10 1.28 0.28|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.31|окно ДА|остриё вбок 0.82 вперёд 0.80 вверх 1.56 м над землёй 1.56|v 19.9|до врага 0.475 (Zone_Torso)|боец y 0.00|кисть R -0.02 1.27 0.71 плечо R 0.08 1.26 0.31|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.44|окно ДА|остриё вбок 0.69 вперёд 1.09 вверх 1.44 м над землёй 1.44|v 19.7|до врага 0.372 (Zone_Torso)|боец y 0.00|кисть R -0.07 1.17 0.72 плечо R 0.06 1.24 0.33|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.56|окно ДА|остриё вбок 0.53 вперёд 1.30 вверх 1.26 м над землёй 1.26|v 19.6|до врага 0.195 (Zone_ArmLeft)|боец y 0.00|кисть R -0.11 1.07 0.71 плечо R 0.04 1.23 0.36|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.69|окно ДА|остриё вбок 0.34 вперёд 1.42 вверх 1.02 м над землёй 1.02|v 19.5|до врага 0.023 (Zone_ArmLeft)|боец y 0.00|кисть R -0.15 0.98 0.69 плечо R 0.03 1.21 0.38|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.82|окно ДА|остриё вбок 0.19 вперёд 1.44 вверх 0.78 м над землёй 0.78|v 17.4|до врага 0.020 (Zone_LegLeft)|боец y 0.00|кисть R -0.20 0.90 0.65 плечо R 0.00 1.19 0.40|до цели 1.42
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.82|окно ДА|остриё вбок 0.18 вперёд 1.44 вверх 0.77 м над землёй 0.77|v 14.0|до врага 0.015 (Zone_LegLeft)|боец y 0.00|кисть R -0.20 0.90 0.65 плечо R 0.00 1.19 0.40|до цели 1.42
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.95|окно ДА|остриё вбок 0.07 вперёд 1.38 вверх 0.56 м над землёй 0.56|v 14.9|до врага 0.078 (Zone_LegLeft)|боец y 0.00|кисть R -0.24 0.84 0.59 плечо R -0.03 1.17 0.41|до цели 1.44
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.07|окно ДА|остриё вбок 0.04 вперёд 1.36 вверх 0.51 м над землёй 0.51|v 4.0|до врага 0.162 (Zone_LegLeft)|боец y 0.00|кисть R -0.25 0.82 0.58 плечо R -0.03 1.16 0.42|до цели 1.46
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.18|окно ДА|остриё вбок 0.00 вперёд 1.32 вверх 0.45 м над землёй 0.45|v 4.7|до врага 0.219 (Zone_LegRight)|боец y 0.00|кисть R -0.27 0.81 0.55 плечо R -0.05 1.15 0.42|до цели 1.48
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.29|окно ДА|остриё вбок -0.05 вперёд 1.28 вверх 0.39 м над землёй 0.39|v 5.1|до врага 0.260 (Zone_LegRight)|боец y 0.00|кисть R -0.28 0.79 0.52 плечо R -0.06 1.14 0.43|до цели 1.49
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.40|окно ДА|остриё вбок -0.10 вперёд 1.23 вверх 0.34 м над землёй 0.34|v 5.1|до врага 0.309 (Zone_LegRight)|боец y 0.00|кисть R -0.30 0.78 0.48 плечо R -0.08 1.13 0.43|до цели 1.50
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.51|окно ДА|остриё вбок -0.16 вперёд 1.19 вверх 0.31 м над землёй 0.31|v 4.9|до врага 0.355 (Zone_LegRight)|боец y 0.00|кисть R -0.31 0.77 0.44 плечо R -0.09 1.13 0.43|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.63|окно ДА|остриё вбок -0.22 вперёд 1.14 вверх 0.28 м над землёй 0.28|v 4.8|до врага 0.400 (Zone_LegRight)|боец y 0.00|кисть R -0.32 0.76 0.40 плечо R -0.10 1.12 0.43|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.74|окно ДА|остриё вбок -0.27 вперёд 1.10 вверх 0.26 м над землёй 0.26|v 4.2|до врага 0.439 (Zone_LegRight)|боец y 0.00|кисть R -0.33 0.76 0.36 плечо R -0.12 1.11 0.43|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.85|окно ДА|остриё вбок -0.31 вперёд 1.06 вверх 0.26 м над землёй 0.26|v 3.5|до врага 0.471 (Zone_LegRight)|боец y 0.00|кисть R -0.33 0.76 0.33 плечо R -0.12 1.11 0.43|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.96|окно ДА|остриё вбок -0.35 вперёд 1.03 вверх 0.26 м над землёй 0.26|v 3.1|до врага 0.499 (Zone_LegRight)|боец y 0.00|кисть R -0.34 0.76 0.29 плечо R -0.13 1.10 0.43|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.02|окно нет|остриё вбок -0.38 вперёд 1.01 вверх 0.27 м над землёй 0.27|v 2.3|до врага 0.514 (Zone_LegRight)|боец y 0.00|кисть R -0.34 0.76 0.26 плечо R -0.13 1.10 0.43|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.06|окно нет|остриё вбок -0.39 вперёд 1.00 вверх 0.30 м над землёй 0.30|v 1.9|до врага 0.515 (Zone_LegRight)|боец y 0.00|кисть R -0.34 0.77 0.24 плечо R -0.14 1.10 0.43|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.10|окно нет|остриё вбок -0.39 вперёд 1.00 вверх 0.34 м над землёй 0.34|v 2.4|до врага 0.496 (Zone_LegRight)|боец y 0.00|кисть R -0.33 0.78 0.23 плечо R -0.13 1.11 0.42|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.13|окно нет|остриё вбок -0.37 вперёд 1.02 вверх 0.39 м над землёй 0.39|v 3.5|до врага 0.460 (Zone_LegRight)|боец y 0.00|кисть R -0.33 0.78 0.22 плечо R -0.13 1.11 0.42|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.17|окно нет|остриё вбок -0.34 вперёд 1.05 вверх 0.46 м над землёй 0.46|v 4.8|до врага 0.410 (Zone_LegRight)|боец y 0.00|кисть R -0.32 0.79 0.23 плечо R -0.12 1.12 0.42|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.20|окно нет|остриё вбок -0.30 вперёд 1.09 вверх 0.54 м над землёй 0.54|v 6.0|до врага 0.351 (Zone_LegRight)|боец y 0.00|кисть R -0.32 0.80 0.24 плечо R -0.10 1.13 0.42|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.24|окно нет|остриё вбок -0.25 вперёд 1.14 вверх 0.64 м над землёй 0.64|v 7.2|до врага 0.291 (Zone_LegRight)|боец y 0.00|кисть R -0.31 0.81 0.27 плечо R -0.09 1.14 0.41|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.28|окно нет|остриё вбок -0.19 вперёд 1.17 вверх 0.76 м над землёй 0.76|v 8.2|до врага 0.207 (Zone_Torso)|боец y 0.00|кисть R -0.30 0.83 0.29 плечо R -0.07 1.16 0.41|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.31|окно нет|остриё вбок -0.13 вперёд 1.20 вверх 0.90 м над землёй 0.90|v 9.1|до врага 0.134 (Zone_Torso)|боец y 0.00|кисть R -0.28 0.85 0.33 плечо R -0.05 1.18 0.40|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.35|окно нет|остриё вбок -0.06 вперёд 1.21 вверх 1.04 м над землёй 1.04|v 9.8|до врага 0.105 (Zone_Torso)|боец y 0.00|кисть R -0.26 0.88 0.36 плечо R -0.03 1.20 0.39|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.39|окно нет|остриё вбок 0.01 вперёд 1.20 вверх 1.19 м над землёй 1.19|v 9.8|до врага 0.116 (Zone_Torso)|боец y 0.00|кисть R -0.25 0.92 0.39 плечо R -0.01 1.22 0.38|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.42|окно нет|остриё вбок 0.08 вперёд 1.17 вверх 1.34 м над землёй 1.34|v 9.7|до врага 0.206 (Zone_Torso)|боец y 0.00|кисть R -0.22 0.96 0.42 плечо R 0.01 1.24 0.37|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.46|окно нет|остриё вбок 0.14 вперёд 1.13 вверх 1.47 м над землёй 1.47|v 9.0|до врага 0.285 (Zone_Head)|боец y 0.00|кисть R -0.20 1.00 0.45 плечо R 0.03 1.26 0.35|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.49|окно нет|остриё вбок 0.19 вперёд 1.08 вверх 1.58 м над землёй 1.58|v 8.2|до врага 0.375 (Zone_Head)|боец y 0.00|кисть R -0.17 1.05 0.47 плечо R 0.05 1.27 0.34|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.53|окно нет|остриё вбок 0.24 вперёд 1.03 вверх 1.67 м над землёй 1.67|v 6.9|до врага 0.471 (Zone_Head)|боец y 0.00|кисть R -0.14 1.08 0.48 плечо R 0.07 1.29 0.32|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.57|окно нет|остриё вбок 0.28 вперёд 0.98 вверх 1.75 м над землёй 1.75|v 5.8|до врага 0.558 (Zone_Head)|боец y 0.00|кисть R -0.11 1.12 0.49 плечо R 0.09 1.30 0.30|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.60|окно нет|остриё вбок 0.32 вперёд 0.94 вверх 1.80 м над землёй 1.80|v 4.6|до врага 0.617 (Zone_Head)|боец y 0.00|кисть R -0.08 1.15 0.49 плечо R 0.10 1.31 0.28|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.64|окно нет|остриё вбок 0.35 вперёд 0.91 вверх 1.84 м над землёй 1.84|v 3.5|до врага 0.663 (Zone_Head)|боец y 0.00|кисть R -0.05 1.17 0.49 плечо R 0.11 1.32 0.27|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.68|окно нет|остриё вбок 0.39 вперёд 0.89 вверх 1.85 м над землёй 1.85|v 3.0|до врага 0.695 (Zone_Head)|боец y 0.00|кисть R -0.02 1.18 0.48 плечо R 0.13 1.33 0.25|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.71|окно нет|остриё вбок 0.44 вперёд 0.87 вверх 1.85 м над землёй 1.85|v 2.9|до врага 0.722 (Zone_Head)|боец y 0.00|кисть R 0.01 1.18 0.47 плечо R 0.15 1.33 0.23|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.75|окно нет|остриё вбок 0.48 вперёд 0.85 вверх 1.83 м над землёй 1.83|v 2.9|до врага 0.741 (Zone_Head)|боец y 0.00|кисть R 0.04 1.17 0.46 плечо R 0.17 1.34 0.21|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.78|окно нет|остриё вбок 0.52 вперёд 0.84 вверх 1.81 м над землёй 1.81|v 2.9|до врага 0.757 (Zone_Torso)|боец y 0.00|кисть R 0.06 1.15 0.45 плечо R 0.18 1.34 0.19|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.82|окно нет|остриё вбок 0.55 вперёд 0.84 вверх 1.78 м над землёй 1.78|v 2.7|до врага 0.764 (Zone_Torso)|боец y 0.00|кисть R 0.08 1.14 0.43 плечо R 0.20 1.34 0.17|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.86|окно нет|остриё вбок 0.58 вперёд 0.83 вверх 1.75 м над землёй 1.75|v 2.4|до врага 0.772 (Zone_Torso)|боец y 0.00|кисть R 0.10 1.12 0.42 плечо R 0.21 1.34 0.15|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.89|окно нет|остриё вбок 0.60 вперёд 0.82 вверх 1.72 м над землёй 1.72|v 2.0|до врага 0.778 (Zone_Torso)|боец y 0.00|кисть R 0.12 1.10 0.40 плечо R 0.22 1.34 0.13|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.93|окно нет|остриё вбок 0.62 вперёд 0.82 вверх 1.70 м над землёй 1.70|v 1.6|до врага 0.783 (Zone_Torso)|боец y 0.00|кисть R 0.13 1.09 0.39 плечо R 0.23 1.34 0.12|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.96|окно нет|остриё вбок 0.63 вперёд 0.81 вверх 1.68 м над землёй 1.68|v 1.2|до врага 0.788 (Zone_Torso)|боец y 0.00|кисть R 0.14 1.08 0.38 плечо R 0.23 1.34 0.11|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|enemy|5|EnemyShadowModel|Overhead|контакт да (Zone_ArmLeft) попаданий 2 урон 14|фантом удар 0.036 весь 0.036 м|Overhead|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<EnemyAttacks>d__58:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:414)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace_start|EnemyShadowModel|Slash|дистанция 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<EnemyAttacks>d__58:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:409)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.00|окно нет|остриё вбок 0.63 вперёд 0.80 вверх 1.65 м над землёй 1.65|v 0.0|до врага 0.698 (Zone_Torso)|боец y 0.00|кисть R 0.13 1.07 0.36 плечо R 0.21 1.35 0.09|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.05|окно нет|остриё вбок 0.63 вперёд 0.80 вверх 1.64 м над землёй 1.64|v 0.5|до врага 0.690 (Zone_Torso)|боец y 0.00|кисть R 0.12 1.06 0.36 плечо R 0.21 1.34 0.10|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.09|окно нет|остриё вбок 0.62 вперёд 0.82 вверх 1.63 м над землёй 1.63|v 1.2|до врага 0.674 (Zone_Torso)|боец y 0.00|кисть R 0.10 1.07 0.37 плечо R 0.21 1.34 0.10|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.14|окно нет|остриё вбок 0.61 вперёд 0.84 вверх 1.61 м над землёй 1.61|v 2.1|до врага 0.644 (Zone_ArmLeft)|боец y 0.00|кисть R 0.07 1.07 0.39 плечо R 0.20 1.33 0.12|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.19|окно нет|остриё вбок 0.58 вперёд 0.89 вверх 1.60 м над землёй 1.60|v 3.2|до врага 0.595 (Zone_ArmLeft)|боец y 0.00|кисть R 0.04 1.09 0.41 плечо R 0.18 1.33 0.14|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.23|окно нет|остриё вбок 0.54 вперёд 0.95 вверх 1.60 м над землёй 1.60|v 4.6|до врага 0.532 (Zone_ArmLeft)|боец y 0.00|кисть R 0.00 1.11 0.44 плечо R 0.17 1.33 0.17|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.28|окно нет|остриё вбок 0.47 вперёд 1.01 вверх 1.63 м над землёй 1.63|v 5.7|до врага 0.470 (Zone_ArmLeft)|боец y 0.00|кисть R -0.05 1.14 0.48 плечо R 0.15 1.33 0.22|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.32|окно нет|остриё вбок 0.39 вперёд 1.07 вверх 1.69 м над землёй 1.69|v 6.7|до врага 0.413 (Zone_Head)|боец y 0.00|кисть R -0.11 1.19 0.52 плечо R 0.13 1.33 0.27|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.37|окно нет|остриё вбок 0.31 вперёд 1.08 вверх 1.78 м над землёй 1.78|v 7.6|до врага 0.383 (Zone_Head)|боец y 0.00|кисть R -0.16 1.24 0.55 плечо R 0.11 1.34 0.31|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.42|окно нет|остриё вбок 0.23 вперёд 1.05 вверх 1.91 м над землёй 1.91|v 9.2|до врага 0.433 (Zone_Head)|боец y 0.00|кисть R -0.21 1.31 0.56 плечо R 0.09 1.35 0.34|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.46|окно нет|остриё вбок 0.15 вперёд 0.97 вверх 2.03 м над землёй 2.03|v 9.8|до врага 0.534 (Zone_Head)|боец y 0.00|кисть R -0.26 1.37 0.55 плечо R 0.06 1.36 0.37|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.51|окно нет|остриё вбок 0.09 вперёд 0.87 вверх 2.14 м над землёй 2.14|v 9.4|до врага 0.651 (Zone_Head)|боец y 0.00|кисть R -0.31 1.42 0.53 плечо R 0.02 1.37 0.40|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.56|окно нет|остриё вбок 0.05 вперёд 0.77 вверх 2.20 м над землёй 2.20|v 7.8|до врага 0.759 (Zone_Head)|боец y 0.00|кисть R -0.36 1.46 0.50 плечо R -0.02 1.37 0.43|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.60|окно нет|остриё вбок 0.01 вперёд 0.67 вверх 2.23 м над землёй 2.23|v 6.6|до врага 0.848 (Zone_Head)|боец y 0.00|кисть R -0.40 1.48 0.45 плечо R -0.06 1.36 0.45|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.65|окно нет|остриё вбок -0.01 вперёд 0.56 вверх 2.23 м над землёй 2.23|v 6.9|до врага 0.940 (Zone_Head)|боец y 0.00|кисть R -0.43 1.47 0.37 плечо R -0.11 1.34 0.45|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.69|окно нет|остриё вбок -0.02 вперёд 0.45 вверх 2.20 м над землёй 2.20|v 6.7|до врага 1.017 (Zone_Head)|боец y 0.00|кисть R -0.46 1.44 0.29 плечо R -0.16 1.31 0.43|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.74|окно нет|остриё вбок -0.02 вперёд 0.34 вверх 2.13 м над землёй 2.13|v 7.5|до врага 1.087 (Zone_Head)|боец y 0.00|кисть R -0.49 1.39 0.21 плечо R -0.21 1.28 0.42|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.79|окно нет|остриё вбок 0.00 вперёд 0.23 вверх 2.05 м над землёй 2.05|v 8.6|до врага 1.156 (Zone_Head)|боец y 0.00|кисть R -0.52 1.33 0.15 плечо R -0.26 1.23 0.39|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.83|окно нет|остриё вбок 0.01 вперёд 0.11 вверх 1.95 м над землёй 1.95|v 9.5|до врага 1.234 (Zone_Head)|боец y 0.00|кисть R -0.54 1.26 0.11 плечо R -0.29 1.19 0.37|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.88|окно нет|остриё вбок -0.04 вперёд -0.04 вверх 1.88 м над землёй 1.88|v 10.3|до врага 1.287 (Zone_Torso)|боец y 0.00|кисть R -0.57 1.17 0.10 плечо R -0.31 1.15 0.36|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.93|окно нет|остриё вбок -0.24 вперёд -0.18 вверх 1.84 м над землёй 1.84|v 14.8|до врага 1.299 (Zone_Torso)|боец y 0.00|кисть R -0.59 1.09 0.14 плечо R -0.31 1.12 0.36|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Windup|0.97|окно нет|остриё вбок -0.60 вперёд -0.24 вверх 1.78 м над землёй 1.78|v 22.3|до врага 1.262 (Zone_Torso)|боец y 0.00|кисть R -0.61 1.01 0.21 плечо R -0.31 1.10 0.36|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.05|окно ДА|остриё вбок -1.36 вперёд 0.42 вверх 1.26 м над землёй 1.26|v 67.9|до врага 0.976 (Zone_ArmRight)|боец y 0.00|кисть R -0.56 0.87 0.45 плечо R -0.27 1.08 0.39|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.17|окно ДА|остриё вбок -1.26 вперёд 0.96 вверх 1.04 м над землёй 1.04|v 35.6|до врага 0.784 (Zone_ArmRight)|боец y 0.00|кисть R -0.49 0.84 0.57 плечо R -0.25 1.08 0.41|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.29|окно ДА|остриё вбок -0.99 вперёд 1.29 вверх 1.03 м над землёй 1.03|v 25.4|до врага 0.566 (Zone_ArmRight)|боец y 0.00|кисть R -0.42 0.83 0.63 плечо R -0.22 1.08 0.42|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.40|окно ДА|остриё вбок -0.65 вперёд 1.45 вверх 1.18 м над землёй 1.18|v 23.9|до врага 0.300 (Zone_ArmRight)|боец y 0.00|кисть R -0.36 0.85 0.68 плечо R -0.20 1.09 0.41|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.52|окно ДА|остриё вбок -0.29 вперёд 1.44 вверх 1.38 м над землёй 1.38|v 24.8|до врага 0.015 (Zone_ArmRight)|боец y 0.00|кисть R -0.29 0.89 0.70 плечо R -0.18 1.11 0.40|до цели 1.40
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.64|окно ДА|остриё вбок 0.06 вперёд 1.28 вверх 1.54 м над землёй 1.54|v 24.9|до врага 0.085 (Zone_Head)|боец y 0.00|кисть R -0.22 0.92 0.70 плечо R -0.15 1.12 0.39|до цели 1.42
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.65|окно ДА|остриё вбок 0.06 вперёд 1.27 вверх 1.54 м над землёй 1.54|v 11.6|до врага 0.092 (Zone_Head)|боец y 0.00|кисть R -0.22 0.92 0.70 плечо R -0.15 1.12 0.39|до цели 1.42
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.77|окно ДА|остриё вбок 0.34 вперёд 0.98 вверх 1.63 м над землёй 1.63|v 25.1|до врага 0.518 (Zone_Torso)|боец y 0.00|кисть R -0.14 0.95 0.68 плечо R -0.13 1.14 0.37|до цели 1.44
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Strike|0.88|окно ДА|остриё вбок 0.53 вперёд 0.63 вверх 1.63 м над землёй 1.63|v 23.8|до врага 0.706 (Zone_Torso)|боец y 0.00|кисть R -0.07 0.97 0.65 плечо R -0.11 1.15 0.35|до цели 1.46
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.00|окно ДА|остриё вбок 0.58 вперёд 0.50 вверх 1.60 м над землёй 1.60|v 8.6|до врага 0.766 (Zone_Torso)|боец y 0.00|кисть R -0.04 0.98 0.64 плечо R -0.10 1.16 0.35|до цели 1.48
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.12|окно ДА|остриё вбок 0.61 вперёд 0.35 вверх 1.56 м над землёй 1.56|v 9.2|до врага 0.816 (Zone_Torso)|боец y 0.00|кисть R -0.01 0.99 0.62 плечо R -0.09 1.17 0.34|до цели 1.49
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.24|окно ДА|остриё вбок 0.63 вперёд 0.20 вверх 1.51 м над землёй 1.51|v 9.6|до врага 0.859 (Zone_Torso)|боец y 0.00|кисть R 0.02 1.00 0.60 плечо R -0.08 1.18 0.33|до цели 1.50
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.36|окно ДА|остриё вбок 0.64 вперёд 0.06 вверх 1.44 м над землёй 1.44|v 9.6|до врага 0.897 (Zone_Torso)|боец y 0.00|кисть R 0.06 1.01 0.57 плечо R -0.07 1.19 0.32|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.48|окно ДА|остриё вбок 0.63 вперёд -0.06 вверх 1.37 м над землёй 1.37|v 8.8|до врага 0.927 (Zone_Torso)|боец y 0.00|кисть R 0.09 1.01 0.55 плечо R -0.06 1.20 0.31|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.60|окно ДА|остриё вбок 0.61 вперёд -0.17 вверх 1.29 м над землёй 1.29|v 8.2|до врага 0.952 (Zone_Torso)|боец y 0.00|кисть R 0.12 1.02 0.52 плечо R -0.05 1.21 0.30|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.72|окно ДА|остриё вбок 0.59 вперёд -0.26 вверх 1.20 м над землёй 1.20|v 7.3|до врага 0.975 (Zone_Torso)|боец y 0.00|кисть R 0.15 1.03 0.49 плечо R -0.03 1.22 0.29|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.84|окно ДА|остриё вбок 0.57 вперёд -0.33 вверх 1.13 м над землёй 1.13|v 6.3|до врага 0.995 (Zone_Torso)|боец y 0.00|кисть R 0.18 1.03 0.46 плечо R -0.02 1.23 0.28|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|FollowThrough|0.96|окно ДА|остриё вбок 0.56 вперёд -0.38 вверх 1.06 м над землёй 1.06|v 5.4|до врага 1.017 (Zone_Torso)|боец y 0.00|кисть R 0.21 1.04 0.44 плечо R -0.01 1.24 0.26|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.02|окно нет|остриё вбок 0.55 вперёд -0.43 вверх 1.00 м над землёй 1.00|v 4.7|до врага 1.049 (Zone_Torso)|боец y 0.00|кисть R 0.24 1.06 0.40 плечо R 0.00 1.26 0.24|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.06|окно нет|остриё вбок 0.55 вперёд -0.49 вверх 0.96 м над землёй 0.96|v 4.1|до врага 1.100 (Zone_Torso)|боец y 0.00|кисть R 0.27 1.08 0.34 плечо R 0.02 1.28 0.21|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.10|окно нет|остриё вбок 0.57 вперёд -0.54 вверх 0.95 м над землёй 0.95|v 3.3|до врага 1.153 (Zone_Torso)|боец y 0.00|кисть R 0.29 1.11 0.29 плечо R 0.04 1.30 0.17|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.14|окно нет|остриё вбок 0.59 вперёд -0.59 вверх 0.97 м над землёй 0.97|v 3.3|до врага 1.203 (Zone_Torso)|боец y 0.00|кисть R 0.32 1.14 0.24 плечо R 0.06 1.32 0.14|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.18|окно нет|остриё вбок 0.61 вперёд -0.63 вверх 1.02 м над землёй 1.02|v 4.4|до врага 1.249 (Zone_Torso)|боец y 0.00|кисть R 0.33 1.18 0.20 плечо R 0.08 1.33 0.11|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.21|окно нет|остриё вбок 0.65 вперёд -0.67 вверх 1.10 м над землёй 1.10|v 5.7|до врага 1.288 (Zone_Torso)|боец y 0.00|кисть R 0.35 1.21 0.16 плечо R 0.10 1.34 0.08|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.25|окно нет|остриё вбок 0.69 вперёд -0.69 вверх 1.21 м над землёй 1.21|v 7.1|до врага 1.318 (Zone_Torso)|боец y 0.00|кисть R 0.36 1.25 0.14 плечо R 0.12 1.35 0.06|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.29|окно нет|остриё вбок 0.72 вперёд -0.70 вверх 1.34 м над землёй 1.34|v 8.3|до врага 1.338 (Zone_Torso)|боец y 0.00|кисть R 0.37 1.28 0.12 плечо R 0.14 1.35 0.05|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.33|окно нет|остриё вбок 0.75 вперёд -0.68 вверх 1.49 м над землёй 1.49|v 9.2|до врага 1.345 (Zone_Torso)|боец y 0.00|кисть R 0.38 1.30 0.11 плечо R 0.16 1.36 0.04|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.36|окно нет|остриё вбок 0.76 вперёд -0.63 вверх 1.65 м над землёй 1.65|v 9.6|до врага 1.341 (Zone_Torso)|боец y 0.00|кисть R 0.39 1.32 0.11 плечо R 0.18 1.36 0.03|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.40|окно нет|остриё вбок 0.76 вперёд -0.55 вверх 1.78 м над землёй 1.78|v 9.7|до врага 1.322 (Zone_Torso)|боец y 0.00|кисть R 0.39 1.34 0.12 плечо R 0.19 1.36 0.03|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.44|окно нет|остриё вбок 0.77 вперёд -0.44 вверх 1.90 м над землёй 1.90|v 9.4|до врага 1.291 (Zone_Torso)|боец y 0.00|кисть R 0.38 1.34 0.15 плечо R 0.21 1.37 0.03|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.48|окно нет|остриё вбок 0.77 вперёд -0.31 вверх 1.98 м над землёй 1.98|v 9.0|до врага 1.251 (Zone_Torso)|боец y 0.00|кисть R 0.37 1.34 0.17 плечо R 0.22 1.37 0.03|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.52|окно нет|остриё вбок 0.77 вперёд -0.18 вверх 2.03 м над землёй 2.03|v 8.6|до врага 1.207 (Zone_Torso)|боец y 0.00|кисть R 0.36 1.33 0.20 плечо R 0.23 1.37 0.03|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.55|окно нет|остриё вбок 0.77 вперёд -0.05 вверх 2.05 м над землёй 2.05|v 8.0|до врага 1.162 (Zone_Torso)|боец y 0.00|кисть R 0.34 1.31 0.23 плечо R 0.24 1.37 0.04|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.59|окно нет|остриё вбок 0.76 вперёд 0.08 вверх 2.04 м над землёй 2.04|v 7.4|до врага 1.119 (Zone_Torso)|боец y 0.00|кисть R 0.32 1.29 0.25 плечо R 0.24 1.37 0.04|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.63|окно нет|остриё вбок 0.75 вперёд 0.19 вверх 2.02 м над землёй 2.02|v 7.0|до врага 1.080 (Zone_Torso)|боец y 0.00|кисть R 0.30 1.26 0.27 плечо R 0.25 1.37 0.04|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.67|окно нет|остриё вбок 0.74 вперёд 0.30 вверх 1.99 м над землёй 1.99|v 6.6|до врага 1.041 (Zone_Torso)|боец y 0.00|кисть R 0.27 1.24 0.29 плечо R 0.25 1.36 0.05|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.71|окно нет|остриё вбок 0.73 вперёд 0.39 вверх 1.95 м над землёй 1.95|v 6.2|до врага 1.006 (Zone_Torso)|боец y 0.00|кисть R 0.25 1.21 0.31 плечо R 0.26 1.36 0.06|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.74|окно нет|остриё вбок 0.72 вперёд 0.48 вверх 1.91 м над землёй 1.91|v 5.8|до врага 0.973 (Zone_Torso)|боец y 0.00|кисть R 0.23 1.18 0.32 плечо R 0.26 1.35 0.06|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.78|окно нет|остриё вбок 0.71 вперёд 0.56 вверх 1.86 м над землёй 1.86|v 5.4|до врага 0.945 (Zone_Torso)|боец y 0.00|кисть R 0.22 1.16 0.33 плечо R 0.26 1.35 0.07|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.82|окно нет|остриё вбок 0.70 вперёд 0.62 вверх 1.82 м над землёй 1.82|v 4.7|до врага 0.921 (Zone_Torso)|боец y 0.00|кисть R 0.20 1.13 0.34 плечо R 0.26 1.35 0.08|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.86|окно нет|остриё вбок 0.69 вперёд 0.67 вверх 1.78 м над землёй 1.78|v 4.0|до врага 0.895 (Zone_Torso)|боец y 0.00|кисть R 0.19 1.11 0.35 плечо R 0.25 1.34 0.08|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.90|окно нет|остриё вбок 0.68 вперёд 0.71 вверх 1.74 м над землёй 1.74|v 3.2|до врага 0.871 (Zone_Torso)|боец y 0.00|кисть R 0.18 1.10 0.36 плечо R 0.25 1.34 0.09|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.93|окно нет|остриё вбок 0.67 вперёд 0.74 вверх 1.72 м над землёй 1.72|v 2.4|до врага 0.852 (Zone_Torso)|боец y 0.00|кисть R 0.18 1.09 0.36 плечо R 0.25 1.34 0.09|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|trace|Recovery|0.97|окно нет|остриё вбок 0.67 вперёд 0.76 вверх 1.69 м над землёй 1.69|v 1.7|до врага 0.840 (Zone_Torso)|боец y 0.00|кисть R 0.17 1.08 0.36 плечо R 0.25 1.34 0.09|до цели 1.51
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA:Trace (BladePath.FighterController,BladePath.WeaponController) (at Assets/_Project/Scripts/Debug/CombatQA.cs:75)
+BladePath.CombatQA:LateUpdate () (at Assets/_Project/Scripts/Debug/CombatQA.cs:99)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|enemy|5|EnemyShadowModel|Slash|контакт да (Zone_ArmRight) попаданий 2 урон 10|фантом удар 0.036 весь 0.036 м|Slash|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<EnemyAttacks>d__58:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:414)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|enemy|5|EnemyShadowModel|Thrust|контакт да (Zone_Torso) попаданий 1 урон 16|фантом удар 0.000 весь 0.000 м|Thrust|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<EnemyAttacks>d__58:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:414)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|arena|САД СВЯТИЛИЩА (ТЕСТ)|стопа y 0.151|удар сверху: контакт да (Zone_ArmLeft) попаданий 4 урон 18|фантом удар 0.038 весь 0.038 м|Overhead|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<ArenaCheck>d__59:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:459)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|arena|ДВОР ХРАМА|стопа y 0.151|удар сверху: контакт да (Zone_ArmLeft) попаданий 4 урон 18|фантом удар 0.038 весь 0.038 м|Overhead|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<ArenaCheck>d__59:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:459)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|dice|бросок 1|выпало 5 и 6|остановились за 1.00 с|кадров 54|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<DiceThrows>d__60:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:500)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|dice|бросок 2|выпало 5 и 5|остановились за 1.42 с|кадров 74|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<DiceThrows>d__60:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:500)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|dice|бросок 3|выпало 4 и 6|остановились за 1.14 с|кадров 56|PASS
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<DiceThrows>d__60:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:500)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA|summary|fails 3
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<Start>d__39:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:151)
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+QA: готово, провалов 3
+BladePath.EditorTools.QARunner:Watch () (at Assets/_Project/Scripts/Editor/QARunner.cs:69)
+(Filename: Assets/_Project/Scripts/Editor/QARunner.cs Line: 69)
+BladePath.EditorTools.QARunner:Watch () (at Assets/_Project/Scripts/Editor/QARunner.cs:70)
+(Filename: Assets/_Project/Scripts/Editor/QARunner.cs Line: 70)
+An error occured while trying to return the ULF license. Ulf license file not found (/root/.local/share/unity3d/Unity/Unity_lic.ulf) (1404)
+[Licensing::Module] Error: Serial number unavailable for ULF return; skipping operation
+
+----- хвост -----
+
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+BladePath.CombatResolver:Say (string) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:163)
+BladePath.CombatResolver:OnWindowClosed (BladePath.WeaponController) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:88)
+BladePath.WeaponController:AdvancePhase () (at Assets/_Project/Scripts/Weapon/WeaponController.cs:355)
+BladePath.WeaponController:Update () (at Assets/_Project/Scripts/Weapon/WeaponController.cs:324)
+
+(Filename: Assets/_Project/Scripts/Combat/CombatResolver.cs Line: 163)
+
+QA|enemy|5|EnemyShadowModel|Thrust|контакт да (Zone_Torso) попаданий 1 урон 16|фантом удар 0.000 весь 0.000 м|Thrust|PASS
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<EnemyAttacks>d__58:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:414)
+UnityEngine.SetupCoroutine:InvokeMoveNext (System.Collections.IEnumerator,intptr) (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/Coroutines.cs:17)
+
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+
+[Player #35 СВЕРХУ] удар начат
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+BladePath.CombatResolver:Say (string) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:163)
+BladePath.CombatResolver:OnWindowOpened (BladePath.WeaponController) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:79)
+BladePath.WeaponController:AdvancePhase () (at Assets/_Project/Scripts/Weapon/WeaponController.cs:348)
+BladePath.WeaponController:Update () (at Assets/_Project/Scripts/Weapon/WeaponController.cs:324)
+
+(Filename: Assets/_Project/Scripts/Combat/CombatResolver.cs Line: 163)
+
+[Player #35 СВЕРХУ] ПОПАДАНИЕ → Enemy.ArmLeft  v=18.2 м/с, угол=48°, по клинку=0.83
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+BladePath.CombatResolver:Say (string) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:163)
+BladePath.CombatResolver:OnContact (BladePath.BladeContact) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:112)
+BladePath.BladeTrajectorySampler:Register (BladePath.BladeTrajectorySampler/Candidate) (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:231)
+BladePath.BladeTrajectorySampler:Sweep (UnityEngine.Vector3,UnityEngine.Quaternion,UnityEngine.Vector3,UnityEngine.Quaternion,single) (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:134)
+BladePath.BladeTrajectorySampler:LateUpdate () (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:94)
+
+(Filename: Assets/_Project/Scripts/Combat/CombatResolver.cs Line: 163)
+
+[Player #35 СВЕРХУ] ПОПАДАНИЕ → Enemy.Torso  v=16.5 м/с, угол=52°, по клинку=0.67
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+BladePath.CombatResolver:Say (string) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:163)
+BladePath.CombatResolver:OnContact (BladePath.BladeContact) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:112)
+BladePath.BladeTrajectorySampler:Register (BladePath.BladeTrajectorySampler/Candidate) (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:231)
+BladePath.BladeTrajectorySampler:Sweep (UnityEngine.Vector3,UnityEngine.Quaternion,UnityEngine.Vector3,UnityEngine.Quaternion,single) (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:134)
+BladePath.BladeTrajectorySampler:LateUpdate () (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:94)
+
+(Filename: Assets/_Project/Scripts/Combat/CombatResolver.cs Line: 163)
+
+[Player #35 СВЕРХУ] ПОПАДАНИЕ → Enemy.LegLeft  v=18.9 м/с, угол=50°, по клинку=1.00
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+BladePath.CombatResolver:Say (string) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:163)
+BladePath.CombatResolver:OnContact (BladePath.BladeContact) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:112)
+BladePath.BladeTrajectorySampler:Register (BladePath.BladeTrajectorySampler/Candidate) (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:231)
+BladePath.BladeTrajectorySampler:Sweep (UnityEngine.Vector3,UnityEngine.Quaternion,UnityEngine.Vector3,UnityEngine.Quaternion,single) (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:134)
+BladePath.BladeTrajectorySampler:LateUpdate () (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:94)
+
+(Filename: Assets/_Project/Scripts/Combat/CombatResolver.cs Line: 163)
+
+[Player #35 СВЕРХУ] ПОПАДАНИЕ → Enemy.LegRight  v=15.9 м/с, угол=77°, по клинку=1.00  (скользящее)
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+BladePath.CombatResolver:Say (string) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:163)
+BladePath.CombatResolver:OnContact (BladePath.BladeContact) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:112)
+BladePath.BladeTrajectorySampler:Register (BladePath.BladeTrajectorySampler/Candidate) (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:231)
+BladePath.BladeTrajectorySampler:Sweep (UnityEngine.Vector3,UnityEngine.Quaternion,UnityEngine.Vector3,UnityEngine.Quaternion,single) (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:134)
+BladePath.BladeTrajectorySampler:LateUpdate () (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:94)
+
+(Filename: Assets/_Project/Scripts/Combat/CombatResolver.cs Line: 163)
+
+[Player #35 СВЕРХУ] итог: попаданий 4
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+BladePath.CombatResolver:Say (string) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:163)
+BladePath.CombatResolver:OnWindowClosed (BladePath.WeaponController) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:88)
+BladePath.WeaponController:AdvancePhase () (at Assets/_Project/Scripts/Weapon/WeaponController.cs:355)
+BladePath.WeaponController:Update () (at Assets/_Project/Scripts/Weapon/WeaponController.cs:324)
+
+(Filename: Assets/_Project/Scripts/Combat/CombatResolver.cs Line: 163)
+
+QA|arena|САД СВЯТИЛИЩА (ТЕСТ)|стопа y 0.151|удар сверху: контакт да (Zone_ArmLeft) попаданий 4 урон 18|фантом удар 0.038 весь 0.038 м|Overhead|PASS
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<ArenaCheck>d__59:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:459)
+UnityEngine.SetupCoroutine:InvokeMoveNext (System.Collections.IEnumerator,intptr) (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/Coroutines.cs:17)
+
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+
+[Player #36 СВЕРХУ] удар начат
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+BladePath.CombatResolver:Say (string) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:163)
+BladePath.CombatResolver:OnWindowOpened (BladePath.WeaponController) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:79)
+BladePath.WeaponController:AdvancePhase () (at Assets/_Project/Scripts/Weapon/WeaponController.cs:348)
+BladePath.WeaponController:Update () (at Assets/_Project/Scripts/Weapon/WeaponController.cs:324)
+
+(Filename: Assets/_Project/Scripts/Combat/CombatResolver.cs Line: 163)
+
+[Player #36 СВЕРХУ] ПОПАДАНИЕ → Enemy.ArmLeft  v=18.2 м/с, угол=48°, по клинку=0.83
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+BladePath.CombatResolver:Say (string) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:163)
+BladePath.CombatResolver:OnContact (BladePath.BladeContact) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:112)
+BladePath.BladeTrajectorySampler:Register (BladePath.BladeTrajectorySampler/Candidate) (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:231)
+BladePath.BladeTrajectorySampler:Sweep (UnityEngine.Vector3,UnityEngine.Quaternion,UnityEngine.Vector3,UnityEngine.Quaternion,single) (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:134)
+BladePath.BladeTrajectorySampler:LateUpdate () (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:94)
+
+(Filename: Assets/_Project/Scripts/Combat/CombatResolver.cs Line: 163)
+
+[Player #36 СВЕРХУ] ПОПАДАНИЕ → Enemy.Torso  v=16.5 м/с, угол=52°, по клинку=0.67
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+BladePath.CombatResolver:Say (string) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:163)
+BladePath.CombatResolver:OnContact (BladePath.BladeContact) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:112)
+BladePath.BladeTrajectorySampler:Register (BladePath.BladeTrajectorySampler/Candidate) (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:231)
+BladePath.BladeTrajectorySampler:Sweep (UnityEngine.Vector3,UnityEngine.Quaternion,UnityEngine.Vector3,UnityEngine.Quaternion,single) (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:134)
+BladePath.BladeTrajectorySampler:LateUpdate () (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:94)
+
+(Filename: Assets/_Project/Scripts/Combat/CombatResolver.cs Line: 163)
+
+[Player #36 СВЕРХУ] ПОПАДАНИЕ → Enemy.LegLeft  v=18.9 м/с, угол=54°, по клинку=1.00
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+BladePath.CombatResolver:Say (string) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:163)
+BladePath.CombatResolver:OnContact (BladePath.BladeContact) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:112)
+BladePath.BladeTrajectorySampler:Register (BladePath.BladeTrajectorySampler/Candidate) (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:231)
+BladePath.BladeTrajectorySampler:Sweep (UnityEngine.Vector3,UnityEngine.Quaternion,UnityEngine.Vector3,UnityEngine.Quaternion,single) (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:134)
+BladePath.BladeTrajectorySampler:LateUpdate () (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:94)
+
+(Filename: Assets/_Project/Scripts/Combat/CombatResolver.cs Line: 163)
+
+[Player #36 СВЕРХУ] ПОПАДАНИЕ → Enemy.LegRight  v=15.9 м/с, угол=74°, по клинку=1.00  (скользящее)
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+BladePath.CombatResolver:Say (string) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:163)
+BladePath.CombatResolver:OnContact (BladePath.BladeContact) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:112)
+BladePath.BladeTrajectorySampler:Register (BladePath.BladeTrajectorySampler/Candidate) (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:231)
+BladePath.BladeTrajectorySampler:Sweep (UnityEngine.Vector3,UnityEngine.Quaternion,UnityEngine.Vector3,UnityEngine.Quaternion,single) (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:134)
+BladePath.BladeTrajectorySampler:LateUpdate () (at Assets/_Project/Scripts/Combat/BladeTrajectorySampler.cs:94)
+
+(Filename: Assets/_Project/Scripts/Combat/CombatResolver.cs Line: 163)
+
+[Player #36 СВЕРХУ] итог: попаданий 4
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+BladePath.CombatResolver:Say (string) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:163)
+BladePath.CombatResolver:OnWindowClosed (BladePath.WeaponController) (at Assets/_Project/Scripts/Combat/CombatResolver.cs:88)
+BladePath.WeaponController:AdvancePhase () (at Assets/_Project/Scripts/Weapon/WeaponController.cs:355)
+BladePath.WeaponController:Update () (at Assets/_Project/Scripts/Weapon/WeaponController.cs:324)
+
+(Filename: Assets/_Project/Scripts/Combat/CombatResolver.cs Line: 163)
+
+QA|arena|ДВОР ХРАМА|стопа y 0.151|удар сверху: контакт да (Zone_ArmLeft) попаданий 4 урон 18|фантом удар 0.038 весь 0.038 м|Overhead|PASS
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<ArenaCheck>d__59:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:459)
+UnityEngine.SetupCoroutine:InvokeMoveNext (System.Collections.IEnumerator,intptr) (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/Coroutines.cs:17)
+
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+
+QA|dice|бросок 1|выпало 5 и 6|остановились за 1.00 с|кадров 54|PASS
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<DiceThrows>d__60:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:500)
+UnityEngine.SetupCoroutine:InvokeMoveNext (System.Collections.IEnumerator,intptr) (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/Coroutines.cs:17)
+
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+
+QA|dice|бросок 2|выпало 5 и 5|остановились за 1.42 с|кадров 74|PASS
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<DiceThrows>d__60:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:500)
+UnityEngine.SetupCoroutine:InvokeMoveNext (System.Collections.IEnumerator,intptr) (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/Coroutines.cs:17)
+
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+
+QA|dice|бросок 3|выпало 4 и 6|остановились за 1.14 с|кадров 56|PASS
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<DiceThrows>d__60:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:500)
+UnityEngine.SetupCoroutine:InvokeMoveNext (System.Collections.IEnumerator,intptr) (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/Coroutines.cs:17)
+
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+
+QA|summary|fails 3
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+BladePath.CombatQA:Line (string) (at Assets/_Project/Scripts/Debug/CombatQA.cs:109)
+BladePath.CombatQA/<Start>d__39:MoveNext () (at Assets/_Project/Scripts/Debug/CombatQA.cs:151)
+UnityEngine.SetupCoroutine:InvokeMoveNext (System.Collections.IEnumerator,intptr) (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/Coroutines.cs:17)
+
+(Filename: Assets/_Project/Scripts/Debug/CombatQA.cs Line: 109)
+
+QA: готово, провалов 3
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+BladePath.EditorTools.QARunner:Watch () (at Assets/_Project/Scripts/Editor/QARunner.cs:69)
+UnityEditor.EditorApplication:Internal_CallUpdateFunctions () (at /home/bokken/build/output/unity/unity/Editor/Mono/EditorApplication.cs:384)
+
+(Filename: Assets/_Project/Scripts/Editor/QARunner.cs Line: 69)
+
+Build succeeded!
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+BladePath.EditorTools.QARunner:Watch () (at Assets/_Project/Scripts/Editor/QARunner.cs:70)
+UnityEditor.EditorApplication:Internal_CallUpdateFunctions () (at /home/bokken/build/output/unity/unity/Editor/Mono/EditorApplication.cs:384)
+
+(Filename: Assets/_Project/Scripts/Editor/QARunner.cs Line: 70)
+
+Killing ADB server in 0.071091 seconds.
+Start importing Assets/_Project/Materials/Skin.mat using Guid(709485b11da64fe6a87bb036fcfc2065) (NativeFormatImporter) -> (artifact id: '6d62cc651b80e8bc33bfb39c299c0b9d') in 0.006021171 seconds
+Start importing Assets/_Project/Materials/Ember.mat using Guid(b093ef040966efd37a3accb60393cc32) (NativeFormatImporter) -> (artifact id: '33d521e910ae41419472089cd5dbf20a') in 0.001289649 seconds
+Start importing Assets/_Project/Materials/Halo_Moon.mat using Guid(516f6aa33c467ed7aa89ce4e20404137) (NativeFormatImporter) -> (artifact id: '27053c97ba8d934a052dfb93556ae467') in 0.001374906 seconds
+Start importing Assets/_Project/Materials/Env_Chochin.mat using Guid(c1282051e2ad9e520a76cc740ac1cfda) (NativeFormatImporter) -> (artifact id: '11d34ecc97b8e8f7e755947b15187b19') in 0.001305963 seconds
+Start importing Assets/_Project/Materials/Env_Paper.mat using Guid(623d405d4f9c636229ca70d91db14098) (NativeFormatImporter) -> (artifact id: '013c794cda1c378637300f9a2c627e6c') in 0.001253009 seconds
+Start importing Assets/_Project/Materials/Sky_Day.mat using Guid(13399ff5c1a27320a9687a06fde8650f) (NativeFormatImporter) -> (artifact id: '65fe6f6cda93401e36b9fa699a4745e4') in 0.001178415 seconds
+Start importing Assets/_Project/Materials/Halo_Warm.mat using Guid(346e89a31d3b32be6a504cd306262c37) (NativeFormatImporter) -> (artifact id: 'aee778fb7dc9ffd3cb53b1a8d00f857a') in 0.001246085 seconds
+Start importing Assets/_Project/Materials/Cloth.mat using Guid(35fa366854d397076add305f9122abcd) (NativeFormatImporter) -> (artifact id: '91bb05d74ea871dbeac23eebd04d8a07') in 0.001256802 seconds
+Start importing Assets/_Project/Materials/Halo_Fire.mat using Guid(a7d6622afdd28445dbdd0b1f52d9c471) (NativeFormatImporter) -> (artifact id: 'ebd83757fc4dfa9892e5bc8a50c141eb') in 0.00117033 seconds
+Start importing Assets/_Project/Materials/Void.mat using Guid(9c313af5db4d3abbbb6c0cfaf065681b) (NativeFormatImporter) -> (artifact id: '2c6b4841c6bfc6775ca49d3722617052') in 0.001200164 seconds
+Start importing Assets/_Project/Materials/Armor_Hero.mat using Guid(0d2dc68faf3898efbaf8af09a61f6612) (NativeFormatImporter) -> (artifact id: '38a1e4f9ba1f18830dbe7b0b093da3c7') in 0.001252045 seconds
+Start importing Assets/_Project/Materials/Env_MapleCrown.mat using Guid(fdd0d8311c5460e7381cbfa22836afcc) (NativeFormatImporter) -> (artifact id: '1cab6d8c2a7f062fbbc1e346e4fe56b6') in 0.001928324 seconds
+Start importing Assets/_Project/Materials/Env_Shoji.mat using Guid(2ec03df1c67c16f30b1498129323b42d) (NativeFormatImporter) -> (artifact id: '1dfb65f9df349506e642c2aa256c36ca') in 0.001241037 seconds
+Start importing Assets/_Project/Materials/Armor_Enemy.mat using Guid(9e8f3e7f58f17a2a08ec92180a78ed61) (NativeFormatImporter) -> (artifact id: 'a8eb1965254ca055bad29330436d28b8') in 0.001279343 seconds
+Start importing Assets/_Project/Materials/Env_Glow.mat using Guid(8f64f3240ccc3c752b857eb7b2bbef11) (NativeFormatImporter) -> (artifact id: 'd6961fb2e8c5a5717cdafd578eb98191') in 0.001241405 seconds
+Refreshing native plugins compatible for Editor in 0.00 ms, found 0 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=a6a3bd72ba87cdd0ba4dfdeef123d777): Total: 0.093 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+[Physics::Module] Cleanup current backned.
+[Physics::Module] Id: 0xf2b8ea05
+Input System module state changed to: ShutdownInProgress.
+Input System polling thread exited.
+Input System module state changed to: Shutdown.
+[Licensing::IpcConnector] License Notification channel disconnected successfully.
+[Licensing::IpcConnector] License Client channel disconnected successfully.
+AcceleratorClientConnectionCallback - disconnected - :0
+[40m[32minfo[39m[22m[49m: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...
+Cleanup mono
+debugger-agent: Unable to listen on 43
+[Package Manager] Server process was shutdown
+Checking for leaked weakptr:
+  Found no leaked weakptrs.
+##utp:{"type":"MemoryLeaks","version":2,"phase":"Immediate","time":1793735299767,"processId":156,"allocatedMemory":9229632,"memoryLabels":[{"Default":22341},{"Permanent":16080},{"Thread":1084616},{"Manager":16642},{"VertexData":8},{"Geometry":408},{"Texture":160},{"Shader":81787},{"Material":24},{"GfxDevice":37016},{"Animation":392},{"Audio":4032},{"Font":414428},{"FreeType":16250},{"FontEngine":320},{"Physics":929},{"Serialization":752},{"Input":26752},{"JobScheduler":71784},{"TextLib":32},{"Mono":32},{"ScriptingNativeRuntime":155096},{"BaseObject":1619888},{"Resource":1032},{"Renderer":2928},{"Transform":4678},{"File":3761},{"WebCam":80},{"Culling":32},{"Terrain":11298},{"Wind":24},{"String":393226},{"DynamicArray":91335},{"HashMap":157120},{"Utility":2657904},{"PoolAlloc":1568},{"AI":72},{"TypeTree":5005},{"ScriptManager":512},{"RuntimeInitializeOnLoadManager":64},{"SpriteAtlas":112},{"GI":7448},{"Director":8208},{"CloudService":149104},{"WebRequest":10974},{"VR":45681},{"SceneManager":528},{"Video":64},{"LazyScriptCache":32},{"NativeArray":8},{"Camera":17},{"Secure":9945},{"SerializationCache":1576},{"APIUpdating":10320},{"Subsystems":336},{"VirtualTexturing":57552},{"StaticSafetyDebugInfo":278528},{"Analytics":816},{"Hierarchy":832},{"Gui":80},{"EditorUtility":443551},{"VersionControl":4},{"Undo":944},{"AssetDatabase":1247842},{"EditorGi":328},{"UnityConnect":24816},{"Upm":1812},{"DrivenProperties":72},{"LocalIPC":196},{"ProfilerEditor":9738},{"CoreBusinessMetrics":14184},{"Licensing":3512},{"AssetReference":32},{"IPCStream":32}]}
+Build succeeded
+
+###########################
+#       Build output      #
+###########################
+
+total 8.0K
+drwxr-xr-x 2 root root 4.0K Nov  3 19:29 .
+drwxr-xr-x 4 root root 4.0K Nov  3 19:37 ..
+Changing to "/github/workspace/_activate-license~" directory.
+/github/workspace/_activate-license~ /github/workspace
+Returning personal license seat
+An error occured while trying to return the ULF license. Ulf license file not found (/root/.local/share/unity3d/Unity/Unity_lic.ulf) (1404)
+No ULF license file to return - this seat is entitlement-based; returning it through the editor instead.
+[UnityConnectServicesConfig] Local config successfully read: "/usr/share/unity3d/config/services-config.json"
+[UnityConnectServicesConfig] "clientConnectTimeoutSec" was overridden with "5"
+[UnityConnectServicesConfig] "clientHandshakeTimeoutSec" was overridden with "10"
+[UnityConnectServicesConfig] Service configuration:
+    "servicesConfigBaseUrl": "",
+    "disableServicesWindow": false,
+    "disableUserLogin": false,
+    "entitlementCacheTimeoutInSeconds": 60,
+    "clientConnectTimeoutSec": 5,
+    "clientHandshakeTimeoutSec": 10,
+    "clientResolveEntitlementsTimeoutSec": 30,
+    "clientUpdateLicenseTimeoutSec": 30,
+    "licensingServiceBaseUrl": "",
+    "enableProxyAutoconfig": "false"
+
+Unity Editor version:    6000.0.36f1 (9fe3b5f71dbb)
+Branch:                  6000.0/staging
+Build type:              Release
+Batch mode:              YES
+System name:             Linux
+Distro version:          #17-Ubuntu SMP PREEMPT Thu Sep 24 15:54:51 UTC 2026
+Kernel version:          7.0.0-1017-azure
+Architecture:            x86_64
+Available memory:        7930 MB
+User *** logged in successfully
+[UnityConnect::TryLogin] Request Succeeded.
+[Licensing::Module] Trying to connect to existing licensing client channel...
+[Licensing::IpcConnector] Connection attempt to the License Client on channel: "LicenseClient-root" failed because channel doesn't exist; code: "0x80000002"
+[Licensing::Module] Successfully launched the LicensingClient (PId: 570)
+[Licensing::IpcConnector] Successfully connected to the License Client on channel: "LicenseClient-root" at "2026-11-03T19:48:22.050773Z"
+[SignatureVerifier] Application signature verification not supported on this platform.
+[Licensing::Client] Handshaking with LicensingClient:
+  Version:                 1.16.2+bdef8f5
+  Session Id:              21d6391cec684b83955ff3c04f766796
+  Correlation Id:          9e2263c68f548bd5eb96d948b041d897
+  External correlation Id: 194881320902740046
+  Machine Id:              D7nTUnjNAmtsUMcnoyrqkgIbYdM=
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-root" (connect: 0.57s, validation: 0.10s, handshake: 0.00s)
+[Licensing::IpcConnector] Successfully connected to the License Notification on channel: "LicenseClient-root-notifications" at "2026-11-03T19:48:22.150023Z"
+[Licensing::Module] Connected to LicensingClient (PId: 570, launch time: 0.00, total connection time: 0.67s)
+[Licensing::Client] Successfully updated the access token
+[Licensing::Module] Successfully updated the access token dJhxTCQCSN...
+[Licensing::Client] Successfully processed license management request
+[Licensing::Module] Successfully returned the entitlement license
+[Licensing::Client] Successfully queried for the EntitlementGroupsDetails
+[Licensing::Module] Error: Serial number unavailable for ULF return; skipping operation
+/github/workspace
+::endgroup::
+[INFO] Build done.
