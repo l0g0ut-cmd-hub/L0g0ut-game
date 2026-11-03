@@ -19,6 +19,7 @@ namespace BladePath
         public static bool Open { get; private set; }
         static InventoryScreen inst;
         Item sel; int page; float openedAt;
+        bool runeModal; float runeModalAt;   // всплывающий выбор руны — отдельно от карточки, чтобы не обрезать эффекты предмета
         readonly List<Item> visibleBag = new List<Item>(64);
         int tab;                // 0 — снаряжение, 1 — прокачка
         int[] pending;          // распределение очков, пока не принято
@@ -167,6 +168,35 @@ namespace BladePath
             DrawStats(new Rect(stats.x + 8f, stats.y + 4f, stats.width - 16f, stats.height - 8f));
             DrawEquipped(new Rect(equipped.x + 8f, equipped.y + 4f, equipped.width - 16f, equipped.height - 8f));
             DrawBag(new Rect(bag.x + 8f, bag.y + 4f, bag.width - 16f, bag.height - 8f));
+            if (runeModal) DrawRuneModal(W);
+        }
+
+        /// <summary>Выбор руны поверх всего экрана: полный набор значков и подписей, ничего не обрезается.</summary>
+        void DrawRuneModal(float W)
+        {
+            if (sel == null || !Profile.Items.Contains(sel) || sel.slot != (int)Slot.Blade) { runeModal = false; return; }
+            float a = Mathf.Clamp01((Time.unscaledTime - runeModalAt) / 0.2f);
+            UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0.015f, 0.012f, 0.012f, 0.65f * a));
+            const float w = 420f, h = 300f;
+            Rect r = new Rect((W - w) * 0.5f, (540f - h) * 0.5f + (1f - a) * 20f, w, h);
+            VisualIdentity.Surface(r, a);
+            UiKit.Text(new Rect(r.x + 16f, r.y + 10f, r.width - 32f, 26f), "ВЫБЕРИ РУНУ", 17f, Gold, TextAnchor.MiddleLeft);
+            UiKit.Text(new Rect(r.x + 16f, r.y + 34f, r.width - 32f, 16f), "Кузнец вставит за " + Profile.RuneCost + " мон", 11f, Dimmed, TextAnchor.MiddleLeft);
+            Texture2D rt = UiKit.Tex("UI/runes");
+            int n = Profile.RuneNames.Length, cols = 4;
+            float rs = 64f, gap = 10f;
+            float gridW = cols * rs + (cols - 1) * gap, gx = r.x + (r.width - gridW) * 0.5f, gy = r.y + 58f;
+            for (int k = 0; k < n; k++)
+            {
+                Rect rr = new Rect(gx + (k % cols) * (rs + gap), gy + (k / cols) * (rs + gap), rs, rs);
+                if (sel.rune == k) UiKit.Rect(new Rect(rr.x - 3f, rr.y - 3f, rr.width + 6f, rr.height + 6f), new Color(1f, 0.85f, 0.4f, 0.9f));
+                if (rt != null) GUI.DrawTextureWithTexCoords(rr, rt, new Rect((k % 4) * 0.25f, k < 4 ? 0.5f : 0f, 0.25f, 0.5f));
+                if (GUI.Button(rr, GUIContent.none, GUIStyle.none) && Profile.Gold >= Profile.RuneCost) { Profile.SetRune(sel, k); runeModal = false; }
+            }
+            UiKit.Text(new Rect(r.x + 16f, gy + 2f * (rs + gap) + 4f, r.width - 32f, 36f),
+                sel.rune >= 0 ? "«" + Profile.RuneNames[sel.rune] + "»: " + Profile.RuneHints[sel.rune] : "коснись значка, чтобы вставить руну",
+                11.5f, new Color(0.7f, 0.85f, 1f), TextAnchor.UpperLeft, false);
+            if (Btn(new Rect(r.x + r.width - 110f, r.yMax - 44f, 94f, 32f), "ЗАКРЫТЬ")) runeModal = false;
         }
 
         void DrawStats(Rect a)
@@ -436,17 +466,12 @@ namespace BladePath
                     }
                     if (Profile.CostMul < 1f)
                     {
-                        UiKit.Text(new Rect(a.x + 10f, y + 2f, a.width - 20f, 14f), "Кузнец вставит руну: " + Profile.RuneCost + " мон", 11f, Dimmed, TextAnchor.MiddleLeft, false);
-                        y += 16f;
-                        Texture2D rt = UiKit.Tex("UI/runes");
-                        float rs = Mathf.Min(34f, (a.width - 20f) / 8f - 4f);
-                        for (int k = 0; k < Profile.RuneNames.Length; k++)
-                        {
-                            Rect rr = new Rect(a.x + 10f + k * (rs + 4f), y, rs, rs);
-                            if (it.rune == k) UiKit.Rect(new Rect(rr.x - 2f, rr.y - 2f, rr.width + 4f, rr.height + 4f), new Color(1f, 0.85f, 0.4f, 0.9f));
-                            if (rt != null) GUI.DrawTextureWithTexCoords(rr, rt, new Rect((k % 4) * 0.25f, k < 4 ? 0.5f : 0f, 0.25f, 0.5f));
-                            if (GUI.Button(rr, GUIContent.none, GUIStyle.none) && Profile.Gold >= Profile.RuneCost) Profile.SetRune(it, k);
-                        }
+                        // сетка значков рун раньше рисовалась прямо тут и у предметов с несколькими эффектами
+                        // вылезала за карточку (обрезалась кнопками снизу) — теперь это отдельное окно
+                        string label = (it.rune >= 0 ? "ЗАМЕНИТЬ РУНУ: " : "ВСТАВИТЬ РУНУ: ") + Profile.RuneCost + " мон";
+                        if (Btn(new Rect(a.x + 10f, y + 2f, a.width - 20f, 26f), label, Profile.Gold >= Profile.RuneCost))
+                        { runeModal = true; runeModalAt = Time.unscaledTime; }
+                        y += 30f;
                     }
                 }
             }
