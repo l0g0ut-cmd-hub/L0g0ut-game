@@ -1859,7 +1859,7 @@ namespace BladePath
 
         void TavLabel(Rect z, string text, bool used)
         {
-            if (used) UiKit.Rect(z, new Color(0f, 0f, 0f, 0.4f));
+            // использованное — только приглушённая подпись (тёмный квадрат поверх арта оставался пятном)
             Rect l = new Rect(z.center.x - 70f, z.yMax - 26f, 140f, 22f);
             UiKit.Rect(l, new Color(0.03f, 0.02f, 0.02f, used ? 0.5f : 0.72f));
             UiKit.Text(l, text, 11f, used ? Dim : Gold);
