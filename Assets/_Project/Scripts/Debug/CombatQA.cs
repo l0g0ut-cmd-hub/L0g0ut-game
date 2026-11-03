@@ -145,6 +145,7 @@ namespace BladePath
             yield return JumpStrikes();
             yield return Chains();
             yield return EnemyAttacks();
+            yield return ArenaCheck();
             yield return DiceThrows();
 
             Line("summary|fails " + Fails);
@@ -414,6 +415,49 @@ namespace BladePath
                 }
             }
             if (es != null) es.Apply(was);
+            attackerNow = null;
+        }
+
+        // ------------------------------------------------------------------ тестовая арена (ArenaVariants, облик 1)
+        IEnumerator ArenaCheck()
+        {
+            if (ArenaVariants.Instance == null || ArenaVariants.Count < 2) { Line("arena|нет второго облика арены"); yield break; }
+            for (int a = 1; a >= 0; a--)
+            {
+                ArenaVariants.Instance.Apply(a);
+                yield return Place(1.6f, 1.0f);
+                string nm = "arena_" + a;
+                Camera mc = Camera.main;
+                if (mc != null && cam != null)
+                {
+                    RenderTexture big = new RenderTexture(1280, 720, 24, RenderTextureFormat.ARGB32) { antiAliasing = 2 };
+                    Vector3 mid = (player.transform.position + enemy.transform.position) * 0.5f;
+                    Vector3 side = Vector3.Cross(Vector3.up, fwd);
+                    Vector3[] eyes = { mc.transform.position, mid + side * -5.5f + Vector3.up * 2.2f, mid + Vector3.up * 9f + side * -7f, mid + fwd * -6f + Vector3.up * 3f };
+                    for (int k = 0; k < eyes.Length; k++)
+                    {
+                        cam.transform.position = eyes[k];
+                        cam.transform.rotation = k == 0 ? mc.transform.rotation : Quaternion.LookRotation(mid + Vector3.up * 0.9f - eyes[k], Vector3.up);
+                        cam.fieldOfView = k == 0 ? mc.fieldOfView : 50f;
+                        cam.targetTexture = big; cam.Render();
+                        RenderTexture prev = RenderTexture.active; RenderTexture.active = big;
+                        Texture2D tx = new Texture2D(1280, 720, TextureFormat.RGB24, false); tx.ReadPixels(new Rect(0, 0, 1280, 720), 0, 0); tx.Apply();
+                        RenderTexture.active = prev; cam.targetTexture = null;
+                        File.WriteAllBytes(Path.Combine(OutDir, nm + "_view" + k + ".jpg"), tx.EncodeToJPG(85));
+                        Destroy(tx);
+                    }
+                    big.Release(); Destroy(big);
+                }
+                // бойцы стоят на полу: стопы на высоте 0, удар по-прежнему попадает
+                HeroRigDriver d = HeroRigDriver.Of(player);
+                float foot = d != null && d.footL != null ? Mathf.Min(d.footL.position.y, d.footR.position.y) : -1f;
+                ResetCounters(player);
+                SwingStat st = new SwingStat();
+                player.Attack(AttackType.Overhead);
+                yield return RunSwing(player, st, null, null);
+                string s = "arena|" + ArenaVariants.Names[a] + "|стопа y " + foot.ToString("F3") + "|удар сверху: " + Outcome(st);
+                if (contacts == 0) Fail(s); else Line(s + "|PASS");
+            }
             attackerNow = null;
         }
 

@@ -28,7 +28,13 @@ namespace BladePath.EditorTools
 
             Look look = VisualMaterials.Create();
             BuildCamera();
+            HashSet<GameObject> before = new HashSet<GameObject>(UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects());
             EnvironmentBuilder.Build(look);
+            // всё, что построил двор храма (кроме света), — облик 0; цельная арена Meshy — облик 1 (меню разработчика)
+            List<GameObject> templeRoots = new List<GameObject>();
+            foreach (GameObject g in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
+                if (!before.Contains(g) && g.GetComponent<Light>() == null) templeRoots.Add(g);
+            ArenaBuilder.Build(templeRoots.ToArray());
 
             // игрок слева, смотрит в +X; противник справа, смотрит в -X. Камера видит бойцов сбоку (вдоль мировой Z).
             // Оружие у игрока в правой руке (ближе к камере), у противника зеркально — тоже со стороны камеры.
