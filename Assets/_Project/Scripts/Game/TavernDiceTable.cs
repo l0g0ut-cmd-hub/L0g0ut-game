@@ -22,7 +22,7 @@ namespace BladePath
         public float StillFor { get; private set; }
 
         static readonly Vector3 Origin = new Vector3(0f, -1000f, 0f);   // далеко от арены: камера стола её не видит
-        const float Size = 0.07f, Step = 1f / 120f;   // 10 см на столе арта выглядели кирпичами
+        const float Size = 0.05f, Step = 1f / 120f;   // 10 см, потом 7 см на столе арта всё ещё выглядели крупно
         const float HalfW = 0.40f, HalfD = 0.30f, FarZ = 0.12f;   // площадка стола, м (по бокам на арте бутылка и стаканчик — туда не катятся)
 
         Scene scene; PhysicsScene phys; bool ready;

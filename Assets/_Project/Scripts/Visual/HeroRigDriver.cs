@@ -441,6 +441,12 @@ namespace BladePath
         /// таз (вынос, высота, поворот, наклон) → грудь → голова держит горизонт → ноги IK на стоящие стопы → руки IK на рукоять.
         /// Стопы не скользят: каждая стоит на своём месте, пока клип не «шагнул» ею (канал FF/RF).
         /// </summary>
+        /// <summary>Убрать упавшее тело (модель у рэгдолла живёт в корне сцены — при выключении бойца она оставалась на арене).</summary>
+        public void ResetRagdoll()
+        {
+            if (rag != null && rag.Active) { rag.Deactivate(); if (animator != null) { animator.enabled = true; animator.Rebind(); } gaitInit = false; deadK = 0f; fallDust = false; locoW = 0f; }
+        }
+
         void LateUpdate()
         {
             if (fighter == null || bladeRoot == null) return;

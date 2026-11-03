@@ -86,6 +86,11 @@ namespace BladePath
             Takeover = false; sideWinner = null; mainLoser = null; foeEnterAt = -1f;
             dm.player.opponent = dm.enemy; dm.enemy.opponent = dm.player;
             EnemyAI ea = MainAi(); if (ea != null) ea.target = dm.player;
+            // тела второй пары с прошлого раунда/боя: модель рэгдолла отцеплена от бойца — вернуть её на место до выключения
+            foreach (HeroRigDriver d in FindObjectsByType<HeroRigDriver>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (d != null && d.fighter != null && (d.fighter == ally || d.fighter == foe)) d.ResetRagdoll();
+            if (ally != null) ally.Dead = false;
+            if (foe != null) foe.Dead = false;
             On = Enabled && ally != null && foe != null && Profile.Ally >= 0 && !Profile.AllyDown;
             if (ally != null) ally.gameObject.SetActive(On);
             if (foe != null) foe.gameObject.SetActive(On);

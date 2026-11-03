@@ -90,7 +90,7 @@ namespace BladePath
 
         // накопление удара (узор на полу): они, сёгун со 2-й фазы, на высоких уровнях — все. Пока копит — стоит; прерви ударом,
         // иначе рывок и сокрушительный удар (со 2-й ступени блок не держит, на 3-й — волна, перепрыгни)
-        float chargeAt = 6f, chargeStart; int chargeGoal; bool chargeEarly; static bool chargeHinted;
+        float chargeAt = 6f, chargeStart, spaceUntil = -1f; int chargeGoal; bool chargeEarly; static bool chargeHinted;
         bool answering, answerChecked;   // копит навстречу накоплению игрока (встреча духа)
         bool Charge(float dist, bool busy)
         {
@@ -127,12 +127,22 @@ namespace BladePath
             if (Time.time < chargeAt || dist > 4.2f) return false;
             // копить можно только с дистанции, а бойцы держатся вплотную (1,15 м) — поэтому накопления не было вовсе:
             // решил копить — сперва отходит
+            // отход — одна короткая попытка (≈1,2 с) и не к стене: раньше боец пятился без конца и вжимался в угол
             if (dist < 1.8f)
             {
-                if (!busy && Time.time > dashAt && Random.value < 0.04f) { Vector3 away = self.transform.position - target.transform.position; away.y = 0f; self.Dash(XZ(away)); dashAt = Time.time + 1.5f; }   // противник идёт следом — шаг назад не помогал
-                else if (Time.time > retreatUntil) retreatUntil = Time.time + 0.6f;
+                Vector3 sp = self.transform.position;
+                bool wall = Mathf.Abs(sp.x) > self.arenaHalfWidth - 0.7f || sp.z > self.arenaBackDepth - 0.6f || sp.z < -self.arenaHalfDepth + 0.6f;
+                if (spaceUntil < 0f) spaceUntil = Time.time + 1.2f;
+                if (Time.time < spaceUntil && !wall)
+                {
+                    if (!busy && Time.time > dashAt && Random.value < 0.02f) { Vector3 away = sp - target.transform.position; away.y = 0f; self.Dash(XZ(away)); dashAt = Time.time + 2.5f; }
+                    else if (Time.time > retreatUntil) retreatUntil = Time.time + 0.5f;
+                    return false;
+                }
+                spaceUntil = -1f; chargeAt = Time.time + Random.Range(3f, 6f);   // места не нашлось — позже
                 return false;
             }
+            spaceUntil = -1f;
             if (Random.value > 0.05f + 0.01f * Level) return false;
             chargeAt = Time.time + Random.Range(6f, 10f) - Level * 0.6f;
             int goal = StageIdx == 2 ? (Random.value < 0.25f ? 3 : Random.value < 0.6f ? 2 : 1) : (StageIdx == 3 && Phase >= 3 ? 3 : StageIdx == 3 ? 2 : Random.Range(0, 2));   // ярость (IV) — они иногда, сёгун в 3-й фазе всегда
