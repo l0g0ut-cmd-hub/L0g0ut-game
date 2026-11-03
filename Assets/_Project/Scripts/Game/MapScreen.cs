@@ -274,6 +274,7 @@ namespace BladePath
             // погода над областью — под значками мест и героем: облака не закрывают, куда нажимать
             MapClouds.Draw(Campaign.Region, new Rect(mapX, 0f, viewW, MapH), u0, uw);
             MapBirds.Draw(new Rect(mapX, 0f, viewW, MapH), u0, uw);   // иногда пролетают ворон или стайка цапель
+            DrawBuildings();
             DrawTower();
             DrawNodes(interactive && modal == Modal.None && moveTo < 0);
             DrawHero();
@@ -392,6 +393,65 @@ namespace BladePath
         /// Место видно, если туман над ним разошёлся (герой подходил достаточно близко), как в «Героях 3».
         /// Владыка области виден всегда — это цель похода.
         /// </summary>
+        // ---- здания на карте (UI/map_buildings: 4×2 — трактир, кузница, лавка, привал, хижина травницы, храм, тайник, засада)
+        // Стоят рядом со своим значком, как смотровая башня: значок — куда нажать, здание — что там. Огонь в них мерцает.
+        static readonly Vector3[][] BuildingLights =
+        {
+            new[] { new Vector3(0.58f, 0.62f, 0.16f), new Vector3(0.30f, 0.59f, 0.1f) },    // трактир: фонарь, окно
+            new[] { new Vector3(0.35f, 0.55f, 0.2f) },                                        // кузница: горн
+            new Vector3[0],                                                                   // лавка
+            new[] { new Vector3(0.375f, 0.68f, 0.2f) },                                       // привал: костёр
+            new[] { new Vector3(0.68f, 0.5f, 0.1f) },                                         // травница: окно
+            new[] { new Vector3(0.29f, 0.43f, 0.1f), new Vector3(0.8f, 0.41f, 0.1f), new Vector3(0.49f, 0.43f, 0.1f) },   // храм: фонари
+            new[] { new Vector3(0.46f, 0.48f, 0.16f) },                                       // тайник: золото
+            new Vector3[0],                                                                   // засада
+        };
+        static int BuildingOf(MapNode n)
+        {
+            if (n.IsTavern) return 0;
+            switch (n.Type)
+            {
+                case NodeType.Smith: return 1; case NodeType.Merchant: return 2; case NodeType.Rest: return 3;
+                case NodeType.Herbalist: return 4; case NodeType.Shrine: return 5; case NodeType.Treasure: return 6; case NodeType.Ambush: return 7;
+                default: return -1;
+            }
+        }
+        void DrawBuildings()
+        {
+            if (Event.current.type != EventType.Repaint) return;
+            Texture2D atlas = UiKit.Tex("UI/map_buildings"), glow = UiKit.Tex("FX/glow_pool");
+            if (atlas == null) return;
+            Color oc = GUI.color;
+            float t = Time.unscaledTime;
+            List<MapNode> ns = Campaign.Nodes;
+            int tower = JourneyChoice.FogEnabled && ns.Count > 0 ? Campaign.Tower : -1;
+            for (int i = 0; i < ns.Count; i++)
+            {
+                MapNode n = ns[i];
+                int b = BuildingOf(n);
+                if (b < 0 || !Known(n)) continue;
+                if (b == 7 && n.done) continue;   // засада после боя — убрана с дороги
+                Vector2 p = P(n);
+                if (p.x < mapX - 80f || p.x > mapX + viewW + 80f) continue;
+                const float size = 74f;
+                float side = i == tower ? -1f : 1f;   // у смотровой башни здание встаёт с другой стороны
+                Rect r = new Rect(p.x + side * 38f - size * 0.5f, p.y - size * 0.78f, size, size);
+                bool dim = n.done && b != 0 && b != 1 && b != 2;   // пройденные приглушены (трактир, кузница и лавка — живые всегда)
+                GUI.color = dim ? new Color(0.72f, 0.7f, 0.68f, 0.9f) : Color.white;
+                GUI.DrawTextureWithTexCoords(r, atlas, new Rect((b % 4) * 0.25f, b < 4 ? 0.5f : 0f, 0.25f, 0.5f));
+                if (glow == null || (b == 6 && n.done)) continue;
+                foreach (Vector3 l in BuildingLights[b])
+                {
+                    float fl = 0.6f + 0.4f * Mathf.PerlinNoise(t * 3f + i * 3.1f + l.x * 9f, l.y * 7f);
+                    float g = l.z * size * (1f + 0.25f * fl);
+                    Vector2 c = new Vector2(r.x + l.x * size, r.y + l.y * size);
+                    GUI.color = b == 6 ? new Color(1f, 0.85f, 0.35f, 0.45f * fl) : new Color(1f, 0.6f, 0.25f, (dim ? 0.25f : 0.5f) * fl);
+                    GUI.DrawTexture(new Rect(c.x - g, c.y - g, g * 2f, g * 2f), glow);
+                }
+            }
+            GUI.color = oc;
+        }
+
         bool devTeleport;   // меню разработчика: следующее нажатие на карту — телепорт
 
         void DrawDev(bool ok)
