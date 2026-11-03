@@ -204,6 +204,9 @@ namespace BladePath
             if (gameObject.activeInHierarchy) ApplyStanceOpen();
             Cache(upperArmL, forearmL, handL, out l1L, out l2L);
             Cache(upperArmR, forearmR, handR, out l1R, out l2R);
+            // естественный поворот кисти к предплечью — из позы покоя модели (Start: Animator ещё не трогал кости)
+            if (forearmR != null && forearmL != null && handR != null && handL != null)
+            { relR = Quaternion.Inverse(forearmR.rotation) * handR.rotation; relL = Quaternion.Inverse(forearmL.rotation) * handL.rotation; relInit = true; }
             Cache(upperLegL, lowerLegL, footL, out lgL1, out lgL2);
             Cache(upperLegR, lowerLegR, footR, out lgR1, out lgR2);
             baseLocalPos = transform.localPosition;
@@ -803,14 +806,24 @@ namespace BladePath
             Vector3 outwardL = -ft.right * 1.0f + Vector3.down * 0.5f + back * 0.2f;
             // ключица помогает плечу: рука тянется вверх/вперёд — плечевой сустав поднимается и выдвигается за ней (как у человека).
             // Без этого у моделей Meshy при замахе над головой и выпаде плечо и наплечник сминались («рука ломается»).
-            ClavicleAssist(upperArmR, gripR); ClavicleAssist(upperArmL, gripL);
+            if (DebugClavicle) { ClavicleAssist(upperArmR, gripR); ClavicleAssist(upperArmL, gripL); }
             if (gripFromBind && framesReady && handR != null && handL != null)
             {
-                // запястье ставим так, чтобы центр кулака (точка в системе кисти) лёг на рукоять после поворота кисти
-                Quaternion qR = Quaternion.LookRotation(fR, nR) * bindR, qL = Quaternion.LookRotation(fL, nL) * bindL;
-                Vector3 oR = qR * Vector3.Scale(gripLocalR, handR.lossyScale), oL = qL * Vector3.Scale(gripLocalL, handL.lossyScale);
-                SolveArm(upperArmR, forearmR, handR, l1R, l2R, gripR - oR, outward);
-                SolveArm(upperArmL, forearmL, handL, l1L, l2L, gripL - oL, outwardL);
+                // запястье ставим так, чтобы центр кулака (точка в системе кисти) лёг на рукоять после поворота кисти;
+                // два прохода: после первого излом кисти ограничивается по НАСТОЯЩЕЙ оси предплечья (локоть → запястье),
+                // а не по линии плечо → хват, и рука ставится заново под исправленную кисть
+                for (int pass = 0; pass < 2; pass++)
+                {
+                    if (pass == 1)
+                    {
+                        if (forearmR != null) LimitWrist(handR.position - forearmR.position, maxWristBend, ref fR, ref nR);
+                        if (forearmL != null) LimitWrist(handL.position - forearmL.position, maxWristBend, ref fL, ref nL);
+                    }
+                    Quaternion qR = Quaternion.LookRotation(fR, nR) * bindR, qL = Quaternion.LookRotation(fL, nL) * bindL;
+                    Vector3 oR = qR * Vector3.Scale(gripLocalR, handR.lossyScale), oL = qL * Vector3.Scale(gripLocalL, handL.lossyScale);
+                    SolveArmStable(upperArmR, forearmR, handR, l1R, l2R, gripR - oR, outward, ref elbowPlaneR, dt);
+                    SolveArmStable(upperArmL, forearmL, handL, l1L, l2L, gripL - oL, outwardL, ref elbowPlaneL, dt);
+                }
             }
             else
             {
@@ -822,7 +835,7 @@ namespace BladePath
                 OrientHand(handR, bindR, fR, nR);
                 OrientHand(handL, bindL, fL, nL);
                 // скрутку кисти делит предплечье: иначе весь поворот уходит в запястье и меш у него «перекручивается» (руки ломаются)
-                if (relInit) { Untwist(forearmR, handR, relR); Untwist(forearmL, handL, relL); }
+                if (relInit && DebugTwistShare > 0f) { Untwist(forearmR, handR, relR); Untwist(forearmL, handL, relL); }
             }
             DrinkPose(ft, ys, dt);
         }
@@ -1334,6 +1347,38 @@ namespace BladePath
         }
 
         bool relInit; Quaternion relR = Quaternion.identity, relL = Quaternion.identity;
+        [Tooltip("Предел скрутки предплечья, град.")]
+        public float forearmTwistMax = 70f;
+        /// <summary>Отладка (меню разработчика): помощь ключицы и доля скрутки предплечья — для сравнения в игре.</summary>
+        public static bool DebugClavicle = true;
+        public static float DebugTwistShare = 0.45f;
+        Vector3 elbowPlaneR, elbowPlaneL;   // прошлое направление сгиба локтя (устойчивость)
+
+        /// <summary>
+        /// IK руки с устойчивой плоскостью локтя: желаемое направление сгиба (pole) сглаживается во времени и не перескакивает
+        /// на противоположную сторону; когда рука почти прямая или pole вырождается — держится прошлое направление.
+        /// </summary>
+        void SolveArmStable(Transform upper, Transform fore, Transform hand, float l1, float l2, Vector3 target, Vector3 pole, ref Vector3 plane, float dt)
+        {
+            if (upper == null) return;
+            Vector3 dir = target - upper.position;
+            if (dir.sqrMagnitude < 1e-8f) { SolveArm(upper, fore, hand, l1, l2, target, pole); return; }
+            dir.Normalize();
+            Vector3 want = Vector3.ProjectOnPlane(pole, dir);
+            Vector3 prev = plane.sqrMagnitude > 1e-6f ? Vector3.ProjectOnPlane(plane, dir) : Vector3.zero;
+            if (want.sqrMagnitude < 0.02f && prev.sqrMagnitude > 1e-6f) want = prev;            // вырождение — держим прошлое
+            if (want.sqrMagnitude < 1e-6f) want = Vector3.ProjectOnPlane(Vector3.down, dir);
+            want.Normalize();
+            if (prev.sqrMagnitude > 1e-6f)
+            {
+                prev.Normalize();
+                if (Vector3.Dot(want, prev) < -0.2f) want = prev;   // не перескакивать через руку на другую сторону
+                float k = 1f - Mathf.Exp(-Mathf.Max(dt, 1e-4f) / 0.06f);
+                want = Vector3.Slerp(prev, want, k).normalized;
+            }
+            plane = want;
+            SolveArm(upper, fore, hand, l1, l2, target, want);
+        }
         [Tooltip("Доля скрутки кисти, которую берёт предплечье (0 — вся в запястье). У моделей без костей скрутки 0,5–0,6.")]
         public float forearmTwistShare = 0.6f;
 
@@ -1357,7 +1402,8 @@ namespace BladePath
             float ang; Vector3 axis; tw.ToAngleAxis(out ang, out axis);
             if (ang > 180f) ang -= 360f;
             if (Vector3.Dot(axis, ax) < 0f) ang = -ang;
-            fore.rotation = Quaternion.AngleAxis(ang * forearmTwistShare, ax) * fore.rotation;
+            ang = Mathf.Clamp(ang * DebugTwistShare, -forearmTwistMax, forearmTwistMax);   // анатомический предел скрутки предплечья
+            fore.rotation = Quaternion.AngleAxis(ang, ax) * fore.rotation;
             hand.rotation = want;
         }
 
