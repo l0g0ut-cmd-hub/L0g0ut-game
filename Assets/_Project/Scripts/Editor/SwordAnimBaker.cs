@@ -35,8 +35,10 @@ namespace BladePath
             new Spec("Block", "great sword blocking", -2),
             new Spec("Overhead", "great sword slash", (int)AttackType.Overhead, 11, 17, 21, 24, 38),
             new Spec("Slash", "great sword slash (3)", (int)AttackType.Slash, 0, 25, 30, 33, 55),
-            // по выгрузке клипа: кадры 0–10 — руки к правому плечу (замах), 11–16 — рез вперёд; было 3–6 — окно удара шло на замахе назад
-            new Spec("SlashBack", "great sword attack", (int)AttackType.SlashBack, 0, 11, 16, 20, 36),
+            // «great sword attack» оказался не резом: кисти идут вперёд, а клинок смотрит вбок (автотест: остриё ни разу не вышло вперёд,
+            // 0 контактов). Берём «great sword slash (4)»: кадры 0–12 — клинок за правым плечом, 12–20 — рез справа налево к цели;
+            // дальше в клипе прыжок с ударом сверху — восстановление коротко, к стойке
+            new Spec("SlashBack", "great sword slash (4)", (int)AttackType.SlashBack, 0, 12, 20, 23, 27),
             new Spec("LegSweep", "great sword slash (5)", (int)AttackType.LegSweep, 0, 11, 16, 19, 43),
             new Spec("Rising", "great sword slash (2)", (int)AttackType.Rising, 62, 75, 83, 86, 106),
             // в воздухе — клип удара сверху: «great sword jump attack» по CI-логу ведёт клинок кругом вокруг самого бойца
