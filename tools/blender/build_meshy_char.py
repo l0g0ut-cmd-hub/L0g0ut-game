@@ -67,6 +67,45 @@ if RIG:
                 for g in o.vertex_groups:
                     if g.name in ren: g.name = ren[g.name]
         log('скелет Mixamo → имена Humanoid:', len(ren), 'костей')
+    # T-поза → A-поза: весь конвейер (кулак, позы хвата, клипы, мокап в Unity) рассчитан на руки, опущенные ~60° от
+    # горизонтали, как у остальных моделей. Поворачиваем плечевую кость вокруг оси «вперёд» и делаем позу покоем.
+    def apose():
+        mw = arm.matrix_world
+        ax = (mw.inverted().to_3x3() @ Vector((0, 1, 0))).normalized()
+        bpy.ops.object.select_all(action='DESELECT'); bpy.context.view_layer.objects.active = arm; arm.select_set(True)
+        arm.data.pose_position = 'POSE'
+        bpy.ops.object.mode_set(mode='POSE'); bpy.ops.pose.select_all(action='SELECT'); bpy.ops.pose.transforms_clear()
+        target = math.radians(-60); done = False
+        for side in ('Left', 'Right'):
+            ua = arm.pose.bones.get(side + 'UpperArm'); hb = arm.pose.bones.get(side + 'Hand')
+            if ua is None or hb is None: continue
+            def ang():
+                bpy.context.view_layer.update(); d = mw @ hb.head - mw @ ua.head
+                return math.atan2(d.z, abs(d.x))
+            phi = ang()
+            if phi < math.radians(-35): continue   # уже A-поза
+            h = ua.head.copy()
+            for sgn in (1, -1):
+                old = ua.matrix.copy()
+                ua.matrix = Matrix.Translation(h) @ Matrix.Rotation(sgn * (phi - target), 4, ax) @ Matrix.Translation(-h) @ old
+                if abs(ang() - target) < math.radians(5): break
+                ua.matrix = old
+            log('A-поза', side, round(math.degrees(phi)), '→', round(math.degrees(ang())))
+            done = True
+        bpy.ops.object.mode_set(mode='OBJECT')
+        if not done: arm.data.pose_position = 'REST'; bpy.context.view_layer.update(); return
+        for o in bpy.data.objects:
+            if o.type != 'MESH': continue
+            for m in list(o.modifiers):
+                if m.type == 'ARMATURE':
+                    bpy.ops.object.select_all(action='DESELECT'); bpy.context.view_layer.objects.active = o; o.select_set(True)
+                    try: bpy.ops.object.modifier_apply(modifier=m.name)
+                    except Exception as e: log('A-поза: не применился модификатор', o.name, e)
+        bpy.ops.object.select_all(action='DESELECT'); bpy.context.view_layer.objects.active = arm; arm.select_set(True)
+        bpy.ops.object.mode_set(mode='POSE'); bpy.ops.pose.select_all(action='SELECT'); bpy.ops.pose.armature_apply(selected=False)
+        bpy.ops.object.mode_set(mode='OBJECT')
+        arm.data.pose_position = 'REST'; bpy.context.view_layer.update()
+    apose()
     for b in arm.data.bones:
         MB[b.name] = (arm.matrix_world @ b.head_local, arm.matrix_world @ b.tail_local)
         MPAR[b.name] = b.parent.name if b.parent else None
