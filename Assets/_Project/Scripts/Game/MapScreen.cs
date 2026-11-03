@@ -416,6 +416,20 @@ namespace BladePath
                 default: return -1;
             }
         }
+        // ---- стоянки и места событий (UI/map_camps_<область>: 4×2 — одиночка, застава, лагерь отряда, логово, перекрёсток, руины, могилы, разорённая стоянка)
+        static int CampOf(MapNode n, int i)
+        {
+            switch (n.Type)
+            {
+                case NodeType.Duel: case NodeType.Elite:
+                    if (n.done) return 7;
+                    if (n.extra != null && n.extra.Count > 0) return 2;
+                    return n.Type == NodeType.Elite ? 1 : 0;
+                case NodeType.Event: return 4 + (i * 7 + 3) % 3;   // перекрёсток, руины или могилы — по месту, всегда одно и то же
+                default: return -1;   // логово главаря уже нарисовано на карте области
+            }
+        }
+
         // место здания у значка: из нескольких сторон выбирается та, что дальше всего от дорог, воды (мост!) и других мест
         static readonly Vector2[] BuildingSpots = { new Vector2(38f, 0f), new Vector2(-38f, 0f), new Vector2(30f, -22f), new Vector2(-30f, -22f), new Vector2(0f, -34f), new Vector2(34f, 24f), new Vector2(-34f, 24f) };
         readonly Dictionary<int, Vector2> buildingOff = new Dictionary<int, Vector2>();
@@ -460,7 +474,8 @@ namespace BladePath
             // свой набор у каждой области: лес (_0), горы Они (общий), сёгунат (_2)
             Texture2D atlas = Campaign.Region != 1 ? UiKit.Tex("UI/map_buildings_" + Campaign.Region) : null, glow = UiKit.Tex("FX/glow_pool");
             if (atlas == null) atlas = UiKit.Tex("UI/map_buildings");
-            if (atlas == null) return;
+            Texture2D camps = UiKit.Tex("UI/map_camps_" + Campaign.Region);   // стоянки у боёв и места событий — свой набор у каждой области
+            if (atlas == null && camps == null) return;
             Color oc = GUI.color;
             float t = Time.unscaledTime;
             List<MapNode> ns = Campaign.Nodes;
@@ -468,14 +483,22 @@ namespace BladePath
             for (int i = 0; i < ns.Count; i++)
             {
                 MapNode n = ns[i];
-                int b = BuildingOf(n);
-                if (b < 0 || !Known(n)) continue;
+                int b = atlas != null ? BuildingOf(n) : -1;
+                int cp = b < 0 && camps != null ? CampOf(n, i) : -1;
+                if ((b < 0 && cp < 0) || !Known(n)) continue;
                 if (b == 7 && n.done) continue;   // засада после боя — убрана с дороги
                 Vector2 p = P(n);
                 if (p.x < mapX - 80f || p.x > mapX + viewW + 80f) continue;
                 const float size = 74f;
                 Vector2 off = BuildingOffset(i, tower);
                 Rect r = new Rect(p.x + off.x - size * 0.5f, p.y + off.y - size * 0.78f, size, size);
+                if (cp >= 0)
+                {
+                    // стоянка: после победы — разорённая (ячейка 8), место события после посещения приглушено
+                    GUI.color = n.done && cp >= 4 && cp <= 6 ? new Color(0.72f, 0.7f, 0.68f, 0.9f) : Color.white;
+                    GUI.DrawTextureWithTexCoords(r, camps, new Rect((cp % 4) * 0.25f, cp < 4 ? 0.5f : 0f, 0.25f, 0.5f));
+                    continue;
+                }
                 bool dim = n.done && b != 0 && b != 1 && b != 2;   // пройденные приглушены (трактир, кузница и лавка — живые всегда)
                 GUI.color = dim ? new Color(0.72f, 0.7f, 0.68f, 0.9f) : Color.white;
                 GUI.DrawTextureWithTexCoords(r, atlas, new Rect((b % 4) * 0.25f, b < 4 ? 0.5f : 0f, 0.25f, 0.5f));
