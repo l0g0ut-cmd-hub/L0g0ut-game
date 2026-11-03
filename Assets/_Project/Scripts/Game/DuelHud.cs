@@ -321,13 +321,13 @@ namespace BladePath
             DrawCombo(duel.enemy, new Vector2(W - 70f, 121f), TextAnchor.MiddleRight);
 
             // счёт раундов: по два ромба под полосками
-            DrawPips(new Vector2(cx - 92f, 64f), duel.PlayerWins, duel.winsToMatch, false);
-            DrawPips(new Vector2(cx + 92f, 64f), duel.EnemyWins, duel.winsToMatch, true);
+            DrawPips(new Vector2(cx - 92f, 64f), duel.PlayerWins, duel.NeedWins, false);
+            DrawPips(new Vector2(cx + 92f, 64f), duel.EnemyWins, duel.NeedWins, true);
 
             // «БОЙ!»
             if (duel.State == DuelState.Intro)
             {
-                bool deciding = duel.PlayerWins == duel.winsToMatch - 1 && duel.EnemyWins == duel.winsToMatch - 1;
+                bool deciding = duel.PlayerWins == duel.NeedWins - 1 && duel.EnemyWins == duel.NeedWins - 1;
                 float ta = Mathf.Clamp01(1f - duel.StateTime / duel.IntroLength * 0.9f);
                 UiKit.Text(new Rect(cx - 300f, 110f, 600f, 40f), deciding ? "РЕШАЮЩИЙ РАУНД" : "РАУНД " + duel.Round, 26f, new Color(0.95f, 0.9f, 0.8f, ta));
                 if (duel.Round == 1)

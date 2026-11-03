@@ -272,7 +272,32 @@ namespace BladePath
             ResetMatch();
         }
 
-        public bool PlayerWonMatch { get { return MatchOver && PlayerWins >= winsToMatch; } }
+        public bool PlayerWonMatch { get { return MatchOver && PlayerWins >= NeedWins; } }
+
+        // ---------------- отряд: противники выходят по очереди ----------------
+        /// <summary>Побед до конца матча: с первым противником — как обычно, со следующими из отряда — один раунд.</summary>
+        public int NeedWins { get { return Campaign.FoeIndex > 0 ? 1 : winsToMatch; } }
+        bool squadSwap;
+        /// <summary>Матч с текущим противником выигран, а в отряде ещё есть кто-то: следующий вступает (матч не заканчивается).</summary>
+        bool SquadNext()
+        {
+            if (PlayerWins < NeedWins || Campaign.FoesLeft <= 0) return false;
+            squadSwap = true;
+            int st = Campaign.FightNode != null && Campaign.FightNode.extra.Count > Campaign.FoeIndex ? Campaign.FightNode.extra[Campaign.FoeIndex] : 0;
+            Announce("ВСТУПАЕТ: " + Ladder.Stages[Mathf.Clamp(st, 0, Ladder.Count - 1)].name.ToUpperInvariant(), new Color(1f, 0.45f, 0.3f), "отряд не даёт передышки — здоровье не восстановится");
+            return true;
+        }
+        void SwapToNextFoe()
+        {
+            squadSwap = false;
+            float frac = Mathf.Max(0.35f, Hp01(player));
+            int st = Campaign.NextFoe();
+            if (st >= 0) Ladder.Index = st;
+            PlayerWins = 0; EnemyWins = 0; Round = 1;
+            ApplyStage();
+            ResetDuel();
+            if (player != null) { hp[player] = MaxHp(player) * frac; hpTrail[player] = hp[player]; }
+        }
 
         public float MatchStartedAt { get; private set; }
 
@@ -327,7 +352,7 @@ namespace BladePath
         public void ResetMatch()
         {
             MatchStartedAt = Time.unscaledTime;
-            PlayerWins = 0; EnemyWins = 0; Round = 1; MatchOver = false;
+            PlayerWins = 0; EnemyWins = 0; Round = 1; MatchOver = false; squadSwap = false;
             Resurrections = 1;   // 回生 — раз за матч
             ApplyProfile();
             if (player != null) player.Gourds = player.gourdMax;   // тыква-горлянка — полная на матч
@@ -501,7 +526,11 @@ namespace BladePath
             }
             if (Slowmo && Time.unscaledTime >= slowUntil) Slowmo = false;
             UpdateMuffle();
-            if (!MatchOver && !Paused && (State == DuelState.PlayerWon || State == DuelState.PlayerLost) && Time.unscaledTime >= nextRoundAt) { Round++; ResetDuel(); return; }
+            if (!MatchOver && !Paused && (State == DuelState.PlayerWon || State == DuelState.PlayerLost) && Time.unscaledTime >= nextRoundAt)
+            {
+                if (squadSwap) SwapToNextFoe(); else { Round++; ResetDuel(); }
+                return;
+            }
             ApplyTimeScale();
 
             CheckClash();
@@ -1398,8 +1427,8 @@ namespace BladePath
             SetState(playerLost ? DuelState.PlayerLost : DuelState.PlayerWon);
             if (playerLost) EnemyWins++; else PlayerWins++;
             Perfect = playerLost ? hpE >= MaxMarks(enemy) - 0.001f : hpP >= 0.999f;
-            MatchOver = PlayerWins >= winsToMatch || EnemyWins >= winsToMatch;
-            if (MatchOver) { Records.OnMatch(PlayerWins >= winsToMatch, Ladder.Index); GrantReward(); }
+            MatchOver = !SquadNext() && (PlayerWins >= NeedWins || EnemyWins >= NeedWins);
+            if (MatchOver) { Records.OnMatch(PlayerWins >= NeedWins, Ladder.Index); GrantReward(); }
             if (Juice.Instance != null) Juice.Instance.Taiko(1f, 0.8f);
         }
 
@@ -1424,7 +1453,7 @@ namespace BladePath
         /// <summary>Матч окончен: опыт, монеты, добыча (та же оценка боя, что на экране итогов).</summary>
         void GrantReward()
         {
-            bool won = PlayerWins >= winsToMatch;
+            bool won = PlayerWins >= NeedWins;
             Stats p = StatsOf(player), e = StatsOf(enemy);
             int score = (won ? 40 : 0) + p.parries * 6 + p.maxCombo * 4 + p.hits * 2 + p.blocks + p.supers * 3 - e.hits * 5;
             if (Campaign.Rematch) Profile.Grant(won, Ladder.Index, score, false, false, false, 0.5f, true);   // реванш: монеты вполовину, без добычи
@@ -1638,8 +1667,8 @@ namespace BladePath
             Perfect = attacker != null && Hp(attacker) >= MaxHp(attacker);
             SetState(playerLost ? DuelState.PlayerLost : DuelState.PlayerWon);
             if (playerLost) EnemyWins++; else PlayerWins++;
-            MatchOver = PlayerWins >= winsToMatch || EnemyWins >= winsToMatch;
-            if (MatchOver) { Records.OnMatch(PlayerWins >= winsToMatch, Ladder.Index); GrantReward(); if (Juice.Instance != null && target != null) Juice.Instance.SpiritRise(target.transform.position); }
+            MatchOver = !SquadNext() && (PlayerWins >= NeedWins || EnemyWins >= NeedWins);
+            if (MatchOver) { Records.OnMatch(PlayerWins >= NeedWins, Ladder.Index); GrantReward(); if (Juice.Instance != null && target != null) Juice.Instance.SpiritRise(target.transform.position); }
             nextRoundAt = Time.unscaledTime + nextRoundDelay;
             if (attacker != null) attacker.Frozen = true;
             Slowmo = true; slowUntil = Time.unscaledTime + 1.1f;

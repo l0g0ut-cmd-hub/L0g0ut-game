@@ -1333,6 +1333,7 @@ namespace BladePath
                     string mods = "";
                     if (n.Type == NodeType.Elite) mods += "Сильнее обычного: +35% здоровья, +15% урона, лишняя жизнь.\nДобыча не ниже редкой, мон больше.\n";
                     if (n.Type == NodeType.Ambush) mods += "Засада: бой ночью, враг начинает с полным духом.\nМон в полтора раза больше.\n";
+                    if (n.extra != null && n.extra.Count > 0) mods += Campaign.SquadText(n) + "\n";
                     if (n.Type == NodeType.Boss) mods += "Владыка области. Победа откроет путь дальше" + (Campaign.Region >= 2 ? " — и новый круг." : ".") + "\n";
                     if (Campaign.BlessingText.Length > 0) mods += Campaign.BlessingText + "\n";
                     if (mods.Length == 0) mods = "Честный поединок.";

@@ -16,6 +16,7 @@ namespace BladePath
         public int ev = -1;         // событие: 0 раненый ронин, 1 монах, 2 разбойники, 3 кицунэ, 4 чайный домик, 5 дева в храме, 6 монах на мосту, 7 беженцы, 8 кот-хранитель
         public bool done;
         public List<int> next = new List<int>();
+        public List<int> extra = new List<int>();   // отряд: противники, которые вступают по очереди после первого (ступени Ladder)
         public NodeType Type { get { return (NodeType)type; } }
         public bool IsFight { get { NodeType t = Type; return t == NodeType.Duel || t == NodeType.Elite || t == NodeType.Boss || t == NodeType.Ambush; } }
     }
@@ -41,6 +42,7 @@ namespace BladePath
             public bool cursed;         // проклятие кицунэ: −25% здоровья в следующем бою
             public int clearedRegion = -1;   // только что пройденная область (для плашки на карте)
             public int bounty;              // заказ из трактира: награда за сильного противника (за владыку — вдвое); 0 — нет заказа
+            public int foe;                 // который по счёту противник отряда сейчас на арене (0 — первый)
             public bool rematch;            // идёт бой-реванш на уже пройденном месте (награда урезана, без добычи)
             public int rolls = 1;            // кости пути в запасе (кость — за каждую победу)
             public int steps;                // ходов осталось после броска
@@ -427,6 +429,16 @@ namespace BladePath
                     }
                 }
             }
+            // отряды: иногда на дороге ждут двое-трое — бьются по очереди (второй вступает, как только пал первый)
+            foreach (MapNode sq in dd.nodes)
+            {
+                if (sq.extra == null) sq.extra = new List<int>();
+                sq.extra.Clear();
+                if ((sq.Type != NodeType.Duel && sq.Type != NodeType.Ambush && sq.Type != NodeType.Elite) || sq.layer < 2) continue;
+                float rr = UnityEngine.Random.value;
+                if (rr < 0.2f) sq.extra.Add(DuelEnemy(region));
+                if (rr < 0.2f && region >= 1 && UnityEngine.Random.value < 0.35f) sq.extra.Add(DuelEnemy(region));
+            }
             // одна и та же услуга (кузница, привал, торговец, храм) не стоит дважды подряд на одной дороге — второе место становится боем или событием
             for (int pass = 0; pass < 2; pass++)
                 foreach (MapNode a in dd.nodes)
@@ -533,9 +545,27 @@ namespace BladePath
         public static bool Rematch { get { return InFight && D.rematch; } }
         public static void BeginRematch() { if (!CanRematch) return; BeginFight(D.at, true); }
 
+        /// <summary>Сколько противников отряда ещё ждут своей очереди.</summary>
+        public static int FoesLeft { get { MapNode n = FightNode; return n == null || n.extra == null ? 0 : Mathf.Max(0, n.extra.Count - D.foe); } }
+        public static int FoeIndex { get { return InFight ? D.foe : 0; } }
+        /// <summary>Следующий противник отряда выходит на арену: его ступень Ladder (или −1, если очередь пуста).</summary>
+        public static int NextFoe()
+        {
+            if (FoesLeft <= 0) return -1;
+            int st = FightNode.extra[D.foe]; D.foe++; Save();
+            return st;
+        }
+        public static string SquadText(MapNode n)
+        {
+            if (n == null || n.extra == null || n.extra.Count == 0) return "";
+            string s = "Отряд: после него выйдут ";
+            for (int i = 0; i < n.extra.Count; i++) s += (i > 0 ? ", " : "") + Ladder.Stages[Mathf.Clamp(n.extra[i], 0, Ladder.Count - 1)].name;
+            return s + " — по одному раунду, без передышки.";
+        }
+
         public static void BeginFight(int i, bool rematch = false)
         {
-            D.rematch = rematch;
+            D.rematch = rematch; D.foe = 0;
             D.fight = i;
             MapNode n = D.nodes[i];
             Ladder.Index = n.enemy;
@@ -619,7 +649,17 @@ namespace BladePath
         public static bool EnemyFullKi { get { return InFight && FightType == NodeType.Ambush; } }
         public static bool RareDrop { get { NodeType t = FightType; return InFight && (t == NodeType.Elite || t == NodeType.Boss); } }
         public static bool FinalBoss { get { return InFight && FightType == NodeType.Boss && D.region >= RegionNames.Length - 1; } }
-        public static float GoldMul { get { NodeType t = FightType; return D.training ? 0.5f : !InFight ? 1f : t == NodeType.Ambush ? 1.5f : t == NodeType.Elite ? 1.3f : 1f; } }
+        public static float GoldMul
+        {
+            get
+            {
+                NodeType t = FightType;
+                float m = D.training ? 0.5f : !InFight ? 1f : t == NodeType.Ambush ? 1.5f : t == NodeType.Elite ? 1.3f : 1f;
+                MapNode n = FightNode;
+                if (InFight && n != null && n.extra != null) m *= 1f + 0.4f * n.extra.Count;   // отряд — больше мон
+                return m;
+            }
+        }
 
         public static string BlessingText
         {
