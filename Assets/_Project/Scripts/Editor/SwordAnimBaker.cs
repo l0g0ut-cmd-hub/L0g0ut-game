@@ -79,6 +79,16 @@ namespace BladePath
                 for (int i = 0; i < n; i++) if (s0[i] == null) { Debug.LogWarning("SwordAnimBaker: у X Bot нет " + Src[i]); return null; }
                 Quaternion[] s0R = new Quaternion[n];
                 for (int i = 0; i < n; i++) s0R[i] = s0[i].rotation;
+                // таз: высота в Т-позе и масштаб по длине ноги (наша модель / X Bot)
+                Transform sHip = FindMixamo(restGo.transform, "Hips"), sUL = FindMixamo(restGo.transform, "LeftUpLeg"), sLL = FindMixamo(restGo.transform, "LeftLeg"), sFt = FindMixamo(restGo.transform, "LeftFoot");
+                Transform dUL = find("UpperLeg.L"), dLL = find("LowerLeg.L"), dFt = find("Foot.L");
+                float hipRestY = sHip != null ? sHip.position.y : 0f, legRatio = 1f;
+                if (sUL != null && sLL != null && sFt != null && dUL != null && dLL != null && dFt != null)
+                {
+                    float ls = Vector3.Distance(sUL.position, sLL.position) + Vector3.Distance(sLL.position, sFt.position);
+                    float ld = Vector3.Distance(dUL.position, dLL.position) + Vector3.Distance(dLL.position, dFt.position);
+                    if (ls > 1e-4f) legRatio = ld / ls;
+                }
 
                 // ось «вдоль кости» в системе нашей кости (у кисти нет кости-ребёнка — берём ту же ось, что у предплечья)
                 Vector3 alongFore = Quaternion.Inverse(dst[SwordAnimSet.ForearmR].rotation) * (dst[SwordAnimSet.HandR].position - dst[SwordAnimSet.ForearmR].position).normalized;
@@ -118,10 +128,12 @@ namespace BladePath
                         Transform[] sb = new Transform[n];
                         for (int i = 0; i < n; i++) sb[i] = FindMixamo(go.transform, Src[i]);
                         int frames = Mathf.Max(2, Mathf.RoundToInt(ac.length * 30f) + 1);
-                        SwordAnimSet.Clip c = new SwordAnimSet.Clip { name = sp.name, type = sp.type >= 0 ? sp.type : -1, frames = frames, marks = sp.marks, rot = new Quaternion[frames * n] };
+                        SwordAnimSet.Clip c = new SwordAnimSet.Clip { name = sp.name, type = sp.type >= 0 ? sp.type : -1, frames = frames, marks = sp.marks, rot = new Quaternion[frames * n], hipY = new float[frames] };
+                        Transform aHip = FindMixamo(go.transform, "Hips");
                         for (int k = 0; k < frames; k++)
                         {
                             ac.SampleAnimation(go, Mathf.Min(ac.length, k / 30f));
+                            if (aHip != null) c.hipY[k] = (aHip.position.y - hipRestY) * legRatio;
                             for (int i = 0; i < n; i++)
                             {
                                 Quaternion q = aligned[i];

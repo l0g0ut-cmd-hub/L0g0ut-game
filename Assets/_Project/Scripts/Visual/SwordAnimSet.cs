@@ -22,6 +22,7 @@ namespace BladePath
             public int frames;           // кадров (30 к/с)
             public float[] marks;        // кадры: начало замаха, начало удара, конец удара, конец проводки, конец восстановления
             public Quaternion[] rot;     // [кадр × кости]
+            public float[] hipY;         // высота таза по кадрам относительно Т-позы, в метрах нашей модели (присед в ударе)
         }
 
         public string[] bonePaths;       // путь от корня модели (пустая строка — кости нет)
@@ -33,6 +34,16 @@ namespace BladePath
         public Vector3 bladeEdgeR;       // направление кромки в системе правой кисти
 
         public int Bones { get { return BoneNames.Length; } }
+
+        /// <summary>Высота таза в кадре f (дробный).</summary>
+        public static float Hip(Clip c, float f, bool loop)
+        {
+            if (c == null || c.hipY == null || c.hipY.Length == 0) return 0f;
+            int len = c.hipY.Length;
+            if (loop) f = Mathf.Repeat(f, len); else f = Mathf.Clamp(f, 0f, len - 1);
+            int a = Mathf.FloorToInt(f) % len, b = loop ? (a + 1) % len : Mathf.Min(a + 1, len - 1);
+            return Mathf.Lerp(c.hipY[a], c.hipY[b], f - Mathf.Floor(f));
+        }
 
         public Clip ForAttack(AttackType t)
         {

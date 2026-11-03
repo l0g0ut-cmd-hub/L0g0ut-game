@@ -610,6 +610,7 @@ namespace BladePath
 
             // ---------- 2) таз: вынос вперёд и высота (вся модель) — визуально; зоны поражения едут следом (FollowZones)
             float drop = (stanceDrop * (1f - 0.5f * postK) + pd + walkCrouch * moveK) * wSt * procW;   // на мокапе высоту таза задаёт клип
+            drop += swHipDrop * swW * wSt;   // мокап удара приседает — таз опускается, IK ног сгибает колени (стопы на земле)
             drop += 0.11f * Mathf.Sin(Mathf.PI * Mathf.Min(1f, (1f - landK) * 1.6f)) * (landK > 0f ? 1f : 0f) * wSt;   // проседание при приземлении
             Vector3 off = new Vector3(walkSx * wLeg, -drop, pf);
             transform.localPosition = baseLocalPos + off;
@@ -856,6 +857,7 @@ namespace BladePath
         Quaternion[] swIdle, swAtk, swBlock, swTarget, swSmooth;
         bool swInit;
         float swW, swIdleT;
+        float swHipDrop, swIdleHip = float.NaN;   // присед клипа относительно средней высоты таза в стойке клипа
 
         void AnimSwordPass(Transform ft, float dt)
         {
@@ -896,6 +898,25 @@ namespace BladePath
                 // в конце восстановления клип сходится к стойке
                 float back = weapon.Phase == SwingPhase.Recovery ? Smooth(Mathf.InverseLerp(0.6f, 1f, p)) : 0f;
                 for (int i = 0; i < n; i++) swTarget[i] = Quaternion.Slerp(swAtk[i], swIdle[i], back);
+            }
+            // присед: насколько таз клипа ниже, чем в его стойке (в стойке у нас своя высота) — на следующий кадр, до IK ног
+            {
+                SwordAnimSet.Clip ic = swordSet.clips[swordSet.idle];
+                if (float.IsNaN(swIdleHip))
+                {
+                    swIdleHip = 0f;
+                    if (ic.hipY != null && ic.hipY.Length > 0) { foreach (float h in ic.hipY) swIdleHip += h; swIdleHip /= ic.hipY.Length; }
+                }
+                float hy = swIdleHip;
+                if (atk != null && atk.marks != null && atk.marks.Length >= 5 && atk.hipY != null)
+                {
+                    float[] m = atk.marks; float p = weapon.PhaseProgress;
+                    float f = weapon.Phase == SwingPhase.Windup ? Mathf.Lerp(m[0], m[1], p) : weapon.Phase == SwingPhase.Strike ? Mathf.Lerp(m[1], m[2], p) : weapon.Phase == SwingPhase.FollowThrough ? Mathf.Lerp(m[2], m[3], p) : Mathf.Lerp(m[3], m[4], p);
+                    float back = weapon.Phase == SwingPhase.Recovery ? Smooth(Mathf.InverseLerp(0.6f, 1f, p)) : 0f;
+                    hy = Mathf.Lerp(SwordAnimSet.Hip(atk, f, false), swIdleHip, back);
+                }
+                float want = Mathf.Clamp(swIdleHip - hy, 0f, 0.3f);
+                swHipDrop = Mathf.Lerp(swHipDrop, want, 1f - Mathf.Exp(-dt / 0.04f));
             }
             float bk = weapon.BlockK;
             if (bk > 0.001f && swordSet.block >= 0)
