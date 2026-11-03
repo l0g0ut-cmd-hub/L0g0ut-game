@@ -84,12 +84,9 @@ if RIG:
                 return math.atan2(d.z, abs(d.x))
             phi = ang()
             if phi < math.radians(-35): continue   # уже A-поза
-            h = ua.head.copy()
-            for sgn in (1, -1):
-                old = ua.matrix.copy()
-                ua.matrix = Matrix.Translation(h) @ Matrix.Rotation(sgn * (phi - target), 4, ax) @ Matrix.Translation(-h) @ old
-                if abs(ang() - target) < math.radians(5): break
-                ua.matrix = old
+            # поворот вокруг «вперёд» (+Y): левая рука (+X) опускается при положительном угле, правая (−X) — при отрицательном
+            h = ua.head.copy(); sgn = 1 if side == 'Left' else -1
+            ua.matrix = Matrix.Translation(h) @ Matrix.Rotation(sgn * (phi - target), 4, ax) @ Matrix.Translation(-h) @ ua.matrix.copy()
             log('A-поза', side, round(math.degrees(phi)), '→', round(math.degrees(ang())))
             done = True
         bpy.ops.object.mode_set(mode='OBJECT')
