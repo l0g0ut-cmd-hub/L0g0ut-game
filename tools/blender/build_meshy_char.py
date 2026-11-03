@@ -42,6 +42,31 @@ if RIG:
     bpy.ops.import_scene.fbx(filepath=SRC, automatic_bone_orientation=False, ignore_leaf_bones=False)
     arm = [o for o in bpy.data.objects if o.type == 'ARMATURE'][0]
     arm.data.pose_position = 'REST'; arm.animation_data_clear(); bpy.context.view_layer.update()
+    # новые выгрузки Meshy идут со скелетом Mixamo («mixamorig:LeftArm», пальцы по 4 фаланги) — приводим к именам
+    # Unity Humanoid, которые понимает разбор ниже; группы вершин переименовываем вместе с костями
+    MIX = {'Arm': 'UpperArm', 'ForeArm': 'LowerArm', 'UpLeg': 'UpperLeg', 'Leg': 'LowerLeg', 'ToeBase': 'Toes',
+           'Toe_End': 'ToesEnd', 'HeadTop_End': 'HeadEnd'}
+    def mix_name(nm):
+        if ':' not in nm: return nm
+        s = nm.split(':', 1)[1]
+        for side in ('Left', 'Right'):
+            if s.startswith(side):
+                rest = s[len(side):]
+                if rest in MIX: return side + MIX[rest]
+                if rest.startswith('Hand') and len(rest) > 4:   # LeftHandMiddle4 → LeftMiddleEnd, LeftHandIndex2 → LeftIndex2
+                    f = rest[4:]
+                    return side + (f[:-1] + 'End' if f.endswith('4') else f)
+                return s
+        return MIX.get(s, s)
+    ren = {b.name: mix_name(b.name) for b in arm.data.bones if mix_name(b.name) != b.name}
+    if ren:
+        for b in arm.data.bones:
+            if b.name in ren: b.name = ren[b.name]
+        for o in bpy.data.objects:
+            if o.type == 'MESH':
+                for g in o.vertex_groups:
+                    if g.name in ren: g.name = ren[g.name]
+        log('скелет Mixamo → имена Humanoid:', len(ren), 'костей')
     for b in arm.data.bones:
         MB[b.name] = (arm.matrix_world @ b.head_local, arm.matrix_world @ b.tail_local)
         MPAR[b.name] = b.parent.name if b.parent else None
