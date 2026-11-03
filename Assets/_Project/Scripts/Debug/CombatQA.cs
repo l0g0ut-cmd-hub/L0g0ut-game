@@ -20,6 +20,7 @@ namespace BladePath
     ///  5. удары каждого облика врага по стоящему герою: хват и фантом у новых моделей.
     /// Только для редактора: в APK этого кода нет.
     /// </summary>
+    [DefaultExecutionOrder(1000)]   // замеры и кадры — после драйвера скелета (0), сэмплера клинка (100) и следа (200): то, что видно на экране
     public class CombatQA : MonoBehaviour
     {
         public static bool Finished;
@@ -40,6 +41,37 @@ namespace BladePath
         // контакты текущего опыта
         int contacts, hits; string firstZone = "-"; float dmg;
         FighterController attackerNow;
+
+        // замер текущего удара и съёмка — в LateUpdate (см. порядок выполнения выше)
+        FighterController swingOf; SwingStat swingStat; Strip swingStrip; int lateFrame;
+        FighterController shotOf; string shotName; float shotGripR = -1f, shotGripL = -1f; bool shotPR, shotPL, shotDone;
+
+        void LateUpdate()
+        {
+            lateFrame++;
+            if (swingOf != null && swingStat != null)
+            {
+                WeaponController w = swingOf.weapon;
+                if (w != null && w.Phase != SwingPhase.Idle)
+                {
+                    if (w.CurrentProfile != null && w.CurrentProfile.type != swingStat.last) { swingStat.last = w.CurrentProfile.type; swingStat.types += (swingStat.types.Length > 0 ? ">" : "") + swingStat.last; }
+                    bool bp; float e = GripErr(swingOf, true, out bp);
+                    if (e >= 0f)
+                    {
+                        swingStat.phantomAll = Mathf.Max(swingStat.phantomAll, e);
+                        if (w.Phase == SwingPhase.Strike || w.Phase == SwingPhase.FollowThrough) swingStat.phantomStrike = Mathf.Max(swingStat.phantomStrike, e);
+                    }
+                    swingStat.frames++;
+                }
+                if (swingStrip != null) swingStrip.Tick(lateFrame);
+            }
+            if (shotOf != null && !shotDone)
+            {
+                shotGripR = GripErr(shotOf, true, out shotPR); shotGripL = GripErr(shotOf, false, out shotPL);
+                Portrait(shotOf, shotName);
+                shotDone = true;
+            }
+        }
 
         void Line(string s) { log.Append("QA|").Append(s).Append('\n'); Debug.Log("QA|" + s); }
         void Fail(string s) { Fails++; Line(s + "|FAIL"); }
@@ -113,7 +145,7 @@ namespace BladePath
             player.Teleport(home);
             enemy.Teleport(home + fwd * dist);   // повернуться друг к другу
             float t = 0f;
-            while (t < settle) { t += Time.deltaTime; yield return null; }
+            while (t < settle || ((!player.CanAct || !enemy.CanAct) && t < settle + 3f)) { t += Time.deltaTime; yield return null; }
             float real = Vector3.Distance(Flat(player.transform.position), Flat(enemy.transform.position));
             if (Mathf.Abs(real - dist) > 0.15f) Line("place|дистанция " + real.ToString("F2") + " вместо " + dist.ToString("F2"));
         }
@@ -160,15 +192,17 @@ namespace BladePath
 
         IEnumerator CheckSkin(string side, FighterController f, int idx, string name)
         {
-            yield return Place(1.7f, 1.0f);
+            yield return Place(3.2f, 1.0f);   // противник далеко — не загораживает кадр
             bool bonesOk; string bones = BonesReport(f, out bonesOk);
-            bool pr, pl;
-            float gr = GripErr(f, true, out pr), gl = GripErr(f, false, out pl);
+            shotOf = f; shotName = "skin_" + side + "_" + idx + "_" + name; shotDone = false;
+            while (!shotDone) yield return null;
+            shotOf = null;
+            bool pr = shotPR, pl = shotPL;
+            float gr = shotGripR, gl = shotGripL;
             float lim = pr ? GripMaxPoint : GripMaxBone;
             bool gripOk = gr >= 0f && gl >= 0f && gr <= lim && gl <= (pl ? GripMaxPoint : GripMaxBone);
             string s = string.Format("skin|{0}|{1}|{2}|{3}|кулак R {4:F3} L {5:F3} м ({6}, порог {7:F2})", side, idx, name, bones, gr, gl, pr ? "точка хвата" : "кость кисти", lim);
             if (bonesOk && gripOk) Line(s + "|PASS"); else Fail(s);
-            Portrait(f, "skin_" + side + "_" + idx + "_" + name);
         }
 
         IEnumerator Skins()
@@ -204,33 +238,23 @@ namespace BladePath
         }
 
         // ------------------------------------------------------------------ удар целиком
-        class SwingStat { public float phantomStrike, phantomAll; public int frames; public bool started; public string types = ""; }
+        class SwingStat { public float phantomStrike, phantomAll; public int frames; public bool started; public string types = ""; public AttackType last = (AttackType)(-1); }
 
         /// <summary>Крутит игру, пока оружие атакующего не вернётся в стойку (и боец не на земле); меряет фантом по кадрам.</summary>
         IEnumerator RunSwing(FighterController a, SwingStat st, Func<int, bool> each, Strip strip)
         {
-            float t = 0f; int frame = 0; bool seenSwing = false; AttackType last = (AttackType)(-1);
+            float t = 0f; int frame = 0; bool seenSwing = false;
+            swingOf = a; swingStat = st; swingStrip = strip;
             while (t < 4f)
             {
                 yield return null;
                 t += Time.deltaTime; frame++;
-                WeaponController w = a.weapon;
                 if (each != null) each(frame);
-                if (w.Phase != SwingPhase.Idle)
-                {
-                    seenSwing = true;
-                    if (w.CurrentProfile != null && w.CurrentProfile.type != last) { last = w.CurrentProfile.type; st.types += (st.types.Length > 0 ? ">" : "") + last; }
-                    bool bp; float e = GripErr(a, true, out bp);
-                    if (e >= 0f)
-                    {
-                        st.phantomAll = Mathf.Max(st.phantomAll, e);
-                        if (w.Phase == SwingPhase.Strike || w.Phase == SwingPhase.FollowThrough) st.phantomStrike = Mathf.Max(st.phantomStrike, e);
-                    }
-                    st.frames++;
-                }
-                if (strip != null) strip.Tick(frame);
-                if (seenSwing && w.Phase == SwingPhase.Idle && a.Grounded) break;
+                if (a.weapon.Phase != SwingPhase.Idle) seenSwing = true;
+                if (seenSwing && a.weapon.Phase == SwingPhase.Idle && a.Grounded) break;
             }
+            yield return null;   // последний LateUpdate
+            swingOf = null; swingStat = null; swingStrip = null;
             st.started = seenSwing;
         }
 
@@ -251,7 +275,9 @@ namespace BladePath
                     SwingStat st = new SwingStat();
                     bool ok = player.Attack(t);
                     if (!ok) { Fail("attack|player|" + t + "|d" + dist.ToString("F1") + "|удар не начался"); continue; }
-                    yield return RunSwing(player, st, null, null);
+                    Strip strip = dist < 1.5f && (t == AttackType.Overhead || t == AttackType.SlashBack || t == AttackType.Charge) ? new Strip(this, player, "attack_" + t + "_d" + dist.ToString("F1"), 3) : null;
+                    yield return RunSwing(player, st, null, strip);
+                    if (strip != null) strip.Save();
                     string s = "attack|player|" + t + "|d" + dist.ToString("F1") + "|" + Outcome(st);
                     // ближняя дистанция обязана попадать; дальняя — для сведения
                     bool bad = st.phantomStrike > PhantomMax || (dist < 1.5f && contacts == 0);
@@ -371,7 +397,7 @@ namespace BladePath
 
         void Portrait(FighterController f, string name)
         {
-            Texture2D a = Grab(f, f.transform.forward, 2.6f);
+            Texture2D a = Grab(f, (f.transform.forward + Vector3.Cross(Vector3.up, f.transform.forward) * 0.8f).normalized, 2.6f);
             if (a == null) return;
             Texture2D b = Grab(f, Vector3.Cross(Vector3.up, f.transform.forward), 2.6f);
             Texture2D sheet = new Texture2D(a.width * 2, a.height, TextureFormat.RGB24, false);
