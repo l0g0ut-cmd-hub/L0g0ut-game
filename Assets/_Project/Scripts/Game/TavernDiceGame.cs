@@ -17,12 +17,51 @@ namespace BladePath
         static int rounds, bet, mood;          // mood: 0 спокоен, 1 хохочет (ты проиграл), 2 в ярости (ты выиграл)
         static float stAt, moodAt, shakeAt = -9f;
         static string say = ""; static float sayAt;
+        static Vector2 headPos = new Vector2(480f, 160f);
         public const int MaxRounds = 3;
 
-        static readonly string[] SayIdle = { "Ну, самурай? Чёт или нечет?", "Кости сегодня ко мне благосклонны…", "Ставь, не робей. Я честный… почти.", "Ик… Бросай уже, ночь не резиновая." };
-        static readonly string[] SayWin = { "Ха-ха-ха! Кости любят меня!", "Монетки — к монеткам!", "Ещё разок? Отыграешься… наверное.", "Спасибо за сакэ, самурай!" };
-        static readonly string[] SayLose = { "Тьфу! Везучий пёс…", "Это кости кривые, не я!", "Ну погоди у меня…", "Ещё раз! Сейчас я тебя…" };
-        static readonly string[] SayBump = { "Ой! Локтем задел… бывает.", "Ик! Стол шатается, видишь?", "Тц, муха села. Не считается!" };
+        static readonly string[] SayIdle =
+        {
+            "Ну чё, самурай, чёт или нечет? Или ты, блядь, только мечом махать умеешь?",
+            "Ставь давай. Мёртвым деньги ни к чему, а ты, судя по роже, скоро сдохнешь.",
+            "Я честный, сука, как монах. Монах, правда, тоже мухлевал — потому и сдох.",
+            "Ик… Бросай уже, нахуй. Ночь короткая, а сакэ ещё полно.",
+            "Прошлый самурай тут всё проиграл. И меч, и штаны, и честь. Честь, правда, хуйня, за неё много не дали.",
+            "Кости не врут. Вру я. Но кости — нет.",
+            "Чего вылупился? Ставь или иди нахер — убивай своих демонов бесплатно.",
+            "Мать моя говорила: играй на деньги. Отец ничего не говорил — его зарезали за игрой.",
+            "Не ссы, самурай. Проиграешь — продашь почку. У вас их, говорят, две.",
+        };
+        static readonly string[] SayWin =
+        {
+            "Ха-ха-ха! Сука, обожаю, когда герои плачут!",
+            "Монетки — к монеткам, а лохи — к лохам. Всё по порядку.",
+            "Ещё разок? Отыграешься… хуй там, но попробуй.",
+            "Спасибо за сакэ, самурай! Помянем твой кошелёк.",
+            "Вот это я понимаю — путь воина. Прямиком в нищету, блядь.",
+            "Ой, бля, не могу… Ты и в бою так же везуч? Тогда тебя скоро закопают.",
+            "Забери меч обратно, а денежки оставь — им у меня теплее.",
+            "Кости любят меня, бабы любят меня, а тебя, дружок, любит только смерть.",
+        };
+        static readonly string[] SayLose =
+        {
+            "Тьфу, блядь! Везучий ты пёс…",
+            "Это кости кривые, а не я! Кто их, сука, точил?!",
+            "Ну погоди у меня… Ночью в переулке поговорим.",
+            "Ещё раз! Сейчас я тебя, нахуй, по миру пущу!",
+            "Ах ты ж… Ёб твою мать, да как так-то?!",
+            "Забирай, подавись. Надеюсь, тебя на них и похоронят.",
+            "Это был разогрев, понял? Разогрев, блядь!",
+            "Чтоб тебя демоны жрали медленно и с солью…",
+        };
+        static readonly string[] SayBump =
+        {
+            "Ой! Локтем задел… бывает, хули.",
+            "Ик! Стол шатается, видишь? Пол кривой, сука!",
+            "Тц, муха села. Не считается, перебрасываем!",
+            "Чё ты смотришь? Землетрясение. Духи гневаются, блядь.",
+            "Я ничего не трогал. Это рука. Она сама. Она бухая.",
+        };
 
         public static int RoundsLeft { get { return MaxRounds - rounds; } }
 
@@ -36,6 +75,19 @@ namespace BladePath
         }
 
         static void Leave() { TavernDiceTable.Release(); }
+        /// <summary>Перенос реплики по словам (UiKit.Text не переносит сам).</summary>
+        static string WrapSay(string s, int max)
+        {
+            System.Text.StringBuilder sb = new System.Text.StringBuilder(); int col = 0;
+            foreach (string w in s.Split(' '))
+            {
+                if (col > 0 && col + 1 + w.Length > max) { sb.Append('\n'); col = 0; }
+                else if (col > 0) { sb.Append(' '); col++; }
+                sb.Append(w); col += w.Length;
+            }
+            return sb.ToString();
+        }
+
         static void Say(string s) { say = s; sayAt = Time.unscaledTime; }
         static void SetMood(int m) { mood = m; moodAt = Time.unscaledTime; }
 
@@ -78,6 +130,7 @@ namespace BladePath
                 float bottom = bg != null ? edgeY + h * 0.16f : 268f;   // низ листа (локти) уходит за край стола
                 Rect rr = new Rect(W * 0.5f - w * 0.5f + rage + shake.x, bottom - h - breathe - laugh + shake.y, w, h + breathe);
                 if (rogue != null) GUI.DrawTexture(rr, rogue, ScaleMode.StretchToFill, true);
+                headPos = new Vector2(rr.center.x, rr.y + rr.height * 0.22f);   // лицо жулика — сюда смотрит хвостик пузыря
             }
             // столешница поверх жулика: он сидит ЗА столом, а не растёт из него
             if (bg != null) DrawCoverFrom(full, bg, edgeY);
@@ -90,16 +143,37 @@ namespace BladePath
                 GUI.DrawTexture(new Rect(shake.x - 6f, 552f - rh + shake.y, rw, rh), t.RT, ScaleMode.StretchToFill, true);
             }
 
-            // ---- реплика жулика
+            // ---- реплика жулика: чёрный пузырь с белым текстом, хвостик к его голове, текст печатается
             if (say.Length > 0)
             {
-                float a = Mathf.Clamp01((now - sayAt) / 0.15f) * Mathf.Clamp01((sayAt + 4.5f - now) / 0.5f);
+                float age = now - sayAt, life = 3.2f + say.Length * 0.045f;
+                float a = Mathf.Clamp01(age / 0.12f) * Mathf.Clamp01((sayAt + life - now) / 0.4f);
                 if (a > 0f)
                 {
-                    Rect b = new Rect(W * 0.5f + 120f, 40f, Mathf.Min(300f, W * 0.5f - 140f), 54f);
-                    UiKit.Rect(b, new Color(0.96f, 0.91f, 0.8f, 0.92f * a));
-                    UiKit.Rect(new Rect(b.x - 12f, b.y + 30f, 14f, 8f), new Color(0.96f, 0.91f, 0.8f, 0.92f * a));
-                    UiKit.Text(new Rect(b.x + 10f, b.y + 4f, b.width - 20f, b.height - 8f), "«" + say + "»", 13f, new Color(0.15f, 0.08f, 0.05f, a), TextAnchor.MiddleLeft, false);
+                    float pop = 1f + 0.12f * Mathf.Exp(-age * 14f) * Mathf.Cos(age * 40f);
+                    float bw = Mathf.Min(330f, W * 0.5f - 60f);
+                    string txt = WrapSay(say, 36);
+                    int lines = txt.Split('\n').Length;
+                    float bh = 22f + lines * 17f;
+                    Vector2 head = new Vector2(headPos.x + 40f, headPos.y + 10f);
+                    float bx = Mathf.Min(head.x + 24f, W - bw - 12f), by = Mathf.Max(64f, head.y - bh - 18f);
+                    Rect b = new Rect(bx, by, bw, bh);
+                    Vector2 c = b.center;
+                    b = new Rect(c.x - bw * pop * 0.5f, c.y - bh * pop * 0.5f, bw * pop, bh * pop);
+                    Color fill = new Color(0.03f, 0.025f, 0.03f, 0.93f * a), rim = new Color(0.95f, 0.88f, 0.7f, 0.85f * a);
+                    // хвостик: сужающийся клин от нижнего левого края пузыря к голове
+                    Vector2 t0 = new Vector2(b.x + 34f, b.yMax - 2f), t1 = head;
+                    for (int i = 0; i < 9; i++)
+                    {
+                        float k = i / 8f;
+                        Vector2 p = Vector2.Lerp(t0, t1, k);
+                        float r = Mathf.Lerp(9f, 1.5f, k);
+                        GUI.DrawTexture(new Rect(p.x - r, p.y - r, r * 2f, r * 2f), Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0f, fill, 0f, r);
+                    }
+                    GUI.DrawTexture(b, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0f, fill, 0f, 14f);
+                    GUI.DrawTexture(b, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0f, rim, 1.5f, 14f);
+                    int shown = Mathf.Clamp(Mathf.FloorToInt(age * 55f), 0, say.Length);
+                    UiKit.Text(new Rect(b.x + 14f, b.y + 6f, b.width - 28f, b.height - 12f), txt.Substring(0, Mathf.Min(shown, txt.Length)), 13f, new Color(1f, 1f, 1f, a), TextAnchor.MiddleLeft, false);
                 }
             }
 
