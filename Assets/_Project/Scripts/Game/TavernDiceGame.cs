@@ -53,7 +53,9 @@ namespace BladePath
             // ---- фон: стол
             Texture2D bg = UiKit.Tex("UI/dice_bg");
             Rect full = new Rect(shake.x - 6f, shake.y - 6f, W + 12f, 552f);
-            if (bg != null) DrawCover(full, bg);
+            // дальний край стола на арте — 41,7% высоты сверху; жулик сидит за ним
+            float edgeY = 262f, imgH = 552f;
+            if (bg != null) { DrawCover(full, bg); edgeY = CoverY(full, bg, 0.417f, out imgH); }
             else
             {
                 Texture2D tav = UiKit.Tex("UI/tavern");
@@ -72,8 +74,9 @@ namespace BladePath
                 float breathe = Mathf.Sin(now * 1.6f) * 2.5f;
                 float laugh = mood == 1 ? Mathf.Abs(Mathf.Sin(mt * 11f)) * 7f * Mathf.Clamp01(2.2f - mt) : 0f;
                 float rage = mood == 2 ? Mathf.Sin(mt * 47f) * 3f * Mathf.Clamp01(1.6f - mt) : 0f;
-                float h = 300f, w = h * (rogue != null ? rogue.width / (float)rogue.height : 1f);
-                Rect rr = new Rect(W * 0.5f - w * 0.5f + rage + shake.x, 268f - h - breathe - laugh + shake.y, w, h + breathe);
+                float h = bg != null ? imgH * 0.40f : 300f, w = h * (rogue != null ? rogue.width / (float)rogue.height : 1f);
+                float bottom = bg != null ? edgeY + imgH * 0.06f : 268f;   // локти чуть заходят на стол, низ листа растушёван
+                Rect rr = new Rect(W * 0.5f - w * 0.5f + rage + shake.x, bottom - h - breathe - laugh + shake.y, w, h + breathe);
                 if (rogue != null) GUI.DrawTexture(rr, rogue, ScaleMode.StretchToFill, true);
             }
             // край стола перед жуликом (на запасном фоне; на арте стол уже есть)
@@ -164,11 +167,23 @@ namespace BladePath
             return false;
         }
 
+        const float CoverTop = 0.15f;   // доля обрезки по высоте, уходящая сверху
+
+        /// <summary>Экранная Y точки картинки (доля высоты сверху) при отрисовке DrawCover; imgH — полная высота картинки на экране.</summary>
+        static float CoverY(Rect r, Texture2D tex, float frac, out float imgH)
+        {
+            float ta = tex.width / (float)tex.height, ra = r.width / r.height;
+            if (ta > ra) { imgH = r.height; return r.y + frac * r.height; }
+            float vf = ta / ra; imgH = r.height / vf;
+            return r.y + (frac - (1f - vf) * CoverTop) / vf * r.height;
+        }
+
         /// <summary>Картинка «по размеру с обрезкой» (как cover в CSS).</summary>
         static void DrawCover(Rect r, Texture2D tex)
         {
             float ta = tex.width / (float)tex.height, ra = r.width / r.height;
-            Rect uv = ta > ra ? new Rect((1f - ra / ta) * 0.5f, 0f, ra / ta, 1f) : new Rect(0f, (1f - ta / ra) * 0.5f, 1f, ta / ra);
+            // на широких экранах картинка режется по высоте: сверху чуть-чуть (голова жулика), остальное — снизу (стол большой)
+            Rect uv = ta > ra ? new Rect((1f - ra / ta) * 0.5f, 0f, ra / ta, 1f) : new Rect(0f, (1f - ta / ra) * (1f - CoverTop), 1f, ta / ra);
             GUI.DrawTextureWithTexCoords(r, tex, uv);
         }
     }
