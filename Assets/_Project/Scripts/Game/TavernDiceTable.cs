@@ -23,7 +23,7 @@ namespace BladePath
 
         static readonly Vector3 Origin = new Vector3(0f, -1000f, 0f);   // далеко от арены: камера стола её не видит
         const float Size = 0.07f, Step = 1f / 120f;   // 10 см на столе арта выглядели кирпичами
-        const float HalfW = 0.40f, HalfD = 0.30f;   // площадка стола, м (по бокам на арте бутылка и стаканчик — туда не катятся)
+        const float HalfW = 0.40f, HalfD = 0.30f, FarZ = 0.12f;   // площадка стола, м (по бокам на арте бутылка и стаканчик — туда не катятся)
 
         Scene scene; PhysicsScene phys; bool ready;
         Camera cam; Light lamp;
@@ -59,7 +59,9 @@ namespace BladePath
             Box("Table", new Vector3(0f, -0.05f, 0f), new Vector3(3f, 0.1f, 3f), felt);
             Box("WallL", new Vector3(-HalfW - 0.05f, 0.2f, 0f), new Vector3(0.1f, 0.6f, 2f), felt);
             Box("WallR", new Vector3(HalfW + 0.05f, 0.2f, 0f), new Vector3(0.1f, 0.6f, 2f), felt);
-            Box("WallF", new Vector3(0f, 0.2f, HalfD + 0.05f), new Vector3(2f, 0.6f, 0.1f), felt);
+            // дальний бортик ближе: по наложению кадров CI на арт бортик на 0,3 м оказывался выше края нарисованного стола
+            // (кости ложились «на жулика»); на 0,12 м он как раз у края
+            Box("WallF", new Vector3(0f, 0.2f, FarZ + 0.05f), new Vector3(2f, 0.6f, 0.1f), felt);
             Box("WallN", new Vector3(0f, 0.2f, -HalfD - 0.05f), new Vector3(2f, 0.6f, 0.1f), felt);
 
             Mesh mesh = DieMesh();
