@@ -172,6 +172,8 @@ namespace BladePath.EditorTools
             if (!AssetDatabase.IsValidFolder("Assets/_Project/Animation")) AssetDatabase.CreateFolder("Assets/_Project", "Animation");
             List<MocapBaker.Result> loco = MocapBaker.Bake(model.transform, fighter.transform, n => FindBone(model.transform, n), Clip(fbx, "Idle"), "Assets/_Project/Animation", clipPrefix);
             AnimatorController ctrl = BuildController(fbx, ctrlPath, loco);
+            // удары мечом из мокапа Mixamo: корпус и руки ведёт клип, меч — в правой кисти
+            SwordAnimSet swordSet = SwordAnimBaker.Bake(model.transform, fighter.transform, n => FindBone(model.transform, n), "Assets/_Project/Animation", clipPrefix);
 
             // Аниматор
             Animator anim = model.GetComponent<Animator>();
@@ -209,6 +211,7 @@ namespace BladePath.EditorTools
             d.upperArmR = FindBone(model.transform, "UpperArm.R");
             d.forearmR = FindBone(model.transform, "Forearm.R");
             d.handR = FindBone(model.transform, "Hand.R");
+            d.swordSet = swordSet;
             d.mocapLoco = loco.Count >= 3;
             d.locoDirs = new Vector2[loco.Count]; d.locoSpeeds = new float[loco.Count];
             for (int i = 0; i < loco.Count; i++) { d.locoDirs[i] = loco[i].dir; d.locoSpeeds[i] = loco[i].speed; }

@@ -842,6 +842,108 @@ namespace BladePath
                 if (relInit && DebugTwistShare > 0f) { Untwist(forearmR, handR, relR); Untwist(forearmL, handL, relL); }
             }
             DrinkPose(ft, ys, dt);
+            AnimSwordPass(ft, dt);
+        }
+
+        // ---- мокап ударов (SwordAnimSet): корпус и руки из клипа Mixamo, меч в правой кисти, левая кисть — на рукоять.
+        // Так устроено в обычных играх: не руки догоняют летящий меч (IK ломал локти и кисти), а меч идёт за рукой.
+        // Удары без клипа (укол, добивания) — по-старому, через IK; переход плавный.
+        public SwordAnimSet swordSet;
+        public static bool DebugAnimSword = true;
+        Transform[] swBones;
+        Quaternion[] swIdle, swAtk, swBlock, swTarget, swSmooth;
+        bool swInit;
+        float swW, swIdleT;
+
+        void AnimSwordPass(Transform ft, float dt)
+        {
+            if (swordSet == null || weapon == null || weapon.pivot == null || bladeRoot == null) return;
+            int n = swordSet.Bones;
+            if (swBones == null)
+            {
+                swBones = new Transform[n];
+                for (int i = 0; i < n; i++) swBones[i] = string.IsNullOrEmpty(swordSet.bonePaths[i]) ? null : transform.Find(swordSet.bonePaths[i]);
+                swIdle = new Quaternion[n]; swAtk = new Quaternion[n]; swBlock = new Quaternion[n]; swTarget = new Quaternion[n]; swSmooth = new Quaternion[n];
+            }
+            Transform hR = swBones[SwordAnimSet.HandR], hL = swBones[SwordAnimSet.HandL];
+            if (hR == null || hL == null) return;
+
+            SwordAnimSet.Clip atk = null;
+            bool swinging = weapon.Phase != SwingPhase.Idle && weapon.CurrentProfile != null;
+            if (swinging) atk = swordSet.ForAttack(weapon.CurrentProfile.type);
+            bool on = DebugAnimSword && !fighter.Dead && drinkW < 0.01f && (!swinging || atk != null);
+            swW = Mathf.MoveTowards(swW, on ? 1f : 0f, dt / 0.12f);
+            if (swW <= 0.001f) { swInit = false; return; }
+
+            // стойка (петля), поверх — удар по фазам WeaponController, поверх — блок
+            swIdleT += dt * 30f;
+            swordSet.SampleLoop(swordSet.clips[swordSet.idle], swIdleT, swIdle);
+            for (int i = 0; i < n; i++) swTarget[i] = swIdle[i];
+            if (atk != null && atk.marks != null && atk.marks.Length >= 5)
+            {
+                float p = weapon.PhaseProgress, f;
+                float[] m = atk.marks;
+                switch (weapon.Phase)
+                {
+                    case SwingPhase.Windup: f = Mathf.Lerp(m[0], m[1], p); break;
+                    case SwingPhase.Strike: f = Mathf.Lerp(m[1], m[2], p); break;
+                    case SwingPhase.FollowThrough: f = Mathf.Lerp(m[2], m[3], p); break;
+                    default: f = Mathf.Lerp(m[3], m[4], p); break;
+                }
+                swordSet.Sample(atk, f, swAtk);
+                // в конце восстановления клип сходится к стойке
+                float back = weapon.Phase == SwingPhase.Recovery ? Smooth(Mathf.InverseLerp(0.6f, 1f, p)) : 0f;
+                for (int i = 0; i < n; i++) swTarget[i] = Quaternion.Slerp(swAtk[i], swIdle[i], back);
+            }
+            float bk = weapon.BlockK;
+            if (bk > 0.001f && swordSet.block >= 0)
+            {
+                SwordAnimSet.Clip bc = swordSet.clips[swordSet.block];
+                swordSet.Sample(bc, swordSet.blockHold * Smooth(bk), swBlock);
+                for (int i = 0; i < n; i++) swTarget[i] = Quaternion.Slerp(swTarget[i], swBlock[i], Smooth(bk));
+            }
+
+            // сглаживание: в ударе быстро (клинок не отстаёт), в остальное время мягче — переходы без рывков
+            float tau = weapon.Phase == SwingPhase.Strike ? 0.012f : 0.05f;
+            if (!swInit) for (int i = 0; i < n; i++) swSmooth[i] = swTarget[i];
+            float k = swInit ? 1f - Mathf.Exp(-dt / tau) : 1f;
+            swInit = true;
+            for (int i = 0; i < n; i++) swSmooth[i] = Quaternion.Slerp(swSmooth[i], swTarget[i], k);
+
+            // кости: родитель раньше ребёнка; голова продолжает смотреть на противника
+            Quaternion headW = head != null ? head.rotation : Quaternion.identity;
+            Quaternion fr = ft.rotation;
+            for (int i = 0; i < n; i++)
+            {
+                Transform b = swBones[i];
+                if (b == null) continue;
+                b.rotation = Quaternion.Slerp(b.rotation, fr * swSmooth[i], swW);
+            }
+            if (head != null && deadK < 0.01f) head.rotation = headW;
+
+            // меч в правой кисти: центр кулака — у гарды (gripFront), клинок по оси хвата, кромка — от ладони
+            Vector3 palmR = hR.TransformPoint(swordSet.palmR);
+            Vector3 axis = (hR.rotation * swordSet.bladeAxisR).normalized;
+            Vector3 edge = Vector3.ProjectOnPlane(hR.rotation * swordSet.bladeEdgeR, axis);
+            if (edge.sqrMagnitude < 1e-6f) edge = Vector3.ProjectOnPlane(Vector3.down, axis);
+            Quaternion rb = Quaternion.LookRotation(axis, -edge.normalized);
+            Vector3 pb = palmR + axis * gripFront;
+            Quaternion rbW = Quaternion.Slerp(bladeRoot.rotation, rb, swW);
+            Vector3 pbW = Vector3.Lerp(bladeRoot.position, pb, swW);
+            weapon.pivot.rotation = rbW * Quaternion.Inverse(bladeRoot.localRotation);
+            weapon.pivot.position += pbW - bladeRoot.position;
+
+            // левая кисть — на рукоять (у навершия): двухзвенный IK от плеча, локоть там, где его поставил клип, кисть — как в клипе
+            Transform uL = swBones[SwordAnimSet.UpperArmL], fL = swBones[SwordAnimSet.ForearmL];
+            if (uL != null && fL != null)
+            {
+                Vector3 palmL = bladeRoot.position - bladeRoot.forward * gripRear;
+                Vector3 wrist = palmL - (hL.TransformPoint(swordSet.palmL) - hL.position);
+                Quaternion keep = hL.rotation;
+                Vector3 pole = fL.position - (uL.position + wrist) * 0.5f;
+                SolveArm(uL, fL, hL, l1L, l2L, Vector3.Lerp(hL.position, wrist, swW), pole);
+                hL.rotation = keep;
+            }
         }
 
         // ---- глоток из тыквы-горлянки: левая рука с тыквой поднимается ко рту, тыква наклоняется, голова запрокидывается

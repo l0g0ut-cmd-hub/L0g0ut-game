@@ -30,6 +30,7 @@ namespace BladePath
         public Vector3 guardEuler = new Vector3(-82f, 8f, 0f);
         public Vector3 guardHand = new Vector3(0.03f, -0.02f, 0.40f);   // блок: клинок вертикально перед собой на вытянутых руках
         float blockK, stagK;
+        public float BlockK { get { return blockK; } }   // 0..1 — насколько поднят блок (для мокапа рук)
         [Tooltip("Слом равновесия: клинок опущен остриём к земле, руки внизу, корпус осел.")]
         public Vector3 staggerEuler = new Vector3(62f, -25f, 15f);
         public Vector3 staggerHand = new Vector3(0.16f, -0.70f, 0.22f);

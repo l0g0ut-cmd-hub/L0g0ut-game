@@ -165,7 +165,7 @@ namespace BladePath
             if (down[(int)B.DevMenu]) devOpen = true;
             if (down[(int)B.DevBack]) devOpen = false;
             if (down[(int)B.WinFight] && duel != null) { devOpen = false; duel.DebugWin(); return; }
-            if (down[(int)B.Clavicle]) HeroRigDriver.DebugClavicle = !HeroRigDriver.DebugClavicle;
+            if (down[(int)B.Clavicle]) HeroRigDriver.DebugAnimSword = !HeroRigDriver.DebugAnimSword;   // мокап рук (клипы Mixamo) / старый IK
             if (down[(int)B.Twist]) { float[] tw = { 0f, 0.25f, 0.45f, 0.6f }; int ti = 0; for (int k = 0; k < tw.Length; k++) if (Mathf.Abs(tw[k] - HeroRigDriver.DebugTwistShare) < 0.01f) ti = k; HeroRigDriver.DebugTwistShare = tw[(ti + 1) % tw.Length]; }
             if (down[(int)B.AutoBattle]) DuelManager.AutoBattle = !DuelManager.AutoBattle;
             // автобой (отладка): игроком управляет тот же ИИ, что и врагом
@@ -326,7 +326,7 @@ namespace BladePath
             labels[(int)B.DevMenu] = "МЕНЮ РАЗРАБОТЧИКА";
             labels[(int)B.DevBack] = "НАЗАД";
             labels[(int)B.WinFight] = "ВЫИГРАТЬ БОЙ";
-            labels[(int)B.Clavicle] = "РУКИ: КЛЮЧИЦА " + (HeroRigDriver.DebugClavicle ? "ВКЛ" : "ВЫКЛ");
+            labels[(int)B.Clavicle] = "РУКИ: " + (HeroRigDriver.DebugAnimSword ? "МОКАП" : "СТАРЫЙ IK");
             labels[(int)B.Twist] = "РУКИ: СКРУТКА " + Mathf.RoundToInt(HeroRigDriver.DebugTwistShare * 100f) + "%";
             labels[(int)B.ToMenu] = "В МЕНЮ";
             labels[(int)B.Gfx] = "ГРАФИКА: " + (DuelManager.Gfx == 1 ? "ВЫСОКАЯ" : "ЭКОНОМ");
