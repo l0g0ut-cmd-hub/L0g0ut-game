@@ -28,7 +28,7 @@ namespace BladePath
         static readonly Color Dim = VisualIdentity.Subdued;
         static readonly string[] EnemyFullArt = { "UI/enemy_full_fallen", "UI/enemy_full_shadow", "UI/enemy_full_oni", "UI/enemy_full_shogun" };
 
-        enum Modal { None, Fight, Shrine, Smith, Merchant, Treasure, Rest, Event, RegionClear, Herbalist, Knocked, Camp, Tavern }
+        enum Modal { None, Fight, Shrine, Smith, Merchant, Treasure, Rest, Event, RegionClear, Herbalist, Knocked, Camp, Tavern, Dev }
         Modal modal;
         int sel = -1;
         readonly List<int> previewPath = new List<int>(16);
@@ -297,6 +297,12 @@ namespace BladePath
                 manualPan = !manualPan;
                 if (!manualPan) panU = -1f;
             }
+            // меню разработчика (отладка): телепорт, лагерь, трактир, следующая область
+            if (Btn(new Rect(mapX + viewW - (uw < 0.999f ? 226f : 116f), 14f, 104f, 33f), devTeleport ? "ОТМЕНА" : "РАЗРАБ.", interactive && (modal == Modal.None || modal == Modal.Dev) && moveTo < 0))
+            {
+                if (devTeleport) devTeleport = false; else OpenModal(Modal.Dev);
+            }
+            if (devTeleport) UiKit.Text(new Rect(mapX, 52f, viewW, 24f), "ТЕЛЕПОРТ: нажми на любую точку карты", 15f, new Color(1f, 0.6f, 0.4f));
             DrawPanel(new Rect(W - panel, 0f, panel, 540f), interactive && modal == Modal.None && moveTo < 0);
             if (modal != Modal.None) { DrawModal(interactive); if ((modal == Modal.Camp || modal == Modal.Tavern) && interactive) DrawToast(); }
             else if (interactive) DrawToast();
@@ -386,8 +392,33 @@ namespace BladePath
         /// Место видно, если туман над ним разошёлся (герой подходил достаточно близко), как в «Героях 3».
         /// Владыка области виден всегда — это цель похода.
         /// </summary>
+        bool devTeleport;   // меню разработчика: следующее нажатие на карту — телепорт
+
+        void DrawDev(bool ok)
+        {
+            Rect r = Card(520f, 420f);
+            float x = r.x + 24f, w = r.width - 48f, y = r.y + 18f;
+            UiKit.Text(new Rect(x, y, w, 26f), "МЕНЮ РАЗРАБОТЧИКА", 20f, Gold); y += 38f;
+            float bw = (w - 10f) * 0.5f;
+            if (Btn(new Rect(x, y, bw, 44f), "ТЕЛЕПОРТ", ok, true)) { modal = Modal.None; devTeleport = true; return; }
+            if (Btn(new Rect(x + bw + 10f, y, bw, 44f), "ЛАГЕРЬ", ok)) { OpenCamp(); return; }
+            y += 52f;
+            if (Btn(new Rect(x, y, bw, 44f), "ТРАКТИР", ok && UiKit.Tex("UI/tavern") != null)) { OpenTavern(); return; }
+            if (Btn(new Rect(x + bw + 10f, y, bw, 44f), "СЛЕД. ОБЛАСТЬ", ok)) { Campaign.DebugNextRegion(); modal = Modal.None; sel = -1; previewPath.Clear(); panU = -1f; TerrainRoads.Bind(Campaign.Region, Campaign.Nodes); return; }
+            y += 52f;
+            if (Btn(new Rect(x, y, bw, 44f), "+3 КОСТИ ПУТИ", ok)) { Campaign.AddRoll(3); }
+            if (Btn(new Rect(x + bw + 10f, y, bw, 44f), "+500 МОН", ok)) { Profile.AddGold(500); }
+            y += 52f;
+            if (Btn(new Rect(x, y, bw, 44f), "+1 ОЧКО", ok)) { Profile.GivePoint(); }
+            if (Btn(new Rect(x + bw + 10f, y, bw, 44f), JourneyChoice.FogEnabled ? "ТУМАН: ВКЛ" : "ТУМАН: ВЫКЛ", ok)) { JourneyChoice.FogEnabled = !JourneyChoice.FogEnabled; }
+            y += 52f;
+            if (Btn(new Rect(x, y, w, 44f), "ВЫБРОСИТЬ КОСТЬ: 3 ХОДА", ok)) { Campaign.DebugSteps(3); }
+            if (Btn(new Rect(r.center.x - 80f, r.yMax - 52f, 160f, 40f), "ЗАКРЫТЬ", ok)) modal = Modal.None;
+        }
+
         bool Known(MapNode n)
         {
+            if (devTeleport) return true;
             if (!JourneyChoice.FogEnabled) return true;   // туман войны выключен на экране сложности — всё видно
             if (n.done || n.Type == NodeType.Boss || n.Type == NodeType.Start) return true;
             return FogOfWar.At(new Vector2(n.x, n.y)) < 0.5f;
@@ -793,6 +824,14 @@ namespace BladePath
                     // Selecting a marker never launches movement. The sidebar
                     // confirms exactly that selected node, no surprise detours.
                     continueRideAt = -1f;   // a new tap always takes over from an ongoing ride
+                    if (devTeleport)
+                    {
+                        devTeleport = false; sel = -1; previewPath.Clear();
+                        Campaign.DebugTeleport(i); manualPan = false; panU = -1f;
+                        if (!Campaign.Nodes[i].done || Campaign.Nodes[i].IsTavern) OpenNode(i);
+                        Haptics.Pulse(20);
+                        continue;
+                    }
                     if (i == Campaign.At && (n.Type == NodeType.Smith || n.Type == NodeType.Merchant)) OpenNode(i);
                     else { SelectNode(i); Haptics.Pulse(10); }
                 }
@@ -1473,6 +1512,7 @@ namespace BladePath
                 }
                 case Modal.Camp: DrawCamp(ok); break;
                 case Modal.Tavern: DrawTavern(ok); break;
+                case Modal.Dev: DrawDev(ok); break;
                 case Modal.RegionClear:
                 {
                     int prev = Mathf.Clamp(Campaign.ClearedRegion, 0, 2);

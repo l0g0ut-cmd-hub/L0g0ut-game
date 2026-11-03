@@ -577,6 +577,24 @@ namespace BladePath
             return s + " — по одному раунду, без передышки.";
         }
 
+        // ---- отладка (меню разработчика на карте)
+        /// <summary>Мгновенно перенести героя на место i (без хода и проверок дороги).</summary>
+        public static void DebugTeleport(int i)
+        {
+            if (i < 0 || i >= D.nodes.Count) return;
+            D.at = i; D.fight = -1; D.rematch = false;
+            if (D.travelled == null) D.travelled = new List<int>();
+            D.travelled.Add(i);
+            if (D.seen == null) D.seen = new List<Vector2>();
+            D.seen.Add(new Vector2(D.nodes[i].x, D.nodes[i].y));
+            MapNode n = D.nodes[i];
+            if (!n.IsFight && n.Type != NodeType.Event) n.done = true;
+            Save();
+        }
+        public static void DebugSteps(int n) { D.steps = n; D.lastRoll = n; Save(); }
+        public static void DebugNextRegion() { Generate((D.region + 1) % RegionNames.Length); }
+        public static void DebugSkipSquad() { MapNode n = FightNode; if (n != null && n.extra != null) { D.foe = n.extra.Count; Save(); } }
+
         public static void BeginFight(int i, bool rematch = false)
         {
             D.rematch = rematch; D.foe = 0;

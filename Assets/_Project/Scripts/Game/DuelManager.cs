@@ -289,6 +289,21 @@ namespace BladePath
             Announce("ВСТУПАЕТ: " + Ladder.Stages[Mathf.Clamp(st, 0, Ladder.Count - 1)].name.ToUpperInvariant(), new Color(1f, 0.45f, 0.3f), "отряд не даёт передышки — здоровье не восстановится");
             return true;
         }
+        /// <summary>Отладка: бой выигран сразу (весь отряд), с наградой и экраном итогов.</summary>
+        public void DebugWin()
+        {
+            if (MatchOver || player == null || enemy == null) return;
+            Campaign.DebugSkipSquad(); squadSwap = false;
+            SetPaused(false);
+            PlayerWins = NeedWins; MatchOver = true;
+            if (enemy.weapon != null) enemy.weapon.ResetState();
+            if (player.weapon != null) player.weapon.ResetState();
+            hp[enemy] = 0f;
+            SetState(DuelState.PlayerWon);
+            Freeze(true);
+            Records.OnMatch(true, Ladder.Index); GrantReward();
+        }
+
         void SwapToNextFoe()
         {
             squadSwap = false;
