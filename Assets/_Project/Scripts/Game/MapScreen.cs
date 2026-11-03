@@ -271,10 +271,10 @@ namespace BladePath
             DrawJourneyFootprints();
             DrawRouteGlints();
             DrawFog(uw);
-            // погода над областью — под значками мест и героем: облака не закрывают, куда нажимать
-            MapClouds.Draw(Campaign.Region, new Rect(mapX, 0f, viewW, MapH), u0, uw);
             DrawBuildings();
             DrawTower();
+            // погода — после зданий, до значков: облака загораживают постройки, но не значки мест
+            MapClouds.Draw(Campaign.Region, new Rect(mapX, 0f, viewW, MapH), u0, uw);
             DrawNodes(interactive && modal == Modal.None && moveTo < 0);
             DrawHero();
             MapBirds.Draw(new Rect(mapX, 0f, viewW, MapH), u0, uw);   // ворон или стайка цапель пролетают над всем — и над значками (под ними значки видно, это не облака)
