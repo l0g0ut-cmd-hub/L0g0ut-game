@@ -94,6 +94,8 @@ namespace BladePath
             if (meshes == null) return;
             if (loop && follow == null) { Destroy(gameObject); return; }   // шар погас — и пламя с ним
             if (!loop && Now - born >= life) { Destroy(gameObject); return; }
+            // огонь жаровни следует за её точкой: жаровню спрятали (другой облик арены) — и огонь не висит в воздухе
+            if (follow != null) { bool on = follow.gameObject.activeInHierarchy; if (mr.enabled != on) mr.enabled = on; if (!on) return; }
             if (follow == null && vel != Vector3.zero) transform.position += vel * (unscaled ? Time.unscaledDeltaTime : Time.deltaTime);
             Pose();
         }

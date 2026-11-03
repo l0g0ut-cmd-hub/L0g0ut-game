@@ -23,7 +23,21 @@ namespace BladePath.EditorTools
         {
             GameObject host = new GameObject("ArenaVariants");
             ArenaVariants av = host.AddComponent<ArenaVariants>();
-            av.temple = templeRoots;
+            // в саду гаснет только сам двор: кедровый лес вокруг, луна, облака, птицы и смена дня и ночи остаются
+            // (раньше гасло всё окружение — вокруг диорамы была пустота и белый туман до горизонта)
+            HashSet<string> keep = new HashSet<string> { "Moon", "MoonHalo", "DayNight", "MoonClouds", "Birds", "CrowFlock", "ShootingStars" };
+            List<GameObject> hide = new List<GameObject>();
+            foreach (GameObject g in templeRoots)
+            {
+                if (g == null || keep.Contains(g.name)) continue;
+                if (g.name == "Environment")
+                {
+                    foreach (Transform c in g.transform) if (c.name != "CedarForest") hide.Add(c.gameObject);
+                    continue;
+                }
+                hide.Add(g);
+            }
+            av.temple = hide.ToArray();
             GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(Fbx);
             if (asset == null) { Debug.Log("ArenaBuilder: нет " + Fbx + " — только двор храма"); return; }
 
@@ -87,6 +101,22 @@ namespace BladePath.EditorTools
             float floorY = ys.Count > 0 ? ys[ys.Count / 2] : b.min.y;
             model.transform.position += Vector3.down * floorY;
             Debug.Log("ArenaBuilder: сад святилища, масштаб " + s.ToString("F2") + ", пол по " + ys.Count + " лучам: " + floorY.ToString("F3") + " (разброс " + (ys.Count > 0 ? (ys[ys.Count - 1] - ys[0]).ToString("F3") : "-") + ")");
+
+            // земля вокруг диорамы, до кедрового леса: мох (тот же тайл), чуть ниже основания модели
+            Texture2D mossTx = Tile(Dir + "Detail/moss.jpg");
+            if (mossTx != null)
+            {
+                GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Quad);
+                ground.name = "ForestGround"; ground.transform.SetParent(root.transform, false);
+                Object.DestroyImmediate(ground.GetComponent<Collider>());
+                ground.transform.position = new Vector3(0f, -0.14f, 3f); ground.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+                ground.transform.localScale = new Vector3(44f, 40f, 1f);
+                Material gm = new Material(Shader.Find("Standard")) { name = "ForestGround", mainTexture = mossTx, mainTextureScale = new Vector2(16f, 14.5f) };
+                gm.color = new Color(0.62f, 0.6f, 0.55f); gm.SetFloat("_Glossiness", 0.08f);
+                AssetDatabase.DeleteAsset("Assets/_Project/Materials/ForestGround.mat");
+                AssetDatabase.CreateAsset(gm, "Assets/_Project/Materials/ForestGround.mat");
+                ground.GetComponent<MeshRenderer>().sharedMaterial = gm;
+            }
 
             // невидимый пол под бойцами: рэгдолл падает на него, как на площадку храма
             GameObject floor = GameObject.CreatePrimitive(PrimitiveType.Cube);
