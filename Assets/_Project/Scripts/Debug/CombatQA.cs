@@ -425,7 +425,7 @@ namespace BladePath
             for (int a = 1; a >= 0; a--)
             {
                 ArenaVariants.Instance.Apply(a);
-                yield return Place(1.6f, 1.0f);
+                yield return Place(1.3f, 1.0f);   // на 1,6 удар сверху не достаёт и на старой арене
                 string nm = "arena_" + a;
                 Camera mc = Camera.main;
                 if (mc != null && cam != null)

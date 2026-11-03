@@ -33,7 +33,11 @@ namespace BladePath.EditorTools
             // всё, что построил двор храма (кроме света), — облик 0; цельная арена Meshy — облик 1 (меню разработчика)
             List<GameObject> templeRoots = new List<GameObject>();
             foreach (GameObject g in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects())
-                if (!before.Contains(g) && g.GetComponent<Light>() == null) templeRoots.Add(g);
+                if (!before.Contains(g))
+                {
+                    Light lt = g.GetComponent<Light>();
+                    if (lt == null || lt.type != LightType.Directional) templeRoots.Add(g);   // луна — общая; жаровни храма — его облик (в саду висели в воздухе)
+                }
             ArenaBuilder.Build(templeRoots.ToArray());
 
             // игрок слева, смотрит в +X; противник справа, смотрит в -X. Камера видит бойцов сбоку (вдоль мировой Z).
