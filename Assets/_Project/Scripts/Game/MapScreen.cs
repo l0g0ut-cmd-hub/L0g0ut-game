@@ -416,6 +416,44 @@ namespace BladePath
                 default: return -1;
             }
         }
+        // место здания у значка: из нескольких сторон выбирается та, что дальше всего от дорог, воды (мост!) и других мест
+        static readonly Vector2[] BuildingSpots = { new Vector2(38f, 0f), new Vector2(-38f, 0f), new Vector2(30f, -22f), new Vector2(-30f, -22f), new Vector2(0f, -34f), new Vector2(34f, 24f), new Vector2(-34f, 24f) };
+        readonly Dictionary<int, Vector2> buildingOff = new Dictionary<int, Vector2>();
+        string buildingKey;
+        Vector2 BuildingOffset(int i, int tower)
+        {
+            List<MapNode> ns = Campaign.Nodes;
+            string key = Campaign.Region + ":" + ns.Count + ":" + ns[0].x + ":" + tower;
+            if (key != buildingKey) { buildingKey = key; buildingOff.Clear(); }
+            Vector2 got;
+            if (buildingOff.TryGetValue(i, out got)) return got;
+            TerrainRoads.Bind(Campaign.Region, ns);
+            Vector2 k = new Vector2(810f, 540f), np = new Vector2(ns[i].x, ns[i].y);
+            // точки дорог вокруг (все дороги места и соседей)
+            List<Vector2> road = new List<Vector2>(64);
+            for (int a = 0; a < ns.Count; a++)
+                foreach (int b in ns[a].next)
+                {
+                    if ((Vector2.Scale(new Vector2(ns[a].x, ns[a].y) - np, k)).sqrMagnitude > 260f * 260f && (Vector2.Scale(new Vector2(ns[b].x, ns[b].y) - np, k)).sqrMagnitude > 260f * 260f) continue;
+                    TerrainRoads.Path pth = TerrainRoads.Route(a, b);
+                    for (int q = 0; q <= 12; q++) road.Add(Vector2.Scale(pth.Position(q / 12f), k));
+                }
+            float bestScore = -1e9f; Vector2 best = BuildingSpots[0];
+            // экранные смещения ~ точкам карты 810 (карта на экране почти в масштабе); центр здания — чуть выше основания
+            foreach (Vector2 sp in BuildingSpots)
+            {
+                if (i == tower && sp.x > 10f && sp.y < 5f) continue;   // справа-сверху стоит смотровая башня
+                Vector2 basePt = Vector2.Scale(np, k) + sp, center = basePt + new Vector2(0f, -26f);
+                float dRoad = 1e9f; foreach (Vector2 rp in road) dRoad = Mathf.Min(dRoad, Mathf.Min((rp - basePt).magnitude, (rp - center).magnitude));
+                float dWater = Mathf.Min(MapLife.DistToWater(Campaign.Region, new Vector2(basePt.x / 810f, basePt.y / 540f)), MapLife.DistToWater(Campaign.Region, new Vector2(center.x / 810f, center.y / 540f)));
+                float dNode = 1e9f; for (int o = 0; o < ns.Count; o++) if (o != i) dNode = Mathf.Min(dNode, (Vector2.Scale(new Vector2(ns[o].x, ns[o].y), k) - center).magnitude);
+                float score = Mathf.Min(dRoad, 40f) + 1.5f * Mathf.Min(dWater, 45f) + 0.8f * Mathf.Min(dNode, 60f) - (sp == BuildingSpots[0] ? 0f : 3f);
+                if (score > bestScore) { bestScore = score; best = sp; }
+            }
+            buildingOff[i] = best;
+            return best;
+        }
+
         void DrawBuildings()
         {
             if (Event.current.type != EventType.Repaint) return;
@@ -434,8 +472,8 @@ namespace BladePath
                 Vector2 p = P(n);
                 if (p.x < mapX - 80f || p.x > mapX + viewW + 80f) continue;
                 const float size = 74f;
-                float side = i == tower ? -1f : 1f;   // у смотровой башни здание встаёт с другой стороны
-                Rect r = new Rect(p.x + side * 38f - size * 0.5f, p.y - size * 0.78f, size, size);
+                Vector2 off = BuildingOffset(i, tower);
+                Rect r = new Rect(p.x + off.x - size * 0.5f, p.y + off.y - size * 0.78f, size, size);
                 bool dim = n.done && b != 0 && b != 1 && b != 2;   // пройденные приглушены (трактир, кузница и лавка — живые всегда)
                 GUI.color = dim ? new Color(0.72f, 0.7f, 0.68f, 0.9f) : Color.white;
                 GUI.DrawTextureWithTexCoords(r, atlas, new Rect((b % 4) * 0.25f, b < 4 ? 0.5f : 0f, 0.25f, 0.5f));

@@ -48,6 +48,21 @@ namespace BladePath
             },
         };
 
+        /// <summary>Расстояние (в точках карты 810×540) от точки до ближайшей воды или лавы этой области — чтобы ставить здания не на мост и не в реку.</summary>
+        public static float DistToWater(int region, Vector2 uv)
+        {
+            Region r = regions[Mathf.Clamp(region, 0, regions.Length - 1)];
+            float best = 1e9f; Vector2 k = new Vector2(810f, 540f), q = Vector2.Scale(uv, k);
+            foreach (Vector2[] pl in r.rivers)
+                for (int i = 1; i < pl.Length; i++)
+                {
+                    Vector2 a = Vector2.Scale(pl[i - 1], k), b = Vector2.Scale(pl[i], k), ab = b - a;
+                    float t = Mathf.Clamp01(Vector2.Dot(q - a, ab) / Mathf.Max(1e-4f, ab.sqrMagnitude));
+                    best = Mathf.Min(best, (a + ab * t - q).magnitude);
+                }
+            return best;
+        }
+
         static float H(float a) { float x = Mathf.Sin(a * 12.9898f) * 43758.5453f; return x - Mathf.Floor(x); }
 
         static Vector2 Along(Vector2[] pl, float u)
