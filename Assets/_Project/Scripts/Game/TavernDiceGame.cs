@@ -74,13 +74,14 @@ namespace BladePath
                 float breathe = Mathf.Sin(now * 1.6f) * 2.5f;
                 float laugh = mood == 1 ? Mathf.Abs(Mathf.Sin(mt * 11f)) * 7f * Mathf.Clamp01(2.2f - mt) : 0f;
                 float rage = mood == 2 ? Mathf.Sin(mt * 47f) * 3f * Mathf.Clamp01(1.6f - mt) : 0f;
-                float h = bg != null ? imgH * 0.40f : 300f, w = h * (rogue != null ? rogue.width / (float)rogue.height : 1f);
-                float bottom = bg != null ? edgeY + imgH * 0.06f : 268f;   // локти чуть заходят на стол, низ листа растушёван
+                float h = bg != null ? imgH * 0.46f : 300f, w = h * (rogue != null ? rogue.width / (float)rogue.height : 1f);
+                float bottom = bg != null ? edgeY + h * 0.16f : 268f;   // низ листа (локти) уходит за край стола
                 Rect rr = new Rect(W * 0.5f - w * 0.5f + rage + shake.x, bottom - h - breathe - laugh + shake.y, w, h + breathe);
                 if (rogue != null) GUI.DrawTexture(rr, rogue, ScaleMode.StretchToFill, true);
             }
-            // край стола перед жуликом (на запасном фоне; на арте стол уже есть)
-            if (bg == null) UiKit.Rect(new Rect(full.x, 262f, full.width, 10f), new Color(0.12f, 0.07f, 0.04f));
+            // столешница поверх жулика: он сидит ЗА столом, а не растёт из него
+            if (bg != null) DrawCoverFrom(full, bg, edgeY);
+            else UiKit.Rect(new Rect(full.x, 262f, full.width, 10f), new Color(0.12f, 0.07f, 0.04f));
 
             // ---- кости (RenderTexture поверх стола, во весь экран 16:9 по ширине)
             if (t.RT != null && st != St.Bet)
@@ -178,12 +179,26 @@ namespace BladePath
             return r.y + (frac - (1f - vf) * CoverTop) / vf * r.height;
         }
 
+        /// <summary>Та же картинка, что DrawCover, но только ниже экранной Y (передняя часть стола).</summary>
+        static void DrawCoverFrom(Rect r, Texture2D tex, float fromY)
+        {
+            Rect uv = CoverUV(r, tex);
+            float k = Mathf.Clamp01((fromY - r.y) / r.height);   // доля сверху
+            Rect sub = new Rect(uv.x, uv.y, uv.width, uv.height * (1f - k));   // texcoords снизу вверх
+            GUI.DrawTextureWithTexCoords(new Rect(r.x, fromY, r.width, r.yMax - fromY), tex, sub);
+        }
+
+        static Rect CoverUV(Rect r, Texture2D tex)
+        {
+            float ta = tex.width / (float)tex.height, ra = r.width / r.height;
+            return ta > ra ? new Rect((1f - ra / ta) * 0.5f, 0f, ra / ta, 1f) : new Rect(0f, (1f - ta / ra) * (1f - CoverTop), 1f, ta / ra);
+        }
+
         /// <summary>Картинка «по размеру с обрезкой» (как cover в CSS).</summary>
         static void DrawCover(Rect r, Texture2D tex)
         {
-            float ta = tex.width / (float)tex.height, ra = r.width / r.height;
             // на широких экранах картинка режется по высоте: сверху чуть-чуть (голова жулика), остальное — снизу (стол большой)
-            Rect uv = ta > ra ? new Rect((1f - ra / ta) * 0.5f, 0f, ra / ta, 1f) : new Rect(0f, (1f - ta / ra) * (1f - CoverTop), 1f, ta / ra);
+            Rect uv = CoverUV(r, tex);
             GUI.DrawTextureWithTexCoords(r, tex, uv);
         }
     }
