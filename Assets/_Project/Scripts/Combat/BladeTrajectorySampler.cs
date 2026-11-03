@@ -211,6 +211,9 @@ namespace BladePath
                 zoneCache[col] = zone;
             }
             if (zone == null || zone.owner == weapon.owner) return null; // не бьём себя
+            // на арене две пары (соратники): клинок задевает только своего противника — чужой бой не трогаем
+            FighterController foe = weapon.owner != null ? weapon.owner.opponent : null;
+            if (foe != null && zone.owner != foe) return null;
             return zone;
         }
 

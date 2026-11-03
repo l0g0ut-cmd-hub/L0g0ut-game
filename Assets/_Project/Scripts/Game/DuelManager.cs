@@ -340,7 +340,7 @@ namespace BladePath
         bool EnemyAiOn()
         {
             if (enemyAi == null)   // ИИ врага, а не отладочный автобой игрока
-                foreach (EnemyAI e in FindObjectsByType<EnemyAI>(FindObjectsSortMode.None)) if (!e.autoPlayer) enemyAi = e;
+                foreach (EnemyAI e in FindObjectsByType<EnemyAI>(FindObjectsSortMode.None)) if (!e.autoPlayer && !e.sideFighter) enemyAi = e;
             return enemyAi == null || enemyAi.aiEnabled;
         }
 
@@ -426,6 +426,7 @@ namespace BladePath
             IaiWaiting = false; iaiDone = false; iaiRoll = UnityEngine.Random.value < 0.5f;
             saluted = false; answered = false;
             Freeze(true);
+            if (SideDuel.Instance != null) SideDuel.Instance.Setup();
         }
 
         void SetState(DuelState s) { State = s; stateStart = Time.unscaledTime; }
@@ -535,7 +536,7 @@ namespace BladePath
                     if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.05f);
                 }
                 // низкое здоровье игрока: стук сердца
-                if (player != null && Hp01(player) < 0.3f && Time.unscaledTime >= nextHeartAt)
+                if (player != null && !player.Dead && Hp01(player) < 0.3f && Time.unscaledTime >= nextHeartAt)
                 {
                     nextHeartAt = Time.unscaledTime + Mathf.Lerp(0.6f, 1.1f, Hp01(player) / 0.3f);
                     if (Juice.Instance != null) Juice.Instance.Heartbeat();
@@ -578,6 +579,7 @@ namespace BladePath
         public bool TrySuper(FighterController f)
         {
             if (State != DuelState.Fighting || SuperActive || DeathblowActive || f == null || f.opponent == null) return false;
+            if ((f != player && f != enemy) || (f.opponent != player && f.opponent != enemy)) return false;   // соратник — без удара духа
             if (!f.KiFull || !f.CanAct || !f.Grounded || f.opponent.Dead) return false;
             if (f.weapon != null && f.weapon.Phase != SwingPhase.Idle) return false;
             f.DrainKi();
@@ -1117,7 +1119,7 @@ namespace BladePath
             return (c1 - c2).magnitude;
         }
 
-        static float BaseDamage(AttackType t)
+        public static float BaseDamage(AttackType t)
         {
             switch (t)
             {
@@ -1134,7 +1136,7 @@ namespace BladePath
         }
 
         /// <summary>Урон по равновесию от удара, принятого в блок (отражённый удар бьёт по равновесию атакующего).</summary>
-        static float PostureDamage(AttackType t)
+        public static float PostureDamage(AttackType t)
         {
             switch (t)
             {
@@ -1278,7 +1280,7 @@ namespace BladePath
         }
         static int plungeHints;
 
-        static float ZoneMul(BodyZoneId z)
+        public static float ZoneMul(BodyZoneId z)
         {
             switch (z)
             {
@@ -1293,6 +1295,8 @@ namespace BladePath
         void OnHit(HitResult r)
         {
             if (State != DuelState.Fighting || r.attacker == null || r.target == null) return;
+            // вторая пара на арене (соратник и его противник) — её удары считает SideDuel
+            if ((r.attacker != player && r.attacker != enemy) || (r.target != player && r.target != enemy)) return;
             if (r.attacker.Dead || r.target.Dead || DeathblowActive) return;
             int id = r.contact.swingId;
             int last;
@@ -1459,9 +1463,54 @@ namespace BladePath
         }
 
         /// <summary>Урон не клинком (удар по земле и т.п.): здоровье и равновесие, без серии и контратаки.</summary>
+        /// <summary>Соратник рубит врага (игрок пал, бой продолжает соратник): урон без добивания — в ноль, и враг пал.</summary>
+        public void AllyStrike(FighterController ally, float dmg, Vector3 point, Vector3 normal, Vector3 dir, Transform zoneT, bool blocked)
+        {
+            if (enemy == null || enemy.Dead || State != DuelState.Fighting) return;
+            if (EnemyImmortal && dmg >= Hp(enemy)) dmg = Mathf.Max(0f, Hp(enemy) - 1f);
+            dmg = Mathf.Round(dmg);
+            hp[enemy] = Mathf.Max(0f, Hp(enemy) - dmg);
+            lastHitTime[enemy] = Time.unscaledTime;
+            if (!blocked) MatsOf(enemy).flashAt = Time.unscaledTime;
+            Popups.Add(new Popup { world = point + Vector3.up * 0.15f, text = ((int)dmg).ToString(), color = new Color(0.6f, 0.9f, 1f), born = Time.unscaledTime, size = 24f });
+            if (Damaged != null) Damaged(enemy, dmg);
+            bool kill = Hp(enemy) <= 0f;
+            if (Juice.Instance != null) Juice.Instance.OnHit(point, normal, dir, Mathf.Clamp(dmg / 16f + (kill ? 0.5f : 0f), 0.4f, 2f), blocked, kill, zoneT);
+            if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(kill ? 0.1f : 0.03f);
+            hitStopUntil = Time.unscaledTime + (kill ? 0.14f : 0.04f);
+            if (blocked) return;
+            if (enemy.weapon != null && enemy.weapon.Phase == SwingPhase.Windup) enemy.weapon.ResetState();
+            enemy.Stun(dmg >= 20f ? 0.5f : 0.35f);
+            if (!kill) { enemy.AddPosture(dmg * 0.6f); return; }
+            enemy.Dead = true;
+            if (enemy.weapon != null) enemy.weapon.ResetState();
+            Haptics.Pulse(120);
+            Announce("СОРАТНИК СПАС БОЙ", new Color(0.55f, 0.9f, 1f));
+            EndRoundNow(enemy, player);
+        }
+
+        /// <summary>Противник соратника победил и вступает вместо павшего врага: облик, место и остаток здоровья — его.</summary>
+        public void FoeTakesOver(Vector3 pos, Quaternion rot, int model, float hp01, string name)
+        {
+            if (enemy == null || State != DuelState.Fighting) return;
+            if (Juice.Instance != null) Juice.Instance.SpiritRise(enemy.transform.position);
+            enemy.ResetFighter();
+            enemy.transform.position = pos; enemy.transform.rotation = rot;
+            EnemySkins skins = enemy.GetComponent<EnemySkins>();
+            if (skins != null) skins.Apply(model);
+            hp[enemy] = Mathf.Max(1f, Mathf.Round(MaxHp(enemy) * Mathf.Clamp01(hp01) * 0.7f)); hpTrail[enemy] = hp[enemy];
+            marks[enemy] = 1; lastSwing[enemy] = -1;
+            enemy.Frozen = false; if (player != null) player.Frozen = false;
+            EnemyEnraged = false;
+            Announce("ВСТУПАЕТ: " + name, new Color(1f, 0.45f, 0.3f), "он одолел твоего соратника — теперь твоя очередь");
+            if (Juice.Instance != null) Juice.Instance.Taiko(1f, 0.9f);
+            Haptics.Pulse(60);
+        }
+
         public void ForceHit(FighterController target, FighterController attacker, float dmg, float posture, Vector3 point)
         {
             if (target == null || target.Dead || State != DuelState.Fighting) return;
+            if (target != player && target != enemy) { if (SideDuel.Instance != null) SideDuel.Instance.ExternalHit(target, attacker, dmg, posture, point); return; }
             if (target == player) dmg *= Profile.B.armorMul * Profile.CycleDmg;
             ApplyDamage(target, attacker, Mathf.Round(dmg), point, false, true, Vector3.up, (target.transform.position - point).normalized * 3f, null);
             if (!target.Dead) target.AddPosture(posture);
@@ -1680,6 +1729,20 @@ namespace BladePath
 
         /// <summary>Боец пал: раунд за его противником.</summary>
         void EndRound(FighterController target, FighterController attacker)
+        {
+            // соратники ещё бьются / победитель второй пары вступает — раунд не кончается (SideDuel)
+            if (SideDuel.Instance != null && SideDuel.Instance.InterceptMainEnd(target)) return;
+            EndRoundNow(target, attacker);
+        }
+
+        /// <summary>Раунд окончен по итогам обеих пар (SideDuel): loser — игрок или враг.</summary>
+        public void FinishRound(FighterController loser)
+        {
+            if (State != DuelState.Fighting || loser == null) return;
+            EndRoundNow(loser, loser == player ? enemy : player);
+        }
+
+        void EndRoundNow(FighterController target, FighterController attacker)
         {
             bool playerLost = target == player;
             Perfect = attacker != null && Hp(attacker) >= MaxHp(attacker);

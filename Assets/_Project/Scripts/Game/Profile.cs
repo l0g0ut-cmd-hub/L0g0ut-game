@@ -49,6 +49,8 @@ namespace BladePath
             public int[] stats = new int[5];
             public int[] equipped = { -1, -1, -1, -1, -1, -1 };
             public int companion = -1;   // спутник: 0 ворон, 1 волк, 2 змея (−1 — нет)
+            public int ally = -1;        // соратник-воин на арене (−1 — нет)
+            public bool allyDown;        // соратник пал — до хижины травницы
             public List<Item> items = new List<Item>();
         }
 
@@ -441,6 +443,10 @@ namespace BladePath
             if (c < 0 || c >= CompanionHints.Length) return "";
             return fogEnabled ? CompanionHints[c] : CompanionHintsNoFog[c];
         }
+        public static int Ally { get { return D.ally; } }
+        public static bool AllyDown { get { return D.allyDown; } }
+        public static void SetAlly(int a) { D.ally = a; D.allyDown = false; Save(); }
+        public static void SetAllyDown(bool v) { D.allyDown = v; Save(); }
         public static int Companion { get { return D.companion; } }
         public static void SetCompanion(int c) { D.companion = Mathf.Clamp(c, -1, 2); Save(); }
 

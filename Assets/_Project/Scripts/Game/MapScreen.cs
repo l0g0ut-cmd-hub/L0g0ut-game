@@ -1640,7 +1640,12 @@ namespace BladePath
                         : revisit
                             ? "Травница поднимает глаза от отвара. «Снова ты? Посиди у огня, переведи дух». Кость пути она уже отдала тебе в прошлый раз."
                             : "Старая травница помешивает отвар. «Ходят тут всякие с мечами… Если что — несите сюда». Она вкладывает тебе в ладонь кость пути.";
-                    Lines(x, y, w, tx, 40, 13f, Ink);
+                    y = Lines(x, y, w, tx, 40, 13f, Ink) + 8f;
+                    if (Profile.Ally >= 0 && Profile.AllyDown && Btn(new Rect(x, y, w, 42f), "ВЫХОДИТЬ СОРАТНИКА", ok))
+                    {
+                        Profile.SetAllyDown(false);
+                        TavToast("Травница промывает раны соратника отваром полыни. К утру он снова на ногах и берётся за меч.");
+                    }
                     if (Btn(new Rect(x, r.yMax - 64f, w, 46f), "В ПУТЬ", ok, true)) { if (modal == Modal.Knocked) Campaign.AckKnocked(); modal = Modal.None; }
                     break;
                 }
@@ -1744,6 +1749,7 @@ namespace BladePath
         const float TavW = 1916f, TavH = 821f;
         static readonly Rect TavKeeper = new Rect(80f, 60f, 330f, 320f), TavDice = new Rect(1120f, 210f, 380f, 270f),
             TavBoard = new Rect(1530f, 80f, 270f, 290f), TavDrunk = new Rect(1270f, 430f, 560f, 330f), TavHearth = new Rect(840f, 380f, 440f, 200f);
+        static int AllyPrice { get { return 120 + 40 * Campaign.Region; } }
         int tavSub;           // 0 — зал, 1 — трактирщик, 2 — кости, 3 — доска, 4 — ронин
         bool tavKeeper, tavDice, tavBoard, tavDrunk, tavHearth, tavFromCamp, tavDiceFresh;
         void OpenTavern(bool fromCamp = false)
@@ -1796,6 +1802,26 @@ namespace BladePath
                 if (Btn(new Rect(r.center.x - 70f, r.yMax - 50f, 140f, 38f), "НАЗАД", ok)) tavSub = 0;
                 return;
             }
+            if (tavSub == 4)
+            {
+                // пьяный ронин: расспросить — или нанять в соратники (бьётся на арене с бойцом врага)
+                Rect r = Card(580f, 290f);
+                float x = r.x + 24f, w = r.width - 48f, y = r.y + 20f;
+                int price = AllyPrice;
+                bool has = Profile.Ally >= 0;
+                UiKit.Text(new Rect(x, y, w, 26f), "ПЬЯНЫЙ РОНИН", 20f, Gold); y += 32f;
+                y = Lines(x, y, w, has ? (Profile.AllyDown ? "«Твой соратник? Слыхал, лежит у травницы. Отнеси его к ней — выходит»." : "Ронин кивает на твоего соратника: «Добрый клинок. Береги его»." )
+                    : "Ронин трезвеет на глазах, стоит звякнуть кошелем. «За " + price + " мон пойду с тобой. Пока ты бьёшься с главным, я займу его подручного».", 52, 13f, Ink) + 10f;
+                if (!has && Btn(new Rect(x, y, w, 46f), "НАНЯТЬ СОРАТНИКА — " + price + " МОН", ok && gold >= price, true))
+                {
+                    Profile.AddGold(-price); Profile.SetAlly(0); tavDrunk = true; tavSub = 0;
+                    TavToast("Ронин идёт с тобой. В бою он схватится с бойцом врага в стороне; падёт — выходит травница.");
+                    return;
+                }
+                if (Btn(new Rect(x, y + (has ? 0f : 54f), w, 40f), "РАССПРОСИТЬ", ok)) { tavSub = 0; DrunkRoninTalk(); return; }
+                if (Btn(new Rect(r.center.x - 70f, r.yMax - 50f, 140f, 38f), "НАЗАД", ok)) tavSub = 0;
+                return;
+            }
             // зал: подписи у зон, использованные — приглушены
             Rect keeper = CampRect(TavKeeper, s, ox, oy), dice = CampRect(TavDice, s, ox, oy), board = CampRect(TavBoard, s, ox, oy),
                  drunk = CampRect(TavDrunk, s, ox, oy), hearth = CampRect(TavHearth, s, ox, oy);
@@ -1811,18 +1837,21 @@ namespace BladePath
             if (!tavKeeper && GUI.Button(keeper, GUIContent.none, GUIStyle.none)) { tavSub = 1; return; }
             if (!tavDice && GUI.Button(dice, GUIContent.none, GUIStyle.none)) { tavSub = 2; TavernDiceGame.Enter(tavDiceFresh); tavDiceFresh = false; return; }
             if (!tavBoard && GUI.Button(board, GUIContent.none, GUIStyle.none)) { tavSub = 3; return; }
-            if (!tavDrunk && GUI.Button(drunk, GUIContent.none, GUIStyle.none))
-            {
-                tavDrunk = true;
-                if (Random.value < 0.5f) { Campaign.AddRoll(); TavToast("Ронин приоткрывает глаз: «Короткая тропа за старым мостом…» — и снова храпит. +1 кость пути."); }
-                else { int g = 15 + 10 * Campaign.Region; Profile.AddGold(g); TavToast("Ронин бормочет о засаде и роняет кошель. Ты возвращаешь его… почти весь: +" + g + " мон."); }
-                return;
-            }
+            if (!tavDrunk && GUI.Button(drunk, GUIContent.none, GUIStyle.none)) { tavSub = 4; return; }
             if (!tavHearth && GUI.Button(hearth, GUIContent.none, GUIStyle.none))
             {
                 tavHearth = true;
                 if (Campaign.Cursed) { Campaign.LiftCurse(); TavToast("Ты долго смотришь в огонь. Тяжесть проклятия уходит с дымом."); }
                 else { Profile.AddXp(Mathf.RoundToInt(Profile.XpToNext * 0.15f)); TavToast("Тепло очага, треск углей. Ум проясняется: немного опыта."); }
+            }
+        }
+
+        void DrunkRoninTalk()
+        {
+            {
+                tavDrunk = true;
+                if (Random.value < 0.5f) { Campaign.AddRoll(); TavToast("Ронин приоткрывает глаз: «Короткая тропа за старым мостом…» — и снова храпит. +1 кость пути."); }
+                else { int g = 15 + 10 * Campaign.Region; Profile.AddGold(g); TavToast("Ронин бормочет о засаде и роняет кошель. Ты возвращаешь его… почти весь: +" + g + " мон."); }
             }
         }
 

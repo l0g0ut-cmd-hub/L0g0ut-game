@@ -115,6 +115,13 @@ namespace BladePath.EditorTools
             return true;
         }
 
+        /// <summary>Один облик (боец второй пары — соратник / приспешник): свои клипы и контроллер под префиксом.</summary>
+        public static bool AttachSingle(FighterController fighter, Transform bladeRoot, Look look, string fbx, string prefix)
+        {
+            if (!Exists(fbx)) return false;
+            return Attach(fighter, bladeRoot, look, true, fbx, "Assets/_Project/Animation/" + prefix + ".controller", prefix + "_", prefix + "Model") != null;
+        }
+
         static GameObject Attach(FighterController fighter, Transform bladeRoot, Look look, bool undead, string fbx, string ctrlPath, string clipPrefix, string modelName)
         {
             bool hero3 = fbx == Hero3FbxPath;

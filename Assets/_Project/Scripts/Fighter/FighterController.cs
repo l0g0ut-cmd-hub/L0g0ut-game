@@ -22,6 +22,9 @@ namespace BladePath
         [Tooltip("Множитель скорости, пока идёт любая фаза удара. 1 = без штрафа.")]
         [Range(0f, 1f)] public float attackMoveMultiplier = 0.8f;
         public float minSeparation = 0.7f;      // ближе этого бойцы не сходятся (корпуса)
+        /// <summary>Чужая пара на арене (соратник и его противник): сквозь них не проходим, держим avoidRadius.</summary>
+        [NonSerialized] public FighterController[] avoid;
+        public float avoidRadius = 0.85f;
         public float arenaHalfWidth = 3.1f;     // половина площадки по X
         public float arenaHalfDepth = 2.3f;     // половина площадки по Z
         [Tooltip("Дальний край площадки (к ступеням храма), м: ближе, чем передний — иначе бойцы будто наступают на ступени.")]
@@ -411,10 +414,25 @@ namespace BladePath
                 if (nd < minSeparation && nd < old.magnitude)
                     np = new Vector3(op.x, np.y, op.z) + (nd > 1e-4f ? d / nd : old.normalized) * minSeparation;
             }
+            if (avoid != null)
+                for (int i = 0; i < avoid.Length; i++)
+                {
+                    FighterController o = avoid[i];
+                    if (o == null || o == this || o == opponent || !o.isActiveAndEnabled) continue;
+                    Vector3 op = o.transform.position;
+                    Vector3 d = np - op; d.y = 0f;
+                    Vector3 old = pos - op; old.y = 0f;
+                    float nd = d.magnitude;
+                    if (nd < avoidRadius && nd < old.magnitude + 1e-4f)
+                        np = new Vector3(op.x, np.y, op.z) + (nd > 1e-4f ? d / nd : (old.sqrMagnitude > 1e-8f ? old.normalized : Vector3.right)) * avoidRadius;
+                }
             np.x = Mathf.Clamp(np.x, -arenaHalfWidth, arenaHalfWidth);
             np.z = Mathf.Clamp(np.z, -arenaHalfDepth, Mathf.Min(arenaHalfDepth, arenaBackDepth));
             transform.position = np;
         }
+
+        /// <summary>Место и разворот, куда боец встаёт в начале раунда (ResetFighter).</summary>
+        public void SetHome(Vector3 p, Quaternion r) { startPosition = p; startRotation = r; }
 
         void OnRelease(WeaponController w)
         {

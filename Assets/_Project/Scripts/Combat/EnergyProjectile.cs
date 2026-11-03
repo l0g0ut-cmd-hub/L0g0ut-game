@@ -20,6 +20,9 @@ namespace BladePath
         static readonly Collider[] overlapBuf = new Collider[8];
         float born;
 
+        // шар бьёт только противника владельца (вторая пара на арене — соратники — не задевается)
+        bool Foe(BodyZone z) { return owner == null || owner.opponent == null || z.owner == owner.opponent; }
+
         public static EnergyProjectile Spawn(FighterController owner, Vector3 position, Vector3 velocity, Material material)
         {
             GameObject go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
@@ -78,7 +81,7 @@ namespace BladePath
             for (int i = 0; i < oc; i++)
             {
                 BodyZone z = overlapBuf[i].GetComponentInParent<BodyZone>();
-                if (z != null && z.owner != owner) { Hit(z, overlapBuf[i].ClosestPoint(pos)); return; }
+                if (z != null && z.owner != owner && Foe(z)) { Hit(z, overlapBuf[i].ClosestPoint(pos)); return; }
             }
 
             // 2) путь за кадр
@@ -91,7 +94,7 @@ namespace BladePath
                 for (int i = 0; i < n; i++)
                 {
                     BodyZone z = castBuf[i].collider.GetComponentInParent<BodyZone>();
-                    if (z == null || z.owner == owner) continue;
+                    if (z == null || z.owner == owner || !Foe(z)) continue;
                     if (castBuf[i].distance < bestDist) { bestDist = castBuf[i].distance; best = z; bestPoint = castBuf[i].point; }
                 }
                 if (best != null) { Hit(best, bestPoint); return; }

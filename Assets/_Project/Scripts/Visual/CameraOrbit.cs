@@ -69,8 +69,13 @@ namespace BladePath
 
         void Start()
         {
-            fighters = FindObjectsByType<FighterController>(FindObjectsSortMode.None);
+            DuelManager dm = DuelManager.Instance;
+            if (dm != null && dm.player != null && dm.enemy != null) fighters = new[] { dm.player, dm.enemy };   // вторая пара (соратники) в кадр не тянет
+            else fighters = FindObjectsByType<FighterController>(FindObjectsSortMode.None);
         }
+
+        /// <summary>Кого держать в кадре (обычно герой и враг; при соратниках — идущий бой).</summary>
+        public void SetFocus(FighterController a, FighterController b) { if (a != null && b != null) fighters = new[] { a, b }; }
 
         public void ResetView(bool instant = false)
         {

@@ -49,7 +49,14 @@ namespace BladePath.EditorTools
 
             BladeTrajectorySampler sp = player.weapon.GetComponent<BladeTrajectorySampler>();
             BladeTrajectorySampler se = enemy.weapon.GetComponent<BladeTrajectorySampler>();
-            BladeTrajectorySampler[] samplers = new BladeTrajectorySampler[] { sp, se };
+            // вторая пара: соратник героя (затычка — облик ронина) и приспешник врага (облик Поверженного); выходят, если соратник нанят
+            FighterController ally = BuildFighter("Ally", 1.4f, +1, +1, look, true, HeroModelBuilder.RoninFbxPath);
+            FighterController foe = BuildFighter("Foe", 2.6f, -1, -1, look, true, HeroModelBuilder.FallenFbxPath);
+            ally.transform.position = new Vector3(1.4f, 0f, 1.15f); foe.transform.position = new Vector3(2.6f, 0f, 1.15f);
+            ally.displayName = "Соратник"; foe.displayName = "Приспешник";
+            ally.opponent = foe; foe.opponent = ally;
+            BladeTrajectorySampler[] samplers = new BladeTrajectorySampler[] { sp, se,
+                ally.weapon.GetComponent<BladeTrajectorySampler>(), foe.weapon.GetComponent<BladeTrajectorySampler>() };
 
             GameObject systems = new GameObject("CombatSystems");
             CombatResolver resolver = systems.AddComponent<CombatResolver>();
@@ -70,6 +77,11 @@ namespace BladePath.EditorTools
             EnemyAI ai = systems.AddComponent<EnemyAI>();
             ai.self = enemy;
             ai.target = player;
+
+            SideDuel side = systems.AddComponent<SideDuel>();
+            side.ally = ally; side.foe = foe;
+            side.allyAi = systems.AddComponent<EnemyAI>(); side.allyAi.self = ally; side.allyAi.target = foe; side.allyAi.sideFighter = true;
+            side.foeAi = systems.AddComponent<EnemyAI>(); side.foeAi.self = foe; side.foeAi.target = ally; side.foeAi.sideFighter = true;
 
             PrototypeInput input = systems.AddComponent<PrototypeInput>();
             input.player = player;
@@ -121,7 +133,7 @@ namespace BladePath.EditorTools
 
         // ---------------------------------------------------------------- боец
 
-        static FighterController BuildFighter(string name, float x, int facing, int handSide, Look look, bool undead)
+        static FighterController BuildFighter(string name, float x, int facing, int handSide, Look look, bool undead, string singleFbx = null)
         {
             Material armor = undead ? look.enemyArmor : look.heroArmor;
             Material headMat = undead ? look.voidBlack : look.skin;
@@ -164,7 +176,8 @@ namespace BladePath.EditorTools
             f.weapon = w;
             f.projectileMaterial = MakeEnergyMaterial();
 
-            if (!(undead ? HeroModelBuilder.TryAttach(f, bladeRoot.transform, look, true)
+            if (singleFbx != null) { if (!HeroModelBuilder.AttachSingle(f, bladeRoot.transform, look, singleFbx, name)) CharacterVisuals.DressUndead(root.transform, look); }
+            else if (!(undead ? HeroModelBuilder.TryAttach(f, bladeRoot.transform, look, true)
                          : HeroModelBuilder.TryAttachVariants(f, bladeRoot.transform, look)))
             {
                 if (undead) CharacterVisuals.DressUndead(root.transform, look);
