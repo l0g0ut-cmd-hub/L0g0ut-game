@@ -69,8 +69,11 @@ namespace BladePath
             float v = traceHasPrev ? (tip - tracePrevTip).magnitude / Mathf.Max(1e-5f, Time.deltaTime) : 0f;
             tracePrevTip = tip; traceHasPrev = true;
             Vector3 rel = a.transform.InverseTransformPoint(tip);
-            Line(string.Format("trace|{0}|{1:F2}|окно {2}|остриё вбок {10:F2} вперёд {3:F2} вверх {4:F2} м над землёй {5:F2}|v {6:F1}|до врага {7:F3} ({8})|боец y {9:F2}",
-                w.Phase, w.PhaseProgress, w.ContactWindowOpen ? "ДА" : "нет", rel.z, rel.y, tip.y, v, best, zone, a.transform.position.y, rel.x));
+            HeroRigDriver drv = HeroRigDriver.Of(a);
+            Vector3 hr = drv != null && drv.handR != null ? a.transform.InverseTransformPoint(drv.handR.position) : Vector3.zero;
+            Vector3 sh = drv != null && drv.upperArmR != null ? a.transform.InverseTransformPoint(drv.upperArmR.position) : Vector3.zero;
+            Line(string.Format("trace|{0}|{1:F2}|окно {2}|остриё вбок {10:F2} вперёд {3:F2} вверх {4:F2} м над землёй {5:F2}|v {6:F1}|до врага {7:F3} ({8})|боец y {9:F2}|кисть R {11:F2} {12:F2} {13:F2} плечо R {14:F2} {15:F2} {16:F2}|до цели {17:F2}",
+                w.Phase, w.PhaseProgress, w.ContactWindowOpen ? "ДА" : "нет", rel.z, rel.y, tip.y, v, best, zone, a.transform.position.y, rel.x, hr.x, hr.y, hr.z, sh.x, sh.y, sh.z, Vector3.Distance(Flat(a.transform.position), Flat(target.transform.position))));
         }
 
         FighterController shotOf; string shotName; float shotGripR = -1f, shotGripL = -1f; bool shotPR, shotPL, shotDone;
@@ -398,7 +401,7 @@ namespace BladePath
                     ResetCounters(enemy);
                     SwingStat st = new SwingStat();
                     if (!enemy.Attack(t)) { Fail("enemy|" + i + "|" + name + "|" + t + "|удар не начался"); continue; }
-                    bool shogun = name.Contains("Shogun");
+                    bool shogun = name.Contains("Shogun") || name.Contains("Shadow");   // Тень — для сравнения: тот же клип, но попадает
                     Strip strip = t == AttackType.Overhead || (shogun && t == AttackType.Slash) ? new Strip(this, enemy, "enemy_" + i + "_" + name + "_" + t, 4) : null;
                     traceSwing = shogun && t != AttackType.Thrust; traceHasPrev = false;
                     if (traceSwing) Line("trace_start|" + name + "|" + t + "|дистанция " + Vector3.Distance(Flat(player.transform.position), Flat(enemy.transform.position)).ToString("F2"));
