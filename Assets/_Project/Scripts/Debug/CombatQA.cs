@@ -69,8 +69,8 @@ namespace BladePath
             float v = traceHasPrev ? (tip - tracePrevTip).magnitude / Mathf.Max(1e-5f, Time.deltaTime) : 0f;
             tracePrevTip = tip; traceHasPrev = true;
             Vector3 rel = a.transform.InverseTransformPoint(tip);
-            Line(string.Format("trace|{0}|{1:F2}|окно {2}|остриё вперёд {3:F2} вверх {4:F2} м над землёй {5:F2}|v {6:F1}|до врага {7:F3} ({8})|боец y {9:F2}",
-                w.Phase, w.PhaseProgress, w.ContactWindowOpen ? "ДА" : "нет", rel.z, rel.y, tip.y, v, best, zone, a.transform.position.y));
+            Line(string.Format("trace|{0}|{1:F2}|окно {2}|остриё вбок {10:F2} вперёд {3:F2} вверх {4:F2} м над землёй {5:F2}|v {6:F1}|до врага {7:F3} ({8})|боец y {9:F2}",
+                w.Phase, w.PhaseProgress, w.ContactWindowOpen ? "ДА" : "нет", rel.z, rel.y, tip.y, v, best, zone, a.transform.position.y, rel.x));
         }
 
         FighterController shotOf; string shotName; float shotGripR = -1f, shotGripL = -1f; bool shotPR, shotPL, shotDone;
