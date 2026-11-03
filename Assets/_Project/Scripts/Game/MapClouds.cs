@@ -62,8 +62,12 @@ namespace BladePath
             {
                 Vector2 d = Center(c) - p;
                 float t = Time.realtimeSinceStartup, k = Swell(c, t);
-                float rx = c.size * 0.42f * k, ry = c.size * 0.42f * k * 1.5f;   // облако квадратное, карта 810×540 — по высоте в долях оно в 1,5 раза больше
-                if ((d.x * d.x) / (rx * rx) + (d.y * d.y) / (ry * ry) <= 1f) sky = Mathf.Max(sky, Storminess(c, t) >= 0.5f ? 2 : 1);
+                float rx = c.size * 0.46f * k, ry = c.size * 0.46f * k * 1.5f;   // облако квадратное, карта 810×540 — по высоте в долях оно в 1,5 раза больше
+                // облако висит над тенью (рисуется выше на 0,2 своей ширины): место под дождём — и под тенью, и под самим облаком,
+                // иначе игрок видит тучу над местом, а в бою ясно
+                Vector2 body = d - new Vector2(0f, c.size * k * 0.3f);   // центр облака выше тени на карте
+                bool under = (d.x * d.x) / (rx * rx) + (d.y * d.y) / (ry * ry) <= 1f || (body.x * body.x) / (rx * rx) + (body.y * body.y) / (ry * ry) <= 1f;
+                if (under) sky = Mathf.Max(sky, Storminess(c, t) >= 0.5f ? 2 : 1);
             }
             return sky;
         }

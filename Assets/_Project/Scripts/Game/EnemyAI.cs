@@ -11,6 +11,8 @@ namespace BladePath
     {
         public FighterController self, target;
         public bool aiEnabled = true;
+        /// <summary>ИИ ведёт игрока (отладочный автобой): без фирменных приёмов врагов (дым, волна, залпы).</summary>
+        public bool autoPlayer;
         [Range(0f, 1f)] public float aggression = 0.5f;
 
         float nextAttackAt, strafeUntil, retreatUntil, dashAt, blockUntil, energyAt;
@@ -144,7 +146,7 @@ namespace BladePath
             Vector3 dir = dist > 1e-3f ? to / dist : Vector3.right;
             Vector3 side = new Vector3(-dir.z, 0f, dir.x);
             bool busy = self.weapon != null && self.weapon.Phase != SwingPhase.Idle;
-            Signatures(dist, dir, busy);
+            if (!autoPlayer) Signatures(dist, dir, busy);
             if (Charge(dist, busy)) return;
             bool canVanish = StageIdx == 1 || (StageIdx == 3 && Phase >= 3);
 

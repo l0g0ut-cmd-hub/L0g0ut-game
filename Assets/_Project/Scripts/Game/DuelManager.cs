@@ -89,6 +89,9 @@ namespace BladePath
 
         /// <summary>Графика: 1 — высокая (мягкие тени, MSAA, 4 источника света), 0 — экономная для слабых телефонов.</summary>
         /// <summary>Таймер раунда (настройка «timer»): выключен — время не идёт, ничьей по времени нет, на экране его нет.</summary>
+        /// <summary>Отладка (меню паузы): игроком управляет ИИ / игрок не умирает (здоровье не падает ниже 1).</summary>
+        public static bool AutoBattle, Immortal;
+
         public static bool TimerOn
         {
             get { if (timerCached < 0) timerCached = PlayerPrefs.GetInt("timer", 1); return timerCached == 1; }
@@ -291,7 +294,13 @@ namespace BladePath
         }
 
         // ИИ врага выключен (кнопка ИИ) — никаких самостоятельных ударов, и выхвата тоже
-        EnemyAI enemyAi; bool EnemyAiOn() { if (enemyAi == null) enemyAi = FindFirstObjectByType<EnemyAI>(); return enemyAi == null || enemyAi.aiEnabled; }
+        EnemyAI enemyAi;
+        bool EnemyAiOn()
+        {
+            if (enemyAi == null)   // ИИ врага, а не отладочный автобой игрока
+                foreach (EnemyAI e in FindObjectsByType<EnemyAI>(FindObjectsSortMode.None)) if (!e.autoPlayer) enemyAi = e;
+            return enemyAi == null || enemyAi.aiEnabled;
+        }
 
         void ResolveIai(bool playerWon, bool late)
         {
@@ -1375,7 +1384,8 @@ namespace BladePath
             bool won = PlayerWins >= winsToMatch;
             Stats p = StatsOf(player), e = StatsOf(enemy);
             int score = (won ? 40 : 0) + p.parries * 6 + p.maxCombo * 4 + p.hits * 2 + p.blocks + p.supers * 3 - e.hits * 5;
-            Profile.Grant(won, Ladder.Index, score, won && Perfect, won && Campaign.FinalBoss, Campaign.RareDrop, Campaign.GoldMul);
+            if (Campaign.Rematch) Profile.Grant(won, Ladder.Index, score, false, false, false, 0.5f, true);   // реванш: монеты вполовину, без добычи
+            else Profile.Grant(won, Ladder.Index, score, won && Perfect, won && Campaign.FinalBoss, Campaign.RareDrop, Campaign.GoldMul);
         }
 
         void ApplyDamage(FighterController target, FighterController attacker, float dmg, Vector3 point, bool crit, bool chip = false, Vector3 normal = default(Vector3), Vector3 hitDir = default(Vector3), Transform zoneT = null)
@@ -1389,6 +1399,7 @@ namespace BladePath
                 lp.born = Time.unscaledTime; lp.size = 26f; Popups.Add(lp);
                 return;
             }
+            if (target == player && Immortal && dmg >= Hp(player)) dmg = Mathf.Max(0f, Hp(player) - 1f);   // отладка: бессмертие
             if (target == player && dmg >= Hp(player) && Hp(player) > 1f && Campaign.CatNineLives)
             {
                 dmg = Hp(player) - 1f;

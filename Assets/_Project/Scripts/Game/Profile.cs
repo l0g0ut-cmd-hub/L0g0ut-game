@@ -303,7 +303,7 @@ namespace BladePath
         public static Reward LastReward { get; private set; }
         public static float LastRewardAt { get; private set; } = -10f;
 
-        public static Reward Grant(bool won, int stage, int score, bool perfect, bool last, bool rareDrop = false, float goldMul = 1f)
+        public static Reward Grant(bool won, int stage, int score, bool perfect, bool last, bool rareDrop = false, float goldMul = 1f, bool noLoot = false)
         {
             Reward r = new Reward();
             float cyc = 1f + 0.4f * D.cycle;
@@ -313,9 +313,12 @@ namespace BladePath
                 r.gold = Mathf.RoundToInt((30 + 20 * stage) * cyc * B.goldMul * UnityEngine.Random.Range(0.85f, 1.2f));
                 int n = 1 + (UnityEngine.Random.value < 0.35f ? 1 : 0) + (perfect || score >= 95 ? 1 : 0);
                 r.gold = Mathf.RoundToInt(r.gold * goldMul);
-                for (int i = 0; i < n; i++) AddLoot(r, Roll(stage, score, (last || rareDrop) && i == 0));
-                // свиток с приёмом: с шансом, у последнего врага — чаще
-                if (TechCount < 6 && UnityEngine.Random.value < (last ? 0.6f : 0.22f)) AddLoot(r, ScrollItem());
+                if (!noLoot)   // реванш на пройденном месте — без добычи
+                {
+                    for (int i = 0; i < n; i++) AddLoot(r, Roll(stage, score, (last || rareDrop) && i == 0));
+                    // свиток с приёмом: с шансом, у последнего врага — чаще
+                    if (TechCount < 6 && UnityEngine.Random.value < (last ? 0.6f : 0.22f)) AddLoot(r, ScrollItem());
+                }
                 if (last) { D.cycle++; r.cycleUp = true; }
             }
             else

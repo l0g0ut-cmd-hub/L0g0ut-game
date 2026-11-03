@@ -40,6 +40,7 @@ namespace BladePath
             public int blessing;        // 0 — нет, 1 — клинка (+20% урона), 2 — духа (полный дух в начале), 3 — жизни (+25% здоровья)
             public bool cursed;         // проклятие кицунэ: −25% здоровья в следующем бою
             public int clearedRegion = -1;   // только что пройденная область (для плашки на карте)
+            public bool rematch;            // идёт бой-реванш на уже пройденном месте (награда урезана, без добычи)
             public int rolls = 1;            // кости пути в запасе (кость — за каждую победу)
             public int steps;                // ходов осталось после броска
             public int lastRoll;             // что выпало
@@ -425,6 +426,19 @@ namespace BladePath
                     }
                 }
             }
+            // одна и та же услуга (кузница, привал, торговец, храм) не стоит дважды подряд на одной дороге — второе место становится боем или событием
+            for (int pass = 0; pass < 2; pass++)
+                foreach (MapNode a in dd.nodes)
+                    foreach (int bi in a.next)
+                    {
+                        MapNode b = dd.nodes[bi];
+                        NodeType ta = a.Type;
+                        bool service = ta == NodeType.Smith || ta == NodeType.Rest || ta == NodeType.Merchant || ta == NodeType.Shrine;
+                        if (!service || b.Type != ta) continue;
+                        b.type = (int)(UnityEngine.Random.value < 0.6f ? NodeType.Duel : NodeType.Event);
+                        b.enemy = DuelEnemy(region);
+                        if (b.Type == NodeType.Event) b.ev = UnityEngine.Random.Range(0, MapScreen.CatEvent);
+                    }
             // перед владыкой — хотя бы одна передышка (храм или привал), если есть выбор
             List<int> pre = layers[L - 2];
             if (pre.Count > 1)
@@ -442,6 +456,25 @@ namespace BladePath
                 if (dd.nodes[ci].Type == NodeType.Event) { catSpots.Add(ci); if (dd.nodes[ci].ev == MapScreen.CatEvent) catHere = true; }
             if (!catHere && catSpots.Count > 0 && (region == 0 || UnityEngine.Random.value < 0.35f))
                 dd.nodes[catSpots[UnityEngine.Random.Range(0, catSpots.Count)]].ev = MapScreen.CatEvent;
+            // спутник: в первой области похода встреча с ним есть всегда (если спутника ещё нет), дальше — как выпадет
+            if (Profile.Companion < 0 && (region == 0 || UnityEngine.Random.value < 0.5f))
+            {
+                bool compHere = false; int spot = -1;
+                for (int ci = 0; ci < dd.nodes.Count; ci++)
+                {
+                    MapNode cn = dd.nodes[ci];
+                    if (cn.Type == NodeType.Event && cn.ev >= MapScreen.CompanionEvent) compHere = true;
+                    else if (cn.Type == NodeType.Event && cn.ev != MapScreen.CatEvent && spot < 0) spot = ci;
+                }
+                if (!compHere && spot < 0)   // свободного события нет — обычный бой в середине пути становится встречей
+                    for (int ci = 0; ci < dd.nodes.Count && spot < 0; ci++)
+                        if (dd.nodes[ci].Type == NodeType.Duel && dd.nodes[ci].layer >= 2 && dd.nodes[ci].layer <= L - 3) spot = ci;
+                if (!compHere && spot >= 0)
+                {
+                    dd.nodes[spot].type = (int)NodeType.Event;
+                    dd.nodes[spot].ev = MapScreen.CompanionEvent + UnityEngine.Random.Range(0, 3);
+                }
+            }
             dd.steps = 0; dd.rolls = Mathf.Max(dd.rolls, 1);
             Save();
         }
@@ -494,8 +527,14 @@ namespace BladePath
             n.type = (int)NodeType.Ambush; n.enemy = DuelEnemy(D.region); Save();
         }
 
-        public static void BeginFight(int i)
+        /// <summary>Бой-реванш: повторный бой на пройденном месте, где стоит герой. Монеты вполовину, без добычи и костей пути.</summary>
+        public static bool CanRematch { get { MapNode c = Current; return !InFight && !D.training && c.done && c.IsFight && c.Type != NodeType.Boss; } }
+        public static bool Rematch { get { return InFight && D.rematch; } }
+        public static void BeginRematch() { if (!CanRematch) return; BeginFight(D.at, true); }
+
+        public static void BeginFight(int i, bool rematch = false)
         {
+            D.rematch = rematch;
             D.fight = i;
             MapNode n = D.nodes[i];
             Ladder.Index = n.enemy;
@@ -508,6 +547,7 @@ namespace BladePath
         {
             if (D.training) { D.training = false; D.rolls++; Save(); return false; }   // ронин побеждён — кость пути
             if (!InFight) return false;
+            if (D.rematch) { D.rematch = false; D.fight = -1; Weather.ForceNight = false; Save(); return false; }   // реванш: место уже пройдено
             D.rolls++;   // победа — кость пути
             MapNode n = D.nodes[D.fight];
             n.done = true; D.at = D.fight; D.fight = -1;
@@ -531,6 +571,7 @@ namespace BladePath
         {
             if (D.training) { D.training = false; Save(); return; }   // ронину проиграл — просто назад на карту, без кости
             if (!InFight) return;
+            if (D.rematch) { D.rematch = false; D.fight = -1; Weather.ForceNight = false; Save(); return; }   // реванш проигран — просто назад на карту
             MapNode lost = D.nodes[D.fight];
             int cp = 0;
             for (int i = 0; i < D.nodes.Count; i++)

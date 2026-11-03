@@ -13,7 +13,7 @@ import numpy as np
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(ROOT, 'mocap', 'mixamo_json')
 OUT = os.path.join(ROOT, '..', 'Assets', '_Project', 'Scripts', 'Weapon', 'MocapSwings.cs')
-READY = [0.13, -0.46, 0.40, -6, -10, 0, 0.0, 0.06, 35, 8, 12, 6, 0, 0, 0]
+READY = [0.13, -0.46, 0.40, -6, -10, 0, 0.0, 0.06, 35, 5, 12, 6, 0, 0, 0]   # = SwingProfile.ReadyPose
 S = 1.72 / 1.82   # рост наших бойцов / X Bot
 GUARD = 0.08      # цуба впереди правой кисти вдоль клинка, м (HeroRigDriver.gripFront)
 
@@ -96,14 +96,19 @@ def channels(name):
     lf, rf = g('LeftFoot'), g('RightFoot')
     front, rear = (rf, lf) if rf[0, 2] >= lf[0, 2] else (lf, rf)
     out = np.zeros((n, 15))
-    out[:, 0:3] = hands; out[:, 3:6] = blade
-    out[:, 6] = np.clip((hips[:, 2] - hips[0, 2]) * S, -0.15, 0.4)
-    out[:, 7] = READY[7] + np.clip((hips[0, 1] - hips[:, 1]) * S, -0.1, 0.45)
-    out[:, 8] = READY[8] + (hy - hy[0]); out[:, 9] = READY[9] + (hp - hp[0])
-    out[:, 10] = READY[10] + (cy - cy[0]); out[:, 11] = READY[11] + (cp - cp[0])
-    out[:, 12] = np.clip((front[:, 2] - front[0, 2]) * S, -0.3, 0.45)
-    out[:, 13] = np.clip((rear[:, 2] - rear[0, 2]) * S, -0.3, 0.45)
-    out[:, 14] = np.clip((rear[:, 1] - rear[0, 1]) / 0.08, 0, 1)
+    # Из мокапа целиком берутся клинок и тайминг; руки — с ограничением досягаемости, тело — ослабленно.
+    # Фехтовальщик Mixamo на замахе разворачивается почти спиной (таз до 140°) и сильно гнётся — наши ноги и пропорции
+    # этого не держат (тело «крючило» в #321). Поэтому таз и грудь поворачиваются на треть-половину и в пределах стойки.
+    h = hands.copy()
+    h[:, 0] = np.clip(h[:, 0], -0.45, 0.45); h[:, 1] = np.clip(h[:, 1], -0.55, 0.42); h[:, 2] = np.clip(h[:, 2], -0.05, 0.62)
+    out[:, 0:3] = h; out[:, 3:6] = blade
+    out[:, 6] = np.clip((hips[:, 2] - hips[0, 2]) * S * 0.6, -0.08, 0.24)
+    out[:, 7] = READY[7] + np.clip((hips[0, 1] - hips[:, 1]) * S * 0.5, -0.04, 0.14)
+    out[:, 8] = READY[8] + np.clip((hy - hy[0]) * 0.35, -40, 40); out[:, 9] = READY[9] + np.clip((hp - hp[0]) * 0.3, -6, 8)
+    out[:, 10] = READY[10] + np.clip((cy - cy[0]) * 0.5, -35, 35); out[:, 11] = READY[11] + np.clip((cp - cp[0]) * 0.4, -12, 14)
+    out[:, 12] = np.clip((front[:, 2] - front[0, 2]) * S * 0.7, -0.2, 0.3)
+    out[:, 13] = np.clip((rear[:, 2] - rear[0, 2]) * S * 0.7, -0.2, 0.25)
+    out[:, 14] = np.clip((rear[:, 1] - rear[0, 1]) / 0.08, 0, 1) * 0.8
     return out, np.linalg.norm(vel, axis=1)
 
 def build(key):

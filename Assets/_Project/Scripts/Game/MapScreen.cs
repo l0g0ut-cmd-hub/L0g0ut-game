@@ -270,10 +270,12 @@ namespace BladePath
             DrawJourneyFootprints();
             DrawRouteGlints();
             DrawFog(uw);
+            // погода над областью — под значками мест и героем: облака не закрывают, куда нажимать
+            MapClouds.Draw(Campaign.Region, new Rect(mapX, 0f, viewW, MapH), u0, uw);
+            MapBirds.Draw(new Rect(mapX, 0f, viewW, MapH), u0, uw);   // иногда пролетают ворон или стайка цапель
             DrawTower();
             DrawNodes(interactive && modal == Modal.None && moveTo < 0);
             DrawHero();
-            MapClouds.Draw(Campaign.Region, new Rect(mapX, 0f, viewW, MapH), u0, uw);   // погода над областью
             DrawJourneyLegend();
             // туман по краям и название области
             Texture2D fog = SoftSprites.Fog;
@@ -1186,6 +1188,13 @@ namespace BladePath
                 : sel >= 0 && Campaign.CanGo(NextPreviewStep) ? NextPreviewStep : -1;
             bool travelReady = !rolling && moveTo < 0 && travelTarget >= 0 &&
                 Campaign.CanGo(travelTarget);
+            // бой-реванш: герой стоит на пройденном бою — можно сразиться снова (монеты вполовину, без добычи)
+            if (sel < 0 && moveTo < 0 && !rolling && Campaign.CanRematch &&
+                Btn(new Rect(x, 540f - 218f, w, 44f), "БОЙ-РЕВАНШ", interactive, true))
+            {
+                Campaign.BeginRematch();
+                StartFight(Campaign.At, true);
+            }
             if (Btn(new Rect(x, 540f - 166f, w, 44f), "В ПУТЬ",
                 interactive && travelReady, true))
                 Go(travelTarget);
@@ -1555,12 +1564,12 @@ namespace BladePath
                     TextAnchor.MiddleLeft, false);
         }
 
-        void StartFight(int at)
+        void StartFight(int at, bool rematchStarted = false)
         {
             // погода арены — от облака над местом боя в этот момент
             MapNode fn = Campaign.Nodes[at];
             Weather.MapSky = MapClouds.SkyAt(Campaign.Region, new Vector2(fn.x, fn.y));
-            Campaign.BeginFight(at);
+            if (!rematchStarted) Campaign.BeginFight(at);
             Hide();
             DuelManager dm = DuelManager.Instance;
             if (dm != null) dm.ResetMatch();

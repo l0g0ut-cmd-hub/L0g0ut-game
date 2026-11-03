@@ -103,6 +103,8 @@ namespace BladePath
         public float heelPeel = 0.15f, heelPeelDeg = 25f;
         public float maxAutoDrop = 0.12f;
         public float stanceDrop = 0.03f;
+        [Tooltip("Доля наклона корпуса вперёд, которую берёт сам таз (остальное — поясница). Меньше — таз ровнее, зад не выпячивается.")]
+        public float pelvisPitchShare = 0.25f;
         [Tooltip("Мокап-ходьба в бою: насколько таз ниже, чем в клипе (м) — колени согнуты, шаг «в стойке».")]
         public float mocapCrouch = 0.06f;   // колени мягко согнуты в стойке, м
         public float stepLift = 0.07f;     // подъём стопы в шаге, м
@@ -635,7 +637,10 @@ namespace BladePath
             // ---------- 3) таз → поясница → грудь (родитель раньше ребёнка); ось наклона повёрнута вместе с тазом
             Rot(hips, hYaw, up);
             Vector3 hipRight = Quaternion.AngleAxis(hYaw, up) * right;
-            Rot(hips, hPit, hipRight);
+            // наклон вперёд — в основном поясницей: таз остаётся почти вертикальным. Раньше весь наклон шёл в кость таза,
+            // и у моделей Meshy (ягодицы на кости таза) зад выпячивался назад и в стойке, и на ходу
+            Rot(hips, hPit * pelvisPitchShare, hipRight);
+            Rot(spine, hPit * (1f - pelvisPitchShare), hipRight);
             Rot(spine, cYaw * 0.4f, up);
             Rot(chest, cYaw * 0.6f, up);
             Vector3 chestRight = Quaternion.AngleAxis(hYaw + cYaw, up) * right;
