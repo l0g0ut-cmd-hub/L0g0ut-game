@@ -22,7 +22,7 @@ namespace BladePath
         public float StillFor { get; private set; }
 
         static readonly Vector3 Origin = new Vector3(0f, -1000f, 0f);   // далеко от арены: камера стола её не видит
-        const float Size = 0.1f, Step = 1f / 120f;
+        const float Size = 0.07f, Step = 1f / 120f;   // 10 см на столе арта выглядели кирпичами
         const float HalfW = 0.40f, HalfD = 0.30f;   // площадка стола, м (по бокам на арте бутылка и стаканчик — туда не катятся)
 
         Scene scene; PhysicsScene phys; bool ready;
@@ -65,7 +65,7 @@ namespace BladePath
             Mesh mesh = DieMesh();
             Material mat = new Material(Shader.Find("Standard"));
             mat.mainTexture = DieAtlas();
-            mat.SetFloat("_Glossiness", 0.4f);
+            mat.SetFloat("_Glossiness", 0.3f);
             // тени граней — тёплые: иначе ночной свет арены красил их в голубой
             mat.EnableKeyword("_EMISSION"); mat.SetColor("_EmissionColor", new Color(0.22f, 0.15f, 0.09f));
             mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
@@ -101,8 +101,9 @@ namespace BladePath
             // (CI: раньше кости ложились у дальнего края, то есть под жуликом, и были мелкие)
             cam.fieldOfView = 40f; cam.nearClipPlane = 0.05f; cam.farClipPlane = 4f;
             cam.allowHDR = false; cam.depth = -50;
-            cam.transform.position = Origin + new Vector3(0f, 0.5f, -0.9f);
-            cam.transform.rotation = Quaternion.LookRotation((Origin + new Vector3(0f, 0f, 0.3f)) - cam.transform.position, Vector3.up);
+            // круче (~50°): верхняя грань — та, что считается, — видна хорошо; дальний бортик у края стола на арте
+            cam.transform.position = Origin + new Vector3(0f, 0.75f, -0.6f);
+            cam.transform.rotation = Quaternion.LookRotation((Origin + new Vector3(0f, 0f, 0.25f)) - cam.transform.position, Vector3.up);
             SceneManager.MoveGameObjectToScene(cg, scene);
             int w = Mathf.Clamp(Screen.width, 640, 1600), h = Mathf.RoundToInt(w * 9f / 16f);
             RT = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4, name = "TavernDiceRT" };
@@ -111,7 +112,7 @@ namespace BladePath
             // тёплый свет фонаря над столом
             GameObject lg = new GameObject("DiceLamp");
             lamp = lg.AddComponent<Light>();
-            lamp.type = LightType.Point; lamp.color = new Color(1f, 0.74f, 0.45f); lamp.intensity = 3.2f; lamp.range = 3f; lamp.shadows = LightShadows.None;
+            lamp.type = LightType.Point; lamp.color = new Color(1f, 0.74f, 0.45f); lamp.intensity = 2.6f; lamp.range = 3f; lamp.shadows = LightShadows.None;
             lg.transform.position = Origin + new Vector3(0.15f, 0.9f, -0.1f);
             SceneManager.MoveGameObjectToScene(lg, scene);
 
@@ -150,9 +151,9 @@ namespace BladePath
                 Rigidbody rb = dice[i];
                 rb.isKinematic = false;
                 // из-под камеры, по дуге в середину стола; закрутка сильная — кувыркаются и разбегаются
-                rb.position = Origin + new Vector3((i == 0 ? -0.08f : 0.08f) + Random.Range(-0.03f, 0.03f), 0.18f + Random.Range(0f, 0.04f), -HalfD + 0.05f);
+                rb.position = Origin + new Vector3((i == 0 ? -0.07f : 0.07f) + Random.Range(-0.03f, 0.03f), 0.16f + Random.Range(0f, 0.04f), -HalfD + 0.05f);
                 rb.rotation = Random.rotationUniform;
-                rb.linearVelocity = new Vector3(Random.Range(-0.45f, 0.45f), Random.Range(0.7f, 1.1f), Random.Range(1.1f, 1.6f));
+                rb.linearVelocity = new Vector3(Random.Range(-0.35f, 0.35f), Random.Range(0.6f, 0.9f), Random.Range(0.75f, 1.05f));   // сильнее — улетали к дальнему бортику
                 rb.angularVelocity = Random.onUnitSphere * Random.Range(22f, 34f);
                 rb.WakeUp();
             }
