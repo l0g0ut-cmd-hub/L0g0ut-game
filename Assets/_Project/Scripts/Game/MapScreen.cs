@@ -457,7 +457,9 @@ namespace BladePath
         void DrawBuildings()
         {
             if (Event.current.type != EventType.Repaint) return;
-            Texture2D atlas = UiKit.Tex("UI/map_buildings"), glow = UiKit.Tex("FX/glow_pool");
+            // свой набор у каждой области: лес (_0), горы Они (общий), сёгунат (_2)
+            Texture2D atlas = Campaign.Region != 1 ? UiKit.Tex("UI/map_buildings_" + Campaign.Region) : null, glow = UiKit.Tex("FX/glow_pool");
+            if (atlas == null) atlas = UiKit.Tex("UI/map_buildings");
             if (atlas == null) return;
             Color oc = GUI.color;
             float t = Time.unscaledTime;
