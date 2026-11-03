@@ -145,6 +145,7 @@ namespace BladePath
             yield return JumpStrikes();
             yield return Chains();
             yield return EnemyAttacks();
+            yield return DiceThrows();
 
             Line("summary|fails " + Fails);
             Done();
@@ -414,6 +415,59 @@ namespace BladePath
             }
             if (es != null) es.Apply(was);
             attackerNow = null;
+        }
+
+        // ------------------------------------------------------------------ кости в трактире (TavernDiceTable)
+        IEnumerator DiceThrows()
+        {
+            TavernDiceTable t = TavernDiceTable.Ensure();
+            yield return null;
+            for (int n = 0; n < 3; n++)
+            {
+                t.Throw();
+                List<Texture2D> fr = new List<Texture2D>();
+                float t0 = Time.unscaledTime; int f = 0;
+                while (!(t.Settled && t.StillFor > 0.35f) && Time.unscaledTime - t0 < 8f)
+                {
+                    yield return null;
+                    if (f++ % 5 == 0 && fr.Count < 12 && t.RT != null)
+                    {
+                        t.RenderNow();   // в CI без окна камера сама может не рисовать
+                        RenderTexture prev = RenderTexture.active; RenderTexture.active = t.RT;
+                        Texture2D tx = new Texture2D(t.RT.width, t.RT.height, TextureFormat.RGBA32, false);
+                        tx.ReadPixels(new Rect(0, 0, t.RT.width, t.RT.height), 0, 0); tx.Apply();
+                        RenderTexture.active = prev; fr.Add(tx);
+                    }
+                }
+                float took = Time.unscaledTime - t0;
+                bool ok = t.Settled && t.D1 >= 1 && t.D1 <= 6 && t.D2 >= 1 && t.D2 <= 6 && took < 6f;
+                string s = "dice|бросок " + (n + 1) + "|выпало " + t.D1 + " и " + t.D2 + "|остановились за " + took.ToString("F2") + " с|кадров " + f;
+                if (ok) Line(s + "|PASS"); else Fail(s);
+                if (fr.Count > 0)
+                {
+                    int w = fr[0].width / 2, h = fr[0].height / 2;
+                    Texture2D sheet = new Texture2D(w * 4, h * 3, TextureFormat.RGB24, false);
+                    Color[] bgc = new Color[w * 4 * h * 3]; for (int i = 0; i < bgc.Length; i++) bgc[i] = new Color(0.30f, 0.19f, 0.10f);   // «стол» под прозрачным фоном
+                    sheet.SetPixels(bgc);
+                    for (int i = 0; i < fr.Count; i++)
+                    {
+                        Color[] src = fr[i].GetPixels(0, 0, fr[i].width, fr[i].height);
+                        int ox = (i % 4) * w, oy = (2 - i / 4) * h;
+                        for (int y = 0; y < h; y++)
+                            for (int x = 0; x < w; x++)
+                            {
+                                Color c = src[(y * 2) * fr[i].width + x * 2];
+                                Color b = new Color(0.30f, 0.19f, 0.10f);
+                                sheet.SetPixel(ox + x, oy + y, Color.Lerp(b, c, c.a));
+                            }
+                        Destroy(fr[i]);
+                    }
+                    sheet.Apply();
+                    File.WriteAllBytes(Path.Combine(OutDir, "dice_throw_" + (n + 1) + ".jpg"), sheet.EncodeToJPG(85));
+                    Destroy(sheet);
+                }
+            }
+            TavernDiceTable.Release();
         }
 
         // ------------------------------------------------------------------ кадры

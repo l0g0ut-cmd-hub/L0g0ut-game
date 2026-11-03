@@ -1745,10 +1745,10 @@ namespace BladePath
         static readonly Rect TavKeeper = new Rect(80f, 60f, 330f, 320f), TavDice = new Rect(1120f, 210f, 380f, 270f),
             TavBoard = new Rect(1530f, 80f, 270f, 290f), TavDrunk = new Rect(1270f, 430f, 560f, 330f), TavHearth = new Rect(840f, 380f, 440f, 200f);
         int tavSub;           // 0 — зал, 1 — трактирщик, 2 — кости, 3 — доска, 4 — ронин
-        bool tavKeeper, tavDice, tavBoard, tavDrunk, tavHearth, tavFromCamp;
+        bool tavKeeper, tavDice, tavBoard, tavDrunk, tavHearth, tavFromCamp, tavDiceFresh;
         void OpenTavern(bool fromCamp = false)
         {
-            tavSub = 0; tavKeeper = tavDice = tavBoard = tavDrunk = tavHearth = false; tavFromCamp = fromCamp;
+            tavSub = 0; tavKeeper = tavDice = tavBoard = tavDrunk = tavHearth = false; tavFromCamp = fromCamp; tavDiceFresh = true;
             OpenModal(Modal.Tavern);
         }
         void TavToast(string text)
@@ -1780,21 +1780,8 @@ namespace BladePath
             }
             if (tavSub == 2)
             {
-                Rect r = Card(560f, 270f);
-                float x = r.x + 24f, w = r.width - 48f, y = r.y + 20f;
-                int bet = 25 + 15 * Campaign.Region;
-                UiKit.Text(new Rect(x, y, w, 26f), "ИГРОКИ В КОСТИ", 20f, Gold); y += 32f;
-                y = Lines(x, y, w, "Двое в капюшонах не поднимают глаз. «Чёт или нечет, самурай? Ставка — " + bet + " мон».", 52, 13f, Ink) + 10f;
-                bool can = ok && gold >= bet;
-                for (int k = 0; k < 2; k++)
-                    if (Btn(new Rect(x + k * (w * 0.5f + 4f), y, w * 0.5f - 4f, 46f), k == 0 ? "ЧЁТ" : "НЕЧЕТ", can, k == 0))
-                    {
-                        int d1 = Random.Range(1, 7), d2 = Random.Range(1, 7); bool even = (d1 + d2) % 2 == 0;
-                        bool win = (k == 0) == even && Random.value < 0.92f;   // кости у них, конечно, с секретом
-                        Profile.AddGold(win ? bet : -bet); tavDice = true; tavSub = 0;
-                        TavToast("Кости: " + d1 + " и " + d2 + ". " + (win ? "Твоя взяла: +" + bet + " мон. Игроки переглядываются." : "Проиграл " + bet + " мон. Кто-то в углу хмыкает."));
-                    }
-                if (Btn(new Rect(r.center.x - 70f, r.yMax - 50f, 140f, 38f), "НАЗАД", ok)) tavSub = 0;
+                // чо-хан отдельным экраном: стол, жулик напротив, кости на физике (TavernDiceGame)
+                if (TavernDiceGame.Draw(ok, W, Gold, Ink, Dim)) { tavSub = 0; tavDice = TavernDiceGame.RoundsLeft <= 0; }
                 return;
             }
             if (tavSub == 3)
@@ -1822,7 +1809,7 @@ namespace BladePath
                 Haptics.Pulse(20); return;
             }
             if (!tavKeeper && GUI.Button(keeper, GUIContent.none, GUIStyle.none)) { tavSub = 1; return; }
-            if (!tavDice && GUI.Button(dice, GUIContent.none, GUIStyle.none)) { tavSub = 2; return; }
+            if (!tavDice && GUI.Button(dice, GUIContent.none, GUIStyle.none)) { tavSub = 2; TavernDiceGame.Enter(tavDiceFresh); tavDiceFresh = false; return; }
             if (!tavBoard && GUI.Button(board, GUIContent.none, GUIStyle.none)) { tavSub = 3; return; }
             if (!tavDrunk && GUI.Button(drunk, GUIContent.none, GUIStyle.none))
             {
