@@ -18,6 +18,15 @@ namespace BladePath
     {
         public static SideDuel Instance { get; private set; }
         /// <summary>Нововведение целиком (меню разработчика): выключено — ни найма в трактире, ни второй пары на арене.</summary>
+        /// <summary>Сложность ИИ второй пары (0 ученик, 1 воин, 2 мастер) — меню разработчика.</summary>
+        public static int AiLevel
+        {
+            get { return Mathf.Clamp(PlayerPrefs.GetInt("allies_lvl", 1), 0, 2); }
+            set { PlayerPrefs.SetInt("allies_lvl", Mathf.Clamp(value, 0, 2)); PlayerPrefs.Save(); }
+        }
+        /// <summary>Отладка: бессмертие спутников — 0 нет, 1 соратник, 2 приспешник, 3 оба (здоровье не ниже 1).</summary>
+        public static int ImmortalMode;
+        public static readonly string[] ImmortalNames = { "НЕТ", "СОРАТНИК", "ПРИСПЕШНИК", "ОБА" };
         public static bool Enabled
         {
             get { return PlayerPrefs.GetInt("allies", 1) == 1; }
@@ -108,7 +117,7 @@ namespace BladePath
         {
             if (ai == null) return;
             ai.self = self; ai.target = target; ai.sideFighter = true; ai.hasAnchor = true; ai.hold = false;
-            ai.aiEnabled = true; ai.difficultyOverride = 1;
+            ai.aiEnabled = true; ai.difficultyOverride = AiLevel;
         }
 
         void Update()
@@ -120,6 +129,8 @@ namespace BladePath
             // раунд закончен — вторая пара замирает; во вступлении стоит на местах
             ally.Frozen = !fighting && dm.State != DuelState.Intro; foe.Frozen = ally.Frozen;
             if (!fighting || dm.Paused) return;
+            if (allyAi != null) allyAi.difficultyOverride = AiLevel;
+            if (foeAi != null) foeAi.difficultyOverride = AiLevel;
 
             // место второй пары — у дальнего края, на стороне, противоположной основному бою (с запасом, чтобы не металась)
             if (sideWinner == null && mainLoser == null && !Takeover)
@@ -215,7 +226,9 @@ namespace BladePath
 
         void Damage(FighterController t, float dmg, Vector3 point, bool chip)
         {
-            if (t == ally) allyHp = Mathf.Max(0f, allyHp - dmg); else foeHp = Mathf.Max(0f, foeHp - dmg);
+            bool imm = (ImmortalMode & (t == ally ? 1 : 2)) != 0;
+            float floor = imm ? 1f : 0f;
+            if (t == ally) allyHp = Mathf.Max(floor, allyHp - dmg); else foeHp = Mathf.Max(floor, foeHp - dmg);
             Pop(point + Vector3.up * 0.15f, ((int)dmg).ToString(), t == ally ? new Color(1f, 0.55f, 0.5f) : new Color(0.85f, 0.85f, 0.85f), chip ? 16f : 19f);
             if ((t == ally ? allyHp : foeHp) > 0f) return;
             t.Dead = true;
