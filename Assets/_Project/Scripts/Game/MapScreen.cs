@@ -886,6 +886,7 @@ namespace BladePath
                     GUI.DrawTexture(new Rect(p.x - s * 0.47f, p.y - s * 0.47f, s * 0.94f, s * 0.94f), UiKit.Tex("UI/map_tavern"));
                 else if (ic != null)
                     GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), ic, Cell(k));
+                else UiKit.Disc(p, s * 0.45f, can ? Gold : Dim);   // атлас значков не загрузился — простой кружок
                 // отряд: малый медальон с тремя воинами у края значка
                 if (known && !n.done && n.extra != null && n.extra.Count > 0 && UiKit.Tex("UI/map_squad") != null)
                 {
@@ -894,7 +895,6 @@ namespace BladePath
                     UiKit.Text(new Rect(p.x - s * 0.62f, p.y - s * 0.2f, s * 0.5f, 14f), "×" + (n.extra.Count + 1), 11f, new Color(1f, 0.6f, 0.5f));
                     GUI.color = pc;
                 }
-                else UiKit.Disc(p, s * 0.45f, can ? Gold : Dim);
                 GUI.color = oc;
                 if (n.Type == NodeType.Herbalist && herb == null)
                     HerbalistMark(p + new Vector2(s * 0.26f, s * 0.27f), 10f);
