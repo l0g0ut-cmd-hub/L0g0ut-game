@@ -2087,14 +2087,15 @@ namespace BladePath
                     if (Btn(b1, take[comp] + swap, ok && can, true) && (comp != 2 || Profile.Spend(30)))
                     {
                         Profile.SetCompanion(comp);
-                        if (comp == 0) Result("Ворон каркает и садится тебе на плечо. Теперь он твой спутник: " + Profile.CompanionHints[0]);
+                        bool fog = JourneyChoice.FogEnabled;
+                        if (comp == 0) Result("Ворон каркает и садится тебе на плечо. Теперь он твой спутник: " + Profile.CompanionHint(0, fog));
                         else if (comp == 1)
                         {
                             bool bite = Random.value < 0.3f;
                             if (bite) Campaign.Curse();
-                            Result((bite ? "Освобождённый волк в испуге хватает тебя за руку (−25% здоровья в следующем бою), но потом идёт следом. " : "Волк долго смотрит тебе в глаза и идёт следом. ") + Profile.CompanionHints[1]);
+                            Result((bite ? "Освобождённый волк в испуге хватает тебя за руку (−25% здоровья в следующем бою), но потом идёт следом. " : "Волк долго смотрит тебе в глаза и идёт следом. ") + Profile.CompanionHint(1, fog));
                         }
-                        else Result("Змея пробует подношение языком и обвивается вокруг твоих ножен. " + Profile.CompanionHints[2]);
+                        else Result("Змея пробует подношение языком и обвивается вокруг твоих ножен. " + Profile.CompanionHint(2, fog));
                     }
                     if (had == comp) UiKit.Text(new Rect(b1.x, b1.y - 22f, b1.width, 18f), "Этот спутник уже с тобой", 11f, Dim, TextAnchor.MiddleLeft, false);
                     if (Btn(b2, "ПРОЙТИ МИМО", ok)) Result("Ты идёшь дальше своей дорогой.");

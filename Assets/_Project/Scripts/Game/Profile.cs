@@ -429,6 +429,18 @@ namespace BladePath
             "Боец: в бою раз в 15 с кусает врага — урон и удар по равновесию.",
             "Яд: в бою раз в 12 с жалит врага — яд и равновесие врага восстанавливается вдвое медленнее 5 с.",
         };
+        public static readonly string[] CompanionHintsNoFog =
+        {
+            "Разведчик: в бою раз в 20 с пикирует на врага и сбивает замах (урон и удар по равновесию).",
+            "Боец: в бою раз в 15 с кусает врага — урон и удар по равновесию.",
+            "Яд: в бою раз в 12 с жалит врага — яд и равновесие врага восстанавливается вдвое медленнее 5 с.",
+        };
+        /// <summary>Описание спутника с учётом того, включён ли туман войны.</summary>
+        public static string CompanionHint(int c, bool fogEnabled)
+        {
+            if (c < 0 || c >= CompanionHints.Length) return "";
+            return fogEnabled ? CompanionHints[c] : CompanionHintsNoFog[c];
+        }
         public static int Companion { get { return D.companion; } }
         public static void SetCompanion(int c) { D.companion = Mathf.Clamp(c, -1, 2); Save(); }
 
