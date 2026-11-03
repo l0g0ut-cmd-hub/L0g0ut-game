@@ -237,6 +237,26 @@ namespace BladePath.EditorTools
                 tw.Collect();
             }
 
+            // VFX-меши Meshy (дым, частицы): в файтинге не нужны, скрываем чтобы не мелькали
+            // Определяем по имени объекта — содержит "vfx", "smoke", "effect", "particle", "ember"
+            if (meshy)
+            {
+                int vfxHidden = 0;
+                foreach (SkinnedMeshRenderer smr in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+                {
+                    string n = smr.gameObject.name.ToLowerInvariant();
+                    if (n.Contains("vfx") || n.Contains("smoke") || n.Contains("effect") || n.Contains("particle") || n.Contains("ember"))
+                    { smr.gameObject.SetActive(false); vfxHidden++; }
+                }
+                foreach (MeshRenderer mr in model.GetComponentsInChildren<MeshRenderer>(true))
+                {
+                    string n = mr.gameObject.name.ToLowerInvariant();
+                    if (n.Contains("vfx") || n.Contains("smoke") || n.Contains("effect") || n.Contains("particle") || n.Contains("ember"))
+                    { mr.gameObject.SetActive(false); vfxHidden++; }
+                }
+                if (vfxHidden > 0) Debug.Log("HeroModelBuilder: скрыто VFX-мешей: " + vfxHidden + " в " + model.name);
+            }
+
             // Накладки подсветки попадания: зоны (капсулы) в покое невидимы
             foreach (BodyZone z in fighter.zones)
             {
@@ -300,7 +320,9 @@ namespace BladePath.EditorTools
             if (name == "H3_Body") return VisualMaterials.CharacterRim(VisualMaterials.Hero3(), false);
             if (name.StartsWith("MZ_"))   // MZ_Akiko_Player → Art/Akiko, MZ_Oni_Enemy → Art/Oni …
             {
-                string key = name.Substring(3); int cut = key.IndexOf('_'); if (cut > 0) key = key.Substring(0, cut);
+                // обрезаем нули: в бинарных FBX имена дополняются нулями до фиксированной длины
+                string trimmed = name.TrimEnd('\0');
+                string key = trimmed.Substring(3); int cut = key.IndexOf('_'); if (cut > 0) key = key.Substring(0, cut);
                 return VisualMaterials.CharacterRim(VisualMaterials.Meshy(key), undead);
             }
             switch (name)
