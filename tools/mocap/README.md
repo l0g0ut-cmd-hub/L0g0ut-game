@@ -14,3 +14,9 @@ The database was created with funding from NSF EIA-0196217.»
 
 Перенос и запекание клипов — `Assets/_Project/Scripts/Editor/MocapBaker.cs` (при сборке сцены, под каждую модель отдельно).
 Метка частоты кадров в этих BVH (120 к/с) неверна для субъектов 141/143 — реальная съёмка 60 к/с (по длине шага и темпу).
+
+## Quaternius Universal Animation Library 1 и 2 (CC0)
+
+`tools/mocap/ual/UAL1_Standard.glb`, `UAL2_Standard.glb` — https://quaternius.com/packs/universalanimationlibrary.html,
+лицензия CC0 (License.txt). Удары мечом, блок, получение удара, смерть, кувырок. Перевод в BVH и листы превью —
+`tools/blender/ual_export.py` (workflow «Convert UAL animations», ветка anim-build → anim-out).

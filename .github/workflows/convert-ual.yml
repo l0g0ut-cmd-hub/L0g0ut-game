@@ -1,0 +1,52 @@
+name: Convert UAL animations
+
+# Blender: Quaternius UAL (tools/mocap/ual) → BVH + листы превью; результат — в ветку anim-out.
+on:
+  workflow_dispatch:
+  push:
+    branches: [anim-build]
+
+permissions:
+  contents: write
+
+jobs:
+  blender:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender 4.2 LTS
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libxkbcommon0 libsm6 libice6 libegl1 >/dev/null
+          curl -sSfL https://download.blender.org/release/Blender4.2/blender-4.2.3-linux-x64.tar.xz | tar -xJ -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/blender-4.2.3-linux-x64" >> "$GITHUB_PATH"
+      - name: Export
+        run: |
+          UAL_OUT=out blender -b --factory-startup --python tools/blender/ual_export.py > out.log 2>&1 || true
+          grep -E "^UAL|Error|Traceback" out.log | cut -c1-600 | head -80
+          mkdir -p out; cp out.log out/
+      - name: Contact sheets
+        run: |
+          python3 -m pip install -q pillow
+          python3 - <<'PY'
+          import glob, os
+          from PIL import Image
+          names = sorted({os.path.basename(p).rsplit('_', 1)[0] for p in glob.glob('out/prev/*.png')})
+          for n in names:
+              fr = [Image.open('out/prev/%s_%d.png' % (n, k)).convert('RGB') for k in range(6)]
+              sheet = Image.new('RGB', (220 * 6, 300)); [sheet.paste(im, (i * 220, 0)) for i, im in enumerate(fr)]
+              sheet.save('out/sheet_%s.jpg' % n)
+          PY
+          rm -rf out/prev
+      - name: Publish to anim-out
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          D="$RUNNER_TEMP/anim"; rm -rf "$D"; mkdir -p "$D"; cp -r out/. "$D/"; cd "$D"
+          git init -q; git checkout -q -b anim-out
+          git -c user.name=ci -c user.email=ci@local add -A
+          git -c user.name=ci -c user.email=ci@local commit -qm "ual run ${GITHUB_RUN_NUMBER}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" anim-out
