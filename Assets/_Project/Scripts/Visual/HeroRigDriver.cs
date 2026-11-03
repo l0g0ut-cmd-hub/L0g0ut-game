@@ -567,7 +567,8 @@ namespace BladePath
             wLegS = Mathf.MoveTowards(wLegS, groundedOk ? 1f : 0f, dt / 0.1f);
             float wSt = wLegS;
             bool moving = Mathf.Abs(fighter.MoveAxis) > 0.1f && !keyed;
-            moveK = Mathf.MoveTowards(moveK, moving ? 1f : 0f, dt / 0.25f);
+            // ширина шага на ходу нужна и в ударе на ходу (ноги шагают), а осанка (postK) — нет: удар остаётся ударом
+            moveK = Mathf.MoveTowards(moveK, Mathf.Abs(fighter.MoveAxis) > 0.1f ? 1f : 0f, dt / 0.25f);
             // осанка на ходу: таз выше и прямо над стопами, корпус ровнее (поднимается чуть медленнее, чем ноги собираются из стойки)
             postK = Mathf.MoveTowards(postK, moving ? 1f : 0f, dt / (moving ? 0.4f : 0.3f));
             float hYaw0 = hYaw;
@@ -989,7 +990,9 @@ namespace BladePath
                 float k = fighter.Dashing ? 1f : 1f - Mathf.Exp(-dt / 0.04f);
                 Settle(ref gF, tF, yF, k); Settle(ref gR, tR, yR, k);
             }
-            else if (keyW > 0.001f) { walking = false; Settle(ref gF, tF, yF, keyW); Settle(ref gR, tR, yR, keyW); }
+            // удар на ходу: ноги продолжают шагать (иначе стопы «приклеены» к телу и боец скользит по земле),
+            // а руки и корпус играют удар; стоя на месте — стопы ставит клип удара (притоп, выпад)
+            else if (keyW > 0.001f && !(vel.sqrMagnitude > 0.0225f && Mathf.Abs(fighter.MoveAxis) > 0.1f)) { walking = false; Settle(ref gF, tF, yF, keyW); Settle(ref gR, tR, yR, keyW); }
             else if (vel.sqrMagnitude > 0.0225f && Mathf.Abs(fighter.MoveAxis) > 0.1f) WalkCycle(ft, vel, dt);   // идёт сам (отброс ударом — шагами стойки)
             else { walking = false; Gait(tF, yF, tR, yR, vel, dt); }
             FootPitch(ref gF, 0f, dt);

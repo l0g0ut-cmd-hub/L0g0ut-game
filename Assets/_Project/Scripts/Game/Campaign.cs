@@ -276,7 +276,44 @@ namespace BladePath
         {
             if (from < 0 || to < 0 || from >= D.nodes.Count || to >= D.nodes.Count || from == to) return false;
             if (D.nodes[from].next.Contains(to)) return true;
+            if (Lateral(from, to)) return true;
             return D.nodes[to].done && D.nodes[to].next.Contains(from);
+        }
+
+        // Соседи «вбок»: места одного ряда, между которыми по нарисованной карте идёт своя дорога, не проходящая
+        // через другие места (торговец у моста рядом с тайником и т.п.). Раньше такой шаг был запрещён — «дороги туда нет».
+        static readonly HashSet<int> lateral = new HashSet<int>();
+        static string lateralKey;
+        static bool Lateral(int a, int b)
+        {
+            if (D.nodes[a].layer != D.nodes[b].layer) return false;
+            string key = D.region + ":" + D.nodes.Count + ":" + D.nodes[0].x + ":" + D.nodes[D.nodes.Count - 1].y;
+            if (key != lateralKey)
+            {
+                lateralKey = key; lateral.Clear();
+                TerrainRoads.Bind(D.region, D.nodes);
+                Vector2 px = new Vector2(810f, 540f);
+                for (int i = 0; i < D.nodes.Count; i++)
+                    for (int j = i + 1; j < D.nodes.Count; j++)
+                    {
+                        MapNode ni = D.nodes[i], nj = D.nodes[j];
+                        if (ni.layer != nj.layer) continue;
+                        Vector2 pi = new Vector2(ni.x, ni.y), pj = new Vector2(nj.x, nj.y);
+                        float straight = Vector2.Scale(pi - pj, px).magnitude;
+                        if (straight > 230f) continue;
+                        TerrainRoads.Path road = TerrainRoads.Route(i, j);
+                        if (road.lengthPixels > straight * 1.7f + 40f) continue;   // дорога в обход через полкарты — не соседи
+                        bool through = false;
+                        for (int q = 1; q < 12 && !through; q++)
+                        {
+                            Vector2 rp = road.Position(q / 12f);
+                            for (int o = 0; o < D.nodes.Count && !through; o++)
+                                if (o != i && o != j && Vector2.Scale(rp - new Vector2(D.nodes[o].x, D.nodes[o].y), px).sqrMagnitude < 24f * 24f) through = true;
+                        }
+                        if (!through) { lateral.Add(i * 1000 + j); lateral.Add(j * 1000 + i); }
+                    }
+            }
+            return lateral.Contains(a * 1000 + b);
         }
         /// <summary>Шаг на уже пройденное место (назад или по своим следам) — бесплатный: кость тратится только на новые места.</summary>
         public static bool FreeHop(int i) { return i >= 0 && i < D.nodes.Count && D.nodes[i].done; }
