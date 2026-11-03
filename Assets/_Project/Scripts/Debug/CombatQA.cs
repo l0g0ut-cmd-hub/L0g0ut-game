@@ -433,7 +433,7 @@ namespace BladePath
                     RenderTexture big = new RenderTexture(1280, 720, 24, RenderTextureFormat.ARGB32) { antiAliasing = 2 };
                     Vector3 mid = (player.transform.position + enemy.transform.position) * 0.5f;
                     Vector3 side = Vector3.Cross(Vector3.up, fwd);
-                    Vector3[] eyes = { mc.transform.position, mid + side * -5.5f + Vector3.up * 2.2f, mid + Vector3.up * 9f + side * -7f, mid + fwd * -6f + Vector3.up * 3f };
+                    Vector3[] eyes = { mc.transform.position, mid + side * -5.5f + Vector3.up * 2.2f, mid + Vector3.up * 9f + side * -7f, mid + fwd * -6f + Vector3.up * 3f, mid + side * -2.0f + fwd * -1.2f + Vector3.up * 0.9f };   // последний — вблизи: видна ли фактура
                     for (int k = 0; k < eyes.Length; k++)
                     {
                         cam.transform.position = eyes[k];

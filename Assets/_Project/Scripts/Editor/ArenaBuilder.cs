@@ -36,11 +36,21 @@ namespace BladePath.EditorTools
             }
             Texture2D albedo = Tex(Dir + "ForestShrine_albedo.jpg", false);
             Texture2D normal = Tex(Dir + "ForestShrine_normal.png", true);
-            Material m = new Material(Shader.Find("Standard")) { name = "ForestShrine" };
+            // фактура вблизи: бесшовные тайлы (земля, мох, камень, дерево, бамбук, лак), проекция по миру — BladePath/ArenaDetail
+            Shader detail = Shader.Find("BladePath/ArenaDetail");
+            Material m = new Material(detail != null ? detail : Shader.Find("Standard")) { name = "ForestShrine" };
             m.mainTexture = albedo;
             if (normal != null) { m.SetTexture("_BumpMap", normal); m.EnableKeyword("_NORMALMAP"); m.SetFloat("_BumpScale", 0.8f); }
             m.SetFloat("_Glossiness", 0.12f); m.SetFloat("_Metallic", 0f);
+            if (detail != null)
+                foreach (string t in new[] { "Ground", "Moss", "Stone", "Wood", "Bamboo", "Lacquer" })
+                {
+                    Texture2D tx = Tile(Dir + "Detail/" + t.ToLowerInvariant() + ".jpg");
+                    if (tx != null) m.SetTexture("_" + t, tx); else Debug.LogWarning("ArenaBuilder: нет тайла " + t);
+                }
+            Debug.Log("ArenaBuilder: материал " + m.shader.name);
             if (!AssetDatabase.IsValidFolder("Assets/_Project/Materials")) AssetDatabase.CreateFolder("Assets/_Project", "Materials");
+            AssetDatabase.DeleteAsset("Assets/_Project/Materials/ForestShrine.mat");
             AssetDatabase.CreateAsset(m, "Assets/_Project/Materials/ForestShrine.mat");
 
             GameObject root = new GameObject("Arena_ForestShrine");
@@ -96,6 +106,18 @@ namespace BladePath.EditorTools
             if (normal && ti.textureType != TextureImporterType.NormalMap) { ti.textureType = TextureImporterType.NormalMap; dirty = true; }
             if (ti.maxTextureSize < 4096 && !normal) { ti.maxTextureSize = 4096; dirty = true; }
             if (dirty) ti.SaveAndReimport();
+            return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+        }
+
+        static Texture2D Tile(string path)
+        {
+            TextureImporter ti = AssetImporter.GetAtPath(path) as TextureImporter;
+            if (ti == null) return null;
+            if (ti.wrapMode != TextureWrapMode.Repeat || !ti.mipmapEnabled || ti.maxTextureSize != 1024)
+            {
+                ti.wrapMode = TextureWrapMode.Repeat; ti.mipmapEnabled = true; ti.maxTextureSize = 1024; ti.anisoLevel = 4;
+                ti.SaveAndReimport();
+            }
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
 
