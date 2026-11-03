@@ -110,6 +110,7 @@ namespace BladePath
         {
             if (Event.current.type != EventType.Repaint) return;
             Ensure(r);
+            Texture2D puffs = UiKit.Tex("UI/map_cloud_puffs"), bolts = UiKit.Tex("FX/map_lightning");
             Texture2D atlas = UiKit.Tex("UI/map_clouds"), old = UiKit.Tex("FX/cloud"), bolt = UiKit.Tex("FX/lightning"),
                 glow = UiKit.Tex("FX/glow_pool"), shade = SoftSprites.Fog;
             Color oc = GUI.color;
@@ -143,7 +144,7 @@ namespace BladePath
                     float a = Mathf.Lerp(0.28f, 0.5f, storm) * Mathf.Sin(ph * Mathf.PI) * (0.6f + 0.4f * Hash(q + i * 2f));
                     UiKit.Line(new Vector2(fx + len * 0.3f, fy - len), new Vector2(fx, fy), 1.1f, new Color(0.78f, 0.84f, 0.98f, a));
                 }
-                if (atlas != null)
+                if (atlas != null || puffs != null)
                 {
                     // клубы: сначала дальние (тёмные, ниже), сверху — освещённые
                     for (int pass = 0; pass < 2; pass++)
@@ -159,7 +160,17 @@ namespace BladePath
                                 float rowA = row == 1 ? storm : 1f - storm;   // дождевое ↔ грозовое — плавно
                                 if (rowA <= 0.01f) continue;
                                 GUI.color = new Color(shadeK, shadeK, shadeK * 1.05f, pa * rowA * (pass == 0 ? 0.55f : 0.9f));
-                                GUI.DrawTextureWithTexCoords(new Rect(pc.x - pw * 0.5f, pc.y - ph2 * 0.5f, pw, ph2), atlas, Cell(row, col, flip));
+                                if (puffs != null && (pk > 0 || atlas == null))   // ядро — целое облако из UI/map_clouds, клубы — из атласа клубов
+                                {
+                                    // UI/map_cloud_puffs: 4×4, два верхних ряда — 8 дождевых клубов, два нижних — 8 грозовых
+                                    int idx = (int)(Hash(i * 5.3f + pk * 2.7f + col * 11.1f + (flip ? 3f : 0f)) * 8f) % 8;
+                                    float cx = (idx % 4) * 0.25f, cy = 1f - (idx / 4 + (row == 1 ? 2 : 0) + 1) * 0.25f;
+                                    float bw = pw * 1.15f;
+                                    GUI.DrawTextureWithTexCoords(new Rect(pc.x - bw * 0.5f, pc.y - bw * 0.5f, bw, bw), puffs,
+                                        flip ? new Rect(cx + 0.25f, cy, -0.25f, 0.25f) : new Rect(cx, cy, 0.25f, 0.25f));
+                                }
+                                else
+                                    GUI.DrawTextureWithTexCoords(new Rect(pc.x - pw * 0.5f, pc.y - ph2 * 0.5f, pw, ph2), atlas, Cell(row, col, flip));
                             }
                         }
                 }
@@ -183,12 +194,20 @@ namespace BladePath
                             GUI.color = new Color(0.6f, 0.75f, 1f, 0.55f * a);
                             GUI.DrawTexture(new Rect(fp.x - w * 0.32f, fp.y - w * 0.22f, w * 0.64f, w * 0.44f), glow);
                         }
-                        if (bolt != null && Hash(strike * 4.7f + i) < 0.6f)   // не каждая вспышка бьёт в землю
+                        if ((bolts != null || bolt != null) && Hash(strike * 4.7f + i) < 0.6f)   // не каждая вспышка бьёт в землю
                         {
-                            float bh = (sy + w * 0.2f) - fp.y, bw = bh * 0.38f;
-                            GUI.color = new Color(0.85f, 0.92f, 1f, 0.95f * a);
-                            GUI.DrawTextureWithTexCoords(new Rect(fp.x - bw * 0.5f, fp.y, bw, bh), bolt,
-                                Hash(strike * 6.1f) < 0.5f ? new Rect(0f, 0f, 1f, 1f) : new Rect(1f, 0f, -1f, 1f));
+                            float bh = (sy + w * 0.2f) - fp.y, bw = bh * 0.5f;
+                            GUI.color = new Color(0.9f, 0.94f, 1f, 0.95f * a);
+                            bool mirror = Hash(strike * 6.1f) < 0.5f;
+                            if (bolts != null)
+                            {   // FX/map_lightning: 4 разные молнии в ряд
+                                float bx = (int)(Hash(strike * 3.9f + i) * 4f) % 4 * 0.25f;
+                                GUI.DrawTextureWithTexCoords(new Rect(fp.x - bw * 0.5f, fp.y, bw, bh), bolts,
+                                    mirror ? new Rect(bx + 0.25f, 0f, -0.25f, 1f) : new Rect(bx, 0f, 0.25f, 1f));
+                            }
+                            else
+                                GUI.DrawTextureWithTexCoords(new Rect(fp.x - bw * 0.5f, fp.y, bw * 0.76f, bh), bolt,
+                                    mirror ? new Rect(1f, 0f, -1f, 1f) : new Rect(0f, 0f, 1f, 1f));
                             if (glow != null)
                             {
                                 GUI.color = new Color(0.7f, 0.82f, 1f, 0.35f * a);

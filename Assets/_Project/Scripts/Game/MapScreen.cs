@@ -424,9 +424,17 @@ namespace BladePath
             {
                 float g = lit ? 78f + 10f * pulse : 40f + 6f * pulse;
                 GUI.color = new Color(1f, 0.62f, 0.22f, lit ? 0.5f : 0.32f);
-                GUI.DrawTexture(new Rect(p.x - g, p.y - 26f - g, g * 2f, g * 2f), glow);
+                GUI.DrawTexture(new Rect(p.x - g, p.y - 40f - g, g * 2f, g * 2f), glow);
             }
-            if (tower != null) { GUI.color = Color.white; GUI.DrawTexture(new Rect(p.x - 30f, p.y - 62f, 60f, 72f), tower); }
+            Vector2 basket = new Vector2(p.x, p.y - 36f);   // где жаровня (у запасной вышки)
+            if (tower != null)
+            {
+                // UI/map_watchtower — квадрат 512, основание внизу; жаровня на площадке в точке (0,52; 0,225) картинки
+                Rect tr = new Rect(p.x - 36f, p.y - 64f, 72f, 72f);
+                GUI.color = lit ? Color.white : new Color(0.82f, 0.8f, 0.86f, 1f);
+                GUI.DrawTexture(tr, tower);
+                basket = new Vector2(tr.x + 0.52f * tr.width, tr.y + 0.225f * tr.height);
+            }
             else
             {   // запасной силуэт: деревянная вышка из линий
                 Color wood = new Color(0.22f, 0.14f, 0.08f, 0.95f);
@@ -441,7 +449,7 @@ namespace BladePath
                 int f = (int)(t * 12f) % 8;
                 float fs = lit ? 34f : 16f;
                 GUI.color = lit ? Color.white : new Color(1f, 0.7f, 0.5f, 0.75f);
-                GUI.DrawTextureWithTexCoords(new Rect(p.x - fs * 0.5f, p.y - (tower != null ? 58f : 36f) - fs * 0.9f, fs, fs), fire,
+                GUI.DrawTextureWithTexCoords(new Rect(basket.x - fs * 0.5f, basket.y - fs * 0.85f, fs, fs), fire,
                     new Rect((f % 4) * 0.25f, f < 4 ? 0.5f : 0f, 0.25f, 0.5f));
             }
             GUI.color = oc;
