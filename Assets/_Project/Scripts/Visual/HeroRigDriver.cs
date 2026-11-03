@@ -801,6 +801,9 @@ namespace BladePath
             if (upperArmR != null) LimitWrist(gripR - upperArmR.position, maxWristBend, ref fR, ref nR);
             if (upperArmL != null) LimitWrist(gripL - upperArmL.position, maxWristBend, ref fL, ref nL);
             Vector3 outwardL = -ft.right * 1.0f + Vector3.down * 0.5f + back * 0.2f;
+            // ключица помогает плечу: рука тянется вверх/вперёд — плечевой сустав поднимается и выдвигается за ней (как у человека).
+            // Без этого у моделей Meshy при замахе над головой и выпаде плечо и наплечник сминались («рука ломается»).
+            ClavicleAssist(upperArmR, gripR); ClavicleAssist(upperArmL, gripL);
             if (gripFromBind && framesReady && handR != null && handL != null)
             {
                 // запястье ставим так, чтобы центр кулака (точка в системе кисти) лёг на рукоять после поворота кисти
@@ -1305,6 +1308,29 @@ namespace BladePath
             Vector3 n = Vector3.ProjectOnPlane(palm, fingers);
             if (n.sqrMagnitude < 1e-6f) n = Vector3.Cross(fingers, Vector3.up);
             palm = n.normalized;
+        }
+
+        [Tooltip("Доля направления к хвату, на которую поворачивается ключица (плечевой сустав идёт за рукой).")]
+        public float clavicleShare = 0.3f;
+        [Tooltip("Предел поворота ключицы, град.")]
+        public float clavicleMax = 22f;
+
+        void ClavicleAssist(Transform upper, Vector3 grip)
+        {
+            if (upper == null || clavicleShare <= 0f) return;
+            Transform cl = upper.parent;
+            if (cl == null || cl == chest || cl == spine || cl == hips) return;   // у модели нет отдельной ключицы
+            Vector3 cur = upper.position - cl.position;
+            if (cur.sqrMagnitude < 1e-6f) return;
+            Vector3 want = grip - cl.position;
+            Quaternion full = Quaternion.FromToRotation(cur, want);
+            float ang; Vector3 ax; full.ToAngleAxis(out ang, out ax);
+            if (ang > 180f) ang -= 360f;
+            // только когда руки у плеч и выше (замах над головой, высокий рез); в низкой стойке плечи не сутулятся
+            float w = Mathf.Clamp01((grip.y - upper.position.y + 0.15f) / 0.4f);
+            float a = Mathf.Clamp(ang * clavicleShare, -clavicleMax, clavicleMax) * w;
+            if (Mathf.Abs(a) < 0.1f || ax.sqrMagnitude < 1e-6f) return;
+            cl.rotation = Quaternion.AngleAxis(a, ax) * cl.rotation;
         }
 
         bool relInit; Quaternion relR = Quaternion.identity, relL = Quaternion.identity;
