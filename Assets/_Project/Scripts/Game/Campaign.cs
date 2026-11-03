@@ -18,6 +18,7 @@ namespace BladePath
         public List<int> next = new List<int>();
         public List<int> extra = new List<int>();   // отряд: противники, которые вступают по очереди после первого (ступени Ladder)
         public NodeType Type { get { return (NodeType)type; } }
+        public bool IsTavern { get { return Type == NodeType.Rest && ev == MapScreen.TavernEv; } }
         public bool IsFight { get { NodeType t = Type; return t == NodeType.Duel || t == NodeType.Elite || t == NodeType.Boss || t == NodeType.Ambush; } }
     }
 
@@ -463,6 +464,19 @@ namespace BladePath
             // хижина травницы посреди области — сюда откидывает после поражения (иначе — к началу пути)
             List<int> mid = layers[L / 2];
             dd.nodes[mid[UnityEngine.Random.Range(0, mid.Count)]].type = (int)NodeType.Herbalist;
+            // трактиры: половина привалов — придорожные трактиры (ev = TavernEv); в каждой области хотя бы один
+            {
+                int tav = 0;
+                foreach (MapNode tn in dd.nodes) if (tn.Type == NodeType.Rest && UnityEngine.Random.value < 0.5f) { tn.ev = MapScreen.TavernEv; tav++; }
+                if (tav == 0)
+                {
+                    int pickT = -1;
+                    for (int ti = 0; ti < dd.nodes.Count && pickT < 0; ti++) if (dd.nodes[ti].Type == NodeType.Rest) pickT = ti;
+                    for (int ti = 0; ti < dd.nodes.Count && pickT < 0; ti++)
+                        if (dd.nodes[ti].Type == NodeType.Duel && dd.nodes[ti].layer >= 2 && dd.nodes[ti].layer <= L - 3 && dd.nodes[ti].extra.Count == 0) pickT = ti;
+                    if (pickT >= 0) { dd.nodes[pickT].type = (int)NodeType.Rest; dd.nodes[pickT].ev = MapScreen.TavernEv; }
+                }
+            }
             // кот-хранитель: в первой области похода он встречается всегда (если там есть событие)
             bool catHere = false; List<int> catSpots = new List<int>();
             for (int ci = 0; ci < dd.nodes.Count; ci++)
@@ -668,6 +682,7 @@ namespace BladePath
                 string s = D.blessing == 1 ? "Благословение клинка: +20% урона" : D.blessing == 2 ? "Благословение духа: бой с полным духом" : D.blessing == 3 ? "Благословение жизни: +25% здоровья" : "";
                 if (D.cursed) s += (s.Length > 0 ? "\n" : "") + "Проклятие лисы: −25% здоровья";
                 if (CatBlessed) s += (s.Length > 0 ? "\n" : "") + (D.catBuff == 1 ? "Кошачья удача: 10% ударов мимо" : "Девять жизней: смертельный удар оставит 1 здоровья") + " (боёв: " + D.catFights + ")";
+                if (D.bounty > 0) s += (s.Length > 0 ? "\n" : "") + "Заказ на голову: " + D.bounty + " мон за сильного врага";
                 return s;
             }
         }

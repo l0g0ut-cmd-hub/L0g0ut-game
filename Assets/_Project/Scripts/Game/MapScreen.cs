@@ -106,7 +106,7 @@ namespace BladePath
                     }
                     OpenModal(Modal.Merchant); break;
                 case NodeType.Treasure: if (treasure != null) OpenModal(Modal.Treasure); else modal = Modal.None; break;
-                case NodeType.Rest: OpenModal(Modal.Rest); break;
+                case NodeType.Rest: if (n.IsTavern && UiKit.Tex("UI/tavern") != null) OpenTavern(); else OpenModal(Modal.Rest); break;
                 case NodeType.Event: OpenModal(Modal.Event); break;
                 case NodeType.Herbalist: OpenModal(Modal.Herbalist); break;
                 default: modal = Modal.None; break;
@@ -751,8 +751,18 @@ namespace BladePath
                 }
                 else if (herb != null)
                     GUI.DrawTexture(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), herb);
+                else if (n.IsTavern && UiKit.Tex("UI/map_tavern") != null)
+                    GUI.DrawTexture(new Rect(p.x - s * 0.47f, p.y - s * 0.47f, s * 0.94f, s * 0.94f), UiKit.Tex("UI/map_tavern"));
                 else if (ic != null)
                     GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), ic, Cell(k));
+                // отряд: малый медальон с тремя воинами у края значка
+                if (known && !n.done && n.extra != null && n.extra.Count > 0 && UiKit.Tex("UI/map_squad") != null)
+                {
+                    Color pc = GUI.color; GUI.color = Color.white;
+                    GUI.DrawTexture(new Rect(p.x - s * 0.62f, p.y - s * 0.62f, s * 0.5f, s * 0.5f), UiKit.Tex("UI/map_squad"));
+                    UiKit.Text(new Rect(p.x - s * 0.62f, p.y - s * 0.2f, s * 0.5f, 14f), "×" + (n.extra.Count + 1), 11f, new Color(1f, 0.6f, 0.5f));
+                    GUI.color = pc;
+                }
                 else UiKit.Disc(p, s * 0.45f, can ? Gold : Dim);
                 GUI.color = oc;
                 if (n.Type == NodeType.Herbalist && herb == null)
@@ -763,7 +773,7 @@ namespace BladePath
                     float tw = 90f;
                     Rect label = new Rect(p.x - tw * 0.5f, p.y + s * 0.45f + 3f, tw, 18f);
                     UiKit.Rect(label, new Color(0.028f, 0.023f, 0.02f, 0.75f));
-                    UiKit.Text(label, ShortTypeNames[(int)n.Type], 10.5f,
+                    UiKit.Text(label, n.IsTavern ? "ТРАКТИР" : ShortTypeNames[(int)n.Type], 10.5f,
                         new Color(0.96f, 0.88f, 0.68f, 0.98f), TextAnchor.MiddleCenter, false);
                 }
                 int routeIndex = previewPath.IndexOf(i);
@@ -1032,7 +1042,23 @@ namespace BladePath
             if (coins != null) GUI.DrawTexture(new Rect(x - 2f, y - 1f, 20f, 20f), coins);
             UiKit.Text(new Rect(x + (coins != null ? 22f : 0f), y, w, 18f), Profile.Gold + " мон", 13f, Gold, TextAnchor.MiddleLeft, false); y += 24f;
             string bl = Campaign.BlessingText;
-            if (bl.Length > 0) { foreach (string line in Wrap(bl, 34)) { UiKit.Text(new Rect(x, y, w, 16f), line, 11.5f, line.StartsWith("Проклятие") ? new Color(1f, 0.5f, 0.45f) : new Color(0.6f, 0.95f, 0.7f), TextAnchor.MiddleLeft, false); y += 16f; } }
+            if (bl.Length > 0)
+            {
+                // благословения, проклятие, кот и заказ — медальоном (UI/buff_icons 3×2) и строкой рядом
+                Texture2D bi = UiKit.Tex("UI/buff_icons");
+                foreach (string entry in bl.Split('\n'))
+                {
+                    int icon = entry.StartsWith("Благословение клинка") ? 0 : entry.StartsWith("Благословение духа") ? 1 : entry.StartsWith("Благословение жизни") ? 2
+                        : entry.StartsWith("Проклятие") ? 3 : entry.StartsWith("Кошачья") || entry.StartsWith("Девять") ? 4 : entry.StartsWith("Заказ") ? 5 : -1;
+                    float tx = x + (bi != null && icon >= 0 ? 24f : 0f);
+                    Color col = icon == 3 ? new Color(1f, 0.5f, 0.45f) : icon == 5 ? Gold : new Color(0.6f, 0.95f, 0.7f);
+                    float y0 = y;
+                    foreach (string line in Wrap(entry, 31)) { UiKit.Text(new Rect(tx, y, w - (tx - x), 16f), line, 11.5f, col, TextAnchor.MiddleLeft, false); y += 16f; }
+                    if (bi != null && icon >= 0)
+                        GUI.DrawTextureWithTexCoords(new Rect(x, y0 - 1f, 20f, 20f), bi, new Rect((icon % 3) / 3f, icon < 3 ? 0.5f : 0f, 1f / 3f, 0.5f));
+                    y = Mathf.Max(y, y0 + 22f);
+                }
+            }
             y += 6f;
             // кости пути: запас, выпавшее, бросок; без костей — проводник за моны или бой с ронином
             bool rolling = Time.unscaledTime - rollAt < RollTime;
@@ -1093,13 +1119,14 @@ namespace BladePath
                     GUI.color = MapBadgeTint(n, known, show);
                     Texture2D herb = n.Type == NodeType.Herbalist ? UiKit.Tex(HerbalistIcon) : null;
                     if (herb != null) GUI.DrawTexture(new Rect(x, y, 64f, 64f), herb);
+                    else if (n.IsTavern && UiKit.Tex("UI/map_tavern") != null) GUI.DrawTexture(new Rect(x, y, 64f, 64f), UiKit.Tex("UI/map_tavern"));
                     else GUI.DrawTextureWithTexCoords(new Rect(x, y, 64f, 64f), ic,
                         Cell(MapBadgeCell(n, show)));
                     GUI.color = previousTint;
                     if (n.Type == NodeType.Herbalist && herb == null)
                         HerbalistMark(new Vector2(x + 53f, y + 53f), 11f);
                 }
-                UiKit.Text(new Rect(x + 72f, y + 6f, w - 72f, 24f), known ? Campaign.TypeNames[n.type] : "НЕИЗВЕСТНО", 16f, Ink, TextAnchor.MiddleLeft);
+                UiKit.Text(new Rect(x + 72f, y + 6f, w - 72f, 24f), known ? NodeName(n) : "НЕИЗВЕСТНО", 16f, Ink, TextAnchor.MiddleLeft);
                 if (n.done && show != Campaign.At && n.Type != NodeType.Start)
                 {
                     // Visited place: say what a return trip offers.
@@ -1110,7 +1137,7 @@ namespace BladePath
                 }
                 else if (known && n.IsFight) UiKit.Text(new Rect(x + 72f, y + 32f, w - 72f, 20f), Ladder.Stages[Mathf.Clamp(n.enemy, 0, Ladder.Count - 1)].name, 12f, new Color(1f, 0.6f, 0.45f), TextAnchor.MiddleLeft, false);
                 y += 72f;
-                string hint = known ? Campaign.TypeHints[n.type] : "Туман скрывает, что ждёт впереди. Подойди ближе.";
+                string hint = known ? NodeHint(n) : "Туман скрывает, что ждёт впереди. Подойди ближе.";
                 // Text never runs under the fixed В ПУТЬ button: the route line has a reserved
                 // slot just above it and the description is cut to the space that is left.
                 const float routeSlot = PanelTextBottom - 40f;
@@ -1216,7 +1243,7 @@ namespace BladePath
                 case NodeType.Shrine: return "UI/npc_2";
                 case NodeType.Smith: return "UI/npc_1";
                 case NodeType.Merchant: return "UI/npc_0";
-                case NodeType.Rest: return "UI/npc_3";
+                case NodeType.Rest: return node.IsTavern && UiKit.Tex("UI/tavern") != null ? "UI/tavern" : "UI/npc_3";
                 case NodeType.Herbalist: return "UI/npc_4";   // своя травница (до 2026-11-02 был мастер с привала)
                 case NodeType.Treasure: return "UI/chest_open";
                 default: return "UI/path_panorama";
@@ -1425,7 +1452,6 @@ namespace BladePath
                     int xpGain = Mathf.RoundToInt(Profile.XpToNext * 0.5f);
                     if (Btn(new Rect(x, y, w, 46f), "ТРЕНИРОВКА: +1 ОЧКО", ok, true)) { Profile.GivePoint(); Result("Час с боккэном. Мышцы ноют, но рука стала твёрже: +1 очко характеристик."); }
                     if (Btn(new Rect(x, y + 54f, w, 46f), "МЕДИТАЦИЯ: +" + xpGain + " ОПЫТА", ok)) { int lv = Profile.AddXp(xpGain); Result("Ты сидишь у огня до рассвета. Ум ясен: +" + xpGain + " опыта" + (lv > 0 ? " и новый уровень!" : ".")); }
-                    if (UiKit.Tex("UI/tavern") != null && Btn(new Rect(x, y + 108f, w, 46f), "ЗАЙТИ В ТРАКТИР У ДОРОГИ", ok)) { OpenTavern(); }
                     break;
                 }
                 case Modal.Event: DrawEvent(n, at, ok); break;
@@ -1746,6 +1772,11 @@ namespace BladePath
         }
 
         // ---------------- события на дороге ----------------
+
+        /// <summary>Привал с ev = TavernEv — придорожный трактир (свой значок, вход в трактир).</summary>
+        public const int TavernEv = 99;
+        static string NodeName(MapNode n) { return n.IsTavern ? "ТРАКТИР" : Campaign.TypeNames[n.type]; }
+        static string NodeHint(MapNode n) { return n.IsTavern ? "Мрачный трактир у дороги: сакэ, кости, заказы на головы и пьяные слухи." : Campaign.TypeHints[n.type]; }
 
         public const int EventCount = 12, CatEvent = 8, CompanionEvent = 9;   // 9 ворон, 10 волк, 11 змея
         static readonly string[] EvTitle = { "РАНЕНЫЙ РОНИН", "СТАРЫЙ МОНАХ", "РАЗБОЙНИКИ", "БЕЛАЯ ЛИСА",
