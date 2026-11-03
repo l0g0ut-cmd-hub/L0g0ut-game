@@ -28,7 +28,7 @@ namespace BladePath
         static readonly Color Dim = VisualIdentity.Subdued;
         static readonly string[] EnemyFullArt = { "UI/enemy_full_fallen", "UI/enemy_full_shadow", "UI/enemy_full_oni", "UI/enemy_full_shogun" };
 
-        enum Modal { None, Fight, Shrine, Smith, Merchant, Treasure, Rest, Event, RegionClear, Herbalist, Knocked, Camp }
+        enum Modal { None, Fight, Shrine, Smith, Merchant, Treasure, Rest, Event, RegionClear, Herbalist, Knocked, Camp, Tavern }
         Modal modal;
         int sel = -1;
         readonly List<int> previewPath = new List<int>(16);
@@ -297,7 +297,7 @@ namespace BladePath
                 if (!manualPan) panU = -1f;
             }
             DrawPanel(new Rect(W - panel, 0f, panel, 540f), interactive && modal == Modal.None && moveTo < 0);
-            if (modal != Modal.None) { DrawModal(interactive); if (modal == Modal.Camp && interactive) DrawToast(); }
+            if (modal != Modal.None) { DrawModal(interactive); if ((modal == Modal.Camp || modal == Modal.Tavern) && interactive) DrawToast(); }
             else if (interactive) DrawToast();
             GUI.matrix = old;
         }
@@ -1423,6 +1423,7 @@ namespace BladePath
                     int xpGain = Mathf.RoundToInt(Profile.XpToNext * 0.5f);
                     if (Btn(new Rect(x, y, w, 46f), "ТРЕНИРОВКА: +1 ОЧКО", ok, true)) { Profile.GivePoint(); Result("Час с боккэном. Мышцы ноют, но рука стала твёрже: +1 очко характеристик."); }
                     if (Btn(new Rect(x, y + 54f, w, 46f), "МЕДИТАЦИЯ: +" + xpGain + " ОПЫТА", ok)) { int lv = Profile.AddXp(xpGain); Result("Ты сидишь у огня до рассвета. Ум ясен: +" + xpGain + " опыта" + (lv > 0 ? " и новый уровень!" : ".")); }
+                    if (UiKit.Tex("UI/tavern") != null && Btn(new Rect(x, y + 108f, w, 46f), "ЗАЙТИ В ТРАКТИР У ДОРОГИ", ok)) { OpenTavern(); }
                     break;
                 }
                 case Modal.Event: DrawEvent(n, at, ok); break;
@@ -1443,6 +1444,7 @@ namespace BladePath
                     break;
                 }
                 case Modal.Camp: DrawCamp(ok); break;
+                case Modal.Tavern: DrawTavern(ok); break;
                 case Modal.RegionClear:
                 {
                     int prev = Mathf.Clamp(Campaign.ClearedRegion, 0, 2);
@@ -1521,6 +1523,7 @@ namespace BladePath
             if (campTrain) UiKit.Rect(train, new Color(0f, 0f, 0f, 0.45f));
             if (campBoard) UiKit.Rect(board, new Color(0f, 0f, 0f, 0.45f));
             if (!ok || InventoryScreen.Open) return;
+            if (UiKit.Tex("UI/tavern") != null && Btn(new Rect(W - 196f, 14f, 180f, 42f), "ТРАКТИР", ok)) { Profile.CostMul = 1f; OpenTavern(true); return; }
             if (GUI.Button(go, GUIContent.none, GUIStyle.none)) { Profile.CostMul = 1f; modal = Modal.None; Haptics.Pulse(20); return; }
             if (GUI.Button(forge, GUIContent.none, GUIStyle.none)) { Profile.CostMul = 0.5f; InventoryScreen.Show(0); return; }
             if (!campAltar && GUI.Button(altar, GUIContent.none, GUIStyle.none)) { campSub = 1; return; }
@@ -1530,6 +1533,171 @@ namespace BladePath
                 Profile.GivePoint(); campTrain = true; Haptics.Pulse(30);
                 toastLines.Clear(); toastLines.Add("Тренировка у соломенных чучел: +1 очко характеристик."); toastAt = Time.unscaledTime;
             }
+        }
+
+        // ---------------- трактир (UI/tavern: мрачная идзакая 1916×821, зоны нажатия поверх картины) ----------------
+        // Трактирщик — чарка сакэ (благословение на бой); игроки в кости — ставка; доска наград — заказ на сильного врага;
+        // пьяный ронин — слухи (кость пути / тайник); очаг — снять проклятие. Каждое — один раз за визит.
+        // Живость: огонь очага дышит, фонари мерцают, из котла поднимается пар, под потолком стелется дым.
+        const float TavW = 1916f, TavH = 821f;
+        static readonly Rect TavKeeper = new Rect(80f, 60f, 330f, 320f), TavDice = new Rect(1120f, 210f, 380f, 270f),
+            TavBoard = new Rect(1530f, 80f, 270f, 290f), TavDrunk = new Rect(1270f, 430f, 560f, 330f), TavHearth = new Rect(840f, 380f, 440f, 200f);
+        int tavSub;           // 0 — зал, 1 — трактирщик, 2 — кости, 3 — доска, 4 — ронин
+        bool tavKeeper, tavDice, tavBoard, tavDrunk, tavHearth, tavFromCamp;
+        void OpenTavern(bool fromCamp = false)
+        {
+            tavSub = 0; tavKeeper = tavDice = tavBoard = tavDrunk = tavHearth = false; tavFromCamp = fromCamp;
+            OpenModal(Modal.Tavern);
+        }
+        void TavToast(string text)
+        {
+            toastLines.Clear();
+            foreach (string line in Wrap(text, 48)) { if (toastLines.Count >= 3) break; toastLines.Add(line); }
+            toastAt = Time.unscaledTime; Haptics.Pulse(25);
+        }
+        void DrawTavern(bool ok)
+        {
+            Texture2D art = UiKit.Tex("UI/tavern");
+            float s = Mathf.Max(W / TavW, 540f / TavH), ox = (W - TavW * s) * 0.5f, oy = (540f - TavH * s) * 0.5f;
+            if (art != null) GUI.DrawTexture(new Rect(ox, oy, TavW * s, TavH * s), art, ScaleMode.StretchToFill, false);
+            DrawTavernLife(s, ox, oy);
+            int gold = Profile.Gold;
+            if (tavSub == 1)
+            {
+                Rect r = Card(560f, 250f);
+                float x = r.x + 24f, w = r.width - 48f, y = r.y + 20f;
+                UiKit.Text(new Rect(x, y, w, 26f), "ТРАКТИРЩИК", 20f, Gold); y += 32f;
+                y = Lines(x, y, w, "Одноглазый не улыбается. «Сакэ — двадцать мон. Крепкое. Наутро рука твёрже — или не проснёшься».", 52, 13f, Ink) + 10f;
+                if (Btn(new Rect(x, y, w, 46f), "ЧАРКА САКЭ — 20 МОН", ok && gold >= 20, true))
+                {
+                    Profile.AddGold(-20); int b = Random.Range(1, 4); Campaign.SetBlessing(b); tavKeeper = true; tavSub = 0;
+                    TavToast(b == 1 ? "Сакэ жжёт горло. Рука налилась силой: +20% урона в следующем бою." : b == 2 ? "Тепло разливается по груди: следующий бой — с полным духом." : "Хмель гонит боль прочь: +25% здоровья в следующем бою.");
+                }
+                if (Btn(new Rect(r.center.x - 70f, r.yMax - 50f, 140f, 38f), "НАЗАД", ok)) tavSub = 0;
+                return;
+            }
+            if (tavSub == 2)
+            {
+                Rect r = Card(560f, 270f);
+                float x = r.x + 24f, w = r.width - 48f, y = r.y + 20f;
+                int bet = 25 + 15 * Campaign.Region;
+                UiKit.Text(new Rect(x, y, w, 26f), "ИГРОКИ В КОСТИ", 20f, Gold); y += 32f;
+                y = Lines(x, y, w, "Двое в капюшонах не поднимают глаз. «Чёт или нечет, самурай? Ставка — " + bet + " мон».", 52, 13f, Ink) + 10f;
+                bool can = ok && gold >= bet;
+                for (int k = 0; k < 2; k++)
+                    if (Btn(new Rect(x + k * (w * 0.5f + 4f), y, w * 0.5f - 4f, 46f), k == 0 ? "ЧЁТ" : "НЕЧЕТ", can, k == 0))
+                    {
+                        int d1 = Random.Range(1, 7), d2 = Random.Range(1, 7); bool even = (d1 + d2) % 2 == 0;
+                        bool win = (k == 0) == even && Random.value < 0.92f;   // кости у них, конечно, с секретом
+                        Profile.AddGold(win ? bet : -bet); tavDice = true; tavSub = 0;
+                        TavToast("Кости: " + d1 + " и " + d2 + ". " + (win ? "Твоя взяла: +" + bet + " мон. Игроки переглядываются." : "Проиграл " + bet + " мон. Кто-то в углу хмыкает."));
+                    }
+                if (Btn(new Rect(r.center.x - 70f, r.yMax - 50f, 140f, 38f), "НАЗАД", ok)) tavSub = 0;
+                return;
+            }
+            if (tavSub == 3)
+            {
+                Rect r = Card(580f, 260f);
+                float x = r.x + 24f, w = r.width - 48f, y = r.y + 20f;
+                int reward = 80 + 40 * Campaign.Region + 40 * Profile.Cycle;
+                UiKit.Text(new Rect(x, y, w, 26f), "ДОСКА НАГРАД", 20f, Gold); y += 32f;
+                y = Lines(x, y, w, Campaign.HasBounty ? "Заказ уже взят: победи сильного противника или владыку области — награда твоя."
+                    : "Листки с лицами. «Голова сильного бойца на дороге — " + reward + " мон. Голова владыки — вдвое».", 52, 13f, Ink) + 10f;
+                if (!Campaign.HasBounty && Btn(new Rect(x, y, w, 46f), "ВЗЯТЬ ЗАКАЗ", ok, true)) { Campaign.TakeBounty(reward); tavBoard = true; tavSub = 0; TavToast("Заказ взят. Победи сильного противника или владыку — получишь " + reward + " мон (за владыку вдвое)."); }
+                if (Btn(new Rect(r.center.x - 70f, r.yMax - 50f, 140f, 38f), "НАЗАД", ok)) tavSub = 0;
+                return;
+            }
+            // зал: подписи у зон, использованные — приглушены
+            Rect keeper = CampRect(TavKeeper, s, ox, oy), dice = CampRect(TavDice, s, ox, oy), board = CampRect(TavBoard, s, ox, oy),
+                 drunk = CampRect(TavDrunk, s, ox, oy), hearth = CampRect(TavHearth, s, ox, oy);
+            TavLabel(keeper, "ТРАКТИРЩИК", tavKeeper); TavLabel(dice, "КОСТИ", tavDice); TavLabel(board, "НАГРАДЫ", tavBoard);
+            TavLabel(drunk, "ПЬЯНЫЙ РОНИН", tavDrunk); TavLabel(hearth, "ОЧАГ", tavHearth);
+            UiKit.Text(new Rect(0f, 8f, W, 30f), "ТРАКТИР «ЧЁРНЫЙ ФОНАРЬ»", 22f, Gold);
+            if (!ok || InventoryScreen.Open) return;
+            if (Btn(new Rect(W * 0.5f - 100f, 540f - 58f, 200f, 44f), tavFromCamp ? "В ЛАГЕРЬ" : "УЙТИ", ok, true))
+            {
+                if (tavFromCamp) { modal = Modal.Camp; modalAt = Time.unscaledTime; } else modal = Modal.None;
+                Haptics.Pulse(20); return;
+            }
+            if (!tavKeeper && GUI.Button(keeper, GUIContent.none, GUIStyle.none)) { tavSub = 1; return; }
+            if (!tavDice && GUI.Button(dice, GUIContent.none, GUIStyle.none)) { tavSub = 2; return; }
+            if (!tavBoard && GUI.Button(board, GUIContent.none, GUIStyle.none)) { tavSub = 3; return; }
+            if (!tavDrunk && GUI.Button(drunk, GUIContent.none, GUIStyle.none))
+            {
+                tavDrunk = true;
+                if (Random.value < 0.5f) { Campaign.AddRoll(); TavToast("Ронин приоткрывает глаз: «Короткая тропа за старым мостом…» — и снова храпит. +1 кость пути."); }
+                else { int g = 15 + 10 * Campaign.Region; Profile.AddGold(g); TavToast("Ронин бормочет о засаде и роняет кошель. Ты возвращаешь его… почти весь: +" + g + " мон."); }
+                return;
+            }
+            if (!tavHearth && GUI.Button(hearth, GUIContent.none, GUIStyle.none))
+            {
+                tavHearth = true;
+                if (Campaign.Cursed) { Campaign.LiftCurse(); TavToast("Ты долго смотришь в огонь. Тяжесть проклятия уходит с дымом."); }
+                else { Profile.AddXp(Mathf.RoundToInt(Profile.XpToNext * 0.15f)); TavToast("Тепло очага, треск углей. Ум проясняется: немного опыта."); }
+            }
+        }
+
+        void TavLabel(Rect z, string text, bool used)
+        {
+            if (used) UiKit.Rect(z, new Color(0f, 0f, 0f, 0.4f));
+            Rect l = new Rect(z.center.x - 70f, z.yMax - 26f, 140f, 22f);
+            UiKit.Rect(l, new Color(0.03f, 0.02f, 0.02f, used ? 0.5f : 0.72f));
+            UiKit.Text(l, text, 11f, used ? Dim : Gold);
+        }
+
+        /// <summary>Живой трактир: огонь очага, мерцание фонарей, пар над котлом, дым под потолком.</summary>
+        void DrawTavernLife(float s, float ox, float oy)
+        {
+            if (Event.current.type != EventType.Repaint) return;
+            float t = Time.unscaledTime;
+            Texture2D glow = UiKit.Tex("FX/glow_pool"), fire = UiKit.Tex("FX/brazier_fire"), mist = SoftSprites.Fog;
+            Color oc = GUI.color;
+            System.Func<float, float, Vector2> TP = (x, y) => new Vector2(ox + x * s, oy + y * s);
+            float flick = 0.75f + 0.25f * Mathf.PerlinNoise(t * 3.1f, 0.3f);
+            if (glow != null)
+            {
+                // очаг
+                Vector2 h = TP(1050f, 470f);
+                GUI.color = new Color(1f, 0.55f, 0.2f, 0.32f * flick);
+                GUI.DrawTexture(new Rect(h.x - 230f * s, h.y - 150f * s, 460f * s, 300f * s), glow);
+                // фонари
+                Vector2[] lamps = { TP(455f, 150f), TP(1325f, 185f) };
+                for (int i = 0; i < lamps.Length; i++)
+                {
+                    float f = 0.8f + 0.2f * Mathf.PerlinNoise(t * 2.3f + i * 7f, 1.7f);
+                    GUI.color = new Color(1f, 0.7f, 0.35f, 0.38f * f);
+                    float r = (130f + 10f * f) * s;
+                    GUI.DrawTexture(new Rect(lamps[i].x - r, lamps[i].y - r, r * 2f, r * 2f), glow);
+                }
+            }
+            if (fire != null)
+            {
+                int fr = (int)(t * 12f) % 8;
+                Vector2 h = TP(1060f, 455f);
+                GUI.color = new Color(1f, 1f, 1f, 0.85f);
+                GUI.DrawTextureWithTexCoords(new Rect(h.x - 70f * s, h.y - 80f * s, 140f * s, 100f * s), fire, new Rect((fr % 4) * 0.25f, fr < 4 ? 0.5f : 0f, 0.25f, 0.5f));
+            }
+            if (mist != null)
+            {
+                // пар из котла: клубы поднимаются и тают
+                for (int k = 0; k < 5; k++)
+                {
+                    float ph = Mathf.Repeat(t * 0.18f + k * 0.2f, 1f);
+                    Vector2 p = TP(1035f + 30f * Mathf.Sin(t * 0.6f + k), 380f - ph * 300f);
+                    float sz = (90f + 160f * ph) * s;
+                    GUI.color = new Color(0.8f, 0.78f, 0.82f, 0.16f * Mathf.Sin(ph * Mathf.PI));
+                    GUI.DrawTexture(new Rect(p.x - sz * 0.5f, p.y - sz * 0.35f, sz, sz * 0.7f), mist);
+                }
+                // дым под потолком
+                for (int k = 0; k < 3; k++)
+                {
+                    float x = Mathf.Repeat(t * 12f + k * 640f, TavW + 600f) - 300f;
+                    Vector2 p = TP(x, 60f + 25f * k);
+                    GUI.color = new Color(0.55f, 0.5f, 0.6f, 0.12f);
+                    GUI.DrawTexture(new Rect(p.x - 300f * s, p.y - 60f * s, 600f * s, 120f * s), mist);
+                }
+            }
+            GUI.color = oc;
         }
 
         void Result(string message)

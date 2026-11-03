@@ -40,6 +40,7 @@ namespace BladePath
             public int blessing;        // 0 — нет, 1 — клинка (+20% урона), 2 — духа (полный дух в начале), 3 — жизни (+25% здоровья)
             public bool cursed;         // проклятие кицунэ: −25% здоровья в следующем бою
             public int clearedRegion = -1;   // только что пройденная область (для плашки на карте)
+            public int bounty;              // заказ из трактира: награда за сильного противника (за владыку — вдвое); 0 — нет заказа
             public bool rematch;            // идёт бой-реванш на уже пройденном месте (награда урезана, без добычи)
             public int rolls = 1;            // кости пути в запасе (кость — за каждую победу)
             public int steps;                // ходов осталось после броска
@@ -550,6 +551,7 @@ namespace BladePath
             if (D.rematch) { D.rematch = false; D.fight = -1; Weather.ForceNight = false; Save(); return false; }   // реванш: место уже пройдено
             D.rolls++;   // победа — кость пути
             MapNode n = D.nodes[D.fight];
+            if (D.bounty > 0 && (n.Type == NodeType.Elite || n.Type == NodeType.Boss)) { Profile.AddGold(n.Type == NodeType.Boss ? D.bounty * 2 : D.bounty); D.bounty = 0; }   // заказ из трактира выполнен
             n.done = true; D.at = D.fight; D.fight = -1;
             D.blessing = 0; D.cursed = false; TickCat();
             Weather.ForceNight = false;
@@ -592,6 +594,9 @@ namespace BladePath
         }
 
         public static void SetBlessing(int b) { D.blessing = b; Save(); }
+        public static void LiftCurse() { D.cursed = false; Save(); }
+        public static bool HasBounty { get { return D.bounty > 0; } }
+        public static void TakeBounty(int reward) { D.bounty = reward; Save(); }
 
         // ---- кот-хранитель: одно благословение на 3 боя похода (новое заменяет старое, не копится)
         public static bool CatBlessed { get { return D.catBuff > 0 && D.catFights > 0; } }
