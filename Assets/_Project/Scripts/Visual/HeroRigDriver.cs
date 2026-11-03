@@ -610,7 +610,7 @@ namespace BladePath
 
             // ---------- 2) таз: вынос вперёд и высота (вся модель) — визуально; зоны поражения едут следом (FollowZones)
             float drop = (stanceDrop * (1f - 0.5f * postK) + pd + walkCrouch * moveK) * wSt * procW;   // на мокапе высоту таза задаёт клип
-            drop += swHipDrop * swW * wSt;   // мокап удара приседает — таз опускается, IK ног сгибает колени (стопы на земле)
+            drop += swHipDrop * swW * wSt;   // мокап удара: положительное — таз опускается (ноги сгибаются), отрицательное — поднимается (JumpStrike)
             drop += 0.11f * Mathf.Sin(Mathf.PI * Mathf.Min(1f, (1f - landK) * 1.6f)) * (landK > 0f ? 1f : 0f) * wSt;   // проседание при приземлении
             Vector3 off = new Vector3(walkSx * wLeg, -drop, pf);
             transform.localPosition = baseLocalPos + off;
@@ -915,7 +915,8 @@ namespace BladePath
                     float back = weapon.Phase == SwingPhase.Recovery ? Smooth(Mathf.InverseLerp(0.6f, 1f, p)) : 0f;
                     hy = Mathf.Lerp(SwordAnimSet.Hip(atk, f, false), swIdleHip, back);
                 }
-                float want = Mathf.Clamp(swIdleHip - hy, 0f, 0.3f);
+                // отрицательное значение — таз поднимается (JumpStrike: прыжок); положительное — приседает
+                float want = Mathf.Clamp(swIdleHip - hy, -0.3f, 0.3f);
                 swHipDrop = Mathf.Lerp(swHipDrop, want, 1f - Mathf.Exp(-dt / 0.04f));
             }
             float bk = weapon.BlockK;
