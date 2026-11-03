@@ -440,7 +440,13 @@ namespace BladePath
             if (blendLeft > 0f)
             {
                 float k = Smooth(1f - blendLeft / BlendTime);
+                Vector3 eTo = new Vector3(Pose[PoseCh.EP], Pose[PoseCh.EY], Pose[PoseCh.ER]);
                 for (int c = 0; c < PoseCh.N; c++) Pose[c] = Mathf.Lerp(blendFrom[c], Pose[c], k);
+                // клинок — по кратчайшему повороту: у мокап-ударов углы Эйлера могут уйти за ±180 (тот же поворот другими числами),
+                // и покомпонентный lerp прокрутил бы клинок лишний оборот
+                Quaternion q = Quaternion.Slerp(Quaternion.Euler(blendFrom[PoseCh.EP], blendFrom[PoseCh.EY], blendFrom[PoseCh.ER]), Quaternion.Euler(eTo), k);
+                Vector3 qe = q.eulerAngles;
+                Pose[PoseCh.EP] = eTo.x + Mathf.DeltaAngle(eTo.x, qe.x); Pose[PoseCh.EY] = eTo.y + Mathf.DeltaAngle(eTo.y, qe.y); Pose[PoseCh.ER] = eTo.z + Mathf.DeltaAngle(eTo.z, qe.z);
             }
             HandOffset = new Vector3(Pose[PoseCh.HX], Pose[PoseCh.HY], Pose[PoseCh.HZ]);
             CurrentEuler = new Vector3(Pose[PoseCh.EP], Pose[PoseCh.EY], Pose[PoseCh.ER]);

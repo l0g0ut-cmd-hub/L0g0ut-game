@@ -335,6 +335,20 @@ namespace BladePath
                     p.KReady(1.10f);
                     break;
             }
+            // удары с мокапом (Mixamo Great Sword Pack → tools/mocap_to_tracks.py): руки, клинок, таз, корпус и шаг — с живого фехтовальщика;
+            // тайминги фаз те же, поэтому попадания и баланс не меняются. Кинетическая цепь уже есть в самом мокапе — сдвиги каналов не нужны.
+            float[][] mk = MocapSwings.Enabled ? MocapSwings.Keys(t) : null;
+            if (mk != null)
+            {
+                p.track = null;
+                foreach (float[] k in mk)
+                {
+                    float[] v = new float[k.Length - 1];
+                    System.Array.Copy(k, 1, v, 0, v.Length);
+                    p.K(k[0], v);
+                }
+                p.leadFeet = p.leadPelvis = p.leadChest = 0f; p.bladeLag = 0.004f;
+            }
             return p;
         }
     }
