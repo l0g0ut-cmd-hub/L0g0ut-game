@@ -737,9 +737,14 @@ namespace BladePath
                 Texture2D herb = n.Type == NodeType.Herbalist ? UiKit.Tex(HerbalistIcon) : null;
                 if (!known)
                 {
-                    UiKit.Disc(p, s * 0.4f, new Color(0.10f, 0.08f, 0.13f, 0.88f));
-                    UiKit.Ring(p, s * 0.4f, new Color(0.75f, 0.68f, 0.9f, can ? 0.9f : 0.55f), false);
-                    UiKit.Text(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), "?", s * 0.5f, new Color(0.9f, 0.86f, 1f, 0.95f), TextAnchor.MiddleCenter);
+                    Texture2D unk = UiKit.Tex("UI/map_unknown");   // медальон «неизвестное место»: туман и знак вопроса
+                    if (unk != null) { GUI.color = new Color(1f, 1f, 1f, can ? 1f : 0.85f); GUI.DrawTexture(new Rect(p.x - s * 0.46f, p.y - s * 0.46f, s * 0.92f, s * 0.92f), unk); }
+                    else
+                    {
+                        UiKit.Disc(p, s * 0.4f, new Color(0.10f, 0.08f, 0.13f, 0.88f));
+                        UiKit.Ring(p, s * 0.4f, new Color(0.75f, 0.68f, 0.9f, can ? 0.9f : 0.55f), false);
+                        UiKit.Text(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), "?", s * 0.5f, new Color(0.9f, 0.86f, 1f, 0.95f), TextAnchor.MiddleCenter);
+                    }
                 }
                 else if (herb != null)
                     GUI.DrawTexture(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), herb);
@@ -1071,8 +1076,13 @@ namespace BladePath
                 Texture2D ic = UiKit.Tex("UI/map_icons");
                 if (!known)
                 {
-                    UiKit.Disc(new Vector2(x + 32f, y + 32f), 28f, new Color(0.10f, 0.08f, 0.13f, 0.9f));
-                    UiKit.Text(new Rect(x, y, 64f, 64f), "?", 34f, new Color(0.9f, 0.86f, 1f, 0.95f), TextAnchor.MiddleCenter);
+                    Texture2D unk = UiKit.Tex("UI/map_unknown");
+                    if (unk != null) GUI.DrawTexture(new Rect(x, y, 64f, 64f), unk);
+                    else
+                    {
+                        UiKit.Disc(new Vector2(x + 32f, y + 32f), 28f, new Color(0.10f, 0.08f, 0.13f, 0.9f));
+                        UiKit.Text(new Rect(x, y, 64f, 64f), "?", 34f, new Color(0.9f, 0.86f, 1f, 0.95f), TextAnchor.MiddleCenter);
+                    }
                 }
                 else if (ic != null)
                 {
@@ -1301,8 +1311,15 @@ namespace BladePath
                     UiKit.Text(new Rect(x, y, w, 34f), Ladder.Stages[e].name, 26f, Ink, TextAnchor.MiddleLeft); y += 36f;
                     UiKit.Text(new Rect(x, y, w, 20f), Ladder.Stages[e].title, 13f, Dim, TextAnchor.MiddleLeft, false); y += 22f;
                     int sky = MapClouds.SkyAt(Campaign.Region, new Vector2(n.x, n.y));
+                    Texture2D wi = UiKit.Tex("UI/weather_icons");   // 3 медальона в ряд: ясно, дождь, гроза
+                    if (wi != null)
+                    {
+                        GUI.DrawTextureWithTexCoords(new Rect(x, y - 6f, 30f, 30f), wi, new Rect(sky / 3f, 0f, 1f / 3f, 1f));
+                        x += 36f; w -= 36f;
+                    }
                     UiKit.Text(new Rect(x, y, w, 18f), "Погода: " + MapClouds.SkyName(sky) + (sky == 2 ? " — бой под молниями" : sky == 1 ? " — бой под дождём" : ""),
-                        12f, sky == 2 ? new Color(0.75f, 0.7f, 1f) : sky == 1 ? new Color(0.65f, 0.8f, 1f) : Dim, TextAnchor.MiddleLeft, false); y += 22f;
+                        12f, sky == 2 ? new Color(0.75f, 0.7f, 1f) : sky == 1 ? new Color(0.65f, 0.8f, 1f) : Dim, TextAnchor.MiddleLeft, false); y += 26f;
+                    if (wi != null) { x -= 36f; w += 36f; }
                     string mods = "";
                     if (n.Type == NodeType.Elite) mods += "Сильнее обычного: +35% здоровья, +15% урона, лишняя жизнь.\nДобыча не ниже редкой, мон больше.\n";
                     if (n.Type == NodeType.Ambush) mods += "Засада: бой ночью, враг начинает с полным духом.\nМон в полтора раза больше.\n";
