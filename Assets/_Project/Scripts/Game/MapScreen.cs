@@ -1238,7 +1238,7 @@ namespace BladePath
                 "КОСТИ ПУТИ: " + Campaign.Rolls, 14f, Ink, TextAnchor.MiddleLeft);
             UiKit.Text(new Rect(x + 61f, y + 22f, w - 61f, 20f),
                 rolling ? "бросок…" : Campaign.Steps > 0
-                    ? "ходов: " + Campaign.Steps : "ход окончен",
+                    ? "ходов: " + Campaign.Steps : Campaign.Stuck ? "костей нет — кость за победу" : "ход окончен",
                 12f, Campaign.Steps > 0 ? VisualIdentity.Jade : Dim,
                 TextAnchor.MiddleLeft, false);
             // Three-step travel gauge below the die: coloured segments correspond
@@ -1256,9 +1256,8 @@ namespace BladePath
             if (canRoll) y += 48f;
             if (Campaign.Stuck && !rolling)
             {
-                UiKit.Text(new Rect(x, y, w, 16f), "Костей нет. Кость — за каждую победу.", 11.5f, new Color(1f, 0.7f, 0.5f), TextAnchor.MiddleLeft, false); y += 20f;
                 int gc = Campaign.GuideCost;
-                if (Btn(new Rect(x, y, w, 40f), "ПРОВОДНИК (−" + gc + " МОН)", interactive && Profile.Gold >= gc)) { if (Campaign.BuyGuide()) Haptics.Pulse(20); }
+                if (Btn(new Rect(x, y, w, 40f), "ПРОВОДНИК (−" + gc + " МОН)", interactive && Profile.Gold >= gc)) { if (Campaign.BuyGuide()) TavToast("Проводник указал дорогу: +1 кость пути за " + gc + " мон. Брось кость."); }   // раньше молча: кнопки просто исчезали
                 y += 46f;
                 if (Btn(new Rect(x, y, w, 40f), "ВЫЗВАТЬ РОНИНА НА БОЙ", interactive, true)) { Campaign.BeginTraining(); Hide(); if (DuelManager.Instance != null) DuelManager.Instance.ResetMatch(); }
                 y += 46f;
@@ -1271,14 +1270,17 @@ namespace BladePath
                 MapNode n = Campaign.Nodes[show];
                 bool known = Known(n);
                 Texture2D ic = UiKit.Tex("UI/map_icons");
+                // мало места (кнопки проводника и ронина) — значок меньше, без описания: заголовок и маршрут не лезут друг на друга
+                bool compact = PanelTextBottom - y < 120f;
+                float ics = compact ? 36f : 64f;
                 if (!known)
                 {
                     Texture2D unk = UiKit.Tex("UI/map_unknown");
-                    if (unk != null) GUI.DrawTexture(new Rect(x, y, 64f, 64f), unk);
+                    if (unk != null) GUI.DrawTexture(new Rect(x, y, ics, ics), unk);
                     else
                     {
-                        UiKit.Disc(new Vector2(x + 32f, y + 32f), 28f, new Color(0.10f, 0.08f, 0.13f, 0.9f));
-                        UiKit.Text(new Rect(x, y, 64f, 64f), "?", 34f, new Color(0.9f, 0.86f, 1f, 0.95f), TextAnchor.MiddleCenter);
+                        UiKit.Disc(new Vector2(x + ics * 0.5f, y + ics * 0.5f), ics * 0.44f, new Color(0.10f, 0.08f, 0.13f, 0.9f));
+                        UiKit.Text(new Rect(x, y, ics, ics), "?", 34f, new Color(0.9f, 0.86f, 1f, 0.95f), TextAnchor.MiddleCenter);
                     }
                 }
                 else if (ic != null)
@@ -1286,26 +1288,26 @@ namespace BladePath
                     Color previousTint = GUI.color;
                     GUI.color = MapBadgeTint(n, known, show);
                     Texture2D herb = n.Type == NodeType.Herbalist ? UiKit.Tex(HerbalistIcon) : null;
-                    if (herb != null) GUI.DrawTexture(new Rect(x, y, 64f, 64f), herb);
-                    else if (n.IsTavern && UiKit.Tex("UI/map_tavern") != null) GUI.DrawTexture(new Rect(x, y, 64f, 64f), UiKit.Tex("UI/map_tavern"));
-                    else GUI.DrawTextureWithTexCoords(new Rect(x, y, 64f, 64f), ic,
+                    if (herb != null) GUI.DrawTexture(new Rect(x, y, ics, ics), herb);
+                    else if (n.IsTavern && UiKit.Tex("UI/map_tavern") != null) GUI.DrawTexture(new Rect(x, y, ics, ics), UiKit.Tex("UI/map_tavern"));
+                    else GUI.DrawTextureWithTexCoords(new Rect(x, y, ics, ics), ic,
                         Cell(MapBadgeCell(n, show)));
                     GUI.color = previousTint;
                     if (n.Type == NodeType.Herbalist && herb == null)
-                        HerbalistMark(new Vector2(x + 53f, y + 53f), 11f);
+                        HerbalistMark(new Vector2(x + ics * 0.83f, y + ics * 0.83f), ics * 0.17f);
                 }
-                UiKit.Text(new Rect(x + 72f, y + 6f, w - 72f, 24f), known ? NodeName(n) : "НЕИЗВЕСТНО", 16f, Ink, TextAnchor.MiddleLeft);
+                UiKit.Text(new Rect(x + ics + 8f, y + (compact ? 0f : 6f), w - ics - 8f, compact ? 20f : 24f), known ? NodeName(n) : "НЕИЗВЕСТНО", compact ? 14f : 16f, Ink, TextAnchor.MiddleLeft);
                 if (n.done && show != Campaign.At && n.Type != NodeType.Start)
                 {
                     // Visited place: say what a return trip offers.
                     bool reusable = n.Type == NodeType.Smith || n.Type == NodeType.Merchant || n.Type == NodeType.Herbalist;
-                    UiKit.Text(new Rect(x + 72f, y + 32f, w - 72f, 20f),
+                    UiKit.Text(new Rect(x + ics + 8f, y + (compact ? 20f : 32f), w - ics - 8f, compact ? 16f : 20f),
                         reusable ? "ПРОЙДЕНО · можно вернуться" : "ПРОЙДЕНО · уже пусто", 12f,
                         reusable ? VisualIdentity.Jade : Dim, TextAnchor.MiddleLeft, false);
                 }
-                else if (known && n.IsFight) UiKit.Text(new Rect(x + 72f, y + 32f, w - 72f, 20f), Ladder.Stages[Mathf.Clamp(n.enemy, 0, Ladder.Count - 1)].name, 12f, new Color(1f, 0.6f, 0.45f), TextAnchor.MiddleLeft, false);
-                y += 72f;
-                string hint = known ? NodeHint(n) : "Туман скрывает, что ждёт впереди. Подойди ближе.";
+                else if (known && n.IsFight) UiKit.Text(new Rect(x + ics + 8f, y + (compact ? 20f : 32f), w - ics - 8f, compact ? 16f : 20f), Ladder.Stages[Mathf.Clamp(n.enemy, 0, Ladder.Count - 1)].name, 12f, new Color(1f, 0.6f, 0.45f), TextAnchor.MiddleLeft, false);
+                y += compact ? ics + 6f : 72f;
+                string hint = compact ? "" : known ? NodeHint(n) : "Туман скрывает, что ждёт впереди. Подойди ближе.";
                 // Text never runs under the fixed В ПУТЬ button: the route line has a reserved
                 // slot just above it and the description is cut to the space that is left.
                 const float routeSlot = PanelTextBottom - 40f;
@@ -1314,7 +1316,8 @@ namespace BladePath
                     if (y + 17f > routeSlot - 4f) break;
                     UiKit.Text(new Rect(x, y, w, 17f), line, 12f, Dim, TextAnchor.MiddleLeft, false); y += 17f;
                 }
-                y = Mathf.Min(y + 10f, routeSlot);
+                // назад вверх не прыгаем: при нехватке места строка маршрута шла поверх заголовка
+                y = compact ? y : Mathf.Min(y + 10f, Mathf.Max(y, routeSlot));
                 int nextStep = NextPreviewStep;
                 if (nextStep < 0 && show != Campaign.At && previewPath.Count <= 1)
                     UiKit.Text(new Rect(x, y, w, 18f), "Отсюда дороги туда нет", 12f, new Color(1f, 0.61f, 0.48f), TextAnchor.MiddleLeft, false);
@@ -1328,6 +1331,8 @@ namespace BladePath
                         totalMoves == 0 ? "МАРШРУТ по своим следам — бесплатно" : "МАРШРУТ: " + totalMoves + " шаг.   ·   доступно: " + available,
                         12f, routeColor, TextAnchor.MiddleLeft, false);
                     y += 20f;
+                    if (compact || y + 18f > PanelTextBottom) { }   // подсказки под маршрутом нет места
+                    else
                     // Travel remains one node at a time, so fight/event encounters
                     // are never skipped by the route preview.
                     // The same stable button remains present while the die is empty.
