@@ -38,7 +38,8 @@ namespace BladePath
             new Spec("SlashBack", "great sword attack", (int)AttackType.SlashBack, 0, 3, 6, 9, 30),
             new Spec("LegSweep", "great sword slash (5)", (int)AttackType.LegSweep, 0, 11, 16, 19, 43),
             new Spec("Rising", "great sword slash (2)", (int)AttackType.Rising, 62, 75, 83, 86, 106),
-            new Spec("JumpStrike", "great sword jump attack", (int)AttackType.JumpStrike, 14, 29, 36, 40, 65),
+            // удар — на рубящей вниз части клипа (CI-кадры: на 29–36 клинок ещё шёл дугой над головой цели, до цели доходил к 38–43)
+            new Spec("JumpStrike", "great sword jump attack", (int)AttackType.JumpStrike, 14, 30, 42, 46, 65),
             new Spec("Charge", "great sword high spin attack", (int)AttackType.Charge, 0, 26, 33, 37, 56),
         };
 

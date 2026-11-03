@@ -44,6 +44,35 @@ namespace BladePath
 
         // замер текущего удара и съёмка — в LateUpdate (см. порядок выполнения выше)
         FighterController swingOf; SwingStat swingStat; Strip swingStrip; int lateFrame;
+        bool traceSwing; Vector3 tracePrevTip; bool traceHasPrev;
+
+        /// <summary>Покадрово: фаза, окно попадания, острие (вперёд/вверх от бойца), скорость острия, ближайшая зона врага до клинка.</summary>
+        void Trace(FighterController a, WeaponController w)
+        {
+            FighterController target = a == player ? enemy : player;
+            Vector3 root = w.bladeRoot.position, ax = w.bladeRoot.forward, tip = root + ax * w.bladeLength;
+            float best = 99f; string zone = "-";
+            foreach (BodyZone z in target.zones)
+            {
+                if (z == null) continue;
+                foreach (Collider col in z.GetComponentsInChildren<Collider>())
+                {
+                    if (col == null || !col.enabled) continue;
+                    for (int k = 0; k <= 6; k++)
+                    {
+                        Vector3 p = root + ax * (w.bladeLength * k / 6f);
+                        float d = Vector3.Distance(p, col.ClosestPoint(p));
+                        if (d < best) { best = d; zone = z.name; }
+                    }
+                }
+            }
+            float v = traceHasPrev ? (tip - tracePrevTip).magnitude / Mathf.Max(1e-5f, Time.deltaTime) : 0f;
+            tracePrevTip = tip; traceHasPrev = true;
+            Vector3 rel = a.transform.InverseTransformPoint(tip);
+            Line(string.Format("trace|{0}|{1:F2}|окно {2}|остриё вперёд {3:F2} вверх {4:F2} м над землёй {5:F2}|v {6:F1}|до врага {7:F3} ({8})|боец y {9:F2}",
+                w.Phase, w.PhaseProgress, w.ContactWindowOpen ? "ДА" : "нет", rel.z, rel.y, tip.y, v, best, zone, a.transform.position.y));
+        }
+
         FighterController shotOf; string shotName; float shotGripR = -1f, shotGripL = -1f; bool shotPR, shotPL, shotDone;
 
         void LateUpdate()
@@ -64,6 +93,7 @@ namespace BladePath
                     swingStat.frames++;
                 }
                 if (swingStrip != null) swingStrip.Tick(lateFrame);
+                if (traceSwing && w != null && w.Phase != SwingPhase.Idle) Trace(swingOf, w);
             }
             if (shotOf != null && !shotDone)
             {
@@ -141,9 +171,10 @@ namespace BladePath
                 if (f.weapon != null) f.weapon.SnapRest();
                 f.ResetPosture(); f.SetMoveVector(Vector2.zero);
             }
-            enemy.Teleport(home + fwd * dist);
-            player.Teleport(home);
-            enemy.Teleport(home + fwd * dist);   // повернуться друг к другу
+            Vector3 c = new Vector3(0f, home.y, 0f);   // центр арены: у края Teleport упирался в границу и ставил дальше нужного
+            enemy.Teleport(c + fwd * (dist * 0.5f));
+            player.Teleport(c - fwd * (dist * 0.5f));
+            enemy.Teleport(c + fwd * (dist * 0.5f));   // повернуться друг к другу
             float t = 0f;
             while (t < settle || ((!player.CanAct || !enemy.CanAct) && t < settle + 3f)) { t += Time.deltaTime; yield return null; }
             float real = Vector3.Distance(Flat(player.transform.position), Flat(enemy.transform.position));
@@ -303,7 +334,9 @@ namespace BladePath
                     bool shoot = Mathf.Approximately(delay, 0.15f) && dist < 1.5f;
                     Strip strip = shoot ? new Strip(this, player, "jump_strike_d" + dist.ToString("F1"), 3) : null;
                     if (!started) { Line("jump|d" + dist.ToString("F1") + "|t" + delay.ToString("F2") + "|удар не начался (на земле? " + player.Grounded + ")"); continue; }
+                    traceSwing = shoot; traceHasPrev = false;
                     yield return RunSwing(player, st, f => { apex = Mathf.Max(apex, player.transform.position.y); return true; }, strip);
+                    traceSwing = false;
                     if (strip != null) strip.Save();
                     if (contacts > 0) okCount++;
                     string s = "jump|d" + dist.ToString("F1") + "|t" + delay.ToString("F2") + "|высота " + apex.ToString("F2") + "|" + Outcome(st);
