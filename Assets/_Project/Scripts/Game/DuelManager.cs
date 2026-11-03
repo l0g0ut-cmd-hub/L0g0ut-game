@@ -972,6 +972,49 @@ namespace BladePath
             }
         }
 
+        /// <summary>
+        /// Встреча духа: оба выпустили накопленный удар почти одновременно — клинки сшибаются с выплеском.
+        /// Равные ступени гасят друг друга (оба отлетают, урона нет). Иначе сильный пробивает: проигравший получает урон
+        /// по разнице ступеней, теряет равновесие и стоит оглушённый; победителя тоже отбрасывает, но слабее.
+        /// </summary>
+        public void ChargeClash(FighterController a, int la, FighterController b, int lb)
+        {
+            if (a == null || b == null) return;
+            if (a.weapon != null) a.weapon.ResetState();
+            if (b.weapon != null) b.weapon.ResetState();
+            Vector3 p = (a.transform.position + b.transform.position) * 0.5f + Vector3.up * 1.2f;
+            Vector3 ab = b.transform.position - a.transform.position; ab.y = 0f;
+            int diff = la - lb;
+            FighterController win = diff > 0 ? a : diff < 0 ? b : null, lose = diff > 0 ? b : diff < 0 ? a : null;
+            if (win == null)
+            {
+                a.Knockback(-ab, 4f); b.Knockback(ab, 4f);
+                a.Stun(0.45f); b.Stun(0.45f);
+                a.AddKi(10f); b.AddKi(10f);
+            }
+            else
+            {
+                int lw = Mathf.Max(la, lb), ll = Mathf.Min(la, lb);
+                float dmg = MaxHp(lose) * 0.05f * (ChargeSystem.DmgMul[lw] - ChargeSystem.DmgMul[ll] + 0.5f);
+                Vector3 away = lose.transform.position - win.transform.position; away.y = 0f;
+                lose.Knockback(away, 5.5f); win.Knockback(-away, 2.5f);
+                lose.Stun(0.8f); lose.AddPosture(30f + 15f * (lw - ll));
+                win.Stun(0.25f);
+                ApplyDamage(lose, win, dmg, lose.transform.position + Vector3.up * 1.2f, false);
+            }
+            if (Juice.Instance != null) { Juice.Instance.Clash(p); Juice.Instance.Taiko(1.2f, 0.7f); Juice.Instance.ChargePulse(p - Vector3.up * 1.2f, new Color(1f, 0.85f, 0.5f), 3.5f); }
+            GroundFlash.Spawn("FX/shock_ring", p - Vector3.up * 1.2f, 1.5f, 6f, new Color(1f, 0.85f, 0.55f), 0.6f, 0f);
+            if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(0.14f); CameraOrbit.Instance.Punch(4f); }
+            PostFX.Kick(0.012f);
+            hitStopUntil = Time.unscaledTime + 0.22f;
+            Haptics.Pulse(160);
+            Popup cp = new Popup();
+            cp.world = p + Vector3.up * 0.4f; cp.size = 36f; cp.born = Time.unscaledTime;
+            cp.text = win == null ? "ВСТРЕЧА ДУХА — РАВНЫ!" : win == player ? "ТВОЙ ДУХ СИЛЬНЕЕ!" : "ДУХ ВРАГА СИЛЬНЕЕ!";
+            cp.color = win == null ? new Color(1f, 0.9f, 0.55f) : win == player ? new Color(0.5f, 0.9f, 1f) : new Color(1f, 0.4f, 0.3f);
+            Popups.Add(cp);
+        }
+
         int lastClashA = -1, lastClashB = -1;
 
         /// <summary>Сшибка: оба бьют одновременно и клинки пересеклись — удары гасятся, бойцов отбрасывает.</summary>
@@ -1408,7 +1451,19 @@ namespace BladePath
             }
             // удар во время глотка из тыквы: глоток сорван (если ещё не успел подействовать — лечения не будет, тыква потрачена)
             // удар по накапливающему срывает накопление
-            if (!chip && target != null && ChargeSystem.Instance != null && ChargeSystem.Instance.IsCharging(target))
+            // игрока лёгкие удары не срывают: накопление теряет часть прогресса; срывают тяжёлые (сверху, по ногам, натиск, накопленный)
+            bool heavyHit = attacker != null && attacker.weapon != null && attacker.weapon.CurrentProfile != null &&
+                (attacker.weapon.CurrentProfile.type == AttackType.Overhead || attacker.weapon.CurrentProfile.type == AttackType.LegSweep || attacker.weapon.CurrentProfile.type == AttackType.Charge)
+                || dmg >= MaxHp(target) * 0.12f;
+            if (!chip && target == player && !heavyHit && ChargeSystem.Instance != null && ChargeSystem.Instance.IsCharging(target))
+            {
+                ChargeSystem.Instance.Knock(target, 0.45f);
+                Popup kp = new Popup();
+                kp.world = target.transform.position + Vector3.up * 2.1f; kp.text = "ДУХ ДРОГНУЛ"; kp.color = new Color(0.7f, 0.85f, 1f);
+                kp.born = Time.unscaledTime; kp.size = 18f;
+                Popups.Add(kp);
+            }
+            else if (!chip && target != null && ChargeSystem.Instance != null && ChargeSystem.Instance.IsCharging(target))
             {
                 ChargeSystem.Instance.Cancel(target);
                 Popup sp = new Popup();

@@ -42,6 +42,21 @@ namespace BladePath
         public static void Ensure(GameObject host) { if (Instance == null) host.AddComponent<ChargeSystem>(); }
 
         public bool IsCharging(FighterController f) { return f != null && active.ContainsKey(f); }
+
+        /// <summary>Окно встречи духа: оба выпустили накопленный удар не дальше друг от друга, с.</summary>
+        public const float ClashWindow = 0.45f;
+        readonly Dictionary<FighterController, float> releaseAt = new Dictionary<FighterController, float>();
+
+        /// <summary>Лёгкий удар по накапливающему игроку не срывает накопление, а отнимает часть прогресса (с).</summary>
+        public void Knock(FighterController f, float seconds)
+        {
+            Charge c;
+            if (f == null || !active.TryGetValue(f, out c)) return;
+            c.start = Mathf.Min(Time.time, c.start + seconds);
+            int lvl = -1; float tt = Time.time - c.start;
+            for (int i = 0; i <= Max; i++) if (tt >= LevelAt[i]) lvl = i;
+            if (lvl < c.level) c.level = lvl;
+        }
         public int Level(FighterController f) { Charge c; return active.TryGetValue(f, out c) ? c.level : -1; }
         public float Progress(FighterController f) { Charge c; return active.TryGetValue(f, out c) ? Mathf.Clamp01((Time.time - c.start) / LevelAt[Max]) : 0f; }
 
@@ -91,6 +106,16 @@ namespace BladePath
             if (!f.Attack(type, lvl >= 1)) return false;   // со второй ступени блок не держит
             strikeSwing[f] = f.weapon != null ? f.weapon.SwingId : -1;
             strikeLevel[f] = lvl;
+            // встреча духа: противник выпустил накопленный удар только что (его удар ещё не дошёл) — клинки сшибаются
+            float ta; int tl, tsw;
+            if (t != null && releaseAt.TryGetValue(t, out ta) && Time.time - ta < ClashWindow && strikeLevel.TryGetValue(t, out tl)
+                && strikeSwing.TryGetValue(t, out tsw) && t.weapon != null && tsw == t.weapon.SwingId && DuelManager.Instance != null)
+            {
+                strikeSwing.Remove(f); strikeSwing.Remove(t); releaseAt.Remove(t); waveAt.Remove(t); slashLvl.Remove(t);
+                DuelManager.Instance.ChargeClash(f, lvl, t, tl);
+                return true;
+            }
+            releaseAt[f] = Time.time;
             if (lvl >= 2) { waveAt[f] = Time.time + 0.18f; waveLvl[f] = lvl; BigReleaseAt = Time.unscaledTime; }
             if (lvl >= 1) slashLvl[f] = new Vector2Int(lvl, f.weapon != null ? f.weapon.SwingId : -1);
             Vector3 hitAt = f.transform.position + f.transform.forward * 0.9f;
@@ -472,6 +497,8 @@ namespace BladePath
             {
                 Charge c = kv.Value; FighterController f = c.f;
                 if (f == null || f.Dead || f.Stunned || (dm != null && dm.State != DuelState.Fighting)) { (drop ?? (drop = new List<FighterController>())).Add(kv.Key); continue; }
+                // враг копит — он раскрылся: дух игрока растёт быстрее (успеть накопить навстречу или ударить)
+                if (dm != null && dm.player != null && f != dm.player && !dm.player.Dead) dm.player.AddKi(9f * Time.deltaTime);
                 float t = Time.time - c.start;
                 int lvl = t >= LevelAt[3] ? 3 : t >= LevelAt[2] ? 2 : t >= LevelAt[1] ? 1 : t >= LevelAt[0] ? 0 : -1;
                 while (lvl >= 0 && f.Ki < KiCost[lvl]) lvl--;   // духа не хватает — выше не поднимется

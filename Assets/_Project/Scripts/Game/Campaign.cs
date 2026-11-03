@@ -604,7 +604,7 @@ namespace BladePath
 
         // ---------------- модификаторы текущего боя (DuelManager) ----------------
 
-        static NodeType FightType { get { MapNode n = FightNode; return n != null ? n.Type : NodeType.Duel; } }
+        public static NodeType FightType { get { MapNode n = FightNode; return n != null ? n.Type : NodeType.Duel; } }
         public static float EnemyHpMul { get { NodeType t = FightType; return !InFight ? 1f : t == NodeType.Elite ? 1.35f : t == NodeType.Ambush ? 1.1f : 1f; } }
         public static float EnemyDmgMul { get { return InFight && FightType == NodeType.Elite ? 1.15f : 1f; } }
         public static int ExtraMarks { get { return InFight && FightType == NodeType.Elite ? 1 : 0; } }

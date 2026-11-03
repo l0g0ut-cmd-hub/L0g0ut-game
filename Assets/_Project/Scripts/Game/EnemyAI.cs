@@ -84,6 +84,7 @@ namespace BladePath
         // накопление удара (узор на полу): они, сёгун со 2-й фазы, на высоких уровнях — все. Пока копит — стоит; прерви ударом,
         // иначе рывок и сокрушительный удар (со 2-й ступени блок не держит, на 3-й — волна, перепрыгни)
         float chargeAt = 6f, chargeStart; int chargeGoal; bool chargeEarly; static bool chargeHinted;
+        bool answering, answerChecked;   // копит навстречу накоплению игрока (встреча духа)
         bool Charge(float dist, bool busy)
         {
             ChargeSystem cs = ChargeSystem.Instance;
@@ -92,14 +93,32 @@ namespace BladePath
             {
                 int lv = cs.Level(self);
                 float held = Time.time - chargeStart;
-                if (lv >= chargeGoal || (chargeEarly && lv >= 0 && dist < 1.3f) || (lv >= 0 && held > 3.0f)) cs.Release(self, AttackType.Overhead);
-                else if (held > 3.4f) cs.Cancel(self);
+                // копил навстречу игроку: он отпустил — отпускаем сразу же (встреча духа)
+                if (answering && lv >= 0 && target != null && !cs.IsCharging(target)) { answering = false; cs.Release(self, AttackType.Overhead); return true; }
+                if (lv >= chargeGoal || (chargeEarly && lv >= 0 && dist < 1.3f) || (lv >= 0 && held > 3.0f)) { answering = false; cs.Release(self, AttackType.Overhead); }
+                else if (held > 3.4f) { answering = false; cs.Cancel(self); }
                 return true;
             }
-            bool can = StageIdx == 2 || (StageIdx == 3 && Phase >= 2) || Level >= 3;
-            if (!can || busy || Time.time < chargeAt || dist < 1.8f || dist > 4.2f || self.Ki < ChargeSystem.KiCost[0]) return false;
-            if (Random.value > 0.01f + 0.004f * Level) return false;
-            chargeAt = Time.time + Random.Range(7f, 12f) - Level;
+            // заряд есть не у всех и не всегда: слабые — только сильным противником на карте, остальные — по силе и уровню
+            bool strongNode = Campaign.InFight && (Campaign.FightType == NodeType.Elite || Campaign.FightType == NodeType.Boss);
+            bool can = StageIdx >= 2 || (StageIdx == 1 && Level >= 1) || strongNode || Level >= 3;
+            if (!can || busy || self.Ki < ChargeSystem.KiCost[0]) return false;
+            // игрок копит — иногда копим навстречу (кто сильнее, тот и пробьёт)
+            if (target != null && cs.IsCharging(target))
+            {
+                if (answerChecked) return false;
+                answerChecked = true;
+                if (dist > 4.5f || Random.value > 0.35f + 0.1f * Level) return false;
+                int ag = Mathf.Clamp(Random.Range(0, 3), 0, ChargeSystem.Max);
+                while (ag > 0 && self.Ki < ChargeSystem.KiCost[ag]) ag--;
+                if (!cs.Begin(self)) return false;
+                chargeStart = Time.time; chargeGoal = 9; chargeEarly = false; answering = true;
+                return true;
+            }
+            answerChecked = false;
+            if (Time.time < chargeAt || dist < 1.8f || dist > 4.2f) return false;
+            if (Random.value > 0.015f + 0.005f * Level) return false;
+            chargeAt = Time.time + Random.Range(6f, 10f) - Level * 0.6f;
             int goal = StageIdx == 2 ? (Random.value < 0.25f ? 3 : Random.value < 0.6f ? 2 : 1) : (StageIdx == 3 && Phase >= 3 ? 3 : StageIdx == 3 ? 2 : Random.Range(0, 2));   // ярость (IV) — они иногда, сёгун в 3-й фазе всегда
             while (goal > 0 && self.Ki < ChargeSystem.KiCost[goal]) goal--;
             if (!cs.Begin(self)) return false;
