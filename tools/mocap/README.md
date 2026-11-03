@@ -20,3 +20,9 @@ The database was created with funding from NSF EIA-0196217.»
 `tools/mocap/ual/UAL1_Standard.glb`, `UAL2_Standard.glb` — https://quaternius.com/packs/universalanimationlibrary.html,
 лицензия CC0 (License.txt). Удары мечом, блок, получение удара, смерть, кувырок. Перевод в BVH и листы превью —
 `tools/blender/ual_export.py` (workflow «Convert UAL animations», ветка anim-build → anim-out).
+
+## Mixamo Great Sword Pack
+
+`tools/mocap/mixamo/*.fbx` — анимации Adobe Mixamo (mixamo.com), набор «Great Sword Pack», скелет X Bot.
+Mixamo разрешает использовать анимации в играх, в том числе коммерческих; отдельно файлы не распространяются.
+Сырые данные по кадрам и превью — `tools/blender/mixamo_extract.py` (workflow «Convert UAL animations»).

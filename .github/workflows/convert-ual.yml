@@ -24,8 +24,10 @@ jobs:
       - name: Export
         run: |
           UAL_OUT=out blender -b --factory-startup --python tools/blender/ual_export.py > out.log 2>&1 || true
-          grep -E "^UAL|Error|Traceback" out.log | cut -c1-600 | head -80
-          mkdir -p out; cp out.log out/
+          grep -E "^UAL|Traceback" out.log | cut -c1-600 | head -80
+          MIX_OUT=out/mixamo blender -b --factory-startup --python tools/blender/mixamo_extract.py > mix.log 2>&1 || true
+          grep -E "^MIX|Traceback|Error:" mix.log | cut -c1-600 | head -80
+          mkdir -p out; cp out.log mix.log out/
       - name: Contact sheets
         run: |
           python3 -m pip install -q pillow
@@ -37,8 +39,13 @@ jobs:
               fr = [Image.open('out/prev/%s_%d.png' % (n, k)).convert('RGB') for k in range(6)]
               sheet = Image.new('RGB', (220 * 6, 300)); [sheet.paste(im, (i * 220, 0)) for i, im in enumerate(fr)]
               sheet.save('out/sheet_%s.jpg' % n)
+          names = sorted({os.path.basename(p).rsplit('__', 1)[0] for p in glob.glob('out/mixamo/prev/*.png')})
+          for n in names:
+              fr = [Image.open('out/mixamo/prev/%s__%d.png' % (n, k)).convert('RGB') for k in range(8)]
+              sheet = Image.new('RGB', (230 * 8, 300)); [sheet.paste(im, (i * 230, 0)) for i, im in enumerate(fr)]
+              sheet.save('out/mixamo/sheet_%s.jpg' % n)
           PY
-          rm -rf out/prev
+          rm -rf out/prev out/mixamo/prev
       - name: Publish to anim-out
         if: always()
         env:
