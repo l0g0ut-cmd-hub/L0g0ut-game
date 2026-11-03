@@ -24,6 +24,8 @@ namespace BladePath
         public float minSeparation = 0.7f;      // ближе этого бойцы не сходятся (корпуса)
         public float arenaHalfWidth = 3.1f;     // половина площадки по X
         public float arenaHalfDepth = 2.3f;     // половина площадки по Z
+        [Tooltip("Дальний край площадки (к ступеням храма), м: ближе, чем передний — иначе бойцы будто наступают на ступени.")]
+        public float arenaBackDepth = 1.9f;
         [Tooltip("Скорость разворота к противнику, град/с.")]
         public float turnSpeed = 420f;
         [Tooltip("Стартовый взгляд: +1 в +X, -1 в -X (дальше боец сам следит за противником).")]
@@ -91,7 +93,7 @@ namespace BladePath
         public void Teleport(Vector3 p)
         {
             p.x = Mathf.Clamp(p.x, -arenaHalfWidth, arenaHalfWidth);
-            p.z = Mathf.Clamp(p.z, -arenaHalfDepth, arenaHalfDepth);
+            p.z = Mathf.Clamp(p.z, -arenaHalfDepth, Mathf.Min(arenaHalfDepth, arenaBackDepth));
             p.y = transform.position.y;
             transform.position = p;
             if (opponent != null)
@@ -381,7 +383,7 @@ namespace BladePath
             Vector3 pos = transform.position;
             Vector3 np = pos + delta;
             np.x = Mathf.Clamp(np.x, -arenaHalfWidth, arenaHalfWidth);
-            np.z = Mathf.Clamp(np.z, -arenaHalfDepth, arenaHalfDepth);
+            np.z = Mathf.Clamp(np.z, -arenaHalfDepth, Mathf.Min(arenaHalfDepth, arenaBackDepth));
 
             // препятствия (жаровни и т.п.): выталкиваем наружу, получается скольжение вдоль
             for (int i = 0; i < ArenaObstacle.All.Count; i++)
@@ -410,7 +412,7 @@ namespace BladePath
                     np = new Vector3(op.x, np.y, op.z) + (nd > 1e-4f ? d / nd : old.normalized) * minSeparation;
             }
             np.x = Mathf.Clamp(np.x, -arenaHalfWidth, arenaHalfWidth);
-            np.z = Mathf.Clamp(np.z, -arenaHalfDepth, arenaHalfDepth);
+            np.z = Mathf.Clamp(np.z, -arenaHalfDepth, Mathf.Min(arenaHalfDepth, arenaBackDepth));
             transform.position = np;
         }
 

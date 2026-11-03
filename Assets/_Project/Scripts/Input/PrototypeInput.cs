@@ -18,8 +18,9 @@ namespace BladePath
         public FighterController enemy;
 
         enum B { Stick, Jump, Dash, Overhead, Rising, Legs, Energy, Thrust, Slash, Pause,
-                 Resume, Restart, CamReset, AiToggle, DebugToggle, ToMenu, OverAgain, OverMenu, Block, Vibro, Difficulty, Super, Gfx, Heal, CamMode, TimerToggle, Gear, OverGear, Stats, AutoBattle, Immortal }
-        const int Count = 31;
+                 Resume, Restart, CamReset, AiToggle, DebugToggle, ToMenu, OverAgain, OverMenu, Block, Vibro, Difficulty, Super, Gfx, Heal, CamMode, TimerToggle, Gear, OverGear, Stats, AutoBattle, Immortal, DevMenu, DevBack, AutoLevel, EnemyImmortal }
+        const int Count = 35;
+        bool devOpen;   // пауза: открыто «меню разработчика»
 
         const float StickRadius = 84f;
 
@@ -159,12 +160,16 @@ namespace BladePath
             }
             if (toggleAi && ai != null) ai.aiEnabled = !ai.aiEnabled;
             if (down[(int)B.Immortal]) DuelManager.Immortal = !DuelManager.Immortal;
+            if (down[(int)B.EnemyImmortal]) DuelManager.EnemyImmortal = !DuelManager.EnemyImmortal;
+            if (down[(int)B.AutoLevel]) DuelManager.AutoLevel = (DuelManager.AutoLevel + 1) % 3;
+            if (down[(int)B.DevMenu]) devOpen = true;
+            if (down[(int)B.DevBack]) devOpen = false;
             if (down[(int)B.AutoBattle]) DuelManager.AutoBattle = !DuelManager.AutoBattle;
             // автобой (отладка): игроком управляет тот же ИИ, что и врагом
             if (player != null && (DuelManager.AutoBattle || playerAi != null))
             {
                 if (playerAi == null) { playerAi = player.gameObject.AddComponent<EnemyAI>(); playerAi.autoPlayer = true; }
-                playerAi.self = player; playerAi.target = enemy; playerAi.aiEnabled = DuelManager.AutoBattle;
+                playerAi.self = player; playerAi.target = enemy; playerAi.aiEnabled = DuelManager.AutoBattle; playerAi.difficultyOverride = DuelManager.AutoLevel;
                 if (!DuelManager.AutoBattle && autoWasOn) { player.SetMoveVector(Vector2.zero); player.SetBlock(false); }
                 autoWasOn = DuelManager.AutoBattle;
             }
@@ -278,11 +283,16 @@ namespace BladePath
             Box(B.CamMode, rx, 120f, 300f, 40f);
             Box(B.CamReset, rx, 170f, 300f, 40f);
             Box(B.TimerToggle, rx, 220f, 300f, 40f);
-            Box(B.AiToggle, rx, 270f, 147f, 40f);
-            Box(B.DebugToggle, rx + 153f, 270f, 147f, 40f);
-            Box(B.AutoBattle, rx, 320f, 300f, 40f);
-            Box(B.Immortal, rx, 370f, 300f, 40f);
-            Box(B.Stats, rx, 420f, 300f, 40f);
+            Box(B.DevMenu, rx, 270f, 300f, 40f);
+            Box(B.Stats, rx, 320f, 300f, 40f);
+            // меню разработчика (вместо обычных кнопок паузы): отладка и проверка боя
+            Box(B.AiToggle, lx, 120f, 300f, 40f);
+            Box(B.DebugToggle, lx, 170f, 300f, 40f);
+            Box(B.EnemyImmortal, lx, 220f, 300f, 40f);
+            Box(B.AutoBattle, rx, 120f, 300f, 40f);
+            Box(B.AutoLevel, rx, 170f, 300f, 40f);
+            Box(B.Immortal, rx, 220f, 300f, 40f);
+            Box(B.DevBack, cx - 150f, 420f, 300f, 40f);
             Box(B.OverAgain, cx - 210f, 300f, 200f, 56f);
             Box(B.OverMenu, cx + 10f, 300f, 200f, 56f);
             Box(B.OverGear, cx - 130f, 480f, 260f, 46f);
@@ -291,17 +301,24 @@ namespace BladePath
             if (play)
                 foreach (B b in new[] { B.Stick, B.Jump, B.Dash, B.Block, B.Overhead, B.Rising, B.Legs, B.Energy, B.Thrust, B.Slash, B.Pause, B.Heal }) active[(int)b] = true;
             if (play && player != null && player.KiFull) active[(int)B.Super] = true;
-            if (paused)
-                foreach (B b in new[] { B.Resume, B.Restart, B.Difficulty, B.Gfx, B.Vibro, B.CamReset, B.AiToggle, B.DebugToggle, B.ToMenu, B.CamMode, B.TimerToggle, B.Gear, B.Stats, B.AutoBattle, B.Immortal }) active[(int)b] = true;
+            if (!paused) devOpen = false;
+            if (paused && devOpen)
+                foreach (B b in new[] { B.AiToggle, B.DebugToggle, B.EnemyImmortal, B.AutoBattle, B.AutoLevel, B.Immortal, B.DevBack }) active[(int)b] = true;
+            else if (paused)
+                foreach (B b in new[] { B.Resume, B.Restart, B.Difficulty, B.Gfx, B.Vibro, B.CamReset, B.ToMenu, B.CamMode, B.TimerToggle, B.Gear, B.Stats, B.DevMenu }) active[(int)b] = true;
             if (over) { active[(int)B.OverAgain] = true; active[(int)B.OverMenu] = true; active[(int)B.OverGear] = true; }
 
             labels[(int)B.Resume] = "ПРОДОЛЖИТЬ";
             labels[(int)B.Restart] = "ЗАНОВО";
             labels[(int)B.CamReset] = "КАМЕРА: СБРОС";
-            labels[(int)B.AiToggle] = "ВРАГ: " + (ai == null || ai.aiEnabled ? "ИИ" : "СТОИТ");
-            labels[(int)B.DebugToggle] = "ЗОНЫ: " + (debugViz != null && debugViz.visible ? "ВКЛ" : "ВЫКЛ");
+            labels[(int)B.AiToggle] = "ВРАГ: " + (ai == null || ai.aiEnabled ? "ИИ ВКЛ" : "СТОИТ");
+            labels[(int)B.DebugToggle] = "ЗОНЫ ПОРАЖЕНИЯ: " + (debugViz != null && debugViz.visible ? "ВКЛ" : "ВЫКЛ");
             labels[(int)B.AutoBattle] = "АВТОБОЙ: " + (DuelManager.AutoBattle ? "ВКЛ" : "ВЫКЛ");
-            labels[(int)B.Immortal] = "БЕССМЕРТИЕ: " + (DuelManager.Immortal ? "ВКЛ" : "ВЫКЛ");
+            labels[(int)B.Immortal] = "БЕССМЕРТИЕ ИГРОКА: " + (DuelManager.Immortal ? "ВКЛ" : "ВЫКЛ");
+            labels[(int)B.EnemyImmortal] = "БЕССМЕРТИЕ ВРАГА: " + (DuelManager.EnemyImmortal ? "ВКЛ" : "ВЫКЛ");
+            labels[(int)B.AutoLevel] = "ИИ ИГРОКА: " + (DuelManager.AutoLevel == 0 ? "УЧЕНИК" : DuelManager.AutoLevel == 1 ? "ВОИН" : "МАСТЕР");
+            labels[(int)B.DevMenu] = "МЕНЮ РАЗРАБОТЧИКА";
+            labels[(int)B.DevBack] = "НАЗАД";
             labels[(int)B.ToMenu] = "В МЕНЮ";
             labels[(int)B.Gfx] = "ГРАФИКА: " + (DuelManager.Gfx == 1 ? "ВЫСОКАЯ" : "ЭКОНОМ");
             labels[(int)B.Vibro] = "ВИБРАЦИЯ: " + (Haptics.Enabled ? "ВКЛ" : "ВЫКЛ");
@@ -485,10 +502,19 @@ namespace BladePath
                     UiKit.Text(new Rect(W * 0.5f - 200f, 62f, 400f, 50f),
                         "ПАУЗА", 40f, Gold);
                 }
-                for (int b = (int)B.Resume; b <= (int)B.ToMenu; b++) DrawRectButton(b);
-                DrawRectButton((int)B.Vibro); DrawRectButton((int)B.Difficulty); DrawRectButton((int)B.Gfx);
-                DrawRectButton((int)B.CamMode); DrawRectButton((int)B.TimerToggle); DrawRectButton((int)B.Gear); DrawRectButton((int)B.Stats);
-                DrawRectButton((int)B.AutoBattle); DrawRectButton((int)B.Immortal);
+                if (devOpen)
+                {
+                    UiKit.Rect(new Rect(W * 0.5f - 200f, 64f, 400f, 46f), new Color(0.12f, 0.05f, 0.03f, 0.9f));
+                    UiKit.Text(new Rect(W * 0.5f - 200f, 64f, 400f, 46f), "МЕНЮ РАЗРАБОТЧИКА", 24f, Gold);
+                    foreach (B b in new[] { B.AiToggle, B.DebugToggle, B.EnemyImmortal, B.AutoBattle, B.AutoLevel, B.Immortal, B.DevBack }) DrawRectButton((int)b);
+                }
+                else
+                {
+                    DrawRectButton((int)B.Resume); DrawRectButton((int)B.Restart); DrawRectButton((int)B.CamReset); DrawRectButton((int)B.ToMenu);
+                    DrawRectButton((int)B.Vibro); DrawRectButton((int)B.Difficulty); DrawRectButton((int)B.Gfx);
+                    DrawRectButton((int)B.CamMode); DrawRectButton((int)B.TimerToggle); DrawRectButton((int)B.Gear); DrawRectButton((int)B.Stats);
+                    DrawRectButton((int)B.DevMenu);
+                }
                 UiKit.Text(new Rect(W * 0.5f - 400f, 510f, 800f, 24f),
                     "ПУТЬ " + (Ladder.Index + 1) + "/" + Ladder.Count + "  ·  ПОБЕД " + Records.Wins + "  ·  ПОРАЖЕНИЙ " + Records.Losses + "  ·  ЛУЧШЕЕ " + Records.BestStage + "/" + Ladder.Count + (Records.Cleared > 0 ? "  ·  ПРОЙДЕН ×" + Records.Cleared : ""),
                     13f, new Color(0.85f, 0.8f, 0.7f, 0.9f));

@@ -784,6 +784,11 @@ namespace BladePath
             FollowZones(ft, pf);
 
             // ---------- 6) руки держат рукоять
+            // естественный поворот кисти относительно предплечья — из позы клипа (до IK), один раз
+            if (!relInit && forearmR != null && forearmL != null && handR != null && handL != null)
+            {
+                relR = Quaternion.Inverse(forearmR.rotation) * handR.rotation; relL = Quaternion.Inverse(forearmL.rotation) * handL.rotation; relInit = true;
+            }
             Vector3 axis = bladeRoot.forward;
             Vector3 back = -axis;
             Vector3 outward = ft.right * 1.0f + Vector3.down * 0.5f + back * 0.2f;   // локти разведены в стороны, а не прижаты к корпусу
@@ -813,6 +818,8 @@ namespace BladePath
             {
                 OrientHand(handR, bindR, fR, nR);
                 OrientHand(handL, bindL, fL, nL);
+                // скрутку кисти делит предплечье: иначе весь поворот уходит в запястье и меш у него «перекручивается» (руки ломаются)
+                if (relInit) { Untwist(forearmR, handR, relR); Untwist(forearmL, handL, relL); }
             }
             DrinkPose(ft, ys, dt);
         }
@@ -1298,6 +1305,34 @@ namespace BladePath
             Vector3 n = Vector3.ProjectOnPlane(palm, fingers);
             if (n.sqrMagnitude < 1e-6f) n = Vector3.Cross(fingers, Vector3.up);
             palm = n.normalized;
+        }
+
+        bool relInit; Quaternion relR = Quaternion.identity, relL = Quaternion.identity;
+        [Tooltip("Доля скрутки кисти, которую берёт предплечье (0 — вся в запястье). У моделей без костей скрутки 0,5–0,6.")]
+        public float forearmTwistShare = 0.6f;
+
+        /// <summary>
+        /// Делит скрутку кисти (вокруг оси предплечья) между запястьем и предплечьем: предплечье поворачивается вокруг своей оси
+        /// на долю скрутки (кисть остаётся там же — она на этой оси), затем кисть возвращается в нужный поворот.
+        /// </summary>
+        void Untwist(Transform fore, Transform hand, Quaternion rel)
+        {
+            if (fore == null || hand == null) return;
+            Vector3 ax = hand.position - fore.position;
+            if (ax.sqrMagnitude < 1e-8f) return;
+            ax.Normalize();
+            Quaternion want = hand.rotation;
+            Quaternion d = want * Quaternion.Inverse(fore.rotation * rel);
+            Vector3 v = new Vector3(d.x, d.y, d.z), pr = Vector3.Project(v, ax);
+            Quaternion tw = new Quaternion(pr.x, pr.y, pr.z, d.w);
+            float m = Mathf.Sqrt(tw.x * tw.x + tw.y * tw.y + tw.z * tw.z + tw.w * tw.w);
+            if (m < 1e-6f) return;
+            tw = new Quaternion(tw.x / m, tw.y / m, tw.z / m, tw.w / m);
+            float ang; Vector3 axis; tw.ToAngleAxis(out ang, out axis);
+            if (ang > 180f) ang -= 360f;
+            if (Vector3.Dot(axis, ax) < 0f) ang = -ang;
+            fore.rotation = Quaternion.AngleAxis(ang * forearmTwistShare, ax) * fore.rotation;
+            hand.rotation = want;
         }
 
         static void OrientHand(Transform hand, Quaternion bind, Vector3 fingers, Vector3 palm)

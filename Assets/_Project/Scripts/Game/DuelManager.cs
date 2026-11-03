@@ -90,7 +90,9 @@ namespace BladePath
         /// <summary>Графика: 1 — высокая (мягкие тени, MSAA, 4 источника света), 0 — экономная для слабых телефонов.</summary>
         /// <summary>Таймер раунда (настройка «timer»): выключен — время не идёт, ничьей по времени нет, на экране его нет.</summary>
         /// <summary>Отладка (меню паузы): игроком управляет ИИ / игрок не умирает (здоровье не падает ниже 1).</summary>
-        public static bool AutoBattle, Immortal;
+        public static bool AutoBattle, Immortal, EnemyImmortal;
+        /// <summary>Сложность ИИ, который ведёт игрока в автобое: 0 ученик, 1 воин, 2 мастер.</summary>
+        public static int AutoLevel = 1;
 
         public static bool TimerOn
         {
@@ -1472,6 +1474,7 @@ namespace BladePath
                 return;
             }
             if (target == player && Immortal && dmg >= Hp(player)) dmg = Mathf.Max(0f, Hp(player) - 1f);   // отладка: бессмертие
+            if (target == enemy && EnemyImmortal && dmg >= Hp(enemy)) dmg = Mathf.Max(0f, Hp(enemy) - 1f);
             if (target == player && dmg >= Hp(player) && Hp(player) > 1f && Campaign.CatNineLives)
             {
                 dmg = Hp(player) - 1f;

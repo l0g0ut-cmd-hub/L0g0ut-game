@@ -19,7 +19,7 @@ namespace BladePath
         int lastSeenSwing = -1, parrySwing = -1;
         float punishAt, ballCheckAt, stanceAt;
         int lastBall;
-        float strafeDir = 1f;
+        float strafeDir = 1f, strafeK = 0.25f;
         bool hooked;
         // серия (как у мечников Sekiro): 2–4 удара подряд из восстановления, каждый надо отбить; парирование её обрывает
         int feintSwing = -1;   // финт: замах обрывается на середине — ловит ранний блок/парирование, следом настоящий удар
@@ -145,7 +145,10 @@ namespace BladePath
         }
         public static string DifficultyName { get { int d = Difficulty; return d == 0 ? "УЧЕНИК" : (d == 1 ? "ВОИН" : "МАСТЕР"); } }
 
-        int Level { get { int r = DuelManager.Instance != null ? DuelManager.Instance.Round - 1 : 0; return Mathf.Clamp(r + Difficulty - 1, 0, 4); } }
+        /// <summary>Сложность этого ИИ: своя (отладочный автобой игрока) или общая сложность врага.</summary>
+        public int difficultyOverride = -1;
+        int Diff { get { return difficultyOverride >= 0 ? difficultyOverride : Difficulty; } }
+        int Level { get { int r = DuelManager.Instance != null ? DuelManager.Instance.Round - 1 : 0; return Mathf.Clamp(r + Diff - 1, 0, 4); } }
 
         static Vector2 XZ(Vector3 v) { return new Vector2(v.x, v.z); }
 
@@ -158,7 +161,7 @@ namespace BladePath
             if (DuelManager.Instance != null && (DuelManager.Instance.State != DuelState.Fighting || DuelManager.Instance.Paused)) return;   // под паузой ИИ не думает
             if (DuelManager.Instance != null && DuelManager.Instance.Round == 1 && lastPhase > 1 && Phase == 1) lastPhase = 1;   // новый матч
 
-            float agg = Mathf.Clamp01(aggression - 0.2f + 0.2f * Difficulty + 0.12f * Mathf.Max(0, Level) + Ladder.Current.aggr
+            float agg = Mathf.Clamp01(aggression - 0.2f + 0.2f * Diff + 0.12f * Mathf.Max(0, Level) + Ladder.Current.aggr
                 + (DuelManager.Instance != null && DuelManager.Instance.EnemyEnraged ? 0.25f : 0f));   // ярость на последней трети здоровья
             Vector3 to = target.transform.position - self.transform.position; to.y = 0f;
             float dist = to.magnitude;
@@ -169,7 +172,18 @@ namespace BladePath
             if (Charge(dist, busy)) return;
             bool canVanish = StageIdx == 1 || (StageIdx == 3 && Phase >= 3);
 
-            if (Time.time > strafeUntil) { strafeUntil = Time.time + Random.Range(0.8f, 1.8f); strafeDir = Random.value < 0.5f ? -1f : 1f; }
+            // кружение — эпизодами, а не постоянно: чаще бойцы держат линию и сходятся (раньше вечно ходили по кругу)
+            if (Time.time > strafeUntil)
+            {
+                strafeUntil = Time.time + Random.Range(0.8f, 1.8f);
+                strafeDir = Random.value < 0.5f ? -1f : 1f;
+                strafeK = Random.value < 0.4f ? Random.Range(0.18f, 0.3f) : 0f;
+            }
+            // уводит в глубину арены (к ступеням храма или к камере) — обходим в сторону центра
+            {
+                Vector3 sp = self.transform.position, sd = side * strafeDir;
+                if (Mathf.Abs(sp.z) > 1.1f && sd.z * sp.z > 0f) strafeDir = -strafeDir;
+            }
 
             // стойки (камаэ): между схватками враг перехватывает меч — хассо (рубит сверху и наискось), вакигамаэ (снизу, по ногам, укол);
             // Они любит хассо, Тень — вакигамаэ; ученик почти всегда в тюдан
@@ -274,7 +288,10 @@ namespace BladePath
             {
                 if (dist > want + 0.35f) mv = dir;
                 else if (dist < want - 0.35f) mv = -dir * 0.6f;
-                mv += side * strafeDir * 0.35f;
+                mv += side * strafeDir * strafeK;
+                // держимся ближе к центру площадки по глубине
+                float z = self.transform.position.z;
+                if (Mathf.Abs(z) > 0.9f) mv += new Vector3(0f, 0f, -Mathf.Sign(z) * Mathf.Clamp01((Mathf.Abs(z) - 0.9f) / 0.8f) * 0.45f);
             }
             self.SetMoveVector(new Vector2(mv.x, mv.z));
 
