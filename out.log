@@ -1,0 +1,378 @@
+00:59:47 | INFO: Data are loaded, start creating Blender stuff
+00:59:47 | INFO: Blender create Mesh node Mannequin
+00:59:48 | INFO: glTF import finished in 0.81s
+UAL UAL1_Standard.glb кости 65 клипов 43 fps 30
+UAL rest {'pelvis': (0.0, 0.05, 0.917), 'spine_01': (0.0, 0.016, 1.051), 'Head': (0.0, -0.005, 1.569), 'upperarm_l': (0.192, 0.065, 1.441), 'lowerarm_l': (0.466, 0.07, 1.441), 'hand_l': (0.739, 0.065, 1.441), 'thigh_l': (0.089, -0.001, 0.932), 'calf_l': (0.089, 0.001, 0.532), 'foot_l': (0.089, 0.036, 0.104)}
+BVH Exported: out/A_TPose.bvh frames:76
+
+UAL клип A_TPose кадры 0 75 сек 2.5
+BVH Exported: out/Death01.bvh frames:73
+
+UAL клип Death01 кадры 0 72 сек 2.4
+EGL Error (0x3009): EGL_BAD_MATCH: Arguments are inconsistent (for example, a valid context requires buffers not supplied by a valid surface).
+Blender 4.2.3 LTS (hash 0e22e4fcea03 built 2024-10-14 23:31:34)
+Saved: 'out/prev/Death01_0.png'
+Time: 00:03.19 (Saving: 00:00.07)
+
+Saved: 'out/prev/Death01_1.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Death01_2.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Death01_3.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Death01_4.png'
+Time: 00:00.10 (Saving: 00:00.00)
+
+Saved: 'out/prev/Death01_5.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+BVH Exported: out/Hit_Chest.bvh frames:11
+
+UAL клип Hit_Chest кадры 0 10 сек 0.33
+Saved: 'out/prev/Hit_Chest_0.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Hit_Chest_1.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Hit_Chest_2.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Hit_Chest_3.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Hit_Chest_4.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Hit_Chest_5.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+BVH Exported: out/Hit_Head.bvh frames:14
+
+UAL клип Hit_Head кадры 0 13 сек 0.43
+Saved: 'out/prev/Hit_Head_0.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Hit_Head_1.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Hit_Head_2.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Hit_Head_3.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Hit_Head_4.png'
+Time: 00:00.11 (Saving: 00:00.01)
+
+Saved: 'out/prev/Hit_Head_5.png'
+Time: 00:00.11 (Saving: 00:00.01)
+
+BVH Exported: out/Idle_Loop.bvh frames:76
+
+UAL клип Idle_Loop кадры 0 75 сек 2.5
+BVH Exported: out/Jog_Fwd_Loop.bvh frames:29
+
+UAL клип Jog_Fwd_Loop кадры 0 28 сек 0.93
+BVH Exported: out/Jump_Land.bvh frames:39
+
+UAL клип Jump_Land кадры 0 38 сек 1.27
+BVH Exported: out/Jump_Loop.bvh frames:76
+
+UAL клип Jump_Loop кадры 0 75 сек 2.5
+BVH Exported: out/Jump_Start.bvh frames:41
+
+UAL клип Jump_Start кадры 0 40 сек 1.33
+BVH Exported: out/Punch_Cross.bvh frames:31
+
+UAL клип Punch_Cross кадры 0 30 сек 1.0
+Saved: 'out/prev/Punch_Cross_0.png'
+Time: 00:00.14 (Saving: 00:00.01)
+
+Saved: 'out/prev/Punch_Cross_1.png'
+Time: 00:00.12 (Saving: 00:00.01)
+
+Saved: 'out/prev/Punch_Cross_2.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Punch_Cross_3.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Punch_Cross_4.png'
+Time: 00:00.11 (Saving: 00:00.01)
+
+Saved: 'out/prev/Punch_Cross_5.png'
+Time: 00:00.11 (Saving: 00:00.01)
+
+BVH Exported: out/Punch_Jab.bvh frames:27
+
+UAL клип Punch_Jab кадры 0 26 сек 0.87
+Saved: 'out/prev/Punch_Jab_0.png'
+Time: 00:00.11 (Saving: 00:00.01)
+
+Saved: 'out/prev/Punch_Jab_1.png'
+Time: 00:00.10 (Saving: 00:00.00)
+
+Saved: 'out/prev/Punch_Jab_2.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Punch_Jab_3.png'
+Time: 00:00.10 (Saving: 00:00.00)
+
+Saved: 'out/prev/Punch_Jab_4.png'
+Time: 00:00.10 (Saving: 00:00.00)
+
+Saved: 'out/prev/Punch_Jab_5.png'
+Time: 00:00.10 (Saving: 00:00.00)
+
+BVH Exported: out/Roll.bvh frames:45
+
+UAL клип Roll кадры 0 44 сек 1.47
+Saved: 'out/prev/Roll_0.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Roll_1.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Roll_2.png'
+Time: 00:00.10 (Saving: 00:00.00)
+
+Saved: 'out/prev/Roll_3.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Roll_4.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Roll_5.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+BVH Exported: out/Sword_Attack.bvh frames:47
+
+UAL клип Sword_Attack кадры 0 46 сек 1.53
+Saved: 'out/prev/Sword_Attack_0.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Attack_1.png'
+Time: 00:00.11 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Attack_2.png'
+Time: 00:00.10 (Saving: 00:00.00)
+
+Saved: 'out/prev/Sword_Attack_3.png'
+Time: 00:00.11 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Attack_4.png'
+Time: 00:00.11 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Attack_5.png'
+Time: 00:00.11 (Saving: 00:00.01)
+
+BVH Exported: out/Sword_Idle.bvh frames:51
+
+UAL клип Sword_Idle кадры 0 50 сек 1.67
+Saved: 'out/prev/Sword_Idle_0.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Idle_1.png'
+Time: 00:00.10 (Saving: 00:00.00)
+
+Saved: 'out/prev/Sword_Idle_2.png'
+Time: 00:00.11 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Idle_3.png'
+Time: 00:00.11 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Idle_4.png'
+Time: 00:00.11 (Saving: 00:00.00)
+
+Saved: 'out/prev/Sword_Idle_5.png'
+Time: 00:00.10 (Saving: 00:00.00)
+
+BVH Exported: out/Walk_Loop.bvh frames:41
+
+UAL клип Walk_Loop кадры 0 40 сек 1.33
+00:59:58 | INFO: Data are loaded, start creating Blender stuff
+00:59:58 | INFO: Blender create Mesh node Mannequin
+00:59:59 | INFO: glTF import finished in 0.86s
+UAL UAL2_Standard.glb кости 65 клипов 43 fps 30
+UAL rest {'pelvis': (0.0, 0.05, 0.917), 'spine_01': (0.0, 0.016, 1.051), 'Head': (0.0, -0.005, 1.569), 'upperarm_l': (0.192, 0.065, 1.441), 'lowerarm_l': (0.466, 0.07, 1.441), 'hand_l': (0.739, 0.065, 1.441), 'thigh_l': (0.089, -0.001, 0.932), 'calf_l': (0.089, 0.001, 0.532), 'foot_l': (0.089, 0.036, 0.104)}
+BVH Exported: out/Hit_Knockback.bvh frames:26
+
+UAL клип Hit_Knockback кадры 0 25 сек 0.83
+Saved: 'out/prev/Hit_Knockback_0.png'
+Time: 00:00.11 (Saving: 00:00.01)
+
+Saved: 'out/prev/Hit_Knockback_1.png'
+Time: 00:00.10 (Saving: 00:00.00)
+
+Saved: 'out/prev/Hit_Knockback_2.png'
+Time: 00:00.11 (Saving: 00:00.01)
+
+Saved: 'out/prev/Hit_Knockback_3.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Hit_Knockback_4.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Hit_Knockback_5.png'
+Time: 00:00.11 (Saving: 00:00.01)
+
+BVH Exported: out/Idle_Shield_Break.bvh frames:33
+
+UAL клип Idle_Shield_Break кадры 0 32 сек 1.07
+Saved: 'out/prev/Idle_Shield_Break_0.png'
+Time: 00:00.11 (Saving: 00:00.01)
+
+Saved: 'out/prev/Idle_Shield_Break_1.png'
+Time: 00:00.11 (Saving: 00:00.01)
+
+Saved: 'out/prev/Idle_Shield_Break_2.png'
+Time: 00:00.12 (Saving: 00:00.01)
+
+Saved: 'out/prev/Idle_Shield_Break_3.png'
+Time: 00:00.11 (Saving: 00:00.01)
+
+Saved: 'out/prev/Idle_Shield_Break_4.png'
+Time: 00:00.11 (Saving: 00:00.01)
+
+Saved: 'out/prev/Idle_Shield_Break_5.png'
+Time: 00:00.11 (Saving: 00:00.00)
+
+BVH Exported: out/Melee_Hook.bvh frames:15
+
+UAL клип Melee_Hook кадры 0 14 сек 0.47
+Saved: 'out/prev/Melee_Hook_0.png'
+Time: 00:00.10 (Saving: 00:00.01)
+
+Saved: 'out/prev/Melee_Hook_1.png'
+Time: 00:00.10 (Saving: 00:00.00)
+
+Saved: 'out/prev/Melee_Hook_2.png'
+Time: 00:00.10 (Saving: 00:00.00)
+
+Saved: 'out/prev/Melee_Hook_3.png'
+Time: 00:00.16 (Saving: 00:00.01)
+
+Saved: 'out/prev/Melee_Hook_4.png'
+Time: 00:00.16 (Saving: 00:00.01)
+
+Saved: 'out/prev/Melee_Hook_5.png'
+Time: 00:00.15 (Saving: 00:00.01)
+
+BVH Exported: out/NinjaJump_Land.bvh frames:39
+
+UAL клип NinjaJump_Land кадры 0 38 сек 1.27
+BVH Exported: out/NinjaJump_Start.bvh frames:30
+
+UAL клип NinjaJump_Start кадры 0 29 сек 0.97
+BVH Exported: out/Sword_Block.bvh frames:38
+
+UAL клип Sword_Block кадры 0 37 сек 1.23
+Saved: 'out/prev/Sword_Block_0.png'
+Time: 00:00.15 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Block_1.png'
+Time: 00:00.14 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Block_2.png'
+Time: 00:00.15 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Block_3.png'
+Time: 00:00.14 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Block_4.png'
+Time: 00:00.15 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Block_5.png'
+Time: 00:00.15 (Saving: 00:00.01)
+
+BVH Exported: out/Sword_Dash_RM.bvh frames:48
+
+UAL клип Sword_Dash_RM кадры 0 47 сек 1.57
+Saved: 'out/prev/Sword_Dash_RM_0.png'
+Time: 00:00.14 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Dash_RM_1.png'
+Time: 00:00.12 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Dash_RM_2.png'
+Time: 00:00.11 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Dash_RM_3.png'
+Time: 00:00.11 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Dash_RM_4.png'
+Time: 00:00.11 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Dash_RM_5.png'
+Time: 00:00.11 (Saving: 00:00.01)
+
+BVH Exported: out/Sword_Regular_A.bvh frames:14
+
+UAL клип Sword_Regular_A кадры 0 13 сек 0.43
+Saved: 'out/prev/Sword_Regular_A_0.png'
+Time: 00:00.15 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Regular_A_1.png'
+Time: 00:00.15 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Regular_A_2.png'
+Time: 00:00.14 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Regular_A_3.png'
+Time: 00:00.14 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Regular_A_4.png'
+Time: 00:00.14 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Regular_A_5.png'
+Time: 00:00.14 (Saving: 00:00.01)
+
+BVH Exported: out/Sword_Regular_B.bvh frames:17
+
+UAL клип Sword_Regular_B кадры 0 16 сек 0.53
+Saved: 'out/prev/Sword_Regular_B_0.png'
+Time: 00:00.15 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Regular_B_1.png'
+Time: 00:00.15 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Regular_B_2.png'
+Time: 00:00.15 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Regular_B_3.png'
+Time: 00:00.14 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Regular_B_4.png'
+Time: 00:00.15 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Regular_B_5.png'
+Time: 00:00.15 (Saving: 00:00.01)
+
+BVH Exported: out/Sword_Regular_C.bvh frames:61
+
+UAL клип Sword_Regular_C кадры 0 60 сек 2.0
+Saved: 'out/prev/Sword_Regular_C_0.png'
+Time: 00:00.15 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Regular_C_1.png'
+Time: 00:00.13 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Regular_C_2.png'
+Time: 00:00.13 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Regular_C_3.png'
+Time: 00:00.12 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Regular_C_4.png'
+Time: 00:00.11 (Saving: 00:00.01)
+
+Saved: 'out/prev/Sword_Regular_C_5.png'
+Time: 00:00.12 (Saving: 00:00.01)
+
+UAL ГОТОВО 25 ['A_TPose', 'Death01', 'Hit_Chest', 'Hit_Head', 'Hit_Knockback', 'Idle_Loop', 'Idle_Shield_Break', 'Jog_Fwd_Loop', 'Jump_Land', 'Jump_Loop', 'Jump_Start', 'Melee_Hook', 'NinjaJump_Land', 'NinjaJump_Start', 'Punch_Cross', 'Punch_Jab', 'Roll', 'Sword_Attack', 'Sword_Block', 'Sword_Dash_RM', 'Sword_Idle', 'Sword_Regular_A', 'Sword_Regular_B', 'Sword_Regular_C', 'Walk_Loop']
+
+Blender quit
