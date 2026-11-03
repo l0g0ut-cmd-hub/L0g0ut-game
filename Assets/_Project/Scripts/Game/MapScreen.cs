@@ -263,6 +263,7 @@ namespace BladePath
             u0 = panU;
             Texture2D mt = UiKit.Tex(Campaign.MapTexture(Campaign.Region));
             if (mt != null) GUI.DrawTextureWithTexCoords(new Rect(mapX, 0f, viewW, MapH), mt, new Rect(u0, 0f, uw, 1f));
+            MapLife.Draw(Campaign.Region, new Rect(mapX, 0f, viewW, MapH), u0, uw);   // вода бежит, огни мерцают, пар, лава, блуждающие огни
             DrawPaintedMist();
             DrawLandmarkLights();
             DrawAmbientLandmarkMotes();
