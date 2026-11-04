@@ -50,7 +50,7 @@ namespace BladePath
             string url = System.IO.Path.Combine(Application.streamingAssetsPath, "camp_loop.mp4");
             for (int i = 0; i < 2; i++)
             {
-                rt[i] = new RenderTexture(852, 408, 0, RenderTextureFormat.ARGB32) { name = "CampVideoRT" + i };
+                rt[i] = new RenderTexture(852, 480, 0, RenderTextureFormat.ARGB32) { name = "CampVideoRT" + i };
                 VideoPlayer p = gameObject.AddComponent<VideoPlayer>();
                 p.playOnAwake = false;
                 p.source = VideoSource.Url;
