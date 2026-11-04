@@ -19,6 +19,12 @@ namespace BladePath
         readonly VideoPlayer[] vp = new VideoPlayer[2];
         readonly RenderTexture[] rt = new RenderTexture[2];
         readonly bool[] started = new bool[2];
+        readonly bool[] frameDelivered = new bool[2];
+        bool standbyPrepared;
+        bool initialVideoVisible;
+        float firstFrameAt = -1f;
+        // First launch waits for a real decoded frame; never switch on frame index alone.
+        const float FirstFrameSettle = 0.12f;
         int cur = -1;   // чью текстуру показываем
         bool shown;     // первый кадр уже был — дальше текстура всегда с кадром
         float lastAsk = -10f;
@@ -62,9 +68,19 @@ namespace BladePath
                 p.renderMode = VideoRenderMode.RenderTexture;
                 p.targetTexture = rt[i];
                 p.timeUpdateMode = VideoTimeUpdateMode.UnscaledGameTime;
+                int index = i;
+                p.sendFrameReadyEvents = true;
+                p.frameReady += (player, frameIndex) =>
+                {
+                    frameDelivered[index] = true;
+                    if (index == 0 && firstFrameAt < 0f)
+                        firstFrameAt = Time.unscaledTime;
+                };
                 p.errorReceived += (v, msg) => { failed = true; Debug.LogWarning("TavernVideo: " + msg); };
-                p.Prepare();
                 vp[i] = p;
+                // Start one Android decoder first. Preparing both simultaneously
+                // caused an avoidable first-visit GPU/codec load spike.
+                if (i == 0) p.Prepare();
             }
         }
 
@@ -84,21 +100,35 @@ namespace BladePath
                 if (!vp[0].isPrepared) return null;
                 vp[0].Play(); started[0] = true; cur = 0;
             }
+            // Wait for the decoder to output a real frame and settle before
+            // replacing the static picture. Index zero can mean no pixels yet.
+            if (!initialVideoVisible)
+            {
+                if (!frameDelivered[0] || firstFrameAt < 0f || Time.unscaledTime - firstFrameAt < FirstFrameSettle)
+                    return null;
+                initialVideoVisible = true;
+                shown = true;
+            }
+            // Prepare the second loop decoder only after the first is visible.
+            if (!standbyPrepared)
+            {
+                standbyPrepared = true;
+                vp[1].Prepare();
+            }
             VideoPlayer p = vp[cur];
             if (p.isPaused) p.Play();   // вернулись в трактир
             int nxt = 1 - cur;
             if (Ended(cur) && vp[nxt].isPrepared)
             {
-                if (!started[nxt]) { vp[nxt].Play(); started[nxt] = true; }
-                if (vp[nxt].frame >= 0)
+                if (!started[nxt]) { frameDelivered[nxt] = false; vp[nxt].Play(); started[nxt] = true; }
+                if (frameDelivered[nxt])
                 {
                     // второй уже выдал кадр — переключаемся, первый готовим к следующему кругу
-                    vp[cur].Stop(); started[cur] = false; vp[cur].Prepare();
+                    vp[cur].Stop(); started[cur] = false; frameDelivered[cur] = false; vp[cur].Prepare();
                     cur = nxt;
                 }
             }
-            if (vp[cur].frame >= 0) shown = true;
-            return shown ? rt[cur] : null;   // до первого кадра текстура пустая (чёрная) — показываем картинку
+            return shown && frameDelivered[cur] ? rt[cur] : null;   // never display an unrendered RT
         }
 
         void Update()
