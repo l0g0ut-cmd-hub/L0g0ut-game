@@ -141,8 +141,8 @@ namespace BladePath
             if (sideWinner == null && mainLoser == null && !Takeover)
             {
                 float mx = (dm.player.transform.position.x + dm.enemy.transform.position.x) * 0.5f;
-                float want = mx > 0.7f ? -AnchorX : mx < -0.7f ? AnchorX : anchorX;
-                anchorX = Mathf.MoveTowards(anchorX, want, 0.5f * Time.deltaTime);
+                float want = mx > 0.5f ? -AnchorX : mx < -0.5f ? AnchorX : anchorX;
+                anchorX = Mathf.MoveTowards(anchorX, want, 0.9f * Time.deltaTime);   // основной бой сместился к ним — уходят на другую сторону живее
                 Vector3 a = new Vector3(anchorX, 0f, AnchorZ);
                 if (allyAi != null) allyAi.anchor = a;
                 if (foeAi != null) foeAi.anchor = a;

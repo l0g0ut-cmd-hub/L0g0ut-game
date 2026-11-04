@@ -198,7 +198,7 @@ namespace BladePath
                     if (g.z < 0f) continue;
                     float a = Mathf.Clamp01(age / 0.06f) * Mathf.Clamp01((0.9f - age) / 0.25f);
                     float sz = 74f * (1f + 0.35f * Mathf.Max(0f, 0.15f - age) / 0.15f);
-                    DrawGlyph("UI/kiken", new Vector2(g.x / UiKit.Scale, (Screen.height - g.y) / UiKit.Scale), sz, a);
+                    DrawBrush("UI/ru_danger", new Vector2(g.x / UiKit.Scale, (Screen.height - g.y) / UiKit.Scale), sz * 0.55f, a, 1f);
                 }
                 // стойка врага сменилась: 八相 (хассо) / 脇構 (вакигамаэ) над головой на 1,6 с — по стойке читается удар;
                 // первые разы за запуск — ещё и подпись, чем он из неё бьёт
@@ -214,7 +214,7 @@ namespace BladePath
                         {
                             float sal = Mathf.Clamp01(sa / 0.15f) * Mathf.Clamp01((1.6f - sa) / 0.4f);
                             Vector2 sc2 = new Vector2(sgp.x / UiKit.Scale, (Screen.height - sgp.y) / UiKit.Scale);
-                            DrawGlyphWide(ew.stance == 1 ? "UI/hasso" : "UI/waki", sc2, 92f, sal * 0.92f);
+                            DrawBrush(ew.stance == 1 ? "UI/ru_high" : "UI/ru_low", sc2, 54f, sal * 0.92f, 1f);
                             if (stanceShown <= 3)
                                 UiKit.Text(new Rect(sc2.x - 160f, sc2.y + 18f, 320f, 22f), ew.stance == 1 ? "ЖДИ УДАР СВЕРХУ" : "ЖДИ УДАР СНИЗУ И ПО НОГАМ", 14f, new Color(1f, 0.85f, 0.7f, sal));
                         }
@@ -259,7 +259,7 @@ namespace BladePath
                             GUI.color = boc;
                         }
                         else if (da < 1.2f) UiKit.Ink("FX/ink_slash", new Vector2(g.x / UiKit.Scale, (Screen.height - g.y) / UiKit.Scale), 330f, new Color(0.5f, 0.03f, 0.03f, 0.85f * Mathf.Clamp01((1.2f - da) / 0.6f)), Mathf.Clamp01(da / 0.12f));
-                        DrawBrush("UI/deathblow", new Vector2(g.x / UiKit.Scale, (Screen.height - g.y) / UiKit.Scale - 70f), 170f * pop, Mathf.Clamp01((1.9f - da) / 0.45f), Mathf.Clamp01(da / 0.22f));
+                        DrawBrush("UI/ru_deathblow", new Vector2(g.x / UiKit.Scale, (Screen.height - g.y) / UiKit.Scale - 70f), 95f * pop, Mathf.Clamp01((1.9f - da) / 0.45f), Mathf.Clamp01(da / 0.22f));
                     }
                 }
             }
@@ -375,7 +375,7 @@ namespace BladePath
                     float t2 = (t - split) / (1f - split);
                     float a = t2 < 0.6f ? 1f : Mathf.Clamp01((1f - t2) * 2.5f);
                     float sc = 1f + (1f - Mathf.Clamp01(t2 * 4f)) * 0.8f;
-                    UiKit.Ink("UI/ink_hajime", rc, 210f * (1.12f - 0.12f * Mathf.Clamp01(t2 * 3f)), new Color(0.7f, 0.08f, 0.06f, 0.6f * a), Mathf.Clamp01(t2 * 5f));
+                    UiKit.Ink("UI/ru_begin", rc, 95f * (1.12f - 0.12f * Mathf.Clamp01(t2 * 3f)), new Color(0.7f, 0.08f, 0.06f, 0.6f * a), Mathf.Clamp01(t2 * 5f));
                     UiKit.Text(new Rect(cx - 300f, 150f, 600f, 110f), "БОЙ!", 78f * sc, new Color(Gold.r, Gold.g, Gold.b, a));
                 }
             }
@@ -390,7 +390,7 @@ namespace BladePath
                 if (cued)
                 {
                     float k = Mathf.Clamp01((Time.unscaledTime - duel.IaiCueAt) / 0.08f);
-                    DrawBrush("UI/zan", new Vector2(cx, 200f), 220f * (1.25f - 0.25f * k), 1f, 1f);
+                    DrawBrush("UI/ru_cut", new Vector2(cx, 200f), 115f * (1.25f - 0.25f * k), 1f, 1f);
                 }
             }
 
@@ -416,7 +416,7 @@ namespace BladePath
                 if (!duel.TimedOut && !duel.LastDraw)
                 {
                     float gt = Mathf.Clamp01((duel.StateTime - 0.35f) / 0.5f);
-                    if (gt > 0f) DrawBrush(won ? "UI/sho" : "UI/shi", new Vector2(cx, 172f), 330f * (1.08f - 0.08f * gt), 0.62f * gt, Mathf.Clamp01(gt * 1.6f));
+                    if (gt > 0f) DrawBrush(won ? "UI/ru_victory" : "UI/ru_death", new Vector2(cx, 172f), 135f * (1.08f - 0.08f * gt), 0.62f * gt, Mathf.Clamp01(gt * 1.6f));
                 }
                 if (sub.Length > 0) UiKit.Text(new Rect(cx - 300f, 70f, 600f, 44f), sub, 30f, new Color(1f, 0.85f, 0.35f, t));
                 UiKit.Text(new Rect(cx - 400f, 110f, 800f, 120f), title, duel.MatchOver ? 90f : 64f, c);
@@ -430,14 +430,14 @@ namespace BladePath
                 float oa = duel.ResurrectOfferAge;
                 float k = Mathf.Clamp01(oa / 0.6f);
                 UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0.05f, 0f, 0f, 0.55f * k));
-                DrawBrush("UI/shi", new Vector2(cx, 175f), 300f, 0.85f * k, Mathf.Clamp01(oa / 0.5f));
+                DrawBrush("UI/ru_death", new Vector2(cx, 175f), 125f, 0.85f * k, Mathf.Clamp01(oa / 0.5f));
                 if (oa > 0.6f)
                 {
                     float left = Mathf.Clamp01(1f - oa / DuelManager.ResurrectWindow);
                     float pulse = 1f + 0.05f * Mathf.Sin(Time.unscaledTime * 6f);
                     Rect br = new Rect(cx - 170f, 330f, 340f, 120f);
                     UiKit.Rect(new Rect(br.x, br.y, br.width, br.height), new Color(0f, 0f, 0f, 0.5f));
-                    DrawBrush("UI/kaisei", new Vector2(cx, br.y + 48f), 92f * pulse, 1f, 1f);
+                    DrawBrush("UI/ru_revive", new Vector2(cx, br.y + 46f), 62f * pulse, 1f, 1f);
                     UiKit.Text(new Rect(br.x, br.y + 86f, br.width, 28f), "ВОСКРЕСНУТЬ", 22f, new Color(0.95f, 0.9f, 0.8f, 1f));
                     UiKit.Rect(new Rect(br.x, br.yMax + 6f, br.width * left, 4f), new Color(0.9f, 0.15f, 0.1f, 0.9f));
                     if (GUI.Button(br, GUIContent.none, GUIStyle.none)) duel.Resurrect();
@@ -451,7 +451,7 @@ namespace BladePath
                 if (cam != null && duel.player != null)
                 {
                     Vector3 g = cam.WorldToScreenPoint(duel.player.transform.position + Vector3.up * 2.2f);
-                    if (g.z > 0f) DrawBrush("UI/kaisei", new Vector2(g.x / UiKit.Scale, (Screen.height - g.y) / UiKit.Scale), 120f, Mathf.Clamp01((1.6f - ra) / 0.5f), Mathf.Clamp01(ra / 0.2f));
+                    if (g.z > 0f) DrawBrush("UI/ru_revive", new Vector2(g.x / UiKit.Scale, (Screen.height - g.y) / UiKit.Scale), 64f, Mathf.Clamp01((1.6f - ra) / 0.5f), Mathf.Clamp01(ra / 0.2f));
                 }
             }
 
@@ -820,9 +820,6 @@ namespace BladePath
                 new Color(0.98f, 0.93f, 0.83f, fade), ta);
             UiKit.Text(new Rect(lx, cy + 2f, labelW, 16f), "ударов подряд", 11f,
                 new Color(0.92f, 0.84f, 0.72f, fade), ta);
-            if (tier > 0)
-                UiKit.Ink("UI/zan", new Vector2(right ? lx - 22f : lx + labelW + 22f, cy), 42f,
-                    new Color(1f, 1f, 1f, fade));
         }
 
         void DrawPips(Vector2 c, int wins, int total, bool mirror)
