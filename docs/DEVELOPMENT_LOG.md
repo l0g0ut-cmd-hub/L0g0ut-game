@@ -230,3 +230,6 @@
 - **Status:** CODE_READY / APK_PENDING, Preflight and Android SHA verification pending.
 
 | 2026-11-05 — BP-031 / RELEASE STATUS | `SideDuel.cs` `49c042c7`, `MainMenuController.cs` `d8c17e06`; approved button style and side-duel observer idle | Source integrated; existing selection and camp/tavern background JPEGs, videos and intentional overlay strip unchanged. | Complete preflight, promote a single checked SHA for next Android №410, verify Actions result and user device screenshots. |
+
+
+| 2026-11-05 — BP-031 / RELEASE STATUS №410 | verified dev SHA `b7f944425250c0adca3ab0d9080552ae4062020f`; Preflight №214 `41935341280` **success**; apk-build promoted **once** from №409 SHA `16e80e14466cf9d5dbe180a02051e73811fda76a` | Real Android APK **№410** run `41935427861` was **queued** at creation, SHA `b7f944425250c0adca3ab0d9080552ae4062020f`. Includes SideDuel settled watcher idle and matching selection KitButtons, original background images untouched. | Await actual Unity result and exact APK artifact, then test against screen captures, especially the opaque backing over old baked buttons, ally standing/rotation, camera and takeover. **Not APK_VERIFIED** until tested on Android. |
