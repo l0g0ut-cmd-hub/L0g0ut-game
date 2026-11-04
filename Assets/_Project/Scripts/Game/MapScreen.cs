@@ -1524,7 +1524,17 @@ namespace BladePath
                     if (art != null) { float ah = r.height - 20f, aw = ah * art.width / Mathf.Max(1f, art.height); GUI.DrawTexture(new Rect(r.x + 10f, r.y + 10f, Mathf.Min(aw, 260f), ah), art, ScaleMode.ScaleToFit); }
                     float x = r.x + 280f, w = r.width - 300f, y = r.y + 22f;
                     UiKit.Text(new Rect(x, y, w, 22f), Campaign.TypeNames[n.type], 15f, n.Type == NodeType.Boss ? new Color(1f, 0.4f, 0.3f) : Gold, TextAnchor.MiddleLeft); y += 28f;
+                    // Портрет врага с рамкой
+                    if (art != null)
+                    {
+                        float ps = 54f;
+                        Rect pr = new Rect(x, y, ps, ps);
+                        VisualIdentity.Portrait(pr, EnemyFullArt[e]);
+                        VisualIdentity.Inset(pr, n.Type == NodeType.Boss ? new Color(1f, 0.4f, 0.3f) : VisualIdentity.Brass);
+                        x += ps + 8f; w -= ps + 8f;
+                    }
                     UiKit.Text(new Rect(x, y, w, 34f), Ladder.Stages[e].name, 26f, Ink, TextAnchor.MiddleLeft); y += 36f;
+                    if (art != null) { x -= 54f + 8f; w += 54f + 8f; }
                     UiKit.Text(new Rect(x, y, w, 20f), Ladder.Stages[e].title, 13f, Dim, TextAnchor.MiddleLeft, false); y += 22f;
                     int sky = MapClouds.SkyAt(Campaign.Region, new Vector2(n.x, n.y));
                     Texture2D wi = UiKit.Tex("UI/weather_icons");   // 3 медальона в ряд: ясно, дождь, гроза
