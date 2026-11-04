@@ -727,7 +727,7 @@ namespace BladePath
             Rect kiWin = KiWinKit;
             if (kf == null) { kf = UiKit.Tex("UI/bar_ki"); kiWin = KiWin; }
             if (kf == null) UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), Frame);
-            Texture2D mask = KiFillMask;
+            Texture2D mask = GetFillMask(true, kf, kiWin);
             DrawMaskedFill(r, 1f, mirror, new Color(0.02f, 0.02f, 0.03f, 1f), mask);
             float k = f.Ki01;
             float w = r.width * k;
@@ -901,7 +901,7 @@ namespace BladePath
             }
             // Fill must be shaped to the inner edge of the ornamental frame;
             // frame texture has transparent/tapered corners and cannot clip a solid rectangle.
-            Texture2D mask = HpFillMask;
+            Texture2D mask = GetFillMask(false, frame, hpWin);
             DrawMaskedFill(r, 1f, mirror, new Color(0.05f, 0.01f, 0.01f, 1f), mask);
             DrawMaskedFill(r, tr, mirror, new Color(0.95f, 0.75f, 0.3f, 0.95f), mask);
             Color main = hp > 0.3f ? new Color(0.72f, 0.07f, 0.08f) : new Color(0.95f, 0.16f, 0.08f);
@@ -984,18 +984,111 @@ namespace BladePath
             GUI.DrawTexture(new Rect(pc.x - w * 0.5f, pc.y - h * 0.5f, w, h), t);
         }
 
-        // Two tiny immutable masks keep HP/Ki strictly within the painted inner contour.
-        // Each is generated only once; no textures or pixel buffers are allocated per frame.
+        // Gold-framed bars are not rectangles. Derive their true inner border
+        // once from the actual authored sprite pixels instead of guessing a
+        // taper. Separate masks are retained for each bar; no per-frame readback.
         static Texture2D hpFillMask, kiFillMask;
-        static Texture2D HpFillMask { get { return hpFillMask != null ? hpFillMask : (hpFillMask = MakeFillMask(false)); } }
-        static Texture2D KiFillMask { get { return kiFillMask != null ? kiFillMask : (kiFillMask = MakeFillMask(true)); } }
-
-        static Texture2D MakeFillMask(bool ki)
+        static Texture2D GetFillMask(bool ki, Texture2D frame, Rect win)
         {
-            // Higher-resolution alpha mask reduces bilinear corner holes at Android HUD scale.
+            Texture2D cached = ki ? kiFillMask : hpFillMask;
+            if (cached != null) return cached;
+            Texture2D mask = MakeFrameFillMask(frame, win, ki);
+            if (mask == null) mask = MakeFallbackFillMask(ki);
+            if (ki) kiFillMask = mask; else hpFillMask = mask;
+            return mask;
+        }
+
+        static bool IsGoldBorder(Color32 c)
+        {
+            // Dark inner trough is almost black; the authored ornamental
+            // rails have a warm golden hue and much higher luminance.
+            // Test luminance AND warm/gold chroma to avoid dark lacquer.
+            return c.a > 48 && c.r > 68 && c.g > 46 &&
+                   c.r > c.g * 1.08f && c.g > c.b * 1.17f;
+        }
+
+        static Texture2D MakeFrameFillMask(Texture2D frame, Rect win, bool ki)
+        {
+            if (frame == null || frame.width < 80 || frame.height < 20) return null;
+            RenderTexture rt = null;
+            RenderTexture previous = RenderTexture.active;
+            Texture2D source = null;
+            try
+            {
+                // Source PNG need not have Read/Write enabled in Unity import.
+                // GPU copy + one CPU readback at first HUD render only.
+                rt = RenderTexture.GetTemporary(frame.width, frame.height, 0, RenderTextureFormat.ARGB32);
+                Graphics.Blit(frame, rt);
+                RenderTexture.active = rt;
+                source = new Texture2D(frame.width, frame.height, TextureFormat.RGBA32, false);
+                source.ReadPixels(new Rect(0f, 0f, frame.width, frame.height), 0, 0, false);
+                source.Apply(false, false);
+                Color32[] pixels = source.GetPixels32();
+                int sw = frame.width, sh = frame.height;
+                int x0 = Mathf.Clamp(Mathf.RoundToInt(win.x * sw), 1, sw - 2);
+                int x1 = Mathf.Clamp(Mathf.RoundToInt((win.x + win.width) * sw), x0 + 2, sw - 1);
+                int y0 = Mathf.Clamp(Mathf.RoundToInt(win.y * sh), 1, sh - 2);
+                int y1 = Mathf.Clamp(Mathf.RoundToInt((win.y + win.height) * sh), y0 + 2, sh - 1);
+                const int mw = 512, mh = 96;
+                Texture2D result = new Texture2D(mw, mh, TextureFormat.RGBA32, false);
+                result.name = ki ? "KiFrameDerivedFill" : "HpFrameDerivedFill";
+                result.hideFlags = HideFlags.HideAndDontSave;
+                result.filterMode = FilterMode.Bilinear;
+                result.wrapMode = TextureWrapMode.Clamp;
+                Color32[] output = new Color32[mw * mh];
+                int validRows = 0;
+                for (int iy = 0; iy < mh; iy++)
+                {
+                    // GUI texture coordinates run top-down, pixel arrays bottom-up.
+                    float syTop = Mathf.Lerp(y0, y1, (iy + 0.5f) / mh);
+                    int sy = Mathf.Clamp(sh - 1 - Mathf.RoundToInt(syTop), 0, sh - 1);
+                    int center = (x0 + x1) / 2;
+                    int row = sy * sw;
+                    // Scan *from the inner trough* outwards to the first actual
+                    // gold rail or transparent exterior on EACH scanline.
+                    if (IsGoldBorder(pixels[row + center])) continue;
+                    int left = center, right = center;
+                    while (left > x0 && pixels[row + left].a > 40 && !IsGoldBorder(pixels[row + left])) left--;
+                    while (right < x1 && pixels[row + right].a > 40 && !IsGoldBorder(pixels[row + right])) right++;
+                    if (right - left < (x1 - x0) * 0.45f) continue;
+                    validRows++;
+                    // Inside edge gets full colour; only the last source pixel
+                    // at the golden rail is antialiased, never drawn outside it.
+                    for (int ix = 0; ix < mw; ix++)
+                    {
+                        float sx = Mathf.Lerp(x0, x1, (ix + 0.5f) / mw);
+                        float edge = Mathf.Min(sx - left, right - sx);
+                        float alpha = Mathf.Clamp01((edge - 0.3f) / 1.2f);
+                        output[iy * mw + ix] = new Color32(255, 255, 255,
+                            (byte)Mathf.RoundToInt(255f * alpha));
+                    }
+                }
+                // A failed or unreadable sprite must never produce an empty bar.
+                if (validRows < mh * 0.45f) { Object.Destroy(result); return null; }
+                result.SetPixels32(output);
+                result.Apply(false, true);
+                return result;
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning("HUD frame mask could not be sampled: " + ex.Message);
+                return null;
+            }
+            finally
+            {
+                RenderTexture.active = previous;
+                if (rt != null) RenderTexture.ReleaseTemporary(rt);
+                if (source != null) Object.Destroy(source);
+            }
+        }
+
+        // Safety fallback only; normally the frame-derived gold contours above
+        // are used. Keep its fill strictly inset when sprite readback fails.
+        static Texture2D MakeFallbackFillMask(bool ki)
+        {
             const int mw = 512, mh = 64;
             Texture2D tex = new Texture2D(mw, mh, TextureFormat.RGBA32, false);
-            tex.name = ki ? "KiInnerFillMask" : "HpInnerFillMask";
+            tex.name = ki ? "KiFillFallback" : "HpFillFallback";
             tex.hideFlags = HideFlags.HideAndDontSave;
             tex.filterMode = FilterMode.Bilinear;
             tex.wrapMode = TextureWrapMode.Clamp;
@@ -1004,22 +1097,16 @@ namespace BladePath
             {
                 float yn = (y + 0.5f) / mh;
                 float tip = Mathf.Pow(Mathf.Abs(yn - 0.5f) * 2f, 1.5f);
-                // Both ornate tips are already clipped by the painted frame. Small
-                // symmetric insets prevent colored pixels on the golden outline,
-                // without the conspicuous triangular unfilled corners of the
-                // previous 2–3% masks. Mirror uses this same contour.
-                float taper = (ki ? 0.009f : 0.011f) * tip;
-                float left = 0.002f + taper;
-                float right = 0.998f - taper;
-                // Keep the outermost image row partly covered instead of leaving
-                // a full empty half-pixel border around the filled ribbon.
-                float ay = Mathf.Clamp01((Mathf.Min(yn, 1f - yn) + 0.003f) * mh);
+                float taper = (ki ? 0.022f : 0.026f) * tip;
+                float left = 0.012f + taper;
+                float right = 0.988f - taper;
+                float ay = Mathf.Clamp01(Mathf.Min(yn, 1f - yn) * mh);
                 for (int x = 0; x < mw; x++)
                 {
                     float xn = (x + 0.5f) / mw;
                     float ax = Mathf.Clamp01(Mathf.Min(xn - left, right - xn) * mw);
-                    byte alpha = (byte)Mathf.RoundToInt(255f * Mathf.Min(ax, ay));
-                    colors[y * mw + x] = new Color32(255, 255, 255, alpha);
+                    colors[y * mw + x] = new Color32(255, 255, 255,
+                        (byte)Mathf.RoundToInt(255f * Mathf.Min(ax, ay)));
                 }
             }
             tex.SetPixels32(colors);
