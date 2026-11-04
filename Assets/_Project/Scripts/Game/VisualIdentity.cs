@@ -172,7 +172,7 @@ namespace BladePath
             Color c = new Color(1f, 1f, 1f, alpha);
             if (low)
             {
-                Rect vr = new Rect(r.x - 34f, r.y - 4f, r.width + 68f, r.height + 8f);   // острые концы плашки — за краями текста
+                Rect vr = new Rect(r.x - 34f, r.y - 13f, r.width + 68f, r.height + 26f);   // концы и золотые кромки — за краями текста (по высоте кромка ~22%)
                 UiKit.Slice(vr, t, Mathf.Min(1f, vr.height / t.height), 0.12f, 0.1f, 0.35f, 0f, c);
             }
             else
