@@ -1757,6 +1757,7 @@ namespace BladePath
         void OpenTavern(bool fromCamp = false)
         {
             tavSub = 0; tavKeeper = tavDice = tavBoard = tavDrunk = tavHearth = false; tavFromCamp = fromCamp; tavDiceFresh = true;
+            TavernVideo.Preload();
             OpenModal(Modal.Tavern);
         }
         void TavToast(string text)
@@ -1775,7 +1776,7 @@ namespace BladePath
             else
             {
                 if (art != null) GUI.DrawTexture(new Rect(ox, oy, TavW * s, TavH * s), art, ScaleMode.StretchToFill, false);
-                DrawTavernLife(s, ox, oy);
+                if (TavernVideo.Failed) DrawTavernLife(s, ox, oy);   // видео готовится — та же картинка без эффектов (совпадает с первым кадром)
             }
             int gold = Profile.Gold;
             if (tavSub == 1)
