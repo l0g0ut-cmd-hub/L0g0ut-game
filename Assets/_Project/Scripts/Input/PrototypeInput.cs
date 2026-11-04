@@ -646,7 +646,7 @@ namespace BladePath
                 Color tint = h ? new Color(1f, 0.7f, 0.55f, 1f) : new Color(1f, 1f, 1f, ready ? idle : idle * 0.5f);
                 float rr = r * (h ? 0.94f : 1f);
                 UiKit.Disc(c + new Vector2(0f, 3f), r * 0.98f, new Color(0f, 0f, 0f, 0.16f * a));
-                UiKit.Image(c, rr * 1.08f, bt, tint);
+                UiKit.Image(c, rr * 1.22f, bt, tint);   // новые кнопки: круг в золотом кольце с шипами — шипы выходят за круг касания
                 if (h) UiKit.Disc(c, rr * 0.86f, new Color(1f, 0.45f, 0.15f, 0.22f));
                 if (ft == null) DrawIcon(icon, c + new Vector2(0f, -r * 0.08f), r * 0.46f, new Color(0.85f, 0.85f, 0.85f, 0.95f * a), r >= 50f ? 4.5f : 3.5f);
                 if (!string.IsNullOrEmpty(name) && ft == null)
@@ -755,7 +755,7 @@ namespace BladePath
             Texture2D st = UiKit.Tex("UI/btn_super");
             if (st != null)
             {
-                UiKit.Image(c, r * (held[i] ? 1.0f : 1.08f), st, held[i] ? new Color(1f, 1f, 1f) : new Color(0.85f + 0.15f * pulse, 0.9f + 0.1f * pulse, 1f));
+                UiKit.Image(c, r * (held[i] ? 1.15f : 1.25f), st, held[i] ? new Color(1f, 1f, 1f) : new Color(0.85f + 0.15f * pulse, 0.9f + 0.1f * pulse, 1f));
                 return;
             }
             UiKit.Disc(c, r, held[i] ? new Color(0.9f, 0.95f, 1f, 1f) : new Color(0.1f, 0.35f, 0.6f, 0.92f));
