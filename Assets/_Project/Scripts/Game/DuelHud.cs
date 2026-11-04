@@ -314,13 +314,17 @@ namespace BladePath
                 // лента-объявление (UI/Kit): чёрная, для опасного (красно-оранжевого) — кроваво-красная
                 bool danger = duel.AnnounceColor.r > 0.8f && duel.AnnounceColor.g < 0.55f;
                 Texture2D ban = UiKit.Tex(danger ? "UI/Kit/hud_banner_red" : "UI/Kit/hud_banner");
+                // ширина ленты — по длине надписи: текст помещается в ровную середину (рваные концы ~20% с каждой стороны);
+                // длинная надпись («РАВНОВЕСИЕ СЛОМЛЕНО — ДОБЕЙ!») — мельче шрифт, а не вылезает за ленту
+                float afs = 38f, atw = duel.AnnounceText.Length * afs * 0.7f, inner = (W - 40f) * 0.6f;
+                if (atw > inner) { afs *= inner / atw; atw = inner; }
                 if (ban != null)
                 {
-                    float bw = Mathf.Min(W - 40f, 560f + duel.AnnounceText.Length * 8f), bh = 74f * Mathf.Lerp(0.6f, 1f, Mathf.Clamp01(age / 0.12f));
+                    float bw = Mathf.Min(W - 40f, atw / 0.6f + 40f), bh = 74f * Mathf.Lerp(0.6f, 1f, Mathf.Clamp01(age / 0.12f));
                     UiKit.Slice(new Rect(cx - bw * 0.5f, 194f - bh * 0.5f, bw, bh), ban, bh / ban.height, 0.2f, 0.08f, 0.5f, 0f, new Color(1f, 1f, 1f, aa));
                 }
                 else UiKit.Rect(new Rect(0f, 168f, W, hasSub ? 78f : 52f), new Color(0f, 0f, 0f, 0.35f * aa));
-                UiKit.Text(new Rect(0f, 166f, W, 56f), duel.AnnounceText, 38f * sc, ac);
+                UiKit.Text(new Rect(0f, 166f, W, 56f), duel.AnnounceText, afs * sc, ac);
                 if (hasSub) UiKit.Text(new Rect(0f, 232f, W, 26f), duel.AnnounceSub, 17f, new Color(1f, 0.88f, 0.75f, aa * Mathf.Clamp01((age - 0.25f) / 0.2f)));
             }
 
