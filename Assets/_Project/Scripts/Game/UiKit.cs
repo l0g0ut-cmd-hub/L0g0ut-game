@@ -254,12 +254,17 @@ namespace BladePath
             for (int j = 0; j + 1 < ys.Length; j++)
             {
                 float h = ys[j + 1] - ys[j]; if (h <= 0.01f) continue;
+                // по высоте растягиваемые полосы не тянем больше чем в 1,3 раза — повторяем (иначе фактура лака высокой панели размазывается)
+                int ny = (ys.Length == 6 && (j == 1 || j == 3)) ? Mathf.Max(1, Mathf.CeilToInt(h / Mathf.Max(1f, (uy[j + 1] - uy[j]) * t.height * k * 1.3f))) : 1;
                 for (int i = 0; i + 1 < xs.Length; i++)
                 {
                     float w = xs[i + 1] - xs[i]; if (w <= 0.01f) continue;
-                    // текстурные координаты: v снизу вверх
-                    GUI.DrawTextureWithTexCoords(new Rect(xs[i], ys[j], w, h), t,
-                        new Rect(ux[i], 1f - uy[j + 1], ux[i + 1] - ux[i], uy[j + 1] - uy[j]));
+                    const int nx = 1;   // по ширине тянем: кромки горизонтальные, а повтор плодил лишние шипы и цветки
+                    Rect uv = new Rect(ux[i], 1f - uy[j + 1], ux[i + 1] - ux[i], uy[j + 1] - uy[j]);   // v снизу вверх
+                    float tw = w / nx, th = h / ny;
+                    for (int b = 0; b < ny; b++)
+                        for (int a = 0; a < nx; a++)
+                            GUI.DrawTextureWithTexCoords(new Rect(xs[i] + a * tw, ys[j] + b * th, tw, th), t, uv);
                 }
             }
             GUI.color = o;

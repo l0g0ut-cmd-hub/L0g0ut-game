@@ -172,14 +172,15 @@ namespace BladePath
             Color c = new Color(1f, 1f, 1f, alpha);
             if (low)
             {
-                Rect vr = new Rect(r.x - 10f, r.y - 4f, r.width + 20f, r.height + 8f);
+                Rect vr = new Rect(r.x - 34f, r.y - 4f, r.width + 68f, r.height + 8f);   // острые концы плашки — за краями текста
                 UiKit.Slice(vr, t, Mathf.Min(1f, vr.height / t.height), 0.12f, 0.1f, 0.35f, 0f, c);
             }
             else
             {
                 // рамка чуть шире прямоугольника: шипы углов наружу, содержимое — на тёмной середине
-                Rect vr = new Rect(r.x - 14f, r.y - 14f, r.width + 28f, r.height + 28f);
-                float k = Mathf.Clamp(Mathf.Min(vr.width / t.width, vr.height / t.height) * 0.75f, 0.28f, 0.6f);
+                // углы мельче (k ≤ 0,4) и рамка на 16 наружу — орнамент углов не заходит на заголовки карточек
+                Rect vr = new Rect(r.x - 16f, r.y - 16f, r.width + 32f, r.height + 32f);
+                float k = Mathf.Clamp(Mathf.Min(vr.width / t.width, vr.height / t.height) * 0.6f, 0.26f, 0.4f);
                 UiKit.Slice(vr, t, k, 0.2f, 0.1f, 0.3f, 0.12f, c);
             }
         }
@@ -190,7 +191,8 @@ namespace BladePath
             // рамка окна (герб боковой панели лёг бы на заголовок «ПОХОД» — без него)
             Texture2D t = UiKit.Tex("UI/Kit/ui_panel");
             if (t == null) { Surface(r, alpha, false); return; }
-            UiKit.Slice(r, t, 0.42f, 0.2f, 0.1f, 0.3f, 0.12f, new Color(1f, 1f, 1f, alpha));
+            // панель у края экрана: верх, низ и правый край рамки уходят за экран — видна левая кромка, а заголовок «ПОХОД» не ложится на угол
+            UiKit.Slice(new Rect(r.x - 6f, r.y - 20f, r.width + 26f, r.height + 40f), t, 0.32f, 0.2f, 0.1f, 0.3f, 0.12f, new Color(1f, 1f, 1f, alpha));
         }
 
         public static void Portrait(Rect r, string resourcePath, Color? tint = null,
