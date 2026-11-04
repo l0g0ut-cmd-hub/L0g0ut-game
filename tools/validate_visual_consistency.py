@@ -108,7 +108,7 @@ def check_design_system():
         "dice selected via three distinct atlas cells":
             "new Rect(index / 3f, 0f, 1f / 3f, 1f)" in map_code,
         "map lacquer panel":
-            "VisualIdentity.Surface(r" in map_code,
+            "VisualIdentity.KitSurface(r" in map_code or "VisualIdentity.Surface(r" in map_code,   # единый стиль (UI/Kit) с 2026-11-04
         "map event art uses authored illustrations":
             'Picture(new Rect(r.x, r.y, 330f, r.height), "UI/event_" + ev)' in map_code,
         "map NPC art not low-res placeholders":
