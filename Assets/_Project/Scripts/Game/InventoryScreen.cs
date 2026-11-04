@@ -291,17 +291,17 @@ namespace BladePath
             bool[] lowerBetter = { false, false, false, false, false, true, false };
             for (int k = 0; k < names.Length; k++)
             {
-                float y = 102f + k * 40f;
+                float y = 120f + k * 46f;   // под заголовком «ИТОГ», не на нём
                 UiKit.Text(new Rect(rx + 12f, y, rw - 24f, 18f), names[k], 12.5f, new Color(0.82f, 0.78f, 0.7f), TextAnchor.MiddleLeft, false);
                 bool better = lowerBetter[k] ? bv[k] < av[k] - 1e-4f : bv[k] > av[k] + 1e-4f, worse = lowerBetter[k] ? bv[k] > av[k] + 1e-4f : bv[k] < av[k] - 1e-4f;
                 string txt = Mathf.Abs(bv[k] - av[k]) < 1e-4f ? Fmt(av[k], k) : Fmt(av[k], k) + "  →  " + Fmt(bv[k], k);
                 UiKit.Text(new Rect(rx + 12f, y + 17f, rw - 24f, 20f), txt, 15f, better ? new Color(0.55f, 0.95f, 0.45f) : worse ? new Color(1f, 0.55f, 0.45f) : Ink, TextAnchor.MiddleLeft);
             }
             // кнопки: перераспределение бесплатно, в любой момент
-            float by = 468f, bw = (W - 92f - 20f) / 3f;
-            if (Btn(new Rect(46f, by, bw, 42f), "СБРОСИТЬ ВСЁ", used > 0, true)) for (int i = 0; i < pending.Length; i++) pending[i] = 0;
-            if (Btn(new Rect(56f + bw, by, bw, 42f), "ОТМЕНА", changed)) pending = Profile.StatsCopy();
-            if (Btn(new Rect(66f + bw * 2f, by, bw, 42f), "ПРИНЯТЬ", changed)) { Profile.SetStats(pending); pending = Profile.StatsCopy(); if (DuelManager.Instance != null) DuelManager.Instance.ApplyProfile(); }
+            float by = 464f, bw = (W - 140f - 20f) / 3f;   // в стороне от угловых орнаментов рамки
+            if (Btn(new Rect(70f, by, bw, 40f), "СБРОСИТЬ ВСЁ", used > 0, true)) for (int i = 0; i < pending.Length; i++) pending[i] = 0;
+            if (Btn(new Rect(80f + bw, by, bw, 40f), "ОТМЕНА", changed)) pending = Profile.StatsCopy();
+            if (Btn(new Rect(90f + bw * 2f, by, bw, 40f), "ПРИНЯТЬ", changed)) { Profile.SetStats(pending); pending = Profile.StatsCopy(); if (DuelManager.Instance != null) DuelManager.Instance.ApplyProfile(); }
         }
 
         // ---------------- «Путь»: горная тропа, печати ступеней, враг в полный рост ----------------
@@ -396,7 +396,7 @@ namespace BladePath
                 if (it != null && GUI.Button(r, GUIContent.none, GUIStyle.none)) sel = it;
             }
             if (bag.Count == 0) UiKit.Text(new Rect(a.x, a.y + 110f, a.width, 24f), "пусто — добыча выпадает за победы", 12f, new Color(0.7f, 0.66f, 0.6f));
-            DrawCard(new Rect(a.x, a.y + 30f + 4f * (cell + gap) + 6f, a.width, 456f - (30f + 4f * (cell + gap) + 6f)));
+            DrawCard(new Rect(a.x, a.y + 30f + 4f * (cell + gap) + 6f, a.width, a.height - (30f + 4f * (cell + gap) + 6f)));   // по высоте сумки, не за рамку
         }
 
         void DrawCard(Rect a)

@@ -1169,7 +1169,8 @@ namespace BladePath
             if (Event.current.type != EventType.Repaint || viewW < 350f) return;
             const float h = 31f;
             float w = Mathf.Min(viewW - 20f, 373f);
-            Rect bar = new Rect(mapX + 10f, MapH - h - 9f, w, h);
+            // под названием области (внизу закрывала подписи узлов — «СУНДУК» у нижнего края)
+            Rect bar = new Rect(mapX + 14f, Profile.Cycle > 0 ? 62f : 46f, w, h);
             UiKit.Rect(bar, new Color(0.035f, 0.025f, 0.020f, 0.79f));
             UiKit.Rect(new Rect(bar.x, bar.y, 2f, h), new Color(Gold.r, Gold.g, Gold.b, 0.65f));
             float px = bar.x + 10f;
@@ -1190,7 +1191,7 @@ namespace BladePath
         void DrawPanel(Rect r, bool interactive)
         {
             VisualIdentity.KitSidePanel(r);
-            float x = r.x + 16f, w = r.width - 32f, y = 12f;
+            float x = r.x + 16f, w = r.width - 40f, y = 12f;   // справа кромка панели у края экрана — запас
             VisualIdentity.Heading(new Rect(x, y, w, 36f), "ПОХОД");
             // Quiet progress caption in the existing heading's unused right side;
             // no panel resize, no new button and no changes to the original art.
