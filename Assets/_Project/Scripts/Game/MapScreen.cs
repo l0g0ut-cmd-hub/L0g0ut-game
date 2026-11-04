@@ -1525,9 +1525,18 @@ namespace BladePath
                     {
                         float ah = r.height - 20f, aw = ah * art.width / Mathf.Max(1f, art.height);
                         Rect ar = new Rect(r.x + 10f, r.y + 10f, Mathf.Min(aw, 260f), ah);
-                        // Portrait already draws its inset behind the image and thin border above it.
-                        // Do NOT call Inset again here: it paints a dark solid rectangle over the enemy artwork.
+                        // Keep the enemy artwork bright. The Portrait routine draws its
+                        // inset only *behind* the picture; never place another inset over it.
                         VisualIdentity.Portrait(ar, EnemyFullArt[e]);
+                        // Reuse the existing gilded panel-frame asset so the portrait
+                        // matches the card and the rest of the UI, rather than adding
+                        // a plain, uneven black border or generating a new texture.
+                        Texture2D portraitFrame = UiKit.Tex("UI/Kit/ui_panel_frame");
+                        if (portraitFrame != null)
+                        {
+                            Rect edge = new Rect(ar.x - 5f, ar.y - 5f, ar.width + 10f, ar.height + 10f);
+                            UiKit.Slice(edge, portraitFrame, 0.27f, 0.2f, 0.1f, 0.3f, 0.12f, Color.white);
+                        }
                     }
                     float x = r.x + 280f, w = r.width - 300f, y = r.y + 22f;
                     UiKit.Text(new Rect(x, y, w, 22f), Campaign.TypeNames[n.type], 15f, n.Type == NodeType.Boss ? new Color(1f, 0.4f, 0.3f) : Gold, TextAnchor.MiddleLeft); y += 28f;
