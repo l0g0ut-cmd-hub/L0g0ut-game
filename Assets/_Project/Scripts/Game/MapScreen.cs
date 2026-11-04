@@ -1750,9 +1750,9 @@ namespace BladePath
             // зоны: уже использованные приглушены, нажатие — тёплая вспышка
             Rect forge = CampRect(CampForge, s, ox, oy), altar = CampRect(CampAltar, s, ox, oy), train = CampRect(CampTrain, s, ox, oy),
                  board = CampRect(CampBoard, s, ox, oy), go = CampRect(CampGo, s, ox, oy);
-            if (campAltar) UiKit.Rect(altar, new Color(0f, 0f, 0f, 0.45f));
-            if (campTrain) UiKit.Rect(train, new Color(0f, 0f, 0f, 0.45f));
-            if (campBoard) UiKit.Rect(board, new Color(0f, 0f, 0f, 0.45f));
+            // Completed camp interactions remain disabled by their hitbox guards below.
+            // Do not draw an opaque/translucent Rect on painted art: it remained
+            // as a visible square after using the altar, training or quest board.
             if (!ok || InventoryScreen.Open) return;
             if (UiKit.Tex("UI/tavern") != null && Btn(new Rect(W - 196f, 14f, 180f, 42f), "ТРАКТИР", ok)) { Profile.CostMul = 1f; OpenTavern(true); return; }
             if (Btn(go, "В ПУТЬ", ok, true)) { Profile.CostMul = 1f; modal = Modal.None; Haptics.Pulse(20); return; }
@@ -2013,14 +2013,15 @@ namespace BladePath
             float age = Time.unscaledTime - toastAt;
             if (age < 0f || age >= 4.5f) return;
             float fade = Mathf.Clamp01(age / 0.2f) * Mathf.Clamp01((4.5f - age) / 0.7f);
-            float w = Mathf.Min(500f, viewW - 80f);
-            float h = 40f + toastLines.Count * 19f;   // поля вокруг текста, чтобы он не стоял впритык к рамке
-            Rect r = new Rect(mapX + 40f, 540f - h - 22f, w, h);   // острые концы плашки выходят на 34 за прямоугольник — не за край экрана
+            float w = Mathf.Min(680f, W - 90f);
+            float h = 40f + toastLines.Count * 19f;
+            // Centre reward notifications over the current camp/tavern/map view.
+            Rect r = new Rect((W - w) * 0.5f, (540f - h) * 0.5f, w, h);
             VisualIdentity.KitSurface(r, fade, false);
             for (int i = 0; i < toastLines.Count; i++)
-                UiKit.Text(new Rect(r.x + 54f, r.y + (h - toastLines.Count * 19f) * 0.5f + i * 19f, r.width - 90f, 19f),   // по центру плашки, в стороне от завитков рамки
+                UiKit.Text(new Rect(r.x + 54f, r.y + (h - toastLines.Count * 19f) * 0.5f + i * 19f, r.width - 108f, 19f),
                     toastLines[i], 12f, new Color(Ink.r, Ink.g, Ink.b, fade),
-                    TextAnchor.MiddleLeft, false);
+                    TextAnchor.MiddleCenter, false);
         }
 
         void StartFight(int at, bool rematchStarted = false)
