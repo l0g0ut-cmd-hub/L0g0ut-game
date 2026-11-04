@@ -292,11 +292,10 @@ namespace BladePath
                 Campaign.RegionNames[Campaign.Region], 25f, Gold, TextAnchor.MiddleLeft);
             if (Profile.Cycle > 0) UiKit.Text(new Rect(mapX + 18f, 40f, 300f, 20f), "КРУГ " + (Profile.Cycle + 1) + ": враги крепче", 12f, new Color(1f, 0.55f, 0.4f), TextAnchor.MiddleLeft);
             // Only show the re-center control when the map is wider than the screen.
-            if (uw < 0.999f && Btn(new Rect(mapX + viewW - 116f, 14f, 104f, 33f),
-                manualPan ? "К ГЕРОЮ" : "ОБЗОР", interactive && modal == Modal.None && moveTo < 0))
+            // карту листают пальцем; увёл её от героя — появляется «К ГЕРОЮ» (кнопка «ОБЗОР» ничего не делала — убрана)
+            if (uw < 0.999f && manualPan && Btn(new Rect(mapX + viewW - 116f, 14f, 104f, 33f), "К ГЕРОЮ", interactive && modal == Modal.None && moveTo < 0))
             {
-                manualPan = !manualPan;
-                if (!manualPan) panU = -1f;
+                manualPan = false; panU = -1f;
             }
             // меню разработчика (отладка): телепорт, лагерь, трактир, следующая область
             if (Btn(new Rect(mapX + viewW - (uw < 0.999f ? 226f : 116f), 14f, 104f, 33f), devTeleport ? "ОТМЕНА" : "РАЗРАБ.", interactive && (modal == Modal.None || modal == Modal.Dev) && moveTo < 0))
