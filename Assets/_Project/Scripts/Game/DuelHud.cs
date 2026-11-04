@@ -895,8 +895,9 @@ namespace BladePath
             DrawFrame(r, frame, hpWin, mirror);
 
             // портрет за наружным концом рамки
-            float px = mirror ? r.xMax + 66f : r.x - 66f;
-            Vector2 pc = new Vector2(px, r.y + r.height * 0.5f + 4f);
+            // кольцо с шипами крупнее старого ободка: портрет чуть меньше и ниже, чтобы шипы не срезались краем экрана
+            float px = mirror ? r.xMax + 60f : r.x - 60f;
+            Vector2 pc = new Vector2(px, r.y + r.height * 0.5f + 17f);
             // портреты: герой — снимок модели героя (CI), враг — по облику: самурай в красном или ронин
             string pp;
             // Each traveller's approved selection card contains a dedicated
@@ -924,7 +925,7 @@ namespace BladePath
                 {
                     // Top-left face inset of each original full-body hero card.
                     // The crop covers the circular portrait, not the small body.
-                    Rect target = new Rect(pc.x - 32f, pc.y - 32f, 64f, 64f);
+                    Rect target = new Rect(pc.x - 27f, pc.y - 27f, 54f, 54f);
                     Color previous = GUI.color;
                     GUI.color = tint;
                     GUI.DrawTextureWithTexCoords(target, pt,
@@ -934,7 +935,7 @@ namespace BladePath
                 }
                 else
                 {
-                    UiKit.Image(pc, 32f, pt, tint);
+                    UiKit.Image(pc, 27f, pt, tint);
                     DrawPortraitRing(pc, mirror);   // золотое кольцо с шипами; у врага — с кроваво-красными вставками
                 }
             }
@@ -961,7 +962,7 @@ namespace BladePath
         {
             Texture2D t = UiKit.Tex(enemy ? "UI/Kit/hud_ring_enemy" : "UI/Kit/hud_ring_hero");
             if (t == null) { if (!enemy) UiKit.Ring(pc, 32f, Gold, true); return; }
-            float w = 33f / (enemy ? 0.30f : 0.33f), h = w * t.height / t.width;
+            float w = 28f / (enemy ? 0.30f : 0.33f), h = w * t.height / t.width;
             GUI.DrawTexture(new Rect(pc.x - w * 0.5f, pc.y - h * 0.5f, w, h), t);
         }
 
