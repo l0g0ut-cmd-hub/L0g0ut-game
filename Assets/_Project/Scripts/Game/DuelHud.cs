@@ -1003,10 +1003,13 @@ namespace BladePath
             {
                 float yn = (y + 0.5f) / mh;
                 float tip = Mathf.Pow(Mathf.Abs(yn - 0.5f) * 2f, 1.5f);
-                // The long inner end of each bar narrows toward the top/bottom.
-                // A small inset on both ends keeps the color below gold outlines.
-                float left = 0.003f + 0.006f * tip;
-                float right = 0.997f - (ki ? 0.020f : 0.032f) * tip;
+                // Fit both tapered ends *inside* the painted gold interior.
+                // Prior mask had an almost square left end (0.006 taper) but an
+                // oversized right inset (0.032), leaving a gap on one side and
+                // corner leakage on its mirrored counterpart. Keep the two ends
+                // close in profile; retain a small antialiasing safety margin.
+                float left = 0.006f + (ki ? 0.014f : 0.017f) * tip;
+                float right = 0.994f - (ki ? 0.017f : 0.021f) * tip;
                 float ay = Mathf.Clamp01(Mathf.Min(yn, 1f - yn) * mh);
                 for (int x = 0; x < mw; x++)
                 {
