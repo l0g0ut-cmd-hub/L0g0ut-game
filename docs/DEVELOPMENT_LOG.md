@@ -207,3 +207,15 @@
 - **Status:** CODE_READY / APK_PENDING. Preflight for final dev SHA required. Inspect full and partial HP/Ki fill on both sides and frame corners on Android. Only after screenshot confirmation may mark APK_VERIFIED.
 
 | 2026-11-05 — BP-029 / RELEASE STATUS | code `3d9a7994`, `8a26f001`; №408 run `41928271031` still pending at change time | Art and ornate frame reuse implemented in dev without modifying existing PNG/video or tavern's overlay strip. | Await preflight and prior Android completion, then promote exactly once for next APK; verify SHA/build/artifact and device screenshots. |
+
+
+## BP-030 — Compact camp and tavern activity buttons (2026-11-05)
+
+- User-approved compact UI layout on Android reference backgrounds. **Never alter background binary images, video, or deliberate image strip over tavern video.**
+- Commit `e07f5b2a91f4f02267287eb983e397257580c914`: `Assets/_Project/Scripts/Game/MapScreen.cs`, adds explicit compact `KitButton` actions in camp for forge, altar and training, keeping quest board, tavern navigation and red travel button. Replaces tavern's floating labels and oversized invisible hitboxes with five small `KitButton` handlers (innkeeper, dice, rewards, drunk ronin, hearth), retaining original once-per-visit behaviour and red exit action. Source re-read. No binary art modified.
+- Preflight №210 run `41932725842` **success** on game code SHA `e07f5b2a91f4f02267287eb983e397257580c914`; Unity/device UI check still required.
+- BP-029 HP/Ki mask tips and ornate prefight portrait included in this ancestry. APK №408 success on old SHA `9ef4f3bf464389f4953128952d43ab0bfaeca2fb` did not include BP-029 or BP-030.
+- **Separate outstanding limitation:** Approved matching controls on selection screens `UI/selection/screen_traveller.jpg` and `screen_difficulty.jpg` are baked into source JPEG pictures. They have NOT been replaced or made uniform; avoid painting conspicuous blocks over original art merely to claim completion. Track as pending and do not imply included in APK №409.
+- Status: CODE_READY/PREFLIGHT_OK/APK_PENDING. One APK release requested by user; obtain exact SHA and verify CI result, then test portrait/buttons/HP/Ki on actual Android device before marking verified.
+
+| 2026-11-05 — BP-030 / RELEASE STATUS | code `e07f5b2a91f4f02267287eb983e397257580c914`, Preflight №210 success | Camp/tavern small visible buttons completed; backgrounds unchanged. Selection button image task pending separately. | Promote one checked SHA once prior APK №408 complete and no Android running, then verify new run number/SHA. |
