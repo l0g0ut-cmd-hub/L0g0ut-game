@@ -725,14 +725,15 @@ namespace BladePath
             Texture2D kf = UiKit.Tex("UI/Kit/hud_ki");
             Rect kiWin = KiWinKit;
             if (kf == null) { kf = UiKit.Tex("UI/bar_ki"); kiWin = KiWin; }
+            // окно внутри рамки — заливка идёт ровно туда
+            Rect win = (kf != null) ? kiWin : new Rect(0f, 0f, 1f, 1f);
+            float fillX = r.x + r.width * win.x;
+            float fillW = r.width * win.width;
+            float fillY = r.y + r.height * win.y;
+            float fillH = r.height * win.height;
+            // тёмный фон только внутри окна
             if (kf == null) UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), Frame);
-            else UiKit.Rect(r, new Color(0.02f, 0.02f, 0.03f, 1f));
-            // заливка духа — зажимаем в окно рамки, чтобы не выезжала за края
-            Rect kiWinFill = (kf != null) ? kiWin : new Rect(0f, 0f, 1f, 1f);
-            float fillX = r.x + r.width * kiWinFill.x;
-            float fillW = r.width * kiWinFill.width;
-            float fillY = r.y + r.height * kiWinFill.y;
-            float fillH = r.height * kiWinFill.height;
+            else UiKit.Rect(new Rect(fillX, fillY, fillW, fillH), new Color(0.02f, 0.02f, 0.03f, 1f));
             float k = f.Ki01;
             float w = fillW * k;
             bool full = f.CanEnergy;
