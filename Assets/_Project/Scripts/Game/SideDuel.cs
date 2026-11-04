@@ -39,7 +39,7 @@ namespace BladePath
         public int foeModel = 4;
 
         public const string AllyName = "СОРАТНИК", FoeName = "ПРИСПЕШНИК";
-        const float AnchorX = 2.3f, AnchorZ = 1.45f, StepsZ = 1.85f;   // StepsZ — у ступеней храма (дальний край площадки)
+        const float AnchorX = 2.3f, AnchorZ = 1.45f, StepsZ = 1.82f;   // StepsZ — у ступеней храма (дальний край площадки)
 
         public bool On { get; private set; }
         /// <summary>Герой пал — бой продолжает соратник.</summary>
@@ -347,24 +347,42 @@ namespace BladePath
             if (Juice.Instance != null) Juice.Instance.Taiko(1f, 1f);
         }
 
-        /// <summary>Отойти к краю арены (подальше от идущего боя) и смотреть на него.</summary>
+        /// <summary>Отойти к ступеням храма — подальше от идущего боя и не через него — и смотреть на бой.
+        /// Противник (opponent) у ждущего не меняется: смотрит он через lookTarget, иначе удары, рывок накопления
+        /// и прочее, что целится в opponent, уходили в соратников.</summary>
         void Watch(FighterController w, FighterController a, FighterController b)
         {
             if (w == null || w.Dead) return;
             if (!watchers.Contains(w)) watchers.Add(w);
-            // к ступеням храма (дальний край площадки), на сторону подальше от идущего боя; двое ждущих — не плечом к плечу
-            Vector3 mid = (a.transform.position + b.transform.position) * 0.5f;
-            float sx = Mathf.Abs(mid.x) > 0.3f ? -Mathf.Sign(mid.x) : (w.transform.position.x >= 0f ? 1f : -1f);
-            float wx = Mathf.Clamp(mid.x + sx * 2.0f, -2.6f, 2.6f);
-            foreach (KeyValuePair<FighterController, Vector3> kv in watchAt)
-                if (kv.Key != w && Mathf.Abs(kv.Value.x - wx) < 1.2f) wx = Mathf.Clamp(kv.Value.x + (wx >= kv.Value.x ? 1.2f : -1.2f), -2.6f, 2.6f);
-            watchAt[w] = new Vector3(wx, 0f, StepsZ);
+            Vector3 mid = (a.transform.position + b.transform.position) * 0.5f; mid.y = 0f;
+            Vector3 pos = w.transform.position; pos.y = 0f;
+            // место у ступеней: дальше всего от боя и чтобы путь туда не шёл через бой; второй ждущий — не плечом к плечу
+            float bestS = float.MinValue; Vector3 best = new Vector3(pos.x, 0f, StepsZ);
+            for (int i = 0; i < 7; i++)
+            {
+                Vector3 c = new Vector3(-2.7f + 0.9f * i, 0f, StepsZ);
+                bool taken = false;
+                foreach (KeyValuePair<FighterController, Vector3> kv in watchAt) if (kv.Key != w && Mathf.Abs(kv.Value.x - c.x) < 1.2f) taken = true;
+                if (taken) continue;
+                float sc = Mathf.Min(Vector3.Distance(c, mid), SegDist(pos, c, mid) + 0.6f) - 0.12f * Vector3.Distance(pos, c);
+                if (sc > bestS) { bestS = sc; best = c; }
+            }
+            watchAt[w] = best;
             if (w.weapon != null) w.weapon.ResetState();
-            // смотрит на ближнего из идущего боя (по нему же и разворачивается)
-            FighterController look = Vector3.Distance(w.transform.position, a.transform.position) <= Vector3.Distance(w.transform.position, b.transform.position) ? a : b;
-            if (look != null && !look.Dead) w.opponent = look;
+            if (ChargeSystem.Instance != null && ChargeSystem.Instance.IsCharging(w)) ChargeSystem.Instance.Cancel(w);
+            w.StopDash();
+            // смотрит на ближнего из идущего боя (только разворот, противник прежний)
+            FighterController look = Vector3.Distance(pos, a.transform.position) <= Vector3.Distance(pos, b.transform.position) ? a : b;
+            w.lookTarget = look != null && !look.Dead ? look : null;
             EnemyAI ai = w == ally ? allyAi : w == foe ? foeAi : w == Dm.enemy ? MainAi() : null;
             if (ai != null) ai.hold = true;
+        }
+
+        static float SegDist(Vector3 p0, Vector3 p1, Vector3 q)
+        {
+            Vector3 d = p1 - p0; float l = d.sqrMagnitude;
+            float t = l > 1e-6f ? Mathf.Clamp01(Vector3.Dot(q - p0, d) / l) : 0f;
+            return Vector3.Distance(p0 + d * t, q);
         }
 
         void ClearWatch()
@@ -374,6 +392,7 @@ namespace BladePath
                 EnemyAI ai = w == ally ? allyAi : w == foe ? foeAi : (Dm != null && w == Dm.enemy) ? MainAi() : null;
                 if (ai != null) ai.hold = false;
                 if (w != null && w.weapon != null) w.weapon.Relaxed = false;   // снова в бой — снова в стойке
+                if (w != null) w.lookTarget = null;
             }
             watchers.Clear(); watchAt.Clear();
         }

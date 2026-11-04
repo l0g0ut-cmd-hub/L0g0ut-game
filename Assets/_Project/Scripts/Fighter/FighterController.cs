@@ -24,6 +24,8 @@ namespace BladePath
         public float minSeparation = 0.7f;      // ближе этого бойцы не сходятся (корпуса)
         /// <summary>Чужая пара на арене (соратник и его противник): сквозь них не проходим, держим avoidRadius.</summary>
         [NonSerialized] public FighterController[] avoid;
+        /// <summary>Ждёт своей очереди и смотрит на чужой бой: разворачивается к нему, а не к своему противнику.</summary>
+        [NonSerialized] public FighterController lookTarget;
         public float avoidRadius = 1.1f;
         public float arenaHalfWidth = 3.1f;     // половина площадки по X
         public float arenaHalfDepth = 2.3f;     // половина площадки по Z
@@ -335,9 +337,10 @@ namespace BladePath
 
             // взгляд: всегда на противника (по горизонтали)
             Vector3 fwd = transform.forward; fwd.y = 0f;
-            if (opponent != null)
+            FighterController faceT = lookTarget != null && lookTarget.isActiveAndEnabled ? lookTarget : opponent;
+            if (faceT != null)
             {
-                Vector3 to = opponent.transform.position - transform.position; to.y = 0f;
+                Vector3 to = faceT.transform.position - transform.position; to.y = 0f;
                 if (to.sqrMagnitude > 1e-4f)
                 {
                     fwd = to.normalized;
