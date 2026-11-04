@@ -165,6 +165,9 @@ namespace BladePath
 
         void OnDestroy() { Time.timeScale = 1f; if (resolver != null) resolver.HitRegistered -= OnHit; if (Instance == this) Instance = null; }
 
+        /// <summary>Вместо павшего врага бьётся приспешник: своими силами — без ступени «Пути», меток, ярости и фирменных приёмов.</summary>
+        public bool FoeStandIn { get; private set; }
+
         public float MaxHp(FighterController f) { return f != null && f == enemy ? maxHp * Ladder.Current.hpMul * Profile.CycleHp * Campaign.EnemyHpMul : (maxHp + (f != null && f == player ? Profile.B.hp : 0)) * (f != null && f == player ? Campaign.PlayerHpMul : 1f); }
 
         float basePosture = -1f; int baseGourds = -1;
@@ -198,7 +201,7 @@ namespace BladePath
         /// <summary>Материалы тела бойца (без оружия) и их исходные цвета — для окраса ступени и «окровавленности».</summary>
         class BodyMats { public List<Material> mats = new List<Material>(); public List<Color> baseCol = new List<Color>(); public List<Color> baseEm = new List<Color>(); public Color tint = Color.white; public float blood; public Color applied = Color.white; public float flashAt = -10f, flashK, woundApplied; }
         readonly Dictionary<FighterController, BodyMats> bodyMats = new Dictionary<FighterController, BodyMats>();
-        float enemyBaseSpeed = -1f;
+        float enemyBaseSpeed = -1f, baseBladeLen = -1f;
 
         BodyMats MatsOf(FighterController f)
         {
@@ -262,6 +265,15 @@ namespace BladePath
             EnemySkins skins = enemy.GetComponent<EnemySkins>();
             if (skins != null && skins.Active != s.model) skins.Apply(s.model);
             MatsOf(enemy).tint = s.tint;
+            // сёгун — с длинным мечом (нодати): +22% длины клинка и хитбокса. Его рослая модель с обычной катаной
+            // не дотягивалась ударами сверху и вбок до стоящего героя (недолёт ~20 см)
+            if (enemy.weapon != null)
+            {
+                if (baseBladeLen < 0f) baseBladeLen = enemy.weapon.bladeLength;
+                float bk = s.model == 3 ? 1.22f : 1f;
+                enemy.weapon.bladeLength = baseBladeLen * bk;
+                if (enemy.weapon.bladeRoot != null) enemy.weapon.bladeRoot.localScale = new Vector3(1f, 1f, bk);
+            }
             if (Juice.Instance != null) Juice.Instance.SetAuraColor(enemy, s.aura);
         }
         public float SinceHit(FighterController f) { float v; return lastHitTime.TryGetValue(f, out v) ? Time.unscaledTime - v : 99f; }
@@ -401,7 +413,7 @@ namespace BladePath
             }
             if (Footprints.Instance != null) Footprints.Instance.ClearMarks();
             combo.Clear(); comboTime.Clear(); counterUntil.Clear(); PerilAt.Clear(); perilSwing.Clear(); jumpedSweep.Clear(); sweepJumpAt.Clear(); DeathblowAt = -10f;
-            Enraged = false;
+            Enraged = false; FoeStandIn = false;
             ApplyStage();   // скорость врага к базовой ступени (сброс ярости)
             SuperBy = null; DeathblowBy = null; DeathblowTarget = null; executing = false; ResurrectOffered = false;
             marks.Clear(); exhaustedUntil.Clear(); reviveUntil.Clear();
@@ -527,7 +539,7 @@ namespace BladePath
                 if (TimerOn && TimeLeft <= 0f) TimeUp();
                 if (TimerOn && !tenSecShown && TimeLeft <= 10f) { tenSecShown = true; Announce("10 СЕКУНД!", new Color(1f, 0.4f, 0.25f)); }
                 if (!lastStandShown && player != null && Hp01(player) < 0.25f && Hp(player) > 0f) { lastStandShown = true; Announce("ПОСЛЕДНИЙ РУБЕЖ", new Color(0.5f, 0.85f, 1f)); }
-                if (!EnemyEnraged && enemy != null && !enemy.Dead && Hp01(enemy) < 0.33f && Hp(enemy) > 0f && EnemyAI.Difficulty > 0)
+                if (!EnemyEnraged && !FoeStandIn && enemy != null && !enemy.Dead && Hp01(enemy) < 0.33f && Hp(enemy) > 0f && EnemyAI.Difficulty > 0)
                 {
                     // враг впадает в ярость: рёв, багровая аура и глаза, удары чаще (EnemyAI)
                     EnemyEnraged = true; Birds.Startle();
@@ -680,7 +692,7 @@ namespace BladePath
         readonly Dictionary<FighterController, float> exhaustedUntil = new Dictionary<FighterController, float>();
         readonly Dictionary<FighterController, float> reviveUntil = new Dictionary<FighterController, float>();
         public int Marks(FighterController f) { int m; return f != null && marks.TryGetValue(f, out m) ? m : 1; }
-        public int MaxMarks(FighterController f) { return f != null && f == enemy ? Mathf.Max(1, Ladder.Current.marks + Campaign.ExtraMarks) : 1; }
+        public int MaxMarks(FighterController f) { return f != null && f == enemy && !FoeStandIn ? Mathf.Max(1, Ladder.Current.marks + Campaign.ExtraMarks) : 1; }
         /// <summary>Поднимается после добивания (здоровье наполняется, удары не проходят).</summary>
         public bool Reviving(FighterController f) { float u; return f != null && reviveUntil.TryGetValue(f, out u) && Time.unscaledTime < u; }
         /// <summary>Доля здоровья игрока, которую снимает сокрушающий удар по сломленному равновесию (казнь — только если это добьёт).</summary>
@@ -1351,7 +1363,7 @@ namespace BladePath
                     }
                 }
             }
-            float dmg = BaseDamage(type) * ZoneMul(r.zone) * (r.glancing ? 0.5f : 1f) * (r.attacker == enemy ? Ladder.Current.dmgMul * Records.Assist * Campaign.EnemyDmgMul : 1f);
+            float dmg = BaseDamage(type) * ZoneMul(r.zone) * (r.glancing ? 0.5f : 1f) * (r.attacker == enemy ? (FoeStandIn ? 0.75f : Ladder.Current.dmgMul) * Records.Assist * Campaign.EnemyDmgMul : 1f);
             bool iai = r.attacker.SinceDash < 0.6f;   // удар прямо из рывка
             if (iai) dmg *= 1.25f;
             dmg = Mathf.Round(dmg);
@@ -1439,6 +1451,9 @@ namespace BladePath
             TimedOut = true;
             // по времени сравниваем «запас жизни»: оставшиеся метки врага считаются полными полосами здоровья (в долях)
             float hpP = Hp01(player), hpE = Hp01(enemy) + (Marks(enemy) - 1);
+            // соратники на арене: их запас здоровья тоже в счёте своей стороны
+            if (SideDuel.Instance != null && SideDuel.Instance.On) { hpP += SideDuel.Instance.AllyLeft01; hpE += SideDuel.Instance.FoeLeft01; }
+            if (player.Dead) hpP = SideDuel.Instance != null && SideDuel.Instance.On ? SideDuel.Instance.AllyLeft01 : 0f;
             Freeze(true);
             if (player.weapon != null) player.weapon.ResetState();
             if (enemy.weapon != null) enemy.weapon.ResetState();
@@ -1482,6 +1497,19 @@ namespace BladePath
             if (enemy.weapon != null && enemy.weapon.Phase == SwingPhase.Windup) enemy.weapon.ResetState();
             enemy.Stun(dmg >= 20f ? 0.5f : 0.35f);
             if (!kill) { enemy.AddPosture(dmg * 0.6f); return; }
+            if (Marks(enemy) > 1)
+            {
+                // у владыки несколько жизней: соратник снимает их по одной, как герой добиванием
+                marks[enemy] = Marks(enemy) - 1;
+                hp[enemy] = MaxHp(enemy); hpTrail[enemy] = hp[enemy];
+                enemy.ResetPosture(); enemy.Stun(1.4f); enemy.Knockback(enemy.transform.position - ally.transform.position, 1.3f);
+                if (enemy.weapon != null) { enemy.weapon.ResetState(); enemy.weapon.Down(1.2f); }
+                reviveUntil[enemy] = Time.unscaledTime + 1.4f;
+                int left = Marks(enemy);
+                Announce(left > 1 ? "ВРАГ ПОДНИМАЕТСЯ — ЕЩЁ " + left + " ЖИЗНИ" : "ВРАГ ПОДНИМАЕТСЯ — ПОСЛЕДНЯЯ ЖИЗНЬ", new Color(1f, 0.5f, 0.2f));
+                enemy.moveSpeed *= 1.06f; enemy.AddKi(30f);
+                return;
+            }
             enemy.Dead = true;
             if (enemy.weapon != null) enemy.weapon.ResetState();
             Haptics.Pulse(120);
@@ -1498,6 +1526,8 @@ namespace BladePath
             enemy.transform.position = pos; enemy.transform.rotation = rot;
             EnemySkins skins = enemy.GetComponent<EnemySkins>();
             if (skins != null) skins.Apply(model);
+            FoeStandIn = true;
+            if (enemyBaseSpeed > 0f) enemy.moveSpeed = enemyBaseSpeed;   // скорость своя, без множителя ступени
             hp[enemy] = Mathf.Max(1f, Mathf.Round(MaxHp(enemy) * Mathf.Clamp01(hp01) * 0.7f)); hpTrail[enemy] = hp[enemy];
             marks[enemy] = 1; lastSwing[enemy] = -1;
             enemy.Frozen = false; if (player != null) player.Frozen = false;
@@ -1648,7 +1678,7 @@ namespace BladePath
                 hp[player] = Mathf.Min(MaxHp(player), hp[player] + Mathf.Min(dmg, Hp(target)) * Profile.B.lifesteal);   // руна «Вампиризм»
             hp[target] = Mathf.Max(0f, Hp(target) - dmg);
             // финальный противник «Пути» на половине здоровья впадает в ярость
-            if (target == enemy && Ladder.IsLast && !Enraged && Marks(enemy) <= 1 && before01 > 0.5f && Hp01(target) <= 0.5f && Hp(target) > 0f)
+            if (target == enemy && Ladder.IsLast && !Enraged && !FoeStandIn && Marks(enemy) <= 1 && before01 > 0.5f && Hp01(target) <= 0.5f && Hp(target) > 0f)
             {
                 Enraged = true;
                 enemy.moveSpeed *= 1.18f;

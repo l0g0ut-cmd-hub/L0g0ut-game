@@ -46,6 +46,12 @@ namespace BladePath
         public bool Takeover { get; private set; }
         public float AllyHp01 { get { return allyMax > 0f ? Mathf.Clamp01(allyHp / allyMax) : 0f; } }
         public float FoeHp01 { get { return foeMax > 0f ? Mathf.Clamp01(foeHp / foeMax) : 0f; } }
+        /// <summary>Запас здоровья стороны для итога по времени (павший или ушедший — ноль).</summary>
+        public float AllyLeft01 { get { return On && ally != null && !ally.Dead && ally.gameObject.activeSelf ? AllyHp01 : 0f; } }
+        public float FoeLeft01 { get { return On && foe != null && !foe.Dead && foe.gameObject.activeSelf ? FoeHp01 : 0f; } }
+        /// <summary>Сила нанятого соратника: 0 ученик, 1 воин, 2 мастер — здоровье, урон и мастерство ИИ.</summary>
+        public static int Tier { get { return Mathf.Clamp(Profile.Ally, 0, 2); } }
+        static readonly float[] TierHp = { 85f, 115f, 150f }, TierDmg = { 0.65f, 0.85f, 1.1f };
 
         float allyHp, foeHp, allyMax, foeMax, anchorX = AnchorX;
         FighterController sideWinner, mainLoser;
@@ -112,7 +118,7 @@ namespace BladePath
             ally.SetHome(a + Vector3.left * 0.55f, Quaternion.Euler(0f, 90f, 0f));
             foe.SetHome(a + Vector3.right * 0.55f, Quaternion.Euler(0f, -90f, 0f));
             ally.ResetFighter(); foe.ResetFighter();
-            allyMax = 110f + 15f * Profile.Cycle; foeMax = (90f + 12f * Ladder.Index) * Profile.CycleHp;
+            allyMax = TierHp[Tier] + 15f * Profile.Cycle + 3f * Profile.Level; foeMax = (90f + 12f * Ladder.Index) * Profile.CycleHp;   // соратник растёт с героем
             allyHp = allyMax; foeHp = foeMax;
             lastSwing.Clear(); popups.Clear();
             Ai(allyAi, ally, foe); Ai(foeAi, foe, ally);
@@ -134,7 +140,7 @@ namespace BladePath
             // раунд закончен — вторая пара замирает; во вступлении стоит на местах
             ally.Frozen = !fighting && dm.State != DuelState.Intro; foe.Frozen = ally.Frozen;
             if (!fighting || dm.Paused) return;
-            if (allyAi != null) allyAi.difficultyOverride = AiLevel;
+            if (allyAi != null) allyAi.difficultyOverride = Tier;   // мастерство — по найму
             if (foeAi != null) foeAi.difficultyOverride = AiLevel;
 
             // место второй пары — у дальнего края, на стороне, противоположной основному бою (с запасом, чтобы не металась)
@@ -180,7 +186,9 @@ namespace BladePath
             float dmg = DuelManager.BaseDamage(type) * DuelManager.ZoneMul(r.zone) * (r.glancing ? 0.5f : 1f);
             if (r.attacker == dm.enemy) dmg *= Ladder.Current.dmgMul * Campaign.EnemyDmgMul;
             else if (r.attacker == foe) dmg *= 0.75f;
-            else if (r.attacker == ally) dmg *= 0.8f;
+            else if (r.attacker == ally) dmg *= TierDmg[Tier];
+            // соратник против самого врага (герой пал): урон соразмерен его запасу здоровья — мастер может одолеть и сёгуна, если повезёт
+            if (r.attacker == ally && r.target == dm.enemy) dmg *= Mathf.Max(1f, dm.MaxHp(dm.enemy) / 100f) * 0.85f;
             bool perilous = r.attacker.weapon != null && r.attacker.weapon.Perilous;
             Transform zt = r.contact.zone != null ? r.contact.zone.transform : null;
 

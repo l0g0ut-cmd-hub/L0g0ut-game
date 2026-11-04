@@ -199,10 +199,10 @@ namespace BladePath
                             Rect lab = new Rect(W * 0.5f - cw * 0.5f, sy, cw, 40f);
                             GUI.DrawTexture(lab, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0f, new Color(0.03f, 0.025f, 0.03f, 0.85f), 0f, 10f);
                             UiKit.Text(lab, "СТАВКА: " + bet + " МОН", 15f, gold);
-                            bool canUp = betIdx < BetMul.Length - 1 && Profile.Gold >= baseBet * BetMul[betIdx + 1];
+                            bool canUp = betIdx < BetMul.Length - 1 && Profile.Gold >= baseBet * BetMul[betIdx + 1] * 2;   // ставка — не больше половины кошелька
                             if (VisualIdentity.KitButton(new Rect(lab.x - 52f, sy, 46f, 40f), "−", ok && betIdx > 0)) { betIdx--; Haptics.Pulse(15); }
                             if (VisualIdentity.KitButton(new Rect(lab.xMax + 6f, sy, 46f, 40f), "+", ok && canUp)) { betIdx++; Haptics.Pulse(15); }
-                            while (betIdx > 0 && Profile.Gold < baseBet * BetMul[betIdx]) betIdx--;   // монет стало меньше — ставка опускается сама
+                            while (betIdx > 0 && Profile.Gold < baseBet * BetMul[betIdx] * 2) betIdx--;   // монет стало меньше — ставка опускается сама
                         }
                         for (int k = 0; k < 2; k++)
                             if (VisualIdentity.KitButton(new Rect(W * 0.5f - bw - 6f + k * (bw + 12f), y, bw, 48f), k == 0 ? "ЧЁТ" : "НЕЧЕТ", can, k == 0))
@@ -221,7 +221,7 @@ namespace BladePath
                         bool even = (t.D1 + t.D2) % 2 == 0;
                         bool wouldWin = even == betEven;
                         // жульничество: на твоём выигрыше иногда «задевает локтем» стол — один раз за бросок
-                        if (wouldWin && !bumped && Random.value < 0.22f)
+                        if (wouldWin && !bumped && Random.value < 0.22f + 0.06f * betIdx)   // на крупной ставке жулик толкает стол охотнее (до 46%)
                         {
                             bumped = true; st = St.Bump; shakeAt = now; SetMood(1);
                             Say(SayBump[Random.Range(0, SayBump.Length)]);

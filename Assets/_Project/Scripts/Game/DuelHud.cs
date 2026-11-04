@@ -108,7 +108,10 @@ namespace BladePath
 
             float barW = Mathf.Clamp(W * 0.5f - 80f - 110f, 200f, 400f);
             float cx = W * 0.5f;
-            DrawBar(new Rect(cx - 80f - barW, 22f, barW, 14f), duel.player, false,
+            SideDuel sdl = SideDuel.Instance;
+            if (sdl != null && sdl.Takeover && sdl.ally != null)   // герой пал — слева соратник, который ведёт бой
+                DrawBar(new Rect(cx - 80f - barW, 22f, barW, 14f), sdl.ally, false, "СОРАТНИК · " + Profile.AllyTierNames[SideDuel.Tier], new Color(0.3f, 0.7f, 0.45f), sdl.AllyHp01, "UI/portrait_ronin");
+            else DrawBar(new Rect(cx - 80f - barW, 22f, barW, 14f), duel.player, false,
                 JourneyChoice.Names[JourneyChoice.Hero], new Color(0.15f, 0.55f, 0.85f));
             DrawBar(new Rect(cx + 80f, 22f, barW, 14f), duel.enemy, true, Ladder.Current.name, new Color(0.75f, 0.2f, 0.85f));
             // спутник героя: маленький портрет под портретом героя, кольцо — откат налёта
@@ -426,14 +429,23 @@ namespace BladePath
                 string sub = duel.TimedOut ? "ВРЕМЯ ВЫШЛО" : "";
                 if (duel.Perfect && !duel.LastDraw) sub = "ИДЕАЛЬНО";
                 // знак кистью за заголовком: 死 — поражение (как экран смерти Sekiro), 勝 — победа; проявляется мазком слева направо
-                if (!duel.TimedOut && !duel.LastDraw)
+                // победа в бою — надписью кистью из атласа («ПОБЕДА»), остальное (раунд, ничья, путь пройден, поражение) — шрифтом
+                bool brushWin = duel.MatchOver && won && !duel.LastDraw && title == "ПОБЕДА" && UiKit.Tex("UI/ru_victory") != null;
+                if (!duel.TimedOut && !duel.LastDraw && !brushWin)
                 {
                     float gt = Mathf.Clamp01((duel.StateTime - 0.35f) / 0.5f);
                     if (gt > 0f) DrawBrush("UI/brush_stroke_red", new Vector2(cx, 172f), 120f * (1.08f - 0.08f * gt), (won ? 0.55f : 0.75f) * gt, Mathf.Clamp01(gt * 1.6f));   // мазок без слов — заголовок уже написан
                 }
                 if (sub.Length > 0) UiKit.Text(new Rect(cx - 300f, 98f, 600f, 30f), sub, 24f, new Color(1f, 0.85f, 0.35f, t));   // под полосками духа, над заголовком
-                UiKit.Text(new Rect(cx - 400f, 110f, 800f, 120f), title, duel.MatchOver ? 90f : 64f, c);
+                if (brushWin)
+                {
+                    float gt = Mathf.Clamp01((duel.StateTime - 0.35f) / 0.45f);
+                    DrawBrush("UI/ru_victory", new Vector2(cx, 165f), 140f * (1.1f - 0.1f * gt), t, Mathf.Clamp01(gt * 1.4f));   // кисть входит мазком слева направо
+                }
+                else UiKit.Text(new Rect(cx - 400f, 110f, 800f, 120f), title, duel.MatchOver ? 90f : 64f, c);
                 if (duel.MatchOver) DrawStats(cx, 240f, t);
+                if (duel.MatchOver && SideDuel.Enabled && Profile.Ally >= 0 && Profile.AllyDown)
+                    UiKit.Text(new Rect(cx - 300f, 352f, 600f, 22f), "СОРАТНИК ПАЛ — ЕГО ВЫХОДИТ ТРАВНИЦА", 14f, new Color(1f, 0.45f, 0.35f, t));
                 if (!duel.MatchOver) UiKit.Text(new Rect(cx - 300f, 250f, 600f, 40f), duel.PlayerWins + " : " + duel.EnemyWins, 34f, new Color(1f, 1f, 1f, t));
                 UiKit.Rect(new Rect(cx - 200f, 232f, 400f, 2f), new Color(c.r, c.g, c.b, 0.8f * t));
             }
@@ -872,9 +884,9 @@ namespace BladePath
             else GUI.DrawTexture(fr, t);
         }
 
-        void DrawBar(Rect r, FighterController f, bool mirror, string name, Color portrait)
+        void DrawBar(Rect r, FighterController f, bool mirror, string name, Color portrait, float hpOverride = -1f, string portraitOverride = null)
         {
-            float hp = duel.Hp01(f), tr = duel.Trail01(f);
+            float hp = hpOverride >= 0f ? hpOverride : duel.Hp01(f), tr = hpOverride >= 0f ? hpOverride : duel.Trail01(f);
             float since = duel.SinceHit(f);
             Texture2D frame = UiKit.Tex("UI/Kit/hud_hp_l");   // единый стиль: золото с шипами, массивный край — снаружи
             Rect hpWin = HpWinKit;
@@ -904,7 +916,8 @@ namespace BladePath
             // circular face inset. Reuse it here so Akiko/Ren never show Ronin.
             // Dedicated round face portraits (UI/hero_face_N) come first; the
             // card inset remains a fallback if a face file is ever missing.
-            if (!mirror)
+            if (portraitOverride != null) pp = portraitOverride;
+            else if (!mirror)
             {
                 pp = JourneyChoice.Face(JourneyChoice.Hero);
                 if (UiKit.Tex(pp) == null) pp = JourneyChoice.Portrait(JourneyChoice.Hero);

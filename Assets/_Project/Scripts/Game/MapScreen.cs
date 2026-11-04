@@ -1212,6 +1212,8 @@ namespace BladePath
             if (coins != null) GUI.DrawTexture(new Rect(x - 2f, y - 1f, 20f, 20f), coins);
             UiKit.Text(new Rect(x + (coins != null ? 22f : 0f), y, w, 18f), Profile.Gold + " мон", 13f, Gold, TextAnchor.MiddleLeft, false); y += 24f;
             string bl = Campaign.BlessingText;
+            if (SideDuel.Enabled && Profile.Ally >= 0)   // соратник: сила найма, ранен — к травнице
+                bl = (Profile.AllyDown ? "Соратник ранен — его выходит травница" : "Соратник: " + Profile.AllyTierNames[SideDuel.Tier].ToLower()) + (bl.Length > 0 ? "\n" + bl : "");
             if (bl.Length > 0)
             {
                 // благословения, проклятие, кот и заказ — медальоном (UI/buff_icons 3×2) и строкой рядом
@@ -1221,7 +1223,7 @@ namespace BladePath
                     int icon = entry.StartsWith("Благословение клинка") ? 0 : entry.StartsWith("Благословение духа") ? 1 : entry.StartsWith("Благословение жизни") ? 2
                         : entry.StartsWith("Проклятие") ? 3 : entry.StartsWith("Кошачья") || entry.StartsWith("Девять") ? 4 : entry.StartsWith("Заказ") ? 5 : -1;
                     float tx = x + (bi != null && icon >= 0 ? 24f : 0f);
-                    Color col = icon == 3 ? new Color(1f, 0.5f, 0.45f) : icon == 5 ? Gold : new Color(0.6f, 0.95f, 0.7f);
+                    Color col = icon == 3 || entry.StartsWith("Соратник ранен") ? new Color(1f, 0.5f, 0.45f) : icon == 5 ? Gold : new Color(0.6f, 0.95f, 0.7f);
                     float y0 = y;
                     foreach (string line in Wrap(entry, 31)) { UiKit.Text(new Rect(tx, y, w - (tx - x), 16f), line, 11.5f, col, TextAnchor.MiddleLeft, false); y += 16f; }
                     if (bi != null && icon >= 0)
@@ -1762,6 +1764,8 @@ namespace BladePath
         static readonly Rect TavKeeper = new Rect(80f, 60f, 330f, 320f), TavDice = new Rect(1120f, 210f, 380f, 270f),
             TavBoard = new Rect(1530f, 80f, 270f, 290f), TavDrunk = new Rect(1270f, 430f, 560f, 330f), TavHearth = new Rect(840f, 380f, 440f, 200f);
         static int AllyPrice { get { return 120 + 40 * Campaign.Region; } }
+        /// <summary>Цена соратника по силе: ученик дёшев, воин дороже, мастер — самый дорогой.</summary>
+        static int AllyPriceOf(int tier) { return Mathf.RoundToInt(AllyPrice * (tier == 0 ? 0.6f : tier == 1 ? 1.2f : 2.4f) / 5f) * 5; }
         int tavSub;           // 0 — зал, 1 — трактирщик, 2 — кости, 3 — доска, 4 — ронин
         bool tavKeeper, tavDice, tavBoard, tavDrunk, tavHearth, tavFromCamp, tavDiceFresh;
         void OpenTavern(bool fromCamp = false)
@@ -1823,22 +1827,32 @@ namespace BladePath
             }
             if (tavSub == 4)
             {
-                // пьяный ронин: расспросить — или нанять в соратники (бьётся на арене с бойцом врага)
-                Rect r = Card(580f, 290f);
-                float x = r.x + 24f, w = r.width - 48f, y = r.y + 20f;
-                int price = AllyPrice;
+                // пьяный ронин и его приятели: расспросить — или нанять соратника по силе (бьётся на арене с подручным врага)
+                Rect r = Card(640f, 380f);
+                float x = r.x + 26f, w = r.width - 52f, y = r.y + 20f;
                 bool has = Profile.Ally >= 0;
                 UiKit.Text(new Rect(x, y, w, 26f), "ПЬЯНЫЙ РОНИН", 20f, Gold); y += 32f;
-                y = Lines(x, y, w, has ? (Profile.AllyDown ? "«Твой соратник? Слыхал, лежит у травницы. Отнеси его к ней — выходит»." : "Ронин кивает на твоего соратника: «Добрый клинок. Береги его»." )
-                    : "Ронин трезвеет на глазах, стоит звякнуть кошелем. «За " + price + " мон пойду с тобой. Пока ты бьёшься с главным, я займу его подручного».", 52, 13f, Ink) + 10f;
-                if (!has && Btn(new Rect(x, y, w, 46f), "НАНЯТЬ СОРАТНИКА — " + price + " МОН", ok && gold >= price, true))
+                string intro = has
+                    ? (Profile.AllyDown ? "«Твой соратник лежит у травницы — отнеси его к ней». Можно взять и другого — прежний уйдёт." : "«С тобой уже ходит " + Profile.AllyTierNames[SideDuel.Tier].ToLower() + ". Хочешь сильнее — плати, прежний уйдёт».")
+                    : "Ронин трезвеет, стоит звякнуть кошелем. «Пока ты бьёшься с главным, мы займём его подручного. Сколько дашь — так и будем рубиться».";
+                y = Lines(x, y, w, intro, 58, 13f, Ink) + 8f;
+                string[] who = { "УЧЕНИК", "ВОИН", "МАСТЕР" };
+                string[] hint = { "дёшево, слабый — продержится, но вряд ли победит", "крепкий рубака — на равных с подручным", "опасный клинок — может одолеть даже владыку" };
+                for (int t = 0; t < 3; t++)
                 {
-                    Profile.AddGold(-price); Profile.SetAlly(0); tavDrunk = true; tavSub = 0;
-                    TavToast("Ронин идёт с тобой. В бою он схватится с бойцом врага в стороне; падёт — выходит травница.");
-                    return;
+                    int price = AllyPriceOf(t);
+                    bool same = has && !Profile.AllyDown && Profile.Ally == t;
+                    if (Btn(new Rect(x, y, w * 0.5f, 40f), who[t] + " — " + price + " МОН", ok && gold >= price && !same, t == 2))
+                    {
+                        Profile.AddGold(-price); Profile.SetAlly(t); tavDrunk = true; tavSub = 0;
+                        TavToast("С тобой идёт соратник (" + who[t].ToLower() + "). В бою он схватится с подручным врага в стороне; падёт — выходит травница.");
+                        return;
+                    }
+                    UiKit.Text(new Rect(x + w * 0.5f + 14f, y, w * 0.5f - 14f, 40f), same ? "уже с тобой" : hint[t], 11.5f, same ? Gold : new Color(0.82f, 0.78f, 0.7f), TextAnchor.MiddleLeft, false);
+                    y += 48f;
                 }
-                if (Btn(new Rect(x, y + (has ? 0f : 54f), w, 40f), "РАССПРОСИТЬ", ok)) { tavSub = 0; DrunkRoninTalk(); return; }
-                if (Btn(new Rect(r.center.x - 70f, r.yMax - 50f, 140f, 38f), "НАЗАД", ok)) tavSub = 0;
+                if (Btn(new Rect(x, r.yMax - 56f, w * 0.5f - 6f, 40f), "РАССПРОСИТЬ", ok)) { tavSub = 0; DrunkRoninTalk(); return; }
+                if (Btn(new Rect(x + w * 0.5f + 6f, r.yMax - 56f, w * 0.5f - 6f, 40f), "НАЗАД", ok)) tavSub = 0;
                 return;
             }
             // зал: подписи у зон, использованные — приглушены

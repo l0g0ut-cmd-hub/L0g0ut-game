@@ -196,9 +196,10 @@ namespace BladePath
             Vector3 dir = dist > 1e-3f ? to / dist : Vector3.right;
             Vector3 side = new Vector3(-dir.z, 0f, dir.x);
             bool busy = self.weapon != null && self.weapon.Phase != SwingPhase.Idle;
-            if (!autoPlayer && !sideFighter) Signatures(dist, dir, busy);
-            if (!sideFighter && Charge(dist, busy)) return;
-            bool canVanish = !sideFighter && (StageIdx == 1 || (StageIdx == 3 && Phase >= 3));
+            bool plain = sideFighter || (DuelManager.Instance != null && DuelManager.Instance.FoeStandIn && self == DuelManager.Instance.enemy);   // приспешник вместо врага — без фирменного
+            if (!autoPlayer && !plain) Signatures(dist, dir, busy);
+            if (!plain && Charge(dist, busy)) return;
+            bool canVanish = !plain && (StageIdx == 1 || (StageIdx == 3 && Phase >= 3));
 
             // кружение — эпизодами, а не постоянно: чаще бойцы держат линию и сходятся (раньше вечно ходили по кругу)
             if (Time.time > strafeUntil)
@@ -358,7 +359,7 @@ namespace BladePath
             if (!sideFighter && !busy && self.KiFull && dist < 2.8f && Random.value < 0.02f + 0.01f * Level && DuelManager.Instance != null && DuelManager.Instance.TrySuper(self)) return;
 
             // шар духа издалека
-            bool volley = StageIdx == 3 && Phase >= 2;
+            bool volley = !plain && StageIdx == 3 && Phase >= 2;
             if (!sideFighter && !busy && dist > (volley ? 1.8f : 2.2f) && self.CanEnergy && Time.time >= energyAt && Time.time >= blockUntil)
             {
                 energyAt = Time.time + (volley ? Random.Range(1.4f, 2.8f) : Random.Range(2.5f, 5f));
@@ -377,7 +378,7 @@ namespace BladePath
             {
                 bool quick = Time.time - nextAttackAt < 0.4f && DuelManager.Instance != null && DuelManager.Instance.Combo(self) > 0 && DuelManager.Instance.ComboAge(self) < 1.2f;
                 AttackType t = quick ? Followups[Random.Range(0, Followups.Length)] : Pool[Random.Range(0, Pool.Length)];
-                if (!quick && !sideFighter && Random.value < Ladder.Current.heavyBias) t = AttackType.Overhead;   // Они любит рубить сверху
+                if (!quick && !plain && Random.value < Ladder.Current.heavyBias) t = AttackType.Overhead;   // Они любит рубить сверху
                 // из стойки — её удары (по стойке их можно прочитать заранее)
                 int stc = self.weapon != null ? self.weapon.stance : 0;
                 if (!quick && stc == 1 && Random.value < 0.75f) t = Random.value < 0.6f ? AttackType.Overhead : AttackType.Slash;
@@ -386,7 +387,7 @@ namespace BladePath
                 bool peril = !quick && Level >= 1 && Random.value < 0.10f + 0.04f * Level;
                 if (peril) { float pr = Random.value; t = pr < 0.45f ? AttackType.Thrust : (pr < 0.75f || Level < 2 ? AttackType.LegSweep : AttackType.Charge); }   // натиск — с уровня 2
                 // они: тяжёлое «сверху» — удар по земле с волной (危: перепрыгни)
-                bool slam = !sideFighter && StageIdx == 2 && !quick && !peril && t == AttackType.Overhead && Random.value < 0.5f;
+                bool slam = !plain && StageIdx == 2 && !quick && !peril && t == AttackType.Overhead && Random.value < 0.5f;
                 if (self.Attack(t, peril))
                 {
                     if (slam && self.weapon != null && DuelManager.Instance != null)

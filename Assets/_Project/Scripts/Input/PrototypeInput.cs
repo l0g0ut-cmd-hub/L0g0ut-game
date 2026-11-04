@@ -172,7 +172,7 @@ namespace BladePath
             if (down[(int)B.AllyLevel]) SideDuel.AiLevel = (SideDuel.AiLevel + 1) % 3;
             if (down[(int)B.AllyImmortal]) SideDuel.ImmortalMode = (SideDuel.ImmortalMode + 1) % 4;
             if (down[(int)B.AllyFeature]) { SideDuel.Enabled = !SideDuel.Enabled; if (duel != null) { devOpen = false; duel.SetPaused(false); duel.ResetMatch(); } return; }
-            if (down[(int)B.Ally]) { Profile.SetAlly(Profile.Ally >= 0 && !Profile.AllyDown ? -1 : 0); if (duel != null) { devOpen = false; duel.SetPaused(false); duel.ResetMatch(); } return; }
+            if (down[(int)B.Ally]) { Profile.SetAlly(Profile.Ally >= 2 || Profile.AllyDown ? -1 : Profile.Ally + 1);   // нет → ученик → воин → мастер → нет if (duel != null) { devOpen = false; duel.SetPaused(false); duel.ResetMatch(); } return; }
             // автобой (отладка): игроком управляет тот же ИИ, что и врагом
             if (player != null && (DuelManager.AutoBattle || playerAi != null))
             {
@@ -340,7 +340,7 @@ namespace BladePath
             labels[(int)B.AllyLevel] = "ИИ СПУТНИКОВ: " + (SideDuel.AiLevel == 0 ? "УЧЕНИК" : SideDuel.AiLevel == 1 ? "ВОИН" : "МАСТЕР");
             labels[(int)B.AllyImmortal] = "БЕССМЕРТИЕ СПУТН.: " + SideDuel.ImmortalNames[SideDuel.ImmortalMode];
             labels[(int)B.AllyFeature] = "СОРАТНИКИ: " + (SideDuel.Enabled ? "ВКЛ" : "ВЫКЛ");
-            labels[(int)B.Ally] = "СОРАТНИК: " + (Profile.Ally < 0 ? "НЕТ" : Profile.AllyDown ? "ПАЛ" : "ЕСТЬ");
+            labels[(int)B.Ally] = "СОРАТНИК: " + (Profile.Ally < 0 ? "НЕТ" : Profile.AllyDown ? "ПАЛ" : Profile.AllyTierNames[Mathf.Clamp(Profile.Ally, 0, 2)]);
             labels[(int)B.Arena] = "АРЕНА: " + ArenaVariants.Names[Mathf.Clamp(ArenaVariants.Current, 0, ArenaVariants.Names.Length - 1)];
             labels[(int)B.Clavicle] = "РУКИ: " + (HeroRigDriver.DebugAnimSword ? "МОКАП" : "СТАРЫЙ IK");
             labels[(int)B.Twist] = "РУКИ: СКРУТКА " + Mathf.RoundToInt(HeroRigDriver.DebugTwistShare * 100f) + "%";
@@ -455,7 +455,7 @@ namespace BladePath
         {
             if (InventoryScreen.Open || MapScreen.Open) return;
             // пауза — поверх всего боевого интерфейса: вступление раунда, «НАЧАЛИ!», карточка врага, объявления не ложатся на её кнопки
-            GUI.depth = Paused ? -10 : 0;
+            GUI.depth = Paused || Over ? -10 : 0;   // и итоги боя: кнопки поверх затемнения экрана итогов, а не под ним
             Matrix4x4 old = UiKit.Begin();
             float W = UiKit.Width;
             bool paused = Paused, over = Over;
@@ -573,7 +573,8 @@ namespace BladePath
             // Buttons are drawn here, but input is processed by the existing
             // touch controller. Do not use GUI.Button (would double-activate).
             // единый стиль: чёрная лаковая кнопка с золотой окантовкой (нажатая — вдавленная)
-            Texture2D wood = UiKit.Tex(h ? "UI/Kit/ui_btn_pressed" : "UI/Kit/ui_btn");
+            bool main = b == (int)B.OverAgain || b == (int)B.Resume;   // главное действие — кроваво-красная кнопка
+            Texture2D wood = UiKit.Tex(main ? (h ? "UI/Kit/ui_btn_red_pressed" : "UI/Kit/ui_btn_red") : (h ? "UI/Kit/ui_btn_pressed" : "UI/Kit/ui_btn"));
             if (wood == null) wood = UiKit.Tex("UI/plank");
             if (wood != null)
             {
