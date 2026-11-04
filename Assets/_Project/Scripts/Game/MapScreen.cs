@@ -1665,11 +1665,20 @@ namespace BladePath
                         Color oc = GUI.color; GUI.color = new Color(1f, 1f, 1f, a);
                         GUI.DrawTexture(new Rect(0f, 0f, W, 540f), victory, ScaleMode.ScaleAndCrop);
                         GUI.color = oc;
-                        UiKit.Rect(new Rect(0f, 352f, W, 188f), new Color(0.01f, 0.008f, 0.008f, 0.62f * a));
-                        UiKit.Text(new Rect(0f, 362f, W, 24f), "ОБЛАСТЬ ПРОЙДЕНА", 16f, new Color(Gold.r, Gold.g, Gold.b, a));
-                        UiKit.Text(new Rect(0f, 386f, W, 42f), Campaign.RegionNames[prev], 32f, new Color(Ink.r, Ink.g, Ink.b, a));
-                        UiKit.Text(new Rect(0f, 430f, W, 22f), "Впереди — " + Campaign.RegionNames[Campaign.Region] + (Campaign.Region == 0 ? " (новый круг: враги крепче, добыча богаче)" : ""), 13f, new Color(Dim.r, Dim.g, Dim.b, a));
-                        if (Btn(new Rect(W * 0.5f - 100f, 466f, 200f, 48f), "В ЛАГЕРЬ", ok && a >= 1f, true)) { Campaign.AckCleared(); OpenCamp(); }
+                        UiKit.Rect(new Rect(0f, 300f, W, 240f), new Color(0.01f, 0.008f, 0.008f, 0.62f * a));
+                        UiKit.Text(new Rect(0f, 306f, W, 24f), "ОБЛАСТЬ ПРОЙДЕНА", 16f, new Color(Gold.r, Gold.g, Gold.b, a));
+                        // название — на ленте с маской они (UI/Kit): маска над лентой, середина свободна под надпись
+                        Texture2D oni = UiKit.Tex("UI/Kit/hud_banner_oni");
+                        if (oni != null)
+                        {
+                            float bw = Mathf.Min(W - 40f, 560f), bh = bw * oni.height / oni.width;
+                            Color oc2 = GUI.color; GUI.color = new Color(1f, 1f, 1f, a);
+                            GUI.DrawTexture(new Rect(W * 0.5f - bw * 0.5f, 400f - bh * 0.575f, bw, bh), oni);
+                            GUI.color = oc2;
+                        }
+                        UiKit.Text(new Rect(0f, 379f, W, 42f), Campaign.RegionNames[prev], 30f, new Color(Ink.r, Ink.g, Ink.b, a));
+                        UiKit.Text(new Rect(0f, 458f, W, 22f), "Впереди — " + Campaign.RegionNames[Campaign.Region] + (Campaign.Region == 0 ? " (новый круг: враги крепче, добыча богаче)" : ""), 13f, new Color(Dim.r, Dim.g, Dim.b, a));
+                        if (Btn(new Rect(W * 0.5f - 100f, 486f, 200f, 44f), "В ЛАГЕРЬ", ok && a >= 1f, true)) { Campaign.AckCleared(); OpenCamp(); }
                         break;
                     }
                     Rect r = Card(600f, 260f);
