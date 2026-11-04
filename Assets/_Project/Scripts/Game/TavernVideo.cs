@@ -23,6 +23,7 @@ namespace BladePath
         bool standbyPrepared;
         bool initialVideoVisible;
         float firstFrameAt = -1f;
+        float initialVisibleAt = -1f;
         // First launch waits for a real decoded frame; never switch on frame index alone.
         const float FirstFrameSettle = 0.12f;
         int cur = -1;   // чью текстуру показываем
@@ -107,10 +108,13 @@ namespace BladePath
                 if (!frameDelivered[0] || firstFrameAt < 0f || Time.unscaledTime - firstFrameAt < FirstFrameSettle)
                     return null;
                 initialVideoVisible = true;
+                initialVisibleAt = Time.unscaledTime;
                 shown = true;
             }
-            // Prepare the second loop decoder only after the first is visible.
-            if (!standbyPrepared)
+            // Let Android finish the first decoder handoff before bringing
+            // up the standby codec. This avoids a second start-up spike
+            // during the first visible moment of the tavern.
+            if (!standbyPrepared && Time.unscaledTime - initialVisibleAt >= 0.7f)
             {
                 standbyPrepared = true;
                 vp[1].Prepare();
