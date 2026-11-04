@@ -454,6 +454,8 @@ namespace BladePath
         void OnGUI()
         {
             if (InventoryScreen.Open || MapScreen.Open) return;
+            // пауза — поверх всего боевого интерфейса: вступление раунда, «НАЧАЛИ!», карточка врага, объявления не ложатся на её кнопки
+            GUI.depth = Paused ? -10 : 0;
             Matrix4x4 old = UiKit.Begin();
             float W = UiKit.Width;
             bool paused = Paused, over = Over;
