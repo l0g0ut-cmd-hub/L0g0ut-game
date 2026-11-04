@@ -567,7 +567,7 @@ namespace BladePath
                 GUI.matrix = m0;
             }
             Vector2 gc = new Vector2(cx + 262f, y + 24f);
-            if (UiKit.Tex(tex + "_ru") != null) DrawGlyph(tex + "_ru", gc, 86f * (1f + 0.7f * (1f - stamp) * (1f - stamp)), stamp);   // печати с иероглифами убраны до русских
+            if (UiKit.Tex(tex + "_ru") != null) DrawGlyph(tex + "_ru", gc, 86f * (1f + 0.7f * (1f - stamp) * (1f - stamp)), stamp);   // оценка — звёзды в печати (раньше 秀 優 良 可)
             UiKit.Text(new Rect(gc.x - 70f, gc.y + 40f, 140f, 16f), word, 11f, new Color(0.9f, 0.82f, 0.68f, a), TextAnchor.MiddleCenter, false);
         }
 
