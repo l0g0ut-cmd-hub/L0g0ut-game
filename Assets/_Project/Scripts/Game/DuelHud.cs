@@ -173,8 +173,8 @@ namespace BladePath
             }
 
             // шкалы духа (ки) под полосками здоровья
-            DrawKi(new Rect(cx - 80f - barW * 0.55f, 88f, barW * 0.55f, 6f), duel.player, false);
-            DrawKi(new Rect(cx + 80f, 88f, barW * 0.55f, 6f), duel.enemy, true);
+            DrawKi(new Rect(cx - 80f - barW * 0.55f, 86f, barW * 0.55f, 10f), duel.player, false);   // толще: в новой рамке тонкую полосу духа не было видно
+            DrawKi(new Rect(cx + 80f, 86f, barW * 0.55f, 10f), duel.enemy, true);
 
             // равновесие (как в Sekiro): у врага — над головой, у игрока — внизу по центру; полоса растёт от середины к краям
             if (cam != null && duel.State == DuelState.Fighting)
