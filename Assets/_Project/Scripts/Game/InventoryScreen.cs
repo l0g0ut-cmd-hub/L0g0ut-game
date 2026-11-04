@@ -140,28 +140,24 @@ namespace BladePath
             float W = UiKit.Width;
             UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, 0.86f));
             Rect panel = new Rect(12f, 10f, W - 24f, 520f);
-            VisualIdentity.KitSurface(panel, 1f);
-            // Paper grain becomes a subtle second layer beneath the lacquer.
-            UiKit.Paper(new Rect(panel.x + 10f, panel.y + 60f,
-                panel.width - 20f, panel.height - 72f),
-                new Color(0.24f, 0.19f, 0.13f, 0.13f));
+            VisualIdentity.KitArmory(panel, 1f);   // оружейная самурая (рамка, катаны, доспех справа) — снизу под ячейками
 
             // шапка: вкладки, монеты, «готово»
-            if (Btn(new Rect(30f, 18f, 186f, 36f), "СНАРЯЖЕНИЕ", true, tab == 0)) tab = 0;
-            if (Btn(new Rect(226f, 18f, 186f, 36f), "ПРОКАЧКА" + (Profile.Points > 0 ? "  +" + Profile.Points : ""), true, tab == 1)) { tab = 1; pending = Profile.StatsCopy(); }
-            if (Btn(new Rect(422f, 18f, 150f, 36f), "ПУТЬ", true, tab == 2)) tab = 2;
+            if (Btn(new Rect(48f, 26f, 180f, 36f), "СНАРЯЖЕНИЕ", true, tab == 0)) tab = 0;
+            if (Btn(new Rect(238f, 26f, 180f, 36f), "ПРОКАЧКА" + (Profile.Points > 0 ? "  +" + Profile.Points : ""), true, tab == 1)) { tab = 1; pending = Profile.StatsCopy(); }
+            if (Btn(new Rect(428f, 26f, 144f, 36f), "ПУТЬ", true, tab == 2)) tab = 2;
             Texture2D coin = UiKit.Tex("UI/coins");
             float gx = W - 330f;
-            if (coin != null) GUI.DrawTexture(new Rect(gx, 18f, 36f, 36f), coin); else UiKit.Disc(new Vector2(gx + 18f, 36f), 12f, Gold);
-            UiKit.Text(new Rect(gx + 40f, 16f, 140f, 40f), Profile.Gold + " МОН", 20f, Gold, TextAnchor.MiddleLeft);
-            if (Btn(new Rect(W - 160f, 18f, 130f, 36f), "ГОТОВО")) { Hide(); return; }
+            if (coin != null) GUI.DrawTexture(new Rect(gx, 26f, 36f, 36f), coin); else UiKit.Disc(new Vector2(gx + 18f, 44f), 12f, Gold);
+            UiKit.Text(new Rect(gx + 40f, 24f, 140f, 40f), Profile.Gold + " МОН", 20f, Gold, TextAnchor.MiddleLeft);
+            if (Btn(new Rect(W - 178f, 26f, 130f, 36f), "ГОТОВО")) { Hide(); return; }
 
-            VisualIdentity.Divider(new Rect(24f, 60f, W - 48f, 1f), 0.43f);
+            VisualIdentity.Divider(new Rect(40f, 68f, W - 80f, 1f), 0.43f);   // рамка оружейной: все элементы внутри её золотой кромки и углов
             if (tab == 1) { DrawUpgrade(W); return; }
             if (tab == 2) { DrawPath(W); return; }
-            Rect stats = new Rect(28f, 68f, 292f, 450f);
-            Rect equipped = new Rect(332f, 68f, 232f, 450f);
-            Rect bag = new Rect(578f, 68f, W - 608f, 450f);
+            Rect stats = new Rect(40f, 76f, 284f, 432f);
+            Rect equipped = new Rect(334f, 76f, 232f, 432f);
+            Rect bag = new Rect(578f, 76f, W - 618f, 432f);
             VisualIdentity.Inset(stats);
             VisualIdentity.Inset(equipped);
             VisualIdentity.Inset(bag);
@@ -257,16 +253,16 @@ namespace BladePath
             int[] cur = Profile.StatsCopy();
             bool changed = false; for (int i = 0; i < cur.Length; i++) if (cur[i] != pending[i]) changed = true;
 
-            float lx = 30f, lw = Mathf.Min(560f, W * 0.56f);
-            UiKit.Text(new Rect(lx, 62f, lw, 28f), "УРОВЕНЬ " + Profile.Level + "   ·   ОПЫТ " + Profile.Xp + " / " + Profile.XpToNext, 17f, Ink, TextAnchor.MiddleLeft);
-            Rect xb = new Rect(lx, 92f, lw, 8f);
+            float lx = 44f, lw = Mathf.Min(560f, W * 0.56f);   // внутри золотой рамки оружейной
+            UiKit.Text(new Rect(lx, 72f, lw, 28f), "УРОВЕНЬ " + Profile.Level + "   ·   ОПЫТ " + Profile.Xp + " / " + Profile.XpToNext, 17f, Ink, TextAnchor.MiddleLeft);
+            Rect xb = new Rect(lx, 100f, lw, 8f);
             VisualIdentity.AccentBar(xb, VisualIdentity.Brass,
                 Profile.Xp / (float)Mathf.Max(1, Profile.XpToNext));
             float pulse = free > 0 ? 1f + 0.05f * Mathf.Sin(Time.unscaledTime * 5f) : 1f;
-            UiKit.Text(new Rect(lx, 104f, lw, 30f), "СВОБОДНЫХ ОЧКОВ: " + free + "   из " + total, 19f * pulse, free > 0 ? new Color(1f, 0.82f, 0.35f) : new Color(0.8f, 0.76f, 0.68f), TextAnchor.MiddleLeft);
+            UiKit.Text(new Rect(lx, 110f, lw, 30f), "СВОБОДНЫХ ОЧКОВ: " + free + "   из " + total, 19f * pulse, free > 0 ? new Color(1f, 0.82f, 0.35f) : new Color(0.8f, 0.76f, 0.68f), TextAnchor.MiddleLeft);
             for (int i = 0; i < Profile.StatCount; i++)
             {
-                float y = 142f + i * 66f;
+                float y = 146f + i * 64f;
                 Rect row = new Rect(lx, y, lw, 60f);
                 VisualIdentity.Inset(row);
                 UiKit.Rect(new Rect(row.x, row.y, 3f, row.height),
@@ -283,10 +279,10 @@ namespace BladePath
                 if (Btn(new Rect(lx + lw - 52f, y + 9f, 44f, 42f), "+", free > 0)) pending[i]++;
             }
             // справа — что изменится
-            float rx = lx + lw + 22f, rw = W - rx - 32f;
-            Rect rp = new Rect(rx, 62f, rw, 396f);
+            float rx = lx + lw + 22f, rw = W - rx - 46f;
+            Rect rp = new Rect(rx, 76f, rw, 382f);
             VisualIdentity.Inset(rp);
-            VisualIdentity.Heading(new Rect(rx + 12f, 68f, rw - 24f, 30f),
+            VisualIdentity.Heading(new Rect(rx + 12f, 82f, rw - 24f, 30f),
                 changed ? "ЧТО ИЗМЕНИТСЯ" : "ИТОГ");
             Profile.Bonus a = Profile.Compute(cur), b = Profile.Compute(pending);
             string[] names = { "Урон", "Здоровье", "Урон по равновесию", "Накопление духа", "Окно отражения", "Откат рывка", "Скорость" };
@@ -302,10 +298,10 @@ namespace BladePath
                 UiKit.Text(new Rect(rx + 12f, y + 17f, rw - 24f, 20f), txt, 15f, better ? new Color(0.55f, 0.95f, 0.45f) : worse ? new Color(1f, 0.55f, 0.45f) : Ink, TextAnchor.MiddleLeft);
             }
             // кнопки: перераспределение бесплатно, в любой момент
-            float by = 470f, bw = (W - 64f - 20f) / 3f;
-            if (Btn(new Rect(32f, by, bw, 42f), "СБРОСИТЬ ВСЁ", used > 0, true)) for (int i = 0; i < pending.Length; i++) pending[i] = 0;
-            if (Btn(new Rect(42f + bw, by, bw, 42f), "ОТМЕНА", changed)) pending = Profile.StatsCopy();
-            if (Btn(new Rect(52f + bw * 2f, by, bw, 42f), "ПРИНЯТЬ", changed)) { Profile.SetStats(pending); pending = Profile.StatsCopy(); if (DuelManager.Instance != null) DuelManager.Instance.ApplyProfile(); }
+            float by = 468f, bw = (W - 92f - 20f) / 3f;
+            if (Btn(new Rect(46f, by, bw, 42f), "СБРОСИТЬ ВСЁ", used > 0, true)) for (int i = 0; i < pending.Length; i++) pending[i] = 0;
+            if (Btn(new Rect(56f + bw, by, bw, 42f), "ОТМЕНА", changed)) pending = Profile.StatsCopy();
+            if (Btn(new Rect(66f + bw * 2f, by, bw, 42f), "ПРИНЯТЬ", changed)) { Profile.SetStats(pending); pending = Profile.StatsCopy(); if (DuelManager.Instance != null) DuelManager.Instance.ApplyProfile(); }
         }
 
         // ---------------- «Путь»: горная тропа, печати ступеней, враг в полный рост ----------------
@@ -316,7 +312,7 @@ namespace BladePath
         void DrawPath(float W)
         {
             float lw = Mathf.Min(560f, W * 0.55f);
-            Rect pr = new Rect(30f, 64f, lw, 452f);
+            Rect pr = new Rect(44f, 76f, lw, 432f);
             Texture2D pan = UiKit.Tex("UI/path_panorama");
             if (pan != null) GUI.DrawTexture(pr, pan, ScaleMode.ScaleAndCrop); else UiKit.Rect(pr, new Color(0.1f, 0.1f, 0.12f));
             UiKit.Rect(new Rect(pr.x, pr.y, pr.width, 34f), new Color(0f, 0f, 0f, 0.5f));
@@ -339,8 +335,8 @@ namespace BladePath
                 UiKit.Text(new Rect(c.x + s * 0.5f + 4f, c.y - 10f, 200f, 20f), Ladder.Stages[i].name, now ? 13f : 11f, now ? Gold : new Color(0.85f, 0.82f, 0.75f, done ? 1f : 0.6f), TextAnchor.MiddleLeft);
             }
             // справа — текущий противник
-            float rx = pr.xMax + 20f, rw = W - rx - 32f;
-            Rect rp = new Rect(rx, 64f, rw, 452f);
+            float rx = pr.xMax + 20f, rw = W - rx - 46f;
+            Rect rp = new Rect(rx, 76f, rw, 432f);
             UiKit.Rect(rp, new Color(0f, 0f, 0f, 0.4f));
             Texture2D ef = UiKit.Tex(EnemyFull[Mathf.Clamp(cur, 0, EnemyFull.Length - 1)]);
             if (ef != null)

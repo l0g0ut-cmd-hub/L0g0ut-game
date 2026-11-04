@@ -118,7 +118,7 @@ def check_design_system():
         "map story cards unified":
             'VisualIdentity.Portrait(r, UiKit.Tex(tex) != null ? tex : "UI/path_panorama")' in map_code,
         "inventory unified":
-            ("VisualIdentity.KitSurface(panel" in inventory or "VisualIdentity.Surface(panel" in inventory) and
+            ("VisualIdentity.KitArmory(panel" in inventory or "VisualIdentity.KitSurface(panel" in inventory or "VisualIdentity.Surface(panel" in inventory) and
             "VisualIdentity.Heading(" in inventory,
         "duel actions have room for full Russian labels":
             'Btn(new Rect(x, r.yMax - 116f, w, 44f), "В БОЙ"' in map_code and

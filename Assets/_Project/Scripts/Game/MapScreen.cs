@@ -1496,6 +1496,7 @@ namespace BladePath
 
         void Picture(Rect r, string tex)
         {
+            r = new Rect(r.x + 14f, r.y + 14f, r.width - 14f, r.height - 28f);   // картинка внутри рамки окна, а не поверх её золота
             VisualIdentity.Portrait(r, UiKit.Tex(tex) != null ? tex : "UI/path_panorama");
         }
 

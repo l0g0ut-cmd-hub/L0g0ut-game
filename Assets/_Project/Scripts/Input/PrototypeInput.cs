@@ -575,7 +575,7 @@ namespace BladePath
             if (wood == null) wood = UiKit.Tex("UI/plank");
             if (wood != null)
             {
-                Rect vr = new Rect(r.x - r.height * 0.12f, r.y - r.height * 0.14f, r.width + r.height * 0.24f, r.height * 1.28f);
+                Rect vr = new Rect(r.x - r.height * 0.10f, r.y - r.height * 0.06f, r.width + r.height * 0.20f, r.height * 1.12f);
                 UiKit.Slice(vr, wood, vr.height / wood.height, 0.14f, 0.12f, 0.5f, 0f, Color.white);
             }
             else VisualIdentity.Surface(r, 0.98f, false);

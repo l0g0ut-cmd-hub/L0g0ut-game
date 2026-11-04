@@ -154,7 +154,7 @@ namespace BladePath
             bool down = enabled && Event.current != null && r.Contains(Event.current.mousePosition) && GUIUtility.hotControl != 0;
             if (down && !square) { Texture2D pt = UiKit.Tex(red ? "UI/Kit/ui_btn_red_pressed" : "UI/Kit/ui_btn_pressed"); if (pt != null) t = pt; }
             // кнопка чуть выше своего прямоугольника: шипы и цветки по краям выходят за него, текст — в середине
-            Rect vr = new Rect(r.x - r.height * 0.12f, r.y - r.height * 0.14f, r.width + r.height * 0.24f, r.height * 1.28f);
+            Rect vr = new Rect(r.x - r.height * 0.10f, r.y - r.height * 0.06f, r.width + r.height * 0.20f, r.height * 1.12f);   // шипы почти не выходят — соседние кнопки не наезжают
             Color tint = !enabled && square ? new Color(0.5f, 0.48f, 0.45f, 0.85f) : Color.white;
             if (square) GUI.DrawTexture(vr, t, ScaleMode.StretchToFill, true, 0f, tint, 0f, 0f);
             else UiKit.Slice(vr, t, vr.height / t.height, 0.14f, 0.12f, 0.5f, 0f, tint);
@@ -180,9 +180,29 @@ namespace BladePath
                 // рамка чуть шире прямоугольника: шипы углов наружу, содержимое — на тёмной середине
                 // углы мельче (k ≤ 0,4) и рамка на 16 наружу — орнамент углов не заходит на заголовки карточек
                 Rect vr = new Rect(r.x - 16f, r.y - 16f, r.width + 32f, r.height + 32f);
-                float k = Mathf.Clamp(Mathf.Min(vr.width / t.width, vr.height / t.height) * 0.6f, 0.26f, 0.4f);
-                UiKit.Slice(vr, t, k, 0.2f, 0.1f, 0.3f, 0.12f, c);
+                float k = Mathf.Clamp(Mathf.Min(vr.width / t.width, vr.height / t.height) * 0.6f, 0.26f, 0.34f);
+                // середина — цельная доска (без повторов: повтор лака давал полосатый узор), поверх — только рамка с прозрачной серединой
+                Texture2D board = UiKit.Tex("UI/Kit/ui_board"), frame = UiKit.Tex("UI/Kit/ui_panel_frame");
+                if (board != null && frame != null)
+                {
+                    float bd = 30f * k;
+                    Color o = GUI.color; GUI.color = c;
+                    GUI.DrawTexture(new Rect(vr.x + bd, vr.y + bd, vr.width - 2f * bd, vr.height - 2f * bd), board, ScaleMode.StretchToFill);
+                    GUI.color = o;
+                    UiKit.Slice(vr, frame, k, 0.2f, 0.1f, 0.3f, 0.12f, c);
+                }
+                else UiKit.Slice(vr, t, k, 0.2f, 0.1f, 0.3f, 0.12f, c);
             }
+        }
+
+        /// <summary>Фон экрана снаряжения: оружейная самурая в золотой рамке (UI/Kit/ui_bg_armory) — цельная картина, без нарезки.</summary>
+        public static void KitArmory(Rect r, float alpha = 1f)
+        {
+            Texture2D t = UiKit.Tex("UI/Kit/ui_bg_armory");
+            if (t == null) { KitSurface(r, alpha); return; }
+            Color o = GUI.color; GUI.color = new Color(1f, 1f, 1f, alpha);
+            GUI.DrawTexture(new Rect(r.x - 6f, r.y - 6f, r.width + 12f, r.height + 12f), t, ScaleMode.StretchToFill);
+            GUI.color = o;
         }
 
         /// <summary>Высокая боковая панель с гербом (карта похода).</summary>
