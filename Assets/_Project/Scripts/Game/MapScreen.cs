@@ -1770,26 +1770,26 @@ namespace BladePath
                 if (Btn(new Rect(r.center.x - 70f, r.yMax - 52f, 140f, 40f), "НАЗАД", ok)) campSub = 0;
                 return;
             }
-            // зоны: уже использованные приглушены, нажатие — тёплая вспышка
-            Rect forge = CampRect(CampForge, s, ox, oy), altar = CampRect(CampAltar, s, ox, oy), train = CampRect(CampTrain, s, ox, oy),
-                 go = CampRect(CampGo, s, ox, oy);
-            // Completed camp interactions remain disabled by their hitbox guards below.
-            // Do not draw an opaque/translucent Rect on painted art: it remained
-            // as a visible square after using the altar, training or quest board.
-            if (!ok || InventoryScreen.Open) return;
+            // Small, visibly clickable plaques; only the buttons are drawn,
+            // never a tint/rectangle on the original camp artwork or video.
+            Rect forgeButton = CampRect(new Rect(335f, 159f, 205f, 46f), s, ox, oy);
+            Rect altarButton = CampRect(new Rect(240f, 544f, 185f, 46f), s, ox, oy);
+            Rect trainButton = CampRect(new Rect(1480f, 450f, 215f, 46f), s, ox, oy);
+            Rect go = CampRect(CampGo, s, ox, oy);
+            bool enabled = ok && !InventoryScreen.Open;
             // Separate navigation buttons: the quest board no longer opens when tapping the distant hill house.
             // Match the tavern button style/height and keep a 12-unit gap.
-            if (Btn(new Rect(W - 450f, 14f, 242f, 42f), "ДОСКА ЗАДАНИЙ", ok && !campBoard)) { campSub = 2; return; }
-            if (UiKit.Tex("UI/tavern") != null && Btn(new Rect(W - 196f, 14f, 180f, 42f), "ТРАКТИР", ok)) { Profile.CostMul = 1f; OpenTavern(true); return; }
-            if (Btn(go, "В ПУТЬ", ok, true)) { Profile.CostMul = 1f; modal = Modal.None; Haptics.Pulse(20); return; }
-            if (GUI.Button(forge, GUIContent.none, GUIStyle.none)) { Profile.CostMul = 0.5f; InventoryScreen.Show(0); return; }
-            if (GUI.Button(altar, GUIContent.none, GUIStyle.none))
+            if (Btn(new Rect(W - 450f, 14f, 242f, 42f), "ДОСКА ЗАДАНИЙ", enabled && !campBoard)) { campSub = 2; return; }
+            if (Btn(new Rect(W - 196f, 14f, 180f, 42f), "ТРАКТИР", enabled && UiKit.Tex("UI/tavern") != null)) { Profile.CostMul = 1f; OpenTavern(true); return; }
+            if (Btn(go, "В ПУТЬ", enabled, true)) { Profile.CostMul = 1f; modal = Modal.None; Haptics.Pulse(20); return; }
+            if (Btn(forgeButton, "КУЗНИЦА", enabled)) { Profile.CostMul = 0.5f; InventoryScreen.Show(0); return; }
+            if (Btn(altarButton, "АЛТАРЬ", enabled))
             {
                 if (campAltar) TavToast("Алтарь уже даровал благословение. Возвращайся в следующий привал.");
                 else campSub = 1;
                 return;
             }
-            if (GUI.Button(train, GUIContent.none, GUIStyle.none))
+            if (Btn(trainButton, "ТРЕНИРОВКА", enabled))
             {
                 if (campTrain) TavToast("Тренировка завершена. Новое занятие — на следующем привале.");
                 else
@@ -1901,23 +1901,26 @@ namespace BladePath
                 if (Btn(new Rect(x + w * 0.5f + 6f, r.yMax - 56f, w * 0.5f - 6f, 40f), "НАЗАД", ok)) tavSub = 0;
                 return;
             }
-            // зал: подписи у зон, использованные — приглушены
-            Rect keeper = CampRect(TavKeeper, s, ox, oy), dice = CampRect(TavDice, s, ox, oy), board = CampRect(TavBoard, s, ox, oy),
-                 drunk = CampRect(TavDrunk, s, ox, oy), hearth = CampRect(TavHearth, s, ox, oy);
-            TavLabel(keeper, "ТРАКТИРЩИК", tavKeeper); TavLabel(dice, "КОСТИ", tavDice); TavLabel(board, "НАГРАДЫ", tavBoard);
-            TavLabel(drunk, "ПЬЯНЫЙ РОНИН", tavDrunk); TavLabel(hearth, "ОЧАГ", tavHearth);
+            // Existing tavern photo/video/intentional static overlay are untouched.
+            // Replace the five tiny plain labels and huge invisible hitboxes
+            // with compact Kit buttons positioned beside their original objects.
+            Rect keeperButton = CampRect(new Rect(90f, 329f, 237f, 44f), s, ox, oy);
+            Rect diceButton = CampRect(new Rect(1236f, 424f, 185f, 44f), s, ox, oy);
+            Rect boardButton = CampRect(new Rect(1610f, 323f, 200f, 44f), s, ox, oy);
+            Rect drunkButton = CampRect(new Rect(1480f, 670f, 244f, 44f), s, ox, oy);
+            Rect hearthButton = CampRect(new Rect(900f, 520f, 160f, 44f), s, ox, oy);
             UiKit.Text(new Rect(0f, 8f, W, 30f), "ТРАКТИР «ЧЁРНЫЙ ФОНАРЬ»", 22f, Gold);
-            if (!ok || InventoryScreen.Open) return;
-            if (Btn(new Rect(W * 0.5f - 100f, 540f - 58f, 200f, 44f), tavFromCamp ? "В ЛАГЕРЬ" : "УЙТИ", ok, true))
+            bool enabled = ok && !InventoryScreen.Open;
+            if (Btn(new Rect(W * 0.5f - 100f, 540f - 58f, 200f, 44f), tavFromCamp ? "В ЛАГЕРЬ" : "УЙТИ", enabled, true))
             {
                 if (tavFromCamp) { modal = Modal.Camp; modalAt = Time.unscaledTime; } else modal = Modal.None;
                 Haptics.Pulse(20); return;
             }
-            if (!tavKeeper && GUI.Button(keeper, GUIContent.none, GUIStyle.none)) { tavSub = 1; return; }
-            if (!tavDice && GUI.Button(dice, GUIContent.none, GUIStyle.none)) { tavSub = 2; TavernDiceGame.Enter(tavDiceFresh); tavDiceFresh = false; return; }
-            if (!tavBoard && GUI.Button(board, GUIContent.none, GUIStyle.none)) { tavSub = 3; return; }
-            if (!tavDrunk && GUI.Button(drunk, GUIContent.none, GUIStyle.none)) { if (SideDuel.Enabled) tavSub = 4; else DrunkRoninTalk(); return; }
-            if (!tavHearth && GUI.Button(hearth, GUIContent.none, GUIStyle.none))
+            if (Btn(keeperButton, "ТРАКТИРЩИК", enabled && !tavKeeper)) { tavSub = 1; return; }
+            if (Btn(diceButton, "КОСТИ", enabled && !tavDice)) { tavSub = 2; TavernDiceGame.Enter(tavDiceFresh); tavDiceFresh = false; return; }
+            if (Btn(boardButton, "НАГРАДЫ", enabled && !tavBoard)) { tavSub = 3; return; }
+            if (Btn(drunkButton, "ПЬЯНЫЙ РОНИН", enabled && !tavDrunk)) { if (SideDuel.Enabled) tavSub = 4; else DrunkRoninTalk(); return; }
+            if (Btn(hearthButton, "ОЧАГ", enabled && !tavHearth))
             {
                 tavHearth = true;
                 if (Campaign.Cursed) { Campaign.LiftCurse(); TavToast("Ты долго смотришь в огонь. Тяжесть проклятия уходит с дымом."); }
