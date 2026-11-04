@@ -172,7 +172,7 @@ namespace BladePath
             if (down[(int)B.AllyLevel]) SideDuel.AiLevel = (SideDuel.AiLevel + 1) % 3;
             if (down[(int)B.AllyImmortal]) SideDuel.ImmortalMode = (SideDuel.ImmortalMode + 1) % 4;
             if (down[(int)B.AllyFeature]) { SideDuel.Enabled = !SideDuel.Enabled; if (duel != null) { devOpen = false; duel.SetPaused(false); duel.ResetMatch(); } return; }
-            if (down[(int)B.Ally]) { Profile.SetAlly(Profile.Ally >= 2 || Profile.AllyDown ? -1 : Profile.Ally + 1);   // нет → ученик → воин → мастер → нет if (duel != null) { devOpen = false; duel.SetPaused(false); duel.ResetMatch(); } return; }
+            if (down[(int)B.Ally]) { Profile.SetAlly(Profile.Ally >= 2 || Profile.AllyDown ? -1 : Profile.Ally + 1); /* нет → ученик → воин → мастер → нет */ if (duel != null) { devOpen = false; duel.SetPaused(false); duel.ResetMatch(); } return; }
             // автобой (отладка): игроком управляет тот же ИИ, что и врагом
             if (player != null && (DuelManager.AutoBattle || playerAi != null))
             {
