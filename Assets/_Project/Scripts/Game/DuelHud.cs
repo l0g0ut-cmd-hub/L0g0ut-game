@@ -903,14 +903,18 @@ namespace BladePath
                 UiKit.Rect(new Rect(r.x - 3f, r.y - 3f, r.width + 6f, r.height + 6f), Frame);
                 UiKit.Rect(new Rect(r.x - 1f, r.y - 1f, r.width + 2f, r.height + 2f), new Color(0.55f, 0.43f, 0.22f, 0.9f));
             }
-            UiKit.Rect(r, new Color(0.05f, 0.01f, 0.01f, 1f));
-            // шлейф и текущее
-            DrawFill(r, tr, mirror, new Color(0.95f, 0.75f, 0.3f, 0.95f));
+            // окно заливки внутри рамки
+            float hfX = r.x + r.width * hpWin.x, hfW = r.width * hpWin.width;
+            float hfY = r.y + r.height * hpWin.y, hfH = r.height * hpWin.height;
+            Rect hf = new Rect(hfX, hfY, hfW, hfH);
+            UiKit.Rect(hf, new Color(0.05f, 0.01f, 0.01f, 1f));
+            // шлейф и текущее — строго внутри окна
+            DrawFill(hf, tr, mirror, new Color(0.95f, 0.75f, 0.3f, 0.95f));
             Color main = hp > 0.3f ? new Color(0.72f, 0.07f, 0.08f) : new Color(0.95f, 0.16f, 0.08f);
             if (since < 0.12f) main = Color.white;
-            DrawFill(r, hp, mirror, main);
-            DrawFill(new Rect(r.x, r.y, r.width, r.height * 0.4f), hp, mirror, new Color(1f, 0.6f, 0.55f, 0.18f));   // блик
-            DrawFill(new Rect(r.x, r.yMax - r.height * 0.3f, r.width, r.height * 0.3f), hp, mirror, new Color(0f, 0f, 0f, 0.25f));
+            DrawFill(hf, hp, mirror, main);
+            DrawFill(new Rect(hfX, hfY, hfW, hfH * 0.4f), hp, mirror, new Color(1f, 0.6f, 0.55f, 0.18f));   // блик
+            DrawFill(new Rect(hfX, hfY + hfH * 0.7f, hfW, hfH * 0.3f), hp, mirror, new Color(0f, 0f, 0f, 0.25f));
             DrawFrame(r, frame, hpWin, mirror);
 
             // портрет за наружным концом рамки
