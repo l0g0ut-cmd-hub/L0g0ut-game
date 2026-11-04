@@ -271,11 +271,12 @@ namespace BladePath
 
             Rect ok = difficulty ? DifficultyConfirm : TravellerStart;
             Rect back = difficulty ? DifficultyBack : TravellerBack;
-            Color oldBg = GUI.backgroundColor;
-            GUI.backgroundColor = new Color(1f, 0.9f, 0.7f, 0.18f);   // отклик при нажатии (hitStyle.active)
-            bool pressedBack = GUI.Button(new Rect(ox + back.x * s, oy + back.y * s, back.width * s, back.height * s), GUIContent.none, hitStyle);
-            bool pressedOk = GUI.Button(new Rect(ox + ok.x * s, oy + ok.y * s, ok.width * s, ok.height * s), GUIContent.none, hitStyle);
-            GUI.backgroundColor = oldBg;
+            // The original selection JPEG contains old button paintings.
+            // Cover only their exact button areas with the existing opaque
+            // dark UI board, then render the shared Kit buttons on top.
+            // The approved hero/difficulty illustrations and backgrounds remain untouched.
+            bool pressedBack = DrawSelectionAction(back, "НАЗАД", false, s, ox, oy);
+            bool pressedOk = DrawSelectionAction(ok, difficulty ? "ПОДТВЕРДИТЬ" : "НАЧАТЬ ПУТЬ", true, s, ox, oy);
             if (pressedBack) newJourneyStep--;
             else if (pressedOk)
             {
@@ -286,6 +287,27 @@ namespace BladePath
                     StartCoroutine(LoadBattle());
                 }
             }
+        }
+
+        /// <summary>Uniform decorative selection button in original art coordinates.
+        /// Erases only the baked old button footprint, never the scene or card art.</summary>
+        static bool DrawSelectionAction(Rect original, string label, bool red, float scale, float ox, float oy)
+        {
+            Matrix4x4 old = UiKit.Begin();
+            float k = UiKit.Scale;
+            Rect r = new Rect((ox + original.x * scale) / k,
+                              (oy + original.y * scale) / k,
+                              original.width * scale / k,
+                              original.height * scale / k);
+            // Opaque backing prevents two different painted button styles
+            // from showing through transparent corners of the new buttons.
+            Texture2D board = UiKit.Tex("UI/Kit/ui_board");
+            Rect cover = new Rect(r.x - 4f, r.y - 2f, r.width + 8f, r.height + 4f);
+            if (board != null) GUI.DrawTexture(cover, board, ScaleMode.StretchToFill, false);
+            else UiKit.Rect(cover, new Color(0.07f, 0.05f, 0.05f, 1f));
+            bool pressed = VisualIdentity.KitButton(r, label, true, red);
+            GUI.matrix = old;
+            return pressed;
         }
 
         /// <summary>
