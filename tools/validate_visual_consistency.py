@@ -118,7 +118,7 @@ def check_design_system():
         "map story cards unified":
             'VisualIdentity.Portrait(r, UiKit.Tex(tex) != null ? tex : "UI/path_panorama")' in map_code,
         "inventory unified":
-            "VisualIdentity.Surface(panel" in inventory and
+            ("VisualIdentity.KitSurface(panel" in inventory or "VisualIdentity.Surface(panel" in inventory) and
             "VisualIdentity.Heading(" in inventory,
         "duel actions have room for full Russian labels":
             'Btn(new Rect(x, r.yMax - 116f, w, 44f), "В БОЙ"' in map_code and
@@ -131,7 +131,7 @@ def check_design_system():
         "menu unified":
             "VisualIdentity.Surface(box" in menu,
         "combat pause unified":
-            "VisualIdentity.Surface(pr" in controls or
+            "VisualIdentity.KitSurface(pr" in controls or "VisualIdentity.Surface(pr" in controls or
             "VisualIdentity.Surface(r" in controls,
         "base typography remains intact":
             "GUI.Label(pr, s, label)" in kit and "label.CalcSize" in kit,
