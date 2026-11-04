@@ -147,3 +147,14 @@
 
 
 | 2026-11-05 — исправления UI после APK №403 | `0da9819991022a3e38763dce8d82ef1bf01e9f1d`, `1499a1525a6ea1cce335d4410921e65922f1e9b5`; Preflight №190 `41912079964` **success** | `MapScreen.cs`: убраны три полупрозрачные плашки, остававшиеся после алтаря/тренировки/заданий; запреты повторного использования сохранены. `DrawToast`: существующая красивая рамка `VisualIdentity.KitSurface` **не изменена**, уведомление и текст центрированы. `MainMenuController.cs`: кнопка тумана сдвинута вправо в основном и fallback-экранах выбора сложности. Пользователь одобрил макеты, особо подтвердил сохранение рамки. Исходные файлы перечитаны из GitHub; Preflight success. | APK №403 SHA `aae506ca` **СТАРЫЙ**, не содержит правок; следующий шаг — однократно продвинуть проверенный пакет в `apk-build`, проверить Actions run/артефакт; на устройстве повторить алтарь и тренировку и проверить положение плашки. |
+
+
+## BP-025 — HP/Ki fill containment (APK №404 screenshots, 2026-11-05)
+
+- **Priority/status:** P1; `CODE_READY / APK_PENDING` — needs actual screenshot test on Android; not APK_VERIFIED.
+- **Regression:** HP and Ki colored rectangles protrude beyond the tapered transparent/gold frame and/or leave corner gaps; enemy frame is offset from its mirrored fill window.
+- **Fix commit:** `df36c5028536a74e5c7a7b79aa3a7f4cbffc72de` — `Assets/_Project/Scripts/Game/DuelHud.cs`: fix mirrored frame-window alignment, add reusable procedural alpha fill masks for tapered ends, clip HP/trail/highlight/Ki to shape, keep spirit tick inside vertical window. Existing painted PNG frames unchanged.
+- **Verified:** source re-read from GitHub (`DuelHud.cs` blob `6f15c73417e1c587befb2f3a7e1e9de4cb807bef`), balanced braces; preflight №192 `419...` pending at first check. This static check **does not** establish Unity compile or actual pixel accuracy.
+- **Next step:** check strict preflight on code SHA; once Android №404 has finished and a separate reviewed batch is ready, make at most one next APK. Compare BOTH hero/enemy HP/Ki at 0%, 1%, 50%, 99%, 100% on the phone, especially tapered ends and energy-cost notch; adjust mask taper only against rendered screenshots.
+
+| 2026-11-05 — BP-025 / RELEASE STATUS | dev game-code `df36c5028536a74e5c7a7b79aa3a7f4cbffc72de`; `DuelHud.cs` | Implemented shape-masked health/spirit fills and corrected mirrored frame placement; source blob read back. Previous Android №404 (`41912761916`, SHA `92e1fe000c252f08160080e569801d9adf872076`) was in progress at time of this code change and **DOES NOT include BP-025**. No Android release started for this change. | Preflight №192 and real Unity/device validation pending; after №404 completes, batch the correction into one subsequent APK with matching SHA, verify screenshots before marking APK_VERIFIED. |
