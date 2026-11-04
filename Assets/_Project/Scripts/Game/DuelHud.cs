@@ -74,6 +74,7 @@ namespace BladePath
         void OnGUI()
         {
             if (duel == null || duel.player == null || duel.enemy == null) return;
+            if (duel.Paused) return;   // меню паузы рисует PrototypeInput поверх; HUD не нужен
             if (!hooked) { duel.Damaged += OnDamaged; hooked = true; Breadcrumbs.Mark("HUD: первый OnGUI"); }
             if (!portraitsTried && Event.current.type == EventType.Repaint)
             {
@@ -176,8 +177,8 @@ namespace BladePath
             }
 
             // шкалы духа (ки) под полосками здоровья
-            DrawKi(new Rect(cx - 80f - barW * 0.55f, 86f, barW * 0.55f, 10f), duel.player, false);   // толще: в новой рамке тонкую полосу духа не было видно
-            DrawKi(new Rect(cx + 80f, 86f, barW * 0.55f, 10f), duel.enemy, true);
+            DrawKi(new Rect(cx - 80f - barW * 0.55f, 84f, barW * 0.55f, 14f), duel.player, false);   // 14px — орнамент рамки не перекрывает заливку
+            DrawKi(new Rect(cx + 80f, 84f, barW * 0.55f, 14f), duel.enemy, true);
 
             // равновесие (как в Sekiro): у врага — над головой, у игрока — внизу по центру; полоса растёт от середины к краям
             if (cam != null && duel.State == DuelState.Fighting)
@@ -725,13 +726,12 @@ namespace BladePath
             Texture2D kf = UiKit.Tex("UI/Kit/hud_ki");
             Rect kiWin = KiWinKit;
             if (kf == null) { kf = UiKit.Tex("UI/bar_ki"); kiWin = KiWin; }
-            // тёмный фон на весь rect — рамка полупрозрачная, накрывает края сверху
             if (kf == null) UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), Frame);
             else UiKit.Rect(r, new Color(0.02f, 0.02f, 0.03f, 1f));
             float k = f.Ki01;
             float w = r.width * k;
             bool full = f.CanEnergy;
-            Color c = full ? new Color(0.35f, 0.75f, 1f, 1f) : new Color(0.25f, 0.45f, 0.7f, 0.9f);
+            Color c = full ? new Color(0.35f, 0.85f, 1f, 1f) : new Color(0.4f, 0.65f, 1f, 1f);
             if (full) c = Color.Lerp(c, Color.white, 0.25f + 0.25f * Mathf.Sin(Time.unscaledTime * 6f));
             UiKit.Rect(mirror ? new Rect(r.x, r.y, w, r.height) : new Rect(r.xMax - w, r.y, w, r.height), c);
             // отметка стоимости шара

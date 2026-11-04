@@ -298,7 +298,7 @@ namespace BladePath
             float k = UiKit.Scale;
             Rect r = new Rect(screenRect.x / k, screenRect.y / k, screenRect.width / k, screenRect.height / k);
             bool on = JourneyChoice.FogEnabled;
-            string label = on ? "ТУМАН ВОЙНЫ  ВКЛ" : "ТУМАН ВОЙНЫ  ВЫКЛ";
+            string label = on ? "ТУМАН ВКЛ" : "ТУМАН ВЫКЛ";
             if (VisualIdentity.KitButton(r, label, true, false, on)) { JourneyChoice.FogEnabled = !on; Haptics.Pulse(12); }
             GUI.matrix = old;
         }
