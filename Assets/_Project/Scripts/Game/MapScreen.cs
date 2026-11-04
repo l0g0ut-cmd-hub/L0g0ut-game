@@ -1988,12 +1988,12 @@ namespace BladePath
             float age = Time.unscaledTime - toastAt;
             if (age < 0f || age >= 4.5f) return;
             float fade = Mathf.Clamp01(age / 0.2f) * Mathf.Clamp01((4.5f - age) / 0.7f);
-            float w = Mathf.Min(460f, viewW - 80f);
-            float h = 26f + toastLines.Count * 19f;
+            float w = Mathf.Min(500f, viewW - 80f);
+            float h = 40f + toastLines.Count * 19f;   // поля вокруг текста, чтобы он не стоял впритык к рамке
             Rect r = new Rect(mapX + 40f, 540f - h - 22f, w, h);   // острые концы плашки выходят на 34 за прямоугольник — не за край экрана
             VisualIdentity.KitSurface(r, fade, false);
             for (int i = 0; i < toastLines.Count; i++)
-                UiKit.Text(new Rect(r.x + 40f, r.y + (h - toastLines.Count * 19f) * 0.5f + i * 19f, r.width - 64f, 19f),   // по центру плашки, в стороне от завитков рамки
+                UiKit.Text(new Rect(r.x + 54f, r.y + (h - toastLines.Count * 19f) * 0.5f + i * 19f, r.width - 90f, 19f),   // по центру плашки, в стороне от завитков рамки
                     toastLines[i], 12f, new Color(Ink.r, Ink.g, Ink.b, fade),
                     TextAnchor.MiddleLeft, false);
         }
