@@ -249,7 +249,8 @@ namespace BladePath
             W = UiKit.Width;
             bool interactive = !InventoryScreen.Open;
             UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0.03f, 0.025f, 0.02f, 1f));
-            float panel = Mathf.Clamp(W * 0.3f, 250f, 340f);
+            // панель справа ужимается, чтобы карта влезла целиком (раньше на широком телефоне не хватало ~10 px — карта «листалась» впустую)
+            float panel = Mathf.Clamp(Mathf.Min(W * 0.3f, W - MapFullW), 250f, 340f);
             viewW = Mathf.Min(MapFullW, W - panel);
             mapX = Mathf.Max(0f, (W - panel - MapFullW) * 0.5f);
             float uw = viewW / MapFullW;
