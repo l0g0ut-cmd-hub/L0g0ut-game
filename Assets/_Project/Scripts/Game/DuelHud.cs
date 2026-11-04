@@ -266,8 +266,9 @@ namespace BladePath
 
             // таймер раунда (выключен в настройках — в медальоне знак бесконечности из двух колечек)
             Vector2 tc = new Vector2(cx, 28f);
-            UiKit.Disc(tc, 30f, Frame);
-            UiKit.Ring(tc, 30f, Gold);
+            Texture2D tmed = UiKit.Tex("UI/Kit/hud_timer");
+            if (tmed != null) GUI.DrawTexture(new Rect(tc.x - 37f, tc.y - 35f, 74f, 70f), tmed);
+            else { UiKit.Disc(tc, 30f, Frame); UiKit.Ring(tc, 30f, Gold); }
             if (DuelManager.TimerOn)
             {
                 int secs = Mathf.CeilToInt(duel.TimeLeft);
@@ -697,7 +698,9 @@ namespace BladePath
 
         void DrawKi(Rect r, FighterController f, bool mirror)
         {
-            Texture2D kf = UiKit.Tex("UI/bar_ki");
+            Texture2D kf = UiKit.Tex("UI/Kit/hud_ki");
+            Rect kiWin = KiWinKit;
+            if (kf == null) { kf = UiKit.Tex("UI/bar_ki"); kiWin = KiWin; }
             if (kf == null) UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), Frame);
             else UiKit.Rect(r, new Color(0.02f, 0.02f, 0.03f, 1f));
             float k = f.Ki01;
@@ -709,7 +712,7 @@ namespace BladePath
             // отметка стоимости шара
             float m = r.width * (f.energyCost / Mathf.Max(1f, f.kiMax));
             UiKit.Rect(new Rect(mirror ? r.x + m : r.xMax - m, r.y - 1f, 1.5f, r.height + 2f), new Color(1f, 1f, 1f, 0.6f));
-            DrawFrame(r, kf, KiWin, mirror);
+            DrawFrame(r, kf, kiWin, mirror);
             UiKit.Text(new Rect(mirror ? r.xMax + 24f : r.x - 54f, r.y - 6f, 30f, 18f), "ДУХ", 9f, new Color(0.7f, 0.85f, 1f, 0.9f), mirror ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight, false);
         }
 
@@ -828,6 +831,8 @@ namespace BladePath
             for (int i = 0; i < total; i++)
             {
                 Vector2 p = new Vector2(c.x + (mirror ? 1f : -1f) * i * 26f, c.y);
+                Texture2D pip = UiKit.Tex(i < wins ? "UI/Kit/hud_pip_full" : "UI/Kit/hud_pip_empty");
+                if (pip != null) { GUI.DrawTexture(new Rect(p.x - 12f, p.y - 12f, 24f, 24f), pip); continue; }
                 UiKit.Disc(p, 9f, VisualIdentity.InsetColor);
                 UiKit.Disc(p, 6.5f, i < wins ? VisualIdentity.BrassLight : VisualIdentity.Raised);
                 UiKit.Ring(p, 9f, new Color(Gold.r, Gold.g, Gold.b, 0.8f), true);
@@ -838,6 +843,9 @@ namespace BladePath
         }
 
         // окно заливки внутри рамки bar_hp.png (476x53): x 42..440, y 19..34 — см. tools/extract_ref.py
+        // окна заливки в рамках UI/Kit (замерено по тёмной середине): hud_hp_l 578x160 — x 88..524, y 56..107; hud_ki 467x76 — x 34..421, y 14..59
+        static readonly Rect HpWinKit = new Rect(88f / 578f, 56f / 160f, 436f / 578f, 51f / 160f);
+        static readonly Rect KiWinKit = new Rect(34f / 467f, 14f / 76f, 387f / 467f, 45f / 76f);
         static readonly Rect HpWin = new Rect(42f / 476f, 19f / 53f, 398f / 476f, 15f / 53f);
         static readonly Rect KiWin = new Rect(38f / 422f, 17f / 47f, 361f / 422f, 13f / 47f);
 
@@ -856,7 +864,9 @@ namespace BladePath
         {
             float hp = duel.Hp01(f), tr = duel.Trail01(f);
             float since = duel.SinceHit(f);
-            Texture2D frame = UiKit.Tex("UI/bar_hp");
+            Texture2D frame = UiKit.Tex("UI/Kit/hud_hp_l");   // единый стиль: золото с шипами, массивный край — снаружи
+            Rect hpWin = HpWinKit;
+            if (frame == null) { frame = UiKit.Tex("UI/bar_hp"); hpWin = HpWin; }
             if (frame == null)
             {
                 UiKit.Rect(new Rect(r.x - 3f, r.y - 3f, r.width + 6f, r.height + 6f), Frame);
@@ -870,7 +880,7 @@ namespace BladePath
             DrawFill(r, hp, mirror, main);
             DrawFill(new Rect(r.x, r.y, r.width, r.height * 0.4f), hp, mirror, new Color(1f, 0.6f, 0.55f, 0.18f));   // блик
             DrawFill(new Rect(r.x, r.yMax - r.height * 0.3f, r.width, r.height * 0.3f), hp, mirror, new Color(0f, 0f, 0f, 0.25f));
-            DrawFrame(r, frame, HpWin, mirror);
+            DrawFrame(r, frame, hpWin, mirror);
 
             // портрет за наружным концом рамки
             float px = mirror ? r.xMax + 66f : r.x - 66f;
@@ -908,12 +918,12 @@ namespace BladePath
                     GUI.DrawTextureWithTexCoords(target, pt,
                         new Rect(0.035f, 0.742f, 0.365f, 0.250f));
                     GUI.color = previous;
-                    UiKit.Ring(pc, 32f, Gold, true);
+                    DrawPortraitRing(pc, false);
                 }
                 else
                 {
                     UiKit.Image(pc, 32f, pt, tint);
-                    if (!mirror) UiKit.Ring(pc, 32f, Gold, true);   // round hero face: gold rim like the cards
+                    DrawPortraitRing(pc, mirror);   // золотое кольцо с шипами; у врага — с кроваво-красными вставками
                 }
             }
             else
@@ -933,6 +943,15 @@ namespace BladePath
 
         static readonly string[] EnemyFullArt = { "UI/enemy_full_fallen", "UI/enemy_full_shadow", "UI/enemy_full_oni", "UI/enemy_full_shogun" };
         static readonly string[] EnemyPortraits = { "UI/portrait_fallen", "UI/portrait_shadow", "UI/portrait_oni", "UI/portrait_shogun" };
+
+        /// <summary>Кольцо поверх круглого портрета (радиус лица 32): дыра в текстуре — ~0,33 (герой) и ~0,30 (враг) ширины.</summary>
+        static void DrawPortraitRing(Vector2 pc, bool enemy)
+        {
+            Texture2D t = UiKit.Tex(enemy ? "UI/Kit/hud_ring_enemy" : "UI/Kit/hud_ring_hero");
+            if (t == null) { if (!enemy) UiKit.Ring(pc, 32f, Gold, true); return; }
+            float w = 33f / (enemy ? 0.30f : 0.33f), h = w * t.height / t.width;
+            GUI.DrawTexture(new Rect(pc.x - w * 0.5f, pc.y - h * 0.5f, w, h), t);
+        }
 
         static void DrawFill(Rect r, float k, bool mirror, Color c)
         {

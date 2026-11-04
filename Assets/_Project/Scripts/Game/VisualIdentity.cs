@@ -142,6 +142,57 @@ namespace BladePath
             return enabled && GUI.Button(r, GUIContent.none, GUIStyle.none);
         }
 
+        // ---------------- единый стиль (UI/Kit): чёрный лак, потёртое золото, кроваво-красный лак ----------------
+        // Главное меню остаётся на прежних Button/Surface — его не трогаем.
+
+        /// <summary>Кнопка в едином стиле: чёрная (или кроваво-красная — главная), золотая окантовка с шипами.</summary>
+        public static bool KitButton(Rect r, string label, bool enabled = true, bool red = false, bool selected = false)
+        {
+            bool square = r.width < r.height * 1.7f;
+            Texture2D t = UiKit.Tex(square ? "UI/Kit/ui_btn_square" : !enabled ? "UI/Kit/ui_btn_disabled" : red ? "UI/Kit/ui_btn_red" : "UI/Kit/ui_btn");
+            if (t == null) return Button(r, label, enabled, red, selected);
+            bool down = enabled && Event.current != null && r.Contains(Event.current.mousePosition) && GUIUtility.hotControl != 0;
+            if (down && !square) { Texture2D pt = UiKit.Tex(red ? "UI/Kit/ui_btn_red_pressed" : "UI/Kit/ui_btn_pressed"); if (pt != null) t = pt; }
+            // кнопка чуть выше своего прямоугольника: шипы и цветки по краям выходят за него, текст — в середине
+            Rect vr = new Rect(r.x - r.height * 0.12f, r.y - r.height * 0.14f, r.width + r.height * 0.24f, r.height * 1.28f);
+            Color tint = !enabled && square ? new Color(0.5f, 0.48f, 0.45f, 0.85f) : Color.white;
+            if (square) GUI.DrawTexture(vr, t, ScaleMode.StretchToFill, true, 0f, tint, 0f, 0f);
+            else UiKit.Slice(vr, t, vr.height / t.height, 0.14f, 0.12f, 0.5f, 0f, tint);
+            if (selected) UiKit.Rect(new Rect(r.x + r.width * 0.2f, r.yMax - 3f, r.width * 0.6f, 2f), new Color(BrassLight.r, BrassLight.g, BrassLight.b, 0.6f + 0.3f * Mathf.Sin(Time.unscaledTime * 3f)));
+            UiKit.Text(r, label, Mathf.Min(17f, r.height * 0.42f), enabled ? Parchment : new Color(0.60f, 0.57f, 0.51f), TextAnchor.MiddleCenter);
+            return enabled && GUI.Button(r, GUIContent.none, GUIStyle.none);
+        }
+
+        /// <summary>Панель в едином стиле: низкая — плашка-тост, высокая — окно с хищными углами.</summary>
+        public static void KitSurface(Rect r, float alpha = 1f, bool ornaments = true)
+        {
+            bool low = r.height < 110f;
+            Texture2D t = UiKit.Tex(low ? "UI/Kit/ui_toast" : "UI/Kit/ui_panel");
+            if (t == null) { Surface(r, alpha, ornaments); return; }
+            Color c = new Color(1f, 1f, 1f, alpha);
+            if (low)
+            {
+                Rect vr = new Rect(r.x - 10f, r.y - 4f, r.width + 20f, r.height + 8f);
+                UiKit.Slice(vr, t, Mathf.Min(1f, vr.height / t.height), 0.12f, 0.1f, 0.35f, 0f, c);
+            }
+            else
+            {
+                // рамка чуть шире прямоугольника: шипы углов наружу, содержимое — на тёмной середине
+                Rect vr = new Rect(r.x - 14f, r.y - 14f, r.width + 28f, r.height + 28f);
+                float k = Mathf.Clamp(Mathf.Min(vr.width / t.width, vr.height / t.height) * 0.75f, 0.28f, 0.6f);
+                UiKit.Slice(vr, t, k, 0.2f, 0.1f, 0.3f, 0.12f, c);
+            }
+        }
+
+        /// <summary>Высокая боковая панель с гербом (карта похода).</summary>
+        public static void KitSidePanel(Rect r, float alpha = 1f)
+        {
+            // рамка окна (герб боковой панели лёг бы на заголовок «ПОХОД» — без него)
+            Texture2D t = UiKit.Tex("UI/Kit/ui_panel");
+            if (t == null) { Surface(r, alpha, false); return; }
+            UiKit.Slice(r, t, 0.42f, 0.2f, 0.1f, 0.3f, 0.12f, new Color(1f, 1f, 1f, alpha));
+        }
+
         public static void Portrait(Rect r, string resourcePath, Color? tint = null,
             bool topCrop = false)
         {

@@ -1189,7 +1189,7 @@ namespace BladePath
 
         void DrawPanel(Rect r, bool interactive)
         {
-            VisualIdentity.Surface(r, 1f, false);
+            VisualIdentity.KitSidePanel(r);
             float x = r.x + 16f, w = r.width - 32f, y = 12f;
             VisualIdentity.Heading(new Rect(x, y, w, 36f), "ПОХОД");
             // Quiet progress caption in the existing heading's unused right side;
@@ -1439,7 +1439,7 @@ namespace BladePath
 
         static bool Btn(Rect r, string label, bool enabled = true, bool red = false)
         {
-            return VisualIdentity.Button(r, label, enabled, red);
+            return VisualIdentity.KitButton(r, label, enabled, red);
         }
 
         /// <summary>Кость пути: костяной кубик с точками (1–3), во время броска крутится.</summary>
@@ -1490,7 +1490,7 @@ namespace BladePath
             UiKit.Rect(new Rect(0f, 0f, W, 540f),
                 new Color(0.015f, 0.012f, 0.012f, 0.65f * a));
             Rect r = new Rect((W - w) * 0.5f, (540f - h) * 0.5f + (1f - a) * 20f, w, h);
-            VisualIdentity.Surface(r, a);
+            VisualIdentity.KitSurface(r, a);
             return r;
         }
 
@@ -1982,7 +1982,7 @@ namespace BladePath
             float w = Mathf.Min(460f, viewW - 30f);
             float h = 26f + toastLines.Count * 19f;
             Rect r = new Rect(mapX + 15f, 540f - h - 15f, w, h);
-            VisualIdentity.Surface(r, fade, false);
+            VisualIdentity.KitSurface(r, fade, false);
             UiKit.Rect(new Rect(r.x, r.y, 3f, r.height),
                 new Color(Gold.r, Gold.g, Gold.b, fade));
             for (int i = 0; i < toastLines.Count; i++)

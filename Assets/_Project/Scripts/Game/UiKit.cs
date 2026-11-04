@@ -241,6 +241,41 @@ namespace BladePath
             GUI.matrix = m;
         }
 
+        /// <summary>
+        /// Растяжимая картинка (25 кусков): углы (capX/capY) и середина каждой стороны (midX/midY — шип, цветок, герб) не тянутся,
+        /// тянутся только промежутки. Доли — от размеров текстуры; k — масштаб текстуры на экране. capY ≥ 0,5 — по высоте не режем, вписываем.
+        /// </summary>
+        public static void Slice(Rect r, Texture2D t, float k, float capX, float midX, float capY, float midY, Color col)
+        {
+            if (t == null || r.width < 1f || r.height < 1f || col.a <= 0.003f) return;
+            float[] xs = Segs(r.x, r.width, t.width * k, capX, midX, out float[] ux);
+            float[] ys = Segs(r.y, r.height, t.height * k, capY, midY, out float[] uy);
+            Color o = GUI.color; GUI.color = col;
+            for (int j = 0; j + 1 < ys.Length; j++)
+            {
+                float h = ys[j + 1] - ys[j]; if (h <= 0.01f) continue;
+                for (int i = 0; i + 1 < xs.Length; i++)
+                {
+                    float w = xs[i + 1] - xs[i]; if (w <= 0.01f) continue;
+                    // текстурные координаты: v снизу вверх
+                    GUI.DrawTextureWithTexCoords(new Rect(xs[i], ys[j], w, h), t,
+                        new Rect(ux[i], 1f - uy[j + 1], ux[i + 1] - ux[i], uy[j + 1] - uy[j]));
+                }
+            }
+            GUI.color = o;
+        }
+
+        static float[] Segs(float p0, float len, float texLen, float cap, float mid, out float[] uv)
+        {
+            if (cap >= 0.5f) { uv = new[] { 0f, 1f }; return new[] { p0, p0 + len }; }
+            float c = cap * texLen, m = mid * texLen;
+            float fixedSum = 2f * c + m;
+            if (fixedSum > len) { float f = len / Mathf.Max(1f, fixedSum); c *= f; m *= f; }
+            float s = Mathf.Max(0f, (len - 2f * c - m) * 0.5f);
+            uv = new[] { 0f, cap, 0.5f - mid * 0.5f, 0.5f + mid * 0.5f, 1f - cap, 1f };
+            return new[] { p0, p0 + c, p0 + c + s, p0 + c + s + m, p0 + c + 2f * s + m, p0 + len };
+        }
+
         public static Matrix4x4 Begin()
         {
             Matrix4x4 old = GUI.matrix;

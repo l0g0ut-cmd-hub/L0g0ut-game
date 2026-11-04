@@ -519,7 +519,7 @@ namespace BladePath
             {
                 UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, 0.65f));
                 Rect pr = new Rect(W * 0.5f - 340f, 54f, 680f, 422f);   // свиток-подложка под кнопками паузы
-                Texture2D scroll = UiKit.Tex("UI/scroll");
+                Texture2D scroll = null;   // единый стиль: окно чёрного лака вместо свитка
                 if (scroll != null)
                 {
                     // развёрнутый свиток макимоно: бумага с роликами по краям, на ней — горы тушью; ветка сакуры свисает с угла
@@ -538,8 +538,7 @@ namespace BladePath
                 }
                 else
                 {
-                    VisualIdentity.Surface(pr, 0.98f);
-                    UiKit.Paper(pr, new Color(0.22f, 0.17f, 0.12f, 0.27f));
+                    VisualIdentity.KitSurface(pr, 0.98f);
                     UiKit.Text(new Rect(W * 0.5f - 200f, 62f, 400f, 50f),
                         "ПАУЗА", 40f, Gold);
                 }
@@ -571,17 +570,15 @@ namespace BladePath
             bool h = held[b];
             // Buttons are drawn here, but input is processed by the existing
             // touch controller. Do not use GUI.Button (would double-activate).
-            Texture2D wood = UiKit.Tex("UI/plank");
+            // единый стиль: чёрная лаковая кнопка с золотой окантовкой (нажатая — вдавленная)
+            Texture2D wood = UiKit.Tex(h ? "UI/Kit/ui_btn_pressed" : "UI/Kit/ui_btn");
+            if (wood == null) wood = UiKit.Tex("UI/plank");
             if (wood != null)
             {
-                Color old = GUI.color;
-                GUI.color = h ? new Color(1f, 0.86f, 0.68f) : Color.white;
-                GUI.DrawTexture(r, wood, ScaleMode.StretchToFill);
-                GUI.color = old;
+                Rect vr = new Rect(r.x - r.height * 0.12f, r.y - r.height * 0.14f, r.width + r.height * 0.24f, r.height * 1.28f);
+                UiKit.Slice(vr, wood, vr.height / wood.height, 0.14f, 0.12f, 0.5f, 0f, Color.white);
             }
             else VisualIdentity.Surface(r, 0.98f, false);
-            UiKit.Rect(new Rect(r.x + 7f, r.y + 3f, r.width - 14f, 1.5f),
-                new Color(Gold.r, Gold.g, Gold.b, h ? 0.92f : 0.38f));
             UiKit.Text(r, labels[b], Mathf.Min(18f, r.height * 0.44f),
                 h ? VisualIdentity.BrassLight : VisualIdentity.Parchment);
         }

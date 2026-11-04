@@ -130,7 +130,7 @@ namespace BladePath
 
         static bool Btn(Rect r, string label, bool enabled = true, bool red = false)
         {
-            return VisualIdentity.Button(r, label, enabled, red);
+            return VisualIdentity.KitButton(r, label, enabled, red);
         }
 
         // ---------------- экран снаряжения ----------------
@@ -140,7 +140,7 @@ namespace BladePath
             float W = UiKit.Width;
             UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, 0.86f));
             Rect panel = new Rect(12f, 10f, W - 24f, 520f);
-            VisualIdentity.Surface(panel, 1f);
+            VisualIdentity.KitSurface(panel, 1f);
             // Paper grain becomes a subtle second layer beneath the lacquer.
             UiKit.Paper(new Rect(panel.x + 10f, panel.y + 60f,
                 panel.width - 20f, panel.height - 72f),
@@ -179,7 +179,7 @@ namespace BladePath
             UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0.015f, 0.012f, 0.012f, 0.65f * a));
             const float w = 420f, h = 300f;
             Rect r = new Rect((W - w) * 0.5f, (540f - h) * 0.5f + (1f - a) * 20f, w, h);
-            VisualIdentity.Surface(r, a);
+            VisualIdentity.KitSurface(r, a);
             UiKit.Text(new Rect(r.x + 16f, r.y + 10f, r.width - 32f, 26f), "ВЫБЕРИ РУНУ", 17f, Gold, TextAnchor.MiddleLeft);
             UiKit.Text(new Rect(r.x + 16f, r.y + 34f, r.width - 32f, 16f), "Кузнец вставит за " + Profile.RuneCost + " мон", 11f, Dimmed, TextAnchor.MiddleLeft);
             Texture2D rt = UiKit.Tex("UI/runes");

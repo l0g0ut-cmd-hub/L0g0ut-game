@@ -200,18 +200,18 @@ namespace BladePath
                             GUI.DrawTexture(lab, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 0f, new Color(0.03f, 0.025f, 0.03f, 0.85f), 0f, 10f);
                             UiKit.Text(lab, "СТАВКА: " + bet + " МОН", 15f, gold);
                             bool canUp = betIdx < BetMul.Length - 1 && Profile.Gold >= baseBet * BetMul[betIdx + 1];
-                            if (VisualIdentity.Button(new Rect(lab.x - 52f, sy, 46f, 40f), "−", ok && betIdx > 0)) { betIdx--; Haptics.Pulse(15); }
-                            if (VisualIdentity.Button(new Rect(lab.xMax + 6f, sy, 46f, 40f), "+", ok && canUp)) { betIdx++; Haptics.Pulse(15); }
+                            if (VisualIdentity.KitButton(new Rect(lab.x - 52f, sy, 46f, 40f), "−", ok && betIdx > 0)) { betIdx--; Haptics.Pulse(15); }
+                            if (VisualIdentity.KitButton(new Rect(lab.xMax + 6f, sy, 46f, 40f), "+", ok && canUp)) { betIdx++; Haptics.Pulse(15); }
                             while (betIdx > 0 && Profile.Gold < baseBet * BetMul[betIdx]) betIdx--;   // монет стало меньше — ставка опускается сама
                         }
                         for (int k = 0; k < 2; k++)
-                            if (VisualIdentity.Button(new Rect(W * 0.5f - bw - 6f + k * (bw + 12f), y, bw, 48f), k == 0 ? "ЧЁТ" : "НЕЧЕТ", can, k == 0))
+                            if (VisualIdentity.KitButton(new Rect(W * 0.5f - bw - 6f + k * (bw + 12f), y, bw, 48f), k == 0 ? "ЧЁТ" : "НЕЧЕТ", can, k == 0))
                             {
                                 betEven = k == 0; bumped = false; st = St.Throw; stAt = now; SetMood(0);
                                 t.Throw(); Haptics.Pulse(25);
                                 if (Juice.Instance != null) Juice.Instance.Taiko(0.5f, 1.6f);
                             }
-                        if (VisualIdentity.Button(new Rect(16f, 540f - 58f, 150f, 42f), "ВСТАТЬ", ok)) { Leave(); return true; }
+                        if (VisualIdentity.KitButton(new Rect(16f, 540f - 58f, 150f, 42f), "ВСТАТЬ", ok)) { Leave(); return true; }
                         break;
                     }
                 case St.Throw:
@@ -246,9 +246,9 @@ namespace BladePath
                         if (now - stAt > 1.2f)
                         {
                             float bw = 200f;
-                            if (VisualIdentity.Button(new Rect(W * 0.5f - bw - 6f, 540f - 58f, bw, 44f), RoundsLeft > 0 ? "ЕЩЁ ПАРТИЮ" : "ХВАТИТ", ok, true))
+                            if (VisualIdentity.KitButton(new Rect(W * 0.5f - bw - 6f, 540f - 58f, bw, 44f), RoundsLeft > 0 ? "ЕЩЁ ПАРТИЮ" : "ХВАТИТ", ok, true))
                             { st = St.Bet; SetMood(0); if (RoundsLeft > 0) Say(SayIdle[Random.Range(0, SayIdle.Length)]); }
-                            if (VisualIdentity.Button(new Rect(W * 0.5f + 6f, 540f - 58f, bw, 44f), "ВСТАТЬ", ok)) { Leave(); return true; }
+                            if (VisualIdentity.KitButton(new Rect(W * 0.5f + 6f, 540f - 58f, bw, 44f), "ВСТАТЬ", ok)) { Leave(); return true; }
                         }
                         break;
                     }
