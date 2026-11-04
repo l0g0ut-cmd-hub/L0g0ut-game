@@ -264,7 +264,11 @@ namespace BladePath
                     float tw = w / nx, th = h / ny;
                     for (int b = 0; b < ny; b++)
                         for (int a = 0; a < nx; a++)
-                            GUI.DrawTextureWithTexCoords(new Rect(xs[i] + a * tw, ys[j] + b * th, tw, th), t, uv);
+                        {
+                            // куски внахлёст на долю точки: иначе на стыках просвечивала тонкая тёмная щель (полоса посередине кнопок)
+                            float ox = i + 2 < xs.Length ? 0.6f : 0f, oy = (j + 2 < ys.Length || b + 1 < ny) ? 0.6f : 0f;
+                            GUI.DrawTextureWithTexCoords(new Rect(xs[i] + a * tw, ys[j] + b * th, tw + ox, th + oy), t, uv);
+                        }
                 }
             }
             GUI.color = o;

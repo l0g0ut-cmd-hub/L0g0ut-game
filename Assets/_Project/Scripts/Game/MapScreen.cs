@@ -1993,7 +1993,7 @@ namespace BladePath
             Rect r = new Rect(mapX + 40f, 540f - h - 15f, w, h);   // острые концы плашки выходят на 34 за прямоугольник — не за край экрана
             VisualIdentity.KitSurface(r, fade, false);
             for (int i = 0; i < toastLines.Count; i++)
-                UiKit.Text(new Rect(r.x + 14f, r.y + 8f + i * 19f, r.width - 24f, 19f),
+                UiKit.Text(new Rect(r.x + 30f, r.y + 8f + i * 19f, r.width - 50f, 19f),   // отступ от завитков рамки
                     toastLines[i], 12f, new Color(Ink.r, Ink.g, Ink.b, fade),
                     TextAnchor.MiddleLeft, false);
         }
