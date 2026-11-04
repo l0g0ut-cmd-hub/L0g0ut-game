@@ -158,3 +158,13 @@
 - **Next step:** check strict preflight on code SHA; once Android №404 has finished and a separate reviewed batch is ready, make at most one next APK. Compare BOTH hero/enemy HP/Ki at 0%, 1%, 50%, 99%, 100% on the phone, especially tapered ends and energy-cost notch; adjust mask taper only against rendered screenshots.
 
 | 2026-11-05 — BP-025 / RELEASE STATUS | dev game-code `df36c5028536a74e5c7a7b79aa3a7f4cbffc72de`; `DuelHud.cs` | Implemented shape-masked health/spirit fills and corrected mirrored frame placement; source blob read back. Previous Android №404 (`41912761916`, SHA `92e1fe000c252f08160080e569801d9adf872076`) was in progress at time of this code change and **DOES NOT include BP-025**. No Android release started for this change. | Preflight №192 succeeded; Unity/device validation still pending; after №404 completes, batch the correction into one subsequent APK with matching SHA, verify screenshots before marking APK_VERIFIED. |
+
+
+## BP-026 — Camp quest board navigation and reward notices (2026-11-05)
+
+- **User regression:** On APK №405/earlier, the distant hillside house triggers "ДОСКА ЗАДАНИЙ" by a hidden map hitbox; user approved a visual mockup of a black/gold "ДОСКА ЗАДАНИЙ" button directly left of "ТРАКТИР". Altar blessing did not show a confirmation toast like training.
+- **Code:** commit `5341abc29bb15687379e3e606ca76b0fc1f52c07`; `Assets/_Project/Scripts/Game/MapScreen.cs` — added quest-board KitButton (242×42 virtual UI units, 12-unit gap before Tavern's 180×42 button); removed old `CampBoard` hillside hitbox, reused existing quest panel and once-per-camp guard; added altar notifications for sword/spirit/life and quest reward toasts through existing centered `TavToast`/`DrawToast`, preserving ornate `VisualIdentity.KitSurface` and original camp painting/video.
+- **Status:** CODE_READY / APK_PENDING. GitHub blob reread, source inspection confirms exact actions and no new art assets. CI preflight on this code SHA and Unity build still need confirmation. User-device visual test required before APK_VERIFIED.
+- **Next:** Confirm Preflight, then promote one checked package to `apk-build` after no active Android run. Check that hills no longer clickable, board button next to tavern is visible and clickable, used quest button disabled, altar/quest messages centered in gold frame and no event duplicates.
+
+| 2026-11-05 — BP-026 / RELEASE STATUS | dev game-code `5341abc29bb15687379e3e606ca76b0fc1f52c07`; previous APK №405 SHA `9e3605b901c27ec0ea1b0f959343cb470a48e03d` **success** | Camp UI code corrected; board/altar notifications not yet contained in №405. No visual assets regenerated. | Finish preflight and publish single №406 package; confirm run SHA, APK artifact, and user test after success. |
