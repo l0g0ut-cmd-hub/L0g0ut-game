@@ -1892,28 +1892,60 @@ namespace BladePath
             }
             if (fire != null)
             {
-                int fr = (int)(t * 12f) % 8;
-                Vector2 h = TP(1060f, 455f);
-                GUI.color = new Color(1f, 1f, 1f, 0.85f);
-                GUI.DrawTextureWithTexCoords(new Rect(h.x - 70f * s, h.y - 80f * s, 140f * s, 100f * s), fire, new Rect((fr % 4) * 0.25f, fr < 4 ? 0.5f : 0f, 0.25f, 0.5f));
+                // огонь под котлом: три невысоких языка по углям (раньше один большой костёр закрывал сам котёл)
+                float[] fx = { 1000f, 1042f, 1084f };
+                for (int i = 0; i < fx.Length; i++)
+                {
+                    int fr = ((int)(t * 13f) + i * 3) % 8;
+                    float fh = (44f + 10f * Mathf.PerlinNoise(t * 2.7f + i * 5f, 0.5f)) * (i == 1 ? 1.15f : 0.9f), fw = fh * 1.25f;
+                    Vector2 b = TP(fx[i] + 3f * Mathf.Sin(t * 3f + i), 497f);
+                    GUI.color = new Color(1f, 0.92f, 0.8f, 0.82f);
+                    GUI.DrawTextureWithTexCoords(new Rect(b.x - fw * 0.5f * s, b.y - fh * s, fw * s, fh * s), fire, new Rect((fr % 4) * 0.25f, fr < 4 ? 0.5f : 0f, 0.25f, 0.5f));
+                }
+            }
+            if (glow != null)
+            {
+                // искры от углей
+                for (int k = 0; k < 12; k++)
+                {
+                    float sp = 0.35f + 0.25f * Mathf.Repeat(k * 0.618f, 1f);
+                    float ph = Mathf.Repeat(t * sp + k * 0.377f, 1f);
+                    float x0 = 975f + 130f * Mathf.Repeat(k * 0.41f, 1f);
+                    Vector2 p = TP(x0 + 14f * Mathf.Sin(t * 2f + k * 1.7f) * ph, 488f - ph * (70f + 50f * Mathf.Repeat(k * 0.73f, 1f)));
+                    float r = (3.5f - 2f * ph) * s;
+                    GUI.color = new Color(1f, 0.6f + 0.3f * (1f - ph), 0.25f, (1f - ph) * 0.9f);
+                    GUI.DrawTexture(new Rect(p.x - r * 2f, p.y - r * 2f, r * 4f, r * 4f), glow);
+                }
+            }
+            Texture2D wisp = UiKit.Tex("FX/smoke_wisp");
+            if (wisp == null) wisp = mist;
+            if (wisp != null)
+            {
+                // пар из котла: клубы поднимаются от крышки, тянутся влево вверх по нарисованному пару, крутятся и тают
+                Matrix4x4 m0 = GUI.matrix;
+                for (int k = 0; k < 7; k++)
+                {
+                    float ph = Mathf.Repeat(t * 0.13f + k / 7f, 1f);
+                    float x = Mathf.Lerp(1030f, 950f, ph) + 22f * Mathf.Sin(t * 0.7f + k * 1.9f) * ph;
+                    float y = Mathf.Lerp(395f, 110f, ph);
+                    Vector2 p = TP(x, y);
+                    float sz = (70f + 190f * ph) * s;
+                    float a = 0.42f * Mathf.Sin(ph * Mathf.PI) * (k % 2 == 0 ? 1f : 0.75f);
+                    GUI.matrix = m0;
+                    GUIUtility.RotateAroundPivot((k * 53f + t * (k % 2 == 0 ? 9f : -7f)) % 360f, (Vector2)m0.MultiplyPoint3x4(new Vector3(p.x, p.y, 0f)));
+                    GUI.color = new Color(0.82f, 0.8f, 0.86f, a);
+                    GUI.DrawTexture(new Rect(p.x - sz * 0.5f, p.y - sz * 0.5f, sz, sz), wisp);
+                }
+                GUI.matrix = m0;
             }
             if (mist != null)
             {
-                // пар из котла: клубы поднимаются и тают
-                for (int k = 0; k < 5; k++)
-                {
-                    float ph = Mathf.Repeat(t * 0.18f + k * 0.2f, 1f);
-                    Vector2 p = TP(1035f + 30f * Mathf.Sin(t * 0.6f + k), 380f - ph * 300f);
-                    float sz = (90f + 160f * ph) * s;
-                    GUI.color = new Color(0.8f, 0.78f, 0.82f, 0.16f * Mathf.Sin(ph * Mathf.PI));
-                    GUI.DrawTexture(new Rect(p.x - sz * 0.5f, p.y - sz * 0.35f, sz, sz * 0.7f), mist);
-                }
                 // дым под потолком
                 for (int k = 0; k < 3; k++)
                 {
                     float x = Mathf.Repeat(t * 12f + k * 640f, TavW + 600f) - 300f;
                     Vector2 p = TP(x, 60f + 25f * k);
-                    GUI.color = new Color(0.55f, 0.5f, 0.6f, 0.12f);
+                    GUI.color = new Color(0.55f, 0.5f, 0.6f, 0.16f);
                     GUI.DrawTexture(new Rect(p.x - 300f * s, p.y - 60f * s, 600f * s, 120f * s), mist);
                 }
             }
