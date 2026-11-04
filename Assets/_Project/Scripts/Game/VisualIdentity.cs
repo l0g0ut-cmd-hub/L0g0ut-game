@@ -188,11 +188,15 @@ namespace BladePath
         /// <summary>Высокая боковая панель с гербом (карта похода).</summary>
         public static void KitSidePanel(Rect r, float alpha = 1f)
         {
-            // рамка окна (герб боковой панели лёг бы на заголовок «ПОХОД» — без него)
-            Texture2D t = UiKit.Tex("UI/Kit/ui_panel");
+            // высокая панель из атласа целиком, без нарезки (нарезка повторяла фактуру — выходил узор-«паттерн»).
+            // Верх с гербом уходит за край экрана, чтобы не лечь на заголовок «ПОХОД»: видны боковые кромки, низ с шипами и цельная доска.
+            Texture2D t = UiKit.Tex("UI/Kit/ui_sidepanel");
             if (t == null) { Surface(r, alpha, false); return; }
-            // панель у края экрана: верх, низ и правый край рамки уходят за экран — видна левая кромка, а заголовок «ПОХОД» не ложится на угол
-            UiKit.Slice(new Rect(r.x - 6f, r.y - 20f, r.width + 26f, r.height + 40f), t, 0.32f, 0.2f, 0.1f, 0.3f, 0.12f, new Color(1f, 1f, 1f, alpha));
+            float top = 0.41f;    // доля высоты текстуры с гербом, лентой и кистями (кисти ложились на текст панели)
+            float w = r.width + 12f, h = (r.height + 4f) / (1f - top);
+            Color o = GUI.color; GUI.color = new Color(1f, 1f, 1f, alpha);
+            GUI.DrawTexture(new Rect(r.x - 6f, r.yMax + 2f - h, w, h), t, ScaleMode.StretchToFill);
+            GUI.color = o;
         }
 
         public static void Portrait(Rect r, string resourcePath, Color? tint = null,
