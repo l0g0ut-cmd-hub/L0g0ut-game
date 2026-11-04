@@ -463,6 +463,22 @@ namespace BladePath
             bool canAct = player != null && player.CanAct && player.weapon != null && player.weapon.Phase == SwingPhase.Idle;
             bool air = player != null && !player.Grounded;
             DrawAttack(B.Overhead, Icon.Down, air ? "В ПРЫЖКЕ" : "СВЕРХУ", canAct);
+            // выхват: знак появился — кнопка «сверху» вспыхивает (жми сейчас)
+            if (duel != null && duel.IaiCued && active[(int)B.Overhead] && Event.current.type == EventType.Repaint)
+            {
+                Vector2 ic = ctr[(int)B.Overhead]; float ir = rad[(int)B.Overhead];
+                float ip = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 14f);
+                Texture2D glow = UiKit.Tex("FX/glow_pool");
+                if (glow != null)
+                {
+                    Color oc = GUI.color; GUI.color = new Color(1f, 0.35f, 0.15f, 0.55f + 0.35f * ip);
+                    float gr = ir * (1.9f + 0.25f * ip);
+                    GUI.DrawTexture(new Rect(ic.x - gr, ic.y - gr, gr * 2f, gr * 2f), glow);
+                    GUI.color = oc;
+                }
+                UiKit.Ring(ic, ir * (1.08f + 0.1f * ip), new Color(1f, 0.55f, 0.25f, 0.95f));
+                UiKit.Ring(ic, ir * (1.25f + 0.25f * ip), new Color(1f, 0.4f, 0.2f, 0.6f * (1f - ip)), true);
+            }
             DrawAttack(B.Thrust, Icon.Thrust, air ? "" : "УКОЛ", canAct && !air);
             DrawAttack(B.Slash, slashFlip ? Icon.SlashBack : Icon.Slash, air ? "" : "РЕЗ", canAct && !air);
             DrawAttack(B.Rising, Icon.Up, air ? "В ПРЫЖКЕ" : "СНИЗУ", canAct);
