@@ -1773,11 +1773,22 @@ namespace BladePath
             if (UiKit.Tex("UI/tavern") != null && Btn(new Rect(W - 196f, 14f, 180f, 42f), "ТРАКТИР", ok)) { Profile.CostMul = 1f; OpenTavern(true); return; }
             if (Btn(go, "В ПУТЬ", ok, true)) { Profile.CostMul = 1f; modal = Modal.None; Haptics.Pulse(20); return; }
             if (GUI.Button(forge, GUIContent.none, GUIStyle.none)) { Profile.CostMul = 0.5f; InventoryScreen.Show(0); return; }
-            if (!campAltar && GUI.Button(altar, GUIContent.none, GUIStyle.none)) { campSub = 1; return; }
-            if (!campTrain && GUI.Button(train, GUIContent.none, GUIStyle.none))
+            if (GUI.Button(altar, GUIContent.none, GUIStyle.none))
             {
-                Profile.GivePoint(); campTrain = true; Haptics.Pulse(30);
-                toastLines.Clear(); toastLines.Add("Тренировка у соломенных чучел: +1 очко характеристик."); toastAt = Time.unscaledTime;
+                if (campAltar) TavToast("Алтарь уже даровал благословение. Возвращайся в следующий привал.");
+                else campSub = 1;
+                return;
+            }
+            if (GUI.Button(train, GUIContent.none, GUIStyle.none))
+            {
+                if (campTrain) TavToast("Тренировка завершена. Новое занятие — на следующем привале.");
+                else
+                {
+                    Profile.GivePoint();
+                    campTrain = true;
+                    TavToast("Тренировка у соломенных чучел: +1 очко характеристик.");
+                }
+                return;
             }
         }
 
