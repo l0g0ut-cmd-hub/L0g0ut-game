@@ -1705,7 +1705,7 @@ namespace BladePath
         // доска заданий — одна награда на выбор. Каждая услуга — один раз за лагерь.
         const float CampW = 1915f, CampH = 821f;
         static readonly Rect CampForge = new Rect(60f, 40f, 640f, 360f), CampAltar = new Rect(40f, 400f, 560f, 380f),
-            CampTrain = new Rect(1180f, 390f, 700f, 390f), CampBoard = new Rect(1380f, 40f, 510f, 340f), CampGo = new Rect(712f, 686f, 488f, 89f);
+            CampTrain = new Rect(1180f, 390f, 700f, 390f), CampGo = new Rect(712f, 686f, 488f, 89f);
         int campSub;          // 0 — лагерь, 1 — алтарь, 2 — доска заданий
         bool campAltar, campTrain, campBoard;
         void OpenCamp()
@@ -1731,7 +1731,20 @@ namespace BladePath
                 UiKit.Text(new Rect(x, y, w, 26f), "АЛТАРЬ", 20f, Gold); y += 40f;
                 string[] names = { "КЛИНОК: +20% УРОНА", "ДУХ: ПОЛНЫЙ ДУХ В НАЧАЛЕ", "ЖИЗНЬ: +25% ЗДОРОВЬЯ" };
                 for (int k = 0; k < 3; k++)
-                    if (Btn(new Rect(x, y + k * 54f, w, 46f), names[k], ok, k == 0)) { Campaign.SetBlessing(k + 1); campAltar = true; campSub = 0; Haptics.Pulse(30); }
+                {
+                    if (!Btn(new Rect(x, y + k * 54f, w, 46f), names[k], ok, k == 0)) continue;
+                    Campaign.SetBlessing(k + 1);
+                    campAltar = true;
+                    campSub = 0;
+                    string[] blessingNotices =
+                    {
+                        "Благословение клинка: +20% урона в следующем бою.",
+                        "Благословение духа: полный дух в начале следующего боя.",
+                        "Благословение жизни: +25% здоровья в следующем бою."
+                    };
+                    TavToast(blessingNotices[k]); // Same centered ornate notification as training.
+                    return; // Avoid processing other altar hitboxes in this OnGUI event.
+                }
                 if (Btn(new Rect(r.center.x - 70f, r.yMax - 52f, 140f, 40f), "НАЗАД", ok)) campSub = 0;
                 return;
             }
@@ -1741,24 +1754,26 @@ namespace BladePath
                 float x = r.x + 24f, w = r.width - 48f, y = r.y + 20f;
                 UiKit.Text(new Rect(x, y, w, 26f), "ДОСКА ЗАДАНИЙ", 20f, Gold); y += 40f;
                 int gold = 60 + 30 * Campaign.Region + 40 * Profile.Cycle;
-                if (Btn(new Rect(x, y, w, 46f), "ПРОВОДИТЬ КАРАВАН: +1 КОСТЬ ПУТИ", ok, true)) { Campaign.AddRoll(); campBoard = true; campSub = 0; }
-                if (Btn(new Rect(x, y + 54f, w, 46f), "НАЙТИ БЕГЛЕЦА: +" + gold + " МОН", ok)) { Profile.AddGold(gold); campBoard = true; campSub = 0; }
-                if (Btn(new Rect(x, y + 108f, w, 46f), "ОХОТА НА ОБОРОТНЯ: ПРЕДМЕТ", ok)) { Profile.Give(Profile.Roll(Campaign.Region + 1, 80, false)); campBoard = true; campSub = 0; }
+                if (Btn(new Rect(x, y, w, 46f), "ПРОВОДИТЬ КАРАВАН: +1 КОСТЬ ПУТИ", ok, true)) { Campaign.AddRoll(); campBoard = true; campSub = 0; TavToast("Задание выполнено: +1 кость пути."); return; }
+                if (Btn(new Rect(x, y + 54f, w, 46f), "НАЙТИ БЕГЛЕЦА: +" + gold + " МОН", ok)) { Profile.AddGold(gold); campBoard = true; campSub = 0; TavToast("Задание выполнено: +" + gold + " мон."); return; }
+                if (Btn(new Rect(x, y + 108f, w, 46f), "ОХОТА НА ОБОРОТНЯ: ПРЕДМЕТ", ok)) { Profile.Give(Profile.Roll(Campaign.Region + 1, 80, false)); campBoard = true; campSub = 0; TavToast("Задание выполнено: получен предмет."); return; }
                 if (Btn(new Rect(r.center.x - 70f, r.yMax - 52f, 140f, 40f), "НАЗАД", ok)) campSub = 0;
                 return;
             }
             // зоны: уже использованные приглушены, нажатие — тёплая вспышка
             Rect forge = CampRect(CampForge, s, ox, oy), altar = CampRect(CampAltar, s, ox, oy), train = CampRect(CampTrain, s, ox, oy),
-                 board = CampRect(CampBoard, s, ox, oy), go = CampRect(CampGo, s, ox, oy);
+                 go = CampRect(CampGo, s, ox, oy);
             // Completed camp interactions remain disabled by their hitbox guards below.
             // Do not draw an opaque/translucent Rect on painted art: it remained
             // as a visible square after using the altar, training or quest board.
             if (!ok || InventoryScreen.Open) return;
+            // Separate navigation buttons: the quest board no longer opens when tapping the distant hill house.
+            // Match the tavern button style/height and keep a 12-unit gap.
+            if (Btn(new Rect(W - 450f, 14f, 242f, 42f), "ДОСКА ЗАДАНИЙ", ok && !campBoard)) { campSub = 2; return; }
             if (UiKit.Tex("UI/tavern") != null && Btn(new Rect(W - 196f, 14f, 180f, 42f), "ТРАКТИР", ok)) { Profile.CostMul = 1f; OpenTavern(true); return; }
             if (Btn(go, "В ПУТЬ", ok, true)) { Profile.CostMul = 1f; modal = Modal.None; Haptics.Pulse(20); return; }
             if (GUI.Button(forge, GUIContent.none, GUIStyle.none)) { Profile.CostMul = 0.5f; InventoryScreen.Show(0); return; }
             if (!campAltar && GUI.Button(altar, GUIContent.none, GUIStyle.none)) { campSub = 1; return; }
-            if (!campBoard && GUI.Button(board, GUIContent.none, GUIStyle.none)) { campSub = 2; return; }
             if (!campTrain && GUI.Button(train, GUIContent.none, GUIStyle.none))
             {
                 Profile.GivePoint(); campTrain = true; Haptics.Pulse(30);
