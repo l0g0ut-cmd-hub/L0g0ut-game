@@ -1525,8 +1525,9 @@ namespace BladePath
                     {
                         float ah = r.height - 20f, aw = ah * art.width / Mathf.Max(1f, art.height);
                         Rect ar = new Rect(r.x + 10f, r.y + 10f, Mathf.Min(aw, 260f), ah);
-                        VisualIdentity.Portrait(ar, EnemyFullArt[e]);   // рисуем через Portrait — получим Inset
-                        VisualIdentity.Inset(ar, n.Type == NodeType.Boss ? new Color(1f, 0.4f, 0.3f) : VisualIdentity.Brass);
+                        // Portrait already draws its inset behind the image and thin border above it.
+                        // Do NOT call Inset again here: it paints a dark solid rectangle over the enemy artwork.
+                        VisualIdentity.Portrait(ar, EnemyFullArt[e]);
                     }
                     float x = r.x + 280f, w = r.width - 300f, y = r.y + 22f;
                     UiKit.Text(new Rect(x, y, w, 22f), Campaign.TypeNames[n.type], 15f, n.Type == NodeType.Boss ? new Color(1f, 0.4f, 0.3f) : Gold, TextAnchor.MiddleLeft); y += 28f;
