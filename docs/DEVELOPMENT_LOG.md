@@ -219,3 +219,14 @@
 - Status: CODE_READY/PREFLIGHT_OK/APK_PENDING. One APK release requested by user; obtain exact SHA and verify CI result, then test portrait/buttons/HP/Ki on actual Android device before marking verified.
 
 | 2026-11-05 — BP-030 / RELEASE STATUS | code `e07f5b2a91f4f02267287eb983e397257580c914`, Preflight №210 success | Camp/tavern small visible buttons completed; backgrounds unchanged. Selection button image task pending separately. | Promote one checked SHA once prior APK №408 complete and no Android running, then verify new run number/SHA. |
+
+
+## BP-031 — Selection button visual unification and post-victory ally idle (2026-11-05)
+
+- **User approved** unified dark/gold secondary and red/gold primary buttons across hero/difficulty screens and requested the ally who wins the side duel to stand calmly and observe, without intermittent movement jitter. Both included for planned next APK №410.
+- **Code commit `49c042c7f88110f64d31d62cbf2b028a2be23ea0`:** `Assets/_Project/Scripts/Game/SideDuel.cs` adds `watchArrived` state for watchers and eases their approach to the selected observation location. Once within 0.25 m, latch a true idle with zero movement commands; clear this state on `ClearWatch` so takeover/re-entry continues to work. Does not freeze other combatants or disable observation orientation. This addresses a code-grounded likely cause of repeated locomotion twitching; actual Android outcome remains unverified.
+- **Code commit `d8c17e0697b116a8793873a63d6c0347a8b917b7`:** `Assets/_Project/Scripts/Menu/MainMenuController.cs` draws one common `VisualIdentity.KitButton` style over pre-existing baked button positions for both `screen_traveller.jpg` and `screen_difficulty.jpg`, using existing opaque `UI/Kit/ui_board` beneath the buttons to hide prior inconsistent paintings. Main buttons red: `НАЧАТЬ ПУТЬ`, `ПОДТВЕРДИТЬ`; secondary `НАЗАД` dark. The fog toggle already uses `KitButton` and remains unchanged. Actual JPEG backgrounds/art/portraits remain intact and are not regenerated.
+- **Prior Android №409:** CI run `41933039078` completed **success**, SHA `16e80e14466cf9d5dbe180a02051e73811fda76a` before these changes; user requested next single APK. Do not report device visual verification from CI alone. Inspect restored source and final preflight before promoting exactly once. Specifically test hold/no twitch and new button overlap/hitbox across both selection screens on actual Android.
+- **Status:** CODE_READY / APK_PENDING, Preflight and Android SHA verification pending.
+
+| 2026-11-05 — BP-031 / RELEASE STATUS | `SideDuel.cs` `49c042c7`, `MainMenuController.cs` `d8c17e06`; approved button style and side-duel observer idle | Source integrated; existing selection and camp/tavern background JPEGs, videos and intentional overlay strip unchanged. | Complete preflight, promote a single checked SHA for next Android №410, verify Actions result and user device screenshots. |
