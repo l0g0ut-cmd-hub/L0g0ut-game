@@ -325,7 +325,7 @@ namespace BladePath
                     // вторая пара: держимся своего места — в стороне от основного боя
                     Vector3 ta = anchor - self.transform.position; ta.y = 0f;
                     float ma = ta.magnitude;
-                    if (ma > 0.7f) mv += ta / ma * Mathf.Clamp01((ma - 0.7f) / 0.9f) * 0.65f;
+                    if (ma > 0.4f) mv += ta / ma * Mathf.Clamp01((ma - 0.4f) / 0.6f) * 1.0f;   // держится своего угла крепче — не заходит в основной бой
                 }
                 else
                 {

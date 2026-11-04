@@ -165,6 +165,7 @@ namespace BladePath
                     Vector3 sp = cam.WorldToScreenPoint(p.world);
                     if (sp.z < 0f) continue;
                     Vector2 v = new Vector2(sp.x / UiKit.Scale, (Screen.height - sp.y) / UiKit.Scale - age * 46f);
+                    v.y = Mathf.Max(v.y, 136f);   // надписи над головой не заплывают на полоски здоровья и духа
                     Color c = p.color; c.a = Mathf.Clamp01(1.6f - age * 1.6f);
                     float sz = p.size * (1f + Mathf.Max(0f, 0.25f - age) * 2f);
                     UiKit.Text(new Rect(v.x - 60f, v.y - 20f, 120f, 40f), p.text, sz, c);

@@ -24,7 +24,7 @@ namespace BladePath
         public float minSeparation = 0.7f;      // ближе этого бойцы не сходятся (корпуса)
         /// <summary>Чужая пара на арене (соратник и его противник): сквозь них не проходим, держим avoidRadius.</summary>
         [NonSerialized] public FighterController[] avoid;
-        public float avoidRadius = 0.85f;
+        public float avoidRadius = 1.1f;
         public float arenaHalfWidth = 3.1f;     // половина площадки по X
         public float arenaHalfDepth = 2.3f;     // половина площадки по Z
         [Tooltip("Дальний край площадки (к ступеням храма), м: ближе, чем передний — иначе бойцы будто наступают на ступени.")]

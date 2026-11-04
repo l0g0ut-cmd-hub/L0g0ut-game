@@ -362,7 +362,7 @@ namespace BladePath
             if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Punch(4f); CameraOrbit.Instance.Shake(0.06f); }
             Slowmo = true; slowUntil = Time.unscaledTime + 0.45f;
             if (playerWon) { Announce("ИАЙ: ПЕРВЫЙ УДАР", new Color(0.55f, 0.9f, 1f)); player.AddKi(15f); }
-            else Announce(late ? "ПРОМЕДЛИЛ" : "СЛИШКОМ РАНО", new Color(1f, 0.35f, 0.25f), "жми удар, как только появится знак 斬");
+            else Announce(late ? "ПРОМЕДЛИЛ" : "СЛИШКОМ РАНО", new Color(1f, 0.35f, 0.25f), "жми удар, как только появится знак РУБИ");
             Haptics.Pulse(80);
         }
 

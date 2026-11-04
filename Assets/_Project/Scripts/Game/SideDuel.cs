@@ -39,7 +39,7 @@ namespace BladePath
         public int foeModel = 4;
 
         public const string AllyName = "СОРАТНИК", FoeName = "ПРИСПЕШНИК";
-        const float AnchorX = 2.0f, AnchorZ = 1.15f, EdgeX = 2.75f, EdgeZ = 1.6f;
+        const float AnchorX = 2.3f, AnchorZ = 1.45f, EdgeX = 2.75f, EdgeZ = 1.6f;
 
         public bool On { get; private set; }
         /// <summary>Герой пал — бой продолжает соратник.</summary>
@@ -109,8 +109,8 @@ namespace BladePath
             ally.opponent = foe; foe.opponent = ally;
             anchorX = AnchorX;
             Vector3 a = new Vector3(anchorX, 0f, AnchorZ);
-            ally.SetHome(a + Vector3.left * 0.6f, Quaternion.Euler(0f, 90f, 0f));
-            foe.SetHome(a + Vector3.right * 0.6f, Quaternion.Euler(0f, -90f, 0f));
+            ally.SetHome(a + Vector3.left * 0.55f, Quaternion.Euler(0f, 90f, 0f));
+            foe.SetHome(a + Vector3.right * 0.55f, Quaternion.Euler(0f, -90f, 0f));
             ally.ResetFighter(); foe.ResetFighter();
             allyMax = 110f + 15f * Profile.Cycle; foeMax = (90f + 12f * Ladder.Index) * Profile.CycleHp;
             allyHp = allyMax; foeHp = foeMax;
@@ -390,6 +390,7 @@ namespace BladePath
                 Vector3 sp = cam.WorldToScreenPoint(p.world);
                 if (sp.z < 0f) continue;
                 Vector2 v = new Vector2(sp.x / UiKit.Scale, (Screen.height - sp.y) / UiKit.Scale - age * 40f);
+                v.y = Mathf.Max(v.y, 150f);
                 Color c = p.color; c.a = Mathf.Clamp01(1.6f - age * 1.6f);
                 UiKit.Text(new Rect(v.x - 50f, v.y - 16f, 100f, 32f), p.text, p.size, c);
             }
@@ -402,7 +403,7 @@ namespace BladePath
             Vector3 sp = cam.WorldToScreenPoint(f.transform.position + Vector3.up * 2.0f);
             if (sp.z < 0f) return;
             Vector2 c = new Vector2(sp.x / UiKit.Scale, (Screen.height - sp.y) / UiKit.Scale);
-            c.y = Mathf.Max(c.y, 112f);
+            c.y = Mathf.Max(c.y, 136f);
             const float w = 70f;
             UiKit.Text(new Rect(c.x - 60f, c.y - 17f, 120f, 14f), name, 9f, new Color(col.r, col.g, col.b, 0.9f));
             UiKit.Rect(new Rect(c.x - w * 0.5f - 1f, c.y - 1f, w + 2f, 6f), new Color(0f, 0f, 0f, 0.6f));
