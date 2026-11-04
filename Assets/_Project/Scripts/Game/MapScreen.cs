@@ -1769,8 +1769,14 @@ namespace BladePath
         {
             Texture2D art = UiKit.Tex("UI/tavern");
             float s = Mathf.Max(W / TavW, 540f / TavH), ox = (W - TavW * s) * 0.5f, oy = (540f - TavH * s) * 0.5f;
-            if (art != null) GUI.DrawTexture(new Rect(ox, oy, TavW * s, TavH * s), art, ScaleMode.StretchToFill, false);
-            DrawTavernLife(s, ox, oy);
+            // живой трактир (видео, та же раскадровка); пока не готово — картинка с огнём и паром кодом
+            Texture vid = TavernVideo.Frame();
+            if (vid != null) GUI.DrawTexture(new Rect(ox, oy, TavW * s, TavH * s), vid, ScaleMode.StretchToFill, false);
+            else
+            {
+                if (art != null) GUI.DrawTexture(new Rect(ox, oy, TavW * s, TavH * s), art, ScaleMode.StretchToFill, false);
+                DrawTavernLife(s, ox, oy);
+            }
             int gold = Profile.Gold;
             if (tavSub == 1)
             {
