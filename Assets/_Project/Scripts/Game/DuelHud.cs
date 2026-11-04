@@ -727,15 +727,21 @@ namespace BladePath
             if (kf == null) { kf = UiKit.Tex("UI/bar_ki"); kiWin = KiWin; }
             if (kf == null) UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), Frame);
             else UiKit.Rect(r, new Color(0.02f, 0.02f, 0.03f, 1f));
+            // заливка духа — зажимаем в окно рамки, чтобы не выезжала за края
+            Rect kiWinFill = (kf != null) ? kiWin : new Rect(0f, 0f, 1f, 1f);
+            float fillX = r.x + r.width * kiWinFill.x;
+            float fillW = r.width * kiWinFill.width;
+            float fillY = r.y + r.height * kiWinFill.y;
+            float fillH = r.height * kiWinFill.height;
             float k = f.Ki01;
-            float w = r.width * k;
+            float w = fillW * k;
             bool full = f.CanEnergy;
             Color c = full ? new Color(0.35f, 0.75f, 1f, 1f) : new Color(0.25f, 0.45f, 0.7f, 0.9f);
             if (full) c = Color.Lerp(c, Color.white, 0.25f + 0.25f * Mathf.Sin(Time.unscaledTime * 6f));
-            UiKit.Rect(mirror ? new Rect(r.x, r.y, w, r.height) : new Rect(r.xMax - w, r.y, w, r.height), c);
+            UiKit.Rect(mirror ? new Rect(fillX, fillY, w, fillH) : new Rect(fillX + fillW - w, fillY, w, fillH), c);
             // отметка стоимости шара
-            float m = r.width * (f.energyCost / Mathf.Max(1f, f.kiMax));
-            UiKit.Rect(new Rect(mirror ? r.x + m : r.xMax - m, r.y - 1f, 1.5f, r.height + 2f), new Color(1f, 1f, 1f, 0.6f));
+            float m = fillW * (f.energyCost / Mathf.Max(1f, f.kiMax));
+            UiKit.Rect(new Rect(mirror ? fillX + m : fillX + fillW - m, fillY - 1f, 1.5f, fillH + 2f), new Color(1f, 1f, 1f, 0.6f));
             DrawFrame(r, kf, kiWin, mirror);
             UiKit.Text(new Rect(mirror ? r.xMax + 24f : r.x - 54f, r.y - 6f, 30f, 18f), "ДУХ", 9f, new Color(0.7f, 0.85f, 1f, 0.9f), mirror ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight, false);
         }
