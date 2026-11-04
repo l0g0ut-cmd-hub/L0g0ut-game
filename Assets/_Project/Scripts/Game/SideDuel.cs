@@ -39,7 +39,7 @@ namespace BladePath
         public int foeModel = 4;
 
         public const string AllyName = "СОРАТНИК", FoeName = "ПРИСПЕШНИК";
-        const float AnchorX = 2.3f, AnchorZ = 1.45f, EdgeX = 2.75f, EdgeZ = 1.6f;
+        const float AnchorX = 2.3f, AnchorZ = 1.45f, StepsZ = 1.85f;   // StepsZ — у ступеней храма (дальний край площадки)
 
         public bool On { get; private set; }
         /// <summary>Герой пал — бой продолжает соратник.</summary>
@@ -154,8 +154,9 @@ namespace BladePath
                 FighterController w = watchers[i];
                 if (w == null || w.Dead) continue;
                 w.SetBlock(false);
+                if (w.weapon != null) w.weapon.Relaxed = true;   // опускает клинок — уже не в боевой стойке
                 Vector3 d = watchAt[w] - w.transform.position; d.y = 0f;
-                if (d.magnitude > 0.2f) w.SetMoveVector(new Vector2(d.x, d.z).normalized * 0.75f);
+                if (d.magnitude > 0.2f) w.SetMoveVector(new Vector2(d.x, d.z).normalized * Mathf.Lerp(0.25f, 0.45f, Mathf.Clamp01(d.magnitude)));   // медленно, шагом
             }
 
             if (foeEnterAt > 0f && Time.time >= foeEnterAt) FoeEnters();
@@ -351,9 +352,13 @@ namespace BladePath
         {
             if (w == null || w.Dead) return;
             if (!watchers.Contains(w)) watchers.Add(w);
+            // к ступеням храма (дальний край площадки), на сторону подальше от идущего боя; двое ждущих — не плечом к плечу
             Vector3 mid = (a.transform.position + b.transform.position) * 0.5f;
             float sx = Mathf.Abs(mid.x) > 0.3f ? -Mathf.Sign(mid.x) : (w.transform.position.x >= 0f ? 1f : -1f);
-            watchAt[w] = new Vector3(sx * EdgeX, 0f, EdgeZ);
+            float wx = Mathf.Clamp(mid.x + sx * 2.0f, -2.6f, 2.6f);
+            foreach (KeyValuePair<FighterController, Vector3> kv in watchAt)
+                if (kv.Key != w && Mathf.Abs(kv.Value.x - wx) < 1.2f) wx = Mathf.Clamp(kv.Value.x + (wx >= kv.Value.x ? 1.2f : -1.2f), -2.6f, 2.6f);
+            watchAt[w] = new Vector3(wx, 0f, StepsZ);
             if (w.weapon != null) w.weapon.ResetState();
             // смотрит на ближнего из идущего боя (по нему же и разворачивается)
             FighterController look = Vector3.Distance(w.transform.position, a.transform.position) <= Vector3.Distance(w.transform.position, b.transform.position) ? a : b;
@@ -368,6 +373,7 @@ namespace BladePath
             {
                 EnemyAI ai = w == ally ? allyAi : w == foe ? foeAi : (Dm != null && w == Dm.enemy) ? MainAi() : null;
                 if (ai != null) ai.hold = false;
+                if (w != null && w.weapon != null) w.weapon.Relaxed = false;   // снова в бой — снова в стойке
             }
             watchers.Clear(); watchAt.Clear();
         }

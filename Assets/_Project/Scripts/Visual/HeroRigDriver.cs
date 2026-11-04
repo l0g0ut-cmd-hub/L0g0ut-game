@@ -890,7 +890,7 @@ namespace BladePath
             // weapon.pivot/bladeRoot к позе стойки ПРОШЛОГО удара поверх уже идущего нового — хитбокс и трейл
             // клинка на миг оказываются оторваны от бойца («фантомный взмах»)
             bool noClipSwing = swinging && atk == null;
-            bool on = DebugAnimSword && !fighter.Dead && drinkW < 0.01f && !noClipSwing;
+            bool on = DebugAnimSword && !fighter.Dead && drinkW < 0.01f && !noClipSwing && weapon.RelaxK < 0.01f;   // вне боя — опущенный клинок (поза WeaponController), а не боевая стойка из клипа
             swW = noClipSwing ? 0f : Mathf.MoveTowards(swW, on ? 1f : 0f, dt / 0.12f);
             if (swW <= 0.001f) { swInit = false; return; }
 

@@ -157,9 +157,13 @@ namespace BladePath
         /// Сразу в стойку, без перетекания из прежней позы. Для редактора (пробы и кадры CI): там Time.deltaTime не идёт,
         /// и после ResetState() смешивание навсегда застревает в позе прерванного удара (клинок остриём в землю).
         /// </summary>
-        public void SnapRest() { ResetState(); blendLeft = 0f; blockK = 0f; stagK = 0f; pinUntil = 0f; downUntil = 0f; downK = 0f; stanceK1 = stance == 1 ? 1f : 0f; stanceK2 = stance == 2 ? 1f : 0f; ApplyRestPose(); }
+        public void SnapRest() { Relaxed = false; relaxK = 0f; ResetState(); blendLeft = 0f; blockK = 0f; stagK = 0f; pinUntil = 0f; downUntil = 0f; downK = 0f; stanceK1 = stance == 1 ? 1f : 0f; stanceK2 = stance == 2 ? 1f : 0f; ApplyRestPose(); }
 
         float pinUntil, downUntil, downK;
+        float relaxK;
+        /// <summary>Вне боя (ждёт у ступеней, смотрит на чужой бой): клинок опущен остриём к земле у бедра, корпус прямой — не боевая стойка.</summary>
+        public bool Relaxed;
+        public float RelaxK { get { return relaxK; } }
         /// <summary>На колено (добит, но поднимается / пропустил сокрушающий удар): корпус осел, клинок упёрт остриём в землю.</summary>
         public void Down(float seconds) { downUntil = Time.time + seconds; }
 
@@ -288,6 +292,14 @@ namespace BladePath
                 Pose[PoseCh.PD] += 0.3f * dk; Pose[PoseCh.PF] -= 0.04f * dk;
                 Pose[PoseCh.CPIT] += 26f * dk; Pose[PoseCh.HPIT] += 14f * dk;
             }
+            float rxk = Smooth(relaxK);
+            if (rxk > 0.001f)
+            {
+                // вне боя: руки опущены, клинок у бедра остриём вниз-вперёд, корпус выпрямлен, голова чуть приподнята
+                re = Vector3.Lerp(re, new Vector3(60f, 16f * yawSign, 0f), rxk);
+                rh = Vector3.Lerp(rh, new Vector3(0.14f * yawSign, -0.40f, 0.04f), rxk);
+                Pose[PoseCh.CPIT] -= 5f * rxk; Pose[PoseCh.HPIT] -= 4f * rxk;
+            }
             SetHandEuler(rh, re);
             FootSpeedF = FootSpeedR = 0f;
             ApplyBlend();
@@ -303,6 +315,7 @@ namespace BladePath
             blockK = Mathf.MoveTowards(blockK, bt, Time.deltaTime / 0.12f);
             bool stag = (owner != null && owner.PostureBroken) || Time.time < pinUntil;
             downK = Mathf.MoveTowards(downK, Time.time < downUntil ? 1f : 0f, Time.deltaTime / (Time.time < downUntil ? 0.18f : 0.5f));
+            relaxK = Mathf.MoveTowards(relaxK, Relaxed ? 1f : 0f, Time.deltaTime / (Relaxed ? 0.8f : 0.3f));
             stagK = Mathf.MoveTowards(stagK, stag ? 1f : 0f, Time.deltaTime / (stag ? 0.15f : 0.4f));
             drinkK = Mathf.MoveTowards(drinkK, owner != null && owner.Drinking ? 1f : 0f, Time.deltaTime / 0.18f);
             stanceK1 = Mathf.MoveTowards(stanceK1, stance == 1 ? 1f : 0f, Time.deltaTime / 0.4f);
