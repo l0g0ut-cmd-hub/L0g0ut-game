@@ -55,7 +55,7 @@ namespace BladePath
             int rar = it != null ? it.rarity : 0;
             Texture2D fr = UiKit.Tex("UI/frame_" + rar);
             Color rc = Profile.RarityColors[rar];
-            UiKit.Rect(r, new Color(0.04f, 0.035f, 0.035f, 0.92f));
+            UiKit.Rect(r, new Color(0.04f, 0.035f, 0.035f, it != null ? 0.85f : 0.55f));   // пустая ячейка — легче, видно фон
             if (it != null)
             {
                 // A low-opacity radial tint gives rarity a visual identity without replacing the item art.
@@ -158,9 +158,10 @@ namespace BladePath
             Rect stats = new Rect(40f, 76f, 284f, 432f);
             Rect equipped = new Rect(334f, 76f, 232f, 432f);
             Rect bag = new Rect(578f, 76f, W - 618f, 432f);
-            VisualIdentity.Inset(stats);
-            VisualIdentity.Inset(equipped);
-            VisualIdentity.Inset(bag);
+            // подложки полупрозрачные: сквозь них видна оружейная (раньше почти чёрные — закрывали фон, особенно доспех справа)
+            VisualIdentity.Inset(stats, null, 0.62f);
+            VisualIdentity.Inset(equipped, null, 0.5f);
+            VisualIdentity.Inset(bag, null, 0.32f);
             DrawStats(new Rect(stats.x + 8f, stats.y + 4f, stats.width - 16f, stats.height - 8f));
             DrawEquipped(new Rect(equipped.x + 8f, equipped.y + 4f, equipped.width - 16f, equipped.height - 8f));
             DrawBag(new Rect(bag.x + 8f, bag.y + 4f, bag.width - 16f, bag.height - 8f));
@@ -281,7 +282,7 @@ namespace BladePath
             // справа — что изменится
             float rx = lx + lw + 22f, rw = W - rx - 46f;
             Rect rp = new Rect(rx, 76f, rw, 382f);
-            VisualIdentity.Inset(rp);
+            VisualIdentity.Inset(rp, null, 0.55f);
             VisualIdentity.Heading(new Rect(rx + 12f, 82f, rw - 24f, 30f),
                 changed ? "ЧТО ИЗМЕНИТСЯ" : "ИТОГ");
             Profile.Bonus a = Profile.Compute(cur), b = Profile.Compute(pending);
@@ -402,7 +403,7 @@ namespace BladePath
         void DrawCard(Rect a)
         {
             if (sel != null && !Profile.Items.Contains(sel)) sel = null;
-            VisualIdentity.Inset(a);
+            VisualIdentity.Inset(a, null, 0.6f);
             if (sel == null)
             {
                 UiKit.Text(a, "ВЫБЕРИ ПРЕДМЕТ", 13f, VisualIdentity.Subdued);

@@ -75,10 +75,10 @@ namespace BladePath
                 UiKit.Corners(r, Mathf.Min(43f, r.height * 0.25f), 0.65f * alpha);
         }
 
-        public static void Inset(Rect r, Color? accent = null)
+        public static void Inset(Rect r, Color? accent = null, float alpha = -1f)
         {
             Color rim = accent ?? Brass;
-            UiKit.Rect(r, InsetColor);
+            UiKit.Rect(r, alpha < 0f ? InsetColor : new Color(InsetColor.r, InsetColor.g, InsetColor.b, alpha));
             UiKit.Rect(new Rect(r.x, r.y, r.width, 1.2f),
                 new Color(rim.r, rim.g, rim.b, 0.34f));
             UiKit.Rect(new Rect(r.x, r.yMax - 1.2f, r.width, 1.2f),
