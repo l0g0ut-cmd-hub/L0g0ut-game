@@ -298,15 +298,8 @@ namespace BladePath
             float k = UiKit.Scale;
             Rect r = new Rect(screenRect.x / k, screenRect.y / k, screenRect.width / k, screenRect.height / k);
             bool on = JourneyChoice.FogEnabled;
-            UiKit.Rect(r, new Color(0.05f, 0.035f, 0.03f, 0.82f));
-            UiKit.Rect(new Rect(r.x, r.yMax - 2f, r.width, 2f), on ? VisualIdentity.BrassLight : new Color(0.4f, 0.34f, 0.28f, 0.8f));
-            Vector2 box = new Vector2(r.x + 16f, r.center.y);
-            UiKit.Ring(box, 8f, VisualIdentity.BrassLight, true);
-            if (on) UiKit.Disc(box, 5f, VisualIdentity.BrassLight);
-            UiKit.Text(new Rect(r.x + 28f, r.y + 2f, r.width - 30f, r.height * 0.5f), "ТУМАН ВОЙНЫ", 11f, VisualIdentity.Parchment, TextAnchor.MiddleLeft, false);
-            UiKit.Text(new Rect(r.x + 28f, r.center.y - 1f, r.width - 30f, r.height * 0.5f), on ? "включён" : "выключен", 10f,
-                on ? VisualIdentity.BrassLight : VisualIdentity.Subdued, TextAnchor.MiddleLeft, false);
-            if (GUI.Button(r, GUIContent.none, GUIStyle.none)) { JourneyChoice.FogEnabled = !on; Haptics.Pulse(12); }
+            string label = on ? "ТУМАН ВОЙНЫ  ВКЛ" : "ТУМАН ВОЙНЫ  ВЫКЛ";
+            if (VisualIdentity.KitButton(r, label, true, false, on)) { JourneyChoice.FogEnabled = !on; Haptics.Pulse(12); }
             GUI.matrix = old;
         }
 
