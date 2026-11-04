@@ -216,7 +216,7 @@ namespace BladePath
                             Vector2 sc2 = new Vector2(sgp.x / UiKit.Scale, (Screen.height - sgp.y) / UiKit.Scale);
                             DrawGlyphWide(ew.stance == 1 ? "UI/hasso" : "UI/waki", sc2, 92f, sal * 0.92f);
                             if (stanceShown <= 3)
-                                UiKit.Text(new Rect(sc2.x - 160f, sc2.y + 18f, 320f, 22f), ew.stance == 1 ? "ХАССО — ЖДИ УДАР СВЕРХУ" : "ВАКИГАМАЭ — СНИЗУ И ПО НОГАМ", 14f, new Color(1f, 0.85f, 0.7f, sal));
+                                UiKit.Text(new Rect(sc2.x - 160f, sc2.y + 18f, 320f, 22f), ew.stance == 1 ? "ЖДИ УДАР СВЕРХУ" : "ЖДИ УДАР СНИЗУ И ПО НОГАМ", 14f, new Color(1f, 0.85f, 0.7f, sal));
                         }
                     }
                 }
