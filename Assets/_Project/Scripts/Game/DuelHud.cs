@@ -992,7 +992,8 @@ namespace BladePath
 
         static Texture2D MakeFillMask(bool ki)
         {
-            const int mw = 256, mh = 32;
+            // Higher-resolution alpha mask reduces bilinear corner holes at Android HUD scale.
+            const int mw = 512, mh = 64;
             Texture2D tex = new Texture2D(mw, mh, TextureFormat.RGBA32, false);
             tex.name = ki ? "KiInnerFillMask" : "HpInnerFillMask";
             tex.hideFlags = HideFlags.HideAndDontSave;
@@ -1003,14 +1004,16 @@ namespace BladePath
             {
                 float yn = (y + 0.5f) / mh;
                 float tip = Mathf.Pow(Mathf.Abs(yn - 0.5f) * 2f, 1.5f);
-                // Fit both tapered ends *inside* the painted gold interior.
-                // Prior mask had an almost square left end (0.006 taper) but an
-                // oversized right inset (0.032), leaving a gap on one side and
-                // corner leakage on its mirrored counterpart. Keep the two ends
-                // close in profile; retain a small antialiasing safety margin.
-                float left = 0.006f + (ki ? 0.014f : 0.017f) * tip;
-                float right = 0.994f - (ki ? 0.017f : 0.021f) * tip;
-                float ay = Mathf.Clamp01(Mathf.Min(yn, 1f - yn) * mh);
+                // Both ornate tips are already clipped by the painted frame. Small
+                // symmetric insets prevent colored pixels on the golden outline,
+                // without the conspicuous triangular unfilled corners of the
+                // previous 2–3% masks. Mirror uses this same contour.
+                float taper = (ki ? 0.009f : 0.011f) * tip;
+                float left = 0.002f + taper;
+                float right = 0.998f - taper;
+                // Keep the outermost image row partly covered instead of leaving
+                // a full empty half-pixel border around the filled ribbon.
+                float ay = Mathf.Clamp01((Mathf.Min(yn, 1f - yn) + 0.003f) * mh);
                 for (int x = 0; x < mw; x++)
                 {
                     float xn = (x + 0.5f) / mw;
