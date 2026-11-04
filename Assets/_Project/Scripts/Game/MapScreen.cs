@@ -1724,11 +1724,11 @@ namespace BladePath
         {
             Texture2D art = UiKit.Tex("UI/camp");
             float s = Mathf.Max(W / CampW, 540f / CampH), ox = (W - CampW * s) * 0.5f, oy = (540f - CampH * s) * 0.5f;
-            // живое видео — поверх статичной картинки
+            // статичная картинка — всегда как подложка; видео поверх когда готово (нет чёрных квадратов при загрузке)
+            if (art != null) GUI.DrawTexture(new Rect(ox, oy, CampW * s, CampH * s), art, ScaleMode.StretchToFill, false);
             CampVideo.Preload();
             Texture vid = CampVideo.Frame();
             if (vid != null) GUI.DrawTexture(new Rect(ox, oy, CampW * s, CampH * s), vid, ScaleMode.StretchToFill, false);
-            else if (art != null) GUI.DrawTexture(new Rect(ox, oy, CampW * s, CampH * s), art, ScaleMode.StretchToFill, false);
             if (campSub == 1)
             {
                 Rect r = Card(560f, 300f);
@@ -1760,16 +1760,7 @@ namespace BladePath
             if (campBoard) UiKit.Rect(board, new Color(0f, 0f, 0f, 0.45f));
             if (!ok || InventoryScreen.Open) return;
             if (UiKit.Tex("UI/tavern") != null && Btn(new Rect(W - 196f, 14f, 180f, 42f), "ТРАКТИР", ok)) { Profile.CostMul = 1f; OpenTavern(true); return; }
-            // кнопка «В ПУТЬ» — картинка в стиле игры, закрывает артефакт анимации (летающий лист)
-            Texture2D btnGo = UiKit.Tex("UI/Kit/btn_go");
-            if (btnGo != null)
-            {
-                Color oc = GUI.color; GUI.color = ok ? Color.white : new Color(1f, 1f, 1f, 0.5f);
-                GUI.DrawTexture(go, btnGo, ScaleMode.StretchToFill, true);
-                GUI.color = oc;
-                if (ok && GUI.Button(go, GUIContent.none, GUIStyle.none)) { Profile.CostMul = 1f; modal = Modal.None; Haptics.Pulse(20); return; }
-            }
-            else if (Btn(go, "В ПУТЬ", ok, true)) { Profile.CostMul = 1f; modal = Modal.None; Haptics.Pulse(20); return; }
+            if (Btn(go, "В ПУТЬ", ok, true)) { Profile.CostMul = 1f; modal = Modal.None; Haptics.Pulse(20); return; }
             if (GUI.Button(forge, GUIContent.none, GUIStyle.none)) { Profile.CostMul = 0.5f; InventoryScreen.Show(0); return; }
             if (!campAltar && GUI.Button(altar, GUIContent.none, GUIStyle.none)) { campSub = 1; return; }
             if (!campBoard && GUI.Button(board, GUIContent.none, GUIStyle.none)) { campSub = 2; return; }

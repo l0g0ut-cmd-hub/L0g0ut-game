@@ -265,7 +265,7 @@ namespace BladePath
 
             if (difficulty)
             {
-                Rect fr = SelRect(1372f, 694f, 1540f, 762f);
+                Rect fr = SelRect(1340f, 698f, 1565f, 756f);
                 DrawFogToggle(new Rect(ox + fr.x * s, oy + fr.y * s, fr.width * s, fr.height * s));
             }
 
@@ -395,7 +395,7 @@ namespace BladePath
             {
                 GUI.matrix = old;
                 float k = UiKit.Scale;
-                DrawFogToggle(new Rect((board.x + 255f) * k, (board.yMax - 65f) * k, 170f * k, 44f * k));
+                DrawFogToggle(new Rect((board.x + 240f) * k, (board.yMax - 65f) * k, 210f * k, 44f * k));
                 UiKit.Begin();
             }
             Rect back = new Rect(board.x + 36f, board.yMax - 65f, 205f, 44f);
