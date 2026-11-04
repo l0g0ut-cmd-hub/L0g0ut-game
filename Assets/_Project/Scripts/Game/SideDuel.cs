@@ -58,6 +58,9 @@ namespace BladePath
         float foeEnterAt = -1f;
         readonly List<FighterController> watchers = new List<FighterController>();
         readonly Dictionary<FighterController, Vector3> watchAt = new Dictionary<FighterController, Vector3>();
+        // Arriving observers stop for good until combat takes over again.
+        // Without this latch, obstacle separation jitters across the 0.2m threshold.
+        readonly HashSet<FighterController> watchArrived = new HashSet<FighterController>();
         readonly Dictionary<FighterController, int> lastSwing = new Dictionary<FighterController, int>();
         readonly List<DuelManager.Popup> popups = new List<DuelManager.Popup>();
         CombatResolver resolver;
@@ -162,7 +165,22 @@ namespace BladePath
                 w.SetBlock(false);
                 if (w.weapon != null) w.weapon.Relaxed = true;   // опускает клинок — уже не в боевой стойке
                 Vector3 d = watchAt[w] - w.transform.position; d.y = 0f;
-                if (d.magnitude > 0.2f) w.SetMoveVector(new Vector2(d.x, d.z).normalized * Mathf.Lerp(0.25f, 0.45f, Mathf.Clamp01(d.magnitude)));   // медленно, шагом
+                float distance = d.magnitude;
+                if (!watchArrived.Contains(w) && distance <= 0.25f)
+                {
+                    // Stop the one-shot walk permanently rather than toggling
+                    // forward motion whenever collision avoidance moves us a few cm.
+                    watchArrived.Add(w);
+                    w.StopDash();
+                }
+                if (watchArrived.Contains(w))
+                    w.SetMoveVector(Vector2.zero);
+                else if (distance > 1e-4f)
+                {
+                    // Approach progressively, avoiding a short full-speed last step.
+                    float speed = Mathf.Lerp(0.12f, 0.42f, Mathf.Clamp01((distance - 0.25f) / 1.3f));
+                    w.SetMoveVector(new Vector2(d.x, d.z) / distance * speed);
+                }
             }
 
             if (foeEnterAt > 0f && Time.time >= foeEnterAt) FoeEnters();
@@ -362,6 +380,7 @@ namespace BladePath
         {
             if (w == null || w.Dead) return;
             if (!watchers.Contains(w)) watchers.Add(w);
+            watchArrived.Remove(w);
             Vector3 mid = (a.transform.position + b.transform.position) * 0.5f; mid.y = 0f;
             Vector3 pos = w.transform.position; pos.y = 0f;
             // место у ступеней: дальше всего от боя и чтобы путь туда не шёл через бой; второй ждущий — не плечом к плечу
@@ -402,7 +421,7 @@ namespace BladePath
                 if (w != null && w.weapon != null) w.weapon.Relaxed = false;   // снова в бой — снова в стойке
                 if (w != null) w.lookTarget = null;
             }
-            watchers.Clear(); watchAt.Clear();
+            watchers.Clear(); watchAt.Clear(); watchArrived.Clear();
         }
 
         // ---------------------------------------------------------------- шкалы над головами
