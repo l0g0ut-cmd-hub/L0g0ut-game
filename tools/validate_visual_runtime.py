@@ -84,9 +84,11 @@ assert 'UiKit.Rect(captionPanel, new Color(0.025f, 0.018f, 0.02f, 0.72f * ta))' 
 assert 'DrawBrush("UI/brush_stroke", new Vector2(cx, 318f)' not in hud_code
 # BP-049: Difficulty background is neutral; there must be exactly one
 # dynamically drawn frame, in the selected card's actual rectangle.
-assert 'Texture2D glow = UiKit.Tex(difficulty' in menu
-assert '"UI/selection/difficulty_active_frame" : "UI/selection/card_glow"' in menu
-assert 'if (i == chosen && glow != null)' in menu
+assert 'Texture2D glow = difficulty ? null : UiKit.Tex("UI/selection/card_glow");' in menu
+assert 'if (i == chosen)' in menu
+assert 'DrawDifficultySelectionGlow(r, s);' in menu
+assert 'static void DrawDifficultySelectionGlow(Rect card, float s)' in menu
+assert 'UI/selection/difficulty_active_frame' not in menu
 assert 'if (difficulty) chosenDifficulty = i;' in menu
 assert 'DifficultyHaloNeutralizer' not in menu
 assert 'GUI.DrawTexture(haloArea, neutralizer' not in menu
@@ -107,10 +109,15 @@ assert 'GUI.DrawTexture(vr, tex, ScaleMode.StretchToFill, false);' in menu
 assert 'DrawSideBorders(vr);' in menu
 assert 'float left = Mathf.Max(0f, video.x);' in menu
 assert 'float right = Mathf.Max(0f, Screen.width - video.xMax);' in menu
-assert 'UiKit.Tex("UI/menu_side_panels")' in menu
+assert 'UiKit.Tex("UI/Kit/ui_sidepanel")' in menu
+assert 'static void DrawMenuPillar(' in menu
 assert 'UiKit.Tex("UI/menu_side_borders")' not in menu, "Do not restore blurry JPEG borders"
 assert (ROOT / "Assets/_Project/Resources/UI/menu_side_panels.png").is_file()
 assert 'float k = vr.width / CW;' in menu
+assert 'GUI.DrawTexture(screenRect, art, ScaleMode.StretchToFill, false);' not in menu
+assert 'static Texture2D FogIcon(bool enabled)' in menu
+assert 'Texture2D fogCloud = FogIcon(on);' in menu
+assert 'float knobX=on?track.xMax-knob-4f*sc:track.x+4f*sc;' in menu
 assert 'VisualIdentity.KitButton(r, label, true, red)' not in menu
 # Result buttons stay ahead of vignette and use intact art, rather than
 # slicing the lacquer into distorted segments or adding mismatched overlays.
