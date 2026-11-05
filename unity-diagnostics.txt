@@ -1,0 +1,111 @@
+[Licensing::Module] Error: Access token is unavailable; failed to update
+[Licensing::Client] Error: Code 500 while processing request (status: Unable to update licenses. Errors: No ULF license found.,Token not found in cache)
+[Licensing::Client] Error: Code 500 while updating license in client (status: Unable to update licenses. Errors: No ULF license found.,Token not found in cache)
+GLX Extensions: GLX_ARB_context_flush_control GLX_ARB_create_context GLX_ARB_create_context_no_error GLX_ARB_create_context_profile GLX_ARB_fbconfig_float GLX_ARB_framebuffer_sRGB GLX_ARB_get_proc_address GLX_ARB_multisample GLX_EXT_create_context_es2_profile GLX_EXT_create_context_es_profile GLX_EXT_fbconfig_packed_float GLX_EXT_framebuffer_sRGB GLX_EXT_no_config_context GLX_EXT_texture_from_pixmap GLX_EXT_visual_info GLX_EXT_visual_rating GLX_MESA_copy_sub_buffer GLX_MESA_query_renderer GLX_OML_swap_method GLX_SGIS_multisample GLX_SGIX_fbconfig GLX_SGIX_pbuffer GLX_SGIX_visual_select_group GLX_SGI_make_current_read 
+rm GL_EXT_texture_swizzle GL_EXT_timer_query GL_EXT_transform_feedback GL_EXT_vertex_array_bgra GL_EXT_vertex_attrib_64bit GL_IBM_multimode_draw_arrays GL_INTEL_shader_atomic_float_minmax GL_KHR_blend_equation_advanced GL_KHR_blend_equation_advanced_coherent GL_KHR_context_flush_control GL_KHR_debug GL_KHR_no_error GL_KHR_parallel_shader_compile GL_KHR_robust_buffer_access_behavior GL_KHR_robustness GL_KHR_texture_compression_astc_ldr GL_KHR_texture_compression_astc_sliced_3d GL_MESA_framebuffer_flip_y GL_MESA_pack_invert GL_MESA_shader_integer_functions GL_MESA_texture_signed_rgba GL_MESA_ycbcr_texture GL_NVX_gpu_memory_info GL_NV_conditional_render GL_NV_copy_image GL_NV_depth_clamp GL_NV_packed_depth_stencil GL_NV_shader_atomic_float GL_NV_texture_barrier GL_OES_EGL_image GL_S3_s3tc
+			LogAssemblyErrors (0ms)
+			LogAssemblyErrors (0ms)
+			LogAssemblyErrors (0ms)
+GLX Extensions: GLX_ARB_context_flush_control GLX_ARB_create_context GLX_ARB_create_context_no_error GLX_ARB_create_context_profile GLX_ARB_fbconfig_float GLX_ARB_framebuffer_sRGB GLX_ARB_get_proc_address GLX_ARB_multisample GLX_EXT_create_context_es2_profile GLX_EXT_create_context_es_profile GLX_EXT_fbconfig_packed_float GLX_EXT_framebuffer_sRGB GLX_EXT_no_config_context GLX_EXT_texture_from_pixmap GLX_EXT_visual_info GLX_EXT_visual_rating GLX_MESA_copy_sub_buffer GLX_MESA_query_renderer GLX_OML_swap_method GLX_SGIS_multisample GLX_SGIX_fbconfig GLX_SGIX_pbuffer GLX_SGIX_visual_select_group GLX_SGI_make_current_read 
+BladePath.MainMenuController:OnError (UnityEngine.Video.VideoPlayer,string) (at Assets/_Project/Scripts/Menu/MainMenuController.cs:67)
+UnityEngine.Video.VideoPlayer:InvokeErrorReceivedCallback_Internal (UnityEngine.Video.VideoPlayer,string) (at /home/bokken/build/output/unity/unity/Modules/Video/Public/ScriptBindings/VideoPlayer.bindings.cs:347)
+----- log tail -----
+	RebuildCommonClasses (43ms)
+	RebuildNativeTypeToScriptingClass (10ms)
+	initialDomainReloadingComplete (30ms)
+	LoadAllAssembliesAndSetupDomain (18ms)
+		LoadAssemblies (79ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (11ms)
+			TypeCache.Refresh (3ms)
+				TypeCache.ScanAssembly (0ms)
+			BuildScriptInfoCaches (5ms)
+			ResolveRequiredComponents (2ms)
+	FinalizeReload (809ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (391ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (43ms)
+			SetLoadedEditorAssemblies (7ms)
+			BeforeProcessingInitializeOnLoad (137ms)
+			ProcessInitializeOnLoadAttributes (170ms)
+			ProcessInitializeOnLoadMethodAttributes (27ms)
+			AfterProcessingInitializeOnLoad (8ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (31ms)
+Asset Pipeline Refresh (id=3ab03e0d5d844a3fda8cdc2f4129939f): Total: 1.131 seconds - Initiated by StopAssetImportingV2(ForceSynchronousImport | ForceDomainReload)
+	Summary:
+		Imports: total=0 (actual=0, local cache=0, cache server=0)
+		Asset DB Process Time: managed=0 ms, native=839 ms
+		Asset DB Callback time: managed=13 ms, native=0 ms
+		Scripting: domain reloads=1, domain reload time=275 ms, compile time=2 ms, other=0 ms
+		Project Asset Count: scripts=152, non-scripts=613
+		Asset File Changes: new=0, changed=0, moved=0, deleted=0
+		Scan Filter Count: 0
+	InvokeCustomDependenciesCallbacks: 0.001ms
+	InvokePackagesCallback: 0.836ms
+	ApplyChangesToAssetFolders: 0.245ms
+	Scan: 0.001ms
+	OnSourceAssetsModified: 0.002ms
+	CategorizeAssetsWithTransientArtifact: 0.002ms
+	ProcessAssetsWithTransientArtifactChanges: 0.129ms
+	CategorizeAssets: 4.449ms
+	ImportOutOfDateAssets: 809.914ms (807.719ms without children)
+		CompileScripts: 1.865ms
+		CollectScriptTypesHashes: 0.000ms
+		ReloadNativeAssets: 0.000ms
+		UnloadImportedAssets: 0.055ms
+		EnsureUptoDateAssetsAreRegisteredWithGuidPM: 0.080ms
+		InitializingProgressBar: 0.000ms
+		PostProcessAllAssetNotificationsAddChangedAssets: 0.000ms
+		OnDemandSchedulerStart: 0.194ms
+	PostProcessAllAssets: 13.565ms
+	GatherAllCurrentPrimaryArtifactRevisions: 0.037ms
+	UnloadStreamsBegin: 0.052ms
+	PersistCurrentRevisions: 0.024ms
+	UnloadStreamsEnd: 0.001ms
+	GenerateScriptTypeHashes: 0.098ms
+	Untracked: 301.287ms
+
+Loaded scene 'Temp/__Backupscenes/0.backup'
+	Deserialize:            0.785 ms
+	Integration:            51.719 ms
+	Integration of assets:  0.001 ms
+	Thread Wait Time:       0.022 ms
+	Total Operation Time:   52.526 ms
+GLX Extensions: GLX_ARB_context_flush_control GLX_ARB_create_context GLX_ARB_create_context_no_error GLX_ARB_create_context_profile GLX_ARB_fbconfig_float GLX_ARB_framebuffer_sRGB GLX_ARB_get_proc_address GLX_ARB_multisample GLX_EXT_create_context_es2_profile GLX_EXT_create_context_es_profile GLX_EXT_fbconfig_packed_float GLX_EXT_framebuffer_sRGB GLX_EXT_no_config_context GLX_EXT_texture_from_pixmap GLX_EXT_visual_info GLX_EXT_visual_rating GLX_MESA_copy_sub_buffer GLX_MESA_query_renderer GLX_OML_swap_method GLX_SGIS_multisample GLX_SGIX_fbconfig GLX_SGIX_pbuffer GLX_SGIX_visual_select_group GLX_SGI_make_current_read 
+Can't add script behaviour 'VisualScreenshotDriver' because it is an editor script. To attach a script it needs to be outside the 'Editor' folder.
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.GameObject:Internal_AddComponentWithType (System.Type)
+UnityEngine.GameObject:AddComponent (System.Type) (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/GameObject.bindings.cs:246)
+UnityEngine.GameObject:AddComponent<BladePath.EditorTools.VisualScreenshotDriver> () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/GameObject.bindings.cs:251)
+BladePath.EditorTools.VisualQARunner:OnPlayMode (UnityEditor.PlayModeStateChange) (at Assets/_Project/Scripts/Editor/VisualQARunner.cs:79)
+UnityEditor.EditorApplication:Internal_PlayModeStateChanged (UnityEditor.PlayModeStateChange) (at /home/bokken/build/output/unity/unity/Editor/Mono/EditorApplication.cs:487)
+
+[Assets/_Project/Scripts/Editor/VisualQARunner.cs line 79]
+
+[MODES] ModeService[default].LoadModes
+Asset Pipeline Refresh (id=29872ea4352715ddbb0a8c9ae3973b27): Total: 0.051 seconds - Initiated by RefreshV2(NoUpdateAssetOptions)
+Created GICache directory at /root/.cache/unity3d/GiCache. Took: 0.018s, timestamps: [236.145 - 236.163]
+VideoPlayer cannot play url : /github/workspace/Assets/StreamingAssets/menu_bg.mp4
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.Video.VideoPlayer:Prepare ()
+BladePath.MainMenuController:Start () (at Assets/_Project/Scripts/Menu/MainMenuController.cs:59)
+
+[Assets/_Project/Scripts/Menu/MainMenuController.cs line 59]
+
+Меню: видео не воспроизводится: VideoPlayer cannot play url : /github/workspace/Assets/StreamingAssets/menu_bg.mp4
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace () (at /home/bokken/build/output/unity/unity/Runtime/Export/Scripting/StackTrace.cs:37)
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:LogWarning (object)
+BladePath.MainMenuController:OnError (UnityEngine.Video.VideoPlayer,string) (at Assets/_Project/Scripts/Menu/MainMenuController.cs:67)
+UnityEngine.Video.VideoPlayer:InvokeErrorReceivedCallback_Internal (UnityEngine.Video.VideoPlayer,string) (at /home/bokken/build/output/unity/unity/Modules/Video/Public/ScriptBindings/VideoPlayer.bindings.cs:347)
+
+(Filename: Assets/_Project/Scripts/Menu/MainMenuController.cs Line: 67)
