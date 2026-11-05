@@ -86,6 +86,10 @@ namespace BladePath
                     portraitE = PortraitCam.Create(duel.enemy, new Color(0.2f, 0.06f, 0.18f));
                 }
             }
+            // Always paint world/HUD darkening BEHIND the interactive victory
+            // buttons. GUI.depth is shared by IMGUI behaviours in one event.
+            int previousHudDepth = GUI.depth;
+            GUI.depth = 10;
             Matrix4x4 old = UiKit.Begin();
             float W = UiKit.Width;
 
@@ -522,6 +526,7 @@ namespace BladePath
 
             DrawTutorial(W);
             GUI.matrix = old;
+            GUI.depth = previousHudDepth;
         }
 
         // подсказки первого боя (один раз)
@@ -902,7 +907,7 @@ namespace BladePath
             }
             Rect fr = FrameRect(r, frame, win, mirror);
             const float authoredWidth = 467f, authoredHeight = 76f;
-            const float leftSource = 43f, rightSource = 453f;
+            const float leftSource = 37f, rightSource = 453f;
             const float topSource = 19f, bottomSource = 53f;
             float from = mirror ? 1f - rightSource / authoredWidth : leftSource / authoredWidth;
             float to = mirror ? 1f - leftSource / authoredWidth : rightSource / authoredWidth;

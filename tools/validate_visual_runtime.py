@@ -41,4 +41,12 @@ post = source("Assets/_Project/Scripts/Visual/PostFX.cs")
 assert "float taper" in trail and "MobileVfxBudget.Level" in trail
 assert "float daylightBloom" in post and "float focusPower" in post
 assert "MobileVfxBudget.AllowDepthOfField" in post
+# Result-screen buttons must appear in front of the 55% darkening drawn
+# by DuelHud, with a bright enabled label rather than a disabled-looking tint.
+hud_code = source("Assets/_Project/Scripts/Game/DuelHud.cs")
+assert "GUI.depth = 10;" in hud_code and "GUI.depth = previousHudDepth;" in hud_code
+assert "GUI.depth = Paused || Over ? -100 : 0;" in input_code
+assert "GUI.depth = previousInputDepth;" in input_code
+assert "bool resultButton = b == (int)B.OverAgain" in input_code
+assert "new Color(1f, 0.96f, 0.85f, 1f)" in input_code
 print("Visual/haptic runtime source guards: OK")

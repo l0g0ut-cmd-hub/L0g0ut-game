@@ -52,9 +52,10 @@ def main():
     for xy in ((300, 76), (0, 79), (575, 79), (110, 20), (533, 120)):
         assert cap(*xy) == 0, ("HP cap leaks outside authored tips", xy)
     ki = read_alpha("hud_ki_caps.png", (467, 76), 6)
-    for xy in ((50, 35), (82, 35), (99, 35), (385, 35), (401, 35), (425, 35), (447, 27)):
+    for xy in ((40, 35), (50, 35), (82, 35), (99, 35), (385, 35), (401, 35), (425, 35), (447, 27)):
         assert ki(*xy) > 0, ("KI endcap missing", xy)
-    for xy in ((220, 35), (0, 35), (460, 35), (220, 6), (220, 66)):
+    assert ki(40, 35) > 200, "Guard-side KI blunt tip remains visibly unfilled"
+    for xy in ((220, 35), (36, 35), (0, 35), (460, 35), (220, 6), (220, 66)):
         assert ki(*xy) == 0, ("KI endcaps leak into center/outside frame", xy)
     hud = (ROOT / "Assets/_Project/Scripts/Game/DuelHud.cs").read_text()
     assert 'UI/Kit/hud_hp_caps' in hud and 'UI/Kit/hud_ki_caps' in hud
@@ -65,6 +66,7 @@ def main():
     assert "const float authoredWidth = 578f, authoredHeight = 160f" in hud
     assert "tips == null ||" not in hud, "fatal cap guard must not disable HP or KI"
     assert "const float authoredWidth = 467f, authoredHeight = 76f" in hud
+    assert "const float leftSource = 37f, rightSource = 453f" in hud, "KI clip must include blunt-end extension"
     assert "const float midX0 = 83f, midX1 = 384f" in hud
     assert "const float leftSource = 94f, rightSource = 567f" in hud
     assert "const float midX0 = 140f, midX1 = 494f" in hud

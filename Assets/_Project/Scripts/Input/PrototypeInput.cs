@@ -455,7 +455,8 @@ namespace BladePath
         {
             if (InventoryScreen.Open || MapScreen.Open) return;
             // пауза — поверх всего боевого интерфейса: вступление раунда, «НАЧАЛИ!», карточка врага, объявления не ложатся на её кнопки
-            GUI.depth = Paused || Over ? -10 : 0;   // и итоги боя: кнопки поверх затемнения экрана итогов, а не под ним
+            int previousInputDepth = GUI.depth;
+            GUI.depth = Paused || Over ? -100 : 0;  // victory/pause buttons ALWAYS above HUD vignette and dark overlay
             Matrix4x4 old = UiKit.Begin();
             float W = UiKit.Width;
             bool paused = Paused, over = Over;
@@ -564,6 +565,7 @@ namespace BladePath
             if (over) { DrawRectButton((int)B.OverAgain); DrawRectButton((int)B.OverMenu); DrawRectButton((int)B.OverGear); }
 
             GUI.matrix = old;
+            GUI.depth = previousInputDepth;
         }
 
         void DrawRectButton(int b)
@@ -574,6 +576,9 @@ namespace BladePath
             // touch controller. Do not use GUI.Button (would double-activate).
             // единый стиль: чёрная лаковая кнопка с золотой окантовкой (нажатая — вдавленная)
             bool main = b == (int)B.OverAgain || b == (int)B.Resume;   // главное действие — кроваво-красная кнопка
+            bool resultButton = b == (int)B.OverAgain || b == (int)B.OverMenu || b == (int)B.OverGear;
+            Color oldTint = GUI.color;
+            GUI.color = Color.white; // never inherit dimmed overlay tint from the HUD
             Texture2D wood = UiKit.Tex(main ? (h ? "UI/Kit/ui_btn_red_pressed" : "UI/Kit/ui_btn_red") : (h ? "UI/Kit/ui_btn_pressed" : "UI/Kit/ui_btn"));
             if (wood == null) wood = UiKit.Tex("UI/plank");
             if (wood != null)
@@ -582,8 +587,17 @@ namespace BladePath
                 UiKit.Slice(vr, wood, vr.height / wood.height, 0.14f, 0.12f, 0.5f, 0f, Color.white);
             }
             else VisualIdentity.Surface(r, 0.98f, false);
+            if (resultButton)
+            {
+                // Keep the existing approved Kit ornaments, but let the
+                // available post-victory actions read as ACTIVE, not disabled.
+                UiKit.Rect(new Rect(r.x + 18f, r.y + 5f, r.width - 36f, 1.5f),
+                    new Color(1f, 0.82f, 0.45f, 0.62f));
+            }
             UiKit.Text(r, labels[b], Mathf.Min(18f, r.height * 0.44f),
-                h ? VisualIdentity.BrassLight : VisualIdentity.Parchment);
+                h ? VisualIdentity.BrassLight : resultButton
+                    ? new Color(1f, 0.96f, 0.85f, 1f) : VisualIdentity.Parchment);
+            GUI.color = oldTint;
         }
 
         void DrawStick()

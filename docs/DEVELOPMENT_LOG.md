@@ -313,3 +313,12 @@
 
 
 | 2026-11-05 — BP-037 / Android №416 launched | checked release SHA `b780ba28c91baaadaf9c2182a4218729cb6dbf82`; Preflight №241 `42000640285` **success** including new KI caps test | `apk-build` advanced ONCE from APK №415 SHA `0d9ea7cf47f61949d29879053859ffe9cc8dde83` to this SHA. Confirmed real Android №416 Actions run `42000761936`, status initially **in_progress**, matching SHA. | Await Unity build result; user Android screenshot verify KI left/right at full/partial and no bleed/gaps. HP unchanged (accepted from №415), no extra APK run. |
+
+
+## BP-038 — KI guard-end fill and victory button contrast (2026-11-05)
+
+- Android №416 user screenshots: cyan KI already fills its pointed tip but still leaves a visible dark section beside the large ornamental guard (on both mirrored bars). The result screen also paints clickable «НА КАРТУ», «В МЕНЮ», «СНАРЯЖЕНИЕ» unusually dark after victory.
+- Exact isolated KI cap fix: regenerate **only** `UI/Kit/hud_ki_caps.png` (467×76 RGBA), retaining the prior approved mask alpha everywhere except original source x 37..49 beside the blunt guard. Extend this 12-source-pixel end inside the gold bezel with tapered, antialiased alpha. The progress window now begins at original source x37 instead of x43 so it cannot clip off the newly painted cap. The right-hand sharp tip and calculated center remain unchanged; mirrored KI reuses the same source geometry. **HP resources and code are untouched.**
+- Victory buttons: `PrototypeInput.OnGUI` now explicitly renders input buttons at `GUI.depth=-100` while `DuelHud.OnGUI` renders its vignette/black result overlay at `GUI.depth=10`; previous depth is restored after each GUI event. Result action controls always render in full color and get subtly brighter paper text and a restrained brass top highlight. No change to button labels, hitboxes, action logic, original paintings, or the intended darkened background behind the result.
+- Preflight guards: `validate_hud_masks.py` checks cap alpha at x40, center and outside alpha as well as expanded clip; `validate_visual_runtime.py` verifies both GUI depths and result-button brightness. This is static validation, not a device screenshot test.
+- Target: one Android APK №417 only after final Preflight is successful and no APK is in progress. Inspect both KI bars at full/partial level and victory actions in a screenshot; do not declare visually complete before seeing device result.
