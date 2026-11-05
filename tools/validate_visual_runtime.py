@@ -89,6 +89,16 @@ assert 'Rect cover = new Rect(r.x - 4f, r.y - 2f' not in menu
 assert 'bool pressedBack = SelectionHitbox(back, s, ox, oy);' in menu
 assert 'bool pressedOk = SelectionHitbox(ok, s, ox, oy);' in menu
 assert 'return GUI.Button(r, GUIContent.none, GUIStyle.none);' in menu
+# Main-menu side ornaments only occupy existing pillarbox space. The video,
+# baked-in controls and hit zones are not shifted or scaled to add borders.
+assert 'Rect vr = VideoRect();' in menu
+assert 'GUI.DrawTexture(vr, tex, ScaleMode.StretchToFill, false);' in menu
+assert 'DrawSideBorders(vr);' in menu
+assert 'float left = Mathf.Max(0f, video.x);' in menu
+assert 'float right = Mathf.Max(0f, Screen.width - video.xMax);' in menu
+assert 'UiKit.Tex("UI/menu_side_borders")' in menu
+assert (ROOT / "Assets/_Project/Resources/UI/menu_side_borders.jpg").is_file()
+assert 'float k = vr.width / CW;' in menu
 assert 'VisualIdentity.KitButton(r, label, true, red)' not in menu
 # Result buttons stay ahead of vignette and use intact art, rather than
 # slicing the lacquer into distorted segments or adding mismatched overlays.
