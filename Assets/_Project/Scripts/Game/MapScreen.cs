@@ -1904,7 +1904,7 @@ namespace BladePath
             // Existing tavern photo/video/intentional static overlay are untouched.
             // Replace the five tiny plain labels and huge invisible hitboxes
             // with compact Kit buttons positioned beside their original objects.
-            Rect keeperButton = CampRect(new Rect(90f, 329f, 237f, 44f), s, ox, oy);
+            Rect keeperButton = CampRect(new Rect(285f, 329f, 237f, 44f), s, ox, oy);
             Rect diceButton = CampRect(new Rect(1236f, 424f, 185f, 44f), s, ox, oy);
             Rect boardButton = CampRect(new Rect(1610f, 323f, 200f, 44f), s, ox, oy);
             Rect drunkButton = CampRect(new Rect(1480f, 670f, 244f, 44f), s, ox, oy);
