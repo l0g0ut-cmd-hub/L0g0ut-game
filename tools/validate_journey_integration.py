@@ -226,7 +226,18 @@ def check_selection_screens():
         check_png("Assets/_Project/Resources/UI/hero_face_%d.png" % i, 256, 256)
         assert (ROOT / ("Assets/_Project/Resources/UI/hero_face_sq_%d.jpg" % i)).is_file()
     menu = read("Assets/_Project/Scripts/Menu/MainMenuController.cs")
-    assert '"UI/selection/screen_difficulty"' in menu and '"UI/selection/screen_traveller"' in menu
+    # BP-047: approved 5-November difficulty remake plus two-state fog icon.
+    for name, minimum in (("screen_difficulty_redesign.jpg", 250000),
+                          ("fog_toggle_off.jpg", 12000),
+                          ("fog_toggle_on.jpg", 12000)):
+        f = ROOT / (sel + name)
+        assert f.is_file() and f.stat().st_size > minimum, "Missing redesigned UI art: " + name
+        assert f.read_bytes()[:3] == bytes((255, 216, 255)), "Not JPEG: " + name
+    assert '"UI/selection/screen_difficulty_redesign"' in menu and '"UI/selection/screen_traveller"' in menu
+    assert '"UI/selection/fog_toggle_on"' in menu and '"UI/selection/fog_toggle_off"' in menu
+    assert "DrawFogToggleArt(" in menu
+    assert "const float DifficultyW = 1824f, DifficultyH = 862f;" in menu
+    assert 'bool pressedOk = SelectionHitbox(ok, s, ox, oy);' in menu
     assert "const float SelW = 1916f, SelH = 821f;" in menu
     assert '"UI/selection/card_glow"' in menu
     assert "DrawJourneySelectionLegacy();" in menu
