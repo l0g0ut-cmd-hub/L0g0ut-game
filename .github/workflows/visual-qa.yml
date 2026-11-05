@@ -53,7 +53,7 @@ jobs:
     # Capture actual game frames when an APK is promoted or by manual request.
     if: github.ref_name == 'unity-ui-qa' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    timeout-minutes: 70
+    timeout-minutes: 40
     concurrency:
       group: build-android
       cancel-in-progress: false
@@ -90,7 +90,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         run: |
           set +e
-          game-ci build . \
+          # Time-box headless Play Mode: a hung editor must not occupy the shared\n          # Unity license / APK concurrency slot indefinitely.\n          timeout --signal=TERM --kill-after=45s 25m game-ci build . \
             --engine unity \
             --engine-version "$UNITY_VERSION" \
             --target-platform Android \
@@ -100,6 +100,10 @@ jobs:
             --build-method BladePath.EditorTools.VisualQARunner.Run 2>&1 | tee "$RUNNER_TEMP/visual-qa.log"
           tool_status=${PIPESTATUS[0]}
           set -e
+          if [ "$tool_status" -eq 124 ] || [ "$tool_status" -eq 137 ]; then
+            echo "::error::Visual QA Unity Play Mode hung for 25 minutes; releasing CI slot"
+            exit 124
+          fi
           echo "GameCI status=$tool_status (no APK expected from screenshot-only Play Mode)"
           grep -q "END screenshots=10 failures=0" build/visual-runtime/status.txt
           if grep -q "^FAIL:" build/visual-runtime/status.txt; then cat build/visual-runtime/status.txt; exit 1; fi
