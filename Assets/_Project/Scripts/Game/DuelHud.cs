@@ -318,9 +318,15 @@ namespace BladePath
                 float age = duel.AnnounceAge;
                 float aa = Mathf.Clamp01(age / 0.1f) * Mathf.Clamp01((annLife - age) / 0.4f);
                 float sc = 1f + Mathf.Max(0f, 0.2f - age) * 2f;
-                Color ac = duel.AnnounceColor; ac.a = aa;
-                // лента-объявление (UI/Kit): чёрная, для опасного (красно-оранжевого) — кроваво-красная
+                // The announcement color still selects the red danger banner,
+                // but red letters on that same red artwork were unreadable.
+                // Danger messages now use opaque white lettering with the
+                // existing UiKit.Text dark shadow; neutral banners keep their
+                // original accent colors. The banner artwork is unchanged.
                 bool danger = duel.AnnounceColor.r > 0.8f && duel.AnnounceColor.g < 0.55f;
+                Color ac = danger
+                    ? new Color(1f, 1f, 1f, aa)
+                    : new Color(duel.AnnounceColor.r, duel.AnnounceColor.g, duel.AnnounceColor.b, aa);
                 Texture2D ban = UiKit.Tex(danger ? "UI/Kit/hud_banner_red" : "UI/Kit/hud_banner");
                 // ширина ленты — по длине надписи: текст помещается в ровную середину (рваные концы ~20% с каждой стороны);
                 // длинная надпись («РАВНОВЕСИЕ СЛОМЛЕНО — ДОБЕЙ!») — мельче шрифт, а не вылезает за ленту
