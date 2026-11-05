@@ -927,23 +927,36 @@ namespace BladePath
             Texture2D tips, float fraction, bool mirror, Color color,
             float y0 = 0f, float y1 = 1f)
         {
-            if (frame == null || tips == null || fraction <= 0f
-                || frame.width != 578 || frame.height != 160
-                || tips.width != frame.width || tips.height != frame.height)
+            if (fraction <= 0f) return;
+            // The frame PNG was authored at 578x160, but on Android Unity may
+            // import it as a smaller texture (NPOT max-size/compression). Never
+            // use the runtime texture dimensions for source-art UV geometry.
+            // Most importantly, missing/mismatched cap art MUST NOT hide HP.
+            if (frame == null)
+            {
+                float k = Mathf.Clamp01(fraction);
+                float w = r.width * k;
+                if (w <= 0.001f) return;
+                Rect fallback = new Rect(mirror ? r.x : r.xMax - w,
+                    r.y + r.height * y0, w,
+                    r.height * Mathf.Max(0f, y1 - y0));
+                UiKit.Rect(fallback, color);
                 return;
+            }
             Rect fr = FrameRect(r, frame, win, mirror);
+            const float authoredWidth = 578f, authoredHeight = 160f;
             // Source-frame coordinates: 94..567 includes BOTH sword-shaped
             // ends, unlike the old 101..553 rectangular channel.
             const float leftSource = 94f, rightSource = 567f;
             const float topSource = 54f, bottomSource = 99f;
-            float from = mirror ? 1f - rightSource / frame.width : leftSource / frame.width;
-            float to = mirror ? 1f - leftSource / frame.width : rightSource / frame.width;
+            float from = mirror ? 1f - rightSource / authoredWidth : leftSource / authoredWidth;
+            float to = mirror ? 1f - leftSource / authoredWidth : rightSource / authoredWidth;
             float left = fr.x + fr.width * from;
             float right = fr.x + fr.width * to;
             float width = (right - left) * Mathf.Clamp01(fraction);
             float start = mirror ? left : right - width;
-            float clipTop = fr.y + fr.height * Mathf.Lerp(topSource, bottomSource, Mathf.Clamp01(y0)) / frame.height;
-            float clipBottom = fr.y + fr.height * Mathf.Lerp(topSource, bottomSource, Mathf.Clamp01(y1)) / frame.height;
+            float clipTop = fr.y + fr.height * Mathf.Lerp(topSource, bottomSource, Mathf.Clamp01(y0)) / authoredHeight;
+            float clipBottom = fr.y + fr.height * Mathf.Lerp(topSource, bottomSource, Mathf.Clamp01(y1)) / authoredHeight;
             if (width <= 0.001f || clipBottom <= clipTop) return;
 
             GUI.BeginGroup(new Rect(start, clipTop, width, clipBottom - clipTop));
@@ -954,18 +967,21 @@ namespace BladePath
             // The authored cap sprites overlap this middle so there is no
             // join seam or straight vertical edge at either full-health tip.
             const float midX0 = 140f, midX1 = 494f, midY0 = 55f, midY1 = 98f;
-            float midLeft = fr.x + (mirror ? 1f - midX1 / frame.width : midX0 / frame.width) * fr.width;
-            float midRight = fr.x + (mirror ? 1f - midX0 / frame.width : midX1 / frame.width) * fr.width;
+            float midLeft = fr.x + (mirror ? 1f - midX1 / authoredWidth : midX0 / authoredWidth) * fr.width;
+            float midRight = fr.x + (mirror ? 1f - midX0 / authoredWidth : midX1 / authoredWidth) * fr.width;
             Rect mid = new Rect(midLeft - start,
-                fr.y + midY0 / frame.height * fr.height - clipTop,
-                midRight - midLeft, (midY1 - midY0) / frame.height * fr.height);
+                fr.y + midY0 / authoredHeight * fr.height - clipTop,
+                midRight - midLeft, (midY1 - midY0) / authoredHeight * fr.height);
             GUI.DrawTexture(mid, Texture2D.whiteTexture);
 
             // Baked antialiased left and right end shapes (white + alpha).
-            GUI.DrawTextureWithTexCoords(
-                new Rect(fr.x - start, fr.y - clipTop, fr.width, fr.height),
-                tips, mirror ? new Rect(1f, 0f, -1f, 1f)
-                             : new Rect(0f, 0f, 1f, 1f));
+            if (tips != null)
+            {
+                GUI.DrawTextureWithTexCoords(
+                    new Rect(fr.x - start, fr.y - clipTop, fr.width, fr.height),
+                    tips, mirror ? new Rect(1f, 0f, -1f, 1f)
+                                 : new Rect(0f, 0f, 1f, 1f));
+            }
             GUI.color = oldColor;
             GUI.EndGroup();
         }
