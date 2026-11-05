@@ -24,6 +24,8 @@ jobs:
         run: python3 -m compileall -q tools
       - name: Verify authored visual assets
         run: python3 tools/validate_visual_assets.py
+      - name: Verify authored HUD HP Ki alpha masks and tip coverage
+        run: python3 tools/validate_hud_masks.py
       - name: Verify runtime visuals and preferences
         run: python3 tools/validate_visual_runtime.py
       - name: Verify UI and artwork consistency
