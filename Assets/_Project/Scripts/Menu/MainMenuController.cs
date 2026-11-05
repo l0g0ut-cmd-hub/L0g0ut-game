@@ -148,38 +148,25 @@ namespace BladePath
         }
 
         /// <summary>
-        /// High-resolution carved lacquer/gold side ornaments only in the
-        /// existing letterbox bars. The previous 2-KB JPEG was blown up to
-        /// screen height and visibly blurred. Reuse the original high-resolution
-        /// 339x698 painted kit frame instead, sampling its vertical edge panels.
-        /// The video, menu artwork and click coordinates are never modified.
+        /// Two approved independent high-resolution side panels. Never alter
+        /// or draw over the original 852x480 menu video and click positions.
+        /// Atlas: left panel in left half, right panel in right half.
         /// </summary>
         static void DrawSideBorders(Rect video)
         {
             float left = Mathf.Max(0f, video.x);
             float right = Mathf.Max(0f, Screen.width - video.xMax);
             if (left < 1f && right < 1f) return;
-            Texture2D detailedFrame = UiKit.Tex("UI/Kit/ui_sidepanel");
-            if (detailedFrame == null) return;
-
+            Texture2D panels = UiKit.Tex("UI/menu_side_panels");
+            if (panels == null) return;
             Color previous = GUI.color;
             GUI.color = Color.white;
             if (left >= 1f)
-            {
                 GUI.DrawTextureWithTexCoords(new Rect(0f, 0f, left, Screen.height),
-                    detailedFrame, new Rect(0f, 0.06f, 0.32f, 0.88f));
-                // A native-resolution gold inner seam remains sharp on Android.
-                GUI.color = new Color(0.79f, 0.52f, 0.24f, 0.95f);
-                GUI.DrawTexture(new Rect(Mathf.Max(0f, left - 2f), 0f, 2f, Screen.height), Texture2D.whiteTexture);
-                GUI.color = Color.white;
-            }
+                    panels, new Rect(0f, 0f, 0.5f, 1f));
             if (right >= 1f)
-            {
                 GUI.DrawTextureWithTexCoords(new Rect(video.xMax, 0f, right, Screen.height),
-                    detailedFrame, new Rect(0.68f, 0.06f, 0.32f, 0.88f));
-                GUI.color = new Color(0.79f, 0.52f, 0.24f, 0.95f);
-                GUI.DrawTexture(new Rect(video.xMax, 0f, 2f, Screen.height), Texture2D.whiteTexture);
-            }
+                    panels, new Rect(0.5f, 0f, 0.5f, 1f));
             GUI.color = previous;
         }
 
@@ -278,46 +265,6 @@ namespace BladePath
         static readonly Rect TravellerStart = SelRect(573f, 698f, 945f, 778f);
         static readonly Rect TravellerBack = SelRect(988f, 698f, 1310f, 775f);
 
-        // A translucent, feathered ring cools the pre-painted halo without
-        // hiding the difficulty illustration. Generated once, reused per repaint.
-        // Baked highlight remains visible only when difficulty 0 is selected.
-        static Texture2D difficultyHaloNeutralizer;
-        static Texture2D DifficultyHaloNeutralizer()
-        {
-            if (difficultyHaloNeutralizer != null) return difficultyHaloNeutralizer;
-            const int w = 224, h = 320;
-            const float marginX = 46f, marginY = 58f;
-            const float cardW = 340f, cardH = 498f;
-            float regionW = cardW + marginX * 2f, regionH = cardH + marginY * 2f;
-            Texture2D texture = new Texture2D(w, h, TextureFormat.RGBA32, false);
-            texture.wrapMode = TextureWrapMode.Clamp;
-            texture.filterMode = FilterMode.Bilinear;
-            Color32[] pixels = new Color32[w * h];
-            for (int y = 0; y < h; y++)
-                for (int x = 0; x < w; x++)
-                {
-                    float px = (x + 0.5f) / w * regionW - marginX;
-                    float py = (y + 0.5f) / h * regionH - marginY;
-                    float dx = Mathf.Max(Mathf.Max(-px, px - cardW), 0f);
-                    float dy = Mathf.Max(Mathf.Max(-py, py - cardH), 0f);
-                    float outside = Mathf.Sqrt(dx * dx + dy * dy);
-                    bool inside = px >= 0f && px <= cardW && py >= 0f && py <= cardH;
-                    float inner = inside ? Mathf.Min(Mathf.Min(px, cardW - px),
-                        Mathf.Min(py, cardH - py)) : 0f;
-                    float edgeFade = inside
-                        ? 1f - Mathf.SmoothStep(0f, 32f, inner)
-                        : 1f - Mathf.SmoothStep(4f, 56f, outside);
-                    float alpha = Mathf.Clamp01(edgeFade) * 0.67f;
-                    // Cool dark violet cancels the fixed warm gold bloom.
-                    pixels[y * w + x] = new Color(17f / 255f,
-                        13f / 255f, 33f / 255f, alpha);
-                }
-            texture.SetPixels32(pixels);
-            texture.Apply(false, true);
-            difficultyHaloNeutralizer = texture;
-            return texture;
-        }
-
         void DrawJourneySelection()
         {
             bool difficulty = newJourneyStep == 1;
@@ -333,22 +280,11 @@ namespace BladePath
 
             Rect[] cards = difficulty ? RedesignDifficultyCards : TravellerCards;
             int chosen = difficulty ? chosenDifficulty : chosenHero;
-            Texture2D glow = UiKit.Tex("UI/selection/card_glow");
-
-            // The approved difficulty illustration has a gold halo BAKED around
-            // the first card. When another card is selected, neutralize only
-            // that fixed halo; otherwise it misleadingly stays on "ЛЕГКО".
-            if (difficulty && chosen != 0)
-            {
-                Texture2D neutralizer = DifficultyHaloNeutralizer();
-                Rect first = cards[0];
-                float marginX = 46f, marginY = 58f;
-                Rect haloArea = new Rect(ox + (first.x - marginX) * s,
-                    oy + (first.y - marginY) * s,
-                    (first.width + 2f * marginX) * s,
-                    (first.height + 2f * marginY) * s);
-                GUI.DrawTexture(haloArea, neutralizer, ScaleMode.StretchToFill, true);
-            }
+            // Difficulty painting contains NO selection halo. The sole active
+            // frame is a transparent, precisely aligned overlay. Traveller
+            // retains its own existing glow art unchanged.
+            Texture2D glow = UiKit.Tex(difficulty
+                ? "UI/selection/difficulty_active_frame" : "UI/selection/card_glow");
 
             for (int i = 0; i < cards.Length; i++)
             {
@@ -357,12 +293,16 @@ namespace BladePath
                 // difficulty and hero selection. No fixed underlines / extra buttons.
                 if (i == chosen && glow != null)
                 {
-                    float pad = r.width * 0.09f;
+                    // The new gold outline is symmetric and fitted to the
+                    // entire selected card. No static glow and no double frames.
+                    float padX = difficulty ? 13f * s : r.width * 0.09f;
+                    float padY = difficulty ? 15f * s : r.width * 0.09f;
                     Color prev = GUI.color;
-                    float pulse = 0.88f + 0.12f * Mathf.Sin(Time.unscaledTime * 3f);
+                    float pulse = 0.94f + 0.06f * Mathf.Sin(Time.unscaledTime * 3f);
                     GUI.color = new Color(1f, 1f, 1f, pulse);
-                    GUI.DrawTexture(new Rect(r.x - pad, r.y - pad,
-                        r.width + pad * 2f, r.height + pad * 2f), glow);
+                    GUI.DrawTexture(new Rect(r.x - padX, r.y - padY,
+                        r.width + padX * 2f, r.height + padY * 2f), glow,
+                        ScaleMode.StretchToFill, true);
                     GUI.color = prev;
                 }
                 if (GUI.Button(r, GUIContent.none, GUIStyle.none))
