@@ -77,24 +77,48 @@ def fog_overlay(background: Image.Image, on: bool, fr: tuple[float,float,float,f
     background.alpha_composite(sprite.resize((x1-x0,y1-y0),Image.Resampling.LANCZOS),(x0,y0))
 
 
-def difficulty_outline(im: Image.Image, rect, selected: int) -> None:
-    # Same straight-line additive rim currently drawn in DrawDifficultySelectionGlow.
-    x0,y0,x1,y1=rect
-    for passno in range(4,-1,-1):
-        offset=1+passno*2.5
-        thickness=(2.7 if passno==0 else 3.2+passno)
-        alpha=(.92 if passno==0 else .075+.04/passno)*.84
-        color=(255,round(255*(.91 if passno==0 else .73)),
-               round(255*(.54 if passno==0 else .23)),round(255*alpha))
-        d=Image.new('RGBA',im.size)
-        p=ImageDraw.Draw(d,'RGBA')
-        xx0,yy0,xx1,yy1=x0-offset,y0-offset,x1+offset,y1+offset
-        solid(p,(xx0,yy0,xx1,yy0+thickness),color)
-        solid(p,(xx0,yy1-thickness,xx1,yy1),color)
-        solid(p,(xx0,yy0,xx0+thickness,yy1),color)
-        solid(p,(xx1-thickness,yy0,xx1,yy1),color)
-        im.alpha_composite(d)
+# Reproduce the BP-051 GENERATED Unity halo, not the deleted straight
+# rectangle. The geometry below is shared with MainMenuController.cs.
+# This preview is still an artwork composition, NOT an Android screenshot.
+from functools import lru_cache
 
+@lru_cache(maxsize=1)
+def difficulty_halo() -> Image.Image:
+    w,h=180,264
+    outline=[
+        (.075,.042),(.38,.042),(.50,.010),(.62,.042),
+        (.925,.042),(.975,.075),(.975,.920),(.925,.955),
+        (.62,.955),(.50,.993),(.38,.955),(.075,.955),
+        (.025,.920),(.025,.075),
+    ]
+    segments=[
+        ((a[0]*(w-1),a[1]*(h-1)),(b[0]*(w-1),b[1]*(h-1)))
+        for a,b in zip(outline,outline[1:]+outline[:1])
+    ]
+    halo=Image.new('RGBA',(w,h),(0,0,0,0))
+    pixels=halo.load()
+    for y in range(h):
+        for x in range(w):
+            nearest_sq=1e12
+            for (ax,ay),(bx,by) in segments:
+                dx=bx-ax;dy=by-ay
+                proj=max(0.,min(1.,((x-ax)*dx+(y-ay)*dy)/max(.0001,dx*dx+dy*dy)))
+                dist_sq=(x-ax-proj*dx)**2+(y-ay-proj*dy)**2
+                nearest_sq=min(nearest_sq,dist_sq)
+            soft=math.exp(-nearest_sq/36.)*.42
+            rim=math.exp(-nearest_sq/1.8)*.58
+            alpha=min(1.,soft+rim)*(.92+.08*0.0)
+            pixels[x,y]=(255,round(255*(.78+.17*rim)),
+                         round(255*(.36+.26*rim)),round(255*alpha))
+    return halo
+
+def difficulty_outline(im: Image.Image, rect, selected: int) -> None:
+    x0,y0,x1,y1=rect
+    margin=6
+    scaled=difficulty_halo().resize(
+        (round(x1-x0+margin*2),round(y1-y0+margin*2)),
+        Image.Resampling.BILINEAR)
+    im.alpha_composite(scaled,(round(x0-margin),round(y0-margin)))
 
 def generate(out: Path) -> dict:
     out.mkdir(parents=True,exist_ok=True)
