@@ -302,7 +302,7 @@ namespace BladePath
         };
         static readonly Rect DifficultyConfirm = SelRect(424f, 682f, 910f, 778f);
         static readonly Rect DifficultyBack = SelRect(937f, 682f, 1327f, 778f);
-        static readonly Rect DifficultyFog = SelRect(1482f, 683f, 1750f, 799f);
+        static readonly Rect DifficultyFog = SelRect(1485f, 683f, 1754f, 801f);
         static readonly Rect[] TravellerCards =
         {
             SelRect(385f, 97f, 749f, 670f), SelRect(764f, 97f, 1152f, 670f), SelRect(1167f, 97f, 1531f, 670f)
@@ -322,6 +322,21 @@ namespace BladePath
             float s = Mathf.Max(Screen.width / artworkW, Screen.height / artworkH);
             float ox = (Screen.width - artworkW * s) * 0.5f, oy = (Screen.height - artworkH * s) * 0.5f;
             GUI.DrawTexture(new Rect(ox, oy, artworkW * s, artworkH * s), screen, ScaleMode.StretchToFill, false);
+            // BP-053: original painting contains a rectangular BLACK matte
+            // outside the carved fog plaque. Correct ONLY those black pixels;
+            // all scenery, cards and the painted gold plaque remain unchanged.
+            if (difficulty)
+            {
+                Texture2D matteFix = UiKit.Tex("UI/selection/difficulty_plaque_matte_fix");
+                if (matteFix != null)
+                {
+                    Color previousTint = GUI.color;
+                    GUI.color = Color.white;
+                    GUI.DrawTexture(new Rect(ox + 1467f * s, oy + 669f * s,
+                        305f * s, 147f * s), matteFix, ScaleMode.StretchToFill, true);
+                    GUI.color = previousTint;
+                }
+            }
 
             Rect[] cards = difficulty ? RedesignDifficultyCards : TravellerCards;
             int chosen = difficulty ? chosenDifficulty : chosenHero;
@@ -448,77 +463,26 @@ namespace BladePath
             return GUI.Button(r, GUIContent.none, GUIStyle.none);
         }
 
-        // BP-051: use the EXACT approved option #1 (full ornate cloud
-        // toggle), not a substitute made of rectangles. Both states have the
-        // same size, position and transparent exterior.
-        static Texture2D fogButtonOff, fogButtonOn;
-        static Texture2D FogButton(bool enabled)
+        // BP-053: approved fog option #1, without the background JPEG matte.
+        // Both transparent PNGs have an identical 325x152 canvas and exactly
+        // the same ornamental perimeter. Only the cloud and slider INSIDES
+        // change. The original gold/wood plaque is painted once in the scene.
+        void DrawFogToggleArt(Rect screenRect, float selectionScale)
         {
-            if(enabled && fogButtonOn!=null) return fogButtonOn;
-            if(!enabled && fogButtonOff!=null) return fogButtonOff;
-            Texture2D source=UiKit.Tex(enabled
-                ? "UI/selection/fog_toggle_on" : "UI/selection/fog_toggle_off");
-            if(source==null) return null;
-            RenderTexture previous=RenderTexture.active;
-            RenderTexture temp=RenderTexture.GetTemporary(source.width,source.height,0,
-                RenderTextureFormat.ARGB32);
-            Graphics.Blit(source,temp);
-            RenderTexture.active=temp;
-            Texture2D result=new Texture2D(source.width,source.height,
-                TextureFormat.RGBA32,false);
-            result.ReadPixels(new Rect(0f,0f,source.width,source.height),0,0);
-            result.Apply(false,false);
-            RenderTexture.active=previous;
-            RenderTexture.ReleaseTemporary(temp);
-
-            // Alpha silhouette matches the sculpted plaque; no outer JPG box.
-            Vector2[] border = {
-                new Vector2(.045f,.18f),new Vector2(.08f,.075f),
-                new Vector2(.42f,.075f),new Vector2(.50f,.018f),
-                new Vector2(.58f,.075f),new Vector2(.92f,.075f),
-                new Vector2(.965f,.18f),new Vector2(.965f,.84f),
-                new Vector2(.92f,.925f),new Vector2(.58f,.925f),
-                new Vector2(.50f,.982f),new Vector2(.42f,.925f),
-                new Vector2(.08f,.925f),new Vector2(.035f,.84f)
-            };
-            Color[] p=result.GetPixels();
-            int w=result.width,h=result.height;
-            for(int y=0;y<h;y++)for(int x=0;x<w;x++)
+            bool on = JourneyChoice.FogEnabled;
+            Texture2D art = UiKit.Tex(on
+                ? "UI/selection/fog_toggle_inner_on"
+                : "UI/selection/fog_toggle_inner_off");
+            if (art != null)
             {
-                Vector2 pt=new Vector2((x+.5f)/w,(y+.5f)/h);
-                bool inside=false;
-                for(int i=0,j=border.Length-1;i<border.Length;j=i++)
-                {
-                    Vector2 a=border[i],b=border[j];
-                    if(((a.y>pt.y)!=(b.y>pt.y)) &&
-                       (pt.x<(b.x-a.x)*(pt.y-a.y)/(b.y-a.y)+a.x))
-                       inside=!inside;
-                }
-                Color color=p[y*w+x];
-                color.a=inside?1f:0f;
-                p[y*w+x]=color;
+                Color oldTint = GUI.color;
+                GUI.color = Color.white;
+                GUI.DrawTexture(screenRect, art, ScaleMode.StretchToFill, true);
+                GUI.color = oldTint;
             }
-            result.SetPixels(p);
-            result.Apply(false,true);
-            if(enabled)fogButtonOn=result;else fogButtonOff=result;
-            return result;
-        }
-
-        void DrawFogToggleArt(Rect screenRect,float selectionScale)
-        {
-            bool on=JourneyChoice.FogEnabled;
-            Texture2D art=FogButton(on);
-            if(art!=null)
+            if (GUI.Button(screenRect, GUIContent.none, GUIStyle.none))
             {
-                Color saved=GUI.color;
-                GUI.color=Color.white;
-                // Identical geometry for OFF and ON. Only image content changes.
-                GUI.DrawTexture(screenRect,art,ScaleMode.StretchToFill,true);
-                GUI.color=saved;
-            }
-            if(GUI.Button(screenRect,GUIContent.none,GUIStyle.none))
-            {
-                JourneyChoice.FogEnabled=!on;
+                JourneyChoice.FogEnabled = !on;
                 Haptics.Pulse(12);
             }
         }

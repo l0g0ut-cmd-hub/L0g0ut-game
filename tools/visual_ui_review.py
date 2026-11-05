@@ -70,22 +70,11 @@ def solid(draw: ImageDraw.ImageDraw,rect,fill):
 
 
 def fog_overlay(background: Image.Image, on: bool, fr: tuple[float,float,float,float]) -> None:
-    x0,y0,x1,y1=fr; h=y1-y0; sc=h/116
-    src=load(UI/'selection'/('fog_toggle_on.jpg' if on else 'fog_toggle_off.jpg'))
-    diameter=round(99*sc)
-    med=switch_art(src,diameter)
-    over(background,med,(round(x0+9*sc),round((y0+y1)*.5-diameter*.5)))
-    # Mimics fixed toggle geometry from Unity source, rather than drawing
-    # a mismatched JPG under the switch.
-    track=(x0+149*sc,(y0+y1)*.5-19*sc,x0+230*sc,(y0+y1)*.5+19*sc)
-    d=ImageDraw.Draw(background,'RGBA')
-    solid(d,track,(168,112,54,245))
-    solid(d,(track[0]+2*sc,track[1]+2*sc,track[2]-2*sc,track[3]-2*sc),
-          (168,13,10,255) if on else (17,18,22,255))
-    knob=31*sc
-    knobx=track[2]-knob-4*sc if on else track[0]+4*sc
-    solid(d,(knobx,track[1]+3.5*sc,knobx+knob,track[1]+3.5*sc+knob),
-          (247,201,120,255) if on else (155,160,160,255))
+    # Exact approved artwork: same 325x152 canvas and original fixed plaque.
+    x0,y0,x1,y1=map(round,fr)
+    sprite=load(UI/'selection'/('fog_toggle_inner_on.png' if on else 'fog_toggle_inner_off.png'))
+    assert sprite.size==(325,152), 'Fog states must use the same 325x152 canvas'
+    background.alpha_composite(sprite.resize((x1-x0,y1-y0),Image.Resampling.LANCZOS),(x0,y0))
 
 
 def difficulty_outline(im: Image.Image, rect, selected: int) -> None:
@@ -129,6 +118,9 @@ def generate(out: Path) -> dict:
     for selected,slug in enumerate(('easy','warrior','master')):
         for on in (False,True):
             picture=frame.copy()
+            matte=load(UI/'selection/difficulty_plaque_matte_fix.png')
+            assert matte.size==(305,147)
+            picture.alpha_composite(matte,(1467,669))
             difficulty_outline(picture,cards[selected],selected)
             fog_overlay(picture,on,fog)
             name=f'difficulty_{slug}_fog_{"on" if on else "off"}.jpg'
