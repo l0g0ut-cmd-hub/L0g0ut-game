@@ -1,0 +1,28 @@
+name: Unblock queued Android visual QA
+on:
+  push:
+    branches: [ci-unblock]
+  workflow_dispatch:
+permissions:
+  actions: write
+  contents: read
+jobs:
+  clear-stuck-visual-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Cancel only stalled Unity Play Mode run 20
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OLD_RUN: "42089221898"
+        run: |
+          set -euo pipefail
+          status=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$OLD_RUN" --jq '.status')
+          echo "Unity QA #20 current state: $status"
+          if [ "$status" = "in_progress" ] || [ "$status" = "queued" ] || [ "$status" = "pending" ]; then
+            gh api --method POST "repos/$GITHUB_REPOSITORY/actions/runs/$OLD_RUN/cancel" >/dev/null
+            echo "Requested cancellation of stalled Unity QA #20 to release build-android concurrency slot"
+          else
+            echo "Old run already finished; no cancellation needed"
+          fi
+          echo "Queued Android Smoke: https://github.com/$GITHUB_REPOSITORY/actions/runs/42093130814"
