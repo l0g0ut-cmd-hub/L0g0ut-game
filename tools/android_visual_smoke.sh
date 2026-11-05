@@ -60,7 +60,7 @@ if not (0<=x0<x1<=w and 0<=y0<y1<=h):
   raise SystemExit(f'Fog UI rectangle outside Android screenshot: {bounds}, screen={(w,h)}')
 a=on.crop(bounds); b=off.crop(bounds)
 diff=ImageChops.difference(a,b)
-diff.save('build/android-ui/fog_on_off_difference.png')
+diff.save('build/android-ui/fog_on_off_difference.jpg', quality=91)
 changed=sum(ImageStat.Stat(diff.resize((100,50))).mean)/3.
 print('FOG TOGGLE REAL ANDROID CHECK: bounds=',bounds,'state mean RGB change=',round(changed,2))
 if changed<5.:
