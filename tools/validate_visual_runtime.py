@@ -49,4 +49,14 @@ assert "GUI.depth = Paused || Over ? -100 : 0;" in input_code
 assert "GUI.depth = previousInputDepth;" in input_code
 assert "bool resultButton = b == (int)B.OverAgain" in input_code
 assert "new Color(1f, 0.96f, 0.85f, 1f)" in input_code
+# Red combat announcements share one HUD renderer. Their danger category
+# still selects the red ornamental banner, but foreground text MUST be white
+# (UiKit.Text supplies the existing dark shadow). Non-danger colors stay intact.
+assert "bool danger = duel.AnnounceColor.r > 0.8f && duel.AnnounceColor.g < 0.55f;" in hud_code
+assert 'UiKit.Tex(danger ? "UI/Kit/hud_banner_red" : "UI/Kit/hud_banner")' in hud_code
+assert "Color ac = danger" in hud_code
+assert "? new Color(1f, 1f, 1f, aa)" in hud_code, "Red banner must use white lettering"
+assert ": new Color(duel.AnnounceColor.r, duel.AnnounceColor.g, duel.AnnounceColor.b, aa)" in hud_code
+assert "duel.AnnounceText, afs * sc, ac);" in hud_code
+assert "label.normal.textColor = new Color(0f, 0f, 0f, 0.85f * c.a)" in source("Assets/_Project/Scripts/Game/UiKit.cs")
 print("Visual/haptic runtime source guards: OK")
