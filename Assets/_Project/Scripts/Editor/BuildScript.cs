@@ -41,7 +41,7 @@ namespace BladePath.EditorTools
                     new EditorBuildSettingsScene(scenes[0], true),
                     new EditorBuildSettingsScene(scenes[1], true),
                 };
-                ConfigurePlayer();
+                ConfigurePlayer(name);
 
                 BuildPlayerOptions opts = new BuildPlayerOptions();
                 opts.scenes = scenes;
@@ -74,7 +74,7 @@ namespace BladePath.EditorTools
             }
         }
 
-        static void ConfigurePlayer()
+        static void ConfigurePlayer(string buildName)
         {
             PlayerSettings.companyName = "BladePath";
             PlayerSettings.productName = "Путь клинка";
@@ -84,7 +84,12 @@ namespace BladePath.EditorTools
 
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.bladepath.prototype");
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
-            PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
+            // Keep production APK ARM64-only. The opt-in emulator QA build
+            // uses x86_64 so the standard Linux emulator can INSTALL and RUN it.
+            bool emulatorQA = buildName.IndexOf("VisualEmulator", StringComparison.OrdinalIgnoreCase) >= 0;
+            PlayerSettings.Android.targetArchitectures = emulatorQA
+                ? AndroidArchitecture.X86_64 : AndroidArchitecture.ARM64;
+            Debug.Log("BladePath Android ABI=" + (emulatorQA ? "x86_64 (QA only)" : "arm64-v8a (production)"));
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel26;
 
             // горизонтальная ориентация (ТЗ, раздел 4)
