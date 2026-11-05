@@ -259,8 +259,16 @@ namespace BladePath
         {
             SelRect(428f, 118f, 768f, 660f), SelRect(786f, 118f, 1132f, 660f), SelRect(1152f, 118f, 1492f, 660f)
         };
-        static readonly Rect DifficultyConfirm = SelRect(535f, 690f, 993f, 765f);
-        static readonly Rect DifficultyBack = SelRect(1027f, 690f, 1353f, 762f);
+        // New difficulty art is authored at 1824x862 (the traveller keeps 1916x821).
+        const float DifficultyW = 1824f, DifficultyH = 862f;
+        static readonly Rect[] RedesignDifficultyCards =
+        {
+            SelRect(346f, 141f, 686f, 639f), SelRect(710f, 141f, 1056f, 639f),
+            SelRect(1080f, 141f, 1426f, 639f)
+        };
+        static readonly Rect DifficultyConfirm = SelRect(424f, 682f, 910f, 778f);
+        static readonly Rect DifficultyBack = SelRect(937f, 682f, 1327f, 778f);
+        static readonly Rect DifficultyFog = SelRect(1482f, 683f, 1750f, 799f);
         static readonly Rect[] TravellerCards =
         {
             SelRect(385f, 97f, 749f, 670f), SelRect(764f, 97f, 1152f, 670f), SelRect(1167f, 97f, 1531f, 670f)
@@ -272,20 +280,23 @@ namespace BladePath
         {
             bool difficulty = newJourneyStep == 1;
             Texture2D screen = UiKit.Tex(difficulty
-                ? "UI/selection/screen_difficulty" : "UI/selection/screen_traveller");
+                ? "UI/selection/screen_difficulty_redesign" : "UI/selection/screen_traveller");
             if (screen == null) { DrawJourneySelectionLegacy(); return; }
 
-            float s = Mathf.Max(Screen.width / SelW, Screen.height / SelH);
-            float ox = (Screen.width - SelW * s) * 0.5f, oy = (Screen.height - SelH * s) * 0.5f;
-            GUI.DrawTexture(new Rect(ox, oy, SelW * s, SelH * s), screen, ScaleMode.StretchToFill, false);
+            float artworkW = difficulty ? DifficultyW : SelW;
+            float artworkH = difficulty ? DifficultyH : SelH;
+            float s = Mathf.Max(Screen.width / artworkW, Screen.height / artworkH);
+            float ox = (Screen.width - artworkW * s) * 0.5f, oy = (Screen.height - artworkH * s) * 0.5f;
+            GUI.DrawTexture(new Rect(ox, oy, artworkW * s, artworkH * s), screen, ScaleMode.StretchToFill, false);
 
-            Rect[] cards = difficulty ? DifficultyCards : TravellerCards;
+            Rect[] cards = difficulty ? RedesignDifficultyCards : TravellerCards;
             int chosen = difficulty ? chosenDifficulty : chosenHero;
             Texture2D glow = UiKit.Tex("UI/selection/card_glow");
             for (int i = 0; i < cards.Length; i++)
             {
                 Rect r = new Rect(ox + cards[i].x * s, oy + cards[i].y * s, cards[i].width * s, cards[i].height * s);
-                if (i == chosen && glow != null)
+                // This new painting has its own selected-card illumination.
+                if (!difficulty && i == chosen && glow != null)
                 {
                     float pad = r.width * 0.09f;   // card_glow.png нарисован с таким же полем вокруг карточки
                     Color prev = GUI.color;
@@ -299,12 +310,22 @@ namespace BladePath
                     else chosenHero = i;
                     Haptics.Pulse(12);
                 }
+                if (difficulty && chosen == i)
+                {
+                    // Minimal dynamic cue; no second rectangular frame over art.
+                    float underlineWidth = r.width * 0.46f;
+                    Color previous = GUI.color;
+                    GUI.color = new Color(1f, 0.8f, 0.38f, 0.92f);
+                    GUI.DrawTexture(new Rect(r.center.x - underlineWidth * 0.5f,
+                        r.yMax + 2f * s, underlineWidth, Mathf.Max(2f, 3f * s)), Texture2D.whiteTexture);
+                    GUI.color = previous;
+                }
             }
 
             if (difficulty)
             {
-                Rect fr = SelRect(1405f, 698f, 1630f, 756f);
-                DrawFogToggle(new Rect(ox + fr.x * s, oy + fr.y * s, fr.width * s, fr.height * s));
+                Rect fr = DifficultyFog;
+                DrawFogToggleArt(new Rect(ox + fr.x * s, oy + fr.y * s, fr.width * s, fr.height * s), s);
             }
 
             Rect ok = difficulty ? DifficultyConfirm : TravellerStart;
@@ -333,6 +354,32 @@ namespace BladePath
             Rect r = new Rect(ox + original.x * scale, oy + original.y * scale,
                               original.width * scale, original.height * scale);
             return GUI.Button(r, GUIContent.none, GUIStyle.none);
+        }
+
+        // Approved #1 fog symbol, in distinct disabled/enabled states.
+        void DrawFogToggleArt(Rect screenRect, float selectionScale)
+        {
+            bool on = JourneyChoice.FogEnabled;
+            Texture2D art = UiKit.Tex(on ? "UI/selection/fog_toggle_on" : "UI/selection/fog_toggle_off");
+            if (art == null) { DrawFogToggle(screenRect); return; }
+            Color previous = GUI.color;
+            GUI.color = Color.white;
+            GUI.DrawTexture(screenRect, art, ScaleMode.StretchToFill, false);
+            GUI.color = previous;
+
+            Matrix4x4 old = UiKit.Begin();
+            float k = UiKit.Scale;
+            Rect label = new Rect(screenRect.x / k,
+                (screenRect.y - 32f * selectionScale) / k,
+                screenRect.width / k, 29f * selectionScale / k);
+            UiKit.Text(label, "ТУМАН ВОЙНЫ", 16f * selectionScale / k,
+                new Color(1f, 0.93f, 0.72f, 1f));
+            GUI.matrix = old;
+            if (GUI.Button(screenRect, GUIContent.none, GUIStyle.none))
+            {
+                JourneyChoice.FogEnabled = !on;
+                Haptics.Pulse(12);
+            }
         }
 
         /// <summary>
