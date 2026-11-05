@@ -310,3 +310,6 @@
 - `DuelHud.cs/DrawKiSegmentedFill`: KI center always draws independently of tip texture success; fallback if frame missing. Mirror and percentage match the HP approach. Original KI color, energy marker, text and combat logic unchanged. This avoids the empty-HP regression of №414.
 - Update Preflight `tools/validate_hud_masks.py`: verify 8-bit RGBA KI cap dimensions, both tips alpha, center/outside alpha clear, runtime KI draw function and fallback; retain all HP checks. No other systems changed.
 - Next release: exactly one Android APK №416 following successful final Preflight and zero active Android builds. Device compare both KI bars at full/half/low, no corner gaps or bleed; don't claim device verification from CI.
+
+
+| 2026-11-05 — BP-037 / Android №416 launched | checked release SHA `b780ba28c91baaadaf9c2182a4218729cb6dbf82`; Preflight №241 `42000640285` **success** including new KI caps test | `apk-build` advanced ONCE from APK №415 SHA `0d9ea7cf47f61949d29879053859ffe9cc8dde83` to this SHA. Confirmed real Android №416 Actions run `42000761936`, status initially **in_progress**, matching SHA. | Await Unity build result; user Android screenshot verify KI left/right at full/partial and no bleed/gaps. HP unchanged (accepted from №415), no extra APK run. |
