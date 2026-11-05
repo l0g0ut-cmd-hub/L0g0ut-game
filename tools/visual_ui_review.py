@@ -69,6 +69,41 @@ def solid(draw: ImageDraw.ImageDraw,rect,fill):
     draw.rectangle(tuple(round(n) for n in rect),fill=fill)
 
 
+def validate_fog_art_geometry() -> None:
+    """Prevent a black JPEG matte or 1-2 pixel nudge between ON and OFF.
+
+    These are project assets, independent of any simulated rendering.
+    Compare full alpha silhouettes and anchored ornament edges, not just sizes.
+    """
+    off=load(UI/'selection/fog_toggle_inner_off.png')
+    on=load(UI/'selection/fog_toggle_inner_on.png')
+    if off.size != (325,152) or on.size != off.size:
+        raise AssertionError('Fog toggle PNG canvases must match exactly (325x152)')
+    a_off=off.getchannel('A')
+    a_on=on.getchannel('A')
+    bounds_off=a_off.getbbox()
+    bounds_on=a_on.getbbox()
+    if bounds_off != bounds_on:
+        raise AssertionError('Fog switch outer silhouette shifts between OFF and ON: '
+                             f'{bounds_off} -> {bounds_on}')
+    # Transparent exterior on all four corners; dark rectangular JPG mats
+    # have alpha=255 here and should fail immediately.
+    for label,im in [('OFF',off),('ON',on)]:
+        alpha=im.getchannel('A')
+        for xy in [(0,0),(324,0),(0,151),(324,151)]:
+            if alpha.getpixel(xy) > 16:
+                raise AssertionError(f'{label} fog PNG has opaque outer background at {xy}')
+    # The decorative perimeter itself does not move; require aligned alpha
+    # gradients along the entire canvas (slider and cloud RGB may change).
+    from PIL import ImageChops, ImageStat
+    alpha_difference=ImageChops.difference(a_off,a_on)
+    pixels_diff=sum(1 for p in alpha_difference.getdata() if p > 20)
+    if pixels_diff > 90:
+        raise AssertionError(f'Fog switch silhouette/ornament jumps: {pixels_diff} alpha pixels differ')
+    print('FOG ART OK: 325x152, aligned silhouette',bounds_off,
+          'alpha difference pixels=',pixels_diff)
+
+
 def fog_overlay(background: Image.Image, on: bool, fr: tuple[float,float,float,float]) -> None:
     # Exact approved artwork: same 325x152 canvas and original fixed plaque.
     x0,y0,x1,y1=map(round,fr)
@@ -127,6 +162,7 @@ def generate(out: Path) -> dict:
     fog=single_rect(code,'DifficultyFog')
     ok=single_rect(code,'DifficultyConfirm')
     back=single_rect(code,'DifficultyBack')
+    validate_fog_art_geometry()
     frame=load(UI/'selection/screen_difficulty_redesign.jpg')
     assert frame.size==(ART_W,ART_H), f'Difficulty art is {frame.size}, expected {(ART_W,ART_H)}'
     errors=[]
