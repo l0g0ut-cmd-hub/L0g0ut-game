@@ -61,6 +61,17 @@ jobs:
           name: BladePath-x86_64-VisualQA
           path: build/Android/*.apk
           if-no-files-found: warn
+      # GameCI Unity container may leave ~/.android owned by root.
+      # The emulator action must create ~/.android/avd as the runner user.
+      - name: Repair Android AVD directory permissions after GameCI
+        run: |
+          set -euo pipefail
+          sudo install -d -o "$(id -u)" -g "$(id -g)" -m 0700 "$HOME/.android"
+          sudo install -d -o "$(id -u)" -g "$(id -g)" -m 0700 "$HOME/.android/avd"
+          sudo chown -R "$(id -u):$(id -g)" "$HOME/.android"
+          test -w "$HOME/.android/avd"
+          echo "Android AVD directory writable: $HOME/.android/avd"
+
       - name: Start emulator and capture all UI states from installed APK
         uses: reactivecircus/android-emulator-runner@v2
         with:
