@@ -129,6 +129,12 @@ namespace BladePath.EditorTools
         {
             yield return new WaitForSecondsRealtime(2f);
             menu = FindFirstObjectByType<MainMenuController>();
+            // StudioSplash obscures/blocks the menu for 8-10 seconds. QA must
+            // bypass it or ten identical splash screenshots look like success.
+            StudioSplash splash = FindFirstObjectByType<StudioSplash>();
+            if (splash != null) Destroy(splash.gameObject);
+            if (menu != null) menu.enabled = true;
+            yield return new WaitForSecondsRealtime(2f);
             if (menu == null)
             {
                 VisualQARunner.Fail("MainMenuController not found in running scene");
