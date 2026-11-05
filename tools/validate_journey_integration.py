@@ -234,7 +234,14 @@ def check_selection_screens():
         assert f.is_file() and f.stat().st_size > minimum, "Missing redesigned UI art: " + name
         assert f.read_bytes()[:3] == bytes((255, 216, 255)), "Not JPEG: " + name
     assert '"UI/selection/screen_difficulty_redesign"' in menu and '"UI/selection/screen_traveller"' in menu
-    assert '"UI/selection/fog_toggle_on"' in menu and '"UI/selection/fog_toggle_off"' in menu
+    # BP-053: source JPEGs remain archived, runtime uses transparent PNG
+    # overlays of approved option #1, aligned on an unchanging plaque.
+    assert '"UI/selection/fog_toggle_inner_on"' in menu and '"UI/selection/fog_toggle_inner_off"' in menu
+    assert '"UI/selection/difficulty_plaque_matte_fix"' in menu
+    for name in ("fog_toggle_inner_off.png", "fog_toggle_inner_on.png",
+                 "difficulty_plaque_matte_fix.png"):
+        art = ROOT / (sel + name)
+        assert art.is_file() and art.read_bytes()[:8] == bytes((137,80,78,71,13,10,26,10)), name
     assert "DrawFogToggleArt(" in menu
     assert "const float DifficultyW = 1824f, DifficultyH = 862f;" in menu
     assert 'bool pressedOk = SelectionHitbox(ok, s, ox, oy);' in menu
