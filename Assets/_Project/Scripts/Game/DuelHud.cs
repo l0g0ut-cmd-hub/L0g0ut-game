@@ -395,7 +395,16 @@ namespace BladePath
                     float rv = Mathf.Clamp01(t / 0.16f);
                     UiKit.Ink("UI/enso", rc, 150f * (1.06f - 0.06f * rv), new Color(0.72f, 0.1f, 0.08f, 0.9f * rAl), rv);
                     // номер раунда — цифрой кистью (раньше иероглифы 壱 弐 参)
-                    if (t > 0.05f) UiKit.BrushNumber(rc, duel.Round.ToString(), 84f, rAl, TextAnchor.MiddleCenter);
+                    if (t > 0.05f)
+                    {
+                        // Use the existing WHITE brush-glyph atlas instead of
+                        // black digits that disappear against the red ensō.
+                        // Keep a white font fallback if the atlas is missing.
+                        string roundNumber = duel.Round.ToString();
+                        if (!UiKit.BrushNumber(rc, roundNumber, 84f, rAl, TextAnchor.MiddleCenter, true))
+                            UiKit.Text(new Rect(rc.x - 72f, rc.y - 48f, 144f, 96f),
+                                roundNumber, 80f, new Color(1f, 0.96f, 0.87f, rAl));
+                    }
                 }
                 else
                 {

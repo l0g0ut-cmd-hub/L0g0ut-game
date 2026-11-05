@@ -59,4 +59,13 @@ assert "? new Color(1f, 1f, 1f, aa)" in hud_code, "Red banner must use white let
 assert ": new Color(duel.AnnounceColor.r, duel.AnnounceColor.g, duel.AnnounceColor.b, aa)" in hud_code
 assert "duel.AnnounceText, afs * sc, ac);" in hud_code
 assert "label.normal.textColor = new Color(0f, 0f, 0f, 0.85f * c.a)" in source("Assets/_Project/Scripts/Game/UiKit.cs")
+# Intro round numerals must remain brush calligraphy but be light over the
+# red ensō. The white atlas exists already: no source artwork is modified.
+assert 'UiKit.BrushNumber(rc, roundNumber, 84f, rAl, TextAnchor.MiddleCenter, true)' in hud_code
+assert 'if (!UiKit.BrushNumber(' in hud_code, "Missing white number font fallback"
+ui_code = source("Assets/_Project/Scripts/Game/UiKit.cs")
+assert 'Tex(bright ? "UI/brush_digits_white" : "UI/brush_digits")' in ui_code
+assert "new Color(1f, 0.96f, 0.87f, alpha)" in ui_code
+assert "alpha * 0.72f" in ui_code, "Brush numeral shadow must stay visible"
+assert (ROOT / "Assets/_Project/Resources/UI/brush_digits_white.png").is_file()
 print("Visual/haptic runtime source guards: OK")
