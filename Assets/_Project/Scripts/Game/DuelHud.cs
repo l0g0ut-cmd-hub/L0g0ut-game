@@ -727,14 +727,16 @@ namespace BladePath
             Rect kiWin = KiWinKit;
             if (kf == null) { kf = UiKit.Tex("UI/bar_ki"); kiWin = KiWin; }
             if (kf == null) UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), Frame);
+            bool kitFrame = kf != null && kiWin == KiWinKit;
+            Rect fill = kitFrame ? PixelFillRect(r, kf, kiWin, KiFillArea, mirror) : r;
             Texture2D mask = GetFillMask(true, kf, kiWin);
-            DrawMaskedFill(r, 1f, mirror, new Color(0.02f, 0.02f, 0.03f, 1f), mask);
+            DrawMaskedFill(fill, 1f, mirror, new Color(0.02f, 0.02f, 0.03f, 1f), mask);
             float k = f.Ki01;
             float w = r.width * k;
             bool full = f.CanEnergy;
             Color c = full ? new Color(0.35f, 0.85f, 1f, 1f) : new Color(0.4f, 0.65f, 1f, 1f);
             if (full) c = Color.Lerp(c, Color.white, 0.25f + 0.25f * Mathf.Sin(Time.unscaledTime * 6f));
-            DrawMaskedFill(r, k, mirror, c, mask);
+            DrawMaskedFill(fill, k, mirror, c, mask);
             // отметка стоимости шара
             float m = r.width * (f.energyCost / Mathf.Max(1f, f.kiMax));
             UiKit.Rect(new Rect(mirror ? r.x + m : r.xMax - m, r.y + 1f, 1.5f, Mathf.Max(0f, r.height - 2f)), new Color(1f, 1f, 1f, 0.6f));
@@ -874,6 +876,28 @@ namespace BladePath
         static readonly Rect KiWinKit = new Rect(34f / 467f, 14f / 76f, 387f / 467f, 45f / 76f);
         static readonly Rect HpWin = new Rect(42f / 476f, 19f / 53f, 398f / 476f, 15f / 53f);
         static readonly Rect KiWin = new Rect(38f / 422f, 17f / 47f, 361f / 422f, 13f / 47f);
+        // In source PNG pixel coordinates (top-left origin). The dark trough
+        // continues into the pointed gold tip *beyond* the old rectangular
+        // HpWinKit/KiWinKit. Expand only the fill/mask sampling; keep the
+        // original window when drawing the frame to preserve its placement.
+        static readonly Rect HpFillArea = new Rect(90f, 48f, 472f, 65f); // x 90..562, y 48..113 in 578x160
+        static readonly Rect KiFillArea = new Rect(35f, 10f, 421f, 56f); // x 35..456, y 10..66 in 467x76
+
+        static Rect PixelFillRect(Rect r, Texture2D frame, Rect oldWindow, Rect samplePixels, bool mirror)
+        {
+            if (frame == null) return r;
+            float windowLeft = oldWindow.x * frame.width;
+            float windowRight = (oldWindow.x + oldWindow.width) * frame.width;
+            float windowTop = oldWindow.y * frame.height;
+            float windowBottom = (oldWindow.y + oldWindow.height) * frame.height;
+            float sx = r.width / Mathf.Max(1f, windowRight - windowLeft);
+            float sy = r.height / Mathf.Max(1f, windowBottom - windowTop);
+            float x = mirror
+                ? r.x + (windowRight - samplePixels.xMax) * sx
+                : r.x + (samplePixels.xMin - windowLeft) * sx;
+            float y = r.y + (samplePixels.yMin - windowTop) * sy;
+            return new Rect(x, y, samplePixels.width * sx, samplePixels.height * sy);
+        }
 
         /// <summary>Рамка-текстура вокруг прямоугольника заливки r (окно win в долях текстуры). Для правой полоски — зеркально.</summary>
         static void DrawFrame(Rect r, Texture2D t, Rect win, bool mirror)
@@ -901,14 +925,16 @@ namespace BladePath
             }
             // Fill must be shaped to the inner edge of the ornamental frame;
             // frame texture has transparent/tapered corners and cannot clip a solid rectangle.
+            bool kitFrame = frame != null && hpWin == HpWinKit;
+            Rect fill = kitFrame ? PixelFillRect(r, frame, hpWin, HpFillArea, mirror) : r;
             Texture2D mask = GetFillMask(false, frame, hpWin);
-            DrawMaskedFill(r, 1f, mirror, new Color(0.05f, 0.01f, 0.01f, 1f), mask);
-            DrawMaskedFill(r, tr, mirror, new Color(0.95f, 0.75f, 0.3f, 0.95f), mask);
+            DrawMaskedFill(fill, 1f, mirror, new Color(0.05f, 0.01f, 0.01f, 1f), mask);
+            DrawMaskedFill(fill, tr, mirror, new Color(0.95f, 0.75f, 0.3f, 0.95f), mask);
             Color main = hp > 0.3f ? new Color(0.72f, 0.07f, 0.08f) : new Color(0.95f, 0.16f, 0.08f);
             if (since < 0.12f) main = Color.white;
-            DrawMaskedFill(r, hp, mirror, main, mask);
-            DrawMaskedFill(r, hp, mirror, new Color(1f, 0.6f, 0.55f, 0.18f), mask, 0f, 0.4f);   // блик
-            DrawMaskedFill(r, hp, mirror, new Color(0f, 0f, 0f, 0.25f), mask, 0.7f, 1f);
+            DrawMaskedFill(fill, hp, mirror, main, mask);
+            DrawMaskedFill(fill, hp, mirror, new Color(1f, 0.6f, 0.55f, 0.18f), mask, 0f, 0.4f);   // блик
+            DrawMaskedFill(fill, hp, mirror, new Color(0f, 0f, 0f, 0.25f), mask, 0.7f, 1f);
             DrawFrame(r, frame, hpWin, mirror);
 
             // портрет за наружным концом рамки
@@ -1025,10 +1051,17 @@ namespace BladePath
                 source.Apply(false, false);
                 Color32[] pixels = source.GetPixels32();
                 int sw = frame.width, sh = frame.height;
-                int x0 = Mathf.Clamp(Mathf.RoundToInt(win.x * sw), 1, sw - 2);
-                int x1 = Mathf.Clamp(Mathf.RoundToInt((win.x + win.width) * sw), x0 + 2, sw - 1);
-                int y0 = Mathf.Clamp(Mathf.RoundToInt(win.y * sh), 1, sh - 2);
-                int y1 = Mathf.Clamp(Mathf.RoundToInt((win.y + win.height) * sh), y0 + 2, sh - 1);
+                Rect area = ki ? KiFillArea : HpFillArea;
+                // The PNG ornamental tip extends beyond win.xMax; scanning the
+                // old window is the cause of the unfilled dark wedge in №411.
+                // For alternate legacy sprites keep their unexpanded window.
+                bool sameKit = (ki ? sw == 467 && sh == 76 : sw == 578 && sh == 160);
+                if (!sameKit)
+                    area = new Rect(win.x * sw, win.y * sh, win.width * sw, win.height * sh);
+                int x0 = Mathf.Clamp(Mathf.RoundToInt(area.xMin), 1, sw - 2);
+                int x1 = Mathf.Clamp(Mathf.RoundToInt(area.xMax), x0 + 2, sw - 1);
+                int y0 = Mathf.Clamp(Mathf.RoundToInt(area.yMin), 1, sh - 2);
+                int y1 = Mathf.Clamp(Mathf.RoundToInt(area.yMax), y0 + 2, sh - 1);
                 const int mw = 512, mh = 96;
                 Texture2D result = new Texture2D(mw, mh, TextureFormat.RGBA32, false);
                 result.name = ki ? "KiFrameDerivedFill" : "HpFrameDerivedFill";
@@ -1039,8 +1072,10 @@ namespace BladePath
                 int validRows = 0;
                 for (int iy = 0; iy < mh; iy++)
                 {
-                    // GUI texture coordinates run top-down, pixel arrays bottom-up.
-                    float syTop = Mathf.Lerp(y0, y1, (iy + 0.5f) / mh);
+                    // Output pixel row 0 is BOTTOM. In №411 it sampled the TOP
+                    // of the frame instead, vertically flipping the gold contour.
+                    // Read source rows bottom-to-top to align with GUI texture UVs.
+                    float syTop = Mathf.Lerp(y1, y0, (iy + 0.5f) / mh);
                     int sy = Mathf.Clamp(sh - 1 - Mathf.RoundToInt(syTop), 0, sh - 1);
                     int center = (x0 + x1) / 2;
                     int row = sy * sw;
@@ -1058,7 +1093,8 @@ namespace BladePath
                     {
                         float sx = Mathf.Lerp(x0, x1, (ix + 0.5f) / mw);
                         float edge = Mathf.Min(sx - left, right - sx);
-                        float alpha = Mathf.Clamp01((edge - 0.3f) / 1.2f);
+                        // One source pixel safety inset: never bleed over gold.
+                        float alpha = Mathf.Clamp01((edge - 1f) / 1.1f);
                         output[iy * mw + ix] = new Color32(255, 255, 255,
                             (byte)Mathf.RoundToInt(255f * alpha));
                     }
