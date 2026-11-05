@@ -727,16 +727,14 @@ namespace BladePath
             Rect kiWin = KiWinKit;
             if (kf == null) { kf = UiKit.Tex("UI/bar_ki"); kiWin = KiWin; }
             if (kf == null) UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), Frame);
-            bool kitFrame = kf != null && kf.width == 467 && kf.height == 76;
-            Rect fill = kitFrame ? PixelFillRect(r, kf, kiWin, KiFillArea, mirror) : r;
-            Texture2D mask = GetFillMask(true, kf, kiWin);
-            DrawMaskedFill(fill, 1f, mirror, new Color(0.02f, 0.02f, 0.03f, 1f), mask);
+            Texture2D mask = UiKit.Tex("UI/Kit/hud_ki_mask");
             float k = f.Ki01;
-            float w = r.width * k;
             bool full = f.CanEnergy;
             Color c = full ? new Color(0.35f, 0.85f, 1f, 1f) : new Color(0.4f, 0.65f, 1f, 1f);
             if (full) c = Color.Lerp(c, Color.white, 0.25f + 0.25f * Mathf.Sin(Time.unscaledTime * 6f));
-            DrawMaskedFill(fill, k, mirror, c, mask);
+            DrawArtMaskFill(r, kf, kiWin, mask, KiMaskChannel, 1f, mirror,
+                new Color(0.02f, 0.02f, 0.03f, 1f));
+            DrawArtMaskFill(r, kf, kiWin, mask, KiMaskChannel, k, mirror, c);
             // отметка стоимости шара
             float m = r.width * (f.energyCost / Mathf.Max(1f, f.kiMax));
             UiKit.Rect(new Rect(mirror ? r.x + m : r.xMax - m, r.y + 1f, 1.5f, Mathf.Max(0f, r.height - 2f)), new Color(1f, 1f, 1f, 0.6f));
@@ -876,37 +874,56 @@ namespace BladePath
         static readonly Rect KiWinKit = new Rect(34f / 467f, 14f / 76f, 387f / 467f, 45f / 76f);
         static readonly Rect HpWin = new Rect(42f / 476f, 19f / 53f, 398f / 476f, 15f / 53f);
         static readonly Rect KiWin = new Rect(38f / 422f, 17f / 47f, 361f / 422f, 13f / 47f);
-        // In source PNG pixel coordinates (top-left origin). The dark trough
-        // continues into the pointed gold tip *beyond* the old rectangular
-        // HpWinKit/KiWinKit. Expand only the fill/mask sampling; keep the
-        // original window when drawing the frame to preserve its placement.
-        static readonly Rect HpFillArea = new Rect(90f, 48f, 472f, 65f); // x 90..562, y 48..113 in 578x160
-        static readonly Rect KiFillArea = new Rect(35f, 10f, 421f, 56f); // x 35..456, y 10..66 in 467x76
+        // Authored alpha masks have EXACTLY the same dimensions as their
+        // ornate frame PNGs. Bounds describe the intended progress channel
+        // *in those source pixels*, including the pointed tip. Unlike previous
+        // attempts, mask and frame use the SAME full-frame drawing rect.
+        static readonly Rect HpMaskChannel = new Rect(101f, 54f, 452f, 44f);
+        static readonly Rect KiMaskChannel = new Rect(44f, 19f, 409f, 34f);
 
-        static Rect PixelFillRect(Rect r, Texture2D frame, Rect oldWindow, Rect samplePixels, bool mirror)
+        static Rect FrameRect(Rect r, Texture2D frame, Rect win, bool mirror)
         {
-            if (frame == null) return r;
-            float windowLeft = oldWindow.x * frame.width;
-            float windowRight = (oldWindow.x + oldWindow.width) * frame.width;
-            float windowTop = oldWindow.y * frame.height;
-            float windowBottom = (oldWindow.y + oldWindow.height) * frame.height;
-            float sx = r.width / Mathf.Max(1f, windowRight - windowLeft);
-            float sy = r.height / Mathf.Max(1f, windowBottom - windowTop);
-            float x = mirror
-                ? r.x + (windowRight - samplePixels.xMax) * sx
-                : r.x + (samplePixels.xMin - windowLeft) * sx;
-            float y = r.y + (samplePixels.yMin - windowTop) * sy;
-            return new Rect(x, y, samplePixels.width * sx, samplePixels.height * sy);
+            float fw = r.width / win.width, fh = r.height / win.height;
+            float fx = mirror ? r.x - (1f - win.x - win.width) * fw : r.x - win.x * fw;
+            return new Rect(fx, r.y - win.y * fh, fw, fh);
+        }
+
+        // The mask is rendered in precisely the same frame rect / UV as the
+        // gold art. Only the visible part is clipped for current progress.
+        // The mirror mirrors BOTH the frame and the mask (not just the bar
+        // bounds). No color-based scanning, no approximate tapered fill.
+        static void DrawArtMaskFill(Rect r, Texture2D frame, Rect win,
+            Texture2D mask, Rect sourceChannel, float fraction, bool mirror,
+            Color color, float y0 = 0f, float y1 = 1f)
+        {
+            if (frame == null || mask == null || fraction <= 0f ||
+                mask.width != frame.width || mask.height != frame.height) return;
+            Rect fr = FrameRect(r, frame, win, mirror);
+            float from = mirror ? 1f - sourceChannel.xMax / frame.width : sourceChannel.xMin / frame.width;
+            float to = mirror ? 1f - sourceChannel.xMin / frame.width : sourceChannel.xMax / frame.width;
+            float left = fr.x + fr.width * from, right = fr.x + fr.width * to;
+            float width = (right - left) * Mathf.Clamp01(fraction);
+            if (width < 0.01f) return;
+            float clipX = mirror ? left : right - width;
+            float clipTop = fr.y + fr.height * (sourceChannel.yMin + sourceChannel.height * Mathf.Clamp01(y0)) / frame.height;
+            float clipBottom = fr.y + fr.height * (sourceChannel.yMin + sourceChannel.height * Mathf.Clamp01(y1)) / frame.height;
+            if (clipBottom <= clipTop) return;
+
+            GUI.BeginGroup(new Rect(clipX, clipTop, width, clipBottom - clipTop));
+            Color oldColor = GUI.color;
+            GUI.color = color;
+            GUI.DrawTextureWithTexCoords(
+                new Rect(fr.x - clipX, fr.y - clipTop, fr.width, fr.height),
+                mask, mirror ? new Rect(1f, 0f, -1f, 1f) : new Rect(0f, 0f, 1f, 1f));
+            GUI.color = oldColor;
+            GUI.EndGroup();
         }
 
         /// <summary>Рамка-текстура вокруг прямоугольника заливки r (окно win в долях текстуры). Для правой полоски — зеркально.</summary>
         static void DrawFrame(Rect r, Texture2D t, Rect win, bool mirror)
         {
             if (t == null) return;
-            float fw = r.width / win.width, fh = r.height / win.height;
-            // Mirroring flips the texture window too: align its *flipped* left edge with r.x.
-            float fx = mirror ? r.x - (1f - win.x - win.width) * fw : r.x - win.x * fw;
-            Rect fr = new Rect(fx, r.y - win.y * fh, fw, fh);
+            Rect fr = FrameRect(r, t, win, mirror);
             if (mirror) GUI.DrawTextureWithTexCoords(fr, t, new Rect(1f, 0f, -1f, 1f));
             else GUI.DrawTexture(fr, t);
         }
@@ -923,18 +940,19 @@ namespace BladePath
                 UiKit.Rect(new Rect(r.x - 3f, r.y - 3f, r.width + 6f, r.height + 6f), Frame);
                 UiKit.Rect(new Rect(r.x - 1f, r.y - 1f, r.width + 2f, r.height + 2f), new Color(0.55f, 0.43f, 0.22f, 0.9f));
             }
-            // Fill must be shaped to the inner edge of the ornamental frame;
-            // frame texture has transparent/tapered corners and cannot clip a solid rectangle.
-            bool kitFrame = frame != null && frame.width == 578 && frame.height == 160;
-            Rect fill = kitFrame ? PixelFillRect(r, frame, hpWin, HpFillArea, mirror) : r;
-            Texture2D mask = GetFillMask(false, frame, hpWin);
-            DrawMaskedFill(fill, 1f, mirror, new Color(0.05f, 0.01f, 0.01f, 1f), mask);
-            DrawMaskedFill(fill, tr, mirror, new Color(0.95f, 0.75f, 0.3f, 0.95f), mask);
+            // Authored mask is aligned pixel-for-pixel with the original gold art.
+            Texture2D mask = UiKit.Tex("UI/Kit/hud_hp_mask");
+            DrawArtMaskFill(r, frame, hpWin, mask, HpMaskChannel, 1f, mirror,
+                new Color(0.05f, 0.01f, 0.01f, 1f));
+            DrawArtMaskFill(r, frame, hpWin, mask, HpMaskChannel, tr, mirror,
+                new Color(0.95f, 0.75f, 0.3f, 0.95f));
             Color main = hp > 0.3f ? new Color(0.72f, 0.07f, 0.08f) : new Color(0.95f, 0.16f, 0.08f);
             if (since < 0.12f) main = Color.white;
-            DrawMaskedFill(fill, hp, mirror, main, mask);
-            DrawMaskedFill(fill, hp, mirror, new Color(1f, 0.6f, 0.55f, 0.18f), mask, 0f, 0.4f);   // блик
-            DrawMaskedFill(fill, hp, mirror, new Color(0f, 0f, 0f, 0.25f), mask, 0.7f, 1f);
+            DrawArtMaskFill(r, frame, hpWin, mask, HpMaskChannel, hp, mirror, main);
+            DrawArtMaskFill(r, frame, hpWin, mask, HpMaskChannel, hp, mirror,
+                new Color(1f, 0.6f, 0.55f, 0.18f), 0f, 0.4f);
+            DrawArtMaskFill(r, frame, hpWin, mask, HpMaskChannel, hp, mirror,
+                new Color(0f, 0f, 0f, 0.25f), 0.7f, 1f);
             DrawFrame(r, frame, hpWin, mirror);
 
             // портрет за наружным концом рамки
@@ -1010,163 +1028,6 @@ namespace BladePath
             GUI.DrawTexture(new Rect(pc.x - w * 0.5f, pc.y - h * 0.5f, w, h), t);
         }
 
-        // Gold-framed bars are not rectangles. Derive their true inner border
-        // once from the actual authored sprite pixels instead of guessing a
-        // taper. Separate masks are retained for each bar; no per-frame readback.
-        static Texture2D hpFillMask, kiFillMask;
-        static Texture2D GetFillMask(bool ki, Texture2D frame, Rect win)
-        {
-            Texture2D cached = ki ? kiFillMask : hpFillMask;
-            if (cached != null) return cached;
-            Texture2D mask = MakeFrameFillMask(frame, win, ki);
-            if (mask == null) mask = MakeFallbackFillMask(ki);
-            if (ki) kiFillMask = mask; else hpFillMask = mask;
-            return mask;
-        }
 
-        static bool IsGoldBorder(Color32 c)
-        {
-            // Dark inner trough is almost black; the authored ornamental
-            // rails have a warm golden hue and much higher luminance.
-            // Test luminance AND warm/gold chroma to avoid dark lacquer.
-            return c.a > 48 && c.r > 68 && c.g > 46 &&
-                   c.r > c.g * 1.08f && c.g > c.b * 1.17f;
-        }
-
-        static Texture2D MakeFrameFillMask(Texture2D frame, Rect win, bool ki)
-        {
-            if (frame == null || frame.width < 80 || frame.height < 20) return null;
-            RenderTexture rt = null;
-            RenderTexture previous = RenderTexture.active;
-            Texture2D source = null;
-            try
-            {
-                // Source PNG need not have Read/Write enabled in Unity import.
-                // GPU copy + one CPU readback at first HUD render only.
-                rt = RenderTexture.GetTemporary(frame.width, frame.height, 0, RenderTextureFormat.ARGB32);
-                Graphics.Blit(frame, rt);
-                RenderTexture.active = rt;
-                source = new Texture2D(frame.width, frame.height, TextureFormat.RGBA32, false);
-                source.ReadPixels(new Rect(0f, 0f, frame.width, frame.height), 0, 0, false);
-                source.Apply(false, false);
-                Color32[] pixels = source.GetPixels32();
-                int sw = frame.width, sh = frame.height;
-                Rect area = ki ? KiFillArea : HpFillArea;
-                // The PNG ornamental tip extends beyond win.xMax; scanning the
-                // old window is the cause of the unfilled dark wedge in №411.
-                // For alternate legacy sprites keep their unexpanded window.
-                bool sameKit = (ki ? sw == 467 && sh == 76 : sw == 578 && sh == 160);
-                if (!sameKit)
-                    area = new Rect(win.x * sw, win.y * sh, win.width * sw, win.height * sh);
-                int x0 = Mathf.Clamp(Mathf.RoundToInt(area.xMin), 1, sw - 2);
-                int x1 = Mathf.Clamp(Mathf.RoundToInt(area.xMax), x0 + 2, sw - 1);
-                int y0 = Mathf.Clamp(Mathf.RoundToInt(area.yMin), 1, sh - 2);
-                int y1 = Mathf.Clamp(Mathf.RoundToInt(area.yMax), y0 + 2, sh - 1);
-                const int mw = 512, mh = 96;
-                Texture2D result = new Texture2D(mw, mh, TextureFormat.RGBA32, false);
-                result.name = ki ? "KiFrameDerivedFill" : "HpFrameDerivedFill";
-                result.hideFlags = HideFlags.HideAndDontSave;
-                result.filterMode = FilterMode.Bilinear;
-                result.wrapMode = TextureWrapMode.Clamp;
-                Color32[] output = new Color32[mw * mh];
-                int validRows = 0;
-                for (int iy = 0; iy < mh; iy++)
-                {
-                    // Output pixel row 0 is BOTTOM. In №411 it sampled the TOP
-                    // of the frame instead, vertically flipping the gold contour.
-                    // Read source rows bottom-to-top to align with GUI texture UVs.
-                    float syTop = Mathf.Lerp(y1, y0, (iy + 0.5f) / mh);
-                    int sy = Mathf.Clamp(sh - 1 - Mathf.RoundToInt(syTop), 0, sh - 1);
-                    int center = (x0 + x1) / 2;
-                    int row = sy * sw;
-                    // Scan *from the inner trough* outwards to the first actual
-                    // gold rail or transparent exterior on EACH scanline.
-                    if (IsGoldBorder(pixels[row + center])) continue;
-                    int left = center, right = center;
-                    while (left > x0 && pixels[row + left].a > 40 && !IsGoldBorder(pixels[row + left])) left--;
-                    while (right < x1 && pixels[row + right].a > 40 && !IsGoldBorder(pixels[row + right])) right++;
-                    if (right - left < (x1 - x0) * 0.45f) continue;
-                    validRows++;
-                    // Inside edge gets full colour; only the last source pixel
-                    // at the golden rail is antialiased, never drawn outside it.
-                    for (int ix = 0; ix < mw; ix++)
-                    {
-                        float sx = Mathf.Lerp(x0, x1, (ix + 0.5f) / mw);
-                        float edge = Mathf.Min(sx - left, right - sx);
-                        // One source pixel safety inset: never bleed over gold.
-                        float alpha = Mathf.Clamp01((edge - 1f) / 1.1f);
-                        output[iy * mw + ix] = new Color32(255, 255, 255,
-                            (byte)Mathf.RoundToInt(255f * alpha));
-                    }
-                }
-                // A failed or unreadable sprite must never produce an empty bar.
-                if (validRows < mh * 0.45f) { Object.Destroy(result); return null; }
-                result.SetPixels32(output);
-                result.Apply(false, true);
-                return result;
-            }
-            catch (System.Exception ex)
-            {
-                Debug.LogWarning("HUD frame mask could not be sampled: " + ex.Message);
-                return null;
-            }
-            finally
-            {
-                RenderTexture.active = previous;
-                if (rt != null) RenderTexture.ReleaseTemporary(rt);
-                if (source != null) Object.Destroy(source);
-            }
-        }
-
-        // Safety fallback only; normally the frame-derived gold contours above
-        // are used. Keep its fill strictly inset when sprite readback fails.
-        static Texture2D MakeFallbackFillMask(bool ki)
-        {
-            const int mw = 512, mh = 64;
-            Texture2D tex = new Texture2D(mw, mh, TextureFormat.RGBA32, false);
-            tex.name = ki ? "KiFillFallback" : "HpFillFallback";
-            tex.hideFlags = HideFlags.HideAndDontSave;
-            tex.filterMode = FilterMode.Bilinear;
-            tex.wrapMode = TextureWrapMode.Clamp;
-            Color32[] colors = new Color32[mw * mh];
-            for (int y = 0; y < mh; y++)
-            {
-                float yn = (y + 0.5f) / mh;
-                float tip = Mathf.Pow(Mathf.Abs(yn - 0.5f) * 2f, 1.5f);
-                float taper = (ki ? 0.022f : 0.026f) * tip;
-                float left = 0.012f + taper;
-                float right = 0.988f - taper;
-                float ay = Mathf.Clamp01(Mathf.Min(yn, 1f - yn) * mh);
-                for (int x = 0; x < mw; x++)
-                {
-                    float xn = (x + 0.5f) / mw;
-                    float ax = Mathf.Clamp01(Mathf.Min(xn - left, right - xn) * mw);
-                    colors[y * mw + x] = new Color32(255, 255, 255,
-                        (byte)Mathf.RoundToInt(255f * Mathf.Min(ax, ay)));
-                }
-            }
-            tex.SetPixels32(colors);
-            tex.Apply(false, true);
-            return tex;
-        }
-
-        /// <summary>Clip a progress bar to both its fill fraction and its tapered/rounded inner window.
-        /// y0/y1 clip highlights without changing the mask's original aspect ratio.</summary>
-        static void DrawMaskedFill(Rect r, float k, bool mirror, Color color, Texture2D mask, float y0 = 0f, float y1 = 1f)
-        {
-            float w = r.width * Mathf.Clamp01(k);
-            if (w < 0.5f || r.height <= 0f || mask == null) return;
-            float y = r.height * y0, h = r.height * Mathf.Max(0f, y1 - y0);
-            if (h <= 0f) return;
-            float x = mirror ? r.x : r.xMax - w;
-            GUI.BeginGroup(new Rect(x, r.y + y, w, h));
-            Color previous = GUI.color;
-            GUI.color = color;
-            float offsetX = r.x - x;
-            GUI.DrawTextureWithTexCoords(new Rect(offsetX, -y, r.width, r.height), mask,
-                mirror ? new Rect(1f, 0f, -1f, 1f) : new Rect(0f, 0f, 1f, 1f));
-            GUI.color = previous;
-            GUI.EndGroup();
-        }
     }
 }
