@@ -3,7 +3,8 @@
 set -euo pipefail
 OUT=build/android-ui
 mkdir -p "$OUT"
-APK=$(find build/Android -type f -name '*.apk' -print -quit)
+# The release build may coexist with the emulator QA package. Only install x86_64 QA.
+APK=$(find build/Android -type f -iname '*VisualEmulator*.apk' -print -quit)
 if [[ -z "$APK" ]]; then echo 'Missing APK for emulator'; exit 2; fi
 adb shell wm size 1920x824
 adb shell wm density 280
