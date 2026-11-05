@@ -35,18 +35,18 @@ def read_alpha(name, expected, mode):
         if kind == b"IEND":
             break
     raw = zlib.decompress(stream)
-    channels = 1 if mode == 3 else 2
+    channels = {3: 1, 4: 2, 6: 4}[mode]
     stride = width * channels + 1
     assert len(raw) == height * stride, (name, "decompressed length")
     assert all(raw[y * stride] == 0 for y in range(height)), "unexpected row filter"
     if mode == 3:
         assert transparency is not None and len(transparency) == 256
         return lambda x, y: transparency[raw[y * stride + x + 1]]
-    return lambda x, y: raw[y * stride + 1 + 2 * x + 1]
+    return lambda x, y: raw[y * stride + 1 + channels * x + (3 if mode == 6 else 1)]
 
 
 def main():
-    cap = read_alpha("hud_hp_caps.png", (578, 160), 3)
+    cap = read_alpha("hud_hp_caps.png", (578, 160), 6)
     for xy in ((112, 79), (141, 79), (501, 79), (533, 75), (540, 74), (554, 68)):
         assert cap(*xy) > 0, ("HP tapered end missing", xy, cap(*xy))
     for xy in ((300, 76), (0, 79), (575, 79), (110, 20), (533, 120)):
@@ -60,6 +60,9 @@ def main():
     assert 'UI/Kit/hud_hp_caps' in hud and 'UI/Kit/hud_ki_mask' in hud
     assert "DrawHpSegmentedFill" in hud and "DrawArtMaskFill" in hud
     assert "GUI.DrawTexture(mid, Texture2D.whiteTexture)" in hud
+    assert "if (tips != null)" in hud, "HP must render even without caps"
+    assert "const float authoredWidth = 578f, authoredHeight = 160f" in hud
+    assert "tips == null ||" not in hud, "fatal cap guard must not disable HP"
     assert "const float leftSource = 94f, rightSource = 567f" in hud
     assert "const float midX0 = 140f, midX1 = 494f" in hud
     assert "MakeFrameFillMask(" not in hud
