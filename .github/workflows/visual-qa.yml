@@ -49,6 +49,9 @@ jobs:
   unity-runtime:
     name: Capture real Unity IMGUI at 21:9 in Play Mode
     needs: preview
+    # Avoid occupying the one Unity seat for each development commit.
+    # Capture actual game frames when an APK is promoted or by manual request.
+    if: github.ref_name == 'apk-build' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 70
     concurrency:
