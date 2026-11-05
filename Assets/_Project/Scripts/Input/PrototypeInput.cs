@@ -578,7 +578,16 @@ namespace BladePath
             bool main = b == (int)B.OverAgain || b == (int)B.Resume;   // главное действие — кроваво-красная кнопка
             bool resultButton = b == (int)B.OverAgain || b == (int)B.OverMenu || b == (int)B.OverGear;
             Color oldTint = GUI.color;
-            GUI.color = Color.white; // never inherit dimmed overlay tint from the HUD
+            Color oldContentTint = GUI.contentColor;
+            Color oldBackgroundTint = GUI.backgroundColor;
+            GUI.color = Color.white;
+            if (resultButton)
+            {
+                // Result actions must be full-bright regardless of other
+                // IMGUI controls or the background victory vignette.
+                GUI.contentColor = Color.white;
+                GUI.backgroundColor = Color.white;
+            }
             Texture2D wood = UiKit.Tex(main ? (h ? "UI/Kit/ui_btn_red_pressed" : "UI/Kit/ui_btn_red") : (h ? "UI/Kit/ui_btn_pressed" : "UI/Kit/ui_btn"));
             if (wood == null) wood = UiKit.Tex("UI/plank");
             if (wood != null)
@@ -589,14 +598,21 @@ namespace BladePath
             else VisualIdentity.Surface(r, 0.98f, false);
             if (resultButton)
             {
-                // Keep the existing approved Kit ornaments, but let the
-                // available post-victory actions read as ACTIVE, not disabled.
+                // A restrained interior light keeps these ACTIVE buttons from
+                // looking disabled on the darkened match-results screen.
+                // Entire highlight stays within the carved gold frame.
+                UiKit.Rect(new Rect(r.x + 20f, r.y + 11f,
+                    Mathf.Max(0f, r.width - 40f), Mathf.Max(0f, r.height - 22f)),
+                    main ? new Color(1f, 0.24f, 0.12f, 0.16f)
+                         : new Color(1f, 0.84f, 0.58f, 0.14f));
                 UiKit.Rect(new Rect(r.x + 18f, r.y + 5f, r.width - 36f, 1.5f),
-                    new Color(1f, 0.82f, 0.45f, 0.62f));
+                    new Color(1f, 0.82f, 0.45f, 0.75f));
             }
             UiKit.Text(r, labels[b], Mathf.Min(18f, r.height * 0.44f),
-                h ? VisualIdentity.BrassLight : resultButton
-                    ? new Color(1f, 0.96f, 0.85f, 1f) : VisualIdentity.Parchment);
+                resultButton ? new Color(1f, 0.96f, 0.85f, 1f)
+                    : h ? VisualIdentity.BrassLight : VisualIdentity.Parchment);
+            GUI.backgroundColor = oldBackgroundTint;
+            GUI.contentColor = oldContentTint;
             GUI.color = oldTint;
         }
 

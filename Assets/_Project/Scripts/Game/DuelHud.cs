@@ -462,21 +462,45 @@ namespace BladePath
                 if (duel.LastDraw) { title = "НИЧЬЯ"; c = new Color(0.85f, 0.85f, 0.9f, t); }
                 string sub = duel.TimedOut ? "ВРЕМЯ ВЫШЛО" : "";
                 if (duel.Perfect && !duel.LastDraw) sub = "ИДЕАЛЬНО";
-                // знак кистью за заголовком: 死 — поражение (как экран смерти Sekiro), 勝 — победа; проявляется мазком слева направо
-                // победа в бою — надписью кистью из атласа («ПОБЕДА»), остальное (раунд, ничья, путь пройден, поражение) — шрифтом
+                // Keep the existing brush-paint style, but size the backing
+                // to the ENTIRE result heading (and optional "ИДЕАЛЬНО"),
+                // rather than stretching a 480-unit stroke under 800-unit text.
                 bool brushWin = duel.MatchOver && won && !duel.LastDraw && title == "ПОБЕДА" && UiKit.Tex("UI/ru_victory") != null;
-                if (!duel.TimedOut && !duel.LastDraw && !brushWin)
+                bool redResultBanner = !duel.TimedOut && !duel.LastDraw && !brushWin;
+                if (redResultBanner)
                 {
+                    Texture2D stroke = UiKit.Tex("UI/brush_stroke_red");
                     float gt = Mathf.Clamp01((duel.StateTime - 0.35f) / 0.5f);
-                    if (gt > 0f) DrawBrush("UI/brush_stroke_red", new Vector2(cx, 172f), 120f * (1.08f - 0.08f * gt), (won ? 0.55f : 0.75f) * gt, Mathf.Clamp01(gt * 1.6f));   // мазок без слов — заголовок уже написан
+                    if (stroke != null && gt > 0f)
+                    {
+                        float bannerW = Mathf.Min(940f, W - 80f);
+                        Rect banner = new Rect(cx - bannerW * 0.5f,
+                            sub.Length > 0 ? 88f : 106f, bannerW,
+                            sub.Length > 0 ? 145f : 127f);
+                        // Preserve ragged original left/right brush edges;
+                        // only the middle stretches to house longer names.
+                        UiKit.Slice(banner, stroke, banner.height / stroke.height,
+                            0.18f, 0.10f, 0.5f, 0f,
+                            new Color(1f, 1f, 1f, 0.82f * gt));
+                    }
                 }
-                if (sub.Length > 0) UiKit.Text(new Rect(cx - 300f, 98f, 600f, 30f), sub, 24f, new Color(1f, 0.85f, 0.35f, t));   // под полосками духа, над заголовком
+                if (sub.Length > 0)
+                    UiKit.Text(new Rect(cx - 330f, 98f, 660f, 32f), sub, 24f,
+                        new Color(1f, 0.85f, 0.35f, t));
                 if (brushWin)
                 {
                     float gt = Mathf.Clamp01((duel.StateTime - 0.35f) / 0.45f);
-                    DrawBrush("UI/ru_victory", new Vector2(cx, 165f), 140f * (1.1f - 0.1f * gt), t, Mathf.Clamp01(gt * 1.4f));   // кисть входит мазком слева направо
+                    DrawBrush("UI/ru_victory", new Vector2(cx, 165f), 140f * (1.1f - 0.1f * gt), t, Mathf.Clamp01(gt * 1.4f));
                 }
-                else UiKit.Text(new Rect(cx - 400f, 110f, 800f, 120f), title, duel.MatchOver ? 90f : 64f, c);
+                else
+                {
+                    // A losing-round title is pale on red, not red on red.
+                    Color titleTint = redResultBanner && !won
+                        ? new Color(1f, 0.96f, 0.88f, t) : c;
+                    UiKit.Text(new Rect(cx - 440f, sub.Length > 0 ? 128f : 110f,
+                        880f, sub.Length > 0 ? 100f : 120f),
+                        title, duel.MatchOver ? 90f : 64f, titleTint);
+                }
                 if (duel.MatchOver) DrawStats(cx, 240f, t);
                 if (duel.MatchOver && SideDuel.Enabled && Profile.Ally >= 0 && Profile.AllyDown)
                     UiKit.Text(new Rect(cx - 300f, 352f, 600f, 22f), "СОРАТНИК ПАЛ — ЕГО ВЫХОДИТ ТРАВНИЦА", 14f, new Color(1f, 0.45f, 0.35f, t));

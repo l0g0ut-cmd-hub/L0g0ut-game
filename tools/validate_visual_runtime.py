@@ -75,4 +75,25 @@ assert "float captionH = mk > 1 ? 118f : 94f;" in hud_code
 assert "Rect captionTitle = new Rect(cx - 365f, 288f, 730f, 34f);" in hud_code
 assert 'UiKit.Rect(captionPanel, new Color(0.025f, 0.018f, 0.02f, 0.72f * ta))' in hud_code
 assert 'DrawBrush("UI/brush_stroke", new Vector2(cx, 318f)' not in hud_code
+# BP-042: selection actions cannot draw opaque black rectangles outside
+# carved gold corners. Existing approved background paintings stay untouched.
+assert 'Texture2D board = UiKit.Tex("UI/Kit/ui_board");' not in menu
+assert 'Rect cover = new Rect(r.x - 4f, r.y - 2f' not in menu
+assert 'bool pressed = VisualIdentity.KitButton(r, label, true, red);' in menu
+# Post-victory buttons must draw above dark overlay, keep full content tint,
+# and maintain a restrained internal active-state lift.
+assert "GUI.depth = Paused || Over ? -100 : 0;" in input_code
+assert "GUI.contentColor = Color.white;" in input_code
+assert "GUI.contentColor = oldContentTint;" in input_code
+assert "GUI.backgroundColor = oldBackgroundTint;" in input_code
+assert "new Color(1f, 0.96f, 0.85f, 1f)" in input_code
+assert "new Color(1f, 0.84f, 0.58f, 0.14f)" in input_code
+# Both "ИДЕАЛЬНО" and a long round-won title fit a source-art red brush
+# stretched ONLY through its center; short narrow brush backing is forbidden.
+assert "bool redResultBanner = !duel.TimedOut && !duel.LastDraw && !brushWin;" in hud_code
+assert "float bannerW = Mathf.Min(940f, W - 80f);" in hud_code
+assert 'UiKit.Slice(banner, stroke, banner.height / stroke.height,' in hud_code
+assert "sub.Length > 0 ? 145f : 127f" in hud_code
+assert "880f, sub.Length > 0 ? 100f : 120f" in hud_code
+assert 'DrawBrush("UI/brush_stroke_red", new Vector2(cx, 172f)' not in hud_code
 print("Visual/haptic runtime source guards: OK")

@@ -271,10 +271,10 @@ namespace BladePath
 
             Rect ok = difficulty ? DifficultyConfirm : TravellerStart;
             Rect back = difficulty ? DifficultyBack : TravellerBack;
-            // The original selection JPEG contains old button paintings.
-            // Cover only their exact button areas with the existing opaque
-            // dark UI board, then render the shared Kit buttons on top.
-            // The approved hero/difficulty illustrations and backgrounds remain untouched.
+            // Both approved backgrounds already contain painted button art.
+            // Keep their original pixels unchanged; the shared Kit buttons
+            // cover the painted interiors without adding a BLACK RECTANGLE
+            // under the transparent ornamental corners.
             bool pressedBack = DrawSelectionAction(back, "НАЗАД", false, s, ox, oy);
             bool pressedOk = DrawSelectionAction(ok, difficulty ? "ПОДТВЕРДИТЬ" : "НАЧАТЬ ПУТЬ", true, s, ox, oy);
             if (pressedBack) newJourneyStep--;
@@ -289,8 +289,9 @@ namespace BladePath
             }
         }
 
-        /// <summary>Uniform decorative selection button in original art coordinates.
-        /// Erases only the baked old button footprint, never the scene or card art.</summary>
+        /// <summary>Uniform Kit action over the original selection artwork.
+        /// Never use an opaque rectangular cover: it produces black square
+        /// borders outside the ornate button on both selection screens.</summary>
         static bool DrawSelectionAction(Rect original, string label, bool red, float scale, float ox, float oy)
         {
             Matrix4x4 old = UiKit.Begin();
@@ -299,12 +300,9 @@ namespace BladePath
                               (oy + original.y * scale) / k,
                               original.width * scale / k,
                               original.height * scale / k);
-            // Opaque backing prevents two different painted button styles
-            // from showing through transparent corners of the new buttons.
-            Texture2D board = UiKit.Tex("UI/Kit/ui_board");
-            Rect cover = new Rect(r.x - 4f, r.y - 2f, r.width + 8f, r.height + 4f);
-            if (board != null) GUI.DrawTexture(cover, board, ScaleMode.StretchToFill, false);
-            else UiKit.Rect(cover, new Color(0.07f, 0.05f, 0.05f, 1f));
+            // The ornate Kit button is already opaque in its painted center.
+            // Removing the old ui_board patch exposes the untouched landscape
+            // through transparent gold corners instead of a black rectangle.
             bool pressed = VisualIdentity.KitButton(r, label, true, red);
             GUI.matrix = old;
             return pressed;
