@@ -107,8 +107,9 @@ assert 'GUI.DrawTexture(vr, tex, ScaleMode.StretchToFill, false);' in menu
 assert 'DrawSideBorders(vr);' in menu
 assert 'float left = Mathf.Max(0f, video.x);' in menu
 assert 'float right = Mathf.Max(0f, Screen.width - video.xMax);' in menu
-assert 'UiKit.Tex("UI/menu_side_borders")' in menu
-assert (ROOT / "Assets/_Project/Resources/UI/menu_side_borders.jpg").is_file()
+assert 'UiKit.Tex("UI/Kit/ui_sidepanel")' in menu
+assert 'UiKit.Tex("UI/menu_side_borders")' not in menu, "Do not restore blurry JPEG borders"
+assert (ROOT / "Assets/_Project/Resources/UI/Kit/ui_sidepanel.png").is_file()
 assert 'float k = vr.width / CW;' in menu
 assert 'VisualIdentity.KitButton(r, label, true, red)' not in menu
 # Result buttons stay ahead of vignette and use intact art, rather than
