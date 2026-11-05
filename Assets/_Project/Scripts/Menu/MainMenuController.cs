@@ -276,6 +276,46 @@ namespace BladePath
         static readonly Rect TravellerStart = SelRect(573f, 698f, 945f, 778f);
         static readonly Rect TravellerBack = SelRect(988f, 698f, 1310f, 775f);
 
+        // A translucent, feathered ring cools the pre-painted halo without
+        // hiding the difficulty illustration. Generated once, reused per repaint.
+        // Baked highlight remains visible only when difficulty 0 is selected.
+        static Texture2D difficultyHaloNeutralizer;
+        static Texture2D DifficultyHaloNeutralizer()
+        {
+            if (difficultyHaloNeutralizer != null) return difficultyHaloNeutralizer;
+            const int w = 224, h = 320;
+            const float marginX = 46f, marginY = 58f;
+            const float cardW = 340f, cardH = 498f;
+            float regionW = cardW + marginX * 2f, regionH = cardH + marginY * 2f;
+            Texture2D texture = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            texture.wrapMode = TextureWrapMode.Clamp;
+            texture.filterMode = FilterMode.Bilinear;
+            Color32[] pixels = new Color32[w * h];
+            for (int y = 0; y < h; y++)
+                for (int x = 0; x < w; x++)
+                {
+                    float px = (x + 0.5f) / w * regionW - marginX;
+                    float py = (y + 0.5f) / h * regionH - marginY;
+                    float dx = Mathf.Max(Mathf.Max(-px, px - cardW), 0f);
+                    float dy = Mathf.Max(Mathf.Max(-py, py - cardH), 0f);
+                    float outside = Mathf.Sqrt(dx * dx + dy * dy);
+                    bool inside = px >= 0f && px <= cardW && py >= 0f && py <= cardH;
+                    float inner = inside ? Mathf.Min(Mathf.Min(px, cardW - px),
+                        Mathf.Min(py, cardH - py)) : 0f;
+                    float edgeFade = inside
+                        ? 1f - Mathf.SmoothStep(0f, 32f, inner)
+                        : 1f - Mathf.SmoothStep(4f, 56f, outside);
+                    float alpha = Mathf.Clamp01(edgeFade) * 0.67f;
+                    // Cool dark violet cancels the fixed warm gold bloom.
+                    pixels[y * w + x] = new Color(17f / 255f,
+                        13f / 255f, 33f / 255f, alpha);
+                }
+            texture.SetPixels32(pixels);
+            texture.Apply(false, true);
+            difficultyHaloNeutralizer = texture;
+            return texture;
+        }
+
         void DrawJourneySelection()
         {
             bool difficulty = newJourneyStep == 1;
@@ -292,16 +332,35 @@ namespace BladePath
             Rect[] cards = difficulty ? RedesignDifficultyCards : TravellerCards;
             int chosen = difficulty ? chosenDifficulty : chosenHero;
             Texture2D glow = UiKit.Tex("UI/selection/card_glow");
+
+            // The approved difficulty illustration has a gold halo BAKED around
+            // the first card. When another card is selected, neutralize only
+            // that fixed halo; otherwise it misleadingly stays on "ЛЕГКО".
+            if (difficulty && chosen != 0)
+            {
+                Texture2D neutralizer = DifficultyHaloNeutralizer();
+                Rect first = cards[0];
+                float marginX = 46f, marginY = 58f;
+                Rect haloArea = new Rect(ox + (first.x - marginX) * s,
+                    oy + (first.y - marginY) * s,
+                    (first.width + 2f * marginX) * s,
+                    (first.height + 2f * marginY) * s);
+                GUI.DrawTexture(haloArea, neutralizer, ScaleMode.StretchToFill, true);
+            }
+
             for (int i = 0; i < cards.Length; i++)
             {
                 Rect r = new Rect(ox + cards[i].x * s, oy + cards[i].y * s, cards[i].width * s, cards[i].height * s);
-                // This new painting has its own selected-card illumination.
-                if (!difficulty && i == chosen && glow != null)
+                // One active halo following the ACTUAL selected card, for both
+                // difficulty and hero selection. No fixed underlines / extra buttons.
+                if (i == chosen && glow != null)
                 {
-                    float pad = r.width * 0.09f;   // card_glow.png нарисован с таким же полем вокруг карточки
+                    float pad = r.width * 0.09f;
                     Color prev = GUI.color;
-                    GUI.color = new Color(1f, 1f, 1f, 0.85f + 0.15f * Mathf.Sin(Time.unscaledTime * 3f));
-                    GUI.DrawTexture(new Rect(r.x - pad, r.y - pad, r.width + pad * 2f, r.height + pad * 2f), glow);
+                    float pulse = 0.88f + 0.12f * Mathf.Sin(Time.unscaledTime * 3f);
+                    GUI.color = new Color(1f, 1f, 1f, pulse);
+                    GUI.DrawTexture(new Rect(r.x - pad, r.y - pad,
+                        r.width + pad * 2f, r.height + pad * 2f), glow);
                     GUI.color = prev;
                 }
                 if (GUI.Button(r, GUIContent.none, GUIStyle.none))
@@ -309,16 +368,6 @@ namespace BladePath
                     if (difficulty) chosenDifficulty = i;
                     else chosenHero = i;
                     Haptics.Pulse(12);
-                }
-                if (difficulty && chosen == i)
-                {
-                    // Minimal dynamic cue; no second rectangular frame over art.
-                    float underlineWidth = r.width * 0.46f;
-                    Color previous = GUI.color;
-                    GUI.color = new Color(1f, 0.8f, 0.38f, 0.92f);
-                    GUI.DrawTexture(new Rect(r.center.x - underlineWidth * 0.5f,
-                        r.yMax + 2f * s, underlineWidth, Mathf.Max(2f, 3f * s)), Texture2D.whiteTexture);
-                    GUI.color = previous;
                 }
             }
 
