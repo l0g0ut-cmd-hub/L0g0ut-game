@@ -341,3 +341,11 @@
 - Scope restricted to introductory round numbers (1, 2, 3...): reuse original `UI/brush_digits_white.png` atlas already committed to Resources, with the exact same brush glyph UV 4×3 and existing size/position. `UiKit.BrushNumber` gains optional `bright` parameter to paint warm-white/ivory glyphs and offset soft black shadow; old call behavior remains unchanged. `DuelHud` enables bright mode only for introduction, using legible ivory font fallback if the art fails to load. Red `UI/enso.png`, round title, portraits, health/KI bars, all backgrounds and other UI remain unchanged.
 - Regression guard in `tools/validate_visual_runtime.py` verifies white atlas selection, shadow, visual fallback and presence of the existing PNG. Device screenshot acceptance required; CI verifies code/test consistency only.
 - Release policy: Android №418 (`apk-build` SHA `83cd525e936fb90674a0a8458ba0e6a8a98d35cf`) was in progress when this change was prepared. Do not start next APK concurrently; wait for completion and successful final dev SHA Preflight. User has not explicitly requested a next build in this turn, so do not trigger without instruction.
+
+
+## BP-041 — Round-intro caption stays inside its backing (2026-11-05)
+
+- User screenshot shows `ПУТЬ 1 / 4 · ПОВЕРЖЕННЫЙ` and the opponent subtitle/weather extending outside the too-narrow black brush background.
+- Scoped fix in `DuelHud.cs`: replace narrow brush-stroke backing with a centered translucent dark rectangular caption panel (780 virtual units wide, 94/118 high according to extra lives), thin restrained gold top/bottom strokes, and centered caption text constrained to a 730-unit interior width. The original opponent full-body art, red ensō, white round numerals, HP/KI bars, scene/background and gameplay logic are untouched.
+- `tools/validate_visual_runtime.py` checks backing width, vertical variants, text inset, and absence of the old narrow brush-stroke backing. Requires an actual device screenshot to visually accept.
+- This change is on `bladepath-development` only; do not disturb in-progress Android APK №418 or trigger another build until explicitly requested and release gates pass.
