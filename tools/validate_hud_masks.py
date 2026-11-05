@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Verify authored HUD mask geometry (no Pillow/Unity dependency).
+"""Validate authored HP tip sprites and KI masks without Pillow or Unity.
 
-The masks are full-size RGBA-compatible grayscale+alpha PNG resources.
-They must line up 1:1 with hud_hp_l.png and hud_ki.png; the pointed tips
-MUST NOT be cut off at the old rectangular window endpoints.
+The two HP end shapes are baked; the straight center is calculated by code.
+The original gold frame art is never modified.
 """
 from pathlib import Path
 import struct
@@ -13,51 +12,59 @@ ROOT = Path(__file__).resolve().parents[1]
 KIT = ROOT / "Assets/_Project/Resources/UI/Kit"
 
 
-def read_mask(name, expected):
+def read_alpha(name, expected, mode):
     data = (KIT / name).read_bytes()
     assert data[:8] == b"\x89PNG\r\n\x1a\n", name
-    w, h = struct.unpack_from(">II", data, 16)
-    assert (w, h) == expected, (name, w, h)
-    assert data[24:26] == bytes((8, 4)), f"{name}: 8-bit gray+alpha expected"
+    width, height = struct.unpack_from(">II", data, 16)
+    assert (width, height) == expected, (name, width, height)
+    assert data[24] == 8 and data[25] == mode, (name, "PNG bit depth/color type")
     pos = 8
     stream = bytearray()
+    transparency = None
     while pos < len(data):
         n = struct.unpack_from(">I", data, pos)[0]
         kind = data[pos + 4:pos + 8]
         chunk = data[pos + 8:pos + 8 + n]
-        check = struct.unpack_from(">I", data, pos + 8 + n)[0]
-        assert zlib.crc32(kind + chunk) == check, (name, "PNG CRC", kind)
+        crc = struct.unpack_from(">I", data, pos + 8 + n)[0]
+        assert zlib.crc32(kind + chunk) == crc, (name, "PNG CRC", kind)
+        if kind == b"tRNS":
+            transparency = chunk
         if kind == b"IDAT":
             stream.extend(chunk)
-        pos += 12 + n
+        pos += n + 12
         if kind == b"IEND":
             break
     raw = zlib.decompress(stream)
-    stride = w * 2 + 1
-    assert len(raw) == h * stride, (name, len(raw))
-    assert all(raw[y * stride] == 0 for y in range(h)), "unexpected PNG row filter"
-    return lambda x, y: raw[y * stride + 1 + x * 2 + 1]
-
-
-def check(name, size, middle, tip, outside):
-    alpha = read_mask(name, size)
-    assert alpha(*middle) == 255, (name, "interior is not opaque")
-    assert alpha(*tip) > 140, (name, "ornate tip unfilled", tip, alpha(*tip))
-    for xy in outside:
-        assert alpha(*xy) == 0, (name, "leaks outside gold frame", xy)
-    print(f"HUD MASK OK {name}: {size[0]}x{size[1]}, interior & tip coverage")
+    channels = 1 if mode == 3 else 2
+    stride = width * channels + 1
+    assert len(raw) == height * stride, (name, "decompressed length")
+    assert all(raw[y * stride] == 0 for y in range(height)), "unexpected row filter"
+    if mode == 3:
+        assert transparency is not None and len(transparency) == 256
+        return lambda x, y: transparency[raw[y * stride + x + 1]]
+    return lambda x, y: raw[y * stride + 1 + 2 * x + 1]
 
 
 def main():
-    check("hud_hp_mask.png", (578, 160), (300, 75), (548, 69),
-          [(300, 35), (300, 125), (570, 70), (20, 75)])
-    check("hud_ki_mask.png", (467, 76), (220, 35), (447, 27),
-          [(220, 6), (220, 66), (460, 23), (5, 35)])
+    cap = read_alpha("hud_hp_caps.png", (578, 160), 3)
+    for xy in ((112, 79), (141, 79), (501, 79), (533, 75), (540, 74), (554, 68)):
+        assert cap(*xy) > 0, ("HP tapered end missing", xy, cap(*xy))
+    for xy in ((300, 76), (0, 79), (575, 79), (110, 20), (533, 120)):
+        assert cap(*xy) == 0, ("HP cap leaks outside authored tips", xy)
+    ki = read_alpha("hud_ki_mask.png", (467, 76), 4)
+    assert ki(220, 35) == 255, "KI center missing"
+    assert ki(447, 27) > 140, "KI tip missing"
+    for xy in ((220, 6), (220, 66), (460, 23), (5, 35)):
+        assert ki(*xy) == 0, ("KI leaks outside frame", xy)
     hud = (ROOT / "Assets/_Project/Scripts/Game/DuelHud.cs").read_text()
-    assert "DrawArtMaskFill" in hud and "FrameRect(r, frame, win, mirror)" in hud
-    assert 'UI/Kit/hud_hp_mask' in hud and 'UI/Kit/hud_ki_mask' in hud
-    assert "MakeFrameFillMask(" not in hud and "HpFillArea" not in hud
-    print("HUD mask artwork/geometry contract OK")
+    assert 'UI/Kit/hud_hp_caps' in hud and 'UI/Kit/hud_ki_mask' in hud
+    assert "DrawHpSegmentedFill" in hud and "DrawArtMaskFill" in hud
+    assert "GUI.DrawTexture(mid, Texture2D.whiteTexture)" in hud
+    assert "const float leftSource = 94f, rightSource = 567f" in hud
+    assert "const float midX0 = 140f, midX1 = 494f" in hud
+    assert "MakeFrameFillMask(" not in hud
+    assert not (KIT / "hud_hp_states.png").exists(), "101-frame atlas still in project"
+    print("HUD MASK OK: manually authored HP tips and calculated middle; KI unchanged")
 
 
 if __name__ == "__main__":
