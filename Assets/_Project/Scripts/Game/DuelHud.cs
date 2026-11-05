@@ -919,6 +919,57 @@ namespace BladePath
             GUI.EndGroup();
         }
 
+        // HP uses two manually authored tapered ends and a constant-height
+        // middle. Only the progress window is computed at runtime. Both tips
+        // and the middle share the ORIGINAL gold-frame texture coordinates;
+        // no scanline detection, rectangular cap pixels or 101-frame atlas.
+        static void DrawHpSegmentedFill(Rect r, Texture2D frame, Rect win,
+            Texture2D tips, float fraction, bool mirror, Color color,
+            float y0 = 0f, float y1 = 1f)
+        {
+            if (frame == null || tips == null || fraction <= 0f
+                || frame.width != 578 || frame.height != 160
+                || tips.width != frame.width || tips.height != frame.height)
+                return;
+            Rect fr = FrameRect(r, frame, win, mirror);
+            // Source-frame coordinates: 94..567 includes BOTH sword-shaped
+            // ends, unlike the old 101..553 rectangular channel.
+            const float leftSource = 94f, rightSource = 567f;
+            const float topSource = 54f, bottomSource = 99f;
+            float from = mirror ? 1f - rightSource / frame.width : leftSource / frame.width;
+            float to = mirror ? 1f - leftSource / frame.width : rightSource / frame.width;
+            float left = fr.x + fr.width * from;
+            float right = fr.x + fr.width * to;
+            float width = (right - left) * Mathf.Clamp01(fraction);
+            float start = mirror ? left : right - width;
+            float clipTop = fr.y + fr.height * Mathf.Lerp(topSource, bottomSource, Mathf.Clamp01(y0)) / frame.height;
+            float clipBottom = fr.y + fr.height * Mathf.Lerp(topSource, bottomSource, Mathf.Clamp01(y1)) / frame.height;
+            if (width <= 0.001f || clipBottom <= clipTop) return;
+
+            GUI.BeginGroup(new Rect(start, clipTop, width, clipBottom - clipTop));
+            Color oldColor = GUI.color;
+            GUI.color = color;
+
+            // Straight inner channel (source x 140..494, y 55..98).
+            // The authored cap sprites overlap this middle so there is no
+            // join seam or straight vertical edge at either full-health tip.
+            const float midX0 = 140f, midX1 = 494f, midY0 = 55f, midY1 = 98f;
+            float midLeft = fr.x + (mirror ? 1f - midX1 / frame.width : midX0 / frame.width) * fr.width;
+            float midRight = fr.x + (mirror ? 1f - midX0 / frame.width : midX1 / frame.width) * fr.width;
+            Rect mid = new Rect(midLeft - start,
+                fr.y + midY0 / frame.height * fr.height - clipTop,
+                midRight - midLeft, (midY1 - midY0) / frame.height * fr.height);
+            GUI.DrawTexture(mid, Texture2D.whiteTexture);
+
+            // Baked antialiased left and right end shapes (white + alpha).
+            GUI.DrawTextureWithTexCoords(
+                new Rect(fr.x - start, fr.y - clipTop, fr.width, fr.height),
+                tips, mirror ? new Rect(1f, 0f, -1f, 1f)
+                             : new Rect(0f, 0f, 1f, 1f));
+            GUI.color = oldColor;
+            GUI.EndGroup();
+        }
+
         /// <summary>Рамка-текстура вокруг прямоугольника заливки r (окно win в долях текстуры). Для правой полоски — зеркально.</summary>
         static void DrawFrame(Rect r, Texture2D t, Rect win, bool mirror)
         {
@@ -940,18 +991,18 @@ namespace BladePath
                 UiKit.Rect(new Rect(r.x - 3f, r.y - 3f, r.width + 6f, r.height + 6f), Frame);
                 UiKit.Rect(new Rect(r.x - 1f, r.y - 1f, r.width + 2f, r.height + 2f), new Color(0.55f, 0.43f, 0.22f, 0.9f));
             }
-            // Authored mask is aligned pixel-for-pixel with the original gold art.
-            Texture2D mask = UiKit.Tex("UI/Kit/hud_hp_mask");
-            DrawArtMaskFill(r, frame, hpWin, mask, HpMaskChannel, 1f, mirror,
+            // White cap alpha + mathematical middle; the gold art is unchanged.
+            Texture2D tips = UiKit.Tex("UI/Kit/hud_hp_caps");
+            DrawHpSegmentedFill(r, frame, hpWin, tips, 1f, mirror,
                 new Color(0.05f, 0.01f, 0.01f, 1f));
-            DrawArtMaskFill(r, frame, hpWin, mask, HpMaskChannel, tr, mirror,
+            DrawHpSegmentedFill(r, frame, hpWin, tips, tr, mirror,
                 new Color(0.95f, 0.75f, 0.3f, 0.95f));
             Color main = hp > 0.3f ? new Color(0.72f, 0.07f, 0.08f) : new Color(0.95f, 0.16f, 0.08f);
             if (since < 0.12f) main = Color.white;
-            DrawArtMaskFill(r, frame, hpWin, mask, HpMaskChannel, hp, mirror, main);
-            DrawArtMaskFill(r, frame, hpWin, mask, HpMaskChannel, hp, mirror,
+            DrawHpSegmentedFill(r, frame, hpWin, tips, hp, mirror, main);
+            DrawHpSegmentedFill(r, frame, hpWin, tips, hp, mirror,
                 new Color(1f, 0.6f, 0.55f, 0.18f), 0f, 0.4f);
-            DrawArtMaskFill(r, frame, hpWin, mask, HpMaskChannel, hp, mirror,
+            DrawHpSegmentedFill(r, frame, hpWin, tips, hp, mirror,
                 new Color(0f, 0f, 0f, 0.25f), 0.7f, 1f);
             DrawFrame(r, frame, hpWin, mirror);
 
