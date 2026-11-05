@@ -63,6 +63,8 @@ jobs:
         run: |
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost
           sudo docker image prune --all --force || true
+      - name: Install screenshot validator
+        run: python3 -m pip install --user 'Pillow>=10,<13'
       - name: Cache Unity Library
         uses: actions/cache@v4
         with:
@@ -84,7 +86,7 @@ jobs:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         run: |
-          set -o pipefail
+          set +e
           game-ci build . \
             --engine unity \
             --engine-version "$UNITY_VERSION" \
@@ -93,6 +95,12 @@ jobs:
             --versioning-strategy None \
             --manual-exit \
             --build-method BladePath.EditorTools.VisualQARunner.Run 2>&1 | tee "$RUNNER_TEMP/visual-qa.log"
+          tool_status=${PIPESTATUS[0]}
+          set -e
+          echo "GameCI status=$tool_status (no APK expected from screenshot-only Play Mode)"
+          grep -q "END screenshots=10 failures=0" build/visual-runtime/status.txt
+          if grep -q "^FAIL:" build/visual-runtime/status.txt; then cat build/visual-runtime/status.txt; exit 1; fi
+          python3 tools/validate_runtime_shots.py build/visual-runtime
       - name: Save real Unity screenshots even if rendering failed
         if: always()
         uses: actions/upload-artifact@v4
