@@ -148,34 +148,36 @@ namespace BladePath
         }
 
         /// <summary>
-        /// Side-only ornamental masks sourced from the approved menu mockup.
-        /// No top/bottom edging and no pixels drawn over the video rectangle.
-        /// Image contains the left ornament in UV 0..0.5 and the right one in 0.5..1.
+        /// High-resolution carved lacquer/gold side ornaments only in the
+        /// existing letterbox bars. The previous 2-KB JPEG was blown up to
+        /// screen height and visibly blurred. Reuse the original high-resolution
+        /// 339x698 painted kit frame instead, sampling its vertical edge panels.
+        /// The video, menu artwork and click coordinates are never modified.
         /// </summary>
         static void DrawSideBorders(Rect video)
         {
             float left = Mathf.Max(0f, video.x);
             float right = Mathf.Max(0f, Screen.width - video.xMax);
             if (left < 1f && right < 1f) return;
-            Texture2D sides = UiKit.Tex("UI/menu_side_borders");
-            if (sides == null) return;
+            Texture2D detailedFrame = UiKit.Tex("UI/Kit/ui_sidepanel");
+            if (detailedFrame == null) return;
 
             Color previous = GUI.color;
             GUI.color = Color.white;
             if (left >= 1f)
             {
                 GUI.DrawTextureWithTexCoords(new Rect(0f, 0f, left, Screen.height),
-                    sides, new Rect(0f, 0f, 0.5f, 1f));
-                // Crisp inner lacquer/gold inlay, matching the approved frame.
-                GUI.color = new Color(0.69f, 0.43f, 0.17f, 0.88f);
+                    detailedFrame, new Rect(0f, 0.06f, 0.32f, 0.88f));
+                // A native-resolution gold inner seam remains sharp on Android.
+                GUI.color = new Color(0.79f, 0.52f, 0.24f, 0.95f);
                 GUI.DrawTexture(new Rect(Mathf.Max(0f, left - 2f), 0f, 2f, Screen.height), Texture2D.whiteTexture);
                 GUI.color = Color.white;
             }
             if (right >= 1f)
             {
                 GUI.DrawTextureWithTexCoords(new Rect(video.xMax, 0f, right, Screen.height),
-                    sides, new Rect(0.5f, 0f, 0.5f, 1f));
-                GUI.color = new Color(0.69f, 0.43f, 0.17f, 0.88f);
+                    detailedFrame, new Rect(0.68f, 0.06f, 0.32f, 0.88f));
+                GUI.color = new Color(0.79f, 0.52f, 0.24f, 0.95f);
                 GUI.DrawTexture(new Rect(video.xMax, 0f, 2f, Screen.height), Texture2D.whiteTexture);
             }
             GUI.color = previous;
