@@ -287,3 +287,14 @@
 
 
 | 2026-11-05 — BP-035 / Android №414 launched | final inspected dev SHA `64bffcf1d20a2608f5b5e582d7d6a6b116c92a1f`, Preflight №233 run `41987875946` **success** | `apk-build` advanced exactly ONCE from №413 SHA `2f6d49523e52173d73a124c8156a2413ea933455`. GitHub Actions Android build **№414** ID `41987980236` actually started **in_progress** at SHA `64bffcf1d20a2608f5b5e582d7d6a6b116c92a1f`. | Await Unity outcome and **device screenshot**, verify left/right HP (0/10/50/90/100) and no decorative gold bleed; do not claim visual fix accepted until checked. |
+
+
+## BP-036 — Restore HP visibility after Android №414 (2026-11-05)
+
+- **User Android screenshot confirms P0 regression:** Android №414 (SHA `64bffcf1d20a2608f5b5e582d7d6a6b116c92a1f`) renders both HP channels completely empty, though gold frames and Ki channels are visible. Do not state that №414 is repaired.
+- **Code fix commit `8e35bcdb920104495e1f78a79a321dfc0dc646b3`:** `DuelHud.cs/DrawHpSegmentedFill` no longer returns early when `tips` is missing, resized by Unity or disagrees in dimensions with imported frame. The calculated middle now always draws when health fraction is positive; tips are optional and drawn only if present. Pixel coordinates use original authored HP sprite size 578×160 instead of runtime imported dimensions, preventing Android NPOT/import resizing from shifting/clipping HP. If frame art itself is unavailable, draw a visible rectangular fallback. **No changes to Ki bar and background textures.**
+- **Asset fix `55ab81312b2acfb37192f18f1cd0f712653a6758`:** re-encoded `UI/Kit/hud_hp_caps.png` as standard 8-bit RGBA PNG with alpha (same exact original 578×160 dimensions, same cap shapes), replacing indexed palette/tRNS PNG that may be incompatible with Android import.
+- **Regression gate `3a60c4e571c5be6a2914670ed42e0894109ca03a`:** `tools/validate_hud_masks.py` supports and validates RGBA alpha, checks both cap tips and that the HP renderer always draws the middle even if cap asset is absent. This prevents the exact early-return regression from passing Preflight again.
+- **Scope:** no changes to original gold frames `hud_hp_l.png`, existing Ki PNG/mask, other UI, combat gameplay, backgrounds, or videos. Intended next Android APK №415 only after final SHA passes Preflight and no Android APK is running. Visual acceptance **must** check HP both left/right, full and partial, on device; Preflight itself is not a visual sign-off.
+
+| 2026-11-05 — BP-036 | source `8e35bcdb`, RGBA cap art `55ab8131`, new regression test `3a60c4e5` | HP center always visible with optional authored endcaps, resilient to Unity Android texture sizing | Require final preflight, exactly one №415 Android build and phone screenshot before claiming final fix. |
