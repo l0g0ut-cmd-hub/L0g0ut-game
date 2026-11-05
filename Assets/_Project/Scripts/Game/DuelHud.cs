@@ -727,14 +727,14 @@ namespace BladePath
             Rect kiWin = KiWinKit;
             if (kf == null) { kf = UiKit.Tex("UI/bar_ki"); kiWin = KiWin; }
             if (kf == null) UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), Frame);
-            Texture2D mask = UiKit.Tex("UI/Kit/hud_ki_mask");
+            Texture2D tips = UiKit.Tex("UI/Kit/hud_ki_caps");
             float k = f.Ki01;
             bool full = f.CanEnergy;
             Color c = full ? new Color(0.35f, 0.85f, 1f, 1f) : new Color(0.4f, 0.65f, 1f, 1f);
             if (full) c = Color.Lerp(c, Color.white, 0.25f + 0.25f * Mathf.Sin(Time.unscaledTime * 6f));
-            DrawArtMaskFill(r, kf, kiWin, mask, KiMaskChannel, 1f, mirror,
+            DrawKiSegmentedFill(r, kf, kiWin, tips, 1f, mirror,
                 new Color(0.02f, 0.02f, 0.03f, 1f));
-            DrawArtMaskFill(r, kf, kiWin, mask, KiMaskChannel, k, mirror, c);
+            DrawKiSegmentedFill(r, kf, kiWin, tips, k, mirror, c);
             // отметка стоимости шара
             float m = r.width * (f.energyCost / Mathf.Max(1f, f.kiMax));
             UiKit.Rect(new Rect(mirror ? r.x + m : r.xMax - m, r.y + 1f, 1.5f, Mathf.Max(0f, r.height - 2f)), new Color(1f, 1f, 1f, 0.6f));
@@ -874,12 +874,8 @@ namespace BladePath
         static readonly Rect KiWinKit = new Rect(34f / 467f, 14f / 76f, 387f / 467f, 45f / 76f);
         static readonly Rect HpWin = new Rect(42f / 476f, 19f / 53f, 398f / 476f, 15f / 53f);
         static readonly Rect KiWin = new Rect(38f / 422f, 17f / 47f, 361f / 422f, 13f / 47f);
-        // Authored alpha masks have EXACTLY the same dimensions as their
-        // ornate frame PNGs. Bounds describe the intended progress channel
-        // *in those source pixels*, including the pointed tip. Unlike previous
-        // attempts, mask and frame use the SAME full-frame drawing rect.
-        static readonly Rect HpMaskChannel = new Rect(101f, 54f, 452f, 44f);
-        static readonly Rect KiMaskChannel = new Rect(44f, 19f, 409f, 34f);
+        // Both HP and KI use authored tip alpha with a calculated straight center.
+        // Gold frames still use their original full-source UVs.
 
         static Rect FrameRect(Rect r, Texture2D frame, Rect win, bool mirror)
         {
@@ -888,33 +884,58 @@ namespace BladePath
             return new Rect(fx, r.y - win.y * fh, fw, fh);
         }
 
-        // The mask is rendered in precisely the same frame rect / UV as the
-        // gold art. Only the visible part is clipped for current progress.
-        // The mirror mirrors BOTH the frame and the mask (not just the bar
-        // bounds). No color-based scanning, no approximate tapered fill.
-        static void DrawArtMaskFill(Rect r, Texture2D frame, Rect win,
-            Texture2D mask, Rect sourceChannel, float fraction, bool mirror,
-            Color color, float y0 = 0f, float y1 = 1f)
+        // Same proven HP approach: KI's manually authored two pointed ends
+        // plus an always-visible computed straight middle. The caps carry
+        // exactly the alpha contour from the previously accepted KI mask.
+        // Use original sprite dimensions; Android import may resize textures.
+        static void DrawKiSegmentedFill(Rect r, Texture2D frame, Rect win,
+            Texture2D tips, float fraction, bool mirror, Color color)
         {
-            if (frame == null || mask == null || fraction <= 0f ||
-                mask.width != frame.width || mask.height != frame.height) return;
+            if (fraction <= 0f) return;
+            if (frame == null)
+            {
+                float w = r.width * Mathf.Clamp01(fraction);
+                if (w <= 0.001f) return;
+                UiKit.Rect(new Rect(mirror ? r.x : r.xMax - w,
+                    r.y, w, r.height), color);
+                return;
+            }
             Rect fr = FrameRect(r, frame, win, mirror);
-            float from = mirror ? 1f - sourceChannel.xMax / frame.width : sourceChannel.xMin / frame.width;
-            float to = mirror ? 1f - sourceChannel.xMin / frame.width : sourceChannel.xMax / frame.width;
-            float left = fr.x + fr.width * from, right = fr.x + fr.width * to;
+            const float authoredWidth = 467f, authoredHeight = 76f;
+            const float leftSource = 43f, rightSource = 453f;
+            const float topSource = 19f, bottomSource = 53f;
+            float from = mirror ? 1f - rightSource / authoredWidth : leftSource / authoredWidth;
+            float to = mirror ? 1f - leftSource / authoredWidth : rightSource / authoredWidth;
+            float left = fr.x + fr.width * from;
+            float right = fr.x + fr.width * to;
             float width = (right - left) * Mathf.Clamp01(fraction);
-            if (width < 0.01f) return;
-            float clipX = mirror ? left : right - width;
-            float clipTop = fr.y + fr.height * (sourceChannel.yMin + sourceChannel.height * Mathf.Clamp01(y0)) / frame.height;
-            float clipBottom = fr.y + fr.height * (sourceChannel.yMin + sourceChannel.height * Mathf.Clamp01(y1)) / frame.height;
-            if (clipBottom <= clipTop) return;
+            float start = mirror ? left : right - width;
+            float clipTop = fr.y + fr.height * topSource / authoredHeight;
+            float clipBottom = fr.y + fr.height * bottomSource / authoredHeight;
+            if (width <= 0.001f || clipBottom <= clipTop) return;
 
-            GUI.BeginGroup(new Rect(clipX, clipTop, width, clipBottom - clipTop));
+            GUI.BeginGroup(new Rect(start, clipTop, width, clipBottom - clipTop));
             Color oldColor = GUI.color;
             GUI.color = color;
-            GUI.DrawTextureWithTexCoords(
-                new Rect(fr.x - clipX, fr.y - clipTop, fr.width, fr.height),
-                mask, mirror ? new Rect(1f, 0f, -1f, 1f) : new Rect(0f, 0f, 1f, 1f));
+
+            // Source center is flat at alpha=255. Overlap the authored
+            // corners, so neither side has a visible vertical splice.
+            const float midX0 = 83f, midX1 = 384f, midY0 = 21f, midY1 = 51f;
+            float midLeft = fr.x + (mirror ? 1f - midX1 / authoredWidth : midX0 / authoredWidth) * fr.width;
+            float midRight = fr.x + (mirror ? 1f - midX0 / authoredWidth : midX1 / authoredWidth) * fr.width;
+            Rect mid = new Rect(midLeft - start,
+                fr.y + midY0 / authoredHeight * fr.height - clipTop,
+                midRight - midLeft, (midY1 - midY0) / authoredHeight * fr.height);
+            GUI.DrawTexture(mid, Texture2D.whiteTexture);
+
+            // Never hide the middle if Android does not import the endcaps.
+            if (tips != null)
+            {
+                GUI.DrawTextureWithTexCoords(
+                    new Rect(fr.x - start, fr.y - clipTop, fr.width, fr.height),
+                    tips, mirror ? new Rect(1f, 0f, -1f, 1f)
+                                 : new Rect(0f, 0f, 1f, 1f));
+            }
             GUI.color = oldColor;
             GUI.EndGroup();
         }

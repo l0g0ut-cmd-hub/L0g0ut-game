@@ -51,23 +51,27 @@ def main():
         assert cap(*xy) > 0, ("HP tapered end missing", xy, cap(*xy))
     for xy in ((300, 76), (0, 79), (575, 79), (110, 20), (533, 120)):
         assert cap(*xy) == 0, ("HP cap leaks outside authored tips", xy)
-    ki = read_alpha("hud_ki_mask.png", (467, 76), 4)
-    assert ki(220, 35) == 255, "KI center missing"
-    assert ki(447, 27) > 140, "KI tip missing"
-    for xy in ((220, 6), (220, 66), (460, 23), (5, 35)):
-        assert ki(*xy) == 0, ("KI leaks outside frame", xy)
+    ki = read_alpha("hud_ki_caps.png", (467, 76), 6)
+    for xy in ((50, 35), (82, 35), (99, 35), (385, 35), (401, 35), (425, 35), (447, 27)):
+        assert ki(*xy) > 0, ("KI endcap missing", xy)
+    for xy in ((220, 35), (0, 35), (460, 35), (220, 6), (220, 66)):
+        assert ki(*xy) == 0, ("KI endcaps leak into center/outside frame", xy)
     hud = (ROOT / "Assets/_Project/Scripts/Game/DuelHud.cs").read_text()
-    assert 'UI/Kit/hud_hp_caps' in hud and 'UI/Kit/hud_ki_mask' in hud
-    assert "DrawHpSegmentedFill" in hud and "DrawArtMaskFill" in hud
+    assert 'UI/Kit/hud_hp_caps' in hud and 'UI/Kit/hud_ki_caps' in hud
+    assert "DrawHpSegmentedFill" in hud and "DrawKiSegmentedFill" in hud
+    assert "DrawArtMaskFill(" not in hud and "KiMaskChannel" not in hud
     assert "GUI.DrawTexture(mid, Texture2D.whiteTexture)" in hud
-    assert "if (tips != null)" in hud, "HP must render even without caps"
+    assert hud.count("if (tips != null)") >= 2, "HP and KI must render with missing caps"
     assert "const float authoredWidth = 578f, authoredHeight = 160f" in hud
-    assert "tips == null ||" not in hud, "fatal cap guard must not disable HP"
+    assert "tips == null ||" not in hud, "fatal cap guard must not disable HP or KI"
+    assert "const float authoredWidth = 467f, authoredHeight = 76f" in hud
+    assert "const float midX0 = 83f, midX1 = 384f" in hud
     assert "const float leftSource = 94f, rightSource = 567f" in hud
     assert "const float midX0 = 140f, midX1 = 494f" in hud
     assert "MakeFrameFillMask(" not in hud
     assert not (KIT / "hud_hp_states.png").exists(), "101-frame atlas still in project"
-    print("HUD MASK OK: manually authored HP tips and calculated middle; KI unchanged")
+    assert not (KIT / "hud_ki_mask.png").exists(), "obsolete KI full mask still in project"
+    print("HUD MASK OK: authored HP and KI tips, calculated middles, safe fallback")
 
 
 if __name__ == "__main__":

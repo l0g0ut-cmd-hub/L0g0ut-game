@@ -301,3 +301,12 @@
 
 
 | 2026-11-05 — BP-036 / Android №415 started | verified game release SHA `0d9ea7cf47f61949d29879053859ffe9cc8dde83`; Preflight №238 run `41995932153` **success** including RGBA alpha / HP fallback tests | `apk-build` advanced ONCE from №414 SHA `64bffcf1d20a2608f5b5e582d7d6a6b116c92a1f` to this SHA. GitHub Actions real Android build №415 run `41996078972`, initially **in_progress** with matching SHA. | Confirm Unity APK result, then inspect screenshots on Android: HP must visibly fill on both sides at 100% and 50%; missing tips must never blank whole HP. Do not claim visual fix without device validation. |
+
+
+## BP-037 — KI/дух authored tip caps + calculated center (2026-11-05)
+
+- User visually accepted HP from Android №415 and instructed matching KI implementation without modifying HP. **KI** now uses separate manually authored left/right antialiased endcap PNGs with a mathematical flat center, using original pixel coordinates in the same gold frame UV and shared progress clipping.
+- Add `Assets/_Project/Resources/UI/Kit/hud_ki_caps.png` (467×76 standard RGBA PNG). To preserve the existing correct KI outline, cap alpha pixels were copied from the prior `hud_ki_mask.png` at x<=106 and x>=370. Midpoint is transparent in the caps; runtime draws center x83..384, y21..51. Remove old full KI mask PNG. Original gold frame and HP caps/systems remain **unchanged**.
+- `DuelHud.cs/DrawKiSegmentedFill`: KI center always draws independently of tip texture success; fallback if frame missing. Mirror and percentage match the HP approach. Original KI color, energy marker, text and combat logic unchanged. This avoids the empty-HP regression of №414.
+- Update Preflight `tools/validate_hud_masks.py`: verify 8-bit RGBA KI cap dimensions, both tips alpha, center/outside alpha clear, runtime KI draw function and fallback; retain all HP checks. No other systems changed.
+- Next release: exactly one Android APK №416 following successful final Preflight and zero active Android builds. Device compare both KI bars at full/half/low, no corner gaps or bleed; don't claim device verification from CI.
