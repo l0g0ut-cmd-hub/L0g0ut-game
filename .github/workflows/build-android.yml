@@ -201,6 +201,17 @@ jobs:
             --versioning-strategy None \
             --build-method BladePath.EditorTools.BuildScript.BuildAndroid 2>&1 | tee "$RUNNER_TEMP/emulator-build.log"
 
+      # GameCI Unity container may leave ~/.android owned by root.
+      # The emulator action must create ~/.android/avd as the runner user.
+      - name: Repair Android AVD directory permissions after GameCI
+        run: |
+          set -euo pipefail
+          sudo install -d -o "$(id -u)" -g "$(id -g)" -m 0700 "$HOME/.android"
+          sudo install -d -o "$(id -u)" -g "$(id -g)" -m 0700 "$HOME/.android/avd"
+          sudo chown -R "$(id -u):$(id -g)" "$HOME/.android"
+          test -w "$HOME/.android/avd"
+          echo "Android AVD directory writable: $HOME/.android/avd"
+
       - name: Install QA APK and capture actual 21:9 Android screenshots
         id: emulator_shots
         if: steps.emulator_apk.outcome == 'success'
@@ -242,3 +253,24 @@ jobs:
           git -c user.name=ci -c user.email=ci@local add -A
           git -c user.name=ci -c user.email=ci@local commit -qm "Android screen review $GITHUB_SHA"
           git push -q -f "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" android-ui-results
+
+      # Release APK is already uploaded above, but a missing/failed emulator
+      # verification must NOT be silently labeled green by continue-on-error.
+      - name: Enforce Android visual QA verdict (do not hide emulator errors)
+        if: always()
+        run: |
+          set -euo pipefail
+          if [ "${{ steps.emulator_apk.outcome }}" != "success" ]; then
+            echo "::error::Release APK was published, but x86_64 QA APK failed to build."
+            exit 1
+          fi
+          if [ "${{ steps.emulator_shots.outcome }}" != "success" ]; then
+            echo "::error::Release APK was published, but emulator capture failed. Inspect Android UI steps."
+            exit 1
+          fi
+          count=$(find build/android-ui -maxdepth 1 -name '*.png' -type f | wc -l)
+          if [ "$count" -ne 10 ]; then
+            echo "::error::Expected 10 real Android screenshots, got $count"
+            exit 1
+          fi
+          echo "Visual QA: 10 Android screenshots captured; verified."
