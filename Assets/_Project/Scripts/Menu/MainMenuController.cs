@@ -147,51 +147,71 @@ namespace BladePath
             return new Rect((Screen.width - w) * 0.5f, (Screen.height - h) * 0.5f, w, h);
         }
 
-        /// <summary>
-        /// New minimalist lacquered side ornament. Reuses the SHARP original
-        /// 339x698 UI-kit artwork, not the low-detail two-panel atlas. Repeating
-        /// gold trim and matching sakura are drawn ONLY in pillarbox regions.
-        /// Never changes video pixels, menu text, click coordinates, top/bottom.
-        /// </summary>
+        // BP-051: a restrained CINEMATIC side extension, not bulky battle panels.
+        // Texture is procedurally rendered once at native pillar resolution.
+        // No changes to video dimensions, video pixels or button hitboxes.
+        static Texture2D menuPillarTexture;
+        static Texture2D MenuPillarTexture()
+        {
+            if (menuPillarTexture != null) return menuPillarTexture;
+            const int width = 192, height = 1024;
+            Texture2D t = new Texture2D(width, height, TextureFormat.RGBA32, false);
+            t.wrapMode = TextureWrapMode.Clamp;
+            t.filterMode = FilterMode.Bilinear;
+            Color32[] p = new Color32[width * height];
+            for (int y = 0; y < height; y++)
+                for (int x = 0; x < width; x++)
+                {
+                    float u = (float)x / (width - 1);
+                    float v = (float)y / (height - 1);
+                    float grain = Mathf.PerlinNoise(x * 0.07f + 19f, y * 0.012f) * 0.065f;
+                    float cloud = Mathf.PerlinNoise(x * 0.017f + 51f, y * 0.004f + 13f) * 0.085f;
+                    float edge = Mathf.Pow(u, 3f) * 0.12f;
+                    float accent = Mathf.Exp(-Mathf.Pow((u - 0.975f) * 180f, 2f));
+                    float inlay = Mathf.Exp(-Mathf.Pow((u - 0.915f) * 130f, 2f));
+                    Color baseColor = new Color(0.035f + grain + cloud * 0.5f,
+                        0.031f + grain * 0.65f + cloud * 0.39f,
+                        0.061f + grain * 0.76f + cloud * 0.65f, 1f);
+                    baseColor = Color.Lerp(baseColor, new Color(0.23f, 0.11f, 0.09f), edge);
+                    baseColor = Color.Lerp(baseColor, new Color(0.67f, 0.40f, 0.19f), inlay * 0.56f);
+                    baseColor = Color.Lerp(baseColor, new Color(0.92f, 0.63f, 0.30f), accent * 0.7f);
+                    p[y * width + x] = baseColor;
+                }
+            t.SetPixels32(p);
+            t.Apply(false, true);
+            menuPillarTexture = t;
+            return t;
+        }
+
         static void DrawSideBorders(Rect video)
         {
             float left = Mathf.Max(0f, video.x);
             float right = Mathf.Max(0f, Screen.width - video.xMax);
             if (left < 1f && right < 1f) return;
-            Texture2D panel = UiKit.Tex("UI/Kit/ui_sidepanel");
+            Texture2D panel = MenuPillarTexture();
             Texture2D blossom = UiKit.Tex("UI/sakura_branch");
-            if (panel == null) return;
-            Color previous = GUI.color;
-            // Exact same full-height painting on each side, mirrored on right.
-            // UI-kit edge detailing stays sharp and the video is not overlapped.
-            if (left >= 1f)
-                DrawMenuPillar(new Rect(0f, 0f, left, Screen.height),
-                    panel, blossom, false);
-            if (right >= 1f)
-                DrawMenuPillar(new Rect(video.xMax, 0f, right, Screen.height),
-                    panel, blossom, true);
-            GUI.color = previous;
+            Color saved = GUI.color;
+            GUI.color = Color.white;
+            if (left > 0f) DrawMenuPillar(new Rect(0f, 0f, left, Screen.height), panel, blossom, false);
+            if (right > 0f) DrawMenuPillar(new Rect(video.xMax, 0f, right, Screen.height), panel, blossom, true);
+            GUI.color = saved;
         }
 
-        static void DrawMenuPillar(Rect r, Texture2D panel, Texture2D blossom, bool mirror)
+        static void DrawMenuPillar(Rect area, Texture2D panel, Texture2D blossom, bool mirror)
         {
-            if (r.width < 1f) return;
             GUI.color = Color.white;
-            GUI.DrawTextureWithTexCoords(r, panel,
+            GUI.DrawTextureWithTexCoords(area, panel,
                 mirror ? new Rect(1f, 0f, -1f, 1f) : new Rect(0f, 0f, 1f, 1f));
-            // Restrained blossom on both dark-wood panels, away from the video.
-            if (blossom != null && r.width > 30f)
+            // Sparse petals from the existing game art; never obscure the video.
+            if (blossom != null && area.width > 45f)
             {
-                float w = r.width * 0.90f, h = Mathf.Min(r.height * 0.28f, w * 1.5f);
-                GUI.color = new Color(1f, 0.71f, 0.70f, 0.25f);
-                GUI.DrawTextureWithTexCoords(new Rect(r.x + (r.width-w)*0.5f,
-                    r.y + r.height * 0.51f, w, h), blossom,
+                GUI.color = new Color(1f, 0.8f, 0.78f, 0.17f);
+                float bw = area.width * 0.78f;
+                float bh = Mathf.Min(area.height * 0.27f, bw * 2.0f);
+                GUI.DrawTextureWithTexCoords(new Rect(area.x + (area.width-bw)*0.5f,
+                    area.y + area.height*0.075f, bw, bh), blossom,
                     mirror ? new Rect(1f, 0f, -1f, 1f) : new Rect(0f, 0f, 1f, 1f));
             }
-            GUI.color = new Color(1f, 0.76f, 0.39f, 0.85f);
-            float edge = Mathf.Clamp(r.width * 0.012f, 1f, 2.5f);
-            float x = mirror ? r.x : r.xMax - edge;
-            GUI.DrawTexture(new Rect(x, r.y, edge, r.height), Texture2D.whiteTexture);
             GUI.color = Color.white;
         }
 
@@ -277,8 +297,8 @@ namespace BladePath
         const float DifficultyW = 1824f, DifficultyH = 862f;
         static readonly Rect[] RedesignDifficultyCards =
         {
-            SelRect(346f, 141f, 686f, 639f), SelRect(710f, 141f, 1056f, 639f),
-            SelRect(1080f, 141f, 1426f, 639f)
+            SelRect(355f, 149f, 704f, 654f), SelRect(735f, 149f, 1085f, 654f),
+            SelRect(1119f, 149f, 1471f, 654f)
         };
         static readonly Rect DifficultyConfirm = SelRect(424f, 682f, 910f, 778f);
         static readonly Rect DifficultyBack = SelRect(937f, 682f, 1327f, 778f);
@@ -362,27 +382,61 @@ namespace BladePath
             }
         }
 
-        // Actual card perimeter drawn just OUTSIDE the gilded edge. No ornate
-        // second frame, no interior tint and no clipping of labels/subtitles.
+        // BP-051: a single translucent ornament-shaped halo matched to the
+        // actual card edges; no second square frame, text clipping or baked glow.
+        static Texture2D difficultySelectionHalo;
+        static Texture2D DifficultySelectionHalo()
+        {
+            if (difficultySelectionHalo != null) return difficultySelectionHalo;
+            const int w=180, h=264;
+            Vector2[] path = {
+                new Vector2(0.075f,0.042f), new Vector2(0.38f,0.042f),
+                new Vector2(0.50f,0.010f), new Vector2(0.62f,0.042f),
+                new Vector2(0.925f,0.042f), new Vector2(0.975f,0.075f),
+                new Vector2(0.975f,0.920f), new Vector2(0.925f,0.955f),
+                new Vector2(0.62f,0.955f), new Vector2(0.50f,0.993f),
+                new Vector2(0.38f,0.955f), new Vector2(0.075f,0.955f),
+                new Vector2(0.025f,0.920f), new Vector2(0.025f,0.075f)
+            };
+            Texture2D t = new Texture2D(w,h,TextureFormat.RGBA32,false);
+            t.wrapMode=TextureWrapMode.Clamp;
+            t.filterMode=FilterMode.Bilinear;
+            Color[] pixels=new Color[w*h];
+            for(int y=0;y<h;y++) for(int x=0;x<w;x++)
+            {
+                Vector2 p=new Vector2(x,y);
+                float nearest=100000f;
+                for(int j=0;j<path.Length;j++)
+                {
+                    Vector2 a=new Vector2(path[j].x*(w-1),path[j].y*(h-1));
+                    Vector2 b=new Vector2(path[(j+1)%path.Length].x*(w-1),
+                        path[(j+1)%path.Length].y*(h-1));
+                    Vector2 delta=b-a;
+                    float amount=Mathf.Clamp01(Vector2.Dot(p-a,delta) /
+                        Mathf.Max(0.0001f,delta.sqrMagnitude));
+                    nearest=Mathf.Min(nearest,Vector2.Distance(p,a+amount*delta));
+                }
+                float soft=Mathf.Exp(-nearest*nearest/36f)*0.42f;
+                float rim=Mathf.Exp(-nearest*nearest/1.8f)*0.58f;
+                pixels[y*w+x]=new Color(1f,0.78f+0.17f*rim,0.36f+0.26f*rim,
+                    Mathf.Clamp01(soft+rim));
+            }
+            t.SetPixels(pixels);
+            t.Apply(false,true);
+            difficultySelectionHalo=t;
+            return t;
+        }
         static void DrawDifficultySelectionGlow(Rect card, float s)
         {
-            float pulse = 0.84f + 0.16f * Mathf.Sin(Time.unscaledTime * 3.2f);
-            Color prev = GUI.color;
-            for (int pass = 4; pass >= 0; pass--)
-            {
-                float offset = (1f + pass * 2.5f) * s;
-                float thickness = (pass == 0 ? 2.7f : 3.2f + pass) * s;
-                float alpha = (pass == 0 ? 0.92f : 0.075f + 0.04f / pass) * pulse;
-                GUI.color = new Color(1f, pass == 0 ? 0.91f : 0.73f,
-                    pass == 0 ? 0.54f : 0.23f, alpha);
-                float x0 = card.x - offset, x1 = card.xMax + offset;
-                float y0 = card.y - offset, y1 = card.yMax + offset;
-                GUI.DrawTexture(new Rect(x0, y0, x1-x0, thickness), Texture2D.whiteTexture);
-                GUI.DrawTexture(new Rect(x0, y1-thickness, x1-x0, thickness), Texture2D.whiteTexture);
-                GUI.DrawTexture(new Rect(x0, y0, thickness, y1-y0), Texture2D.whiteTexture);
-                GUI.DrawTexture(new Rect(x1-thickness, y0, thickness, y1-y0), Texture2D.whiteTexture);
-            }
-            GUI.color = prev;
+            Texture2D halo=DifficultySelectionHalo();
+            Color old=GUI.color;
+            GUI.color=new Color(1f,1f,1f,
+                0.92f+0.08f*Mathf.Sin(Time.unscaledTime*3f));
+            float margin=6f*s;
+            GUI.DrawTexture(new Rect(card.x-margin,card.y-margin,
+                card.width+margin*2f,card.height+margin*2f),
+                halo,ScaleMode.StretchToFill,true);
+            GUI.color=old;
         }
 
         /// <summary>Clickable area aligned with a button painted into the screen art.
@@ -394,104 +448,77 @@ namespace BladePath
             return GUI.Button(r, GUIContent.none, GUIStyle.none);
         }
 
-        // The whole JPG had an opaque black bounding rectangle and its
-        // off/on variants differed slightly in their framing. Extract ONLY
-        // the circular cloud medallions, then draw a fixed switch in IMGUI.
-        // Both states occupy exactly the same Rect. Textures are cached once.
-        static Texture2D fogOffIcon, fogOnIcon;
-        static Texture2D FogIcon(bool enabled)
+        // BP-051: use the EXACT approved option #1 (full ornate cloud
+        // toggle), not a substitute made of rectangles. Both states have the
+        // same size, position and transparent exterior.
+        static Texture2D fogButtonOff, fogButtonOn;
+        static Texture2D FogButton(bool enabled)
         {
-            if (enabled && fogOnIcon != null) return fogOnIcon;
-            if (!enabled && fogOffIcon != null) return fogOffIcon;
-            Texture2D source = UiKit.Tex(enabled
+            if(enabled && fogButtonOn!=null) return fogButtonOn;
+            if(!enabled && fogButtonOff!=null) return fogButtonOff;
+            Texture2D source=UiKit.Tex(enabled
                 ? "UI/selection/fog_toggle_on" : "UI/selection/fog_toggle_off");
-            if (source == null) return null;
-
-            // Imported JPGs are normally not marked Read/Write. Read via GPU
-            // to avoid "texture not readable" in Android release builds.
-            RenderTexture previous = RenderTexture.active;
-            RenderTexture tmp = RenderTexture.GetTemporary(source.width, source.height, 0,
+            if(source==null) return null;
+            RenderTexture previous=RenderTexture.active;
+            RenderTexture temp=RenderTexture.GetTemporary(source.width,source.height,0,
                 RenderTextureFormat.ARGB32);
-            Graphics.Blit(source, tmp);
-            RenderTexture.active = tmp;
-            Texture2D readable = new Texture2D(source.width, source.height,
-                TextureFormat.RGBA32, false);
-            readable.ReadPixels(new Rect(0f, 0f, source.width, source.height), 0, 0);
-            readable.Apply();
-            RenderTexture.active = previous;
-            RenderTexture.ReleaseTemporary(tmp);
+            Graphics.Blit(source,temp);
+            RenderTexture.active=temp;
+            Texture2D result=new Texture2D(source.width,source.height,
+                TextureFormat.RGBA32,false);
+            result.ReadPixels(new Rect(0f,0f,source.width,source.height),0,0);
+            result.Apply(false,false);
+            RenderTexture.active=previous;
+            RenderTexture.ReleaseTemporary(temp);
 
-            int size = Mathf.Min(source.height-4, Mathf.RoundToInt(source.width * 0.46f));
-            int centerX = Mathf.RoundToInt(source.width * 0.317f);
-            int centerY = Mathf.RoundToInt(source.height * 0.49f);
-            int x0 = Mathf.Clamp(centerX - size / 2, 0, source.width-size);
-            int y0 = Mathf.Clamp(centerY - size / 2, 0, source.height-size);
-            Color[] pixels = readable.GetPixels(x0,y0,size,size);
-            Texture2D result = new Texture2D(size,size,TextureFormat.RGBA32,false);
-            float radius = size * 0.47f;
-            for (int y=0;y<size;y++)
-                for (int x=0;x<size;x++)
+            // Alpha silhouette matches the sculpted plaque; no outer JPG box.
+            Vector2[] border = {
+                new Vector2(.045f,.18f),new Vector2(.08f,.075f),
+                new Vector2(.42f,.075f),new Vector2(.50f,.018f),
+                new Vector2(.58f,.075f),new Vector2(.92f,.075f),
+                new Vector2(.965f,.18f),new Vector2(.965f,.84f),
+                new Vector2(.92f,.925f),new Vector2(.58f,.925f),
+                new Vector2(.50f,.982f),new Vector2(.42f,.925f),
+                new Vector2(.08f,.925f),new Vector2(.035f,.84f)
+            };
+            Color[] p=result.GetPixels();
+            int w=result.width,h=result.height;
+            for(int y=0;y<h;y++)for(int x=0;x<w;x++)
+            {
+                Vector2 pt=new Vector2((x+.5f)/w,(y+.5f)/h);
+                bool inside=false;
+                for(int i=0,j=border.Length-1;i<border.Length;j=i++)
                 {
-                    float dist = Vector2.Distance(new Vector2(x,y),
-                        new Vector2((size-1)*0.5f,(size-1)*0.5f));
-                    Color col = pixels[y*size+x];
-                    col.a = 1f - Mathf.SmoothStep(radius-2.5f,radius+0.5f,dist);
-                    pixels[y*size+x] = col;
+                    Vector2 a=border[i],b=border[j];
+                    if(((a.y>pt.y)!=(b.y>pt.y)) &&
+                       (pt.x<(b.x-a.x)*(pt.y-a.y)/(b.y-a.y)+a.x))
+                       inside=!inside;
                 }
-            result.SetPixels(pixels);
+                Color color=p[y*w+x];
+                color.a=inside?1f:0f;
+                p[y*w+x]=color;
+            }
+            result.SetPixels(p);
             result.Apply(false,true);
-            Object.Destroy(readable);
-            if (enabled) fogOnIcon=result; else fogOffIcon=result;
+            if(enabled)fogButtonOn=result;else fogButtonOff=result;
             return result;
         }
 
-        static void FogRect(Rect r, Color color)
+        void DrawFogToggleArt(Rect screenRect,float selectionScale)
         {
-            Color old=GUI.color;
-            GUI.color=color;
-            GUI.DrawTexture(r,Texture2D.whiteTexture);
-            GUI.color=old;
-        }
-
-        void DrawFogToggleArt(Rect screenRect, float selectionScale)
-        {
-            bool on = JourneyChoice.FogEnabled;
-            Color old = GUI.color;
-            float sc = screenRect.height / 116f;
-            // The screen background already has a matching dark wooden plaque.
-            // No imported JPG rectangular background is drawn here.
-            Texture2D fogCloud = FogIcon(on);
-            float diameter = 99f * sc;
-            Rect medallion = new Rect(screenRect.x + 9f*sc,
-                screenRect.center.y-diameter*0.5f,diameter,diameter);
-            if (fogCloud != null) GUI.DrawTexture(medallion,fogCloud,
-                ScaleMode.StretchToFill,true);
-            // Static-size black/red switch; knob moves, not the art itself.
-            Rect track = new Rect(screenRect.x+149f*sc,
-                screenRect.center.y-19f*sc,81f*sc,38f*sc);
-            FogRect(track,new Color(0.66f,0.44f,0.21f,0.96f));
-            FogRect(new Rect(track.x+2f*sc,track.y+2f*sc,
-                track.width-4f*sc,track.height-4f*sc),
-                on?new Color(0.66f,0.05f,0.04f,1f):
-                   new Color(0.065f,0.07f,0.085f,1f));
-            float knob = 31f*sc;
-            float knobX=on?track.xMax-knob-4f*sc:track.x+4f*sc;
-            FogRect(new Rect(knobX,track.y+3.5f*sc,knob,knob),
-                on?new Color(0.97f,0.79f,0.47f,1f):
-                   new Color(0.61f,0.63f,0.63f,1f));
-            GUI.color=old;
-
-            Matrix4x4 oldMatrix=UiKit.Begin();
-            float k=UiKit.Scale;
-            Rect label=new Rect(screenRect.x/k,
-                (screenRect.y-32f*selectionScale)/k,
-                screenRect.width/k,29f*selectionScale/k);
-            UiKit.Text(label,"ТУМАН ВОЙНЫ",16f*selectionScale/k,
-                new Color(1f,0.93f,0.72f,1f));
-            GUI.matrix=oldMatrix;
-            if (GUI.Button(screenRect,GUIContent.none,GUIStyle.none))
+            bool on=JourneyChoice.FogEnabled;
+            Texture2D art=FogButton(on);
+            if(art!=null)
             {
-                JourneyChoice.FogEnabled = !on;
+                Color saved=GUI.color;
+                GUI.color=Color.white;
+                // Identical geometry for OFF and ON. Only image content changes.
+                GUI.DrawTexture(screenRect,art,ScaleMode.StretchToFill,true);
+                GUI.color=saved;
+            }
+            if(GUI.Button(screenRect,GUIContent.none,GUIStyle.none))
+            {
+                JourneyChoice.FogEnabled=!on;
                 Haptics.Pulse(12);
             }
         }
