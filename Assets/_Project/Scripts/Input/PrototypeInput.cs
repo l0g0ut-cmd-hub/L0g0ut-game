@@ -562,10 +562,25 @@ namespace BladePath
                     "ПУТЬ " + (Ladder.Index + 1) + "/" + Ladder.Count + "  ·  ПОБЕД " + Records.Wins + "  ·  ПОРАЖЕНИЙ " + Records.Losses + "  ·  ЛУЧШЕЕ " + Records.BestStage + "/" + Ladder.Count + (Records.Cleared > 0 ? "  ·  ПРОЙДЕН ×" + Records.Cleared : ""),
                     13f, new Color(0.85f, 0.8f, 0.7f, 0.9f));
             }
-            if (over) { DrawRectButton((int)B.OverAgain); DrawRectButton((int)B.OverMenu); DrawRectButton((int)B.OverGear); }
-
+            // Match-result actions are painted by DuelHud AFTER its full-screen
+            // dark overlay in the SAME OnGUI pass. Rendering them here in a
+            // separate MonoBehaviour allowed the overlay to obscure the buttons.
             GUI.matrix = old;
             GUI.depth = previousInputDepth;
+        }
+
+        /// <summary>Draw only match-result actions in DuelHud's final foreground
+        /// pass. Input remains touch-driven here; the HUD does not handle clicks.
+        /// Caller must have applied UiKit.Begin() and painted the dimming first.
+        /// </summary>
+        public void DrawResultActionsFromHud()
+        {
+            if (!isActiveAndEnabled || !Over || InventoryScreen.Open || MapScreen.Open) return;
+            // Paint the complete buttons after the overlay, not at the mercy
+            // of ordering between different MonoBehaviour.OnGUI callbacks.
+            DrawRectButton((int)B.OverAgain);
+            DrawRectButton((int)B.OverMenu);
+            DrawRectButton((int)B.OverGear);
         }
 
         void DrawRectButton(int b)
