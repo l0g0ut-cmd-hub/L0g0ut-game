@@ -284,3 +284,6 @@
 - **Build gate:** last Android №413 success on `apk-build` SHA `2f6d49523e52173d73a124c8156a2413ea933455`; launch exactly one next Android №414 after final Preflight on dev commit, verify run head SHA, do not publish as visually fixed without screenshot.
 
 | 2026-11-05 — BP-035 / release pending | cap PNG `abbfdde2`, code `fb0bb2b7`, tests `ea9a2d8d`, cleanup `6e134c81` | HP uses authored two caps + calculated middle; Ki unchanged; original HUD art unchanged. | Final dev preflight, promote one APK №414, verify actual phone screenshot. |
+
+
+| 2026-11-05 — BP-035 / Android №414 launched | final inspected dev SHA `64bffcf1d20a2608f5b5e582d7d6a6b116c92a1f`, Preflight №233 run `41987875946` **success** | `apk-build` advanced exactly ONCE from №413 SHA `2f6d49523e52173d73a124c8156a2413ea933455`. GitHub Actions Android build **№414** ID `41987980236` actually started **in_progress** at SHA `64bffcf1d20a2608f5b5e582d7d6a6b116c92a1f`. | Await Unity outcome and **device screenshot**, verify left/right HP (0/10/50/90/100) and no decorative gold bleed; do not claim visual fix accepted until checked. |
