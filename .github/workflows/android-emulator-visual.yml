@@ -5,7 +5,7 @@ name: BladePath Android Emulator Visual Smoke
 on:
   workflow_dispatch:
   push:
-    branches: [apk-build, android-ui-qa]
+    branches: [android-ui-qa]
 permissions:
   contents: write
 concurrency:
