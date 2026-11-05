@@ -593,23 +593,15 @@ namespace BladePath
             if (wood != null)
             {
                 Rect vr = new Rect(r.x - r.height * 0.10f, r.y - r.height * 0.06f, r.width + r.height * 0.20f, r.height * 1.12f);
-                UiKit.Slice(vr, wood, vr.height / wood.height, 0.14f, 0.12f, 0.5f, 0f, Color.white);
+                // Match-result buttons use the complete original artwork. Segmenting
+                // this sprite repeats/distorts its lacquer fill and darkens the face.
+                // Do not place a second rectangle over the painted button.
+                if (resultButton) GUI.DrawTexture(vr, wood, ScaleMode.StretchToFill, true);
+                else UiKit.Slice(vr, wood, vr.height / wood.height, 0.14f, 0.12f, 0.5f, 0f, Color.white);
             }
             else VisualIdentity.Surface(r, 0.98f, false);
-            if (resultButton)
-            {
-                // A restrained interior light keeps these ACTIVE buttons from
-                // looking disabled on the darkened match-results screen.
-                // Entire highlight stays within the carved gold frame.
-                UiKit.Rect(new Rect(r.x + 20f, r.y + 11f,
-                    Mathf.Max(0f, r.width - 40f), Mathf.Max(0f, r.height - 22f)),
-                    main ? new Color(1f, 0.24f, 0.12f, 0.16f)
-                         : new Color(1f, 0.84f, 0.58f, 0.14f));
-                UiKit.Rect(new Rect(r.x + 18f, r.y + 5f, r.width - 36f, 1.5f),
-                    new Color(1f, 0.82f, 0.45f, 0.75f));
-            }
             UiKit.Text(r, labels[b], Mathf.Min(18f, r.height * 0.44f),
-                resultButton ? new Color(1f, 0.96f, 0.85f, 1f)
+                resultButton ? new Color(1f, 0.99f, 0.91f, 1f)
                     : h ? VisualIdentity.BrassLight : VisualIdentity.Parchment);
             GUI.backgroundColor = oldBackgroundTint;
             GUI.contentColor = oldContentTint;
