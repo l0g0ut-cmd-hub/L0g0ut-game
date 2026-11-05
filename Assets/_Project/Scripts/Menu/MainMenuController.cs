@@ -147,6 +147,40 @@ namespace BladePath
             return new Rect((Screen.width - w) * 0.5f, (Screen.height - h) * 0.5f, w, h);
         }
 
+        /// <summary>
+        /// Side-only ornamental masks sourced from the approved menu mockup.
+        /// No top/bottom edging and no pixels drawn over the video rectangle.
+        /// Image contains the left ornament in UV 0..0.5 and the right one in 0.5..1.
+        /// </summary>
+        static void DrawSideBorders(Rect video)
+        {
+            float left = Mathf.Max(0f, video.x);
+            float right = Mathf.Max(0f, Screen.width - video.xMax);
+            if (left < 1f && right < 1f) return;
+            Texture2D sides = UiKit.Tex("UI/menu_side_borders");
+            if (sides == null) return;
+
+            Color previous = GUI.color;
+            GUI.color = Color.white;
+            if (left >= 1f)
+            {
+                GUI.DrawTextureWithTexCoords(new Rect(0f, 0f, left, Screen.height),
+                    sides, new Rect(0f, 0f, 0.5f, 1f));
+                // Crisp inner lacquer/gold inlay, matching the approved frame.
+                GUI.color = new Color(0.69f, 0.43f, 0.17f, 0.88f);
+                GUI.DrawTexture(new Rect(Mathf.Max(0f, left - 2f), 0f, 2f, Screen.height), Texture2D.whiteTexture);
+                GUI.color = Color.white;
+            }
+            if (right >= 1f)
+            {
+                GUI.DrawTextureWithTexCoords(new Rect(video.xMax, 0f, right, Screen.height),
+                    sides, new Rect(0.5f, 0f, 0.5f, 1f));
+                GUI.color = new Color(0.69f, 0.43f, 0.17f, 0.88f);
+                GUI.DrawTexture(new Rect(video.xMax, 0f, 2f, Screen.height), Texture2D.whiteTexture);
+            }
+            GUI.color = previous;
+        }
+
         void OnGUI()
         {
             if (hitStyle == null)
@@ -169,6 +203,10 @@ namespace BladePath
             else if ((videoFailed || !animated) && posterLast != null) tex = posterLast;
             else tex = posterFirst != null ? (Texture)posterFirst : Texture2D.blackTexture;
             GUI.DrawTexture(vr, tex, ScaleMode.StretchToFill, false);
+            // Add decorative artwork ONLY inside the left/right letterbox bars.
+            // The original 852x480 video, painted menu and click targets remain
+            // pixel-perfect, untouched and in their original positions.
+            DrawSideBorders(vr);
 
             if (loading && DrawLoading()) return;
             if (crashLog != null) { DrawCrash(); return; }
