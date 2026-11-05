@@ -48,6 +48,13 @@ assert "GUI.depth = 10;" in hud_code and "GUI.depth = previousHudDepth;" in hud_
 assert "GUI.depth = Paused || Over ? -100 : 0;" in input_code
 assert "GUI.depth = previousInputDepth;" in input_code
 assert "bool resultButton = b == (int)B.OverAgain" in input_code
+# The end-of-match overlay and its action buttons must use the SAME
+# OnGUI painter, with buttons emitted after every darkening effect.
+assert "public void DrawResultActionsFromHud()" in input_code
+assert "PrototypeInput.Instance.DrawResultActionsFromHud();" in hud_code
+assert hud_code.index("PrototypeInput.Instance.DrawResultActionsFromHud();") > hud_code.index("UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, 0.55f * t));")
+assert 'if (over) { DrawRectButton((int)B.OverAgain);' not in input_code
+assert "DrawRectButton((int)B.OverAgain);" in input_code
 assert "new Color(1f, 0.99f, 0.91f, 1f)" in input_code
 # Red combat announcements share one HUD renderer. Their danger category
 # still selects the red ornamental banner, but foreground text MUST be white
