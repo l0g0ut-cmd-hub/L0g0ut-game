@@ -268,3 +268,6 @@
 - **Release process:** prior APK №412 run `41943084881` successful at SHA `12e46c74915793278501559b6baffd0d18c52ec5`; next intended Android build №413 must be pushed once after final current dev SHA Preflight success, no overlapping runs. Record run ID / SHA after verified trigger.
 
 | 2026-11-05 — BP-034 | static alpha mask assets `099ea872`, matching atlas-rect implementation `eac2e18c`, regression tests `2dfa0221`/`b4c73650` | No original UI images modified; exact pixel coordinate canvas is shared between frame and mask, active channel progress clipped separately. | Preflight + single Android release, then user device screenshots before APK_VERIFIED. |
+
+
+| 2026-11-05 — BP-034 / Android release №413 | final dev SHA `2f6d49523e52173d73a124c8156a2413ea933455` passed Preflight №226 run `41979365008`, including the new explicit HUD mask PNG coverage step | `apk-build` advanced **once** from previous №412 SHA `12e46c74915793278501559b6baffd0d18c52ec5` to this SHA. Real Android APK №413 run ID `41979433562`, initially **in_progress**, same SHA. | Await Unity Android result and visual verification from device for both full/partial mirrored HP/Ki fills; do not call APK_VERIFIED before screenshots. Documentation-only commit remains on dev and is not repromoted to apk-build. |
