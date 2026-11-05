@@ -588,6 +588,16 @@ namespace BladePath
             }
 
             DrawTutorial(W);
+
+            // The 55%-black victory layer above is intentionally behind these
+            // buttons. Draw from this same IMGUI callback, after ALL dimming,
+            // so script execution order and GUI.depth cannot tint the actions.
+            if (duel.MatchOver &&
+                (duel.State == DuelState.PlayerWon || duel.State == DuelState.PlayerLost) &&
+                duel.StateTime > 1.3f && PrototypeInput.Instance != null)
+            {
+                PrototypeInput.Instance.DrawResultActionsFromHud();
+            }
             GUI.matrix = old;
             GUI.depth = previousHudDepth;
         }
