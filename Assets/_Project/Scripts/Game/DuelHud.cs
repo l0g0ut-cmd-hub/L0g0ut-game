@@ -299,7 +299,17 @@ namespace BladePath
                     float reveal = Mathf.Clamp01(st / 0.22f);
                     Color glow = mine ? new Color(0.45f, 0.8f, 1f) : new Color(0.85f, 0.45f, 1f);
                     UiKit.Rect(new Rect(0f, 228f, W, 74f), new Color(glow.r * 0.12f, glow.g * 0.08f, glow.b * 0.15f, 0.45f * k));
-                    DrawBrush(mine ? "UI/brush_stroke" : "UI/brush_stroke_red", new Vector2(W * 0.5f, 265f), 150f, 0.95f * k, reveal);   // удар духа врага — багровым мазком
+                    // Stretch only the middle of the original brush artwork so
+                    // the entire "УДАР ДУХА" title fits inside the painted stroke.
+                    Texture2D spiritStroke = UiKit.Tex(mine ? "UI/brush_stroke" : "UI/brush_stroke_red");
+                    if (spiritStroke != null && reveal > 0f)
+                    {
+                        float spiritW = Mathf.Min(W - 80f, 850f);
+                        Rect spiritBanner = new Rect((W - spiritW) * 0.5f, 195f, spiritW, 140f);
+                        UiKit.Slice(spiritBanner, spiritStroke, spiritBanner.height / spiritStroke.height,
+                            0.18f, 0.10f, 0.5f, 0f,
+                            new Color(1f, 1f, 1f, 0.95f * k * reveal));
+                    }
                     float ta = Mathf.Clamp01((st - 0.12f) / 0.12f);
                     UiKit.Text(new Rect(0f, 222f, W, 86f), "УДАР ДУХА", 60f * (1f + 0.25f * (1f - ta)), new Color(Mathf.Lerp(1f, glow.r, 0.35f), Mathf.Lerp(1f, glow.g, 0.35f), Mathf.Lerp(1f, glow.b, 0.35f), ta));
                 }
