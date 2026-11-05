@@ -1,0 +1,98 @@
+name: BladePath Android Emulator Visual Smoke
+
+# Separate QA build: original production ARM64 APK remains unchanged.
+# On-demand or pushes to the dedicated test branch; uses the Unity license queue.
+on:
+  workflow_dispatch:
+  push:
+    branches: [android-ui-qa]
+permissions:
+  contents: write
+concurrency:
+  group: build-android
+  cancel-in-progress: false
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 135
+    env:
+      UNITY_VERSION: 6000.0.36f1
+      GAMECI_VERSION: v0.1.72
+    steps:
+      - uses: actions/checkout@v4
+      - name: Free space without removing Android SDK (emulator needs it)
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost
+          sudo docker image prune --all --force || true
+          df -h /
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-AndroidEmulator-${{ env.UNITY_VERSION }}-${{ github.sha }}
+          restore-keys: |
+            Library-AndroidEmulator-${{ env.UNITY_VERSION }}-
+            Library-Android-${{ env.UNITY_VERSION }}-
+      - name: Install GameCI CLI
+        run: |
+          export GAME_CI_INSTALL="$RUNNER_TEMP/game-ci/bin"
+          mkdir -p "$GAME_CI_INSTALL"
+          curl -fsSL "https://raw.githubusercontent.com/game-ci/cli/${GAMECI_VERSION}/scripts/install.sh" -o "$RUNNER_TEMP/gc-install.sh"
+          bash "$RUNNER_TEMP/gc-install.sh" "$GAMECI_VERSION" "$GAME_CI_INSTALL"
+          echo "$GAME_CI_INSTALL" >> "$GITHUB_PATH"
+      - name: Build x86_64 QA APK from the same scenes and UI scripts
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          set -o pipefail
+          game-ci build . \
+            --engine unity \
+            --engine-version "$UNITY_VERSION" \
+            --target-platform Android \
+            --android-export-type androidPackage \
+            --build-name BladePath-VisualEmulator \
+            --versioning-strategy None \
+            --build-method BladePath.EditorTools.BuildScript.BuildAndroid 2>&1 | tee "$RUNNER_TEMP/android-ui-build.log"
+      - name: Preserve x86 QA APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: BladePath-x86_64-VisualQA
+          path: build/Android/*.apk
+          if-no-files-found: warn
+      - name: Start emulator and capture all UI states from installed APK
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7
+          cores: 2
+          ram-size: 4096M
+          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot
+          script: |
+            python3 -m pip install --user 'Pillow>=10,<13'
+            bash tools/android_visual_smoke.sh
+      - name: Upload real APK screenshots and logcat
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: BladePath-Android-Device-Screens
+          path: build/android-ui/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Publish APK screenshots for GitHub connector review
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          D="$RUNNER_TEMP/android-ui-publish"; mkdir -p "$D"
+          if [ -d build/android-ui ]; then cp -a build/android-ui/. "$D/"; fi
+          echo "source commit $GITHUB_SHA run $GITHUB_RUN_ID" > "$D/info.txt"
+          cd "$D"; git init -q; git checkout -q -b android-ui-results
+          git -c user.name=ci -c user.email=ci@local add -A
+          git -c user.name=ci -c user.email=ci@local commit -qm "Android UI smoke $GITHUB_SHA"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" android-ui-results
