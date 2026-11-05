@@ -325,3 +325,11 @@
 
 
 | 2026-11-05 — BP-038 / Android №417 launched | final dev SHA `f94bdac7f154fad9649ce896b1eb78db87420d95`; Preflight №244 `42007443690` **success** with KI blunt-cap and victory layer tests | `apk-build` advanced exactly once from №416 SHA `b780ba28c91baaadaf9c2182a4218729cb6dbf82` to this SHA; confirmed Android №417 Actions run `42007572593`, status **in_progress** at creation and identical SHA. | Await Unity CI and actual device screenshots of KI guard-side caps and victory buttons. Accepted HP unchanged. No duplicate APK. |
+
+
+## BP-039 — White danger-banner lettering, preserve ornate red art (2026-11-05)
+
+- Device screenshot (APK №417 test): combat alert `РАВНОВЕСИЕ СЛОМЛЕНО — ДОБЕЙ!` uses red letters over red `UI/Kit/hud_banner_red`, reducing legibility. User explicitly requests **white foreground text** on red alert ribbons and next Android build.
+- **Scoped fix:** `Assets/_Project/Scripts/Game/DuelHud.cs` now derives `danger` first from `duel.AnnounceColor` and selects `new Color(1f,1f,1f,aa)` for every red-danger announcement; other non-red announcement fonts preserve `AnnounceColor`. Existing `UiKit.Text` supplies black text shadow. Original `hud_banner_red.png`/banner geometry, other HUD and UI textures, both approved HP and KI cap renderers, gameplay logic and backgrounds untouched.
+- **Regression guard:** `tools/validate_visual_runtime.py` asserts white-on-red selection, preserved non-danger tint, unchanged red banner asset selection and dark shadow in `UiKit.Text`.
+- **Release gate:** last verified APK №417 commit `f94bdac7f154fad9649ce896b1eb78db87420d95`, Actions run `42007572593` was in progress when work began; do not trigger Android №418 until it completes and final `bladepath-development` SHA passes Preflight. Trigger **once** by advancing `apk-build`, validate actual number/run SHA/status; APK CI verifies compilation only. Confirm in-app screenshot for white text over alert ribbon.
