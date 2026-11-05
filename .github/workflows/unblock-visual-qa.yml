@@ -20,8 +20,10 @@ jobs:
           status=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$OLD_RUN" --jq '.status')
           echo "Unity QA #20 current state: $status"
           if [ "$status" = "in_progress" ] || [ "$status" = "queued" ] || [ "$status" = "pending" ]; then
-            gh api --method POST "repos/$GITHUB_REPOSITORY/actions/runs/$OLD_RUN/cancel" >/dev/null
-            echo "Requested cancellation of stalled Unity QA #20 to release build-android concurrency slot"
+            # Normal cancellation was accepted but the stuck GameCI process remained in_progress.
+            # Force-cancel this one known old run only; do not touch APK or the Android QA run.
+            gh api --method POST "repos/$GITHUB_REPOSITORY/actions/runs/$OLD_RUN/force-cancel" >/dev/null
+            echo "Force-cancel requested for stalled Unity QA #20; APK #433 and Android test #4 untouched"
           else
             echo "Old run already finished; no cancellation needed"
           fi
