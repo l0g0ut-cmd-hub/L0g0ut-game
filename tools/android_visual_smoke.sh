@@ -41,4 +41,41 @@ for path in files:
   stat=ImageStat.Stat(img.resize((80,40)))
   if max(stat.stddev)<5: raise SystemExit(f'Flat/unrendered APK frame: {path}')
   print(path, img.size, 'stddev', [round(x,1) for x in stat.stddev])
+
+# Validate that the APK actually switches fog state and that the approved
+# carved outer frame does NOT jump between OFF and ON.
+from PIL import ImageChops
+on=Image.open('build/android-ui/05_fog_toggled.png').convert('RGB')
+off=Image.open('build/android-ui/06_fog_restored.png').convert('RGB')
+if on.size!=off.size:
+  raise SystemExit('Fog screenshots changed device resolution')
+w,h=on.size
+scale=max(w/1824.,h/862.)
+ox=(w-1824.*scale)*.5
+oy=(h-862.*scale)*.5
+bounds=(round(ox+1485*scale), round(oy+683*scale),
+        round(ox+1754*scale), round(oy+801*scale))
+x0,y0,x1,y1=bounds
+if not (0<=x0<x1<=w and 0<=y0<y1<=h):
+  raise SystemExit(f'Fog UI rectangle outside Android screenshot: {bounds}, screen={(w,h)}')
+a=on.crop(bounds); b=off.crop(bounds)
+diff=ImageChops.difference(a,b)
+diff.save('build/android-ui/fog_on_off_difference.png')
+changed=sum(ImageStat.Stat(diff.resize((100,50))).mean)/3.
+print('FOG TOGGLE REAL ANDROID CHECK: bounds=',bounds,'state mean RGB change=',round(changed,2))
+if changed<5.:
+  raise SystemExit('Fog switch ON and OFF are visually identical in the actual APK')
+# The 9px perimeter of the switch is decorative and must remain stationary.
+band=max(3,round(7*scale))
+regions=[
+  (0,0,a.width,band),(0,a.height-band,a.width,a.height),
+  (0,band,band,a.height-band),(a.width-band,band,a.width,a.height-band),
+]
+border_means=[]
+for region in regions:
+  perimeter=diff.crop(region)
+  border_means.append(sum(ImageStat.Stat(perimeter).mean)/3.)
+print('FOG FRAME perimeter mean RGB differences:',[round(v,2) for v in border_means])
+if max(border_means)>14.:
+  raise SystemExit('Approved fog toggle outer frame shifts or degrades between ON and OFF')
 PY
