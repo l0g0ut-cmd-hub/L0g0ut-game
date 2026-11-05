@@ -1,0 +1,131 @@
+name: BladePath Visual QA (Unity UI Screenshots)
+
+# Runs automatically on every development change and every APK promotion.
+# Offline UI compositions are fast. The Unity play-mode job uses the one
+# licensed editor slot, shared with Android builds, to capture *real* IMGUI.
+on:
+  workflow_dispatch:
+  push:
+    branches: [bladepath-development, apk-build]
+
+permissions:
+  contents: write
+
+jobs:
+  preview:
+    name: Compose & inspect all UI states (no Unity license)
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install image compositor
+        run: python3 -m pip install --user 'Pillow>=10,<13'
+      - name: Compose all six difficulty states and validate hitboxes
+        run: python3 tools/visual_ui_review.py --out build/ui-review
+      - name: Upload visual review gallery
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: BladePath-UI-Review-${{ github.run_number }}
+          path: build/ui-review/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Publish gallery to ui-review branch for direct inspection
+        if: success()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          D="$RUNNER_TEMP/ui-preview-drop"; mkdir -p "$D"
+          cp -a build/ui-review/. "$D/"
+          printf 'commit=%s\nsource=%s\nworkflow=%s\ntype=COMPOSITION PREVIEW (NOT Android screen capture)\n' \
+            "$GITHUB_SHA" "$GITHUB_REF_NAME" "$GITHUB_RUN_ID" > "$D/info.txt"
+          cd "$D"
+          git init -q; git checkout -q -b ui-review
+          git -c user.name=ci -c user.email=ci@local add -A
+          git -c user.name=ci -c user.email=ci@local commit -qm "UI composition review for ${GITHUB_SHA}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" ui-review
+
+  unity-runtime:
+    name: Capture real Unity IMGUI at 21:9 in Play Mode
+    needs: preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 70
+    concurrency:
+      group: build-android
+      cancel-in-progress: false
+    env:
+      UNITY_VERSION: 6000.0.36f1
+      GAMECI_VERSION: v0.1.72
+    steps:
+      - uses: actions/checkout@v4
+      - name: Free disk space for Unity editor
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost
+          sudo docker image prune --all --force || true
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-VisualQA-${{ env.UNITY_VERSION }}-${{ github.sha }}
+          restore-keys: |
+            Library-VisualQA-${{ env.UNITY_VERSION }}-
+            Library-Android-${{ env.UNITY_VERSION }}-
+      - name: Install GameCI CLI
+        run: |
+          set -o pipefail
+          export GAME_CI_INSTALL="$RUNNER_TEMP/game-ci/bin"
+          mkdir -p "$GAME_CI_INSTALL"
+          curl -fsSL "https://raw.githubusercontent.com/game-ci/cli/${GAMECI_VERSION}/scripts/install.sh" -o "$RUNNER_TEMP/gc-install.sh"
+          bash "$RUNNER_TEMP/gc-install.sh" "$GAMECI_VERSION" "$GAME_CI_INSTALL"
+          echo "$GAME_CI_INSTALL" >> "$GITHUB_PATH"
+      - name: Execute Unity Play Mode and capture main menu, six difficulty states and all heroes
+        env:
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          set -o pipefail
+          game-ci build . \
+            --engine unity \
+            --engine-version "$UNITY_VERSION" \
+            --target-platform Android \
+            --build-name BladePath-VisualQA \
+            --versioning-strategy None \
+            --manual-exit \
+            --build-method BladePath.EditorTools.VisualQARunner.Run 2>&1 | tee "$RUNNER_TEMP/visual-qa.log"
+      - name: Save real Unity screenshots even if rendering failed
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: BladePath-Unity-IMGUI-${{ github.run_number }}
+          path: build/visual-runtime/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Publish runtime screenshots and failure diagnostics
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          D="$RUNNER_TEMP/ui-runtime-drop"; mkdir -p "$D"
+          if [ -d build/visual-runtime ]; then sudo cp -a build/visual-runtime/. "$D/"; sudo chown -R "$(id -u)" "$D"; fi
+          python3 - "$RUNNER_TEMP/visual-qa.log" "$D/unity-diagnostics.txt" <<'PY'
+          import os,sys
+          src,dst=sys.argv[1:]
+          data=open(src,errors='replace').read() if os.path.exists(src) else '(Unity never started)'
+          for key in ('UNITY_EMAIL','UNITY_PASSWORD'):
+              secret=os.environ.get(key)
+              if secret: data=data.replace(secret,'***')
+          lines=data.splitlines()
+          selected=[x for x in lines if 'VISUAL_QA' in x or 'exception' in x.lower() or 'error' in x.lower()]
+          open(dst,'w').write('\n'.join(selected[-200:] + ['----- log tail -----'] + lines[-100:]))
+          PY
+          printf 'commit=%s\nsource=%s\nworkflow=%s\n' "$GITHUB_SHA" "$GITHUB_REF_NAME" "$GITHUB_RUN_ID" > "$D/info.txt"
+          cd "$D"
+          git init -q; git checkout -q -b ui-runtime-results
+          git -c user.name=ci -c user.email=ci@local add -A
+          git -c user.name=ci -c user.email=ci@local commit -qm "Unity UI render review for ${GITHUB_SHA}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" ui-runtime-results
