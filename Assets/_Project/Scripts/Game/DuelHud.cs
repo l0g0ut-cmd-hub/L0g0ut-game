@@ -370,11 +370,25 @@ namespace BladePath
                         GUI.DrawTexture(new Rect(W - w - 30f + slide, 120f, w, h), ef);
                         GUI.color = oc;
                     }
-                    // мазок туши под титулом врага (как имя босса в Sekiro): кисть проводит его слева направо
-                    DrawBrush("UI/brush_stroke", new Vector2(cx, 318f), 120f, 0.88f * ta, Mathf.Clamp01(duel.StateTime / 0.45f));
-                    UiKit.Text(new Rect(cx - 400f, 288f, 800f, 34f), "ПУТЬ " + (Ladder.Index + 1) + " / " + Ladder.Count + (Profile.Cycle > 0 ? "  ·  КРУГ " + (Profile.Cycle + 1) : "") + "  ·  " + Ladder.Current.name, 22f, new Color(Gold.r, Gold.g, Gold.b, ta));
-                    UiKit.Text(new Rect(cx - 400f, 318f, 800f, 24f), Ladder.Current.title, 15f, new Color(0.9f, 0.88f, 0.82f, ta * 0.9f));
+                    // Intro opponent caption: size the backing to ALL caption rows,
+                    // not to the old narrow brush stroke. Keep symmetric inner padding
+                    // so even long path/opponent titles remain inside the dark panel.
                     int mk = duel.MaxMarks(duel.enemy);
+                    float captionH = mk > 1 ? 118f : 94f;
+                    Rect captionPanel = new Rect(cx - 390f, 280f, 780f, captionH);
+                    UiKit.Rect(captionPanel, new Color(0.025f, 0.018f, 0.02f, 0.72f * ta));
+                    // Delicate gold edges match the existing HUD without replacing
+                    // any original art, portrait, round ensō or background.
+                    UiKit.Rect(new Rect(captionPanel.x + 12f, captionPanel.y, captionPanel.width - 24f, 1.5f),
+                        new Color(Gold.r, Gold.g, Gold.b, 0.52f * ta));
+                    UiKit.Rect(new Rect(captionPanel.x + 12f, captionPanel.yMax - 1.5f, captionPanel.width - 24f, 1.5f),
+                        new Color(Gold.r, Gold.g, Gold.b, 0.35f * ta));
+                    Rect captionTitle = new Rect(cx - 365f, 288f, 730f, 34f);
+                    UiKit.Text(captionTitle, "ПУТЬ " + (Ladder.Index + 1) + " / " + Ladder.Count
+                        + (Profile.Cycle > 0 ? "  ·  КРУГ " + (Profile.Cycle + 1) : "")
+                        + "  ·  " + Ladder.Current.name, 20f, new Color(Gold.r, Gold.g, Gold.b, ta));
+                    UiKit.Text(new Rect(cx - 365f, 318f, 730f, 24f), Ladder.Current.title, 15f,
+                        new Color(0.9f, 0.88f, 0.82f, ta));
                     if (mk > 1) UiKit.Text(new Rect(cx - 400f, 342f, 800f, 24f), "ЖИЗНЕЙ: " + mk + " — СЛОМИ И ДОБЕЙ " + mk + " РАЗА", 15f, new Color(1f, 0.45f, 0.3f, ta * 0.95f));
                     // время суток и погода матча — строкой под титулом
                     Weather wz = Weather.Instance;
