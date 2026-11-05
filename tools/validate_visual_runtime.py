@@ -82,6 +82,17 @@ assert "float captionH = mk > 1 ? 118f : 94f;" in hud_code
 assert "Rect captionTitle = new Rect(cx - 365f, 288f, 730f, 34f);" in hud_code
 assert 'UiKit.Rect(captionPanel, new Color(0.025f, 0.018f, 0.02f, 0.72f * ta))' in hud_code
 assert 'DrawBrush("UI/brush_stroke", new Vector2(cx, 318f)' not in hud_code
+# Difficulty selection highlight must follow chosenDifficulty. The previous
+# artwork contained a static halo on the first card and accidentally disabled
+# card_glow for ALL difficulty cards, leaving the apparent selection stationary.
+assert 'if (difficulty && chosen != 0)' in menu
+assert 'Texture2D neutralizer = DifficultyHaloNeutralizer();' in menu
+assert 'if (i == chosen && glow != null)' in menu
+assert 'if (!difficulty && i == chosen && glow != null)' not in menu
+assert 'if (difficulty && chosen == i)' not in menu
+assert 'if (difficulty) chosenDifficulty = i;' in menu
+assert 'GUI.DrawTexture(haloArea, neutralizer, ScaleMode.StretchToFill, true);' in menu
+
 # BP-042: selection actions cannot draw opaque black rectangles outside
 # carved gold corners. Existing approved background paintings stay untouched.
 assert 'Texture2D board = UiKit.Tex("UI/Kit/ui_board");' not in menu
