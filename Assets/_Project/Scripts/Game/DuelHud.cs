@@ -727,7 +727,7 @@ namespace BladePath
             Rect kiWin = KiWinKit;
             if (kf == null) { kf = UiKit.Tex("UI/bar_ki"); kiWin = KiWin; }
             if (kf == null) UiKit.Rect(new Rect(r.x - 2f, r.y - 2f, r.width + 4f, r.height + 4f), Frame);
-            bool kitFrame = kf != null && kiWin == KiWinKit;
+            bool kitFrame = kf != null && kf.width == 467 && kf.height == 76;
             Rect fill = kitFrame ? PixelFillRect(r, kf, kiWin, KiFillArea, mirror) : r;
             Texture2D mask = GetFillMask(true, kf, kiWin);
             DrawMaskedFill(fill, 1f, mirror, new Color(0.02f, 0.02f, 0.03f, 1f), mask);
@@ -925,7 +925,7 @@ namespace BladePath
             }
             // Fill must be shaped to the inner edge of the ornamental frame;
             // frame texture has transparent/tapered corners and cannot clip a solid rectangle.
-            bool kitFrame = frame != null && hpWin == HpWinKit;
+            bool kitFrame = frame != null && frame.width == 578 && frame.height == 160;
             Rect fill = kitFrame ? PixelFillRect(r, frame, hpWin, HpFillArea, mirror) : r;
             Texture2D mask = GetFillMask(false, frame, hpWin);
             DrawMaskedFill(fill, 1f, mirror, new Color(0.05f, 0.01f, 0.01f, 1f), mask);
