@@ -244,3 +244,14 @@
 - **Status:** CODE_READY / PREFLIGHT_PENDING / APK_QUEUED_FOR_RELEASE (not yet a GitHub Actions build queue until branch promotion).
 
 | 2026-11-05 — BP-032 / release guard | Pixel-based HUD mask source commit `015c4f87` | Original HP/Ki frames preserved; geometry derives from source images once at runtime. | Check final dev Preflight and preceding APK №410 completion, then promote exactly one APK №411 and test on phone. |
+
+
+## BP-033 — Fix HUD tip crop and upside-down alpha mask after APK №411 (2026-11-05)
+
+- **User device evidence:** APK №411 still shows dark unfilled triangular regions near pointed HP and Ki tips. Earlier pixel-derived mask BP-032 only sampled within old `HpWinKit` / `KiWinKit` and couldn't fill ornament tips beyond those rectangles. Also output mask pixel row 0 (bottom) sampled the source PNG's top row, flipping asymmetric upper/lower rails.
+- **Fix commits:** `fc066eac1f51c92e57d372ae3d7854924bba3a7c` changes `Assets/_Project/Scripts/Game/DuelHud.cs` to define measured larger *fill-only* source regions `HpFillArea` (90..562, 48..113 for 578×160 PNG), `KiFillArea` (35..456, 10..66 for 467×76 PNG), maps these source coordinates onto the *existing* `DrawFrame` placement via `PixelFillRect` (both normal and mirrored), samples pixel-derived alpha through the extended pointed tips, reads source rows bottom-to-top for Unity mask texture orientation, and adds 1-source-pixel inner safety inset to prevent gold bleed. `242e0e37a54b78c37c24fa8324b92bda29ecbc33` only applies expanded mapping to exact kit texture dimensions; legacy assets retain original coordinates. No art textures modified.
+- **Rationale:** The prior approach aligned mask to an undersized rectangular sample and inverted its vertical contour; merely changing taper numbers was insufficient. Frame draw placement, original PNGs, hero portraits, UI and gameplay logic remain untouched.
+- **Validation:** Inspect full/partial HP and Ki fill in both normal/mirrored bars on Android, including top/bottom margins, outer gold tips and antialias. Device validation required: Preflight/static compilation does not prove no frame bleed. Do not declare resolved based on source change alone.
+- **Release gate:** The last checked prior APK №411 completed success at SHA `f30b812e8494ce41230724e199514032e6bb0584`; previous `apk-build` SHA unchanged until a checked next release. Wait for Preflight success on final dev SHA before exactly one Android APK promotion; never cancel/duplicate concurrent runs.
+
+| 2026-11-05 — BP-033 | HUD geometry code `fc066eac`, exact atlas guard `242e0e37` | Enlarged fill under HP/Ki pointed tip; fixed flipped mask row coordinates; no PNG/video changes. | Validate final dev Preflight; Android screenshot comparison required before marking visual success. |
