@@ -298,3 +298,6 @@
 - **Scope:** no changes to original gold frames `hud_hp_l.png`, existing Ki PNG/mask, other UI, combat gameplay, backgrounds, or videos. Intended next Android APK №415 only after final SHA passes Preflight and no Android APK is running. Visual acceptance **must** check HP both left/right, full and partial, on device; Preflight itself is not a visual sign-off.
 
 | 2026-11-05 — BP-036 | source `8e35bcdb`, RGBA cap art `55ab8131`, new regression test `3a60c4e5` | HP center always visible with optional authored endcaps, resilient to Unity Android texture sizing | Require final preflight, exactly one №415 Android build and phone screenshot before claiming final fix. |
+
+
+| 2026-11-05 — BP-036 / Android №415 started | verified game release SHA `0d9ea7cf47f61949d29879053859ffe9cc8dde83`; Preflight №238 run `41995932153` **success** including RGBA alpha / HP fallback tests | `apk-build` advanced ONCE from №414 SHA `64bffcf1d20a2608f5b5e582d7d6a6b116c92a1f` to this SHA. GitHub Actions real Android build №415 run `41996078972`, initially **in_progress** with matching SHA. | Confirm Unity APK result, then inspect screenshots on Android: HP must visibly fill on both sides at 100% and 50%; missing tips must never blank whole HP. Do not claim visual fix without device validation. |
