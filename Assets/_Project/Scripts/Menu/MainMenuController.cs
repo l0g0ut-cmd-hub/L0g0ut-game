@@ -271,12 +271,11 @@ namespace BladePath
 
             Rect ok = difficulty ? DifficultyConfirm : TravellerStart;
             Rect back = difficulty ? DifficultyBack : TravellerBack;
-            // Both approved backgrounds already contain painted button art.
-            // Keep their original pixels unchanged; the shared Kit buttons
-            // cover the painted interiors without adding a BLACK RECTANGLE
-            // under the transparent ornamental corners.
-            bool pressedBack = DrawSelectionAction(back, "НАЗАД", false, s, ox, oy);
-            bool pressedOk = DrawSelectionAction(ok, difficulty ? "ПОДТВЕРДИТЬ" : "НАЧАТЬ ПУТЬ", true, s, ox, oy);
+            // The approved screen textures already contain the COMPLETE ornamental
+            // buttons (frames, fills and labels). Draw no second button on top:
+            // an overlay produces offset double borders and mismatched text.
+            bool pressedBack = SelectionHitbox(back, s, ox, oy);
+            bool pressedOk = SelectionHitbox(ok, s, ox, oy);
             if (pressedBack) newJourneyStep--;
             else if (pressedOk)
             {
@@ -289,23 +288,13 @@ namespace BladePath
             }
         }
 
-        /// <summary>Uniform Kit action over the original selection artwork.
-        /// Never use an opaque rectangular cover: it produces black square
-        /// borders outside the ornate button on both selection screens.</summary>
-        static bool DrawSelectionAction(Rect original, string label, bool red, float scale, float ox, float oy)
+        /// <summary>Clickable area aligned with a button painted into the screen art.
+        /// GUIStyle.none draws no pixels in any button state.</summary>
+        static bool SelectionHitbox(Rect original, float scale, float ox, float oy)
         {
-            Matrix4x4 old = UiKit.Begin();
-            float k = UiKit.Scale;
-            Rect r = new Rect((ox + original.x * scale) / k,
-                              (oy + original.y * scale) / k,
-                              original.width * scale / k,
-                              original.height * scale / k);
-            // The ornate Kit button is already opaque in its painted center.
-            // Removing the old ui_board patch exposes the untouched landscape
-            // through transparent gold corners instead of a black rectangle.
-            bool pressed = VisualIdentity.KitButton(r, label, true, red);
-            GUI.matrix = old;
-            return pressed;
+            Rect r = new Rect(ox + original.x * scale, oy + original.y * scale,
+                              original.width * scale, original.height * scale);
+            return GUI.Button(r, GUIContent.none, GUIStyle.none);
         }
 
         /// <summary>
