@@ -40,7 +40,6 @@ jobs:
           key: Library-AndroidEmulator-${{ env.UNITY_VERSION }}-${{ github.sha }}
           restore-keys: |
             Library-AndroidEmulator-${{ env.UNITY_VERSION }}-
-            Library-Android-${{ env.UNITY_VERSION }}-
       - name: Install GameCI CLI
         if: inputs.reuse_apk_run == ''
         run: |
@@ -49,6 +48,10 @@ jobs:
           curl -fsSL "https://raw.githubusercontent.com/game-ci/cli/${GAMECI_VERSION}/scripts/install.sh" -o "$RUNNER_TEMP/gc-install.sh"
           bash "$RUNNER_TEMP/gc-install.sh" "$GAMECI_VERSION" "$GAME_CI_INSTALL"
           echo "$GAME_CI_INSTALL" >> "$GITHUB_PATH"
+      # Промежуточные файлы IL2CPP из кэша (особенно другой архитектуры: arm64 у APK, x86_64 у фототура)
+      # роняли конвертер Unity с segmentation fault. Скрипты и ассеты из кэша остаются — пересобирается только IL2CPP.
+      - name: Clear stale IL2CPP intermediates
+        run: sudo rm -rf Library/Bee/artifacts/Android Library/Il2cppBuildCache || true
       - name: Build x86_64 QA APK from the same scenes and UI scripts
         if: inputs.reuse_apk_run == ''
         env:
