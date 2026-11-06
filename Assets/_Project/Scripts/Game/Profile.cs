@@ -197,6 +197,7 @@ namespace BladePath
         {
             public float dmgMul, postureMul, armorMul, kiGainMul, kiRegenMul, parryMul, dashCdMul, moveMul, healMul, goldMul, bleedDps, crit, blockPostureMul;
             public float lifesteal;   // руна «Вампиризм»: доля урона, возвращаемая здоровьем
+            public float swingMul;    // скорость удара (1 — обычная): у Рэна быстрее, у Акико медленнее
             public int hp, gourds, postureMax;
         }
         static Bonus cache; static bool dirty = true;
@@ -283,13 +284,25 @@ namespace BladePath
                 // Starting identities grant small, legible differences:
                 // Dzin: flexible sword technique; Akiko: survivability;
                 // Ren: nimble movement. Existing equipment/stat rules remain.
+                // роли путников заметны в бою (а не 3–6%, которые не почувствовать):
+                // Дзин — баланс: обычная скорость, сильнее рубит и чаще отражает;
+                // Акико — броня: больше здоровья, меньше урона, держит блок, но тяжелее и медленнее;
+                // Рэн — скорость: ходит и бьёт заметно быстрее, рывок чаще, но хрупкий и бьёт легче.
+                b.swingMul = 1f;
                 switch (JourneyChoice.Hero)
                 {
-                    case 0: b.dmgMul *= 1.03f; break;
-                    case 1: b.hp += 6; b.armorMul *= 0.93f; break;
+                    case 0:
+                        b.dmgMul *= 1.08f; b.postureMul *= 1.10f;
+                        b.parryMul = Mathf.Min(2f, b.parryMul * 1.10f);
+                        break;
+                    case 1:
+                        b.hp += 30; b.armorMul *= 0.85f; b.blockPostureMul *= 0.80f;
+                        b.moveMul *= 0.90f; b.swingMul = 0.92f;
+                        break;
                     case 2:
-                        b.moveMul = Mathf.Min(1.38f, b.moveMul * 1.06f);
-                        b.dashCdMul *= 0.94f;
+                        b.hp -= 15; b.dmgMul *= 0.92f;
+                        b.moveMul = Mathf.Min(1.5f, b.moveMul * 1.20f);
+                        b.dashCdMul *= 0.75f; b.swingMul = 1.18f;
                         break;
                 }
                 return b;

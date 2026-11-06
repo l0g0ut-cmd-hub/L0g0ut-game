@@ -99,6 +99,8 @@ namespace BladePath
         public event Action<WeaponController> Released;
 
         float phaseTime;
+        /// <summary>Скорость всех фаз удара (1 — обычная). Ставит DuelManager.ApplyProfile по путнику героя.</summary>
+        public float SwingSpeed = 1f;
         Vector3 pivotBasePos;
 
         void Awake()
@@ -326,7 +328,7 @@ namespace BladePath
             if (Phase == SwingPhase.Idle && pivot != null) { ApplyRestPose(); return; }
             if (Phase == SwingPhase.Idle || pivot == null || CurrentProfile == null) return;
 
-            phaseTime += Time.deltaTime * (Perilous && Phase == SwingPhase.Windup ? perilousWindupRate : 1f);
+            phaseTime += Time.deltaTime * SwingSpeed * (Perilous && Phase == SwingPhase.Windup ? perilousWindupRate : 1f);
             // перенос остатка времени между фазами (длинный кадр не «съедает» фазу)
             int guard = 8;
             while (Phase != SwingPhase.Idle && guard-- > 0)

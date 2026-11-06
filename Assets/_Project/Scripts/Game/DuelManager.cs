@@ -178,6 +178,7 @@ namespace BladePath
             if (basePosture < 0f) { basePosture = player.maxPosture; baseGourds = player.gourdMax; }
             Profile.Bonus b = Profile.B;
             player.maxPosture = basePosture + b.postureMax;
+            if (player.weapon != null) player.weapon.SwingSpeed = b.swingMul > 0f ? b.swingMul : 1f;   // Рэн бьёт быстрее, Акико — тяжелее
             int oldMax = player.gourdMax;
             player.gourdMax = baseGourds + b.gourds;
             if (player.gourdMax > oldMax) player.Gourds += player.gourdMax - oldMax;
@@ -1156,7 +1157,7 @@ namespace BladePath
                 case AttackType.JumpStrike: return 36f;
                 case AttackType.Thrust: return 26f;
                 case AttackType.Rising: return 24f;
-                case AttackType.LegSweep: return 20f;
+                case AttackType.LegSweep: return 34f;   // своя роль: слабый по урону, но сильнее всех ломает равновесие
                 case AttackType.Energy: return 18f;
                 default: return 22f;
             }

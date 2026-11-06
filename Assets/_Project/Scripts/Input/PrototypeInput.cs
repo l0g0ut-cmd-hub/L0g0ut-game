@@ -264,16 +264,17 @@ namespace BladePath
             Vector2 C = new Vector2(W - 82f, H - 82f);
             System.Func<float, float, Vector2> At = (deg, d) => C + new Vector2(Mathf.Cos(deg * Mathf.Deg2Rad), Mathf.Sin(deg * Mathf.Deg2Rad)) * d;
             Vector2 p;
-            Circle(B.Overhead, C.x, C.y, 47f);
-            p = At(180f, 118f); Circle(B.Legs, p.x, p.y, 27f);
-            p = At(211.7f, 118f); Circle(B.Rising, p.x, p.y, 27f);
-            p = At(243.3f, 118f); Circle(B.Slash, p.x, p.y, 27f);
-            p = At(275f, 118f); Circle(B.Thrust, p.x, p.y, 27f);
-            p = At(193f, 200f); Circle(B.Block, p.x, p.y, 33f);
-            p = At(224f, 198f); Circle(B.Dash, p.x, p.y, 26f);
-            p = At(252f, 200f); Circle(B.Jump, p.x, p.y, 24f);
-            p = At(281f, 198f); Circle(B.Energy, p.x, p.y, 22f);
-            p = At(166f, 198f); Circle(B.Heal, p.x, p.y, 22f);
+            // три удара (рез и «снизу» убраны — делали то же, что остальные): «сверху» в углу под большим пальцем,
+            // по ближней дуге — укол (вверх), блок (по диагонали, главная защита — в один короткий жест), по ногам (влево);
+            // вторым поясом — рывок, прыжок, шар, тыква. Кнопки удара крупнее прежних: промахиваться труднее.
+            Circle(B.Overhead, C.x, C.y, 50f);
+            p = At(270f, 122f); Circle(B.Thrust, p.x, p.y, 34f);
+            p = At(225f, 126f); Circle(B.Block, p.x, p.y, 36f);
+            p = At(180f, 122f); Circle(B.Legs, p.x, p.y, 34f);
+            p = At(170f, 212f); Circle(B.Heal, p.x, p.y, 23f);   // ниже 165° уходит за нижний край экрана
+            p = At(194f, 212f); Circle(B.Dash, p.x, p.y, 28f);
+            p = At(232f, 214f); Circle(B.Jump, p.x, p.y, 28f);
+            p = At(268f, 212f); Circle(B.Energy, p.x, p.y, 25f);
             // «дух» — рядом с дугой внизу, под большим пальцем: на месте над дугой (238°, 286) кнопка
             // висела посреди экрана поверх боя
             p = At(186f, 292f); Circle(B.Super, p.x, p.y, 30f);
@@ -317,7 +318,7 @@ namespace BladePath
 
             for (int i = 0; i < Count; i++) active[i] = false;
             if (play)
-                foreach (B b in new[] { B.Stick, B.Jump, B.Dash, B.Block, B.Overhead, B.Rising, B.Legs, B.Energy, B.Thrust, B.Slash, B.Pause, B.Heal }) active[(int)b] = true;
+                foreach (B b in new[] { B.Stick, B.Jump, B.Dash, B.Block, B.Overhead, B.Legs, B.Energy, B.Thrust, B.Pause, B.Heal }) active[(int)b] = true;
             if (play && player != null && player.KiFull) active[(int)B.Super] = true;
             if (!paused) devOpen = false;
             if (paused && devOpen)
