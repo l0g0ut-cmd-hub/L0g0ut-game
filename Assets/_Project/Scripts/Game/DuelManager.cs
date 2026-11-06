@@ -438,7 +438,7 @@ namespace BladePath
             if (Juice.Instance != null)
             {
                 Juice.Instance.Taiko(0.9f, 0.95f);
-                if (Round <= 1) Juice.Instance.Growl(1f / Mathf.Sqrt(Ladder.Current.hpMul));   // чем крепче враг, тем ниже рык
+                // рык врага в начале боя убран (2026-11-06): низкое жужжание 48 Гц после удара гонга звучало как пердёж
             }
             SetState(DuelState.Intro);
             IaiWaiting = false; iaiDone = false; iaiRoll = UnityEngine.Random.value < 0.5f;
