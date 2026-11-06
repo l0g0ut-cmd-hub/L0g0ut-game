@@ -14,10 +14,7 @@ jobs:
           set -u
           mkdir -p out/pages out/files
           UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
-          SLUGS="smoke-plume-small-rising-01-front smoke-plume-medium-rising-03-front smoke-plume-medium-rising-04-front smoke-plume-rising-medium-02-front smoke-plume-large-rising-01-front
-          woodfire-02-side woodfire-05-side woodfire-03-front
-          steam-jet-continous-01-side steam-jet-continous-02-front steam-jet-continous-04-front steam-jet-continous-01-angle
-          falling-fog-01-front falling-fog-02-front fog-01-side fog-03-side fog-04-side fog-05-side fog-06-side fog-09-side"
+          SLUGS="campfire-03-loop-front"
           for s in $SLUGS; do
             curl -sL -A "$UA" "https://cgheven.com/assets/$s" -o "out/pages/$s.html" || true
             grep -oE 'https://cdn\.cgheven\.com/file/[^"\\ ]+' "out/pages/$s.html" | grep -viE 'preview|thumbnail|/Addons/|\.webm$|\.webp$|Thanos_Portal' | sort -u > "out/pages/$s.urls" || true
@@ -37,9 +34,9 @@ jobs:
             [ -f "$f" ] || continue
             n=$(basename "$f"); n="${n#raw_}"; n="${n%.*}"
             dur=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$f" || echo 2)
-            fps=$(python3 -c "print(max(1.0, 48.0/max(0.5, float('$dur'))))")
+            fps=25
             mkdir -p "out/frames/$n"
-            ffmpeg -v error -i "$f" -vf "fps=$fps,format=rgba,scale=384:384:force_original_aspect_ratio=decrease" -frames:v 48 "out/frames/$n/f_%02d.png" || echo "FFMPEG FAIL $n" >> out/log.txt
+            ffmpeg -v error -i "$f" -vf "fps=$fps,format=rgba,scale=384:384:force_original_aspect_ratio=decrease" -frames:v 400 "out/frames/$n/f_%02d.png" || echo "FFMPEG FAIL $n" >> out/log.txt
             ffprobe -v error -select_streams v:0 -show_entries stream=pix_fmt,width,height,nb_frames -of csv=p=0 "$f" | sed "s/^/$n: /" >> out/log.txt
           done
           rm -f out/raw_*
