@@ -146,6 +146,13 @@ namespace BladePath
         // Главное меню остаётся на прежних Button/Surface — его не трогаем.
 
         /// <summary>Кнопка в едином стиле: чёрная (или кроваво-красная — главная), золотая окантовка с шипами.</summary>
+        /// <summary>Место под надпись внутри кнопки: без орнаментальных концов (≈0,45 высоты с каждой стороны).</summary>
+        public static Rect TextArea(Rect r, bool square = false)
+        {
+            float pad = square ? r.height * 0.18f : Mathf.Min(r.height * 0.45f, r.width * 0.12f);
+            return new Rect(r.x + pad, r.y, Mathf.Max(8f, r.width - pad * 2f), r.height);
+        }
+
         public static bool KitButton(Rect r, string label, bool enabled = true, bool red = false, bool selected = false)
         {
             bool square = r.width < r.height * 1.7f;
@@ -159,7 +166,8 @@ namespace BladePath
             if (square) GUI.DrawTexture(vr, t, ScaleMode.StretchToFill, true, 0f, tint, 0f, 0f);
             else UiKit.Slice(vr, t, vr.height / t.height, 0.14f, 0.12f, 0.5f, 0f, tint);
             if (selected) UiKit.Rect(new Rect(r.x + r.width * 0.2f, r.yMax - 3f, r.width * 0.6f, 2f), new Color(BrassLight.r, BrassLight.g, BrassLight.b, 0.6f + 0.3f * Mathf.Sin(Time.unscaledTime * 3f)));
-            UiKit.Text(r, label, Mathf.Min(17f, r.height * 0.42f), enabled ? Parchment : new Color(0.60f, 0.57f, 0.51f), TextAnchor.MiddleCenter);
+            // текст подгоняется под гладкую середину кнопки, а не под всю ширину с завитками по краям
+            UiKit.Text(TextArea(r, square), label, Mathf.Min(17f, r.height * 0.42f), enabled ? Parchment : new Color(0.60f, 0.57f, 0.51f), TextAnchor.MiddleCenter);
             return enabled && GUI.Button(r, GUIContent.none, GUIStyle.none);
         }
 

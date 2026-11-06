@@ -245,7 +245,7 @@ namespace BladePath
             if (pr.width > 24f && !string.IsNullOrEmpty(s))
             {
                 float w = TextWidth(s), room = pr.width - 4f * k;
-                if (w > room) label.fontSize = Mathf.Max(6, Mathf.RoundToInt(label.fontSize * Mathf.Max(0.55f, room / w)));
+                if (w > room) label.fontSize = Mathf.Max(6, Mathf.RoundToInt(label.fontSize * Mathf.Max(0.5f, room / w)));
             }
             if (shadow)
             {
