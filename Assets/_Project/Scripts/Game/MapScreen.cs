@@ -1724,6 +1724,8 @@ namespace BladePath
             if (UiKit.Tex("UI/camp") == null) { modal = Modal.None; return; }
             OpenModal(Modal.Camp);
         }
+        // одна и та же кнопка выхода в лагере («В ПУТЬ») и в трактире («В ЛАГЕРЬ»)
+        Rect ExitButtonRect() { return new Rect(W * 0.5f - 110f, 540f - 58f, 220f, 44f); }
         Rect CampRect(Rect z, float s, float ox, float oy) { return new Rect(ox + z.x * s, oy + z.y * s, z.width * s, z.height * s); }
         void DrawCamp(bool ok)
         {
@@ -1775,29 +1777,20 @@ namespace BladePath
             Rect forgeButton = CampRect(new Rect(335f, 159f, 205f, 46f), s, ox, oy);
             Rect altarButton = CampRect(new Rect(240f, 544f, 185f, 46f), s, ox, oy);
             Rect trainButton = CampRect(new Rect(1480f, 450f, 215f, 46f), s, ox, oy);
-            Rect go = CampRect(CampGo, s, ox, oy);
             bool enabled = ok && !InventoryScreen.Open;
             // Separate navigation buttons: the quest board no longer opens when tapping the distant hill house.
             // Match the tavern button style/height and keep a 12-unit gap.
             if (Btn(new Rect(W - 450f, 14f, 242f, 42f), "ДОСКА ЗАДАНИЙ", enabled && !campBoard)) { campSub = 2; return; }
             if (Btn(new Rect(W - 196f, 14f, 180f, 42f), "ТРАКТИР", enabled && UiKit.Tex("UI/tavern") != null)) { Profile.CostMul = 1f; OpenTavern(true); return; }
-            if (Btn(go, "В ПУТЬ", enabled, true)) { Profile.CostMul = 1f; modal = Modal.None; Haptics.Pulse(20); return; }
+            if (Btn(ExitButtonRect(), "В ПУТЬ", enabled, true)) { Profile.CostMul = 1f; modal = Modal.None; Haptics.Pulse(20); return; }
             if (Btn(forgeButton, "КУЗНИЦА", enabled)) { Profile.CostMul = 0.5f; InventoryScreen.Show(0); return; }
-            if (Btn(altarButton, "АЛТАРЬ", enabled))
+            // использованное за этот привал гаснет — как в трактире и у доски заданий
+            if (Btn(altarButton, "АЛТАРЬ", enabled && !campAltar)) { campSub = 1; return; }
+            if (Btn(trainButton, "ТРЕНИРОВКА", enabled && !campTrain))
             {
-                if (campAltar) TavToast("Алтарь уже даровал благословение. Возвращайся в следующий привал.");
-                else campSub = 1;
-                return;
-            }
-            if (Btn(trainButton, "ТРЕНИРОВКА", enabled))
-            {
-                if (campTrain) TavToast("Тренировка завершена. Новое занятие — на следующем привале.");
-                else
-                {
-                    Profile.GivePoint();
-                    campTrain = true;
-                    TavToast("Тренировка у соломенных чучел: +1 очко характеристик.");
-                }
+                Profile.GivePoint();
+                campTrain = true;
+                TavToast("Тренировка у соломенных чучел: +1 очко характеристик.");
                 return;
             }
         }
@@ -1904,14 +1897,17 @@ namespace BladePath
             // Existing tavern photo/video/intentional static overlay are untouched.
             // Replace the five tiny plain labels and huge invisible hitboxes
             // with compact Kit buttons positioned beside their original objects.
-            Rect keeperButton = CampRect(new Rect(285f, 329f, 237f, 44f), s, ox, oy);
+            Rect keeperButton = CampRect(new Rect(137f, 432f, 237f, 44f), s, ox, oy);
             Rect diceButton = CampRect(new Rect(1236f, 424f, 185f, 44f), s, ox, oy);
-            Rect boardButton = CampRect(new Rect(1610f, 323f, 200f, 44f), s, ox, oy);
+            Rect boardButton = CampRect(new Rect(1610f, 40f, 200f, 44f), s, ox, oy);
             Rect drunkButton = CampRect(new Rect(1480f, 670f, 244f, 44f), s, ox, oy);
             Rect hearthButton = CampRect(new Rect(900f, 520f, 160f, 44f), s, ox, oy);
-            UiKit.Text(new Rect(0f, 8f, W, 30f), "ТРАКТИР «ЧЁРНЫЙ ФОНАРЬ»", 22f, Gold);
+            Texture2D plaque = UiKit.Tex("UI/Kit/hud_banner");
+            if (plaque != null)
+                GUI.DrawTexture(new Rect(W * 0.5f - 230f, 2f, 460f, 460f * plaque.height / plaque.width), plaque, ScaleMode.StretchToFill, true);
+            UiKit.Text(new Rect(0f, 30f, W, 30f), "ТРАКТИР «ЧЁРНЫЙ ФОНАРЬ»", 20f, Gold);
             bool enabled = ok && !InventoryScreen.Open;
-            if (Btn(new Rect(W * 0.5f - 100f, 540f - 58f, 200f, 44f), tavFromCamp ? "В ЛАГЕРЬ" : "УЙТИ", enabled, true))
+            if (Btn(ExitButtonRect(), tavFromCamp ? "В ЛАГЕРЬ" : "УЙТИ", enabled, true))
             {
                 if (tavFromCamp) { modal = Modal.Camp; modalAt = Time.unscaledTime; } else modal = Modal.None;
                 Haptics.Pulse(20); return;

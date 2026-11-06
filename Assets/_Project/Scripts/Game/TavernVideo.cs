@@ -124,7 +124,7 @@ namespace BladePath
             int nxt = 1 - cur;
             if (Ended(cur) && vp[nxt].isPrepared)
             {
-                if (!started[nxt]) { frameDelivered[nxt] = false; vp[nxt].Play(); started[nxt] = true; }
+                if (!started[nxt]) { frameDelivered[nxt] = false; vp[nxt].sendFrameReadyEvents = true; vp[nxt].Play(); started[nxt] = true; }
                 if (frameDelivered[nxt])
                 {
                     // второй уже выдал кадр — переключаемся, первый готовим к следующему кругу
@@ -132,6 +132,9 @@ namespace BladePath
                     cur = nxt;
                 }
             }
+            // события «кадр готов» нужны только чтобы дождаться первого кадра; дальше на Android
+            // они впустую дёргают обработчик каждый кадр — выключаем
+            if (frameDelivered[cur] && vp[cur].sendFrameReadyEvents) vp[cur].sendFrameReadyEvents = false;
             return shown && frameDelivered[cur] ? rt[cur] : null;   // never display an unrendered RT
         }
 
