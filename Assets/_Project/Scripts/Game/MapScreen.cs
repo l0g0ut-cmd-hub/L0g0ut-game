@@ -436,15 +436,11 @@ namespace BladePath
                 manualPan = false; panU = -1f;
             }
             // меню разработчика (отладка): телепорт, лагерь, трактир, следующая область
-            {   // звук: выключатель и что звучит (игра / музыка / оба) — слева от «РАЗРАБ.»
-                float sx = mapX + viewW - (uw < 0.999f ? 226f : 116f);
-                bool sndOk = interactive && modal == Modal.None && moveTo < 0;
-                if (Btn(new Rect(sx - 236f, 14f, 96f, 33f), SoundSettings.On ? "ЗВУК: ВКЛ" : "ЗВУК: ВЫКЛ", sndOk)) SoundSettings.Toggle();
-                // время суток: медальон в правом верхнем углу карты; нажатие — что сейчас и сколько шагов до смены
+            {   // время суток: медальон в правом верхнем углу карты; нажатие — что сейчас и сколько шагов до смены
+                bool dayOk = interactive && modal == Modal.None && moveTo < 0;
                 Rect dayR = new Rect(mapX + viewW - 60f, 54f, 48f, 48f);   // под кнопками справа (слева заняты название области и легенда)
                 DayCycle.DrawBadge(dayR);
-                if (sndOk && Event.current.type == EventType.MouseDown && dayR.Contains(Event.current.mousePosition)) { SetToast(DayCycle.Hint()); Event.current.Use(); }
-                if (Btn(new Rect(sx - 134f, 14f, 126f, 33f), SoundSettings.ScopeShortName, sndOk && SoundSettings.On)) SoundSettings.NextScope();
+                if (dayOk && Event.current.type == EventType.MouseDown && dayR.Contains(Event.current.mousePosition)) { SetToast(DayCycle.Hint()); Event.current.Use(); }
             }
             if (Btn(new Rect(mapX + viewW - (uw < 0.999f ? 226f : 116f), 14f, 104f, 33f), devTeleport ? "ОТМЕНА" : "РАЗРАБ.", interactive && (modal == Modal.None || modal == Modal.Dev) && moveTo < 0))
             {
@@ -604,45 +600,91 @@ namespace BladePath
         // место здания у значка: из нескольких сторон выбирается та, что дальше всего от дорог, воды (мост!) и других мест
         static readonly Vector2[] BuildingSpots = { new Vector2(38f, 0f), new Vector2(-38f, 0f), new Vector2(30f, -22f), new Vector2(-30f, -22f), new Vector2(0f, -34f), new Vector2(34f, 24f), new Vector2(-34f, 24f),
                                                     new Vector2(54f, -12f), new Vector2(-54f, -12f), new Vector2(42f, -40f), new Vector2(-42f, -40f) };   // дальние — когда у ближних вода
+        static readonly Vector2[] FarSpots = { new Vector2(70f, 0f), new Vector2(-70f, 0f), new Vector2(62f, -36f), new Vector2(-62f, -36f), new Vector2(0f, -62f), new Vector2(60f, 34f), new Vector2(-60f, 34f) };   // если рядом тесно — подальше
         readonly Dictionary<int, Vector2> buildingOff = new Dictionary<int, Vector2>();
         string buildingKey;
+        bool HasBuilding(MapNode n, int i) { return !Campaign.OnBridge(i) && (BuildingOf(n) >= 0 || CampOf(n, i) >= 0 || NewPlace(n.Type) >= 0); }
+
         Vector2 BuildingOffset(int i, int tower)
         {
             List<MapNode> ns = Campaign.Nodes;
             string key = Campaign.Region + ":" + ns.Count + ":" + ns[0].x + ":" + tower;
-            if (key != buildingKey) { buildingKey = key; buildingOff.Clear(); }
+            if (key != buildingKey) { buildingKey = key; buildingOff.Clear(); PlaceBuildings(tower); }
             Vector2 got;
-            if (buildingOff.TryGetValue(i, out got)) return got;
+            return buildingOff.TryGetValue(i, out got) ? got : BuildingSpots[0];
+        }
+
+        /// <summary>
+        /// Места всех домиков области разом: у каждого — сторона подальше от дорог, воды и значков, и при этом домики
+        /// не налезают друг на друга и на смотровую башню (несколько проходов: каждый домик пересматривает место с учётом соседей).
+        /// </summary>
+        void PlaceBuildings(int tower)
+        {
+            List<MapNode> ns = Campaign.Nodes;
             TerrainRoads.Bind(Campaign.Region, ns);
-            Vector2 k = new Vector2(810f, 540f), np = new Vector2(ns[i].x, ns[i].y);
-            // точки дорог вокруг (все дороги места и соседей)
-            List<Vector2> road = new List<Vector2>(64);
-            for (int a = 0; a < ns.Count; a++)
-                foreach (int b in ns[a].next)
-                {
-                    if ((Vector2.Scale(new Vector2(ns[a].x, ns[a].y) - np, k)).sqrMagnitude > 260f * 260f && (Vector2.Scale(new Vector2(ns[b].x, ns[b].y) - np, k)).sqrMagnitude > 260f * 260f) continue;
-                    TerrainRoads.Path pth = TerrainRoads.Route(a, b);
-                    for (int q = 0; q <= 12; q++) road.Add(Vector2.Scale(pth.Position(q / 12f), k));
-                }
-            float bestScore = -1e9f; Vector2 best = BuildingSpots[0];
-            // экранные смещения ~ точкам карты 810 (карта на экране почти в масштабе); центр здания — чуть выше основания
-            foreach (Vector2 sp in BuildingSpots)
+            Vector2 k = new Vector2(810f, 540f);
+            List<int> idx = new List<int>();
+            for (int i = 0; i < ns.Count; i++) if (HasBuilding(ns[i], i)) idx.Add(i);
+            Vector2[] spots = new Vector2[BuildingSpots.Length + FarSpots.Length];
+            BuildingSpots.CopyTo(spots, 0); FarSpots.CopyTo(spots, BuildingSpots.Length);
+            float[][] baseScore = new float[idx.Count][];
+            for (int q = 0; q < idx.Count; q++)
             {
-                if (i == tower && sp.x > 10f && sp.y < 5f) continue;   // справа-сверху стоит смотровая башня
-                Vector2 basePt = Vector2.Scale(np, k) + sp, center = basePt + new Vector2(0f, -26f);
-                float dRoad = 1e9f; foreach (Vector2 rp in road) dRoad = Mathf.Min(dRoad, Mathf.Min((rp - basePt).magnitude, (rp - center).magnitude));
-                float dWater = 1e9f;   // по основанию, центру и бокам спрайта (74 точки шириной)
-                foreach (Vector2 wp in new[] { basePt, center, basePt + new Vector2(-30f, -8f), basePt + new Vector2(30f, -8f) })
-                    dWater = Mathf.Min(dWater, MapLife.DistToWater(Campaign.Region, new Vector2(wp.x / 810f, wp.y / 540f)));
-                float dNode = 1e9f; for (int o = 0; o < ns.Count; o++) if (o != i) dNode = Mathf.Min(dNode, (Vector2.Scale(new Vector2(ns[o].x, ns[o].y), k) - center).magnitude);
-                // река широкая (линия — её середина): ближе ~60 точек к середине здание стоит на воде или на самом берегу — сильный штраф
-                float far = sp.magnitude > 50f ? 6f : 0f;
-                float score = Mathf.Min(dRoad, 40f) + 2.5f * Mathf.Min(dWater, 80f) + 0.8f * Mathf.Min(dNode, 60f) - (sp == BuildingSpots[0] ? 0f : 3f) - far
-                              - (dWater < 60f ? (60f - dWater) * 6f : 0f);
-                if (score > bestScore) { bestScore = score; best = sp; }
+                int i = idx[q];
+                Vector2 np = new Vector2(ns[i].x, ns[i].y);
+                List<Vector2> road = new List<Vector2>(64);
+                for (int a = 0; a < ns.Count; a++)
+                    foreach (int b in ns[a].next)
+                    {
+                        if ((Vector2.Scale(new Vector2(ns[a].x, ns[a].y) - np, k)).sqrMagnitude > 260f * 260f && (Vector2.Scale(new Vector2(ns[b].x, ns[b].y) - np, k)).sqrMagnitude > 260f * 260f) continue;
+                        TerrainRoads.Path pth = TerrainRoads.Route(a, b);
+                        for (int t = 0; t <= 12; t++) road.Add(Vector2.Scale(pth.Position(t / 12f), k));
+                    }
+                baseScore[q] = new float[spots.Length];
+                for (int si = 0; si < spots.Length; si++)
+                {
+                    Vector2 sp = spots[si];
+                    if (i == tower && sp.x > 10f && sp.y < 5f) { baseScore[q][si] = -1e9f; continue; }   // справа-сверху стоит смотровая башня
+                    Vector2 basePt = Vector2.Scale(np, k) + sp, center = basePt + new Vector2(0f, -26f);
+                    float dRoad = 1e9f; foreach (Vector2 rp in road) dRoad = Mathf.Min(dRoad, Mathf.Min((rp - basePt).magnitude, (rp - center).magnitude));
+                    float dWater = 1e9f;   // по основанию, центру и бокам спрайта (74 точки шириной)
+                    foreach (Vector2 wp in new[] { basePt, center, basePt + new Vector2(-30f, -8f), basePt + new Vector2(30f, -8f) })
+                        dWater = Mathf.Min(dWater, MapLife.DistToWater(Campaign.Region, new Vector2(wp.x / 810f, wp.y / 540f)));
+                    float dNode = 1e9f; for (int o = 0; o < ns.Count; o++) if (o != i) dNode = Mathf.Min(dNode, (Vector2.Scale(new Vector2(ns[o].x, ns[o].y), k) - center).magnitude);
+                    // река широкая (линия — её середина): ближе ~60 точек к середине здание стоит на воде или на самом берегу — сильный штраф
+                    float far = si >= BuildingSpots.Length ? 14f : sp.magnitude > 50f ? 6f : 0f;
+                    baseScore[q][si] = Mathf.Min(dRoad, 40f) + 2.5f * Mathf.Min(dWater, 80f) + 0.8f * Mathf.Min(dNode, 60f) - (si == 0 ? 0f : 3f) - far
+                                       - (dWater < 60f ? (60f - dWater) * 6f : 0f) - (dNode < 30f ? (30f - dNode) * 4f : 0f);
+                }
             }
-            buildingOff[i] = best;
-            return best;
+            // центр спрайта домика: основание + (0, −21), видимая часть ~70×62
+            int[] pick = new int[idx.Count];
+            for (int q = 0; q < idx.Count; q++) { int best = 0; for (int si = 1; si < spots.Length; si++) if (baseScore[q][si] > baseScore[q][best]) best = si; pick[q] = best; }
+            System.Func<int, int, Vector2> Center = (q, si) => Vector2.Scale(new Vector2(ns[idx[q]].x, ns[idx[q]].y), k) + spots[si] + new Vector2(0f, -21f);
+            Vector2 towerC = tower >= 0 && tower < ns.Count ? Vector2.Scale(new Vector2(ns[tower].x, ns[tower].y), k) + new Vector2(30f, -30f) : new Vector2(-9999f, -9999f);
+            for (int pass = 0; pass < 4; pass++)
+                for (int q = 0; q < idx.Count; q++)
+                {
+                    int best = pick[q]; float bestS = -1e12f;
+                    for (int si = 0; si < spots.Length; si++)
+                    {
+                        if (baseScore[q][si] <= -1e8f) continue;
+                        Vector2 c = Center(q, si);
+                        float overlap = 0f;
+                        for (int o = 0; o < idx.Count; o++)
+                        {
+                            if (o == q) continue;
+                            Vector2 d = c - Center(o, pick[o]);
+                            overlap += Mathf.Max(0f, 72f - Mathf.Abs(d.x)) * Mathf.Max(0f, 62f - Mathf.Abs(d.y));
+                        }
+                        Vector2 dt = c - towerC;
+                        overlap += Mathf.Max(0f, 60f - Mathf.Abs(dt.x)) * Mathf.Max(0f, 70f - Mathf.Abs(dt.y));
+                        float sc = baseScore[q][si] - overlap * 0.12f;   // налезание — главный штраф (полное ~ −540)
+                        if (sc > bestS) { bestS = sc; best = si; }
+                    }
+                    pick[q] = best;
+                }
+            for (int q = 0; q < idx.Count; q++) buildingOff[idx[q]] = spots[pick[q]];
         }
 
         /// <summary>
@@ -858,7 +900,7 @@ namespace BladePath
 
         void DrawDev(bool ok)
         {
-            Rect r = Card(520f, 528f);
+            Rect r = Card(520f, 532f);
             float x = r.x + 24f, w = r.width - 48f, y = r.y + 16f;
             VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "МЕНЮ РАЗРАБОТЧИКА", 20f); y += 36f;
             float bw = (w - 10f) * 0.5f;
@@ -881,6 +923,10 @@ namespace BladePath
             // время суток (по пути / утро / день / вечер / ночь / выкл — всегда день) и дождь с грозой — на карте и в боях
             if (Btn(new Rect(x, y, bw, 44f), "ВРЕМЯ: " + DayCycle.ModeName(false), ok)) DayCycle.NextMode();
             if (Btn(new Rect(x + bw + 10f, y, bw, 44f), Weather.NoRain ? "ДОЖДЬ/ГРОЗА: ВЫКЛ" : "ДОЖДЬ/ГРОЗА: ВКЛ", ok)) Weather.NoRain = !Weather.NoRain;
+            y += 52f;
+            // звук: выключатель и что звучит (игра / музыка / оба)
+            if (Btn(new Rect(x, y, bw, 44f), SoundSettings.On ? "ЗВУК: ВКЛ" : "ЗВУК: ВЫКЛ", ok)) SoundSettings.Toggle();
+            if (Btn(new Rect(x + bw + 10f, y, bw, 44f), SoundSettings.ScopeShortName, ok && SoundSettings.On)) SoundSettings.NextScope();
             if (Btn(new Rect(r.center.x - 80f, r.yMax - 48f, 160f, 38f), "ЗАКРЫТЬ", ok)) modal = Modal.None;
         }
 
@@ -1965,7 +2011,6 @@ namespace BladePath
             float a = Mathf.Clamp01((Time.unscaledTime - modalAt) / 0.2f);
             UiKit.Rect(new Rect(0f, 0f, W, 540f),
                 new Color(0.015f, 0.012f, 0.012f, 0.82f * a));   // карта и боковая панель под окном уходят в тень, их кнопки не путаются с кнопками окна
-            ModalMist(a);   // по низу — стелющийся туман (под самим окном)
             Rect r = new Rect((W - w) * 0.5f, (540f - h) * 0.5f + (1f - a) * 20f, w, h);
             VisualIdentity.KitSurface(r, a);
             return r;
