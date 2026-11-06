@@ -673,7 +673,7 @@ namespace BladePath
                             GUI.color = new Color(1f, 0.6f, 0.25f, (dimN ? 0.25f : 0.5f) * fl);
                             GUI.DrawTexture(new Rect(c.x - g, c.y - g, g * 2f, g * 2f), glow);
                         }
-                    if (nb == 5) { MapFire(rn, sz, NewBuildingLights[5][0], dimN, i); MapSmoke(rn, sz, new Vector2(0.31f, 0.6f), false, dimN, i, 0.7f); }   // охотники: костёр под котлом
+                    if (nb == 5) { MapFire(rn, sz, NewBuildingLights[5][0], dimN, i); MapSmoke(rn, sz, new Vector2(0.31f, 0.56f), false, dimN, i, 0.6f); }   // охотники: костёр под котлом
                     if (nb == 0) { MapSmoke(rn, sz, new Vector2(0.62f, 0.56f), true, dimN, i, 1f); MapSmoke(rn, sz, new Vector2(0.46f, 0.62f), true, dimN, i + 5, 0.65f); }   // онсэн: пар над источником
                     continue;
                 }
@@ -704,9 +704,9 @@ namespace BladePath
                     GUI.DrawTexture(new Rect(c.x - g, c.y - g, g * 2f, g * 2f), glow);
                 }
                 // живой огонь, дым и пар там, где они нарисованы на домиках
-                if (b == 0) MapSmoke(r, size, new Vector2(0.51f, 0.19f), false, false, i, 0.8f);                  // трактир: дым из трубы
+                if (b == 0) MapSmoke(r, size, new Vector2(0.51f, 0.2f), false, false, i, 1f);                  // трактир: дым из трубы
                 if (b == 1) MapFire(r, size, new Vector3(0.35f, 0.6f, 0.11f), false, i);                          // кузница: огонь в горне
-                if (b == 3) { MapFire(r, size, BuildingLights[3][0], dim, i); MapSmoke(r, size, new Vector2(0.39f, 0.56f), false, dim, i, 0.9f); }   // привал: костёр и дым над котлом
+                if (b == 3) { MapFire(r, size, BuildingLights[3][0], dim, i); MapSmoke(r, size, new Vector2(0.37f, 0.46f), false, dim, i, 0.85f); }   // привал: костёр и дым над котлом
             }
             GUI.color = oc;
         }
@@ -733,19 +733,19 @@ namespace BladePath
             Texture2D puff = UiKit.Tex(PuffSheet);
             if (puff == null) return;
             Vector2 src = new Vector2(cell.x + at.x * size, cell.y + at.y * size);
-            const int N = 6;
-            float life = steam ? 2.6f : 3.8f;
+            const int N = 9;
+            float life = steam ? 2.8f : 4.2f;
             Color oc = GUI.color;
             for (int p = 0; p < N; p++)
             {
                 float run = Time.unscaledTime / life + p / (float)N + i * 0.173f;
                 float u = run - Mathf.Floor(run);
                 int seed = Mathf.FloorToInt(run) * 7 + p * 13 + i * 31;
-                float rise = u * size * (steam ? 0.3f : 0.42f) * k;
-                float drift = (Mathf.Sin(u * 3f + seed) * 0.04f + u * u * 0.1f) * size * k;   // покачивается и уходит по ветру
-                float sz = size * k * Mathf.Lerp(0.07f, steam ? 0.26f : 0.3f, Mathf.Sqrt(u));
-                float al = Mathf.Clamp01(u / 0.15f) * (1f - u) * (1f - u) * (steam ? 0.6f : 0.62f) * (dim ? 0.5f : 1f);
-                GUI.color = steam ? new Color(0.96f, 0.97f, 1f, al) : new Color(0.3f, 0.29f, 0.31f, al);
+                float rise = u * size * (steam ? 0.42f : 0.62f) * k;
+                float drift = (Mathf.Sin(u * 3f + seed) * 0.05f + u * u * 0.16f) * size * k;   // покачивается и уходит по ветру
+                float sz = size * k * Mathf.Lerp(0.12f, steam ? 0.42f : 0.5f, Mathf.Sqrt(u));
+                float al = Mathf.Clamp01(u / 0.12f) * (1f - u) * (1f - u * 0.6f) * (steam ? 0.8f : 0.9f) * (dim ? 0.5f : 1f);
+                GUI.color = steam ? new Color(0.96f, 0.97f, 1f, al) : new Color(0.56f, 0.55f, 0.57f, al);
                 int c = seed & 3;
                 GUI.DrawTextureWithTexCoords(new Rect(src.x + drift - sz * 0.5f, src.y - rise - sz * 0.5f, sz, sz), puff,
                     new Rect((c % 2) * 0.5f, c < 2 ? 0.5f : 0f, 0.5f, 0.5f));
