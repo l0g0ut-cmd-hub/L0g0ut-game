@@ -652,7 +652,7 @@ namespace BladePath
                 dir = d > 1e-3f ? dir / d : a.transform.forward;
                 SuperLanded = d < 3.2f && !t.Dead;
                 Vector3 end = SuperLanded ? t.transform.position + dir * 1.0f : a.transform.position + dir * Mathf.Min(2.2f, d - 0.8f);
-                if (SuperLanded && Juice.Instance != null) { Juice.Instance.GroundCrack(t.transform.position, 1.9f); Juice.Instance.SuperStrike(t.transform.position, dir); }   // удар духа раскалывает камень, с неба бьёт молния
+                if (SuperLanded && Juice.Instance != null) { Juice.Instance.GroundCrack(t.transform.position, 1.9f); Juice.Instance.SuperStrike(t.transform.position, dir); Juice.Instance.FinisherBurst(t.transform.position + Vector3.up * 1.2f, true); }   // удар духа раскалывает камень, с неба бьёт молния
                 a.Teleport(end);
                 if (a.weapon != null)
                 {
@@ -841,6 +841,7 @@ namespace BladePath
                     if (db.plunge)
                     {
                         Juice.Instance.GroundCrack(t.transform.position, 1.5f);   // клинок до земли: камень под жертвой трескается
+                        Juice.Instance.FinisherBurst(t.transform.position + Vector3.up * 1.1f, false);
                         // клинок сверху в ключицу: кровь бьёт вверх из раны, к атакующему
                         Juice.Instance.OnHit(hit, Vector3.up, (Vector3.up * 0.8f - dir * 0.45f).normalized * 4.5f, 1.2f, false, false, torso);
                         Juice.Instance.StabSound();
@@ -858,6 +859,7 @@ namespace BladePath
                         Juice.Instance.OnHit(hit, -dir, cutDir * 6f, 1.5f, false, false, db.neck ? null : torso);
                     }
                     Juice.Instance.BloodyBlade(w, 0.7f);
+                    if (!db.plunge) Juice.Instance.FinisherBurst(hit, false);   // добивание: алый всплеск у раны
                 }
                 if (rig != null) rig.Recoil(db.plunge ? (Vector3.down * 0.7f + dir * 0.5f).normalized : db.cut ? (dir - side * 0.6f).normalized : dir, hit, 1.15f, db.neck ? BodyZoneId.Head : BodyZoneId.Torso);
                 if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(0.06f); CameraOrbit.Instance.Punch(4f); }

@@ -45,6 +45,7 @@ namespace BladePath
             public int bloodSteps;   // наступил в лужу крови — столько ещё кровавых отпечатков
             public float dripAt;     // тяжело ранен — капает кровь
             public float scrapeAt;   // остриё чиркнуло по камню (низкая подсечка) — искры не чаще раза в 60 мс
+            public FxSprite kiAura; public Transform kiAnchor;   // дух полон — пламя ауры у ног (CGHEVEN, CC0)
         }
         readonly List<Tracked> tracked = new List<Tracked>();
 
@@ -277,6 +278,7 @@ namespace BladePath
             {
                 Tracked t = tracked[i];
                 if (t.w == null) continue;
+                UpdateKiAura(t);
                 SwingPhase ph = t.w.Phase;
                 if (ph != t.last)
                 {
@@ -527,6 +529,7 @@ namespace BladePath
                 Sparks(point, normal, 22, 0.8f);
                 Flash(point, 0.22f, new Color(1f, 0.82f, 0.5f, 0.8f), 0.07f, false);
                 Sheet("fx_clash", point, 0.8f, 0.24f, new Color(1f, 0.95f, 0.85f, 0.9f));
+                Flip("fx_shield", point, 1.05f, 0.32f, new Color(1f, 0.78f, 0.42f, 0.55f));   // тёплая вспышка щита-блока
                 // A single brief gold burst emphasizes a clean steel-on-steel
                 // contact without making every block a full-screen explosion.
                 if (DuelManager.Gfx == 1 && MobileVfxBudget.Level < 2)
@@ -1352,6 +1355,35 @@ namespace BladePath
         }
 
         // ---- покадровые эффекты (атласы 19–20): лист 4×1, плоскость к камере
+        /// <summary>Покадровые эффекты CGHEVEN (CC0): лист 6×6, 36 кадров, на чёрном (аддитивно).</summary>
+        FxSprite Flip(string tex, Vector3 pos, float size, float life, Color tint)
+        {
+            FxSprite f = FxSprite.Spawn(tex, pos, size, 6, 6, 36, 36f / Mathf.Max(0.05f, life), false, life);
+            if (f != null) f.tint = tint;
+            return f;
+        }
+        /// <summary>Дух полон: у ног бойца пламя ауры (герой — синее, враг — красное, Тень клана — фиолетовое), гаснет с духом.</summary>
+        void UpdateKiAura(Tracked t)
+        {
+            FighterController f = t.f;
+            DuelManager dm = DuelManager.Instance;
+            bool want = f != null && f.gameObject.activeInHierarchy && f.KiFull && dm != null && dm.State == DuelState.Fighting && !MapScreen.Open;
+            if (want && t.kiAura == null)
+            {
+                bool hero = dm.player == f;
+                string tex = hero ? "fx_aura_blue" : Ladder.Current.model == 5 ? "fx_aura_violet" : "fx_aura_red";
+                if (t.kiAnchor == null)
+                {
+                    t.kiAnchor = new GameObject("KiAuraAnchor").transform;
+                    t.kiAnchor.SetParent(f.transform, false);
+                    t.kiAnchor.localPosition = new Vector3(0f, 0.55f, 0f);
+                }
+                t.kiAura = FxSprite.Spawn(tex, t.kiAnchor.position, 1.9f, 6, 6, 36, 14f, true);
+                if (t.kiAura != null) { t.kiAura.follow = t.kiAnchor; t.kiAura.tint = new Color(1f, 1f, 1f, 0.75f); }
+            }
+            else if (!want && t.kiAura != null) { Destroy(t.kiAura.gameObject); t.kiAura = null; }
+        }
+
         FxSprite Sheet(string tex, Vector3 pos, float size, float life, Color tint, System.Func<Vector3> dir = null)
         {
             FxSprite f = FxSprite.Spawn(tex, pos, size, 4, 1, 4, 4f / Mathf.Max(0.05f, life), false, life);
@@ -1400,7 +1432,14 @@ namespace BladePath
         }
 
         /// <summary>Слом равновесия: золотое кольцо защиты трескается и разлетается осколками.</summary>
-        public void GuardBreak(Vector3 pos) { Sheet("fx_guard_break", pos, 1.6f, 0.5f, new Color(1f, 1f, 1f, 0.7f)); }
+        /// <summary>Добивание или удар духа достиг цели: всплеск энергии у груди (красный / бело-алый).</summary>
+        public void FinisherBurst(Vector3 chest, bool super) { Flip(super ? "fx_burst_white" : "fx_burst_red", chest, super ? 2.2f : 1.7f, 0.6f, new Color(1f, 1f, 1f, 0.8f)); }
+
+        public void GuardBreak(Vector3 pos)
+        {
+            Sheet("fx_guard_break", pos, 1.6f, 0.5f, new Color(1f, 1f, 1f, 0.7f));
+            Flip("fx_shock_ring", new Vector3(pos.x, pos.y - 0.95f, pos.z), 2.6f, 0.6f, new Color(1f, 0.6f, 0.4f, 0.8f));   // волна по земле — равновесие сломлено
+        }
 
         /// <summary>Рывок: порыв ветра по ходу и пыль из-под ног.</summary>
         public void DashFx(Vector3 feet, Vector3 dir)
@@ -1440,6 +1479,7 @@ namespace BladePath
             SparkLight(pos, new Color(1f, 0.86f, 0.62f), 3.6f, 3.8f, 0.16f);
             Shockwave(pos, 0.7f, new Color(0.6f, 0.85f, 1f, 0.22f), 0.16f);   // едва заметная волна воздуха, не «магическое кольцо»
             Sheet("fx_perfect_parry", pos, 1.15f, 0.38f, new Color(0.8f, 0.9f, 1f, 0.5f));   // ледяное кольцо и осколки
+            Flip("fx_burst_gold", pos, 1.35f, 0.45f, new Color(1f, 1f, 1f, 0.7f));            // золотой всплеск энергии
         }
 
         Material addMat, glowMat, starMat, ringMat;

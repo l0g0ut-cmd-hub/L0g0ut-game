@@ -37,6 +37,7 @@
 ## Эффекты
 - Линии скорости в `Shaders/PostFX.shader` — своя реализация по идее MirzaBeig/Anime-Speed-Lines (Unlicense), код не скопирован.
 - Рассыпание пеплом в `Shaders/Character.shader` — своя реализация по идее AdultLink/VerticalDissolve (MIT).
+- Покадровые эффекты CGHEVEN (CC0): всплески энергии, волна, щит, ауры — `tools/fx/cgheven/README.md`.
 
 ## Музыка
 - `music_battle` — «Shamisen Samurai Rock» (loop), MOMIZizm MUSiC, Free Japanese Music Pack — https://momiziba.itch.io/free-japanese-music-pack
