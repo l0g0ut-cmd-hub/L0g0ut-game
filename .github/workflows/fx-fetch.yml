@@ -7,23 +7,39 @@ permissions:
 jobs:
   fetch:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v4
-      - name: Discover pages
+      - name: Download flipbooks
         run: |
-          mkdir -p out/html
+          set -u
+          mkdir -p out/pages out/files
           UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
-          for q in aura energy burst shockwave shield teleport portal tornado lightning fire campfire smoke magic slash; do
-            curl -sL -A "$UA" "https://cgheven.com/?s=$q" -o "out/html/search_$q.html" || true
+          SLUGS="looping-magic-aura-01-front-flipbook-6x6 looping-magic-aura-02-front-flipbook-6x6 looping-magic-aura-03-front-flipbook-6x6 looping-magic-aura-04-front-flipbook-6x6 looping-magic-aura-05-front-flipbook-6x6
+          energy-burst-01-flipbook-7x7 energy-burst-02-flipbook-6x6 energy-burst-03-flipbook-6x6 energy-burst-04-flipbook-6x6 energy-burst-05-flipbook-6x6 energy-burst-06-flipbook-6x6 energy-burst-07-flipbook-6x6 energy-burst-09-flipbook-6x6 energy-burst-10-flipbook-6x6 energy-burst-11-flipbook-6x6 energy-burst-12-flipbook-6x6 energy-burst-13-flipbook-6x6 energy-burst-14-flipbook-6x6
+          magical-shockwave-01-front-flipbook-7x7 magical-shield-block-01-front-flipbook-8x8 teleportation-02-front-flipbook-8x8
+          spirit-flame-01-front-flipbook spirit-flame-02-front-flipbook spirit-flame-03-front-flipbook spirit-flame-04-front-flipbook spirit-flame-05-front-flipbook spirit-flame-06-front-flipbook
+          energy-swirl-01-top-flipbook energy-swirl-03-top-flipbook energy-swirl-05-top-flipbook energy-swirl-07-top-flipbook
+          energy-leaks-01-flipbook energy-leaks-02-flipbook energy-leaks-03-flipbook energy-leaks-04-flipbook
+          magic-fire-loop-04-front-flipbooks-6x6 magic-fire-loop-05-front-flipbooks-6x6 magic-fire-loop-06-front-flipbooks-6x6
+          magical-tornado-01-front-flipbook-8x8 candle-flame-01-loop-flipbook-6x6 large-campfire-loop-smoke-flipbooks-6x6-8x8 ground-fire-03-side-flipbook-6x6"
+          for s in $SLUGS; do
+            curl -sL -A "$UA" "https://cgheven.com/assets/$s" -o "out/pages/$s.html" || true
+            # ссылки на файлы этого эффекта (без превью и миниатюр), сначала 1K, потом 2K
+            grep -oE 'https://cdn\.cgheven\.com/file/[^"\\ ]+' "out/pages/$s.html" | grep -viE 'preview|thumbnail|/Addons/|\.webm$|\.webp$' | sort -u > "out/pages/$s.urls" || true
+            pick=$(grep -iE '1K' "out/pages/$s.urls" | grep -iE '\.(png|zip)$' | head -1)
+            [ -z "$pick" ] && pick=$(grep -iE '2K' "out/pages/$s.urls" | grep -iE '\.(png|zip)$' | head -1)
+            [ -z "$pick" ] && pick=$(grep -iE '\.(png|zip)$' "out/pages/$s.urls" | head -1)
+            echo "$s -> ${pick:-NONE}" | tee -a out/log.txt
+            if [ -n "$pick" ]; then
+              ext="${pick##*.}"
+              curl -sL -A "$UA" --max-filesize 80000000 "$pick" -o "out/files/$s.$ext" || echo "FAIL $s" >> out/log.txt
+            fi
           done
-          for p in assets/vfx/ assets/shockwave-smoke-03-closeup assets/magic-portal-02-vdb assets/lightning-arc-02-glow sitemap.xml sitemap_index.xml wp-sitemap.xml robots.txt; do
-            f=$(echo "$p" | tr '/' '_'); curl -sL -A "$UA" "https://cgheven.com/$p" -o "out/html/$f.html" || true
-          done
-          ls -la out/html
+          rm -f out/pages/*.html
+          du -sh out/files; ls -la out/files
       - name: Publish to fx-out
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           cd out; git init -q; git checkout -q -b fx-out
           git -c user.name=ci -c user.email=ci@local add -A
