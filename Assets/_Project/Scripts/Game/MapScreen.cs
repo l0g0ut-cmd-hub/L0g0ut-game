@@ -821,7 +821,9 @@ namespace BladePath
                     bool forward = nodes[at].next.Contains(next);
                     if (!forward && !(Campaign.Adjacent(at, next) && (nodes[next].done || next == index))) continue;
                     if (!forward && !nodes[next].done && next != index) continue;   // через неизведанное — только вперёд
-                    float c = cost[at] + (nodes[next].done ? 0f : 100000f) + TerrainRoads.Route(at, next).lengthPixels;
+                    // шаг назад или вбок через пройденное место — со штрафом: если к цели ведёт своя дорога вперёд,
+                    // всадник едет по ней, а не возвращается на пройденное событие, чтобы оттуда свернуть к цели
+                    float c = cost[at] + (nodes[next].done ? 0f : 100000f) + TerrainRoads.Route(at, next).lengthPixels + (forward ? 0f : 600f);
                     if (c < cost[next]) { cost[next] = c; parents[next] = at; }
                 }
             }
