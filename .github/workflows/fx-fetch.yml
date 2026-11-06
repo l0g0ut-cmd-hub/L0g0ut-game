@@ -1,0 +1,23 @@
+name: Fetch FX (cgheven)
+on:
+  push:
+    branches: [fx-fetch]
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Discover pages
+        run: |
+          mkdir -p out/html
+          UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
+          for q in aura energy burst shockwave shield teleport portal tornado lightning fire campfire smoke magic slash; do
+            curl -sL -A "$UA" "https://cgheven.com/?s=$q" -o "out/html/search_$q.html" || true
+          done
+          for p in assets/vfx/ assets/shockwave-smoke-03-closeup assets/magic-portal-02-vdb assets/lightning-arc-02-glow sitemap.xml sitemap_index.xml wp-sitemap.xml robots.txt; do
+            f=$(echo "$p" | tr '/' '_'); curl -sL -A "$UA" "https://cgheven.com/$p" -o "out/html/$f.html" || true
+          done
+          ls -la out/html
+      - uses: actions/upload-artifact@v4
+        with: { name: fx-discovery, path: out, retention-days: 3 }
