@@ -38,7 +38,7 @@
 - Линии скорости в `Shaders/PostFX.shader` — своя реализация по идее MirzaBeig/Anime-Speed-Lines (Unlicense), код не скопирован.
 - Рассыпание пеплом в `Shaders/Character.shader` — своя реализация по идее AdultLink/VerticalDissolve (MIT).
 - Покадровые эффекты CGHEVEN (CC0): всплески энергии, волна, щит, ауры — `tools/fx/cgheven/README.md`.
-- Огонь и туман CGHEVEN (CC0): `UI/fx_campfire` (Campfire 03 Loop, костры привала и охотников на карте), `UI/fx_mist` (Atmospheric Fog 09 Side, туман под окнами карты).
+- Огонь и туман CGHEVEN (CC0): `UI/fx_campfire` (Campfire 03 Loop, костры привала и охотников на карте), `UI/fx_mist` (Atmospheric Fog 09 Side, туман под окнами карты), `UI/fx_puff` (Atmospheric Fog 01 Front — клубы дыма и пара над домиками карты).
 
 ## Музыка
 - `music_battle` — «Shamisen Samurai Rock» (loop), MOMIZizm MUSiC, Free Japanese Music Pack — https://momiziba.itch.io/free-japanese-music-pack

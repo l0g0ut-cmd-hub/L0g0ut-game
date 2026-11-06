@@ -11,3 +11,4 @@
 - `Resources/UI/fx_campfire.png` — Campfire 03 Loop Front (1K ProRes 4444), 48 кадров, 8×6 ячеек 128×168, альфа из яркости.
 - `Resources/UI/fx_mist.png` — Atmospheric Fog 09 Side, кадры 19–48, 6×5 ячеек 256×128, края смягчены, играет вперёд-назад.
 - Платные (PRO) у CGHEVEN: дым из труб (smoke plume), пар (steam jet), стелющийся/падающий туман, деревянный огонь — их не брали.
+- `Resources/UI/fx_puff.png` — 4 клуба из Atmospheric Fog 01 Front (2×2 по 128), края в овал: из них собраны дым трактира/привала/охотников и пар онсэна.
