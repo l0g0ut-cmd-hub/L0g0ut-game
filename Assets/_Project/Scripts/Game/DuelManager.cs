@@ -365,6 +365,7 @@ namespace BladePath
         {
             if (MatchOver) { IaiWaiting = false; iaiDone = true; return; }   // бой уже решён (в т.ч. «ВЫИГРАТЬ БОЙ») — не рубить
             IaiWaiting = false; iaiDone = true;
+            PostFX.SpeedLines(1f);   // выхват: вспышка линий скорости
             SetState(DuelState.Fighting); Freeze(false);
             IaiResultAt = Time.unscaledTime; IaiPlayerWon = playerWon;
             FighterController a = playerWon ? player : enemy, t = playerWon ? enemy : player;

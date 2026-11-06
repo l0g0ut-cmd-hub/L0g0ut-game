@@ -31,7 +31,9 @@ namespace BladePath
         [Range(1, 6)] public int mobileBloomIterations = 4;
         [Range(0.25f, 1f)] public float bloomResolutionScale = 0.5f;
 
-        static float aberr, desatTarget, desat, edgeBlur;
+        static float aberr, desatTarget, desat, edgeBlur, speedKick, speed;
+        /// <summary>Линии скорости на миг (рывок, выхват, ответный удар): сила 0…1, гаснет за ~0,4 с.</summary>
+        public static void SpeedLines(float k) { speedKick = Mathf.Max(speedKick, Mathf.Clamp01(k)); }
         /// <summary>Импульс хроматической аберрации (тяжёлый удар, отражение, добивание): сила 0.004…0.015, гаснет за ~0,3 с.</summary>
         public static void Kick(float amount) { aberr = Mathf.Max(aberr, amount); }
         /// <summary>Обесцвечивание кадра 0…1 (смерть игрока, предложение воскрешения).</summary>
@@ -52,6 +54,10 @@ namespace BladePath
                 else if (dm.State == DuelState.PlayerLost || dm.ResurrectOffered) eb = 1.3f;
             }
             edgeBlur = Mathf.MoveTowards(edgeBlur, eb, dt * (eb > edgeBlur ? 2.5f : 1.2f));
+            // линии скорости: добивание и удар духа держат их, рывок и выхват — вспышкой
+            speedKick = Mathf.MoveTowards(speedKick, 0f, dt * 2.5f);
+            float hold = dm != null && Application.isPlaying && (dm.DeathblowActive || dm.SuperActive) ? 0.75f : 0f;
+            speed = Mathf.MoveTowards(speed, Mathf.Max(hold, speedKick), dt * 6f);
         }
 
         readonly RenderTexture[] chain = new RenderTexture[8];
@@ -75,6 +81,7 @@ namespace BladePath
             material.SetFloat("_Aberr", aberr);
             material.SetFloat("_Desat", desat);
             material.SetFloat("_EdgeBlur", edgeBlur);
+            material.SetFloat("_Speed", speed);
             if (DuelManager.Gfx != 1) { material.SetVector("_Dof", Vector4.zero); Graphics.Blit(src, dst, material, 4); return; }
 
             // глубина резкости: фокус — на бойцах (точка обзора камеры), дальше — размытая копия кадра в ¼ и ⅛

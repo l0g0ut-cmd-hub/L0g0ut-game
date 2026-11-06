@@ -252,6 +252,7 @@ namespace BladePath
             dashReadyAt = Time.time + DashCd;
             if (Dashed != null) Dashed(this, dashDir);
             lastDashAt = Time.time;
+            if (DuelManager.Instance != null && DuelManager.Instance.player == this) PostFX.SpeedLines(0.55f);   // рывок героя — линии скорости
             if (Juice.Instance != null) { Juice.Instance.DashSound(); Juice.Instance.Dust(transform.position + Vector3.up * 0.05f, -dashDir, 14); Juice.Instance.LeafKick(transform.position, dashDir); Juice.Instance.DashFx(transform.position, dashDir); }
             return true;
         }

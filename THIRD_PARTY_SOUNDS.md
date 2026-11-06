@@ -30,3 +30,6 @@
 
 ## Подложка трактира — CC BY 4.0, Oculus Audio Pack 01
 - `amb_tavern` — CRWDConv_Restaurant_LOOP_01
+
+## Эффекты
+- Линии скорости в `Shaders/PostFX.shader` — своя реализация по идее MirzaBeig/Anime-Speed-Lines (Unlicense), код не скопирован.

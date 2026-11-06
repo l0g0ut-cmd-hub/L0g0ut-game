@@ -10,7 +10,7 @@ Shader "Hidden/BladePath/PostFX"
     float4 _MainTex_TexelSize;
     half4 _Filter;          // x порог, y x−колено, z 2·колено, w 0.25/колено
     half _Intensity, _Exposure, _Contrast, _Saturation, _Delta;
-    half _Vignette, _Aberr, _Grain, _Desat, _EdgeBlur;
+    half _Vignette, _Aberr, _Grain, _Desat, _EdgeBlur, _Speed;
     half3 _Shadows, _Highlights;
     half _BP_Snow;          // глобально из Weather: в снег по краям кадра нарастает иней
     half _BP_Wetness;       // глобально из Weather: 1 под дождём — на «объективе» капли
@@ -116,6 +116,19 @@ Shader "Hidden/BladePath/PostFX"
         c = lerp(c, l.xxx * half3(1.05h, 0.92h, 0.9h), _Desat);
         float n = frac(sin(dot(uv * 431.7 + frac(_Time.y * 7.13), float2(12.9898, 78.233))) * 43758.5453);
         c += (n - 0.5) * _Grain;
+        // линии скорости (как в аниме/манге; идея — MirzaBeig/Anime-Speed-Lines, Unlicense): тонкие светлые лучи от краёв
+        // к центру на рывке, выхвате и добивании; какие лучи горят — меняется 16 раз в секунду, середина кадра чистая
+        if (_Speed > 0.001)
+        {
+            float2 cd = uv - 0.5; cd.x *= _ScreenParams.x / _ScreenParams.y;
+            float rr = length(cd);
+            float a = atan2(cd.y, cd.x) * 0.15915494 * 150.0;
+            float id = floor(a);
+            float hsh = frac(sin(id * 12.9898 + floor(_Time.y * 16.0) * 3.17) * 43758.5453);
+            float beam = 1.0 - abs(frac(a) - 0.5) * 2.0;
+            half ln = step(0.6, hsh) * smoothstep(0.45, 1.0, beam) * saturate((rr - 0.26 - hsh * 0.12) / 0.3);
+            c = lerp(c, half3(0.94h, 0.92h, 0.88h), ln * _Speed * 0.6h);
+        }
         // иней на «объективе» в снегопад: морозные разводы растут от углов и краёв, холодные и светлые
         if (_BP_Snow > 0.01)
         {
