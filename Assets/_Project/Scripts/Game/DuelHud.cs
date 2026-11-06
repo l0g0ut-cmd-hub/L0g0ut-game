@@ -522,7 +522,7 @@ namespace BladePath
                 }
                 if (duel.MatchOver) DrawStats(cx, 240f, t);
                 if (duel.MatchOver && SideDuel.Enabled && Profile.Ally >= 0 && Profile.AllyDown)
-                    UiKit.Text(new Rect(cx - 300f, 420f, 600f, 22f), "СОРАТНИК ПАЛ — ЕГО ВЫХОДИТ ТРАВНИЦА", 14f, new Color(1f, 0.45f, 0.35f, t));
+                    UiKit.Text(new Rect(cx - 300f, 442f, 600f, 22f), "СОРАТНИК ПАЛ — ЕГО ВЫХОДИТ ТРАВНИЦА", 14f, new Color(1f, 0.45f, 0.35f, t));
                 if (!duel.MatchOver) UiKit.Text(new Rect(cx - 300f, 250f, 600f, 40f), duel.PlayerWins + " : " + duel.EnemyWins, 34f, new Color(1f, 1f, 1f, t));
                 UiKit.Rect(new Rect(cx - 200f, 232f, 400f, 2f), new Color(c.r, c.g, c.b, 0.8f * t));
             }
@@ -650,9 +650,13 @@ namespace BladePath
             string[] names = { "УРОН", "ПОПАДАНИЯ", "МАКС. СЕРИЯ", "ПАРИРОВАНИЯ" };
             int[] pv = { p.damage, p.hits, p.maxCombo, p.parries };
             int[] ev = { e.damage, e.hits, e.maxCombo, e.parries };
+            // итог боя на утопленной панели с золотой кромкой, строки проявляются по очереди
+            VisualIdentity.RowPanel(new Rect(cx - 185f, y - 6f, 370f, names.Length * 15f + 10f), 0.92f * a);
+            float baseA = a;
             for (int i = 0; i < names.Length; i++)
             {
-                float ry = y + i * 14f;
+                a = Mathf.Clamp01((baseA - i * 0.12f) / 0.4f);
+                float ry = y + i * 15f;
                 Color pc = pv[i] >= ev[i] ? Gold : new Color(0.85f, 0.85f, 0.85f);
                 Color ec = ev[i] >= pv[i] ? Gold : new Color(0.85f, 0.85f, 0.85f);
                 pc.a = a; ec.a = a;
@@ -660,6 +664,7 @@ namespace BladePath
                 UiKit.Text(new Rect(cx - 80f, ry, 160f, 14f), names[i], 11f, new Color(0.85f, 0.8f, 0.7f, a), TextAnchor.MiddleCenter, false);
                 UiKit.Text(new Rect(cx + 90f, ry, 80f, 14f), ev[i].ToString(), 13f, ec, TextAnchor.MiddleLeft, false);
             }
+            a = baseA;
             // оценка боя кистью, как отметка учителя каллиграфии: 秀 / 優 / 良 / 可 — «печать» опускается на лист
             int score = (duel.PlayerWonMatch ? 40 : 0) + p.parries * 6 + p.maxCombo * 4 + p.hits * 2 + p.blocks + p.supers * 3 - e.hits * 5;
             string tex = score >= 95 ? "UI/rank_s" : score >= 70 ? "UI/rank_a" : score >= 45 ? "UI/rank_b" : "UI/rank_c";

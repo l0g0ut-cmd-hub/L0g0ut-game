@@ -163,6 +163,12 @@ namespace BladePath
             // кнопка чуть выше своего прямоугольника: шипы и цветки по краям выходят за него, текст — в середине
             Rect vr = new Rect(r.x - r.height * 0.10f, r.y - r.height * 0.06f, r.width + r.height * 0.20f, r.height * 1.12f);   // шипы почти не выходят — соседние кнопки не наезжают
             Color tint = !enabled && square ? new Color(0.5f, 0.48f, 0.45f, 0.85f) : Color.white;
+            if (down)
+            {
+                // нажатие видно: кнопка чуть вдавливается (на 4%) и подсвечивается тёплым золотом
+                vr = new Rect(vr.x + vr.width * 0.02f, vr.y + vr.height * 0.04f, vr.width * 0.96f, vr.height * 0.92f);
+                tint = new Color(1f, 0.93f, 0.78f, 1f);
+            }
             if (square) GUI.DrawTexture(vr, t, ScaleMode.StretchToFill, true, 0f, tint, 0f, 0f);
             else UiKit.Slice(vr, t, vr.height / t.height, 0.14f, 0.12f, 0.5f, 0f, tint);
             if (selected) UiKit.Rect(new Rect(r.x + r.width * 0.2f, r.yMax - 3f, r.width * 0.6f, 2f), new Color(BrassLight.r, BrassLight.g, BrassLight.b, 0.6f + 0.3f * Mathf.Sin(Time.unscaledTime * 3f)));

@@ -312,9 +312,9 @@ namespace BladePath
             Box(B.AllyLevel, lx, 420f, 300f, 40f);
             Box(B.AllyImmortal, rx, 420f, 300f, 40f);
             Box(B.DevBack, cx - 150f, 470f, 300f, 40f);
-            Box(B.OverAgain, cx - 210f, 300f, 200f, 56f);
-            Box(B.OverMenu, cx + 10f, 300f, 200f, 56f);
-            Box(B.OverGear, cx - 115f, 366f, 230f, 56f);   // сразу под «НА КАРТУ» / «В МЕНЮ», а не на дне экрана
+            Box(B.OverAgain, cx - 210f, 314f, 200f, 56f);   // ниже панели итогов боя
+            Box(B.OverMenu, cx + 10f, 314f, 200f, 56f);
+            Box(B.OverGear, cx - 115f, 378f, 230f, 56f);   // сразу под «НА КАРТУ» / «В МЕНЮ», а не на дне экрана
 
             for (int i = 0; i < Count; i++) active[i] = false;
             if (play)

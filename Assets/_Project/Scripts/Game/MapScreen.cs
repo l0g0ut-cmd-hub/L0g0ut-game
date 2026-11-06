@@ -929,6 +929,18 @@ namespace BladePath
             }
         }
 
+        /// <summary>Мягкая овальная тень (FX/glow_pool) на земле карты. Только в Repaint.</summary>
+        static void SoftShadow(Vector2 c, float w, float h, float alpha)
+        {
+            if (Event.current.type != EventType.Repaint) return;
+            Texture2D t = UiKit.Tex("FX/glow_pool");
+            if (t == null) return;
+            Color o = GUI.color;
+            GUI.color = new Color(0.02f, 0.015f, 0.01f, alpha);
+            GUI.DrawTexture(new Rect(c.x - w * 0.5f, c.y - h * 0.5f, w, h), t);
+            GUI.color = o;
+        }
+
         void DrawNodes(bool interactive)
         {
             Texture2D ic = UiKit.Tex("UI/map_icons");
@@ -967,6 +979,7 @@ namespace BladePath
                 bool known = Known(n);
                 // под туманом войны места скрыты; соседнее место видно как «?» — дорога туда ведёт, а что там — нет
                 if (!known && n.Type != NodeType.Boss && !Hinted(i)) continue;
+                SoftShadow(new Vector2(p.x + s * 0.06f, p.y + s * 0.40f), s * 0.95f, s * 0.30f, 0.42f);   // медальон стоит на земле, а не висит над картой
                 // Focused marker effects use the existing cached UI disc texture:
                 // glowing boss warning, reachable nodes and the hero's current checkpoint.
                 if (known && (can || i == Campaign.At || n.Type == NodeType.Boss) && !n.done)
@@ -1118,6 +1131,7 @@ namespace BladePath
             float size = newSheet ? 104f : 92f;
             float bob = moving ? (0.5f - 0.5f * Mathf.Cos(pose * Mathf.PI)) * 1.25f : 0f;
             Rect riderRect = new Rect(p.x - size * 0.5f, p.y - size * 0.78f - bob, size, size);
+            SoftShadow(new Vector2(p.x + 4f, p.y + size * 0.17f), size * 0.62f * (1f - bob * 0.04f), size * 0.16f, 0.5f);   // тень под конём
             Rect currentUV = Cell(offset + first);
             if (left) currentUV = new Rect(currentUV.x + currentUV.width, currentUV.y,
                 -currentUV.width, currentUV.height);
