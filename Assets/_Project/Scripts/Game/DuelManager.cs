@@ -309,10 +309,12 @@ namespace BladePath
             Campaign.DebugSkipSquad(); squadSwap = false;
             // выхват отменяется: иначе после победы срабатывал ждущий знак — и герой сам рубил ещё раз
             IaiWaiting = false; iaiDone = true;
+            flourishDone = true;   // без тибури: «стряхивать кровь» после мгновенной победы не с чего — герой махал мечом впустую
             SetPaused(false);
             PlayerWins = NeedWins; MatchOver = true;
-            if (enemy.weapon != null) enemy.weapon.ResetState();
-            if (player.weapon != null) player.weapon.ResetState();
+            // сразу в стойку, без перетекания из прерванного поклона/удара (оно выглядело как взмах)
+            if (enemy.weapon != null) enemy.weapon.SnapRest();
+            if (player.weapon != null) player.weapon.SnapRest();
             hp[enemy] = 0f;
             SetState(DuelState.PlayerWon);
             Freeze(true);
