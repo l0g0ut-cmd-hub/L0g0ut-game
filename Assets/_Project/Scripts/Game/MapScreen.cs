@@ -673,6 +673,7 @@ namespace BladePath
                             GUI.color = new Color(1f, 0.6f, 0.25f, (dimN ? 0.25f : 0.5f) * fl);
                             GUI.DrawTexture(new Rect(c.x - g, c.y - g, g * 2f, g * 2f), glow);
                         }
+                    if (nb == 5) MapFire(rn, sz, NewBuildingLights[5][0], dimN, i);   // стоянка охотников: костёр под котлом
                     continue;
                 }
                 if ((b < 0 && cp < 0) || !Known(n)) continue;
@@ -701,8 +702,66 @@ namespace BladePath
                     GUI.color = b == 6 ? new Color(1f, 0.85f, 0.35f, 0.45f * fl) : new Color(1f, 0.6f, 0.25f, (dim ? 0.25f : 0.5f) * fl);
                     GUI.DrawTexture(new Rect(c.x - g, c.y - g, g * 2f, g * 2f), glow);
                 }
+                if (b == 3) MapFire(r, size, BuildingLights[3][0], dim, i);   // привал: живое пламя над нарисованным костром
             }
             GUI.color = oc;
+        }
+
+        // ---- живой огонь и туман (CGHEVEN, бесплатные видео 1K → листы кадров: UI/fx_campfire 8×6, UI/fx_mist 6×5)
+        const string FireSheet = "UI/fx_campfire", MistSheet = "UI/fx_mist";
+
+        /// <summary>Пламя костра на домике карты: основание — в точке огня (доли ячейки), по высоте ~ пятой части домика.</summary>
+        static void MapFire(Rect cell, float size, Vector3 at, bool dim, int i)
+        {
+            Texture2D fire = UiKit.Tex(FireSheet);
+            if (fire == null) return;
+            float w = size * 0.15f, h = w * 168f / 128f;
+            Vector2 c = new Vector2(cell.x + at.x * size, cell.y + at.y * size + size * 0.035f);
+            Flip(new Rect(c.x - w * 0.5f, c.y - h, w, h), fire, 8, 6, 48, 6f, i * 1.37f, new Color(1f, 1f, 1f, dim ? 0.45f : 0.92f), false);
+        }
+
+        /// <summary>
+        /// Кадр листа в окне IMGUI: текущий и следующий наплывом (6 кадров в секунду выглядят плавно).
+        /// pingPong — вперёд и обратно (у тумана нет бесшовной петли, а медленный дым назад не отличить).
+        /// </summary>
+        static void Flip(Rect r, Texture2D tex, int cols, int rows, int frames, float fps, float phase, Color tint, bool pingPong)
+        {
+            float f = (Time.unscaledTime + phase) * fps;
+            int span = pingPong ? frames * 2 - 2 : frames;
+            int a = (int)Mathf.Repeat(Mathf.Floor(f), span), b = (a + 1) % span;
+            float k = f - Mathf.Floor(f);
+            if (pingPong) { if (a >= frames) a = span - a; if (b >= frames) b = span - b; }
+            Color oc = GUI.color;
+            GUI.color = tint;
+            GUI.DrawTextureWithTexCoords(r, tex, FlipCell(a, cols, rows));
+            GUI.color = new Color(tint.r, tint.g, tint.b, tint.a * k);
+            GUI.DrawTextureWithTexCoords(r, tex, FlipCell(b, cols, rows));
+            GUI.color = oc;
+        }
+        static Rect FlipCell(int k, int cols, int rows)
+        {
+            int c = k % cols, rw = k / cols;
+            return new Rect(c / (float)cols, 1f - (rw + 1) / (float)rows, 1f / cols, 1f / rows);
+        }
+
+        /// <summary>Туман у земли под окном: две полосы медленно плывут навстречу друг другу по низу экрана.</summary>
+        void ModalMist(float a)
+        {
+            if (Event.current.type != EventType.Repaint) return;
+            Texture2D mist = UiKit.Tex(MistSheet);
+            if (mist == null || a <= 0f) return;
+            float t = Time.unscaledTime, h = 170f, w = h * 2f;
+            for (int layer = 0; layer < 2; layer++)
+            {
+                float dir = layer == 0 ? 1f : -1f, speed = layer == 0 ? 9f : 6f, step = w * 0.62f;
+                float run = t * speed * dir + layer * 137f, off = Mathf.Repeat(run, step);
+                int first = Mathf.FloorToInt(run / step);   // номер полосы едет вместе с ней — у каждой свой кадр без скачков при переносе
+                float y = 540f - h * (layer == 0 ? 0.86f : 0.7f);
+                Color tint = layer == 0 ? new Color(0.78f, 0.8f, 0.86f, 0.2f * a) : new Color(0.7f, 0.72f, 0.8f, 0.14f * a);
+                int j = 0;
+                for (float x = -step + off; x < W + step; x += step, j++)
+                    Flip(new Rect(x - w * 0.2f, y, w, h), mist, 6, 5, 30, 3f, layer * 4.1f + (j - first) * 2.9f, tint, true);
+            }
         }
 
         bool devTeleport;   // меню разработчика: следующее нажатие на карту — телепорт
@@ -1773,6 +1832,7 @@ namespace BladePath
             float a = Mathf.Clamp01((Time.unscaledTime - modalAt) / 0.2f);
             UiKit.Rect(new Rect(0f, 0f, W, 540f),
                 new Color(0.015f, 0.012f, 0.012f, 0.82f * a));   // карта и боковая панель под окном уходят в тень, их кнопки не путаются с кнопками окна
+            ModalMist(a);   // по низу — стелющийся туман (под самим окном)
             Rect r = new Rect((W - w) * 0.5f, (540f - h) * 0.5f + (1f - a) * 20f, w, h);
             VisualIdentity.KitSurface(r, a);
             return r;
