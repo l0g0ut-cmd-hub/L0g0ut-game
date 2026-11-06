@@ -98,7 +98,7 @@ def check_routes():
     assert ': sel >= 0 && Campaign.CanGo(NextPreviewStep) ? NextPreviewStep : -1;' in screen
     assert 'if (sel != i && NextPreviewStep != i) return;' in screen
     assert 'if (goal >= 0 && goal != Campaign.At && goal < Campaign.Nodes.Count)' in screen
-    assert 'Campaign.MoveTo(i); // persist only after the rider arrives' in screen
+    assert 'Campaign.MoveTo(i, serviceOnTheWay); // persist only after the rider arrives' in screen
     assert 'if (!interactive || i != hitNode || panDragging) continue;' in screen
     # One В ПУТЬ tap rides the whole route but stops at every new encounter.
     assert 'if (modal == Modal.None && !Campaign.InFight && Campaign.CanGo(hop)) Go(hop);' in screen
