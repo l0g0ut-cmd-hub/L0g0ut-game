@@ -296,7 +296,9 @@ namespace BladePath
             if (from < 0 || to < 0 || from >= D.nodes.Count || to >= D.nodes.Count || from == to) return false;
             if (D.nodes[from].next.Contains(to)) return true;
             if (Lateral(from, to)) return true;
-            return D.nodes[to].done && D.nodes[to].next.Contains(from);
+            // назад по своей дороге — и в пройденное место, и в пропущенное новое. Раньше в пропущенное место назад
+            // было нельзя, и маршрут добирался до него крюком через всю пройденную область (засада → деревня → тайник → событие)
+            return D.nodes[to].next.Contains(from);
         }
 
         // Соседи «вбок»: места одного ряда, между которыми по нарисованной карте идёт своя дорога, не проходящая

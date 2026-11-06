@@ -104,8 +104,8 @@ def check_routes():
     assert 'if (modal == Modal.None && !Campaign.InFight && Campaign.CanGo(hop)) Go(hop);' in screen
     # Маршрут: через неизведанное — только вперёд; кратчайший по ходам, затем по длине дороги;
     # поездка идёт по показанному маршруту, без перестройки на каждом перегоне.
-    assert 'bool forward = nodes[at].next.Contains(next);' in screen, "Unvisited places only along forward roads"
-    assert 'if (!forward && !nodes[next].done && next != index) continue;' in screen
+    assert 'bool forward = nodes[at].next.Contains(next);' in screen, "Route planner knows forward roads"
+    assert 'if (!forward && !Campaign.Adjacent(at, next)) continue;' in screen, "Back and sideways only along an existing road"
     assert 'readonly List<int> ridePlan' in screen and 'int here = ridePlan.IndexOf(Campaign.At);' in screen
     assert 'if (UiKit.Tex(heroArt) != null)' in screen
     assert 'heroArt = "UI/npc_"' not in screen
@@ -263,7 +263,7 @@ def check_selection_screens():
     camp = read("Assets/_Project/Scripts/Game/Campaign.cs")
     # Backtracking (user request 2026-11-02): back only to visited places;
     # shrine and rest stay one-time, merchant keeps its stock.
-    assert "return D.nodes[to].done && D.nodes[to].next.Contains(from);" in camp
+    assert "return D.nodes[to].next.Contains(from);" in camp
     assert "Adjacent(D.at, i)" in camp
     assert "n.Type == NodeType.Shrine || n.Type == NodeType.Rest || n.Type == NodeType.Onsen ||" in screen
     assert "kept.Key == at) stock = kept.Value;" in screen
