@@ -316,7 +316,8 @@ namespace BladePath
             Rect pr = new Rect(44f, 76f, lw, 432f);
             Texture2D pan = UiKit.Tex("UI/path_panorama");
             if (pan != null) GUI.DrawTexture(pr, pan, ScaleMode.ScaleAndCrop); else UiKit.Rect(pr, new Color(0.1f, 0.1f, 0.12f));
-            UiKit.Rect(new Rect(pr.x, pr.y, pr.width, 34f), new Color(0f, 0f, 0f, 0.5f));
+            UiKit.Rect(new Rect(pr.x, pr.y, pr.width, 34f), new Color(0.03f, 0.02f, 0.02f, 0.78f));
+            UiKit.Rect(new Rect(pr.x, pr.y + 33f, pr.width, 1f), new Color(Gold.r, Gold.g, Gold.b, 0.55f));   // золотая кромка, как у плашек на карте
             UiKit.Text(new Rect(pr.x + 12f, pr.y + 2f, pr.width - 24f, 30f), "ПУТЬ КЛИНКА" + (Profile.Cycle > 0 ? "   ·   КРУГ " + (Profile.Cycle + 1) : "") + "   ·   ПРОЙДЕН РАЗ: " + Records.Cleared, 15f, Gold, TextAnchor.MiddleLeft);
             int cur = Ladder.Index;
             // фонари вдоль тропы
@@ -333,7 +334,11 @@ namespace BladePath
                 if (md != null) GUI.DrawTexture(new Rect(c.x - s * 0.5f, c.y - s * 0.5f, s, s), md); else UiKit.Disc(c, s * 0.45f, new Color(0.6f, 0.1f, 0.08f));
                 GUI.color = o;
                 if (done) UiKit.Disc(new Vector2(c.x + s * 0.32f, c.y - s * 0.32f), 6f, new Color(0.55f, 0.9f, 0.45f));   // пройдено
-                UiKit.Text(new Rect(c.x + s * 0.5f + 4f, c.y - 10f, 200f, 20f), Ladder.Stages[i].name, now ? 13f : 11f, now ? Gold : new Color(0.85f, 0.82f, 0.75f, done ? 1f : 0.6f), TextAnchor.MiddleLeft);
+                // имя ступени на тёмной плашке: серым по горам не читалось
+                Rect nr = new Rect(c.x + s * 0.5f + 4f, c.y - 10f, 200f, 20f);
+                float nw = Ladder.Stages[i].name.Length * (now ? 13f : 11f) * 0.68f + 14f;
+                UiKit.Rect(new Rect(nr.x - 6f, nr.y - 1f, nw, 22f), new Color(0.03f, 0.02f, 0.02f, 0.72f));
+                UiKit.Text(nr, Ladder.Stages[i].name, now ? 13f : 11f, now ? Gold : new Color(0.93f, 0.89f, 0.8f, done ? 1f : 0.85f), TextAnchor.MiddleLeft);
             }
             // справа — текущий противник
             float rx = pr.xMax + 20f, rw = W - rx - 46f;

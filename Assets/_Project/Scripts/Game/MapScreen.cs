@@ -277,8 +277,10 @@ namespace BladePath
             DrawTower();
             // погода — после зданий, до значков: облака загораживают постройки, но не значки мест
             MapClouds.Draw(Campaign.Region, new Rect(mapX, 0f, viewW, MapH), u0, uw);
+            nodeLabels.Clear();
             DrawNodes(interactive && modal == Modal.None && moveTo < 0);
             DrawHero();
+            DrawNodeLabels();
             MapBirds.Draw(new Rect(mapX, 0f, viewW, MapH), u0, uw);   // ворон или стайка цапель пролетают над всем — и над значками (под ними значки видно, это не облака)
             DrawJourneyLegend();
             // туман по краям и название области
@@ -843,6 +845,17 @@ namespace BladePath
             GUI.color = oc;
         }
 
+        readonly List<KeyValuePair<Rect, string>> nodeLabels = new List<KeyValuePair<Rect, string>>();
+        void DrawNodeLabels()
+        {
+            foreach (var l in nodeLabels)
+            {
+                UiKit.Rect(l.Key, new Color(0.028f, 0.023f, 0.02f, 0.78f));
+                UiKit.Rect(new Rect(l.Key.x, l.Key.yMax - 1f, l.Key.width, 1f), new Color(Gold.r, Gold.g, Gold.b, 0.45f));
+                UiKit.Text(l.Key, l.Value, 10.5f, new Color(0.96f, 0.88f, 0.68f, 0.98f), TextAnchor.MiddleCenter, false);
+            }
+        }
+
         void DrawNodes(bool interactive)
         {
             Texture2D ic = UiKit.Tex("UI/map_icons");
@@ -934,10 +947,9 @@ namespace BladePath
                 if ((can || i == sel) && known && n.Type != NodeType.Start)
                 {
                     float tw = 90f;
-                    Rect label = new Rect(p.x - tw * 0.5f, p.y + s * 0.45f + 3f, tw, 18f);
-                    UiKit.Rect(label, new Color(0.028f, 0.023f, 0.02f, 0.75f));
-                    UiKit.Text(label, n.IsTavern ? "ТРАКТИР" : ShortTypeNames[(int)n.Type], 10.5f,
-                        new Color(0.96f, 0.88f, 0.68f, 0.98f), TextAnchor.MiddleCenter, false);
+                    // подписи рисуются после всадника (DrawNodeLabels), иначе он закрывает «ТРАВНИЦА», «СУНДУК»
+                    nodeLabels.Add(new KeyValuePair<Rect, string>(new Rect(p.x - tw * 0.5f, p.y + s * 0.45f + 3f, tw, 18f),
+                        n.IsTavern ? "ТРАКТИР" : ShortTypeNames[(int)n.Type]));
                 }
                 int routeIndex = previewPath.IndexOf(i);
                 if (routeIndex > 0)
@@ -1506,6 +1518,9 @@ namespace BladePath
 
         float Lines(float x, float y, float w, string s, int max, float size, Color c)
         {
+            // перенос по реальной ширине окна (≈0,5 кегля на букву), а не по заниженному числу символов:
+            // раньше текст рвался на середине окна, правая половина пустовала
+            max = Mathf.Max(max, Mathf.FloorToInt(w / (size * 0.53f)));
             foreach (string line in Wrap(s, max)) { UiKit.Text(new Rect(x, y, w, size + 6f), line, size, c, TextAnchor.MiddleLeft, false); y += size + 6f; }
             return y;
         }
