@@ -1371,7 +1371,8 @@ namespace BladePath
             else
             {
                 string tip = Campaign.InFight ? "Бой ещё не окончен." : !Campaign.Current.done ? "Ты на месте." : Campaign.Steps > 0 ? "Выбери цель. Светлые следы — доступные шаги, красные — сверх броска." : "Брось кость пути, чтобы идти дальше. Назад по своим следам — без кости.";
-                foreach (string line in Wrap(tip, 34)) { if (y + 17f > PanelTextBottom) break; UiKit.Text(new Rect(x, y, w, 17f), line, 12f, Dim, TextAnchor.MiddleLeft, false); y += 17f; }
+                foreach (string line in Wrap(tip, Mathf.Max(34, Mathf.FloorToInt(w / (12f * 0.53f)))))   // перенос по ширине панели, без пустоты справа
+                    { if (y + 17f > PanelTextBottom) break; UiKit.Text(new Rect(x, y, w, 17f), line, 12f, Dim, TextAnchor.MiddleLeft, false); y += 17f; }
             }
             // The empty lower half of the old sidebar now shows a contextual
             // illustrated location preview. Never reveal a fogged node's event art.

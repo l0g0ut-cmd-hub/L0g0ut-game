@@ -823,7 +823,7 @@ namespace BladePath
             float m = r.width * (f.energyCost / Mathf.Max(1f, f.kiMax));
             UiKit.Rect(new Rect(mirror ? r.x + m : r.xMax - m, r.y + 1f, 1.5f, Mathf.Max(0f, r.height - 2f)), new Color(1f, 1f, 1f, 0.6f));
             DrawFrame(r, kf, kiWin, mirror);
-            UiKit.Text(new Rect(mirror ? r.xMax + 24f : r.x - 54f, r.y - 6f, 30f, 18f), "ДУХ", 9f, new Color(0.7f, 0.85f, 1f, 0.9f), mirror ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight, false);
+            UiKit.Text(new Rect(mirror ? r.xMax + 24f : r.x - 54f, r.y - 6f, 30f, 18f), "ДУХ", 11f, new Color(0.78f, 0.9f, 1f, 1f), mirror ? TextAnchor.MiddleLeft : TextAnchor.MiddleRight, false);
         }
 
         // ---- Серия ударов: кисточные цифры на брызге туши, подпись на красном мазке ----

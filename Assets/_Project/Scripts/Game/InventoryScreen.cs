@@ -213,7 +213,9 @@ namespace BladePath
                 if (g != null) { Color o = GUI.color; GUI.color = new Color(0.95f, 0.85f, 0.6f, 1f); GUI.DrawTexture(gr, g); GUI.color = o; }
                 else { UiKit.Disc(gr.center, 15f, new Color(0.3f, 0.2f, 0.1f)); UiKit.Text(gr, Profile.StatNames[i].Substring(0, 1), 16f, Gold); }
                 UiKit.Text(new Rect(a.x + 42f, y, 170f, 20f), Profile.StatNames[i], 15f, Ink, TextAnchor.MiddleLeft);
-                UiKit.Text(new Rect(a.x + 42f, y + 20f, 220f, 16f), Profile.StatHint[i], 10f, new Color(0.75f, 0.72f, 0.65f), TextAnchor.MiddleLeft, false);
+                // подсказка не вылезает за колонку: длинные («−4% к откату рывка, +1,5% к скорости») — чуть мельче
+                float hw = a.width - 50f, hs = Mathf.Min(10f, hw / Mathf.Max(1f, Profile.StatHint[i].Length * 0.52f));
+                UiKit.Text(new Rect(a.x + 42f, y + 20f, hw, 16f), Profile.StatHint[i], hs, new Color(0.75f, 0.72f, 0.65f), TextAnchor.MiddleLeft, false);
                 UiKit.Text(new Rect(a.x + 190f, y, 50f, 22f), Profile.Stat(i).ToString(), 20f, Gold, TextAnchor.MiddleRight);
                 if (pts > 0 && Btn(new Rect(a.x + 252f, y + 2f, 36f, 32f), "+")) { Profile.AddPoint(i); pending = Profile.StatsCopy(); }
             }

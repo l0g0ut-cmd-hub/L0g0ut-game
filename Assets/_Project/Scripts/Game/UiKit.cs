@@ -231,7 +231,9 @@ namespace BladePath
             if (Event.current != null && Event.current.type != EventType.Repaint) return;
             Init();
             LoadFonts();
-            Font f = IsNumeric(s) ? digits : (size >= 26f ? display : body);
+            // цифровой шрифт — только для крупных чисел (таймер, счёт 1:0, серия); мелкие числа в окнах
+            // («Здоровье 100», статистика) — тем же шрифтом, что и подписи рядом, без разнобоя
+            Font f = IsNumeric(s) && size >= 24f ? digits : (size >= 26f ? display : body);
             label.font = f;   // null → шрифт по умолчанию
             Matrix4x4 m = GUI.matrix;
             float k = Scale;
