@@ -14,7 +14,7 @@ jobs:
           set -u
           mkdir -p out/pages out/files
           UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
-          SLUGS="campfire-03-loop-front"
+          SLUGS="energy-burst-11 energy-burst-12 energy-burst-09 energy-burst-13 magical-shockwave-01-front looping-magic-aura-01-front looping-magic-aura-04-front looping-magic-aura-05-front cannon-spark-01-front cannon-spark-03-front cannon-spark-05-front"
           for s in $SLUGS; do
             curl -sL -A "$UA" "https://cgheven.com/assets/$s" -o "out/pages/$s.html" || true
             grep -oE 'https://cdn\.cgheven\.com/file/[^"\\ ]+' "out/pages/$s.html" | grep -viE 'preview|thumbnail|/Addons/|\.webm$|\.webp$|Thanos_Portal' | sort -u > "out/pages/$s.urls" || true
@@ -36,7 +36,7 @@ jobs:
             dur=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$f" || echo 2)
             fps=25
             mkdir -p "out/frames/$n"
-            ffmpeg -v error -i "$f" -vf "fps=$fps,format=rgba,scale=384:384:force_original_aspect_ratio=decrease" -frames:v 400 "out/frames/$n/f_%02d.png" || echo "FFMPEG FAIL $n" >> out/log.txt
+            ffmpeg -v error -i "$f" -vf "fps=$fps,format=rgba,scale=256:256:force_original_aspect_ratio=decrease" -frames:v 400 "out/frames/$n/f_%02d.png" || echo "FFMPEG FAIL $n" >> out/log.txt
             ffprobe -v error -select_streams v:0 -show_entries stream=pix_fmt,width,height,nb_frames -of csv=p=0 "$f" | sed "s/^/$n: /" >> out/log.txt
           done
           rm -f out/raw_*
