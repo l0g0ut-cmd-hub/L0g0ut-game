@@ -241,6 +241,7 @@ namespace BladePath
                     // всадника и не тратится — к ней можно вернуться; бой, событие и тайник по-прежнему останавливают
                     bool serviceOnTheWay = routeGoal >= 0 && routeGoal != i && !revisit && Campaign.IsService(Campaign.Nodes[i]);
                     Campaign.MoveTo(i, serviceOnTheWay); // persist only after the rider arrives
+                    if (Campaign.At == i) { string dayNote = DayCycle.Advance(); if (dayNote != null) SetToast(dayNote); }   // шаг пути — время суток идёт
                     if (Campaign.At != i)
                     {
                         // шаг не засчитан (правила похода не пустили) — поездка прекращается, а не продолжается
@@ -403,6 +404,11 @@ namespace BladePath
             DrawTower();
             // погода — после зданий, до значков: облака загораживают постройки, но не значки мест
             MapClouds.Draw(Campaign.Region, new Rect(mapX, 0f, viewW, MapH), u0, uw);
+            // время суток: фильтр на карту, поверх — свет окон, фонарей и огонь (не темнеют)
+            DayCycle.Tick();
+            DayCycle.DrawFilter(new Rect(mapX, 0f, viewW, MapH));
+            MapLife.DrawLights(Campaign.Region, new Rect(mapX, 0f, viewW, MapH), u0, uw, DayCycle.LightK);
+            lightPass = true; DrawBuildings(); lightPass = false;
             nodeLabels.Clear();
             DrawNodes(interactive && modal == Modal.None && moveTo < 0);
             DrawHuntMarker();
@@ -433,6 +439,10 @@ namespace BladePath
                 float sx = mapX + viewW - (uw < 0.999f ? 226f : 116f);
                 bool sndOk = interactive && modal == Modal.None && moveTo < 0;
                 if (Btn(new Rect(sx - 236f, 14f, 96f, 33f), SoundSettings.On ? "ЗВУК: ВКЛ" : "ЗВУК: ВЫКЛ", sndOk)) SoundSettings.Toggle();
+                // время суток: медальон в правом верхнем углу карты; нажатие — что сейчас и сколько шагов до смены
+                Rect dayR = new Rect(mapX + viewW - 60f, 54f, 48f, 48f);   // под кнопками справа (слева заняты название области и легенда)
+                DayCycle.DrawBadge(dayR);
+                if (sndOk && Event.current.type == EventType.MouseDown && dayR.Contains(Event.current.mousePosition)) { SetToast(DayCycle.Hint()); Event.current.Use(); }
                 if (Btn(new Rect(sx - 134f, 14f, 126f, 33f), SoundSettings.ScopeShortName, sndOk && SoundSettings.On)) SoundSettings.NextScope();
             }
             if (Btn(new Rect(mapX + viewW - (uw < 0.999f ? 226f : 116f), 14f, 104f, 33f), devTeleport ? "ОТМЕНА" : "РАЗРАБ.", interactive && (modal == Modal.None || modal == Modal.Dev) && moveTo < 0))
@@ -634,6 +644,12 @@ namespace BladePath
             return best;
         }
 
+        /// <summary>
+        /// Второй проход по домикам — после фильтра времени суток: только свет окон и фонарей, огонь костров и горна
+        /// (они не темнеют ночью). В первом проходе — сами домики и дым.
+        /// </summary>
+        bool lightPass;
+
         void DrawBuildings()
         {
             if (Event.current.type != EventType.Repaint) return;
@@ -662,16 +678,21 @@ namespace BladePath
                     Vector2 o = BuildingOffset(i, tower);
                     Rect rn = new Rect(pn.x + o.x - sz * 0.5f, pn.y + o.y - sz * 0.78f, sz, sz);
                     bool dimN = n.done && n.Type != NodeType.Gamble && n.Type != NodeType.HunterCamp;
-                    GUI.color = dimN ? new Color(0.72f, 0.7f, 0.68f, 0.9f) : Color.white;
-                    GUI.DrawTextureWithTexCoords(rn, newAtlas, Cell3(nb));
+                    if (!lightPass)
+                    {
+                        GUI.color = dimN ? new Color(0.72f, 0.7f, 0.68f, 0.9f) : Color.white;
+                        GUI.DrawTextureWithTexCoords(rn, newAtlas, Cell3(nb));
+                        if (nb == 5) MapSmoke(rn, sz, new Vector2(0.31f, 0.56f), false, dimN, i, 0.6f);   // охотники: дым над котлом
+                        if (nb == 0) { MapSmoke(rn, sz, new Vector2(0.62f, 0.56f), true, dimN, i, 1f); MapSmoke(rn, sz, new Vector2(0.46f, 0.62f), true, dimN, i + 5, 0.65f); }   // онсэн: пар над источником
+                        continue;
+                    }
                     if (glow != null)
                         for (int li = 0; li < NewBuildingLights[nb].Length; li++)
                         {
                             Vector3 l = NewBuildingLights[nb][li];
                             WarmLight(glow, new Vector2(rn.x + l.x * sz, rn.y + l.y * sz), l.z * sz, i * 3.1f + li * 1.7f, nb == 5 && li == 0, dimN);   // у охотников первый — костёр
                         }
-                    if (nb == 5) { MapFire(rn, sz, NewBuildingLights[5][0], dimN, i); MapSmoke(rn, sz, new Vector2(0.31f, 0.56f), false, dimN, i, 0.6f); }   // охотники: костёр под котлом
-                    if (nb == 0) { MapSmoke(rn, sz, new Vector2(0.62f, 0.56f), true, dimN, i, 1f); MapSmoke(rn, sz, new Vector2(0.46f, 0.62f), true, dimN, i + 5, 0.65f); }   // онсэн: пар над источником
+                    if (nb == 5) MapFire(rn, sz, NewBuildingLights[5][0], dimN, i);   // охотники: костёр под котлом
                     continue;
                 }
                 if ((b < 0 && cp < 0) || !Known(n)) continue;
@@ -683,14 +704,21 @@ namespace BladePath
                 Rect r = new Rect(p.x + off.x - size * 0.5f, p.y + off.y - size * 0.78f, size, size);
                 if (cp >= 0)
                 {
+                    if (lightPass) continue;
                     // стоянка: после победы — разорённая (ячейка 8), место события после посещения приглушено
                     GUI.color = n.done && cp >= 4 && cp <= 6 ? new Color(0.72f, 0.7f, 0.68f, 0.9f) : Color.white;
                     GUI.DrawTextureWithTexCoords(r, camps, new Rect((cp % 4) * 0.25f, cp < 4 ? 0.5f : 0f, 0.25f, 0.5f));
                     continue;
                 }
                 bool dim = n.done && b != 0 && b != 1 && b != 2;   // пройденные приглушены (трактир, кузница и лавка — живые всегда)
-                GUI.color = dim ? new Color(0.72f, 0.7f, 0.68f, 0.9f) : Color.white;
-                GUI.DrawTextureWithTexCoords(r, atlas, new Rect((b % 4) * 0.25f, b < 4 ? 0.5f : 0f, 0.25f, 0.5f));
+                if (!lightPass)
+                {
+                    GUI.color = dim ? new Color(0.72f, 0.7f, 0.68f, 0.9f) : Color.white;
+                    GUI.DrawTextureWithTexCoords(r, atlas, new Rect((b % 4) * 0.25f, b < 4 ? 0.5f : 0f, 0.25f, 0.5f));
+                    if (b == 0) MapSmoke(r, size, new Vector2(0.51f, 0.2f), false, false, i, 1f);                       // трактир: дым из трубы
+                    if (b == 3) MapSmoke(r, size, new Vector2(0.37f, 0.46f), false, dim, i, 0.85f);                    // привал: дым над котлом
+                    continue;
+                }
                 if (glow == null || (b == 6 && n.done)) continue;
                 for (int li = 0; li < BuildingLights[b].Length; li++)
                 {
@@ -706,14 +734,13 @@ namespace BladePath
                     WarmLight(glow, c, l.z * size, i * 3.1f + li * 1.7f, (b == 1 || b == 3) && li == 0, dim);   // горн и костёр — огонь, остальное — окна и фонари
                 }
                 // живой огонь, дым и пар там, где они нарисованы на домиках
-                if (b == 0) MapSmoke(r, size, new Vector2(0.51f, 0.2f), false, false, i, 1f);                  // трактир: дым из трубы
                 if (b == 1)
                 {
                     // кузница: огонь внутри арки горна (под аркой — 0,3…0,45 по ширине, 0,48…0,61 по высоте; у сёгуната горн чуть ниже) — пламя не выше свода
                     Vector3 fg = Campaign.Region == 2 ? new Vector3(0.38f, 0.595f, 0.085f) : new Vector3(0.37f, 0.575f, 0.085f);
                     MapFire(r, size, fg, false, i); MapFire(r, size, fg, false, i + 3);
-                }   // два слоя со сдвигом фазы — пламя гуще                          // кузница: огонь в горне
-                if (b == 3) { MapFire(r, size, BuildingLights[3][0], dim, i); MapSmoke(r, size, new Vector2(0.37f, 0.46f), false, dim, i, 0.85f); }   // привал: костёр и дым над котлом
+                }   // два слоя со сдвигом фазы — пламя гуще
+                if (b == 3) MapFire(r, size, BuildingLights[3][0], dim, i);   // привал: костёр
             }
             GUI.color = oc;
         }
@@ -721,11 +748,6 @@ namespace BladePath
         // ---- живой огонь и туман (CGHEVEN, бесплатные видео 1K → листы кадров: UI/fx_campfire 16×13 — вся петля 208 кадров при 25 к/с, UI/fx_mist 6×5)
         const string FireSheet = "UI/fx_campfire", MistSheet = "UI/fx_mist", PuffSheet = "UI/fx_puff";
 
-        /// <summary>
-        /// Сила огней в окнах и фонарях: 1 — как сейчас (вечер), для будущей смены дня и ночи: днём ~0,35, ночью ~1,6.
-        /// Огонь костров и горна от неё зависит слабее — он виден и днём.
-        /// </summary>
-        public static float LightK = 1f;
 
         /// <summary>
         /// Тёплый свет: мягкий ореол и яркая сердцевина. Окна и фонари — ровный свет с лёгким колебанием (фитиль, сквозняк),
@@ -736,7 +758,7 @@ namespace BladePath
             float t = Time.unscaledTime, fl;
             if (fire) fl = 0.65f + 0.35f * Mathf.PerlinNoise(t * 3.2f + seed, seed * 0.7f);
             else fl = 0.86f + 0.1f * Mathf.PerlinNoise(t * 1.1f + seed, seed * 0.37f) + 0.04f * Mathf.Sin(t * 5.3f + seed * 2f);
-            float k = (fire ? Mathf.Lerp(1f, LightK, 0.35f) : LightK) * (dim ? 0.5f : 1f);
+            float k = (fire ? 1f + 0.35f * DayCycle.LightK : DayCycle.LightK) * (dim ? 0.5f : 1f);   // огонь горит всегда, окна и фонари — по времени суток
             if (k <= 0.01f) return;
             Color oc = GUI.color;
             float h = g * (fire ? 1.25f : 1.55f) * (0.94f + 0.08f * fl);

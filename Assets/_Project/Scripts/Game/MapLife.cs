@@ -83,6 +83,33 @@ namespace BladePath
         }
 
         /// <summary>Рисовать сразу после картины карты (до дорог, тумана и значков).</summary>
+        /// <summary>
+        /// Окна и фонари нарисованной карты: тёплый свет, каждый в своём ритме, с лёгким колебанием.
+        /// Рисуется поверх фильтра времени суток; light — сила (днём 0, ночью ~1,6).
+        /// </summary>
+        public static void DrawLights(int region, Rect view, float u0, float uw, float light)
+        {
+            if (Event.current.type != EventType.Repaint || DuelManager.Gfx == 0 || light <= 0.01f) return;
+            Region r = regions[Mathf.Clamp(region, 0, regions.Length - 1)];
+            Texture2D glow = UiKit.Tex("FX/glow_pool");
+            if (glow == null) return;
+            float t = Time.unscaledTime, k = view.width / uw / 810f;
+            Color oc = GUI.color;
+            foreach (Vector3 l in r.lights)
+            {
+                Vector2 p = new Vector2(view.x + (l.x - u0) / uw * view.width, l.y * view.height);
+                if (p.x < view.x - 60f || p.x > view.xMax + 60f) continue;
+                float fl = 0.86f + 0.1f * Mathf.PerlinNoise(t * 1.1f + l.x * 50f, l.y * 30f) + 0.04f * Mathf.Sin(t * 5.3f + l.x * 90f);
+                float g = l.z * k * 1.5f;
+                GUI.color = new Color(1f, 0.6f, 0.26f, Mathf.Clamp01(0.3f * light * fl));
+                GUI.DrawTexture(new Rect(p.x - g, p.y - g, g * 2f, g * 2f), glow);
+                float c = l.z * k * 0.5f;
+                GUI.color = new Color(1f, 0.85f, 0.55f, Mathf.Clamp01(0.45f * light * fl));
+                GUI.DrawTexture(new Rect(p.x - c, p.y - c, c * 2f, c * 2f), glow);
+            }
+            GUI.color = oc;
+        }
+
         public static void Draw(int region, Rect view, float u0, float uw)
         {
             if (Event.current.type != EventType.Repaint || DuelManager.Gfx == 0) return;
@@ -146,17 +173,7 @@ namespace BladePath
                         GUI.DrawTexture(new Rect(top.x - sz * 0.5f, top.y + hgt - sz * 0.25f - ph * 6f * k, sz, sz * 0.5f), mist);
                     }
             }
-            // окна и фонари: тёплый свет мерцает каждый в своём ритме
-            if (glow != null)
-                foreach (Vector3 l in r.lights)
-                {
-                    Vector2 p = S(l);
-                    if (!Vis(p)) continue;
-                    float fl = 0.65f + 0.35f * Mathf.PerlinNoise(t * 2.2f + l.x * 50f, l.y * 30f);
-                    float g = l.z * k * (1f + 0.15f * fl);
-                    GUI.color = new Color(1f, 0.72f, 0.32f, 0.42f * fl);
-                    GUI.DrawTexture(new Rect(p.x - g, p.y - g, g * 2f, g * 2f), glow);
-                }
+            // окна и фонари — отдельно, в DrawLights (поверх фильтра времени суток)
             // пар горячих источников и серных трещин
             if (mist != null)
                 foreach (Vector3 st in r.steam)
