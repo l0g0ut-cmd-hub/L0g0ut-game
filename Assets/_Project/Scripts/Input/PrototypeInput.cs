@@ -476,8 +476,10 @@ namespace BladePath
 
             bool canAct = player != null && player.CanAct && player.weapon != null && player.weapon.Phase == SwingPhase.Idle;
             bool air = player != null && !player.Grounded;
-            DrawAttack(B.Overhead, Icon.Down, air ? "В ПРЫЖКЕ" : "СВЕРХУ", canAct);
-            // выхват: знак появился — кнопка «сверху» вспыхивает (жми сейчас)
+            // выхват: кнопки удара на «РУБИ!» — в полную силу (боец замер во вступлении и формально «не может действовать»,
+            // из-за этого кнопка рисовалась тусклой). Свечение — ПОД кнопкой, иначе оранжевое пятно закрывало сам значок.
+            bool iai = duel != null && duel.IaiWaiting;
+            if (iai) canAct = true;
             if (duel != null && duel.IaiCued && active[(int)B.Overhead] && Event.current.type == EventType.Repaint)
             {
                 Vector2 ic = ctr[(int)B.Overhead]; float ir = rad[(int)B.Overhead];
@@ -490,6 +492,12 @@ namespace BladePath
                     GUI.DrawTexture(new Rect(ic.x - gr, ic.y - gr, gr * 2f, gr * 2f), glow);
                     GUI.color = oc;
                 }
+            }
+            DrawAttack(B.Overhead, Icon.Down, air ? "В ПРЫЖКЕ" : "СВЕРХУ", canAct);
+            if (duel != null && duel.IaiCued && active[(int)B.Overhead] && Event.current.type == EventType.Repaint)
+            {
+                Vector2 ic = ctr[(int)B.Overhead]; float ir = rad[(int)B.Overhead];
+                float ip = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 14f);
                 UiKit.Ring(ic, ir * (1.08f + 0.1f * ip), new Color(1f, 0.55f, 0.25f, 0.95f));
                 UiKit.Ring(ic, ir * (1.25f + 0.25f * ip), new Color(1f, 0.4f, 0.2f, 0.6f * (1f - ip)), true);
             }
@@ -694,7 +702,7 @@ namespace BladePath
             if (bt != null)
             {
                 // в покое кнопки полупрозрачные (сквозь них видно бой), нажатая — яркая; главная «сверху» чуть плотнее
-                float idle = b == B.Overhead ? 0.78f : 0.6f;
+                float idle = b == B.Overhead ? (duel != null && duel.IaiCued ? 1f : 0.78f) : 0.6f;   // на «РУБИ!» — без прозрачности
                 Color tint = h ? new Color(1f, 0.7f, 0.55f, 1f) : new Color(1f, 1f, 1f, (ready ? idle : idle * 0.5f) * introDim);
                 float rr = r * (h ? 0.94f : 1f);
                 UiKit.Disc(c + new Vector2(0f, 3f), r * 0.98f, new Color(0f, 0f, 0f, 0.16f * a));
