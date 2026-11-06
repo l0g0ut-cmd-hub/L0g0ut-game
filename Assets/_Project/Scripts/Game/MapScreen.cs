@@ -29,7 +29,7 @@ namespace BladePath
         static readonly string[] EnemyTraits = { "обычный бой — учись отражать", "уходит в дым за спину, финтит", "бьёт по земле — перепрыгивай волну", "три фазы: залпы духа, затем дым" };
         static readonly string[] EnemyFullArt = { "UI/enemy_full_fallen", "UI/enemy_full_shadow", "UI/enemy_full_oni", "UI/enemy_full_shogun" };
 
-        enum Modal { None, Fight, Shrine, Smith, Merchant, Treasure, Rest, Event, RegionClear, Herbalist, Knocked, Camp, Tavern, Dev }
+        enum Modal { None, Fight, Shrine, Smith, Merchant, Treasure, Rest, Event, RegionClear, Herbalist, Knocked, Camp, Tavern, Dev, Onsen, Dojo, Gamble, Clan, Hunter, Hunt, Watch }
         Modal modal;
         int sel = -1;
         readonly List<int> previewPath = new List<int>(16);
@@ -82,7 +82,7 @@ namespace BladePath
             int resume = !Campaign.Knocked && Campaign.ClearedRegion < 0 && plannedRegion == Campaign.Region ? sel : -1;
             Weather.MapSky = -1;   // вне боя с карты (тренировка с ронином) — погода как раньше
             shownAt = Time.unscaledTime; sel = -1; previewPath.Clear(); moveTo = -1; modal = Modal.None; panU = -1f; continueRideAt = -1f;
-            routeAutopilot = false; nextRouteAt = 0f; toastLines.Clear();
+            routeAutopilot = false; nextRouteAt = 0f; toastLines.Clear(); gambleTable = false;
             manualPan = false; panArmed = false; panDragging = false;
             if (resume >= 0 && resume < Campaign.Nodes.Count && resume != Campaign.At) SelectNode(resume);
             TerrainRoads.Bind(Campaign.Region, Campaign.Nodes);
@@ -90,6 +90,8 @@ namespace BladePath
             if (Campaign.Knocked) OpenModal(Modal.Knocked);
             else if (Campaign.ClearedRegion >= 0) OpenModal(Modal.RegionClear);
             else if (Campaign.InFight || (!Campaign.CurrentSettled && Campaign.Current.Type != NodeType.Start)) OpenNode(Campaign.At);
+            string note = Campaign.TakeNote();   // итог боя вне места: додзё, охота за головой
+            if (!string.IsNullOrEmpty(note)) TavToast(note);
         }
 
         void OpenModal(Modal m) { modal = m; modalAt = Time.unscaledTime; }
@@ -103,7 +105,8 @@ namespace BladePath
             // and forth must not farm them. Smith, merchant and herbalist reopen.
             if (revisit && n.done && !Campaign.InFight &&
                 (n.IsFight || n.Type == NodeType.Treasure || n.Type == NodeType.Event ||
-                 n.Type == NodeType.Shrine || n.Type == NodeType.Rest))
+                 n.Type == NodeType.Shrine || n.Type == NodeType.Rest || n.Type == NodeType.Onsen ||
+                 n.Type == NodeType.Dojo || n.Type == NodeType.ClanShrine))
             {
                 modal = Modal.None;
                 return;
@@ -133,6 +136,11 @@ namespace BladePath
                 case NodeType.Rest: if (n.IsTavern && UiKit.Tex("UI/tavern") != null) OpenTavern(); else OpenModal(Modal.Rest); break;
                 case NodeType.Event: OpenModal(Modal.Event); break;
                 case NodeType.Herbalist: OpenModal(Modal.Herbalist); break;
+                case NodeType.Onsen: OpenModal(Modal.Onsen); break;
+                case NodeType.Dojo: OpenModal(Modal.Dojo); break;
+                case NodeType.Gamble: gambleTable = false; OpenModal(Modal.Gamble); break;
+                case NodeType.ClanShrine: OpenModal(Modal.Clan); break;
+                case NodeType.HunterCamp: OpenModal(Modal.Hunter); break;
                 default: modal = Modal.None; break;
             }
         }
@@ -208,9 +216,11 @@ namespace BladePath
                         treasure = null;
                     }
                     bool passing = goal >= 0 && goal != i && (revisit || serviceOnTheWay || chestOnTheWay);
+                    // ронин в розыске стоит здесь — встреча с ним останавливает любую поездку
+                    if (Campaign.HuntAt == i) OpenModal(Modal.Hunt);
                     // Riding THROUGH an already visited place does not reopen its smith or
                     // merchant; a new place always opens its encounter and ends the ride.
-                    if (!passing) OpenNode(i); else modal = Modal.None;
+                    else if (!passing) OpenNode(i); else modal = Modal.None;
                     if (goal >= 0 && goal != Campaign.At && goal < Campaign.Nodes.Count)
                     {
                         // продолжаем по сохранённому маршруту; перестраиваем, только если он больше не ведёт от текущего места
@@ -230,6 +240,9 @@ namespace BladePath
                 }
                 return;
             }
+            // огонь на смотровой башне зажёгся — дозорный рассказывает о долине (один раз, когда поездка окончена)
+            if (modal == Modal.None && !InventoryScreen.Open && continueRideAt < 0f && JourneyChoice.FogEnabled && Campaign.TowerLit && !Campaign.TowerTold)
+            { Campaign.TellTower(); OpenModal(Modal.Watch); }
             if (goAfterRoll && Time.unscaledTime - rollAt >= RollTime)
             {
                 goAfterRoll = false;
@@ -345,6 +358,7 @@ namespace BladePath
             MapClouds.Draw(Campaign.Region, new Rect(mapX, 0f, viewW, MapH), u0, uw);
             nodeLabels.Clear();
             DrawNodes(interactive && modal == Modal.None && moveTo < 0);
+            DrawHuntMarker();
             DrawHero();
             DrawNodeLabels();
             MapBirds.Draw(new Rect(mapX, 0f, viewW, MapH), u0, uw);   // ворон или стайка цапель пролетают над всем — и над значками (под ними значки видно, это не облака)
@@ -427,7 +441,31 @@ namespace BladePath
         static readonly string[] ShortTypeNames =
         {
             "НАЧАЛО", "ДУЭЛЬ", "ЭЛИТА", "БОСС", "ХРАМ", "КУЗНЕЦ",
-            "ТОРГОВЕЦ", "СУНДУК", "ЗАСАДА", "СОБЫТИЕ", "ПРИВАЛ", "ТРАВНИЦА"
+            "ТОРГОВЕЦ", "СУНДУК", "ЗАСАДА", "СОБЫТИЕ", "ПРИВАЛ", "ТРАВНИЦА",
+            "ОНСЭН", "ДОДЗЁ", "КОСТИ", "СВЯТИЛИЩЕ", "ОХОТНИКИ"
+        };
+        // ---- новые места (2026-11-06): свои медальоны UI/map_icons_new (3×2) и домики UI/map_buildings_new (3×2)
+        // ячейки: 0 онсэн, 1 додзё, 2 игорный дом, 3 смотровая башня, 4 святилище клана, 5 охотники за головами (и ронин в розыске)
+        const string NewIcons = "UI/map_icons_new", NewBuildings = "UI/map_buildings_new";
+        static Rect Cell3(int k) { return new Rect((k % 3) / 3f, k < 3 ? 0.5f : 0f, 1f / 3f, 0.5f); }
+        static int NewPlace(NodeType t)
+        {
+            switch (t)
+            {
+                case NodeType.Onsen: return 0; case NodeType.Dojo: return 1; case NodeType.Gamble: return 2;
+                case NodeType.ClanShrine: return 4; case NodeType.HunterCamp: return 5;
+            }
+            return -1;
+        }
+        // огоньки в новых домиках (доли ячейки 256: x, y, размер)
+        static readonly Vector3[][] NewBuildingLights =
+        {
+            new[] { new Vector3(0.83f, 0.52f, 0.12f), new Vector3(0.42f, 0.4f, 0.1f) },   // онсэн: каменный фонарь, окно
+            new[] { new Vector3(0.48f, 0.6f, 0.16f) },                                     // додзё: зал
+            new[] { new Vector3(0.72f, 0.46f, 0.13f), new Vector3(0.62f, 0.66f, 0.1f) },  // игорный дом: фонарь, стол
+            new[] { new Vector3(0.5f, 0.2f, 0.14f) },                                      // башня: площадка
+            new[] { new Vector3(0.5f, 0.58f, 0.12f), new Vector3(0.21f, 0.6f, 0.08f), new Vector3(0.79f, 0.6f, 0.08f) },   // святилище: свечи, фонари
+            new[] { new Vector3(0.31f, 0.7f, 0.17f) },                                     // охотники: костёр
         };
 
         // Painted herbalist medallion (same style as map_icons). The drawn green
@@ -550,7 +588,8 @@ namespace BladePath
             Texture2D atlas = Campaign.Region != 1 ? UiKit.Tex("UI/map_buildings_" + Campaign.Region) : null, glow = UiKit.Tex("FX/glow_pool");
             if (atlas == null) atlas = UiKit.Tex("UI/map_buildings");
             Texture2D camps = UiKit.Tex("UI/map_camps_" + Campaign.Region);   // стоянки у боёв и места событий — свой набор у каждой области
-            if (atlas == null && camps == null) return;
+            Texture2D newAtlas = UiKit.Tex(NewBuildings);
+            if (atlas == null && camps == null && newAtlas == null) return;
             Color oc = GUI.color;
             float t = Time.unscaledTime;
             List<MapNode> ns = Campaign.Nodes;
@@ -560,6 +599,28 @@ namespace BladePath
                 MapNode n = ns[i];
                 int b = atlas != null ? BuildingOf(n) : -1;
                 int cp = b < 0 && camps != null ? CampOf(n, i) : -1;
+                int nb = b < 0 && cp < 0 && newAtlas != null ? NewPlace(n.Type) : -1;
+                if (nb >= 0 && Known(n))
+                {
+                    Vector2 pn = P(n);
+                    if (pn.x < mapX - 80f || pn.x > mapX + viewW + 80f) continue;
+                    const float sz = 74f;
+                    Vector2 o = BuildingOffset(i, tower);
+                    Rect rn = new Rect(pn.x + o.x - sz * 0.5f, pn.y + o.y - sz * 0.78f, sz, sz);
+                    bool dimN = n.done && n.Type != NodeType.Gamble && n.Type != NodeType.HunterCamp;
+                    GUI.color = dimN ? new Color(0.72f, 0.7f, 0.68f, 0.9f) : Color.white;
+                    GUI.DrawTextureWithTexCoords(rn, newAtlas, Cell3(nb));
+                    if (glow != null)
+                        foreach (Vector3 l in NewBuildingLights[nb])
+                        {
+                            float fl = 0.6f + 0.4f * Mathf.PerlinNoise(t * 3f + i * 3.1f + l.x * 9f, l.y * 7f);
+                            float g = l.z * sz * (1f + 0.25f * fl);
+                            Vector2 c = new Vector2(rn.x + l.x * sz, rn.y + l.y * sz);
+                            GUI.color = new Color(1f, 0.6f, 0.25f, (dimN ? 0.25f : 0.5f) * fl);
+                            GUI.DrawTexture(new Rect(c.x - g, c.y - g, g * 2f, g * 2f), glow);
+                        }
+                    continue;
+                }
                 if ((b < 0 && cp < 0) || !Known(n)) continue;
                 if (b == 7 && n.done) continue;   // засада после боя — убрана с дороги
                 Vector2 p = P(n);
@@ -661,6 +722,24 @@ namespace BladePath
                 GUI.DrawTexture(new Rect(p.x - g, p.y - 40f - g, g * 2f, g * 2f), glow);
             }
             Vector2 basket = new Vector2(p.x, p.y - 36f);   // где жаровня (у запасной вышки)
+            Texture2D towerNew = UiKit.Tex(NewBuildings);
+            if (towerNew != null)
+            {
+                // новая сторожевая башня (ячейка 3 домиков): огонь горит в фонарях площадки, а не в жаровне сверху
+                Rect tr = new Rect(p.x - 40f, p.y - 66f, 80f, 80f);
+                GUI.color = lit ? Color.white : new Color(0.78f, 0.76f, 0.84f, 1f);
+                GUI.DrawTextureWithTexCoords(tr, towerNew, Cell3(3));
+                if (glow != null)
+                {
+                    Vector2 hut = new Vector2(tr.x + 0.5f * tr.width, tr.y + 0.2f * tr.height), lamp = new Vector2(tr.x + 0.71f * tr.width, tr.y + 0.26f * tr.height);
+                    float g1 = lit ? 26f + 5f * pulse : 9f + 2f * pulse, g2 = lit ? 13f + 3f * pulse : 6f;
+                    GUI.color = new Color(1f, 0.66f, 0.28f, lit ? 0.75f : 0.35f);
+                    GUI.DrawTexture(new Rect(hut.x - g1, hut.y - g1, g1 * 2f, g1 * 2f), glow);
+                    GUI.DrawTexture(new Rect(lamp.x - g2, lamp.y - g2, g2 * 2f, g2 * 2f), glow);
+                }
+                GUI.color = oc;
+                return;
+            }
             if (tower != null)
             {
                 // UI/map_watchtower — квадрат 512, основание внизу; жаровня на площадке в точке (0,52; 0,225) картинки
@@ -1023,6 +1102,8 @@ namespace BladePath
                     GUI.DrawTexture(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), herb);
                 else if (n.IsTavern && UiKit.Tex("UI/map_tavern") != null)
                     GUI.DrawTexture(new Rect(p.x - s * 0.47f, p.y - s * 0.47f, s * 0.94f, s * 0.94f), UiKit.Tex("UI/map_tavern"));
+                else if (NewPlace(n.Type) >= 0 && UiKit.Tex(NewIcons) != null)
+                    GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.47f, p.y - s * 0.47f, s * 0.94f, s * 0.94f), UiKit.Tex(NewIcons), Cell3(NewPlace(n.Type)));
                 else if (ic != null)
                     GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), ic, Cell(k));
                 else UiKit.Disc(p, s * 0.45f, can ? Gold : Dim);   // атлас значков не загрузился — простой кружок
@@ -1070,7 +1151,7 @@ namespace BladePath
                         Haptics.Pulse(20);
                         continue;
                     }
-                    if (i == Campaign.At && (n.Type == NodeType.Smith || n.Type == NodeType.Merchant)) OpenNode(i);
+                    if (i == Campaign.At && (n.Type == NodeType.Smith || n.Type == NodeType.Merchant || n.Type == NodeType.Gamble || n.Type == NodeType.HunterCamp)) { revisit = true; OpenNode(i); }
                     // повторное касание уже выбранного места — то же, что «В ПУТЬ» (с броском кости, если ходов нет)
                     else if (i == sel && moveTo < 0 && Time.unscaledTime - rollAt >= RollTime) TravelOrRoll();
                     else { SelectNode(i); Haptics.Pulse(10); }
@@ -1085,6 +1166,23 @@ namespace BladePath
                 int f = 12 + (int)(Time.unscaledTime * 6f) % 4;
                 GUI.DrawTextureWithTexCoords(new Rect(p.x - 26f, p.y - 46f, 52f, 52f), ht, Cell(f));
             }
+        }
+
+        /// <summary>Ронин в розыске: медальон с листка охотников у места, где он сейчас стоит, с красным пульсом.</summary>
+        void DrawHuntMarker()
+        {
+            int h = Campaign.HuntAt;
+            Texture2D ic = UiKit.Tex(NewIcons);
+            if (h < 0 || ic == null || Event.current.type != EventType.Repaint) return;
+            Vector2 p = P(Campaign.Nodes[h]) + new Vector2(24f, -26f);
+            if (p.x < mapX - 40f || p.x > mapX + viewW + 40f) return;
+            float t = Time.unscaledTime, pulse = 0.5f + 0.5f * Mathf.Sin(t * 3.4f);
+            UiKit.Disc(p, 21f + 4f * pulse, new Color(0.85f, 0.08f, 0.04f, 0.22f + 0.12f * pulse));
+            SoftShadow(p + new Vector2(1f, 15f), 34f, 10f, 0.45f);
+            Color oc = GUI.color; GUI.color = Color.white;
+            GUI.DrawTextureWithTexCoords(new Rect(p.x - 17f, p.y - 17f, 34f, 34f), ic, Cell3(5));
+            GUI.color = oc;
+            UiKit.Ring(p, 18f, new Color(0.95f, 0.25f, 0.15f, 0.55f + 0.35f * pulse), true);
         }
 
         void DrawHero()
@@ -1404,6 +1502,7 @@ namespace BladePath
                     Texture2D herb = n.Type == NodeType.Herbalist ? UiKit.Tex(HerbalistIcon) : null;
                     if (herb != null) GUI.DrawTexture(new Rect(x, y, ics, ics), herb);
                     else if (n.IsTavern && UiKit.Tex("UI/map_tavern") != null) GUI.DrawTexture(new Rect(x, y, ics, ics), UiKit.Tex("UI/map_tavern"));
+                    else if (NewPlace(n.Type) >= 0 && UiKit.Tex(NewIcons) != null) GUI.DrawTextureWithTexCoords(new Rect(x, y, ics, ics), UiKit.Tex(NewIcons), Cell3(NewPlace(n.Type)));
                     else GUI.DrawTextureWithTexCoords(new Rect(x, y, ics, ics), ic,
                         Cell(MapBadgeCell(n, show)));
                     GUI.color = previousTint;
@@ -1414,7 +1513,7 @@ namespace BladePath
                 if (n.done && show != Campaign.At && n.Type != NodeType.Start)
                 {
                     // Visited place: say what a return trip offers.
-                    bool reusable = n.Type == NodeType.Smith || n.Type == NodeType.Merchant || n.Type == NodeType.Herbalist;
+                    bool reusable = n.Type == NodeType.Smith || n.Type == NodeType.Merchant || n.Type == NodeType.Herbalist || n.Type == NodeType.Gamble || n.Type == NodeType.HunterCamp || n.IsTavern;
                     UiKit.Text(new Rect(x + ics + 8f, y + (compact ? 20f : 32f), w - ics - 8f, compact ? 16f : 20f),
                         reusable ? "ПРОЙДЕНО · можно вернуться" : "ПРОЙДЕНО · уже пусто", 12f,
                         reusable ? VisualIdentity.Jade : Dim, TextAnchor.MiddleLeft, false);
@@ -1546,6 +1645,11 @@ namespace BladePath
                 case NodeType.Rest: return node.IsTavern && UiKit.Tex("UI/tavern") != null ? "UI/tavern" : "UI/npc_3";
                 case NodeType.Herbalist: return "UI/npc_4";   // своя травница (до 2026-11-02 был мастер с привала)
                 case NodeType.Treasure: return "UI/chest_open";
+                case NodeType.Onsen: return "UI/place_onsen";
+                case NodeType.Dojo: return "UI/place_dojo";
+                case NodeType.Gamble: return "UI/place_gamble";
+                case NodeType.ClanShrine: return "UI/place_clan";
+                case NodeType.HunterCamp: return "UI/place_bounty";
                 default: return "UI/path_panorama";
             }
         }
@@ -1819,6 +1923,8 @@ namespace BladePath
                 case Modal.Camp: DrawCamp(ok); break;
                 case Modal.Tavern: DrawTavern(ok); break;
                 case Modal.Dev: DrawDev(ok); break;
+                case Modal.Onsen: case Modal.Dojo: case Modal.Gamble: case Modal.Clan: case Modal.Hunter: case Modal.Hunt: case Modal.Watch:
+                    DrawPlace(ok); break;
                 case Modal.RegionClear:
                 {
                     int prev = Mathf.Clamp(Campaign.ClearedRegion, 0, 2);
@@ -2230,17 +2336,161 @@ namespace BladePath
             if (dm != null) dm.ResetMatch();
         }
 
+        // ---------------- новые места: онсэн, додзё, игорный дом, святилище клана, охотники, ронин в розыске, башня ----------------
+
+        static readonly string[] ClanSigns = { "ВОРОНА", "ВОЛКА", "ЗМЕИ" };
+        bool gambleTable;   // игорный дом: сидим за столом (экран чо-хана)
+
+        /// <summary>Окно места: картина слева, заголовок, текст; высота — по тексту и числу кнопок.</summary>
+        Rect PlaceCard(string art, string title, string text, int buttons, out float x, out float w)
+        {
+            Rect r = Card(720f, Mathf.Clamp(22f + 36f + LinesH(354f, text, 38, 13f) + 16f + buttons * 54f + 10f, 360f, 500f));
+            Picture(new Rect(r.x, r.y, 330f, r.height), art);
+            x = r.x + 348f; w = r.width - 366f;
+            VisualIdentity.TitlePlaque(new Rect(x, r.y + 22f, w, 26f), title, 19f, TextAnchor.MiddleLeft);
+            Lines(x, r.y + 58f, w, text, 38, 13f, Ink);
+            return r;
+        }
+        /// <summary>Кнопка k из total снизу окна (последняя — у нижнего края).</summary>
+        static Rect PlaceBtn(Rect r, float x, float w, int k, int total) { return new Rect(x, r.yMax - 64f - (total - 1 - k) * 54f, w, 46f); }
+
+        void LeaveFight(bool dojo)
+        {
+            MapNode fn = Campaign.Current;
+            Weather.MapSky = MapClouds.SkyAt(Campaign.Region, new Vector2(fn.x, fn.y));
+            if (dojo) Campaign.BeginDojo(); else Campaign.BeginHunt();
+            Hide();
+            DuelManager dm = DuelManager.Instance;
+            if (dm != null) dm.ResetMatch();
+        }
+
+        void DrawPlace(bool ok)
+        {
+            int stage = Campaign.Region + 1;
+            float x, w;
+            switch (modal)
+            {
+                case Modal.Onsen:
+                {
+                    Rect r = PlaceCard("UI/place_onsen", "ГОРЯЧИЙ ИСТОЧНИК", "Старуха-банщица протягивает полотенце: «Вода здесь смывает всё — и грязь дороги, и чужие проклятия»." + (Campaign.Cursed ? "\n\nНа тебе проклятие — источник смоет его." : ""), 2, out x, out w);
+                    if (Btn(PlaceBtn(r, x, w, 0, 2), "ОКУНУТЬСЯ: +25% ЗДОРОВЬЯ", ok, true))
+                    {
+                        bool was = Campaign.Cursed; Campaign.LiftCurse(); Campaign.SetBlessing(3);
+                        Result("Горячая вода вытягивает усталость из костей. " + (was ? "Проклятие смыто. " : "") + "+25% здоровья в следующем бою.");
+                    }
+                    if (Btn(PlaceBtn(r, x, w, 1, 2), "ДОЛГО ПАРИТЬСЯ (−25 МОН)", ok && Profile.Gold >= 25) && Profile.Spend(25))
+                    {
+                        bool was = Campaign.Cursed; Campaign.LiftCurse(); Campaign.SetBlessing(2); int lv = Profile.AddXp(40 * stage);
+                        Result("До звёзд в горячей воде, под стук капель. " + (was ? "Проклятие смыто. " : "") + "Следующий бой — с полным духом, +" + (40 * stage) + " опыта" + (lv > 0 ? " и новый уровень!" : "."));
+                    }
+                    break;
+                }
+                case Modal.Dojo:
+                {
+                    Rect r = PlaceCard("UI/place_dojo", "ДОДЗЁ", "Старый сэнсэй протягивает боккэн. «Деревянный меч не убивает — он учит. Выстоишь против моего ученика — покажу то, чего нет в свитках».\n\nПобеда — +1 очко характеристик. Попытка одна.", 2, out x, out w);
+                    if (Btn(PlaceBtn(r, x, w, 0, 2), "БОЙ НА БОККЭНАХ", ok, true)) { Campaign.Complete(Campaign.At); modal = Modal.None; LeaveFight(true); }
+                    if (Btn(PlaceBtn(r, x, w, 1, 2), "ПОКЛОНИТЬСЯ И УЙТИ", ok)) modal = Modal.None;
+                    break;
+                }
+                case Modal.Gamble:
+                {
+                    if (gambleTable)
+                    {
+                        // тот же чо-хан, что в трактире, но ставки втрое выше и пять партий (TavernDiceGame.HighStakes)
+                        if (TavernDiceGame.Draw(ok, W, Gold, Ink, Dim)) { gambleTable = false; modal = Modal.None; }
+                        break;
+                    }
+                    int bet = (25 + 15 * Campaign.Region) * 3;
+                    Rect r = PlaceCard("UI/place_gamble", "ИГОРНЫЙ ДОМ", "Дым, фонари, стук костей. Якудза с драконами на руках трясёт стаканчик: «Здесь ставят крупнее, чем в твоём трактире, самурай. Пять партий. Трусы — за дверь».\n\nСтавка — от " + bet + " мон.", 2, out x, out w);
+                    if (Btn(PlaceBtn(r, x, w, 0, 2), "СЕСТЬ ЗА СТОЛ", ok && Profile.Gold >= bet, true)) { gambleTable = true; TavernDiceGame.Enter(true, true); }
+                    if (Btn(PlaceBtn(r, x, w, 1, 2), "УЙТИ", ok)) modal = Modal.None;
+                    break;
+                }
+                case Modal.Clan:
+                {
+                    int cost = Mathf.RoundToInt((60 + 40 * Campaign.Region) * (1f + 0.3f * Profile.Cycle));
+                    Rect r = PlaceCard("UI/place_clan", "СВЯТИЛИЩЕ КЛАНА", "Старый монах у трёх знамён: «Ворон, Волк, Змея… Принеси клятву — и я перекую знак клана на твоём снаряжении». Знак ложится на клинок, цубу, облачение или маску. Цена — " + cost + " мон, один раз.", 4, out x, out w);
+                    for (int k = 0; k < 3; k++)
+                    {
+                        int slot = -1;
+                        for (int sl = 0; sl < 4 && slot < 0; sl++) { Item eq = Profile.Equipped(sl); if (eq != null && eq.set != k) slot = sl; }
+                        string label = "ЗНАК " + ClanSigns[k] + " — КОМПЛЕКТ " + Profile.SetPieces(k) + "/4";
+                        if (Btn(PlaceBtn(r, x, w, k, 4), label, ok && slot >= 0 && Profile.Gold >= cost, k == 0) && Profile.Spend(cost))
+                        {
+                            Item it = Profile.Equipped(slot);
+                            it.set = k; Profile.Save();
+                            int pc = Profile.SetPieces(k);
+                            Result("Монах выжигает знак на «" + it.name + "»: теперь это снаряжение " + Profile.SetNames[k] + " (" + pc + "/4)."
+                                + (pc >= 4 ? " Комплект собран: " + Profile.SetBonus4[k] + "." : pc >= 2 ? " Бонус двух: " + Profile.SetBonus2[k] + "." : ""));
+                        }
+                    }
+                    if (Btn(PlaceBtn(r, x, w, 3, 4), "УЙТИ", ok)) modal = Modal.None;
+                    break;
+                }
+                case Modal.Hunter:
+                {
+                    int reward = Campaign.HuntAt >= 0 ? Campaign.HuntReward : Campaign.NewHuntReward;
+                    string text = Campaign.HuntDone ? "«Слыхали, ты достал того ронина. Охотники своё слово держат — награду ты уже получил»."
+                        : Campaign.HuntAt >= 0 ? "«Он всё ещё бродит где-то там. Знак с его лицом — на карте. Только он не стоит на месте: каждый раз, как ты бросаешь кость, он может уйти»."
+                        : "У костра охотники за головами чистят оружие. На столбе — листок с лицом: ронин-убийца бродит по дорогам этой области. «Найдёшь — " + reward + " мон твои. Только он не стоит на месте».";
+                    bool offer = !Campaign.HuntDone && Campaign.HuntAt < 0;
+                    Rect r = PlaceCard("UI/place_bounty", "СТОЯНКА ОХОТНИКОВ", text, offer ? 2 : 1, out x, out w);
+                    if (offer && Btn(PlaceBtn(r, x, w, 0, 2), "ВЗЯТЬ ЗАКАЗ", ok, true))
+                    {
+                        Campaign.TakeHunt();
+                        Result("Заказ взят: ронин в розыске отмечен на карте. Догони его — " + reward + " мон и добыча не ниже редкой.");
+                    }
+                    if (Btn(PlaceBtn(r, x, w, offer ? 1 : 0, offer ? 2 : 1), "УЙТИ", ok)) modal = Modal.None;
+                    break;
+                }
+                case Modal.Hunt:
+                {
+                    Rect r = PlaceCard("UI/place_bounty", "РОНИН В РОЗЫСКЕ", "Тот самый, с листка охотников. Он стоит посреди дороги и медленно кладёт ладонь на рукоять. «За моей головой пришёл? Подойди и возьми».\n\nВраг крепче обычного и с лишней жизнью. Награда — " + Campaign.HuntReward + " мон и добыча не ниже редкой.", 2, out x, out w);
+                    if (Btn(PlaceBtn(r, x, w, 0, 2), "СРАЗИТЬСЯ", ok, true)) { modal = Modal.None; LeaveFight(false); }
+                    if (Btn(PlaceBtn(r, x, w, 1, 2), "ОТСТУПИТЬ", ok))
+                    {
+                        Campaign.HuntRetreat();
+                        modal = Modal.None;
+                        if (!Campaign.CurrentSettled) OpenNode(Campaign.At);   // само место (бой, событие) никуда не делось
+                        else TavToast("Ронин усмехается и уходит в туман. Его знак снова на карте.");
+                    }
+                    break;
+                }
+                case Modal.Watch:
+                {
+                    Rect r = PlaceCard("UI/place_watchtower", "СМОТРОВАЯ БАШНЯ", "Дозорный поднимает фонарь и указывает копьём в долину: «Вон там дороги, а там — костры разбойников». Огонь на башне зажжён — туман вокруг неё рассеялся."
+                        + (Campaign.HuntAt >= 0 ? " «И твой ронин — вон он, у дороги»." : ""), 1, out x, out w);
+                    if (Btn(PlaceBtn(r, x, w, 0, 1), "В ПУТЬ", ok, true)) modal = Modal.None;
+                    break;
+                }
+            }
+        }
+
         // ---------------- события на дороге ----------------
 
         /// <summary>Привал с ev = TavernEv — придорожный трактир (свой значок, вход в трактир).</summary>
         public const int TavernEv = 99;
         static string NodeName(MapNode n) { return n.IsTavern ? "ТРАКТИР" : Campaign.TypeNames[n.type]; }
-        static string NodeHint(MapNode n) { return n.IsTavern ? "Мрачный трактир у дороги: сакэ, кости, заказы на головы и пьяные слухи." : Campaign.TypeHints[n.type]; }
+        static string NodeHint(MapNode n)
+        {
+            string h = n.IsTavern ? "Мрачный трактир у дороги: сакэ, кости, заказы на головы и пьяные слухи." : Campaign.TypeHints[n.type];
+            if (Campaign.HuntAt >= 0 && Campaign.Nodes[Campaign.HuntAt] == n) h = "Здесь сейчас ронин в розыске! " + h;
+            return h;
+        }
 
-        public const int EventCount = 12, CatEvent = 8, CompanionEvent = 9;   // 9 ворон, 10 волк, 11 змея
+        public const int EventCount = 20, CatEvent = 8, CompanionEvent = 9;   // 9 ворон, 10 волк, 11 змея
+        // 12 сожжённая деревня, 13 гадалка, 14 дуэль на рассвете, 15 торговец-пройдоха, 16 призрак самурая, 17 лесной пожар;
+        // 18 и 19 — цепочка раненого ронина (вернул долг / предал), выпадают только после перевязки (событие 0)
+        public const int RoninRepays = 18, RoninBetrays = 19;
+        static readonly int[] PlainEvents = { 0, 1, 2, 3, 4, 5, 6, 7, 12, 13, 14, 15, 16, 17 };
+        /// <summary>Обычное событие дороги (не кот, не спутник, не цепочка ронина).</summary>
+        public static int RandomEvent() { return PlainEvents[Random.Range(0, PlainEvents.Length)]; }
+        public static bool PlainEvent(int ev) { return System.Array.IndexOf(PlainEvents, ev) >= 0; }
         static readonly string[] EvTitle = { "РАНЕНЫЙ РОНИН", "СТАРЫЙ МОНАХ", "РАЗБОЙНИКИ", "БЕЛАЯ ЛИСА",
                                              "ЧАЙНЫЙ ДОМИК", "ДЕВА В ХРАМЕ", "МОНАХ НА МОСТУ", "БЕЖЕНЦЫ", "ХРАНИТЕЛЬ ДЕВЯТИ ЖИЗНЕЙ",
-                                             "ВОРОН НА ПОЛЕ БИТВЫ", "ВОЛК В КАПКАНЕ", "ЗМЕЯ У АЛТАРЯ" };
+                                             "ВОРОН НА ПОЛЕ БИТВЫ", "ВОЛК В КАПКАНЕ", "ЗМЕЯ У АЛТАРЯ",
+                                             "СОЖЖЁННАЯ ДЕРЕВНЯ", "СЛЕПАЯ ГАДАЛКА", "ДУЭЛЬ НА РАССВЕТЕ", "ТОРГОВЕЦ-ПРОЙДОХА",
+                                             "ПРИЗРАК САМУРАЯ", "ЛЕСНОЙ ПОЖАР", "РОНИН ВОЗВРАЩАЕТ ДОЛГ", "ПРЕДАТЕЛЬСТВО РОНИНА" };
         static readonly string[] EvText =
         {
             "У каменного фонаря сидит раненый ронин, зажимая бок. «Перевяжи меня, путник… я не останусь в долгу».",
@@ -2255,6 +2505,14 @@ namespace BladePath
             "Старое поле битвы на закате. На рукояти воткнутого в землю меча сидит огромный ворон с красными глазами и смотрит прямо на тебя, будто выбирает хозяина.",
             "На снежной тропе раненый волк попал в капкан и скалит зубы. Из тумана за ним следят горящие глаза стаи.",
             "В бамбуковой чаще вокруг статуи божества обвилась изумрудная змея с золотым узором. На алтаре — пустая чаша для подношений.",
+            "Деревня ещё дымится. Из-за перевёрнутой телеги на тебя смотрит чумазый мальчишка — один из всей деревни. Под пеплом поблёскивает чьё-то добро.",
+            "Под рваным навесом слепая старуха бросает кости и монеты на циновку. «Дай мон — скажу, что ждёт тебя за поворотом. Или спроси о дороге: её я вижу лучше тебя».",
+            "На мосту в рассветном тумане ждёт самурай. На перилах — письмо с вызовом, придавленное камнем: «Тому, кто идёт к владыке. Сразимся честно».",
+            "Пройдоха у телеги трясёт «легендарным» мечом. Позолота с него подозрительно осыпается. «Меч сёгуна! Всего шестьдесят мон, господин, — себе в убыток».",
+            "В бамбуковой роще над безымянной могилой стоит на коленях призрак в доспехах и протягивает обломок меча. «Похорони его со мной… или скрести со мной клинки, как подобает воину».",
+            "Лес горит. Дорогу заваливают пылающие ветки, на тропе бьётся перепуганный конь с богатым седлом. Есть узкий проход прямо сквозь огонь.",
+            "Тот самый ронин, которого ты перевязал у фонаря, — здоров и гордо прям. Он опускается на колено и протягивает меч обеими руками: «Я говорил, что не останусь в долгу».",
+            "Ночью на тропе — знакомое лицо: ронин, которого ты перевязал. За ним — разбойники с факелами. «Прости, путник. Твой кошель мне нужнее твоей благодарности».",
         };
 
          void DrawEvent(MapNode n, int at, bool ok)
@@ -2278,7 +2536,8 @@ namespace BladePath
                     {
                         Item it = Profile.Make(Random.Range(0, Profile.SlotCount), Random.value < 0.35f ? 2 : 1, 1f + 0.22f * stage + 0.4f * Profile.Cycle);
                         Profile.Give(it);
-                        Result("Ронин отдаёт тебе своё: «" + it.name + "». «Пусть служит лучше, чем мне».");
+                        Campaign.RoninOwes();   // он ещё встретится на дороге: вернёт долг — или предаст
+                        Result("Ронин отдаёт тебе своё: «" + it.name + "». «Пусть служит лучше, чем мне. Мы ещё встретимся».");
                     }
                     if (Btn(b2, "ПРОЙТИ МИМО", ok)) Result("Ты идёшь дальше. За спиной долго слышен его кашель.");
                     break;
@@ -2390,6 +2649,107 @@ namespace BladePath
                     }
                     if (had == comp) UiKit.Text(new Rect(b1.x, b1.y - 22f, b1.width, 18f), "Этот спутник уже с тобой", 11f, Dim, TextAnchor.MiddleLeft, false);
                     if (Btn(b2, "ПРОЙТИ МИМО", ok)) Result("Ты идёшь дальше своей дорогой.");
+                    break;
+                }
+                case 12:   // сожжённая деревня
+                    if (Btn(b1, "ПОМОЧЬ МАЛЬЧИШКЕ (−30 МОН)", ok && Profile.Gold >= 30, true) && Profile.Spend(30))
+                    {
+                        Campaign.SetBlessing(1); int lv = Profile.AddXp(30 * stage);
+                        Result("Ты отводишь мальчишку к соседней деревне. Гнев за сожжённый дом остаётся с тобой: +20% урона в следующем бою, +" + (30 * stage) + " опыта" + (lv > 0 ? " и новый уровень!" : "."));
+                    }
+                    if (Btn(b2, "ОБЫСКАТЬ ПЕПЕЛИЩЕ", ok))
+                    {
+                        if (Random.value < 0.6f)
+                        {
+                            Item it = Profile.Make(Random.Range(0, Profile.SlotCount), Random.value < 0.3f ? 2 : 1, 1f + 0.22f * stage + 0.4f * Profile.Cycle);
+                            Profile.Give(it); Result("Под пеплом — уцелевшее: «" + it.name + "». Мальчишка молча смотрит тебе вслед.");
+                        }
+                        else { Campaign.Curse(); Result("Из пепла поднимается чёрный дым мёртвых и липнет к тебе. Проклятие: −25% здоровья в следующем бою."); }
+                    }
+                    break;
+                case 13:   // слепая гадалка: благословение наугад или дорога впереди без тумана
+                    if (Btn(b1, "ПОГАДАТЬ (−20 МОН)", ok && Profile.Gold >= 20, true) && Profile.Spend(20))
+                    {
+                        int f = Random.Range(0, 4);
+                        if (f == 3) { Campaign.AddRoll(); Result("«Вижу дорогу, что сама ложится под ноги». Старуха вкладывает тебе в ладонь кость пути."); }
+                        else
+                        {
+                            Campaign.SetBlessing(f + 1);
+                            Result(f == 0 ? "«Твой клинок напьётся крови». В следующем бою +20% урона." : f == 1 ? "«Дух твой будет полон, как луна». Следующий бой — с полным духом." : "«Смерть пройдёт мимо, не заметив». +25% здоровья в следующем бою.");
+                        }
+                    }
+                    if (Btn(b2, "СПРОСИТЬ О ДОРОГЕ", ok))
+                    {
+                        if (JourneyChoice.FogEnabled) { Campaign.RevealAhead(); Result("Старуха водит пальцем по циновке и называет каждый поворот. Туман над дорогами впереди расходится."); }
+                        else { int lv = Profile.AddXp(30 * stage); Result("Старуха пересказывает дорогу до самого владыки: +" + (30 * stage) + " опыта" + (lv > 0 ? ", новый уровень!" : ".")); }
+                    }
+                    break;
+                case 14:   // дуэль на рассвете: сильный противник по чести или уйти
+                    if (Btn(b1, "ПРИНЯТЬ ВЫЗОВ", ok, true)) { Campaign.TurnToFight(at, NodeType.Elite); OpenModal(Modal.Fight); }
+                    if (Btn(b2, "СЖЕЧЬ ПИСЬМО", ok))
+                    {
+                        int lv = Profile.AddXp(20 * stage);
+                        Result("Письмо горит на ветру. Самурай на мосту долго смотрит тебе вслед: +" + (20 * stage) + " опыта" + (lv > 0 ? ", новый уровень!" : "."));
+                    }
+                    break;
+                case 15:   // торговец-пройдоха: подделка (или настоящая сталь) — или разоблачение
+                    if (Btn(b1, "КУПИТЬ МЕЧ (−60 МОН)", ok && Profile.Gold >= 60, true) && Profile.Spend(60))
+                    {
+                        if (Random.value < 0.25f)
+                        {
+                            Item it = Profile.Make(0, Random.value < 0.3f ? 3 : 2, 1f + 0.25f * stage + 0.4f * Profile.Cycle);
+                            Profile.Give(it); Result("Позолота осыпается — а под ней настоящая сталь! Пройдоха и сам не знал, что продал: «" + it.name + "».");
+                        }
+                        else
+                        {
+                            Item it = Profile.Make(0, 0, 0.6f + 0.1f * stage);
+                            it.name = "Боккэн в позолоте";
+                            Profile.Give(it); Result("К вечеру позолота облезает: под ней крашеное дерево. «Боккэн в позолоте» — твой. Пройдохи уже и след простыл.");
+                        }
+                    }
+                    if (Btn(b2, "РАЗОБЛАЧИТЬ ПРОЙДОХУ", ok))
+                    {
+                        if (Random.value < 0.65f) { Profile.AddGold(35 * stage); Result("Пройдоха бледнеет и суёт тебе отступные, лишь бы ты молчал: +" + (35 * stage) + " мон."); }
+                        else { Campaign.TurnToAmbush(at); OpenModal(Modal.Fight); }   // из-за телеги выходит его охрана
+                    }
+                    break;
+                case 16:   // призрак самурая: похоронить с честью или скрестить клинки
+                    if (Btn(b1, "ПОХОРОНИТЬ С ЧЕСТЬЮ", ok, true))
+                    {
+                        Campaign.SetBlessing(1); int lv = Profile.AddXp(30 * stage);
+                        Result("Призрак кланяется и тает в тумане. Его сила с тобой: +20% урона в следующем бою, +" + (30 * stage) + " опыта" + (lv > 0 ? " и новый уровень!" : "."));
+                    }
+                    if (Btn(b2, "СКРЕСТИТЬ КЛИНКИ", ok)) { Campaign.TurnToAmbush(at); OpenModal(Modal.Fight); }
+                    break;
+                case 17:   // лесной пожар: сквозь огонь (ожог, но кость пути) или спасти коня (ход сгорает, награда хозяина)
+                    if (Btn(b1, "СКВОЗЬ ОГОНЬ", ok, true))
+                    {
+                        Campaign.Curse(); Campaign.AddRoll();
+                        Result("Ты прорываешься сквозь пламя — обожжённый, но путь стал короче: +1 кость пути. Ожоги: −25% здоровья в следующем бою.");
+                    }
+                    if (Btn(b2, "СПАСТИ КОНЯ", ok))
+                    {
+                        Campaign.ClearSteps(); Profile.AddGold(45 * stage);
+                        Result("Ты выводишь коня кружным путём — остаток хода потерян. У опушки хозяин-купец отсыпает тебе +" + (45 * stage) + " мон.");
+                    }
+                    break;
+                case 18:   // ронин вернул долг
+                    if (Btn(b1, "ПРИНЯТЬ МЕЧ", ok, true))
+                    {
+                        Item it = Profile.Make(0, Random.value < 0.5f ? 3 : 2, 1f + 0.28f * stage + 0.4f * Profile.Cycle);
+                        Profile.Give(it); Result("«" + it.name + "». «Теперь мы квиты, путник. Пусть он рубит за нас обоих».");
+                    }
+                    if (Btn(b2, "«ДОЛГА НЕТ»", ok))
+                    {
+                        Profile.GivePoint(); int lv = Profile.AddXp(30 * stage);
+                        Result("Ронин долго смотрит на тебя, потом показывает свой приём до самого заката: +1 очко характеристик, +" + (30 * stage) + " опыта" + (lv > 0 ? " и новый уровень!" : "."));
+                    }
+                    break;
+                case 19:   // ронин предал: бой с ним и бандой или откуп
+                {
+                    int half = Mathf.Max(20, Mathf.RoundToInt(Profile.Gold * 0.5f));
+                    if (Btn(b1, "СРАЗИТЬСЯ", ok, true)) { Campaign.TurnToFight(at, NodeType.Elite, 1); OpenModal(Modal.Fight); }
+                    if (Btn(b2, "ОТДАТЬ КОШЕЛЁК (−" + half + " МОН)", ok)) { Profile.AddGold(-half); Result("Ронин взвешивает кошель на ладони и усмехается: «Вот теперь мы квиты». Банда уходит в лес."); }
                     break;
                 }
                 case 7:   // беженцы: кость пути за помощь или благословение за деньги

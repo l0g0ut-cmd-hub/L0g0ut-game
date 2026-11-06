@@ -20,6 +20,9 @@ namespace BladePath
         static string say = ""; static float sayAt;
         static Vector2 headPos = new Vector2(480f, 160f);
         public const int MaxRounds = 3;
+        /// <summary>Игорный дом на карте: ставки втрое выше, пять партий (тот же стол и тот же жулик).</summary>
+        public static bool HighStakes;
+        static int Rounds { get { return HighStakes ? 5 : MaxRounds; } }
 
         static readonly string[] SayIdle =
         {
@@ -64,11 +67,12 @@ namespace BladePath
             "Я нихуя не трогал. Это рука. Она сама. Она в говно.",
         };
 
-        public static int RoundsLeft { get { return MaxRounds - rounds; } }
+        public static int RoundsLeft { get { return Rounds - rounds; } }
 
         /// <summary>Вход за стол (новый визит в трактир — партии заново).</summary>
-        public static void Enter(bool newVisit)
+        public static void Enter(bool newVisit, bool highStakes = false)
         {
+            HighStakes = highStakes;
             if (newVisit) rounds = 0;
             st = St.Bet; mood = 0; moodAt = Time.unscaledTime; bumped = false;
             Say(SayIdle[Random.Range(0, SayIdle.Length)]);
@@ -97,7 +101,7 @@ namespace BladePath
         {
             TavernDiceTable t = TavernDiceTable.Ensure();
             float now = Time.unscaledTime;
-            int baseBet = 25 + 15 * Campaign.Region;
+            int baseBet = (25 + 15 * Campaign.Region) * (HighStakes ? 3 : 1);
             if (st == St.Bet) bet = baseBet * BetMul[Mathf.Clamp(betIdx, 0, BetMul.Length - 1)];   // во время броска ставка не меняется
 
             // тряска экрана от удара кулаком / локтем

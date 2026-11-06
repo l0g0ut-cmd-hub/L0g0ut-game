@@ -265,7 +265,7 @@ def check_selection_screens():
     # shrine and rest stay one-time, merchant keeps its stock.
     assert "return D.nodes[to].done && D.nodes[to].next.Contains(from);" in camp
     assert "Adjacent(D.at, i)" in camp
-    assert "n.Type == NodeType.Shrine || n.Type == NodeType.Rest))" in screen
+    assert "n.Type == NodeType.Shrine || n.Type == NodeType.Rest || n.Type == NodeType.Onsen ||" in screen
     assert "kept.Key == at) stock = kept.Value;" in screen
     # Meshy models (2026-11-02): Akiko player, Oni and Shogun enemies.
     builder = read("Assets/_Project/Scripts/Editor/HeroModelBuilder.cs")

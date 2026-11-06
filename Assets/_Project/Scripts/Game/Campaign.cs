@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace BladePath
 {
-    public enum NodeType { Start, Duel, Elite, Boss, Shrine, Smith, Merchant, Treasure, Ambush, Event, Rest, Herbalist }
+    public enum NodeType { Start, Duel, Elite, Boss, Shrine, Smith, Merchant, Treasure, Ambush, Event, Rest, Herbalist, Onsen, Dojo, Gamble, ClanShrine, HunterCamp }
 
     [Serializable]
     public class MapNode
@@ -56,11 +56,19 @@ namespace BladePath
             public List<int> travelled = new List<int>();
             public List<Vector2> seen = new List<Vector2>();
             public int tower = -1;          // смотровая башня (место, с которого видно далеко); −1 — ещё не выбрана
-            public bool towerLit;           // на башне зажжён огонь: туман вокруг неё разошёлся   // туман войны: где побывал герой (доли карты), по ним туман расходится
+            public bool towerLit;           // на башне зажжён огонь: туман вокруг неё разошёлся
+            public bool towerTold;          // дозорный на башне уже рассказал о долине (окно показано)
+            public int trainKind;           // бой вне места: 0 — странствующий ронин (кость пути), 1 — додзё (очко), 2 — ронин в розыске
+            public int hunt = -1;           // место, где сейчас стоит ронин в розыске (−1 — заказа нет)
+            public int huntReward;          // награда охотников за его голову
+            public bool huntDone;           // в этой области заказ уже выполнен
+            public bool roninDebt;          // перевязал раненого ронина: он ещё встретится (вернёт долг или предаст)
+            public string note = "";        // сообщение для карты после боя вне места (додзё, охота)
         }
 
         public static readonly string[] RegionNames = { "ЛЕС ТЕНЕЙ", "ГОРЫ ОНИ", "ПРОКЛЯТЫЙ СЁГУНАТ" };
-        public static readonly string[] TypeNames = { "НАЧАЛО ПУТИ", "ДУЭЛЬ", "СИЛЬНЫЙ ПРОТИВНИК", "ВЛАДЫКА ОБЛАСТИ", "ХРАМ", "КУЗНЕЦ", "ТОРГОВЕЦ", "ТАЙНИК", "ЗАСАДА", "СОБЫТИЕ", "ПРИВАЛ", "ХИЖИНА ТРАВНИЦЫ" };
+        public static readonly string[] TypeNames = { "НАЧАЛО ПУТИ", "ДУЭЛЬ", "СИЛЬНЫЙ ПРОТИВНИК", "ВЛАДЫКА ОБЛАСТИ", "ХРАМ", "КУЗНЕЦ", "ТОРГОВЕЦ", "ТАЙНИК", "ЗАСАДА", "СОБЫТИЕ", "ПРИВАЛ", "ХИЖИНА ТРАВНИЦЫ",
+                                                       "ГОРЯЧИЙ ИСТОЧНИК", "ДОДЗЁ", "ИГОРНЫЙ ДОМ", "СВЯТИЛИЩЕ КЛАНА", "СТОЯНКА ОХОТНИКОВ" };
         public static readonly string[] TypeHints =
         {
             "Отсюда начинается путь по области.",
@@ -75,6 +83,11 @@ namespace BladePath
             "Встреча на дороге. Чем она кончится — решать тебе.",
             "У костра — старый наставник: тренировка или медитация.",
             "Здесь выхаживают проигравших. Заглянешь — травница даст кость пути. Проиграешь дальше — очнёшься здесь.",
+            "Горячий источник в скалах: снимает проклятие и даёт сил на следующий бой.",
+            "Сэнсэй ставит против тебя ученика с боккэном. Выстоишь — очко характеристик.",
+            "Чо-хан по-крупному: ставки втрое выше, чем в трактире, и пять партий.",
+            "Мастер святилища перекуёт знак клана на надетом снаряжении — ради бонуса комплекта.",
+            "Охотники за головами дают заказ на ронина, который бродит по дорогам области.",
         };
 
         // места узлов на каждой карте (доли ширины/высоты), по слоям от начала (внизу слева) к владыке (вверху справа)
@@ -331,6 +344,9 @@ namespace BladePath
         public static int Steps { get { return D.steps; } }
         public static int LastRoll { get { return D.lastRoll; } }
         public static bool Training { get { return D.training; } }
+        /// <summary>Идёт бой с ронином в розыске (охота за головой).</summary>
+        public static bool Hunting { get { return D.training && D.trainKind == 2; } }
+        public static bool Dojo { get { return D.training && D.trainKind == 1; } }
         public static bool Knocked { get { return D.knocked; } }
         public static void AckKnocked() { D.knocked = false; Save(); }
         public static bool Stuck { get { return D.rolls <= 0 && D.steps <= 0 && CurrentSettled && !InFight; } }
@@ -340,7 +356,9 @@ namespace BladePath
         public static int RollDie()
         {
             if (D.rolls <= 0 || D.steps > 0 || !CurrentSettled || InFight || D.training) return 0;
-            D.rolls--; D.lastRoll = UnityEngine.Random.Range(1, 4); D.steps = D.lastRoll; Save();
+            D.rolls--; D.lastRoll = UnityEngine.Random.Range(1, 4); D.steps = D.lastRoll;
+            MoveHunt(0.6f);   // ронин в розыске тоже не стоит на месте
+            Save();
             return D.lastRoll;
         }
         public static void AddRoll(int n = 1) { if (n <= 0) return; D.rolls += n; Save(); }
@@ -351,11 +369,92 @@ namespace BladePath
         public static void BeginTraining()
         {
             if (InFight || D.training || !CurrentSettled) return;
-            D.training = true; D.fight = -1;
+            D.training = true; D.trainKind = 0; D.fight = -1;
             Ladder.Index = DuelEnemy(D.region);
             Weather.ForceNight = false;
             Save();
         }
+        /// <summary>Бой на боккэнах в додзё (вне места): победа — очко характеристик.</summary>
+        public static void BeginDojo()
+        {
+            if (InFight || D.training) return;
+            D.training = true; D.trainKind = 1; D.fight = -1;
+            Ladder.Index = DuelEnemy(D.region);
+            Weather.ForceNight = false;
+            Save();
+        }
+
+        // ---- охота за головой: заказ на стоянке охотников, ронин бродит по дорогам (шаг при каждом броске кости)
+        public static int HuntAt { get { return D.hunt >= 0 && D.hunt < D.nodes.Count ? D.hunt : -1; } }
+        public static int HuntReward { get { return D.huntReward; } }
+        public static bool HuntDone { get { return D.huntDone; } }
+        public static int NewHuntReward { get { return Mathf.RoundToInt((150 + 60 * D.region) * (1f + 0.4f * Profile.Cycle)); } }
+        static bool HuntSpot(int i)
+        {
+            MapNode n = D.nodes[i];
+            int L = 0; foreach (MapNode m in D.nodes) L = Mathf.Max(L, m.layer + 1);
+            return i != D.at && n.Type != NodeType.Boss && n.Type != NodeType.Start && n.Type != NodeType.HunterCamp && n.layer <= L - 2;
+        }
+        public static void TakeHunt()
+        {
+            if (HuntAt >= 0 || D.huntDone) return;
+            List<int> pick = new List<int>();
+            for (int i = 0; i < D.nodes.Count; i++) if (HuntSpot(i) && D.nodes[i].layer >= Current.layer + 2) pick.Add(i);
+            if (pick.Count == 0) for (int i = 0; i < D.nodes.Count; i++) if (HuntSpot(i)) pick.Add(i);
+            if (pick.Count == 0) return;
+            D.hunt = pick[UnityEngine.Random.Range(0, pick.Count)];
+            D.huntReward = NewHuntReward;
+            Save();
+        }
+        /// <summary>Ронин уходит на соседнее место (по дорогам в обе стороны); на героя не выходит сам.</summary>
+        public static void MoveHunt(float chance)
+        {
+            int h = HuntAt;
+            if (h < 0 || UnityEngine.Random.value > chance) return;
+            List<int> nb = new List<int>();
+            for (int i = 0; i < D.nodes.Count; i++)
+                if (i != h && (D.nodes[h].next.Contains(i) || D.nodes[i].next.Contains(h) || Lateral(h, i)) && HuntSpot(i)) nb.Add(i);
+            if (nb.Count > 0) D.hunt = nb[UnityEngine.Random.Range(0, nb.Count)];
+        }
+        public static void BeginHunt()
+        {
+            if (InFight || D.training || HuntAt < 0) return;
+            D.training = true; D.trainKind = 2; D.fight = -1;
+            Ladder.Index = Mathf.Clamp(D.region, 0, Ladder.Count - 1);
+            Weather.ForceNight = false;
+            Save();
+        }
+        /// <summary>Отступил от ронина — он уходит с этого места.</summary>
+        public static void HuntRetreat() { MoveHunt(1f); Save(); }
+        /// <summary>Сообщение карты после боя вне места (забирается один раз).</summary>
+        public static string TakeNote() { string s = D.note; if (!string.IsNullOrEmpty(s)) { D.note = ""; Save(); } return s; }
+
+        // ---- смотровая башня: дозорный рассказывает о долине (окно — один раз за область)
+        public static bool TowerTold { get { return D.towerTold; } }
+        public static void TellTower() { D.towerTold = true; Save(); }
+
+        /// <summary>Гадалка: туман расходится над местами двух следующих рядов.</summary>
+        public static void RevealAhead()
+        {
+            IList<Vector2> s = Seen;
+            int l0 = Current.layer;
+            foreach (MapNode n in D.nodes) if (n.layer > l0 && n.layer <= l0 + 2) s.Add(new Vector2(n.x, n.y));
+            Save();
+        }
+        /// <summary>Остаток хода сгорает (лесной пожар: спасал коня).</summary>
+        public static void ClearSteps() { D.steps = 0; Save(); }
+        /// <summary>Событие становится боем (дуэль на рассвете — сильный противник; предательство ронина — с бандой).</summary>
+        public static void TurnToFight(int i, NodeType t, int squad = 0)
+        {
+            MapNode n = D.nodes[i];
+            n.type = (int)t;
+            n.enemy = t == NodeType.Elite ? Mathf.Clamp(D.region, 0, Ladder.Count - 1) : DuelEnemy(D.region);
+            if (n.extra == null) n.extra = new List<int>();
+            n.extra.Clear();
+            for (int k = 0; k < squad; k++) n.extra.Add(DuelEnemy(D.region));
+            Save();
+        }
+
         public static string MapTexture(int region) { return "UI/map_" + Mathf.Clamp(region, 0, 2); }
 
         // ---------------- генерация карты области ----------------
@@ -367,7 +466,8 @@ namespace BladePath
             if (dd.travelled == null) dd.travelled = new List<int>();
             dd.travelled.Clear(); dd.travelled.Add(0);
             if (dd.seen == null) dd.seen = new List<Vector2>();
-            dd.tower = -1; dd.towerLit = false;
+            dd.tower = -1; dd.towerLit = false; dd.towerTold = false;
+            dd.hunt = -1; dd.huntDone = false; dd.huntReward = 0;
             dd.seen.Clear();   // новая область — снова в тумане (первая точка — начало пути, см. Seen)
             Vector2[][] spots = Spots[Mathf.Clamp(region, 0, Spots.Length - 1)];
             int L = spots.Length;
@@ -430,7 +530,7 @@ namespace BladePath
                         int comp = UnityEngine.Random.Range(0, 3);
                         n.ev = r < 0.07f ? MapScreen.CatEvent
                             : r < 0.19f && comp != Profile.Companion ? MapScreen.CompanionEvent + comp
-                            : UnityEngine.Random.Range(0, MapScreen.CatEvent);
+                            : MapScreen.RandomEvent();
                     }
                 }
             }
@@ -451,11 +551,12 @@ namespace BladePath
                     {
                         MapNode b = dd.nodes[bi];
                         NodeType ta = a.Type;
-                        bool service = ta == NodeType.Smith || ta == NodeType.Rest || ta == NodeType.Merchant || ta == NodeType.Shrine;
+                        bool service = ta == NodeType.Smith || ta == NodeType.Rest || ta == NodeType.Merchant || ta == NodeType.Shrine
+                            || ta == NodeType.Onsen || ta == NodeType.Dojo || ta == NodeType.Gamble || ta == NodeType.ClanShrine;
                         if (!service || b.Type != ta) continue;
                         b.type = (int)(UnityEngine.Random.value < 0.6f ? NodeType.Duel : NodeType.Event);
                         b.enemy = DuelEnemy(region);
-                        if (b.Type == NodeType.Event) b.ev = UnityEngine.Random.Range(0, MapScreen.CatEvent);
+                        if (b.Type == NodeType.Event) b.ev = MapScreen.RandomEvent();
                     }
             // перед владыкой — хотя бы одна передышка (храм или привал), если есть выбор
             List<int> pre = layers[L - 2];
@@ -494,7 +595,7 @@ namespace BladePath
                 for (int ci = 0; ci < dd.nodes.Count; ci++)
                 {
                     MapNode cn = dd.nodes[ci];
-                    if (cn.Type == NodeType.Event && cn.ev >= MapScreen.CompanionEvent) compHere = true;
+                    if (cn.Type == NodeType.Event && cn.ev >= MapScreen.CompanionEvent && cn.ev < MapScreen.CompanionEvent + 3) compHere = true;
                     else if (cn.Type == NodeType.Event && cn.ev != MapScreen.CatEvent && spot < 0) spot = ci;
                 }
                 if (!compHere && spot < 0)   // свободного события нет — обычный бой в середине пути становится встречей
@@ -506,7 +607,44 @@ namespace BladePath
                     dd.nodes[spot].ev = MapScreen.CompanionEvent + UnityEngine.Random.Range(0, 3);
                 }
             }
+            // стоянка охотников за головами: одна на область, в начале пути (заказ на бродячего ронина)
+            {
+                List<int> hc = new List<int>();
+                for (int ci = 0; ci < dd.nodes.Count; ci++)
+                {
+                    MapNode cn = dd.nodes[ci];
+                    if ((cn.layer == 1 || cn.layer == 2) && (cn.Type == NodeType.Duel || cn.Type == NodeType.Event && MapScreen.PlainEvent(cn.ev)) && (cn.extra == null || cn.extra.Count == 0)) hc.Add(ci);
+                }
+                if (hc.Count > 0) dd.nodes[hc[UnityEngine.Random.Range(0, hc.Count)]].type = (int)NodeType.HunterCamp;
+            }
+            // раненый ронин, которого перевязали в прошлой области, встречается снова
+            if (dd.roninDebt && PlaceRoninReturn(dd, 0)) dd.roninDebt = false;
             dd.steps = 0; dd.rolls = Mathf.Max(dd.rolls, 1);
+            Save();
+        }
+
+        /// <summary>Встреча с ронином, которого ты перевязал: 65% — возвращает долг, 35% — предаёт (с бандой).
+        /// Ставится на ещё не пройденное событие или бой не ближе двух рядов впереди.</summary>
+        static bool PlaceRoninReturn(Data dd, int fromLayer)
+        {
+            int L = 0; foreach (MapNode n in dd.nodes) L = Mathf.Max(L, n.layer + 1);
+            List<int> pick = new List<int>();
+            for (int i = 0; i < dd.nodes.Count; i++)
+            {
+                MapNode n = dd.nodes[i];
+                if (n.done || i == dd.at || n.layer < fromLayer + 2 || n.layer < 2 || n.layer > L - 2) continue;
+                if ((n.Type == NodeType.Event && MapScreen.PlainEvent(n.ev)) || (n.Type == NodeType.Duel && (n.extra == null || n.extra.Count == 0))) pick.Add(i);
+            }
+            if (pick.Count == 0) return false;
+            MapNode m = dd.nodes[pick[UnityEngine.Random.Range(0, pick.Count)]];
+            m.type = (int)NodeType.Event;
+            m.ev = UnityEngine.Random.value < 0.65f ? MapScreen.RoninRepays : MapScreen.RoninBetrays;
+            return true;
+        }
+        /// <summary>Ронин перевязан: дальше по дороге (или в следующей области) он встретится снова.</summary>
+        public static void RoninOwes()
+        {
+            if (!PlaceRoninReturn(D, Current.layer)) D.roninDebt = true;
             Save();
         }
 
@@ -520,8 +658,9 @@ namespace BladePath
         static NodeType RollType(int l, int L)
         {
             if (l == 1) { float r = UnityEngine.Random.value; return r < 0.7f ? NodeType.Duel : r < 0.85f ? NodeType.Event : NodeType.Treasure; }
-            NodeType[] t = { NodeType.Duel, NodeType.Elite, NodeType.Shrine, NodeType.Smith, NodeType.Merchant, NodeType.Treasure, NodeType.Ambush, NodeType.Event, NodeType.Rest };
-            float[] w = { 30f, l >= 3 ? 13f : 0f, 11f, 8f, 9f, 7f, 8f, 12f, 9f };
+            NodeType[] t = { NodeType.Duel, NodeType.Elite, NodeType.Shrine, NodeType.Smith, NodeType.Merchant, NodeType.Treasure, NodeType.Ambush, NodeType.Event, NodeType.Rest,
+                             NodeType.Onsen, NodeType.Dojo, NodeType.Gamble, NodeType.ClanShrine };
+            float[] w = { 30f, l >= 3 ? 13f : 0f, 9f, 8f, 8f, 7f, 8f, 14f, 7f, 5f, l >= 2 ? 5f : 0f, 4f, l >= 2 ? 4f : 0f };
             float sum = 0f; foreach (float x in w) sum += x;
             float v = UnityEngine.Random.value * sum;
             for (int i = 0; i < t.Length; i++) { if (v < w[i]) return t[i]; v -= w[i]; }
@@ -535,7 +674,8 @@ namespace BladePath
         public static bool IsService(MapNode n)
         {
             NodeType t = n.Type;
-            return t == NodeType.Shrine || t == NodeType.Smith || t == NodeType.Merchant || t == NodeType.Rest || t == NodeType.Herbalist;
+            return t == NodeType.Shrine || t == NodeType.Smith || t == NodeType.Merchant || t == NodeType.Rest || t == NodeType.Herbalist
+                || t == NodeType.Onsen || t == NodeType.Dojo || t == NodeType.Gamble || t == NodeType.ClanShrine || t == NodeType.HunterCamp;
         }
 
         /// <param name="passing">проезд насквозь к другой цели: услуга не тратится (не «пройдена», травница не дарит кость) — можно вернуться</param>
@@ -621,7 +761,19 @@ namespace BladePath
         /// <summary>Бой в узле выигран: узел пройден; после владыки — следующая область. true — область сменилась.</summary>
         public static bool FinishFight()
         {
-            if (D.training) { D.training = false; D.rolls++; Save(); return false; }   // ронин побеждён — кость пути
+            if (D.training)
+            {
+                int kind = D.trainKind; D.training = false; D.trainKind = 0;
+                if (kind == 1) { Profile.GivePoint(); D.note = "Сэнсэй опускает боккэн и кланяется: «Ты слушаешь клинок». +1 очко характеристик."; }
+                else if (kind == 2)
+                {
+                    Profile.AddGold(D.huntReward);
+                    D.note = "Голова ронина — твоя. Охотники платят по листку: +" + D.huntReward + " мон.";
+                    D.hunt = -1; D.huntDone = true; D.huntReward = 0;
+                }
+                else D.rolls++;   // ронин побеждён — кость пути
+                Save(); return false;
+            }
             if (!InFight) return false;
             if (D.rematch) { D.rematch = false; D.fight = -1; Weather.ForceNight = false; Save(); return false; }   // реванш: место уже пройдено
             D.rolls++;   // победа — кость пути
@@ -647,7 +799,13 @@ namespace BladePath
         /// </summary>
         public static void LoseFight()
         {
-            if (D.training) { D.training = false; Save(); return; }   // ронину проиграл — просто назад на карту, без кости
+            if (D.training)
+            {   // бой вне места проигран — просто назад на карту; ронин в розыске уходит дальше
+                int kind = D.trainKind; D.training = false; D.trainKind = 0;
+                if (kind == 1) D.note = "Ученик выбивает боккэн у тебя из рук. Сэнсэй: «Приходи, когда научишься падать».";
+                if (kind == 2) { MoveHunt(1f); D.note = "Ронин вытирает клинок и уходит в туман. Заказ ещё в силе — он где-то на дорогах."; }
+                Save(); return;
+            }
             if (!InFight) return;
             if (D.rematch) { D.rematch = false; D.fight = -1; Weather.ForceNight = false; Save(); return; }   // реванш проигран — просто назад на карту
             MapNode lost = D.nodes[D.fight];
@@ -686,21 +844,21 @@ namespace BladePath
         // ---------------- модификаторы текущего боя (DuelManager) ----------------
 
         public static NodeType FightType { get { MapNode n = FightNode; return n != null ? n.Type : NodeType.Duel; } }
-        public static float EnemyHpMul { get { NodeType t = FightType; return !InFight ? 1f : t == NodeType.Elite ? 1.35f : t == NodeType.Ambush ? 1.1f : 1f; } }
-        public static float EnemyDmgMul { get { return InFight && FightType == NodeType.Elite ? 1.15f : 1f; } }
-        public static int ExtraMarks { get { return InFight && FightType == NodeType.Elite ? 1 : 0; } }
+        public static float EnemyHpMul { get { NodeType t = FightType; return Hunting ? 1.35f : !InFight ? 1f : t == NodeType.Elite ? 1.35f : t == NodeType.Ambush ? 1.1f : 1f; } }
+        public static float EnemyDmgMul { get { return Hunting || (InFight && FightType == NodeType.Elite) ? 1.15f : 1f; } }
+        public static int ExtraMarks { get { return Hunting || (InFight && FightType == NodeType.Elite) ? 1 : 0; } }
         public static float PlayerDmgMul { get { return D.blessing == 1 ? 1.2f : 1f; } }
         public static float PlayerHpMul { get { return (D.blessing == 3 ? 1.25f : 1f) * (D.cursed ? 0.75f : 1f); } }
         public static bool StartFullKi { get { return D.blessing == 2; } }
         public static bool EnemyFullKi { get { return InFight && FightType == NodeType.Ambush; } }
-        public static bool RareDrop { get { NodeType t = FightType; return InFight && (t == NodeType.Elite || t == NodeType.Boss); } }
+        public static bool RareDrop { get { NodeType t = FightType; return Hunting || (InFight && (t == NodeType.Elite || t == NodeType.Boss)); } }
         public static bool FinalBoss { get { return InFight && FightType == NodeType.Boss && D.region >= RegionNames.Length - 1; } }
         public static float GoldMul
         {
             get
             {
                 NodeType t = FightType;
-                float m = D.training ? 0.5f : !InFight ? 1f : t == NodeType.Ambush ? 1.5f : t == NodeType.Elite ? 1.3f : 1f;
+                float m = Hunting ? 1.5f : D.training ? 0.5f : !InFight ? 1f : t == NodeType.Ambush ? 1.5f : t == NodeType.Elite ? 1.3f : 1f;
                 MapNode n = FightNode;
                 if (InFight && n != null && n.extra != null) m *= 1f + 0.4f * n.extra.Count;   // отряд — больше мон
                 return m;
