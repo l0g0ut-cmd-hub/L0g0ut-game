@@ -266,7 +266,7 @@ def check_selection_screens():
     assert "return Links(from).Contains(to);" in camp
     assert "LinkByRoads(d);" in camp and "LinkByRoads(dd);" in camp
     assert "Adjacent(D.at, i)" in camp
-    assert "n.Type == NodeType.Shrine || n.Type == NodeType.Rest || n.Type == NodeType.Onsen ||" in screen
+    assert "n.Type == NodeType.Shrine || (n.Type == NodeType.Rest && !n.IsTavern) || n.Type == NodeType.Onsen ||" in screen, "Rest is one-time, the tavern reopens"
     assert "kept.Key == at) stock = kept.Value;" in screen
     # Meshy models (2026-11-02): Akiko player, Oni and Shogun enemies.
     builder = read("Assets/_Project/Scripts/Editor/HeroModelBuilder.cs")

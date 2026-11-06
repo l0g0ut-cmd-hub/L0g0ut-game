@@ -110,7 +110,7 @@ namespace BladePath
             // and forth must not farm them. Smith, merchant and herbalist reopen.
             if (revisit && n.done && !Campaign.InFight &&
                 (n.IsFight || n.Type == NodeType.Treasure || n.Type == NodeType.Event ||
-                 n.Type == NodeType.Shrine || n.Type == NodeType.Rest || n.Type == NodeType.Onsen ||
+                 n.Type == NodeType.Shrine || (n.Type == NodeType.Rest && !n.IsTavern) || n.Type == NodeType.Onsen ||
                  n.Type == NodeType.Dojo || n.Type == NodeType.ClanShrine))
             {
                 modal = Modal.None;
@@ -1159,7 +1159,7 @@ namespace BladePath
                         Haptics.Pulse(20);
                         continue;
                     }
-                    if (i == Campaign.At && (n.Type == NodeType.Smith || n.Type == NodeType.Merchant || n.Type == NodeType.Gamble || n.Type == NodeType.HunterCamp)) { revisit = true; OpenNode(i); }
+                    if (i == Campaign.At && (n.Type == NodeType.Smith || n.Type == NodeType.Merchant || n.Type == NodeType.Gamble || n.Type == NodeType.HunterCamp || n.IsTavern)) { revisit = true; OpenNode(i); }
                     // повторное касание уже выбранного места — то же, что «В ПУТЬ» (с броском кости, если ходов нет)
                     else if (i == sel && moveTo < 0 && Time.unscaledTime - rollAt >= RollTime) TravelOrRoll();
                     else { SelectNode(i); Haptics.Pulse(10); }
@@ -2070,9 +2070,13 @@ namespace BladePath
         static int AllyPriceOf(int tier) { return Mathf.RoundToInt(AllyPrice * (tier == 0 ? 0.6f : tier == 1 ? 1.2f : 2.4f) / 5f) * 5; }
         int tavSub;           // 0 — зал, 1 — трактирщик, 2 — кости, 3 — доска, 4 — ронин
         bool tavKeeper, tavDice, tavBoard, tavDrunk, tavHearth, tavFromCamp, tavDiceFresh;
+        string tavKey;        // какой трактир открыт последним: вернулся в тот же — уже сделанное (благословение, кости, заказ, ронин) не повторяется
         void OpenTavern(bool fromCamp = false)
         {
-            tavSub = 0; tavKeeper = tavDice = tavBoard = tavDrunk = tavHearth = false; tavFromCamp = fromCamp; tavDiceFresh = true;
+            MapNode cur = Campaign.Current;
+            string key = fromCamp ? "camp:" + Campaign.Region + ":" + Profile.Cycle : Campaign.Region + ":" + Profile.Cycle + ":" + Campaign.At + ":" + cur.x + ":" + cur.y;
+            if (key != tavKey) { tavKeeper = tavDice = tavBoard = tavDrunk = tavHearth = false; tavDiceFresh = true; tavKey = key; }
+            tavSub = 0; tavFromCamp = fromCamp;
             TavernVideo.Preload();
             OpenModal(Modal.Tavern);
         }
