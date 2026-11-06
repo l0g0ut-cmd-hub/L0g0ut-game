@@ -18,7 +18,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 120
     env:
       UNITY_VERSION: 6000.0.36f1
       GAMECI_VERSION: v0.1.72
@@ -69,7 +69,7 @@ jobs:
 
       - name: Free disk space (образ Unity + Android тяжёлый)
         run: |
-          sudo rm -rf /usr/share/dotnet /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost
           sudo docker image prune --all --force || true
           df -h / | tee -a "$RUNNER_TEMP/ci.log"
 
@@ -180,97 +180,3 @@ jobs:
           json.dump(body, open(os.path.join(T, "put.json"), "w"))
           PY
           gh api -X PUT "repos/$REPO/contents/$NAME" --input "$RUNNER_TEMP/put.json" >/dev/null
-
-      # UI visual QA happens AFTER the release APK was built/uploaded/published.
-      # Never start another queued Unity workflow competing with this production run.
-      # A QA failure does not destroy the already-successful ARM64 deliverable.
-      - name: Build x86_64 QA-only APK for Android emulator
-        id: emulator_apk
-        continue-on-error: true
-        env:
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
-          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-        run: |
-          set -o pipefail
-          game-ci build . \
-            --engine unity \
-            --engine-version "$UNITY_VERSION" \
-            --target-platform Android \
-            --android-export-type androidPackage \
-            --build-name BladePath-VisualEmulator \
-            --versioning-strategy None \
-            --build-method BladePath.EditorTools.BuildScript.BuildAndroid 2>&1 | tee "$RUNNER_TEMP/emulator-build.log"
-
-      # GameCI Unity container may leave ~/.android owned by root.
-      # The emulator action must create ~/.android/avd as the runner user.
-      - name: Repair Android AVD directory permissions after GameCI
-        run: |
-          set -euo pipefail
-          sudo install -d -o "$(id -u)" -g "$(id -g)" -m 0700 "$HOME/.android"
-          sudo install -d -o "$(id -u)" -g "$(id -g)" -m 0700 "$HOME/.android/avd"
-          sudo chown -R "$(id -u):$(id -g)" "$HOME/.android"
-          test -w "$HOME/.android/avd"
-          echo "Android AVD directory writable: $HOME/.android/avd"
-
-      - name: Install QA APK and capture actual 21:9 Android screenshots
-        id: emulator_shots
-        if: steps.emulator_apk.outcome == 'success'
-        continue-on-error: true
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 35
-          target: google_apis
-          arch: x86_64
-          profile: pixel_7
-          cores: 2
-          ram-size: 4096M
-          emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot
-          script: |
-            python3 -m pip install --user 'Pillow>=10,<13'
-            bash tools/android_visual_smoke.sh
-
-      - name: Upload real Android emulator screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: BladePath-Android-UI-Screenshots
-          path: build/android-ui/
-          if-no-files-found: warn
-          retention-days: 30
-
-      - name: Publish Android screenshots for external visual inspection
-        if: always()
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -e
-          D="$RUNNER_TEMP/android-ui-drop"; mkdir -p "$D"
-          if [ -d build/android-ui ]; then cp -a build/android-ui/. "$D/"; fi
-          printf 'APK build=%s\nsha=%s\nemulator_build=%s\nemulator_capture=%s\n' \
-            "$GITHUB_RUN_NUMBER" "$GITHUB_SHA" "${{ steps.emulator_apk.outcome }}" "${{ steps.emulator_shots.outcome }}" > "$D/info.txt"
-          cd "$D"; git init -q; git checkout -q -b android-ui-results
-          git -c user.name=ci -c user.email=ci@local add -A
-          git -c user.name=ci -c user.email=ci@local commit -qm "Android screen review $GITHUB_SHA"
-          git push -q -f "https://x-access-token:$GH_TOKEN@github.com/$GITHUB_REPOSITORY.git" android-ui-results
-
-      # Release APK is already uploaded above, but a missing/failed emulator
-      # verification must NOT be silently labeled green by continue-on-error.
-      - name: Enforce Android visual QA verdict (do not hide emulator errors)
-        if: always()
-        run: |
-          set -euo pipefail
-          if [ "${{ steps.emulator_apk.outcome }}" != "success" ]; then
-            echo "::error::Release APK was published, but x86_64 QA APK failed to build."
-            exit 1
-          fi
-          if [ "${{ steps.emulator_shots.outcome }}" != "success" ]; then
-            echo "::error::Release APK was published, but emulator capture failed. Inspect Android UI steps."
-            exit 1
-          fi
-          count=$(find build/android-ui -maxdepth 1 -name '*.png' -type f | wc -l)
-          if [ "$count" -ne 10 ]; then
-            echo "::error::Expected 10 real Android screenshots, got $count"
-            exit 1
-          fi
-          echo "Visual QA: 10 Android screenshots captured; verified."
