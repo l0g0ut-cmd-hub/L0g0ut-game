@@ -46,6 +46,7 @@ namespace BladePath
             public int foe;                 // который по счёту противник отряда сейчас на арене (0 — первый)
             public bool rematch;            // идёт бой-реванш на уже пройденном месте (награда урезана, без добычи)
             public int rolls = 1;            // кости пути в запасе (кость — за каждую победу)
+            public int heldSteps;            // остаток хода, прерванного боем: возвращается после победы
             public int steps;                // ходов осталось после броска
             public int lastRoll;             // что выпало
             public bool training;            // бой со странствующим ронином (запасной способ добыть кость)
@@ -336,7 +337,8 @@ namespace BladePath
         public static int RollDie()
         {
             if (D.rolls <= 0 || D.steps > 0 || !Current.done || InFight || D.training) return 0;
-            D.rolls--; D.lastRoll = UnityEngine.Random.Range(1, 4); D.steps = D.lastRoll; Save();
+            // 1–3, но «1» дважды подряд не выпадает: случайность остаётся, обидной серии единиц нет
+            D.rolls--; D.lastRoll = D.lastRoll == 1 ? UnityEngine.Random.Range(2, 4) : UnityEngine.Random.Range(1, 4); D.steps = D.lastRoll; Save();
             return D.lastRoll;
         }
         public static void AddRoll(int n = 1) { if (n <= 0) return; D.rolls += n; Save(); }
@@ -547,7 +549,7 @@ namespace BladePath
             if (D.travelled.Count > 48) D.travelled.RemoveRange(0, D.travelled.Count - 48);
             MapNode n = D.nodes[i];
             if (!n.done) D.steps = Mathf.Max(0, D.steps - 1);   // по пройденным местам — без траты хода
-            if (n.IsFight && !n.done) D.steps = 0;   // бой обрывает ход: остаток сгорает
+            if (n.IsFight && !n.done) { D.heldSteps = D.steps; D.steps = 0; }   // бой прерывает ход: остаток ждёт исхода боя
             bool skip = passing && IsService(n);
             if (n.Type == NodeType.Herbalist && !n.done && !skip) D.rolls++;   // травница даёт кость пути
             if (!n.IsFight && n.Type != NodeType.Event && !skip) n.done = true;   // храм, кузнец, торговец, тайник, привал — услуга, путь дальше открыт
@@ -624,6 +626,7 @@ namespace BladePath
             MapNode n = D.nodes[D.fight];
             if (D.bounty > 0 && (n.Type == NodeType.Elite || n.Type == NodeType.Boss)) { Profile.AddGold(n.Type == NodeType.Boss ? D.bounty * 2 : D.bounty); D.bounty = 0; }   // заказ из трактира выполнен
             n.done = true; D.at = D.fight; D.fight = -1;
+            D.steps += D.heldSteps; D.heldSteps = 0;   // победа: недоиспользованные шаги хода возвращаются
             D.blessing = 0; D.cursed = false; TickCat();
             Weather.ForceNight = false;
             if (n.Type == NodeType.Boss)
@@ -652,7 +655,7 @@ namespace BladePath
                 MapNode n = D.nodes[i];
                 if (n.Type == NodeType.Herbalist && n.layer <= lost.layer - 2 && n.layer > D.nodes[cp].layer) cp = i;
             }
-            D.at = cp; D.nodes[cp].done = true; D.fight = -1; D.steps = 0;
+            D.at = cp; D.nodes[cp].done = true; D.fight = -1; D.steps = 0; D.heldSteps = 0;
             // Retreat is an instant checkpoint jump, not a walked road segment.
             // Clear previous marks so the map cannot draw an imaginary shortcut.
             if (D.travelled == null) D.travelled = new List<int>();

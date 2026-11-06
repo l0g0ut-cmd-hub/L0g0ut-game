@@ -46,6 +46,33 @@ namespace BladePath
         Vector2 panTouchOrigin;
         float panAtOrigin;
         const float RollTime = 0.9f;
+        bool goAfterRoll;   // «В ПУТЬ» без ходов: кость бросается сама, после её анимации всадник трогается
+        bool rideFast;      // касание карты во время езды — всадник скачет втрое быстрее до конца поездки
+
+        int TravelTarget()
+        {
+            return sel >= 0 && Campaign.CanGo(sel) ? sel : sel >= 0 && Campaign.CanGo(NextPreviewStep) ? NextPreviewStep : -1;
+        }
+
+        /// <summary>Нужно бросить кость, чтобы выехать к выбранной цели (ходов нет, кость есть, дальше — новое место).</summary>
+        bool NeedRollToGo()
+        {
+            int next = sel >= 0 ? (NextPreviewStep >= 0 ? NextPreviewStep : sel) : -1;
+            return next >= 0 && Campaign.Steps <= 0 && Campaign.Rolls > 0 && Campaign.Current.done && !Campaign.InFight
+                && !Campaign.Training && moveTo < 0 && !Campaign.FreeHop(next) && Campaign.Adjacent(Campaign.At, next);
+        }
+
+        /// <summary>Одно действие «ехать»: есть ходы — едем; нет — сами бросаем кость и едем после её анимации.</summary>
+        void TravelOrRoll()
+        {
+            int t = TravelTarget();
+            if (t >= 0 && Campaign.CanGo(t)) { Go(t); return; }
+            if (NeedRollToGo() && Campaign.RollDie() > 0)
+            {
+                rollAt = Time.unscaledTime; goAfterRoll = true; Haptics.Pulse(30);
+                if (Juice.Instance != null) Juice.Instance.Taiko(0.7f, 1.3f);
+            }
+        }
         Reward treasure;
         bool freshTreasure, revisit;
         bool routeAutopilot;
@@ -134,7 +161,7 @@ namespace BladePath
             moveFrom = Campaign.At; moveTo = i; moveStart = Time.unscaledTime;
             TerrainRoads.Bind(Campaign.Region, Campaign.Nodes);
             moveDuration = Mathf.Clamp(TerrainRoads.Route(moveFrom, moveTo).lengthPixels / 145f,
-                0.85f, 7.5f);
+                0.85f, 7.5f) / (rideFast ? 3f : 1f);
             rideCycleAt = Time.unscaledTime;
             sel = -1; previewPath.Clear(); stockNode = -1;
             manualPan = false; // resume following the animated samurai as the journey proceeds
@@ -150,6 +177,12 @@ namespace BladePath
             HandleMapPan();
             if (moveTo >= 0)
             {
+                if (!rideFast && modal == Modal.None && !InventoryScreen.Open && Input.GetMouseButtonDown(0))
+                {
+                    // ускорение без скачка: прогресс перегона сохраняется, сокращается только остаток
+                    float done01 = Mathf.Clamp01((Time.unscaledTime - moveStart) / moveDuration);
+                    rideFast = true; moveDuration /= 3f; moveStart = Time.unscaledTime - done01 * moveDuration;
+                }
                 Campaign.Reveal(HeroUV());   // туман расходится вокруг фигурки прямо на ходу
                 if (Time.unscaledTime - moveStart >= moveDuration)
                 {
@@ -163,7 +196,15 @@ namespace BladePath
                     if (Juice.Instance != null) Juice.Instance.Taiko(0.6f, 1.25f);
                     Haptics.Pulse(20);
                     int goal = routeGoal; routeGoal = -1;
-                    bool passing = goal >= 0 && goal != i && (revisit || serviceOnTheWay);
+                    // тайник по пути к другой цели: награда уже начислена при прибытии — показываем её сообщением, не останавливаясь
+                    bool chestOnTheWay = goal >= 0 && goal != i && treasure != null;
+                    if (chestOnTheWay)
+                    {
+                        TavToast("Тайник по пути: +" + treasure.gold + " мон, +" + treasure.xp + " опыта"
+                            + (treasure.items.Count > 0 ? ", предметов: " + treasure.items.Count : "") + (treasure.levels > 0 ? ". Новый уровень!" : "."));
+                        treasure = null;
+                    }
+                    bool passing = goal >= 0 && goal != i && (revisit || serviceOnTheWay || chestOnTheWay);
                     // Riding THROUGH an already visited place does not reopen its smith or
                     // merchant; a new place always opens its encounter and ends the ride.
                     if (!passing) OpenNode(i); else modal = Modal.None;
@@ -179,11 +220,18 @@ namespace BladePath
                         }
                         else SelectNode(goal);
                         // nothing to resolve here: continue the same ride to the goal
-                        if (modal == Modal.None && Campaign.CanGo(NextPreviewStep)) continueRideAt = Time.unscaledTime + 0.3f;
+                        if (modal == Modal.None && Campaign.CanGo(NextPreviewStep)) continueRideAt = Time.unscaledTime + (rideFast ? 0.1f : 0.3f);
                     }
                     nextRouteAt = Time.unscaledTime + 0.45f;
+                    if (continueRideAt < 0f) rideFast = false;   // поездка закончилась — следующая снова в обычном темпе
                 }
                 return;
+            }
+            if (goAfterRoll && Time.unscaledTime - rollAt >= RollTime)
+            {
+                goAfterRoll = false;
+                int t = TravelTarget();
+                if (modal == Modal.None && t >= 0) Go(t);
             }
             // Continue a ride started by one В ПУТЬ tap, but only while nothing is open:
             // an encounter on the way always stops the rider.
@@ -718,6 +766,22 @@ namespace BladePath
             return c;
         }
 
+        /// <summary>«1 шаг», «2 шага», «5 шагов».</summary>
+        static string Steps(int n)
+        {
+            int a = Mathf.Abs(n) % 100, b = a % 10;
+            string w = a >= 11 && a <= 14 ? "шагов" : b == 1 ? "шаг" : b >= 2 && b <= 4 ? "шага" : "шагов";
+            return n + " " + w;
+        }
+
+        /// <summary>Где остановится всадник на этом ходу: последняя точка маршрута, до которой хватает шагов кости.</summary>
+        int StopOfThisTurn()
+        {
+            int stop = -1;
+            for (int k = 1; k < previewPath.Count; k++) if (PathCost(k) <= Campaign.Steps) stop = k; else break;
+            return stop;
+        }
+
         int NextPreviewStep
         {
             get { return previewPath.Count > 1 && previewPath[0] == Campaign.At ? previewPath[1] : -1; }
@@ -765,6 +829,16 @@ namespace BladePath
                     ? new Color(0.67f, 1f, 0.65f, 0.95f)
                     : new Color(1f, 0.35f, 0.29f, 0.67f);
                 DrawFootprintsOnRoad(previewPath[i - 1], previewPath[i], tint, 1f, withinDie);
+            }
+            // где всадник остановится на этом ходу, если цель дальше броска: пульсирующее кольцо на месте остановки
+            int stopK = StopOfThisTurn();
+            if (stopK > 0 && stopK < previewPath.Count - 1 && Campaign.Current.done && !Campaign.InFight)
+            {
+                MapNode sn = Campaign.Nodes[previewPath[stopK]];
+                Vector2 sp = P(sn);
+                float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f);
+                UiKit.Ring(sp, 30f + 4f * pulse, new Color(0.67f, 1f, 0.65f, 0.55f + 0.35f * pulse), true);
+                UiKit.Ring(sp, 34f + 4f * pulse, new Color(0.67f, 1f, 0.65f, 0.25f * pulse), true);
             }
         }
 
@@ -981,6 +1055,8 @@ namespace BladePath
                         continue;
                     }
                     if (i == Campaign.At && (n.Type == NodeType.Smith || n.Type == NodeType.Merchant)) OpenNode(i);
+                    // повторное касание уже выбранного места — то же, что «В ПУТЬ» (с броском кости, если ходов нет)
+                    else if (i == sel && moveTo < 0 && Time.unscaledTime - rollAt >= RollTime) TravelOrRoll();
                     else { SelectNode(i); Haptics.Pulse(10); }
                 }
             }
@@ -1349,9 +1425,21 @@ namespace BladePath
                     bool enough = totalMoves <= Campaign.Steps;
                     Color routeColor = enough ? new Color(0.65f, 0.94f, 0.65f) : new Color(1f, 0.61f, 0.48f);
                     UiKit.Text(new Rect(x, y, w, 18f),
-                        totalMoves == 0 ? "МАРШРУТ по своим следам — бесплатно" : "МАРШРУТ: " + totalMoves + " шаг.   ·   доступно: " + available,
+                        totalMoves == 0 ? "МАРШРУТ по своим следам — бесплатно" : "МАРШРУТ: " + Steps(totalMoves) + "   ·   доступно: " + available,
                         12f, routeColor, TextAnchor.MiddleLeft, false);
                     y += 20f;
+                    // места-услуги по пути не останавливают всадника — предупреждаем, чтобы это не было сюрпризом
+                    string through = "";
+                    for (int k = 1; k + 1 < previewPath.Count; k++)
+                    {
+                        MapNode pn = Campaign.Nodes[previewPath[k]];
+                        if (!pn.done && Campaign.IsService(pn)) through += (through.Length > 0 ? ", " : "") + NodeName(pn).ToLower();
+                    }
+                    if (through.Length > 0 && !compact && y + 18f <= PanelTextBottom)
+                    {
+                        UiKit.Text(new Rect(x, y, w, 18f), "По пути: " + through + " — проедешь мимо", 11f, Dim, TextAnchor.MiddleLeft, false);
+                        y += 18f;
+                    }
                     if (compact || y + 18f > PanelTextBottom) { }   // подсказки под маршрутом нет места
                     else
                     // Travel remains one node at a time, so fight/event encounters
@@ -1363,7 +1451,7 @@ namespace BladePath
                     if (!Campaign.CanGo(show))
                         UiKit.Text(new Rect(x, y, w, 18f),
                             Campaign.Steps == 0 ? "Сначала брось кость пути"
-                                : enough ? "«В ПУТЬ» — доедешь до цели" : "«В ПУТЬ» — пройдёшь " + available + " шаг. к цели",
+                                : enough ? "«В ПУТЬ» — доедешь до цели" : "«В ПУТЬ» — пройдёшь " + Steps(available) + " к цели",
                             11f, Dim, TextAnchor.MiddleLeft, false);
                 }
                 else if (show != Campaign.At && Campaign.Nodes[Campaign.At].next.Contains(show))
@@ -1409,8 +1497,8 @@ namespace BladePath
             // (NextPreviewStep); the goal stays selected for the next tap.
             int travelTarget = sel >= 0 && Campaign.CanGo(sel) ? sel
                 : sel >= 0 && Campaign.CanGo(NextPreviewStep) ? NextPreviewStep : -1;
-            bool travelReady = !rolling && moveTo < 0 && travelTarget >= 0 &&
-                Campaign.CanGo(travelTarget);
+            bool travelReady = !rolling && moveTo < 0 && ((travelTarget >= 0 &&
+                Campaign.CanGo(travelTarget)) || NeedRollToGo());
             // бой-реванш: герой стоит на пройденном бою — можно сразиться снова (монеты вполовину, без добычи)
             if (sel < 0 && moveTo < 0 && !rolling && Campaign.CanRematch &&
                 Btn(new Rect(x, 540f - 218f, w, 44f), "БОЙ-РЕВАНШ", interactive, true))
@@ -1420,7 +1508,7 @@ namespace BladePath
             }
             if (Btn(new Rect(x, 540f - 166f, w, 44f), "В ПУТЬ",
                 interactive && travelReady, true))
-                Go(travelTarget);
+                TravelOrRoll();
             if (Btn(new Rect(x, 540f - 112f, w, 44f), "СНАРЯЖЕНИЕ" + (Profile.Points > 0 ? " (+" + Profile.Points + ")" : ""), interactive)) InventoryScreen.Show(0);
             if (Btn(new Rect(x, 540f - 60f, w, 44f), "В МЕНЮ", interactive)) { Hide(); Time.timeScale = 1f; SceneManager.LoadScene(SceneNames.MainMenu); }
         }

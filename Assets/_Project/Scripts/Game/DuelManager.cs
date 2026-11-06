@@ -307,6 +307,8 @@ namespace BladePath
         {
             if (MatchOver || player == null || enemy == null) return;
             Campaign.DebugSkipSquad(); squadSwap = false;
+            // выхват отменяется: иначе после победы срабатывал ждущий знак — и герой сам рубил ещё раз
+            IaiWaiting = false; iaiDone = true;
             SetPaused(false);
             PlayerWins = NeedWins; MatchOver = true;
             if (enemy.weapon != null) enemy.weapon.ResetState();
@@ -359,6 +361,7 @@ namespace BladePath
 
         void ResolveIai(bool playerWon, bool late)
         {
+            if (MatchOver) { IaiWaiting = false; iaiDone = true; return; }   // бой уже решён (в т.ч. «ВЫИГРАТЬ БОЙ») — не рубить
             IaiWaiting = false; iaiDone = true;
             SetState(DuelState.Fighting); Freeze(false);
             IaiResultAt = Time.unscaledTime; IaiPlayerWon = playerWon;
