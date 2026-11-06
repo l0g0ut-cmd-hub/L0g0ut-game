@@ -312,7 +312,7 @@ namespace BladePath
             Box(B.DevBack, cx - 150f, 470f, 300f, 40f);
             Box(B.OverAgain, cx - 210f, 300f, 200f, 56f);
             Box(B.OverMenu, cx + 10f, 300f, 200f, 56f);
-            Box(B.OverGear, cx - 130f, 480f, 260f, 46f);
+            Box(B.OverGear, cx - 130f, 368f, 260f, 46f);   // сразу под «НА КАРТУ» / «В МЕНЮ», а не на дне экрана
 
             for (int i = 0; i < Count; i++) active[i] = false;
             if (play)
@@ -462,6 +462,8 @@ namespace BladePath
             bool paused = Paused, over = Over;
 
             if (active[(int)B.Stick]) DrawStick();
+            // первый раунд: пока враг представляется в полный рост справа, кнопки атак приглушены и не спорят с ним
+            introDim = duel != null && duel.State == DuelState.Intro && duel.Round == 1 && !paused ? 0.18f : 1f;
 
             bool canAct = player != null && player.CanAct && player.weapon != null && player.weapon.Phase == SwingPhase.Idle;
             bool air = player != null && !player.Grounded;
@@ -655,13 +657,14 @@ namespace BladePath
 
         enum Icon { Down, Up, Low, Thrust, Slash, SlashBack, Orb, Jump, Dash, Shield }
 
+        float introDim = 1f;
         void DrawAttack(B b, Icon icon, string name, bool ready)
         {
             int i = (int)b;
             if (!active[i]) return;
             Vector2 c = ctr[i]; float r = rad[i];
             bool h = held[i];
-            float a = ready ? 1f : 0.45f;
+            float a = (ready ? 1f : 0.45f) * introDim;
             // кнопки в стиле референса: каменный круг в металлической оправе; у главных — свой нарисованный значок
             string full = null;
             switch (b)
@@ -683,7 +686,7 @@ namespace BladePath
             {
                 // в покое кнопки полупрозрачные (сквозь них видно бой), нажатая — яркая; главная «сверху» чуть плотнее
                 float idle = b == B.Overhead ? 0.78f : 0.6f;
-                Color tint = h ? new Color(1f, 0.7f, 0.55f, 1f) : new Color(1f, 1f, 1f, ready ? idle : idle * 0.5f);
+                Color tint = h ? new Color(1f, 0.7f, 0.55f, 1f) : new Color(1f, 1f, 1f, (ready ? idle : idle * 0.5f) * introDim);
                 float rr = r * (h ? 0.94f : 1f);
                 UiKit.Disc(c + new Vector2(0f, 3f), r * 0.98f, new Color(0f, 0f, 0f, 0.16f * a));
                 UiKit.Image(c, rr * 1.12f, bt, tint);   // новые кнопки: круг в золотом кольце с шипами — шипы выходят за круг касания
@@ -714,6 +717,7 @@ namespace BladePath
                 float ang = -Mathf.PI * 0.5f + s / (float)N * Mathf.PI * 2f;
                 bool on = s < Mathf.FloorToInt(k * N + 0.001f);
                 Color col = on ? (k >= 1f ? new Color(0.5f, 0.85f, 1f, 1f) : new Color(0.35f, 0.6f, 0.95f, 0.95f)) : new Color(0f, 0f, 0f, 0.4f);
+                col.a *= introDim;
                 UiKit.Disc(c + new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * r, 2.4f, col);
             }
         }
@@ -791,11 +795,11 @@ namespace BladePath
             if (!active[i]) return;
             Vector2 c = ctr[i]; float r = rad[i];
             float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 7f);
-            UiKit.Disc(c, r + 8f + pulse * 6f, new Color(0.4f, 0.8f, 1f, 0.18f + 0.15f * pulse));
+            UiKit.Disc(c, r + 8f + pulse * 6f, new Color(0.4f, 0.8f, 1f, (0.18f + 0.15f * pulse) * introDim));
             Texture2D st = UiKit.Tex("UI/btn_super");
             if (st != null)
             {
-                UiKit.Image(c, r * (held[i] ? 1.15f : 1.25f), st, held[i] ? new Color(1f, 1f, 1f) : new Color(0.85f + 0.15f * pulse, 0.9f + 0.1f * pulse, 1f));
+                UiKit.Image(c, r * (held[i] ? 1.15f : 1.25f), st, held[i] ? new Color(1f, 1f, 1f) : new Color(0.85f + 0.15f * pulse, 0.9f + 0.1f * pulse, 1f, introDim));
                 return;
             }
             UiKit.Disc(c, r, held[i] ? new Color(0.9f, 0.95f, 1f, 1f) : new Color(0.1f, 0.35f, 0.6f, 0.92f));

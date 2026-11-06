@@ -367,7 +367,7 @@ namespace BladePath
             {
                 bool deciding = duel.PlayerWins == duel.NeedWins - 1 && duel.EnemyWins == duel.NeedWins - 1;
                 float ta = Mathf.Clamp01(1f - duel.StateTime / duel.IntroLength * 0.9f);
-                UiKit.Text(new Rect(cx - 300f, 98f, 600f, 28f), deciding ? "РЕШАЮЩИЙ РАУНД" : "РАУНД", 20f, new Color(0.95f, 0.9f, 0.8f, ta));   // номер — цифрой в круге ниже
+                UiKit.Text(new Rect(cx - 300f, 108f, 600f, 28f), deciding ? "РЕШАЮЩИЙ РАУНД" : "РАУНД", 20f, new Color(0.95f, 0.9f, 0.8f, ta));   // номер — цифрой в круге ниже
                 if (duel.Round == 1)
                 {
                     // враг в полный рост справа — представление противника, как у боссов
@@ -385,34 +385,35 @@ namespace BladePath
                     // so even long path/opponent titles remain inside the dark panel.
                     int mk = duel.MaxMarks(duel.enemy);
                     float captionH = mk > 1 ? 118f : 94f;
-                    Rect captionPanel = new Rect(cx - 390f, 280f, 780f, captionH);
-                    UiKit.Rect(captionPanel, new Color(0.025f, 0.018f, 0.02f, 0.72f * ta));
-                    // Delicate gold edges match the existing HUD without replacing
-                    // any original art, portrait, round ensō or background.
-                    UiKit.Rect(new Rect(captionPanel.x + 12f, captionPanel.y, captionPanel.width - 24f, 1.5f),
-                        new Color(Gold.r, Gold.g, Gold.b, 0.52f * ta));
-                    UiKit.Rect(new Rect(captionPanel.x + 12f, captionPanel.yMax - 1.5f, captionPanel.width - 24f, 1.5f),
-                        new Color(Gold.r, Gold.g, Gold.b, 0.35f * ta));
-                    Rect captionTitle = new Rect(cx - 365f, 288f, 730f, 34f);
+                    Rect captionPanel = new Rect(cx - 390f, 300f, 780f, captionH);
+                    // подложка — та же тёмная плашка с золотом, что у объявлений боя и заголовка трактира
+                    Texture2D capBan = UiKit.Tex("UI/Kit/hud_banner");
+                    if (capBan != null)
+                    {
+                        Rect cb = new Rect(captionPanel.x - 50f, captionPanel.y - 22f, captionPanel.width + 100f, captionPanel.height + 44f);
+                        UiKit.Slice(cb, capBan, cb.height / capBan.height, 0.2f, 0.08f, 0.5f, 0f, new Color(1f, 1f, 1f, 0.95f * ta));
+                    }
+                    else UiKit.Rect(captionPanel, new Color(0.025f, 0.018f, 0.02f, 0.72f * ta));
+                    Rect captionTitle = new Rect(cx - 365f, 308f, 730f, 34f);
                     UiKit.Text(captionTitle, "ПУТЬ " + (Ladder.Index + 1) + " / " + Ladder.Count
                         + (Profile.Cycle > 0 ? "  ·  КРУГ " + (Profile.Cycle + 1) : "")
                         + "  ·  " + Ladder.Current.name, 20f, new Color(Gold.r, Gold.g, Gold.b, ta));
-                    UiKit.Text(new Rect(cx - 365f, 318f, 730f, 24f), Ladder.Current.title, 15f,
+                    UiKit.Text(new Rect(cx - 365f, 338f, 730f, 24f), Ladder.Current.title, 15f,
                         new Color(0.9f, 0.88f, 0.82f, ta));
-                    if (mk > 1) UiKit.Text(new Rect(cx - 400f, 342f, 800f, 24f), "ЖИЗНЕЙ: " + mk + " — СЛОМИ И ДОБЕЙ " + mk + " РАЗА", 15f, new Color(1f, 0.45f, 0.3f, ta * 0.95f));
+                    if (mk > 1) UiKit.Text(new Rect(cx - 400f, 362f, 800f, 24f), "ЖИЗНЕЙ: " + mk + " — СЛОМИ И ДОБЕЙ " + mk + " РАЗА", 15f, new Color(1f, 0.45f, 0.3f, ta * 0.95f));
                     // время суток и погода матча — строкой под титулом
                     Weather wz = Weather.Instance;
                     if (wz != null)
                     {
                         bool sak = Weather.LeafMode == 2;
                         string wt = wz.Raining ? "НОЧЬ · ЛИВЕНЬ" : wz.Snowing ? (wz.HeavySnow ? "НОЧЬ · СНЕГОПАД" : "НОЧЬ · ПЕРВЫЙ СНЕГ") : wz.Foggy ? "НОЧЬ · ТУМАН" : wz.Dawn ? (sak ? "РАССВЕТ · ЦВЕТЁТ САКУРА" : "РАССВЕТ В ТУМАНЕ") : wz.Dusk ? (sak ? "ЗАКАТ · ЦВЕТЁТ САКУРА" : "ЗАКАТ") : wz.Daytime ? (sak ? "ВЕСНА · ЦВЕТЁТ САКУРА" : "СОЛНЕЧНЫЙ ДЕНЬ") : wz.BloodMoon ? "НОЧЬ · КРОВАВАЯ ЛУНА" : "ЯСНАЯ НОЧЬ";
-                        UiKit.Text(new Rect(cx - 400f, mk > 1 ? 366f : 342f, 800f, 22f), wt, 13f, new Color(0.8f, 0.82f, 0.86f, ta * 0.8f));
+                        UiKit.Text(new Rect(cx - 400f, mk > 1 ? 386f : 362f, 800f, 22f), wt, 13f, new Color(0.8f, 0.82f, 0.86f, ta * 0.8f));
                     }
                 }
                 float t = duel.StateTime / duel.IntroLength;
                 // первая половина: номер раунда тушью (壱 弐 参) в багровом круге энсо; вторая — 始 («начало») кистью за «БОЙ!»
                 const float split = 0.5f;
-                Vector2 rc = new Vector2(cx, 200f);   // круг 125…275: между «РАУНД» и титулом врага
+                Vector2 rc = new Vector2(cx, 212f);   // круг 125…275: между «РАУНД» и титулом врага
                 if (t < split)
                 {
                     float rAl = Mathf.Clamp01(t / 0.06f) * Mathf.Clamp01((split - t) / 0.07f);
@@ -471,7 +472,9 @@ namespace BladePath
                 string title = duel.MatchOver ? (won ? (Ladder.IsLast ? "ПУТЬ ПРОЙДЕН" : "ПОБЕДА") : "ПОРАЖЕНИЕ") : (won ? "РАУНД ВЫИГРАН" : "РАУНД ПРОИГРАН");
                 if (duel.LastDraw) { title = "НИЧЬЯ"; c = new Color(0.85f, 0.85f, 0.9f, t); }
                 string sub = duel.TimedOut ? "ВРЕМЯ ВЫШЛО" : "";
-                if (duel.Perfect && !duel.LastDraw) sub = "ИДЕАЛЬНО";
+                // «идеально» считается по последнему раунду — на итоге матча так и подписываем,
+                // иначе рядом со статистикой урона за весь бой это выглядит ошибкой
+                if (duel.Perfect && !duel.LastDraw) sub = duel.MatchOver ? "ИДЕАЛЬНЫЙ РАУНД" : "ИДЕАЛЬНО";
                 // Keep the existing brush-paint style, but size the backing
                 // to the ENTIRE result heading (and optional "ИДЕАЛЬНО"),
                 // rather than stretching a 480-unit stroke under 800-unit text.
@@ -495,12 +498,12 @@ namespace BladePath
                     }
                 }
                 if (sub.Length > 0)
-                    UiKit.Text(new Rect(cx - 330f, 98f, 660f, 32f), sub, 24f,
+                    UiKit.Text(new Rect(cx - 330f, brushWin ? 90f : 98f, 660f, brushWin ? 28f : 32f), sub, brushWin ? 21f : 24f,
                         new Color(1f, 0.85f, 0.35f, t));
                 if (brushWin)
                 {
                     float gt = Mathf.Clamp01((duel.StateTime - 0.35f) / 0.45f);
-                    DrawBrush("UI/ru_victory", new Vector2(cx, 165f), 140f * (1.1f - 0.1f * gt), t, Mathf.Clamp01(gt * 1.4f));
+                    DrawBrush("UI/ru_victory", new Vector2(cx, 174f), 126f * (1.1f - 0.1f * gt), t, Mathf.Clamp01(gt * 1.4f));
                 }
                 else
                 {
@@ -513,7 +516,7 @@ namespace BladePath
                 }
                 if (duel.MatchOver) DrawStats(cx, 240f, t);
                 if (duel.MatchOver && SideDuel.Enabled && Profile.Ally >= 0 && Profile.AllyDown)
-                    UiKit.Text(new Rect(cx - 300f, 352f, 600f, 22f), "СОРАТНИК ПАЛ — ЕГО ВЫХОДИТ ТРАВНИЦА", 14f, new Color(1f, 0.45f, 0.35f, t));
+                    UiKit.Text(new Rect(cx - 300f, 420f, 600f, 22f), "СОРАТНИК ПАЛ — ЕГО ВЫХОДИТ ТРАВНИЦА", 14f, new Color(1f, 0.45f, 0.35f, t));
                 if (!duel.MatchOver) UiKit.Text(new Rect(cx - 300f, 250f, 600f, 40f), duel.PlayerWins + " : " + duel.EnemyWins, 34f, new Color(1f, 1f, 1f, t));
                 UiKit.Rect(new Rect(cx - 200f, 232f, 400f, 2f), new Color(c.r, c.g, c.b, 0.8f * t));
             }

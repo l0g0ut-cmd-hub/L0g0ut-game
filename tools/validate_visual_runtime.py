@@ -77,10 +77,10 @@ assert "alpha * 0.72f" in ui_code, "Brush numeral shadow must stay visible"
 assert (ROOT / "Assets/_Project/Resources/UI/brush_digits_white.png").is_file()
 # Round-intro journey/opponent caption must be fully backed, with symmetric
 # padding for the longest title, not a narrow decorative brush strip.
-assert "Rect captionPanel = new Rect(cx - 390f, 280f, 780f, captionH);" in hud_code
+assert "Rect captionPanel = new Rect(cx - 390f, 300f, 780f, captionH);" in hud_code
 assert "float captionH = mk > 1 ? 118f : 94f;" in hud_code
-assert "Rect captionTitle = new Rect(cx - 365f, 288f, 730f, 34f);" in hud_code
-assert 'UiKit.Rect(captionPanel, new Color(0.025f, 0.018f, 0.02f, 0.72f * ta))' in hud_code
+assert "Rect captionTitle = new Rect(cx - 365f, 308f, 730f, 34f);" in hud_code
+assert 'UiKit.Tex("UI/Kit/hud_banner")' in hud_code
 assert 'DrawBrush("UI/brush_stroke", new Vector2(cx, 318f)' not in hud_code
 # BP-051: the difficulty glow is an ornamental alpha shape generated once.
 # Cards have calibrated painted bounds; no rectangular rim or second frame.

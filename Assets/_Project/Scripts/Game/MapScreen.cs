@@ -1491,7 +1491,7 @@ namespace BladePath
         {
             float a = Mathf.Clamp01((Time.unscaledTime - modalAt) / 0.2f);
             UiKit.Rect(new Rect(0f, 0f, W, 540f),
-                new Color(0.015f, 0.012f, 0.012f, 0.65f * a));
+                new Color(0.015f, 0.012f, 0.012f, 0.82f * a));   // карта и боковая панель под окном уходят в тень, их кнопки не путаются с кнопками окна
             Rect r = new Rect((W - w) * 0.5f, (540f - h) * 0.5f + (1f - a) * 20f, w, h);
             VisualIdentity.KitSurface(r, a);
             return r;
@@ -1518,7 +1518,7 @@ namespace BladePath
             {
                 case Modal.Fight:
                 {
-                    Rect r = Card(640f, 380f);
+                    Rect r = Card(640f, 350f);
                     int e = Mathf.Clamp(n.enemy, 0, Ladder.Count - 1);
                     Texture2D art = UiKit.Tex(EnemyFullArt[e]);
                     if (art != null)
@@ -1538,9 +1538,12 @@ namespace BladePath
                             UiKit.Slice(edge, portraitFrame, 0.27f, 0.2f, 0.1f, 0.3f, 0.12f, Color.white);
                         }
                     }
-                    float x = r.x + 280f, w = r.width - 300f, y = r.y + 22f;
-                    UiKit.Text(new Rect(x, y, w, 22f), Campaign.TypeNames[n.type], 15f, n.Type == NodeType.Boss ? new Color(1f, 0.4f, 0.3f) : Gold, TextAnchor.MiddleLeft); y += 28f;
-                    UiKit.Text(new Rect(x, y, w, 20f), Ladder.Stages[e].title, 13f, Dim, TextAnchor.MiddleLeft, false); y += 22f;
+                    float x = r.x + 258f, w = r.width - 278f, y = r.y + 22f;   // портрет теперь 2:3 и уже — текст ближе к нему
+                    UiKit.Text(new Rect(x, y, w, 18f), Campaign.TypeNames[n.type], 13f, n.Type == NodeType.Boss ? new Color(1f, 0.4f, 0.3f) : Dim, TextAnchor.MiddleLeft); y += 22f;
+                    // имя противника — крупно: сразу видно, с кем бой
+                    UiKit.Text(new Rect(x, y, w, 30f), Ladder.Stages[e].name.ToUpper(), 24f, n.Type == NodeType.Boss ? new Color(1f, 0.4f, 0.3f) : Gold, TextAnchor.MiddleLeft); y += 34f;
+                    UiKit.Text(new Rect(x, y, w, 20f), Ladder.Stages[e].title, 13f, new Color(0.9f, 0.85f, 0.75f), TextAnchor.MiddleLeft, false); y += 28f;
+                    VisualIdentity.Divider(new Rect(x, y - 6f, w, 1f)); y += 6f;
                     int sky = MapClouds.SkyAt(Campaign.Region, new Vector2(n.x, n.y));
                     Texture2D wi = UiKit.Tex("UI/weather_icons");   // 3 медальона в ряд: ясно, дождь, гроза
                     if (wi != null)
