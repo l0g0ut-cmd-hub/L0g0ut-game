@@ -497,6 +497,16 @@ namespace BladePath
 
             Breadcrumbs.Frame();
             if (MapScreen.Open) { if (State == DuelState.Intro) stateStart = Time.unscaledTime; return; }   // на карте бой стоит
+            // добивание «поплывшего» врага: удар, начатый рядом с ним, сразу переходит в приём. Раньше клинок должен был
+            // коснуться тела, а крупный сёгун, осевший на колено, пропускал удары над собой — попасть было почти нельзя
+            if (State == DuelState.Fighting && !DeathblowActive && player != null && enemy != null && enemy.PostureBroken && player.weapon != null
+                && player.weapon.Phase != SwingPhase.Idle && player.weapon.SwingId != dbNearSwing && player.weapon.CurrentProfile != null
+                && !player.weapon.CurrentProfile.ranged && !player.weapon.CurrentProfile.scripted && MeleeStrike(player.weapon.CurrentProfile.type))
+            {
+                dbNearSwing = player.weapon.SwingId;
+                Vector3 dv = enemy.transform.position - player.transform.position; dv.y = 0f;
+                if (dv.magnitude <= 2.8f) TryDeathblow(player, enemy);
+            }
             // перед первым раундом враг приветствует клинком
             if (State == DuelState.Intro && Round == 1 && !saluted && StateTime > 0.5f && enemy != null && enemy.weapon != null && enemy.weapon.Phase == SwingPhase.Idle)
             {
@@ -709,6 +719,12 @@ namespace BladePath
         /// (укол, кэса-гири, по шее, снизу; подряд один и тот же не повторяется). Последняя метка — смерть (по шее — голова с плеч),
         /// иначе враг падает на колено и поднимается с полным здоровьем.
         /// </summary>
+        int dbNearSwing = -1;
+        static bool MeleeStrike(AttackType t)
+        {
+            return t == AttackType.Overhead || t == AttackType.Rising || t == AttackType.LegSweep || t == AttackType.JumpStrike
+                || t == AttackType.Thrust || t == AttackType.Slash || t == AttackType.SlashBack || t == AttackType.Charge;
+        }
         bool TryDeathblow(FighterController a, FighterController t)
         {
             if (DeathblowActive || SuperActive || a == null || t == null || a.weapon == null) return false;

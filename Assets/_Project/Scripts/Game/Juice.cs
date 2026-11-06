@@ -403,9 +403,15 @@ namespace BladePath
         }
 
         /// <summary>Киай на тяжёлых ударах: сверху и в прыжке — через раз, добивание и натиск — всегда; не чаще раза в 1,5 с у бойца.</summary>
+        /// <summary>Голос только у героя: синтезированные крик и стоны противников (ярость, боль, смерть) звучали как пердёж — убраны (2026-11-06).</summary>
+        bool HeroVoice(int who)
+        {
+            DuelManager dm = DuelManager.Instance;
+            return who >= 0 && who < tracked.Count && dm != null && tracked[who].f != null && tracked[who].f == dm.player;
+        }
         void KiaiFor(int who, SwingProfile p)
         {
-            if (p == null || who < 0 || who >= kiaiAt.Length) return;
+            if (p == null || who < 0 || who >= kiaiAt.Length || !HeroVoice(who)) return;
             bool db = p.type.ToString().StartsWith("Deathblow");
             bool heavy = p.type == AttackType.Overhead || p.type == AttackType.JumpStrike;
             if (!(db || p.type == AttackType.Charge || (heavy && Random.value < 0.5f))) return;
@@ -421,7 +427,7 @@ namespace BladePath
             FighterController f = at.GetComponentInParent<FighterController>();
             int who = -1;
             for (int i = 0; i < tracked.Count; i++) if (tracked[i].f == f && f != null) { who = i; break; }
-            if (who < 0) return;
+            if (who < 0 || !HeroVoice(who)) return;
             if (kill) { Play(who == 0 ? dieA : dieB, 0.45f, Random.Range(0.97f, 1.03f)); return; }
             if (strength < 0.5f || Random.value > 0.6f) return;
             Play(who == 0 ? gruntA : gruntB, 0.36f, Random.Range(0.94f, 1.06f));
