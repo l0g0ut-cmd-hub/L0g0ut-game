@@ -49,9 +49,14 @@ namespace BladePath
         bool goAfterRoll;   // «В ПУТЬ» без ходов: кость бросается сама, после её анимации всадник трогается
         bool rideFast;      // касание карты во время езды — всадник скачет втрое быстрее до конца поездки
 
+        /// <summary>Куда поедет «В ПУТЬ»: ровно в следующую точку показанного маршрута. Раньше, если цель была соседней,
+        /// всадник ехал в неё напрямую, даже когда на карте был нарисован другой путь (показ и езда расходились).</summary>
         int TravelTarget()
         {
-            return sel >= 0 && Campaign.CanGo(sel) ? sel : sel >= 0 && Campaign.CanGo(NextPreviewStep) ? NextPreviewStep : -1;
+            if (sel < 0) return -1;
+            int next = NextPreviewStep;
+            if (next >= 0) return Campaign.CanGo(next) ? next : -1;
+            return Campaign.CanGo(sel) ? sel : -1;
         }
 
         /// <summary>Нужно бросить кость, чтобы выехать к выбранной цели (ходов нет, кость есть, дальше — новое место).</summary>
@@ -793,7 +798,8 @@ namespace BladePath
             // A step back is only ever a direct hop to a NEIGHBOURING visited place the
             // player tapped. Longer routes go FORWARD only: a forward-and-back search made
             // taps on distant markers send the rider back through already passed places.
-            if (!nodes[start].next.Contains(index) && Campaign.Adjacent(start, index))
+            // сосед по своей дороге — всегда напрямую: эта дорога не проходит через другие места
+            if (Campaign.Adjacent(start, index))
             {
                 previewPath.Add(start); previewPath.Add(index);
                 return;
@@ -818,8 +824,8 @@ namespace BladePath
                 for (int next = 0; next < nodes.Count; next++)
                 {
                     if (closed[next] || next == at) continue;
-                    bool forward = nodes[at].next.Contains(next);
-                    if (!forward && !Campaign.Adjacent(at, next)) continue;   // назад и вбок — только по своей дороге
+                    if (!Campaign.Adjacent(at, next)) continue;   // только по нарисованной дороге между соседними местами
+                    bool forward = nodes[next].layer >= nodes[at].layer;    // назад к началу — со штрафом
                     // шаг назад или вбок через пройденное место — со штрафом: если к цели ведёт своя дорога вперёд,
                     // всадник едет по ней, а не возвращается на пройденное событие, чтобы оттуда свернуть к цели
                     float c = cost[at] + (nodes[next].done ? 0f : 100000f) + TerrainRoads.Route(at, next).lengthPixels + (forward ? 0f : 600f);
@@ -1612,8 +1618,7 @@ namespace BladePath
             // medal, preventing accidental trips to a different location.
             // A distant selected node travels one hop along the highlighted route
             // (NextPreviewStep); the goal stays selected for the next tap.
-            int travelTarget = sel >= 0 && Campaign.CanGo(sel) ? sel
-                : sel >= 0 && Campaign.CanGo(NextPreviewStep) ? NextPreviewStep : -1;
+            int travelTarget = TravelTarget();
             bool travelReady = !rolling && moveTo < 0 && travelTarget >= 0 &&
                 Campaign.CanGo(travelTarget);
             // бой-реванш: герой стоит на пройденном бою — можно сразиться снова (монеты вполовину, без добычи)

@@ -172,6 +172,7 @@ namespace BladePath
             if (d == null || d.nodes == null || d.nodes.Count == 0) { d = new Data(); Generate(0); }
             if (d.at < 0 || d.at >= d.nodes.Count) d.at = 0;
             MigrateSpots(d);
+            LinkByRoads(d);   // и старые сохранения ездят по нарисованным дорогам
             // Old campaign_v1 saves have no travel history: start from the current position.
             if (d.travelled == null) d.travelled = new List<int>();
             if (d.travelled.Count == 0 || d.travelled[d.travelled.Count - 1] != d.at)
@@ -288,53 +289,42 @@ namespace BladePath
         public static int ClearedRegion { get { return D.clearedRegion; } }
         public static void AckCleared() { D.clearedRegion = -1; Save(); }
         /// <summary>
-        /// Соседние места на карте: вперёд по дороге (next) и назад — к уже пройденному месту,
-        /// откуда дорога ведёт сюда. Шаг назад тратит ход кости, как и шаг вперёд.
+        /// Соседние места на карте — те, между которыми идёт своя нарисованная дорога, не проходящая через другое место
+        /// (TerrainRoads.PlaceLinks). Ехать можно в любую сторону: вперёд, назад, вбок. Новое место тратит ход кости,
+        /// пройденное — бесплатно.
         /// </summary>
         public static bool Adjacent(int from, int to)
         {
             if (from < 0 || to < 0 || from >= D.nodes.Count || to >= D.nodes.Count || from == to) return false;
-            if (D.nodes[from].next.Contains(to)) return true;
-            if (Lateral(from, to)) return true;
-            // назад по своей дороге — и в пройденное место, и в пропущенное новое. Раньше в пропущенное место назад
-            // было нельзя, и маршрут добирался до него крюком через всю пройденную область (засада → деревня → тайник → событие)
-            return D.nodes[to].next.Contains(from);
+            return Links(from).Contains(to);
         }
 
-        // Соседи «вбок»: места одного ряда, между которыми по нарисованной карте идёт своя дорога, не проходящая
-        // через другие места (торговец у моста рядом с тайником и т.п.). Раньше такой шаг был запрещён — «дороги туда нет».
-        static readonly HashSet<int> lateral = new HashSet<int>();
-        static string lateralKey;
-        static bool Lateral(int a, int b)
+        static List<int>[] links;
+        static string linksKey;
+        static List<int> Links(int i)
         {
-            if (D.nodes[a].layer != D.nodes[b].layer) return false;
-            string key = D.region + ":" + D.nodes.Count + ":" + D.nodes[0].x + ":" + D.nodes[D.nodes.Count - 1].y;
-            if (key != lateralKey)
+            string key = D.region + ":" + D.nodes.Count + ":" + D.nodes[0].x + ":" + D.nodes[D.nodes.Count - 1].y + ":" + D.nodes[D.nodes.Count / 2].x;
+            if (links == null || key != linksKey || links.Length != D.nodes.Count)
             {
-                lateralKey = key; lateral.Clear();
-                TerrainRoads.Bind(D.region, D.nodes);
-                Vector2 px = new Vector2(810f, 540f);
-                for (int i = 0; i < D.nodes.Count; i++)
-                    for (int j = i + 1; j < D.nodes.Count; j++)
-                    {
-                        MapNode ni = D.nodes[i], nj = D.nodes[j];
-                        if (ni.layer != nj.layer) continue;
-                        Vector2 pi = new Vector2(ni.x, ni.y), pj = new Vector2(nj.x, nj.y);
-                        float straight = Vector2.Scale(pi - pj, px).magnitude;
-                        if (straight > 230f) continue;
-                        TerrainRoads.Path road = TerrainRoads.Route(i, j);
-                        if (road.lengthPixels > straight * 1.7f + 40f) continue;   // дорога в обход через полкарты — не соседи
-                        bool through = false;
-                        for (int q = 1; q < 12 && !through; q++)
-                        {
-                            Vector2 rp = road.Position(q / 12f);
-                            for (int o = 0; o < D.nodes.Count && !through; o++)
-                                if (o != i && o != j && Vector2.Scale(rp - new Vector2(D.nodes[o].x, D.nodes[o].y), px).sqrMagnitude < 24f * 24f) through = true;
-                        }
-                        if (!through) { lateral.Add(i * 1000 + j); lateral.Add(j * 1000 + i); }
-                    }
+                linksKey = key;
+                links = TerrainRoads.PlaceLinks(D.region, D.nodes);
             }
-            return lateral.Contains(a * 1000 + b);
+            return links[i];
+        }
+        /// <summary>Дороги «вперёд» (для рисования и подсказок) — те же нарисованные дороги: к месту дальнего ряда,
+        /// а внутри ряда — от меньшего номера к большему, чтобы каждая дорога была записана один раз.</summary>
+        static void LinkByRoads(Data dd)
+        {
+            List<int>[] l = TerrainRoads.PlaceLinks(dd.region, dd.nodes);
+            for (int i = 0; i < dd.nodes.Count; i++)
+            {
+                MapNode a = dd.nodes[i];
+                if (a.next == null) a.next = new List<int>();
+                a.next.Clear();
+                foreach (int j in l[i])
+                    if (dd.nodes[j].layer > a.layer || (dd.nodes[j].layer == a.layer && j > i)) a.next.Add(j);
+            }
+            links = null;
         }
         /// <summary>Шаг на уже пройденное место (назад или по своим следам) — бесплатный: кость тратится только на новые места.</summary>
         public static bool FreeHop(int i) { return i >= 0 && i < D.nodes.Count && D.nodes[i].done; }
@@ -415,7 +405,7 @@ namespace BladePath
             if (h < 0 || UnityEngine.Random.value > chance) return;
             List<int> nb = new List<int>();
             for (int i = 0; i < D.nodes.Count; i++)
-                if (i != h && (D.nodes[h].next.Contains(i) || D.nodes[i].next.Contains(h) || Lateral(h, i)) && HuntSpot(i)) nb.Add(i);
+                if (Adjacent(h, i) && HuntSpot(i)) nb.Add(i);
             if (nb.Count > 0) D.hunt = nb[UnityEngine.Random.Range(0, nb.Count)];
         }
         public static void BeginHunt()
@@ -490,29 +480,8 @@ namespace BladePath
                     dd.nodes.Add(new MapNode { layer = l, x = p.x, y = p.y });
                 }
             }
-            // дороги: каждый узел ведёт хотя бы в один следующий, в каждый узел ведёт хотя бы одна дорога; иногда — перекрёсток
-            for (int l = 0; l < L - 1; l++)
-            {
-                List<int> A = layers[l], B = layers[l + 1];
-                bool[] hasIn = new bool[B.Count];
-                for (int i = 0; i < A.Count; i++)
-                {
-                    int j = A.Count == 1 ? -1 : Mathf.RoundToInt(i * (B.Count - 1) / (float)(A.Count - 1));
-                    if (j < 0) { for (int k = 0; k < B.Count; k++) { dd.nodes[A[i]].next.Add(B[k]); hasIn[k] = true; } continue; }
-                    dd.nodes[A[i]].next.Add(B[j]); hasIn[j] = true;
-                }
-                for (int k = 0; k < B.Count; k++)
-                {
-                    if (hasIn[k]) continue;
-                    int i = B.Count == 1 ? 0 : Mathf.RoundToInt(k * (A.Count - 1) / (float)(B.Count - 1));
-                    dd.nodes[A[i]].next.Add(B[k]);
-                }
-                if (A.Count > 1 && B.Count > 1 && UnityEngine.Random.value < 0.55f)
-                {
-                    int i = UnityEngine.Random.Range(0, A.Count), k = Mathf.Clamp(i + (UnityEngine.Random.value < 0.5f ? 1 : -1), 0, B.Count - 1);
-                    if (!dd.nodes[A[i]].next.Contains(B[k])) dd.nodes[A[i]].next.Add(B[k]);
-                }
-            }
+            // дороги — ровно нарисованные на карте (раньше — по номерам мест, и «соседи» соединялись через чужие места)
+            LinkByRoads(dd);
             // что в узлах
             for (int l = 0; l < L; l++)
             {
@@ -561,7 +530,10 @@ namespace BladePath
                         if (b.Type == NodeType.Event) b.ev = MapScreen.RandomEvent();
                     }
             // перед владыкой — хотя бы одна передышка (храм или привал), если есть выбор
-            List<int> pre = layers[L - 2];
+            // (среди мест, откуда к владыке ведёт дорога)
+            List<int> pre = new List<int>();
+            int bossAt = layers[L - 1][0];
+            for (int pi = 0; pi < dd.nodes.Count; pi++) if (dd.nodes[pi].next.Contains(bossAt)) pre.Add(pi);
             if (pre.Count > 1)
             {
                 bool rest = false;

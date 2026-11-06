@@ -95,17 +95,18 @@ def check_routes():
     assert 'interactive && travelReady, true' in screen
     # В ПУТЬ to a distant node = one tapped hop along the highlighted route
     # (user decision 2026-11-02); the goal stays selected, no autopilot.
-    assert ': sel >= 0 && Campaign.CanGo(NextPreviewStep) ? NextPreviewStep : -1;' in screen
+    assert 'if (next >= 0) return Campaign.CanGo(next) ? next : -1;' in screen, "В ПУТЬ follows the shown route exactly"
+    assert 'int travelTarget = TravelTarget();' in screen
     assert 'if (sel != i && NextPreviewStep != i) return;' in screen
     assert 'if (goal >= 0 && goal != Campaign.At && goal < Campaign.Nodes.Count)' in screen
     assert 'Campaign.MoveTo(i, serviceOnTheWay); // persist only after the rider arrives' in screen
     assert 'if (!interactive || i != hitNode || panDragging) continue;' in screen
     # One В ПУТЬ tap rides the whole route but stops at every new encounter.
     assert 'if (modal == Modal.None && !Campaign.InFight && Campaign.CanGo(hop)) Go(hop);' in screen
-    # Маршрут: через неизведанное — только вперёд; кратчайший по ходам, затем по длине дороги;
-    # поездка идёт по показанному маршруту, без перестройки на каждом перегоне.
-    assert 'bool forward = nodes[at].next.Contains(next);' in screen, "Route planner knows forward roads"
-    assert 'if (!forward && !Campaign.Adjacent(at, next)) continue;' in screen, "Back and sideways only along an existing road"
+    # Маршрут (2026-11-06): только по нарисованным дорогам между соседними местами; меньше новых мест,
+    # затем короче дорога; назад к началу — со штрафом; поездка идёт по показанному маршруту.
+    assert 'if (!Campaign.Adjacent(at, next)) continue;' in screen, "Route only along painted roads"
+    assert 'bool forward = nodes[next].layer >= nodes[at].layer;' in screen
     assert 'readonly List<int> ridePlan' in screen and 'int here = ridePlan.IndexOf(Campaign.At);' in screen
     assert 'if (UiKit.Tex(heroArt) != null)' in screen
     assert 'heroArt = "UI/npc_"' not in screen
@@ -261,9 +262,9 @@ def check_selection_screens():
     check_png("Assets/_Project/Resources/UI/map_icon_herbalist.png", 256, 256)
     assert 'const string HerbalistIcon = "UI/map_icon_herbalist";' in screen
     camp = read("Assets/_Project/Scripts/Game/Campaign.cs")
-    # Backtracking (user request 2026-11-02): back only to visited places;
-    # shrine and rest stay one-time, merchant keeps its stock.
-    assert "return D.nodes[to].next.Contains(from);" in camp
+    # Соседство мест = нарисованные дороги (TerrainRoads.PlaceLinks), в обе стороны; и для старых сохранений.
+    assert "return Links(from).Contains(to);" in camp
+    assert "LinkByRoads(d);" in camp and "LinkByRoads(dd);" in camp
     assert "Adjacent(D.at, i)" in camp
     assert "n.Type == NodeType.Shrine || n.Type == NodeType.Rest || n.Type == NodeType.Onsen ||" in screen
     assert "kept.Key == at) stock = kept.Value;" in screen

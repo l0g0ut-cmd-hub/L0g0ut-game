@@ -303,6 +303,50 @@ namespace BladePath
         }
         // ROADS-GRAPH END
 
+        /// <summary>
+        /// Соседи мест по НАРИСОВАННЫМ дорогам: B — сосед A, если по дорогам карты от A до B можно доехать,
+        /// не проезжая через другое место. Раньше дороги между местами придумывались по номерам (i-е место ряда → j-е
+        /// следующего), и путь «соседей» на карте шёл через чужие места: всадник проезжал засаду, деревню, тайник.
+        /// Убранное место (дорога сходится в одну точку) — просто развилка, через неё проезжают.
+        /// </summary>
+        public static List<int>[] PlaceLinks(int region, List<MapNode> nodes)
+        {
+            if (graphs == null) MakeGraphs();
+            Graph g = graphs[Mathf.Clamp(region, 0, 2)];
+            int n = nodes.Count;
+            List<int>[] res = new List<int>[n];
+            int[] hubOf = new int[n];
+            Dictionary<int, int> owner = new Dictionary<int, int>();
+            for (int i = 0; i < n; i++)
+            {
+                res[i] = new List<int>(4);
+                hubOf[i] = Nearest(g, new Vector2(nodes[i].x, nodes[i].y), region);
+                if (hubOf[i] >= 0 && !owner.ContainsKey(hubOf[i])) owner[hubOf[i]] = i;
+            }
+            bool[] seen = new bool[g.hubs.Count];
+            Stack<int> stack = new Stack<int>(16);
+            for (int i = 0; i < n; i++)
+            {
+                if (hubOf[i] < 0) continue;
+                System.Array.Clear(seen, 0, seen.Length);
+                stack.Clear();
+                seen[hubOf[i]] = true; stack.Push(hubOf[i]);
+                while (stack.Count > 0)
+                {
+                    int u = stack.Pop();
+                    foreach (int v in g.hubs[u].next)
+                    {
+                        if (seen[v]) continue;
+                        seen[v] = true;
+                        int o;
+                        if (owner.TryGetValue(v, out o)) { if (o != i && !res[i].Contains(o)) res[i].Add(o); continue; }   // дальше этого места не едем
+                        stack.Push(v);
+                    }
+                }
+            }
+            return res;
+        }
+
         // Diagnostics for build-time and debug tests: road crossings MUST contain
         // an actual bridge waypoint. Public inspection never modifies route data.
         public static bool UsesBridge(int from, int to)
