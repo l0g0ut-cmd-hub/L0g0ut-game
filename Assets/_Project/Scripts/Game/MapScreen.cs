@@ -711,7 +711,7 @@ namespace BladePath
             GUI.color = oc;
         }
 
-        // ---- живой огонь и туман (CGHEVEN, бесплатные видео 1K → листы кадров: UI/fx_campfire 8×6, UI/fx_mist 6×5)
+        // ---- живой огонь и туман (CGHEVEN, бесплатные видео 1K → листы кадров: UI/fx_campfire 16×13 — вся петля 208 кадров при 25 к/с, UI/fx_mist 6×5)
         const string FireSheet = "UI/fx_campfire", MistSheet = "UI/fx_mist", PuffSheet = "UI/fx_puff";
 
         /// <summary>Пламя костра на домике карты: основание — в точке огня (доли ячейки), по высоте ~ пятой части домика.</summary>
@@ -719,9 +719,9 @@ namespace BladePath
         {
             Texture2D fire = UiKit.Tex(FireSheet);
             if (fire == null) return;
-            float w = size * (at.z > 0.12f ? 0.15f : at.z), h = w * 168f / 128f;   // z — ширина пламени (у костров по умолчанию 0,15)
+            float w = size * (at.z > 0.12f ? 0.15f : at.z), h = w * 84f / 64f;   // z — ширина пламени (у костров по умолчанию 0,15)
             Vector2 c = new Vector2(cell.x + at.x * size, cell.y + at.y * size + size * 0.035f);
-            Flip(new Rect(c.x - w * 0.5f, c.y - h, w, h), fire, 8, 6, 48, 6f, i * 1.37f, new Color(1f, 1f, 1f, dim ? 0.45f : 0.92f), false);
+            Flip(new Rect(c.x - w * 0.5f, c.y - h, w, h), fire, 16, 13, 208, 25f, i * 1.37f, new Color(1f, 1f, 1f, dim ? 0.45f : 0.92f), false);
         }
 
         /// <summary>
