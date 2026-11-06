@@ -64,7 +64,7 @@ namespace BladePath
             // если файла нет — остаётся синтезированный
             swish = Sampled(swish, "swish", 6); whoosh = Sampled(whoosh, "swish", 6);
             hit = Sampled(hit, "hit", 4); hitHeavy = Sampled(hitHeavy, "hitheavy", 3); stab = Sampled(stab, "stab", 1);
-            clang = Sampled(clang, "clang", 6);
+            clang = Sampled(clang, "clang", 10);   // звон клинка о клинок (StarNinjas, CC0)
             step = Sampled(step, "step", 5); stepSnow = Sampled(stepSnow, "stepsnow", 5);
             stepVoice = gameObject.AddComponent<AudioSource>(); stepVoice.spatialBlend = 0f; stepVoice.playOnAwake = false;   // шаги не отнимают голоса у ударов
             ambient = gameObject.AddComponent<AudioSource>();

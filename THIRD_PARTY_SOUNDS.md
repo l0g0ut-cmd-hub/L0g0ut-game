@@ -8,12 +8,15 @@
 
 - `swish_1..6` — SWSH_Swoosh_OS_01..06
 - `hit_1..4`, `hitheavy_1..3`, `stab_1` — смесь Kenney knifeSlice с FGHTImpt_PunchRegular/PunchHarder
-- `clang_1..5` — METLImpt_MetalHitSurface_OS_01..05; `clang_6` — METLImpt_HammerAnvil_OS_01
 - `step_1..5` — FEETHmn_ShoeDirtWalk_OS_01..05; `stepsnow_1..5` — FEETHmn_ShoeSnowWalk_OS_01..05
 - `rain_loop` — RAINVege_ForestRain_LOOP_01
 
 Строка для титров/страницы магазина:
 «Звуки: Oculus Audio Pack 01 © 2015 Oculus VR, LLC, CC BY 4.0; Kenney (kenney.nl), CC0».
+
+## StarNinjas — CC0
+«20 Sword Sound Effects (Attacks and Clashes)», https://opengameart.org/content/20-sword-sound-effects-attacks-and-clashes
+- `clang_1..10` — sword_clash.1..10 (звон клинка о клинок: блок, парирование, сломленное равновесие)
 
 ## Kenney — CC0 (без условий)
 Источник: https://github.com/ismetcabbar9-oss/kenney-audio-assets (RPG Audio, Casino Audio, kenney.nl)

@@ -1325,7 +1325,12 @@ namespace BladePath
             string sub = null;
             if (!isPlayer && plungeHints < 2) { plungeHints++; sub = "УДАР В ПРЫЖКЕ — ДОБИВАНИЕ С ВЫСОТЫ"; }
             Announce(isPlayer ? "РАВНОВЕСИЕ СЛОМЛЕНО!" : "РАВНОВЕСИЕ СЛОМЛЕНО — ДОБЕЙ!", isPlayer ? new Color(1f, 0.45f, 0.2f) : new Color(1f, 0.2f, 0.12f), sub);
-            if (Juice.Instance != null) { Juice.Instance.Clash(f.transform.position + Vector3.up * 1.2f + f.transform.forward * 0.3f); Juice.Instance.GuardBreak(f.transform.position + Vector3.up * 1.1f); }
+            if (Juice.Instance != null)
+            {
+                Juice.Instance.Clash(f.transform.position + Vector3.up * 1.2f + f.transform.forward * 0.3f);
+                Juice.Instance.GuardBreak(f.transform.position + Vector3.up * 1.1f);
+                Juice.Instance.Taiko(0.85f, 0.8f);   // равновесие сломлено — низкий удар тайко поверх звона клинков (раньше — глухой стук металла)
+            }
             if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.07f);
             Haptics.Pulse(isPlayer ? 80 : 50);
             hitStopUntil = Time.unscaledTime + 0.1f;
