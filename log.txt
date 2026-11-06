@@ -1,0 +1,22 @@
+energy-burst-11 -> https://cdn.cgheven.com/file/cghaven-2025/VFX/Magicfx/Energy_Burst/Energy_Burst_Fade_11/Front/Videos/ProRess4444/Energy_Burst_11_Front_1K_ProRess4444.mov
+energy-burst-12 -> https://cdn.cgheven.com/file/cghaven-2025/VFX/Magicfx/Energy_Burst/Energy_Burst_Fade_12/Front/Videos/ProRess4444/Energy_Burst_12_Front_1K_ProRess4444.mov
+energy-burst-09 -> https://cdn.cgheven.com/file/cghaven-2025/VFX/Magicfx/Energy_Burst/Energy_Burst_Fade_09/Front/Videos/ProRess4444/Energy_Burst_09_Front_1K_ProRess4444.mov
+energy-burst-13 -> https://cdn.cgheven.com/file/cghaven-2025/VFX/Magicfx/Energy_Burst/Energy_Burst_Fade_13/Front/Videos/ProRess4444/Energy_Burst_13_Front_1K_ProRess4444.mov
+magical-shockwave-01-front -> https://cdn.cgheven.com/file/cghaven-2025/VFX/Magicfx/Shokewaves/01/Front/Videos/ProRess4444/Magicalshokwave_01_Front_1K_Prores4444.mov
+looping-magic-aura-01-front -> https://cdn.cgheven.com/file/cghaven-2025/VFX/Magicfx/Magic_Aura/01/Front/Videos/ProRess4444/Aura_01_Front_Loop_1K_ProRess4444.mov
+looping-magic-aura-04-front -> https://cdn.cgheven.com/file/cghaven-2025/VFX/Magicfx/Magic_Aura/04/Front/Videos/ProRess4444/Aura_04_Front_Loop_1K_ProRess4444.mov
+looping-magic-aura-05-front -> https://cdn.cgheven.com/file/cghaven-2025/VFX/Magicfx/Magic_Aura/05/Front/Videos/ProRess4444/Aura_05_Front_Loop_1K_ProRess4444.mov
+cannon-spark-01-front -> https://cdn.cgheven.com/file/cghaven-2025/VFX/Explosion/Cannon_Explosions/Realistic/Sparks/Sparks_01/Front/Videos/ProRess4444/Cannonexplosion_sparks_01_Front_1K_ProRes4444.mov
+cannon-spark-03-front -> https://cdn.cgheven.com/file/cghaven-2025/VFX/Explosion/Cannon_Explosions/Realistic/Sparks/Sparks_03/Front/Videos/ProRess4444/CannonExplosion_Sparks_03_front_1K_Prores4444.mov
+cannon-spark-05-front -> https://cdn.cgheven.com/file/cghaven-2025/VFX/Explosion/Cannon_Explosions/Realistic/Sparks/Sparks_05/Front/Videos/ProRess4444/CannonExplosion_Sparks_05_Front_1K_Prores4444.mov
+cannon-spark-01-front: 1024,1024,yuva444p12le,56
+cannon-spark-03-front: 1024,1024,yuva444p12le,80
+cannon-spark-05-front: 1024,1024,yuva444p12le,54
+energy-burst-09: 1024,1024,yuva444p12le,254
+energy-burst-11: 1024,1024,yuva444p12le,254
+energy-burst-12: 1024,1024,yuva444p12le,254
+energy-burst-13: 1024,1024,yuva444p12le,254
+looping-magic-aura-01-front: 1024,1024,yuva444p12le,160
+looping-magic-aura-04-front: 1024,1024,yuva444p12le,128
+looping-magic-aura-05-front: 1024,1024,yuva444p12le,128
+magical-shockwave-01-front: 1024,1024,yuva444p12le,105
