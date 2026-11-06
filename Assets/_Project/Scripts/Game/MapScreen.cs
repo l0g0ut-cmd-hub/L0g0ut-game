@@ -558,7 +558,7 @@ namespace BladePath
         static readonly Vector3[][] BuildingLights =
         {
             new[] { new Vector3(0.58f, 0.62f, 0.16f), new Vector3(0.30f, 0.59f, 0.1f) },    // трактир: фонарь, окно
-            new[] { new Vector3(0.35f, 0.55f, 0.2f) },                                        // кузница: горн
+            new[] { new Vector3(0.37f, 0.56f, 0.13f) },                                       // кузница: горн (свет — в арке, не на кладке)
             new Vector3[0],                                                                   // лавка
             new[] { new Vector3(0.375f, 0.68f, 0.2f) },                                       // привал: костёр
             new[] { new Vector3(0.68f, 0.5f, 0.1f) },                                         // травница: окно
@@ -707,7 +707,12 @@ namespace BladePath
                 }
                 // живой огонь, дым и пар там, где они нарисованы на домиках
                 if (b == 0) MapSmoke(r, size, new Vector2(0.51f, 0.2f), false, false, i, 1f);                  // трактир: дым из трубы
-                if (b == 1) { MapFire(r, size, new Vector3(0.35f, 0.62f, 0.14f), false, i); MapFire(r, size, new Vector3(0.35f, 0.62f, 0.14f), false, i + 3); }   // два слоя со сдвигом фазы — пламя гуще                          // кузница: огонь в горне
+                if (b == 1)
+                {
+                    // кузница: огонь внутри арки горна (под аркой — 0,3…0,45 по ширине, 0,48…0,61 по высоте; у сёгуната горн чуть ниже) — пламя не выше свода
+                    Vector3 fg = Campaign.Region == 2 ? new Vector3(0.38f, 0.595f, 0.085f) : new Vector3(0.37f, 0.575f, 0.085f);
+                    MapFire(r, size, fg, false, i); MapFire(r, size, fg, false, i + 3);
+                }   // два слоя со сдвигом фазы — пламя гуще                          // кузница: огонь в горне
                 if (b == 3) { MapFire(r, size, BuildingLights[3][0], dim, i); MapSmoke(r, size, new Vector2(0.37f, 0.46f), false, dim, i, 0.85f); }   // привал: костёр и дым над котлом
             }
             GUI.color = oc;
