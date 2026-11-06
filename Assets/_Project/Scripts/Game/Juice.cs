@@ -341,7 +341,8 @@ namespace BladePath
         /// <summary>Удар тайко: начало раунда, «БОЙ!».</summary>
         public void Taiko(float vol = 1f, float pitch = 1f) { Play(drum, vol, pitch); }
         /// <summary>Рык нежити перед боем.</summary>
-        public void Growl(float pitch = 1f) { Play(growl, 0.85f, pitch); }
+        // рык отключён везде (2026-11-06): синтезированное жужжание 48 Гц звучало как пердёж; вызовы оставлены — звук можно вернуть здесь
+        public void Growl(float pitch = 1f) { }
         /// <summary>Порыв лепестков сакуры (сильный удар, KO).</summary>
         public void PetalBurst(int n)
         {
