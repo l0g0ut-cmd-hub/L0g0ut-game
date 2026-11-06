@@ -10,7 +10,6 @@
 - `hit_1..4`, `hitheavy_1..3`, `stab_1` — смесь Kenney knifeSlice с FGHTImpt_PunchRegular/PunchHarder
 - `clang_1..5` — METLImpt_MetalHitSurface_OS_01..05; `clang_6` — METLImpt_HammerAnvil_OS_01
 - `step_1..5` — FEETHmn_ShoeDirtWalk_OS_01..05; `stepsnow_1..5` — FEETHmn_ShoeSnowWalk_OS_01..05
-- `crickets_loop` — AMBForst_Night_LOOP_01; `rain_loop` — RAINVege_ForestRain_LOOP_01
 
 Строка для титров/страницы магазина:
 «Звуки: Oculus Audio Pack 01 © 2015 Oculus VR, LLC, CC BY 4.0; Kenney (kenney.nl), CC0».

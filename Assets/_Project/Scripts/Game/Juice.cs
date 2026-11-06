@@ -70,8 +70,7 @@ namespace BladePath
             ambient = gameObject.AddComponent<AudioSource>();
             ambient.clip = Wind(); ambient.loop = true; ambient.volume = 0.22f; ambient.spatialBlend = 0f; ambient.Play();
             crickets = gameObject.AddComponent<AudioSource>();   // ночные сверчки в саду храма; в дождь замолкают
-            AudioClip night = Resources.Load<AudioClip>("Audio/crickets_loop");
-            crickets.clip = night != null ? night : Crickets(); crickets.loop = true; crickets.volume = 0f; crickets.spatialBlend = 0f; crickets.Play();
+            crickets.clip = Crickets();   // свои сверчки/цикады — не трогаем (просьба 2026-11-07) crickets.loop = true; crickets.volume = 0f; crickets.spatialBlend = 0f; crickets.Play();
             Shader sh = Shader.Find("Sprites/Default");
             if (sh != null)
             {
