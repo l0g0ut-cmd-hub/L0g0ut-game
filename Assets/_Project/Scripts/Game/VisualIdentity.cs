@@ -174,7 +174,10 @@ namespace BladePath
             if (selected) UiKit.Rect(new Rect(r.x + r.width * 0.2f, r.yMax - 3f, r.width * 0.6f, 2f), new Color(BrassLight.r, BrassLight.g, BrassLight.b, 0.6f + 0.3f * Mathf.Sin(Time.unscaledTime * 3f)));
             // текст подгоняется под гладкую середину кнопки, а не под всю ширину с завитками по краям
             UiKit.Text(TextArea(r, square), label, Mathf.Min(17f, r.height * 0.42f), enabled ? Parchment : new Color(0.60f, 0.57f, 0.51f), TextAnchor.MiddleCenter);
-            return enabled && GUI.Button(r, GUIContent.none, GUIStyle.none);
+            UiFx.DrawPress(r);   // недавно нажата — золотая вспышка по кнопке
+            bool hit = enabled && GUI.Button(r, GUIContent.none, GUIStyle.none);
+            if (hit) UiFx.Pressed(r);   // щелчок и вспышка
+            return hit;
         }
 
         /// <summary>Панель в едином стиле: низкая — плашка-тост, высокая — окно с хищными углами.</summary>

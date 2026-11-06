@@ -23,6 +23,8 @@
 
 - `knifeSlice`, `knifeSlice2` — в составе `hit_*`, `hitheavy_*`, `stab_1`
 - `dicecup_1..3` — dieShuffle1..3; `dice_1..3` — diceThrow1..3; `coins_1..2` — handleCoins, handleCoins2
+- интерфейс: `ui_click_1..3` — chipLay1..3; `ui_draw_1..3` — drawKnife3/2/1; `ui_cloth_1..3` — cloth1..3; `ui_metal_1..2` — metalClick, metalLatch; `ui_leather_1..2` — handleSmallLeather 1/2; `ui_scroll_1` — bookFlip1
+- `ui_bell`, `ui_taiko`, `ui_taiko_heavy` — свои, синтез (колокольчик рин, удары тайко)
 
 ## Подложки карты — CC0, Freesound (через https://github.com/funcoder/omarchy-ambient)
 Сделаны бесшовными петлями, громкость выровнена.
@@ -37,7 +39,7 @@
 ## Эффекты
 - Линии скорости в `Shaders/PostFX.shader` — своя реализация по идее MirzaBeig/Anime-Speed-Lines (Unlicense), код не скопирован.
 - Рассыпание пеплом в `Shaders/Character.shader` — своя реализация по идее AdultLink/VerticalDissolve (MIT).
-- Покадровые эффекты CGHEVEN (CC0): всплески энергии, волна, щит, ауры — `tools/fx/cgheven/README.md`.
+- Покадровые эффекты CGHEVEN (CC0): всплески энергии, волна, щит, ауры — `tools/fx/cgheven/README.md`; для интерфейса — `UI/fx_ui_*` (все кадры, 25 к/с).
 - Огонь и туман CGHEVEN (CC0): `UI/fx_campfire` (Campfire 03 Loop, костры привала и охотников на карте), `UI/fx_mist` (Atmospheric Fog 09 Side, туман под окнами карты), `UI/fx_puff` (Atmospheric Fog 01 Front — клубы дыма и пара над домиками карты).
 
 ## Музыка

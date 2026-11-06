@@ -9,13 +9,14 @@ namespace BladePath.EditorTools
     /// </summary>
     public class IllustrationImport : AssetPostprocessor
     {
-        public override uint GetVersion() { return 2; }
+        public override uint GetVersion() { return 3; }
 
         static bool IsIllustration(string path)
         {
             if (!path.StartsWith("Assets/_Project/Resources/UI/")) return false;
             string name = System.IO.Path.GetFileNameWithoutExtension(path);
             if (name.StartsWith("place_")) return true;
+            if (name.StartsWith("fx_ui_") || name == "fx_campfire" || name == "fx_mist" || name == "map_daytime") return true;   // листы кадров — без растяжения до степени двойки (кадры не мылятся)
             if (name.StartsWith("event_"))
             {
                 int n;

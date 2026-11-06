@@ -366,6 +366,38 @@ namespace BladePath
 
         static string Fmt(float v, int kk) { return kk == 1 ? Mathf.RoundToInt(v).ToString() : (v >= 1f ? "+" : "−") + Mathf.RoundToInt(Mathf.Abs(v - 1f) * 100f) + "%"; }
 
+        // ---- отклик надевания (UiFx): вещь «впечатывается» в ячейку — отскок, вспышка цвета редкости, кольцо, всплывает её свойство
+        int equipFxSlot = -1; float equipFxAt = -10f; Item equipFxItem;
+        float learnFxAt = -10f, upFxAt = -10f;
+
+        void DrawEquipFx(Rect r, Item it, float age)
+        {
+            if (Event.current.type != EventType.Repaint) return;
+            Color rc = it != null ? Profile.RarityColors[Mathf.Clamp(it.rarity, 0, 3)] : Color.white;
+            Vector2 c = r.center;
+            if (age < UiFx.Ring.Length)
+                UiFx.Draw(new Rect(c.x - r.width * 0.85f, c.y + r.height * 0.18f, r.width * 1.7f, r.width * 1.7f / 3f), UiFx.Ring, age, new Color(rc.r, rc.g, rc.b, 0.9f));
+            UiFx.Sheet fl = it != null && it.rarity >= 3 ? UiFx.FlashGold : UiFx.FlashWhite;
+            if (age < fl.Length)
+                UiFx.Draw(UiFx.Around(c, r.width * (1.2f + 0.25f * (it != null ? it.rarity : 0))), fl, age, new Color(Mathf.Lerp(1f, rc.r, 0.5f), Mathf.Lerp(1f, rc.g, 0.5f), Mathf.Lerp(1f, rc.b, 0.5f), 0.7f), 0.65f);
+            // кромка ячейки вспыхивает
+            float k = Mathf.Clamp01(1f - age / 0.5f);
+            if (k > 0f)
+            {
+                Color oc = GUI.color; GUI.color = new Color(rc.r, rc.g, rc.b, 0.85f * k);
+                GUI.DrawTexture(new Rect(r.x, r.y, r.width, 2f), Texture2D.whiteTexture); GUI.DrawTexture(new Rect(r.x, r.yMax - 2f, r.width, 2f), Texture2D.whiteTexture);
+                GUI.DrawTexture(new Rect(r.x, r.y, 2f, r.height), Texture2D.whiteTexture); GUI.DrawTexture(new Rect(r.xMax - 2f, r.y, 2f, r.height), Texture2D.whiteTexture);
+                GUI.color = oc;
+            }
+            // всплывает главное свойство вещи
+            if (it != null && it.mods.Count > 0 && age < 1.6f)
+            {
+                float u = age / 1.6f, a = Mathf.Clamp01(u / 0.12f) * Mathf.Clamp01((1f - u) / 0.35f);
+                Mod m = it.mods[0];
+                UiKit.Text(new Rect(r.x - 40f, r.y - 8f - u * 34f, r.width + 80f, 20f), Profile.ModText((ModId)m.stat, it.Value(m)), 12.5f, new Color(0.6f, 1f, 0.5f, a));
+            }
+        }
+
         void DrawEquipped(Rect a)
         {
             VisualIdentity.Heading(new Rect(a.x, a.y, a.width, 32f), "НАДЕТО");
@@ -374,7 +406,11 @@ namespace BladePath
                 float x = a.x + (s % 2) * 110f + 6f, y = a.y + 30f + (s / 2) * 136f;
                 Rect r = new Rect(x, y, 96f, 96f);
                 Item it = Profile.Equipped(s);
-                DrawItem(r, it, it != null && it == sel);
+                float fxAge = s == equipFxSlot && it == equipFxItem ? Time.unscaledTime - equipFxAt : 99f;
+                float pop = UiFx.Pop(fxAge, 0.14f);
+                Rect pr = pop != 1f ? new Rect(r.center.x - r.width * pop * 0.5f, r.center.y - r.height * pop * 0.5f, r.width * pop, r.height * pop) : r;
+                DrawItem(pr, it, it != null && it == sel);
+                if (fxAge < 2f) DrawEquipFx(r, it, fxAge);
                 // пустая ячейка — золотой силуэт того, что в неё надевается (клинок, цуба, облачение, маска, амулет, тыква)
                 Texture2D sil = it == null && s < 6 ? UiKit.Tex("UI/slot_silhouettes") : null;
                 if (sil != null)
@@ -421,6 +457,14 @@ namespace BladePath
         {
             if (sel != null && !Profile.Items.Contains(sel)) sel = null;
             VisualIdentity.Inset(a, null, 0.6f);
+            // прочитан свиток / кузнец улучшил вещь — вспышка в карточке
+            float fxA = Time.unscaledTime - Mathf.Max(learnFxAt, upFxAt);
+            if (fxA < UiFx.FlashGold.Length)
+            {
+                Vector2 fc = new Vector2(a.x + Mathf.Min(70f, a.width * 0.3f), a.y + 24f);
+                UiFx.Draw(UiFx.Around(fc, 120f), UiFx.FlashGold, fxA, new Color(1f, 1f, 1f, 0.7f), 0.6f);
+                if (fxA < UiFx.Ring.Length) UiFx.Draw(new Rect(fc.x - 90f, fc.y - 15f, 180f, 60f), UiFx.Ring, fxA, new Color(1f, 0.82f, 0.45f, 0.9f));
+            }
             if (sel == null)
             {
                 UiKit.Text(a, AtForge ? "КУЗНИЦА: ВЫБЕРИ ПРЕДМЕТ ДЛЯ УЛУЧШЕНИЯ" : AtMarket ? "ТОРГОВЕЦ: ВЫБЕРИ ПРЕДМЕТ НА ПРОДАЖУ" : "ВЫБЕРИ ПРЕДМЕТ", 13f, AtForge || AtMarket ? new Color(1f, 0.62f, 0.32f) : VisualIdentity.Subdued);
@@ -491,14 +535,20 @@ namespace BladePath
             }
             // кнопки
             float bw = (a.width - 30f) / 3f, by = a.yMax - 40f;
-            if (it.slot == (int)Slot.Scroll) { if (Btn(new Rect(a.x + 10f, by, AtForge ? bw : AtMarket ? (a.width - 25f) * 0.5f : a.width - 20f, 34f), "ПРОЧЕСТЬ")) { Profile.Learn(it); sel = null; return; } }
-            else if (Btn(new Rect(a.x + 10f, by, AtForge ? bw : AtMarket ? (a.width - 25f) * 0.5f : a.width - 20f, 34f), Profile.IsEquipped(it) ? "СНЯТЬ" : "НАДЕТЬ")) Profile.Equip(it);
+            if (it.slot == (int)Slot.Scroll) { if (Btn(new Rect(a.x + 10f, by, AtForge ? bw : AtMarket ? (a.width - 25f) * 0.5f : a.width - 20f, 34f), "ПРОЧЕСТЬ")) { Profile.Learn(it); UiFx.Play("ui_scroll", 0.9f); UiFx.Play("ui_bell", 0.45f); learnFxAt = Time.unscaledTime; sel = null; return; } }
+            else if (Btn(new Rect(a.x + 10f, by, AtForge ? bw : AtMarket ? (a.width - 25f) * 0.5f : a.width - 20f, 34f), Profile.IsEquipped(it) ? "СНЯТЬ" : "НАДЕТЬ"))
+            {
+                bool wasOn = Profile.IsEquipped(it);
+                Profile.Equip(it);
+                if (!wasOn && Profile.IsEquipped(it)) { UiFx.EquipSound(it.slot); equipFxSlot = it.slot; equipFxAt = Time.unscaledTime; equipFxItem = it; }
+                else UiFx.Play(it.slot == (int)Slot.Garb ? "ui_cloth" : "ui_leather", 0.5f);   // снято — тише
+            }
             // улучшение — только у кузнеца; в обычном снаряжении две кнопки во всю ширину
             if (AtForge)
             {
                 bool canUp = it.slot != (int)Slot.Scroll && it.level < Profile.MaxItemLevel;
                 int cost = Profile.UpgradeCost(it);
-                if (Btn(new Rect(a.x + 15f + bw, by, AtMarket ? bw : bw * 2f + 5f, 34f), canUp ? "УЛУЧШИТЬ " + cost : "МАКС.", canUp && Profile.Gold >= cost, true)) Profile.Upgrade(it);
+                if (Btn(new Rect(a.x + 15f + bw, by, AtMarket ? bw : bw * 2f + 5f, 34f), canUp ? "УЛУЧШИТЬ " + cost : "МАКС.", canUp && Profile.Gold >= cost, true)) { int lv = it.level; Profile.Upgrade(it); if (it.level > lv) { UiFx.Play("clang", 0.8f, 0.05f); upFxAt = Time.unscaledTime; } }   // молот по клинку
                 if (AtMarket && Btn(new Rect(a.x + 20f + bw * 2f, by, bw, 34f), "ПРОДАТЬ " + Profile.SellPrice(it), true)) { Profile.Sell(it); sel = null; }
             }
             else if (AtMarket)

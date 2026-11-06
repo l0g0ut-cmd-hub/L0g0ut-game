@@ -129,7 +129,7 @@ namespace BladePath
         // ---------------- карта похода: моны, опыт, предметы без боя ----------------
 
         public static bool Spend(int v) { if (v < 0 || D.gold < v) return false; D.gold -= v; Save(); return true; }
-        public static void AddGold(int v) { D.gold = Mathf.Max(0, D.gold + v); Save(); }
+        public static void AddGold(int v) { if (v < 0 && D.gold > 0) UiFx.Play("coins", 0.7f); D.gold = Mathf.Max(0, D.gold + v); Save(); }   // трата — звон монет
         /// <summary>Опыт вне боя; возвращает, сколько уровней взято.</summary>
         public static int AddXp(int v)
         {

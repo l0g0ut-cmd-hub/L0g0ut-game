@@ -305,12 +305,13 @@ namespace BladePath
             {
                 Rect r = new Rect(ox + cards[i].x * s, oy + cards[i].y * s, cards[i].width * s, cards[i].height * s);
                 // выбранная карточка (сложность и путник) — одна золотая рамка по краям нарисованной карточки
-                if (i == chosen) DrawDifficultySelectionGlow(r, s);
+                if (i == chosen) { DrawDifficultySelectionGlow(r, s); DrawPickFx(r, i, difficulty); }
                 if (GUI.Button(r, GUIContent.none, GUIStyle.none))
                 {
                     if (difficulty) chosenDifficulty = i;
                     else chosenHero = i;
                     Haptics.Pulse(12);
+                    Picked(i, difficulty);
                 }
             }
 
@@ -327,6 +328,7 @@ namespace BladePath
             // an overlay produces offset double borders and mismatched text.
             bool pressedBack = SelectionHitbox(back, s, ox, oy);
             bool pressedOk = SelectionHitbox(ok, s, ox, oy);
+            if (pressedBack || pressedOk) UiFx.Play(pressedOk && !difficulty ? "ui_taiko" : "ui_click", pressedOk && !difficulty ? 0.8f : 0.6f);
             if (pressedBack) newJourneyStep--;
             else if (pressedOk)
             {
@@ -366,7 +368,68 @@ namespace BladePath
         {
             Rect r = new Rect(ox + original.x * scale, oy + original.y * scale,
                               original.width * scale, original.height * scale);
-            return GUI.Button(r, GUIContent.none, GUIStyle.none);
+            UiFx.DrawPress(r);   // нажатая нарисованная кнопка коротко вспыхивает золотом
+            bool hit = GUI.Button(r, GUIContent.none, GUIStyle.none);
+            if (hit) UiFx.Pressed(r, false);
+            return hit;
+        }
+
+        // ---- отклик выбора карточки (эффекты CGHEVEN во всех кадрах, UiFx)
+        float pickAt = -10f; int pickIdx = -1; bool pickDiff;
+        // путник: пламя духа у ног (Дзин — синее, Акико — красное, Рэн — фиолетовое); сложность: медальон в середине карточки
+        static readonly Color[] HeroAura = { new Color(0.75f, 0.9f, 1f, 1f), new Color(1f, 0.85f, 0.8f, 1f), new Color(0.95f, 0.85f, 1f, 1f) };
+        static readonly Color[] HeroRing = { new Color(0.6f, 0.85f, 1f, 0.8f), new Color(1f, 0.6f, 0.45f, 0.8f), new Color(0.85f, 0.65f, 1f, 0.8f) };
+        static readonly Color[] DiffTint = { new Color(0.85f, 1f, 0.85f, 1f), new Color(1f, 0.82f, 0.45f, 1f), new Color(1f, 0.3f, 0.22f, 1f) };
+
+        void Picked(int i, bool difficulty)
+        {
+            pickAt = Time.unscaledTime; pickIdx = i; pickDiff = difficulty;
+            if (difficulty) UiFx.Play(i == 0 ? "ui_bell" : i == 1 ? "ui_taiko" : "ui_taiko_heavy", i == 0 ? 0.7f : 0.9f, 0.03f);
+            else UiFx.Play("ui_draw", 0.9f, 0.04f);   // клинок выходит из ножен
+        }
+
+        void DrawPickFx(Rect r, int i, bool difficulty)
+        {
+            if (Event.current.type != EventType.Repaint) return;
+            float t = Time.unscaledTime, age = pickIdx == i && pickDiff == difficulty ? t - pickAt : 99f;
+            if (!difficulty)
+            {
+                // постоянное пламя духа у ног выбранного путника (петля), при выборе — вспыхивает ярче, у ног расходится кольцо
+                Vector2 feet = new Vector2(r.x + r.width * 0.5f, r.y + r.height * 0.775f);
+                float aw = r.width * 1.2f;
+                UiFx.Sheet aura = i == 0 ? UiFx.AuraBlue : i == 1 ? UiFx.AuraRed : UiFx.AuraViolet;
+                float boost = age < 1.2f ? 1f - age / 1.2f : 0f;
+                Color c = HeroAura[Mathf.Clamp(i, 0, 2)];
+                UiFx.Draw(new Rect(feet.x - aw * 0.5f, feet.y - aw * 0.93f, aw, aw), aura, t + i * 1.3f, new Color(c.r, c.g, c.b, 0.6f + 0.4f * boost));
+                if (age < UiFx.Ring.Length)
+                {
+                    // кольцо — у ног, над табличкой с именем
+                    float rw = r.width * 0.9f, rh = rw / 3.4f;
+                    Color rc = HeroRing[Mathf.Clamp(i, 0, 2)];
+                    UiFx.Draw(new Rect(feet.x - rw * 0.5f, feet.y - rh * 0.62f, rw, rh), UiFx.Ring, age, rc);
+                }
+            }
+            else
+            {
+                // медальон сложности: мягкое свечение, при выборе — вспышка своего цвета и кольцо
+                Vector2 icon = new Vector2(r.x + r.width * 0.52f, r.y + r.height * 0.665f);
+                Color c = DiffTint[Mathf.Clamp(i, 0, 2)];
+                Texture2D glow = UiKit.Tex("FX/glow_pool");
+                if (glow != null)
+                {
+                    float pulse = 0.75f + 0.25f * Mathf.Sin(t * 2.4f);
+                    Color oc = GUI.color; GUI.color = new Color(c.r, c.g, c.b, 0.32f * pulse);
+                    GUI.DrawTexture(UiFx.Around(icon, r.width * 0.5f), glow); GUI.color = oc;
+                }
+                if (age < UiFx.Ring.Length)
+                {
+                    float rw = r.width * (i == 2 ? 1.0f : 0.8f);
+                    UiFx.Draw(new Rect(icon.x - rw * 0.5f, icon.y - rw / 6f - r.width * 0.04f, rw, rw / 3f), UiFx.Ring, age, new Color(c.r, c.g, c.b, 0.8f));
+                }
+                UiFx.Sheet fl = i == 0 ? UiFx.FlashWhite : i == 1 ? UiFx.FlashGold : UiFx.FlashRed;
+                if (age < fl.Length)
+                    UiFx.Draw(UiFx.Around(icon, r.width * (i == 2 ? 0.78f : 0.62f)), fl, age, new Color(1f, 1f, 1f, i == 0 ? 0.6f : 0.75f), 0.6f);
+            }
         }
 
         // BP-053: approved fog option #1, without the background JPEG matte.
@@ -390,6 +453,7 @@ namespace BladePath
             {
                 JourneyChoice.FogEnabled = !on;
                 Haptics.Pulse(12);
+                UiFx.Play("ui_click", 0.6f);
             }
         }
 

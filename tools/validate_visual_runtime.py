@@ -102,7 +102,7 @@ assert 'Texture2D board = UiKit.Tex("UI/Kit/ui_board");' not in menu
 assert 'Rect cover = new Rect(r.x - 4f, r.y - 2f' not in menu
 assert 'bool pressedBack = SelectionHitbox(back, s, ox, oy);' in menu
 assert 'bool pressedOk = SelectionHitbox(ok, s, ox, oy);' in menu
-assert 'return GUI.Button(r, GUIContent.none, GUIStyle.none);' in menu
+assert 'bool hit = GUI.Button(r, GUIContent.none, GUIStyle.none);' in menu
 # Main-menu side ornaments only occupy existing pillarbox space. The video,
 # baked-in controls and hit zones are not shifted or scaled to add borders.
 assert 'Rect vr = VideoRect();' in menu

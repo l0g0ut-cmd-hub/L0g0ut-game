@@ -1903,18 +1903,57 @@ namespace BladePath
             GUI.matrix = previous;
         }
 
+        // короткие слова (предлоги, союзы) не остаются в конце строки — держатся за следующее слово
+        static readonly HashSet<string> GlueNext = new HashSet<string> { "в", "во", "и", "с", "со", "к", "ко", "о", "об", "у", "а", "я", "из", "на", "по", "за", "до", "от", "не", "ни", "но", "же", "под", "над", "при", "без", "для", "что", "как" };
+        const char Nbsp = '\u00A0';
+
+        /// <summary>
+        /// Неразрывные пробелы по правилам набора: число со своей единицей («5 с.», «20 мон», «+12%») не разрываются,
+        /// предлог и союз — с последующим словом, тире — с предыдущим.
+        /// </summary>
+        static string Typeset(string s)
+        {
+            string[] w = s.Split(' ');
+            System.Text.StringBuilder b = new System.Text.StringBuilder(s.Length);
+            for (int i = 0; i < w.Length; i++)
+            {
+                b.Append(w[i]);
+                if (i == w.Length - 1) break;
+                string cur = w[i], nxt = w[i + 1];
+                bool glue = false;
+                if (cur.Length > 0 && char.IsDigit(cur[cur.Length - 1])) glue = true;                          // 5 с.  ·  20 мон  ·  12 с
+                else if (GlueNext.Contains(cur.ToLowerInvariant().Trim('«', '(', '"'))) glue = true;             // в бою  ·  и равновесие
+                else if (nxt == "—" || nxt == "–") glue = true;                                                 // слово — (тире не начинает строку)
+                b.Append(glue ? Nbsp : ' ');
+            }
+            return b.ToString();
+        }
+
         static List<string> Wrap(string s, int max)
         {
             List<string> res = new List<string>();
             foreach (string para in s.Split('\n'))
             {
+                List<string> lines = new List<string>();
                 string line = "";
-                foreach (string word in para.Split(' '))
+                foreach (string word in Typeset(para).Split(' '))
                 {
-                    if (line.Length > 0 && line.Length + 1 + word.Length > max) { res.Add(line); line = word; }
+                    if (line.Length > 0 && line.Length + 1 + word.Length > max) { lines.Add(line); line = word; }
                     else line = line.Length > 0 ? line + " " + word : word;
                 }
-                if (line.Length > 0) res.Add(line);
+                if (line.Length > 0) lines.Add(line);
+                // «висячая» последняя строка из одного короткого слова — забрать к ней слово с предыдущей строки
+                int n = lines.Count;
+                if (n > 1 && lines[n - 1].Length < 10 && lines[n - 1].IndexOf(' ') < 0)
+                {
+                    int cut = lines[n - 2].LastIndexOf(' ');
+                    if (cut > 0 && lines[n - 2].Length - cut - 1 + 1 + lines[n - 1].Length <= max)
+                    {
+                        lines[n - 1] = lines[n - 2].Substring(cut + 1) + " " + lines[n - 1];
+                        lines[n - 2] = lines[n - 2].Substring(0, cut);
+                    }
+                }
+                foreach (string l in lines) res.Add(l.Replace(Nbsp, ' '));
             }
             return res;
         }

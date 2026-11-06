@@ -251,7 +251,7 @@ def check_selection_screens():
     assert "const float DifficultyW = 1824f, DifficultyH = 862f;" in menu
     assert 'bool pressedOk = SelectionHitbox(ok, s, ox, oy);' in menu
     assert "const float SelW = 1916f, SelH = 821f;" in menu
-    assert 'if (i == chosen) DrawDifficultySelectionGlow(r, s);' in menu
+    assert 'if (i == chosen) { DrawDifficultySelectionGlow(r, s);' in menu
     assert "DrawJourneySelectionLegacy();" in menu
     hud = read("Assets/_Project/Scripts/Game/DuelHud.cs")
     assert "pp = JourneyChoice.Face(JourneyChoice.Hero);" in hud
