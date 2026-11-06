@@ -62,16 +62,11 @@ namespace BladePath
                 && !Campaign.Training && moveTo < 0 && !Campaign.FreeHop(next) && Campaign.Adjacent(Campaign.At, next);
         }
 
-        /// <summary>Одно действие «ехать»: есть ходы — едем; нет — сами бросаем кость и едем после её анимации.</summary>
+        /// <summary>«Ехать» к выбранной цели. Кость бросается только своей кнопкой «БРОСИТЬ КОСТЬ».</summary>
         void TravelOrRoll()
         {
             int t = TravelTarget();
-            if (t >= 0 && Campaign.CanGo(t)) { Go(t); return; }
-            if (NeedRollToGo() && Campaign.RollDie() > 0)
-            {
-                rollAt = Time.unscaledTime; goAfterRoll = true; Haptics.Pulse(30);
-                if (Juice.Instance != null) Juice.Instance.Taiko(0.7f, 1.3f);
-            }
+            if (t >= 0 && Campaign.CanGo(t)) Go(t);
         }
         Reward treasure;
         bool freshTreasure, revisit;
@@ -1497,8 +1492,8 @@ namespace BladePath
             // (NextPreviewStep); the goal stays selected for the next tap.
             int travelTarget = sel >= 0 && Campaign.CanGo(sel) ? sel
                 : sel >= 0 && Campaign.CanGo(NextPreviewStep) ? NextPreviewStep : -1;
-            bool travelReady = !rolling && moveTo < 0 && ((travelTarget >= 0 &&
-                Campaign.CanGo(travelTarget)) || NeedRollToGo());
+            bool travelReady = !rolling && moveTo < 0 && travelTarget >= 0 &&
+                Campaign.CanGo(travelTarget);
             // бой-реванш: герой стоит на пройденном бою — можно сразиться снова (монеты вполовину, без добычи)
             if (sel < 0 && moveTo < 0 && !rolling && Campaign.CanRematch &&
                 Btn(new Rect(x, 540f - 218f, w, 44f), "БОЙ-РЕВАНШ", interactive, true))

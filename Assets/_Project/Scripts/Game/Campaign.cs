@@ -337,8 +337,7 @@ namespace BladePath
         public static int RollDie()
         {
             if (D.rolls <= 0 || D.steps > 0 || !Current.done || InFight || D.training) return 0;
-            // 1–3, но «1» дважды подряд не выпадает: случайность остаётся, обидной серии единиц нет
-            D.rolls--; D.lastRoll = D.lastRoll == 1 ? UnityEngine.Random.Range(2, 4) : UnityEngine.Random.Range(1, 4); D.steps = D.lastRoll; Save();
+            D.rolls--; D.lastRoll = UnityEngine.Random.Range(1, 4); D.steps = D.lastRoll; Save();
             return D.lastRoll;
         }
         public static void AddRoll(int n = 1) { if (n <= 0) return; D.rolls += n; Save(); }
