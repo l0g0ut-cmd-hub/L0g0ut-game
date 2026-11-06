@@ -71,7 +71,9 @@ namespace BladePath
             shotIndex++;
             string file = shotIndex.ToString("00") + "_" + name;
             Debug.Log("QATOUR_SHOT " + file);
-            try { ScreenCapture.CaptureScreenshot("qa_" + file + ".png"); }   // на Android имя дописывается к persistentDataPath catch (Exception e) { Debug.LogWarning("QATOUR_WARN capture " + e.Message); }
+            // на Android имя файла дописывается к persistentDataPath
+            try { ScreenCapture.CaptureScreenshot("qa_" + file + ".png"); }
+            catch (Exception e) { Debug.LogWarning("QATOUR_WARN capture " + e.Message); }
             yield return new WaitForSecondsRealtime(Hold);
         }
 
