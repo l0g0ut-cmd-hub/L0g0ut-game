@@ -116,7 +116,7 @@ assert 'UiKit.Tex("UI/menu_side_borders")' not in menu
 assert 'float k = vr.width / CW;' in menu
 # OFF/ON are the exact approved #1 image, alpha-masked but never re-drawn
 # as rectangles. Both use screenRect to prevent pixel movement.
-assert 'UI/selection/difficulty_plaque_matte_fix' in menu
+assert 'difficulty_plaque_matte_fix' not in menu
 assert 'UI/selection/fog_toggle_inner_on' in menu
 assert 'UI/selection/fog_toggle_inner_off' in menu
 assert 'static Texture2D FogButton(bool enabled)' not in menu
@@ -124,7 +124,6 @@ assert 'GUI.DrawTexture(screenRect, art, ScaleMode.StretchToFill, true);' in men
 assert 'static readonly Rect DifficultyFog = SelRect(1485f, 683f, 1754f, 801f);' in menu
 assert (ROOT / "Assets/_Project/Resources/UI/selection/fog_toggle_inner_off.png").is_file()
 assert (ROOT / "Assets/_Project/Resources/UI/selection/fog_toggle_inner_on.png").is_file()
-assert (ROOT / "Assets/_Project/Resources/UI/selection/difficulty_plaque_matte_fix.png").is_file()
 assert 'static void FogRect(' not in menu
 assert 'float knobX=' not in menu
 assert 'VisualIdentity.KitButton(r, label, true, red)' not in menu

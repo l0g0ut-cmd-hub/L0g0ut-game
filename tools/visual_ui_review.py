@@ -178,9 +178,6 @@ def generate(out: Path) -> dict:
     for selected,slug in enumerate(('easy','warrior','master')):
         for on in (False,True):
             picture=frame.copy()
-            matte=load(UI/'selection/difficulty_plaque_matte_fix.png')
-            assert matte.size==(305,147)
-            picture.alpha_composite(matte,(1467,669))
             difficulty_outline(picture,cards[selected],selected)
             fog_overlay(picture,on,fog)
             name=f'difficulty_{slug}_fog_{"on" if on else "off"}.jpg'

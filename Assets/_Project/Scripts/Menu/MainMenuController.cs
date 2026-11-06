@@ -322,21 +322,8 @@ namespace BladePath
             float s = Mathf.Max(Screen.width / artworkW, Screen.height / artworkH);
             float ox = (Screen.width - artworkW * s) * 0.5f, oy = (Screen.height - artworkH * s) * 0.5f;
             GUI.DrawTexture(new Rect(ox, oy, artworkW * s, artworkH * s), screen, ScaleMode.StretchToFill, false);
-            // BP-053: original painting contains a rectangular BLACK matte
-            // outside the carved fog plaque. Correct ONLY those black pixels;
-            // all scenery, cards and the painted gold plaque remain unchanged.
-            if (difficulty)
-            {
-                Texture2D matteFix = UiKit.Tex("UI/selection/difficulty_plaque_matte_fix");
-                if (matteFix != null)
-                {
-                    Color previousTint = GUI.color;
-                    GUI.color = Color.white;
-                    GUI.DrawTexture(new Rect(ox + 1467f * s, oy + 669f * s,
-                        305f * s, 147f * s), matteFix, ScaleMode.StretchToFill, true);
-                    GUI.color = previousTint;
-                }
-            }
+            // Чёрная подложка вокруг таблички тумана вычищена в самой картинке экрана,
+            // поверх ничего не накладывается.
 
             Rect[] cards = difficulty ? RedesignDifficultyCards : TravellerCards;
             int chosen = difficulty ? chosenDifficulty : chosenHero;
