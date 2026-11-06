@@ -1730,6 +1730,8 @@ namespace BladePath
         // одна и та же кнопка выхода в лагере («В ПУТЬ») и в трактире («В ЛАГЕРЬ»)
         Rect ExitButtonRect() { return new Rect(W * 0.5f - 110f, 540f - 58f, 220f, 44f); }
         Rect CampRect(Rect z, float s, float ox, float oy) { return new Rect(ox + z.x * s, oy + z.y * s, z.width * s, z.height * s); }
+        // кнопка у объекта на картинке: на узком экране (16:9) картинка обрезана по бокам — кнопку не выпускаем за край
+        Rect OnScreen(Rect r) { r.x = Mathf.Clamp(r.x, 8f, Mathf.Max(8f, W - r.width - 8f)); return r; }
         void DrawCamp(bool ok)
         {
             Texture2D art = UiKit.Tex("UI/camp");
@@ -1777,9 +1779,9 @@ namespace BladePath
             }
             // Small, visibly clickable plaques; only the buttons are drawn,
             // never a tint/rectangle on the original camp artwork or video.
-            Rect forgeButton = CampRect(new Rect(335f, 159f, 205f, 46f), s, ox, oy);
-            Rect altarButton = CampRect(new Rect(240f, 544f, 185f, 46f), s, ox, oy);
-            Rect trainButton = CampRect(new Rect(1480f, 450f, 215f, 46f), s, ox, oy);
+            Rect forgeButton = OnScreen(CampRect(new Rect(335f, 159f, 205f, 46f), s, ox, oy));
+            Rect altarButton = OnScreen(CampRect(new Rect(240f, 544f, 185f, 46f), s, ox, oy));
+            Rect trainButton = OnScreen(CampRect(new Rect(1480f, 450f, 215f, 46f), s, ox, oy));
             bool enabled = ok && !InventoryScreen.Open;
             // Separate navigation buttons: the quest board no longer opens when tapping the distant hill house.
             // Match the tavern button style/height and keep a 12-unit gap.
@@ -1900,11 +1902,11 @@ namespace BladePath
             // Existing tavern photo/video/intentional static overlay are untouched.
             // Replace the five tiny plain labels and huge invisible hitboxes
             // with compact Kit buttons positioned beside their original objects.
-            Rect keeperButton = CampRect(new Rect(137f, 432f, 237f, 44f), s, ox, oy);
-            Rect diceButton = CampRect(new Rect(1236f, 424f, 185f, 44f), s, ox, oy);
-            Rect boardButton = CampRect(new Rect(1610f, 40f, 200f, 44f), s, ox, oy);
-            Rect drunkButton = CampRect(new Rect(1480f, 670f, 244f, 44f), s, ox, oy);
-            Rect hearthButton = CampRect(new Rect(900f, 520f, 160f, 44f), s, ox, oy);
+            Rect keeperButton = OnScreen(CampRect(new Rect(137f, 432f, 237f, 44f), s, ox, oy));
+            Rect diceButton = OnScreen(CampRect(new Rect(1236f, 424f, 185f, 44f), s, ox, oy));
+            Rect boardButton = OnScreen(CampRect(new Rect(1610f, 40f, 200f, 44f), s, ox, oy));
+            Rect drunkButton = OnScreen(CampRect(new Rect(1480f, 670f, 244f, 44f), s, ox, oy));
+            Rect hearthButton = OnScreen(CampRect(new Rect(900f, 520f, 160f, 44f), s, ox, oy));
             Texture2D plaque = UiKit.Tex("UI/Kit/hud_banner");
             if (plaque != null)
                 GUI.DrawTexture(new Rect(W * 0.5f - 230f, 2f, 460f, 460f * plaque.height / plaque.width), plaque, ScaleMode.StretchToFill, true);

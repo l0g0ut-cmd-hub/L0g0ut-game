@@ -312,7 +312,7 @@ namespace BladePath
             Box(B.DevBack, cx - 150f, 470f, 300f, 40f);
             Box(B.OverAgain, cx - 210f, 300f, 200f, 56f);
             Box(B.OverMenu, cx + 10f, 300f, 200f, 56f);
-            Box(B.OverGear, cx - 130f, 368f, 260f, 46f);   // сразу под «НА КАРТУ» / «В МЕНЮ», а не на дне экрана
+            Box(B.OverGear, cx - 115f, 366f, 230f, 56f);   // сразу под «НА КАРТУ» / «В МЕНЮ», а не на дне экрана
 
             for (int i = 0; i < Count; i++) active[i] = false;
             if (play)

@@ -283,6 +283,13 @@ namespace BladePath
             float artworkH = difficulty ? DifficultyH : SelH;
             float s = Mathf.Max(Screen.width / artworkW, Screen.height / artworkH);
             float ox = (Screen.width - artworkW * s) * 0.5f, oy = (Screen.height - artworkH * s) * 0.5f;
+            if (difficulty)
+            {
+                // на узком экране (16:9) картинка обрезается по бокам — центрируем не середину картины,
+                // а область карточек и переключателя тумана (x 355…1754), иначе туман уходит за правый край
+                float focus = (355f + 1754f) * 0.5f;
+                ox = Mathf.Clamp(Screen.width * 0.5f - focus * s, Screen.width - artworkW * s, 0f);
+            }
             GUI.DrawTexture(new Rect(ox, oy, artworkW * s, artworkH * s), screen, ScaleMode.StretchToFill, false);
             // Чёрная подложка вокруг таблички тумана вычищена в самой картинке экрана,
             // поверх ничего не накладывается.
