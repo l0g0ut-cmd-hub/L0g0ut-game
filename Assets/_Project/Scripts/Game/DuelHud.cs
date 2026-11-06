@@ -367,6 +367,9 @@ namespace BladePath
             {
                 bool deciding = duel.PlayerWins == duel.NeedWins - 1 && duel.EnemyWins == duel.NeedWins - 1;
                 float ta = Mathf.Clamp01(1f - duel.StateTime / duel.IntroLength * 0.9f);
+                // «РАУНД» и подпись врага гаснут к середине вступления: во второй половине кистью пишется «НАЧАЛИ!»,
+                // и раньше полупрозрачная подпись просвечивала прямо под ним
+                ta *= Mathf.Clamp01((0.52f - duel.StateTime / duel.IntroLength) / 0.12f);
                 UiKit.Text(new Rect(cx - 300f, 108f, 600f, 28f), deciding ? "РЕШАЮЩИЙ РАУНД" : "РАУНД", 20f, new Color(0.95f, 0.9f, 0.8f, ta));   // номер — цифрой в круге ниже
                 if (duel.Round == 1)
                 {
