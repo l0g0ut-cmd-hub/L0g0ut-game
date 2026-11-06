@@ -527,7 +527,15 @@ namespace BladePath
         // ---------------- движение и бой ----------------
 
         /// <summary>Герой пришёл в узел (по дороге из текущего).</summary>
-        public static void MoveTo(int i)
+        /// <summary>Место-услуга (храм, кузнец, торговец, привал/трактир, травница): его можно проехать насквозь.</summary>
+        public static bool IsService(MapNode n)
+        {
+            NodeType t = n.Type;
+            return t == NodeType.Shrine || t == NodeType.Smith || t == NodeType.Merchant || t == NodeType.Rest || t == NodeType.Herbalist;
+        }
+
+        /// <param name="passing">проезд насквозь к другой цели: услуга не тратится (не «пройдена», травница не дарит кость) — можно вернуться</param>
+        public static void MoveTo(int i, bool passing = false)
         {
             // Проверяем маршрут и доступные ходы здесь, а не только в UI.
             // Иначе прямой вызов MoveTo обходит ограничения похода.
@@ -540,8 +548,9 @@ namespace BladePath
             MapNode n = D.nodes[i];
             if (!n.done) D.steps = Mathf.Max(0, D.steps - 1);   // по пройденным местам — без траты хода
             if (n.IsFight && !n.done) D.steps = 0;   // бой обрывает ход: остаток сгорает
-            if (n.Type == NodeType.Herbalist && !n.done) D.rolls++;   // травница даёт кость пути
-            if (!n.IsFight && n.Type != NodeType.Event) n.done = true;   // храм, кузнец, торговец, тайник, привал — услуга, путь дальше открыт
+            bool skip = passing && IsService(n);
+            if (n.Type == NodeType.Herbalist && !n.done && !skip) D.rolls++;   // травница даёт кость пути
+            if (!n.IsFight && n.Type != NodeType.Event && !skip) n.done = true;   // храм, кузнец, торговец, тайник, привал — услуга, путь дальше открыт
             Save();
         }
 

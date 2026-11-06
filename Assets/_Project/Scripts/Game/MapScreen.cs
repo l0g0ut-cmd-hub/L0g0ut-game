@@ -150,13 +150,16 @@ namespace BladePath
                 if (Time.unscaledTime - moveStart >= moveDuration)
                 {
                     int i = moveTo; moveTo = -1;
-                    Campaign.MoveTo(i); // persist only after the rider arrives
+                    // услуга по пути к другой цели (травница, кузнец, торговец, храм, привал, трактир) не останавливает
+                    // всадника и не тратится — к ней можно вернуться; бой, событие и тайник по-прежнему останавливают
+                    bool serviceOnTheWay = routeGoal >= 0 && routeGoal != i && !revisit && Campaign.IsService(Campaign.Nodes[i]);
+                    Campaign.MoveTo(i, serviceOnTheWay); // persist only after the rider arrives
                     if (freshTreasure) treasure = Profile.Treasure(Campaign.Region + 1);
                     freshTreasure = false; // rollback/revisit must not grant a second chest
                     if (Juice.Instance != null) Juice.Instance.Taiko(0.6f, 1.25f);
                     Haptics.Pulse(20);
                     int goal = routeGoal; routeGoal = -1;
-                    bool passing = goal >= 0 && goal != i && revisit;
+                    bool passing = goal >= 0 && goal != i && (revisit || serviceOnTheWay);
                     // Riding THROUGH an already visited place does not reopen its smith or
                     // merchant; a new place always opens its encounter and ends the ride.
                     if (!passing) OpenNode(i); else modal = Modal.None;
