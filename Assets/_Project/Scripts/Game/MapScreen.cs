@@ -1775,9 +1775,10 @@ namespace BladePath
             if (vid != null) GUI.DrawTexture(new Rect(ox, oy, CampW * s, CampH * s), vid, ScaleMode.StretchToFill, false);
             if (campSub == 1)
             {
-                Rect r = Card(560f, 300f);
-                float x = r.x + 24f, w = r.width - 48f, y = r.y + 20f;
-                VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "АЛТАРЬ", 20f); y += 40f;
+                Rect r = Card(800f, 340f);
+                Picture(new Rect(r.x, r.y, 250f, r.height), "UI/npc_altar");   // иллюстрация слева, как у торговца и событий
+                float x = r.x + 268f, w = r.width - 292f, y = r.y + 22f;
+                VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "АЛТАРЬ", 20f); y += 44f;
                 string[] names = { "КЛИНОК: +20% УРОНА", "ДУХ: ПОЛНЫЙ ДУХ В НАЧАЛЕ", "ЖИЗНЬ: +25% ЗДОРОВЬЯ" };
                 for (int k = 0; k < 3; k++)
                 {
@@ -1794,19 +1795,20 @@ namespace BladePath
                     TavToast(blessingNotices[k]); // Same centered ornate notification as training.
                     return; // Avoid processing other altar hitboxes in this OnGUI event.
                 }
-                if (Btn(new Rect(r.center.x - 70f, r.yMax - 52f, 140f, 40f), "НАЗАД", ok)) campSub = 0;
+                if (Btn(new Rect(x + w * 0.5f - 80f, r.yMax - 54f, 160f, 40f), "НАЗАД", ok)) campSub = 0;
                 return;
             }
             if (campSub == 2)
             {
-                Rect r = Card(560f, 300f);
-                float x = r.x + 24f, w = r.width - 48f, y = r.y + 20f;
-                VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "ДОСКА ЗАДАНИЙ", 20f); y += 40f;
+                Rect r = Card(800f, 340f);
+                Picture(new Rect(r.x, r.y, 250f, r.height), "UI/npc_questboard");   // иллюстрация слева, как у торговца и событий
+                float x = r.x + 268f, w = r.width - 292f, y = r.y + 22f;
+                VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "ДОСКА ЗАДАНИЙ", 20f); y += 44f;
                 int gold = 60 + 30 * Campaign.Region + 40 * Profile.Cycle;
                 if (Btn(new Rect(x, y, w, 46f), "ПРОВОДИТЬ КАРАВАН: +1 КОСТЬ ПУТИ", ok, true)) { Campaign.AddRoll(); campBoard = true; campSub = 0; TavToast("Задание выполнено: +1 кость пути."); return; }
                 if (Btn(new Rect(x, y + 54f, w, 46f), "НАЙТИ БЕГЛЕЦА: +" + gold + " МОН", ok)) { Profile.AddGold(gold); campBoard = true; campSub = 0; TavToast("Задание выполнено: +" + gold + " мон."); return; }
                 if (Btn(new Rect(x, y + 108f, w, 46f), "ОХОТА НА ОБОРОТНЯ: ПРЕДМЕТ", ok)) { Profile.Give(Profile.Roll(Campaign.Region + 1, 80, false)); campBoard = true; campSub = 0; TavToast("Задание выполнено: получен предмет."); return; }
-                if (Btn(new Rect(r.center.x - 70f, r.yMax - 52f, 140f, 40f), "НАЗАД", ok)) campSub = 0;
+                if (Btn(new Rect(x + w * 0.5f - 80f, r.yMax - 54f, 160f, 40f), "НАЗАД", ok)) campSub = 0;
                 return;
             }
             // Small, visibly clickable plaques; only the buttons are drawn,
@@ -1873,8 +1875,9 @@ namespace BladePath
             {
                 const string keeperText = "Одноглазый не улыбается. «Сакэ — двадцать мон. Крепкое. Наутро рука твёрже — или не проснёшься».";
                 // высота окна — по содержимому: заголовок, текст, кнопка действия, «НАЗАД»
-                Rect r = Card(560f, Mathf.Max(220f, 20f + 36f + LinesH(512f, keeperText, 52, 13f) + 12f + 46f + 18f + 50f));
-                float x = r.x + 24f, w = r.width - 48f, y = r.y + 20f;
+                Rect r = Card(800f, Mathf.Max(320f, 22f + 36f + LinesH(508f, keeperText, 52, 13f) + 12f + 46f + 18f + 54f));
+                Picture(new Rect(r.x, r.y, 250f, r.height), "UI/npc_keeper");   // иллюстрация слева, как у торговца и событий
+                float x = r.x + 268f, w = r.width - 292f, y = r.y + 22f;
                 VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "ТРАКТИРЩИК", 20f); y += 36f;
                 y = Lines(x, y, w, keeperText, 52, 13f, Ink) + 12f;
                 if (Btn(new Rect(x, y, w, 46f), "ЧАРКА САКЭ — 20 МОН", ok && gold >= 20, true))
@@ -1882,7 +1885,7 @@ namespace BladePath
                     Profile.AddGold(-20); int b = Random.Range(1, 4); Campaign.SetBlessing(b); tavKeeper = true; tavSub = 0;
                     TavToast(b == 1 ? "Сакэ жжёт горло. Рука налилась силой: +20% урона в следующем бою." : b == 2 ? "Тепло разливается по груди: следующий бой — с полным духом." : "Хмель гонит боль прочь: +25% здоровья в следующем бою.");
                 }
-                if (Btn(new Rect(r.center.x - 70f, r.yMax - 50f, 140f, 38f), "НАЗАД", ok)) tavSub = 0;
+                if (Btn(new Rect(x + w * 0.5f - 80f, r.yMax - 54f, 160f, 40f), "НАЗАД", ok)) tavSub = 0;
                 return;
             }
             if (tavSub == 2)
@@ -1896,12 +1899,13 @@ namespace BladePath
                 int reward = 80 + 40 * Campaign.Region + 40 * Profile.Cycle;
                 string boardText = Campaign.HasBounty ? "Заказ уже взят: победи сильного противника или владыку области — награда твоя."
                     : "Листки с лицами. «Голова сильного бойца на дороге — " + reward + " мон. Голова владыки — вдвое».";
-                Rect r = Card(580f, Mathf.Max(220f, 20f + 36f + LinesH(532f, boardText, 52, 13f) + 12f + (Campaign.HasBounty ? 0f : 46f + 18f) + 50f));
-                float x = r.x + 24f, w = r.width - 48f, y = r.y + 20f;
+                Rect r = Card(800f, Mathf.Max(320f, 22f + 36f + LinesH(508f, boardText, 52, 13f) + 12f + (Campaign.HasBounty ? 0f : 46f + 18f) + 54f));
+                Picture(new Rect(r.x, r.y, 250f, r.height), "UI/npc_bounty");   // иллюстрация слева, как у торговца и событий
+                float x = r.x + 268f, w = r.width - 292f, y = r.y + 22f;
                 VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "ДОСКА НАГРАД", 20f); y += 36f;
                 y = Lines(x, y, w, boardText, 52, 13f, Ink) + 12f;
                 if (!Campaign.HasBounty && Btn(new Rect(x, y, w, 46f), "ВЗЯТЬ ЗАКАЗ", ok, true)) { Campaign.TakeBounty(reward); tavBoard = true; tavSub = 0; TavToast("Заказ взят. Победи сильного противника или владыку — получишь " + reward + " мон (за владыку вдвое)."); }
-                if (Btn(new Rect(r.center.x - 70f, r.yMax - 50f, 140f, 38f), "НАЗАД", ok)) tavSub = 0;
+                if (Btn(new Rect(x + w * 0.5f - 80f, r.yMax - 54f, 160f, 40f), "НАЗАД", ok)) tavSub = 0;
                 return;
             }
             if (tavSub == 4)
@@ -1912,8 +1916,9 @@ namespace BladePath
                     ? (Profile.AllyDown ? "«Твой соратник лежит у травницы — отнеси его к ней». Можно взять и другого — прежний уйдёт." : "«С тобой уже ходит " + Profile.AllyTierNames[SideDuel.Tier].ToLower() + ". Хочешь сильнее — плати, прежний уйдёт».")
                     : "Ронин трезвеет, стоит звякнуть кошелем. «Пока ты бьёшься с главным, мы займём его подручного. Сколько дашь — так и будем рубиться».";
                 // окно по содержимому: без пустой полосы между выбором соратника и нижними кнопками
-                Rect r = Card(640f, 20f + 36f + LinesH(588f, intro, 58, 13f) + 10f + 3f * 48f + 10f + 56f);
-                float x = r.x + 26f, w = r.width - 52f, y = r.y + 20f;
+                Rect r = Card(900f, Mathf.Max(340f, 22f + 36f + LinesH(608f, intro, 58, 13f) + 10f + 3f * 48f + 10f + 60f));
+                Picture(new Rect(r.x, r.y, 250f, r.height), "UI/npc_ronin");   // иллюстрация слева, как у торговца и событий
+                float x = r.x + 268f, w = r.width - 292f, y = r.y + 22f;
                 VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "ПЬЯНЫЙ РОНИН", 20f); y += 36f;
                 y = Lines(x, y, w, intro, 58, 13f, Ink) + 10f;
                 string[] who = { "УЧЕНИК", "ВОИН", "МАСТЕР" };
