@@ -9,12 +9,13 @@ namespace BladePath
     public class Music : MonoBehaviour
     {
         const int Rate = 22050;
-        AudioSource koto, drums;
+        AudioSource koto, drums, battle;
+        float battleVol, kotoVol = 0.32f;
         float drumVol;
 
         static Music inst;
         /// <summary>Источник — музыка (для выключателя «игра / музыка / оба»).</summary>
-        public static bool Owns(AudioSource s) { return inst != null && s != null && (s == inst.koto || s == inst.drums); }
+        public static bool Owns(AudioSource s) { return inst != null && s != null && (s == inst.koto || s == inst.drums || s == inst.battle); }
 
         void Start()
         {
@@ -24,6 +25,13 @@ namespace BladePath
             drums = gameObject.AddComponent<AudioSource>();
             drums.clip = DrumLoop(); drums.loop = true; drums.volume = 0f; drums.spatialBlend = 0f; drums.Play();
             koto.reverbZoneMix = 0.25f; drums.reverbZoneMix = 0.35f;   // музыка почти сухая, эхо двора — для звуков боя
+            // музыка боя: «Shamisen Samurai Rock» (MOMIZizm MUSiC, Free Japanese Music Pack) — петля; на карте снова кото
+            AudioClip bc = Resources.Load<AudioClip>("Audio/music_battle");
+            if (bc != null)
+            {
+                battle = gameObject.AddComponent<AudioSource>();
+                battle.clip = bc; battle.loop = true; battle.volume = 0f; battle.spatialBlend = 0f; battle.reverbZoneMix = 0f;
+            }
         }
 
         void Update()
@@ -39,7 +47,20 @@ namespace BladePath
             SoundSettings.Tick();
             drumVol = Mathf.MoveTowards(drumVol, want, Time.unscaledDeltaTime * 0.4f);
             drums.volume = drumVol;
-            koto.volume = (dm != null && dm.Paused) ? 0.15f : 0.32f;
+            float kotoWant = (dm != null && dm.Paused) ? 0.15f : 0.32f;
+            if (battle != null)
+            {
+                // бой (не карта): сямисэн вместо кото и барабанов; пауза и итог боя — тише; на карте — тишина сямисэна
+                bool inFight = dm != null && !MapScreen.Open;
+                float bWant = !inFight ? 0f : dm.Paused ? 0.18f : dm.MatchOver ? 0.25f : 0.5f;
+                battleVol = Mathf.MoveTowards(battleVol, bWant, Time.unscaledDeltaTime * (bWant > battleVol ? 0.5f : 0.8f));
+                battle.volume = battleVol;
+                if (battleVol > 0.001f && !battle.isPlaying) battle.Play();
+                else if (battleVol <= 0.001f && battle.isPlaying) battle.Pause();   // вернёмся в бой — с того же места
+                if (inFight) { kotoWant = 0f; drums.volume = 0f; }
+            }
+            kotoVol = Mathf.MoveTowards(kotoVol, kotoWant, Time.unscaledDeltaTime * 0.6f);
+            koto.volume = kotoVol;
         }
 
         // ---------------------------------------------------------------- синтез

@@ -33,3 +33,7 @@
 
 ## Эффекты
 - Линии скорости в `Shaders/PostFX.shader` — своя реализация по идее MirzaBeig/Anime-Speed-Lines (Unlicense), код не скопирован.
+
+## Музыка
+- `music_battle` — «Shamisen Samurai Rock» (loop), MOMIZizm MUSiC, Free Japanese Music Pack — https://momiziba.itch.io/free-japanese-music-pack
+  Условие автора: «Free Music : MOMIZizm MUSiC» (music.storyinvention.com).

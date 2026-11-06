@@ -9,7 +9,7 @@ namespace BladePath.EditorTools
     /// </summary>
     public class IllustrationImport : AssetPostprocessor
     {
-        public override uint GetVersion() { return 1; }
+        public override uint GetVersion() { return 2; }
 
         static bool IsIllustration(string path)
         {
@@ -22,6 +22,21 @@ namespace BladePath.EditorTools
                 return int.TryParse(name.Substring(6), out n) && n >= 12;
             }
             return false;
+        }
+
+        /// <summary>Длинные записи (музыка, подложки карты, дождь) — потоком с диска, а не распакованными в память
+        /// (2 минуты стерео — это ~20 МБ ОЗУ). Короткие удары и шаги — как по умолчанию, без задержки.</summary>
+        void OnPreprocessAudio()
+        {
+            if (!assetPath.StartsWith("Assets/_Project/Resources/Audio/")) return;
+            string name = System.IO.Path.GetFileNameWithoutExtension(assetPath);
+            if (!(name.StartsWith("music_") || name.StartsWith("amb_") || name.EndsWith("_loop"))) return;
+            AudioImporter ai = (AudioImporter)assetImporter;
+            AudioImporterSampleSettings st = ai.defaultSampleSettings;
+            st.loadType = UnityEngine.AudioClipLoadType.Streaming;
+            st.compressionFormat = UnityEngine.AudioCompressionFormat.Vorbis;
+            st.quality = 0.6f;
+            ai.defaultSampleSettings = st;
         }
 
         void OnPreprocessTexture()
