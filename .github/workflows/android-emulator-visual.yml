@@ -87,6 +87,9 @@ jobs:
           sudo install -d -o "$(id -u)" -g "$(id -g)" -m 0700 "$HOME/.android"
           sudo install -d -o "$(id -u)" -g "$(id -g)" -m 0700 "$HOME/.android/avd"
           sudo chown -R "$(id -u):$(id -g)" "$HOME/.android"
+          # Unity собирает APK в Docker от root: папка build/ после сборки — root, и тур не мог записать снимки
+          mkdir -p build
+          sudo chown -R "$(id -u):$(id -g)" build
           test -w "$HOME/.android/avd"
           echo "Android AVD directory writable: $HOME/.android/avd"
 
