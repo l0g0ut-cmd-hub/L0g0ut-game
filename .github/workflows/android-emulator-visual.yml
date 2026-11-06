@@ -72,20 +72,18 @@ jobs:
           test -w "$HOME/.android/avd"
           echo "Android AVD directory writable: $HOME/.android/avd"
 
-      - name: Start emulator and capture all UI states from installed APK
+      - name: Start emulator and run the screen tour (Debug/QATour.cs)
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
+          api-level: 30
           target: google_apis
           arch: x86_64
           profile: pixel_7
           cores: 2
           ram-size: 4096M
           emulator-options: -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -no-snapshot
-          script: |
-            python3 -m pip install --user 'Pillow>=10,<13'
-            bash tools/android_visual_smoke.sh
-      - name: Upload real APK screenshots and logcat
+          script: bash tools/android_qa_tour.sh
+      - name: Upload screen tour screenshots and logcat
         if: always()
         uses: actions/upload-artifact@v4
         with:

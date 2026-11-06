@@ -51,6 +51,9 @@ namespace BladePath.EditorTools
                 // Релизная сборка: быстрее, без плашки Development Build и без консоли ошибок поверх игры.
                 // Отладочная графика боя включается флагом CombatDebugVisualizer.forceEnableInRelease, если понадобится.
                 opts.options = BuildOptions.None;
+                // фототур экранов (Debug/QATour.cs) — только в тестовой сборке под эмулятор; в обычный APK не попадает
+                if (name.IndexOf("VisualEmulator", StringComparison.OrdinalIgnoreCase) >= 0)
+                    opts.extraScriptingDefines = new[] { "BLADEPATH_QATOUR" };
 
                 BuildReport report = BuildPipeline.BuildPlayer(opts);
                 BuildSummary sum = report.summary;
