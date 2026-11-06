@@ -530,7 +530,7 @@ namespace BladePath
         {
             Rect r = Card(520f, 470f);
             float x = r.x + 24f, w = r.width - 48f, y = r.y + 18f;
-            UiKit.Text(new Rect(x, y, w, 26f), "МЕНЮ РАЗРАБОТЧИКА", 20f, Gold); y += 38f;
+            VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "МЕНЮ РАЗРАБОТЧИКА", 20f); y += 38f;
             float bw = (w - 10f) * 0.5f;
             if (Btn(new Rect(x, y, bw, 44f), "ТЕЛЕПОРТ", ok, true)) { modal = Modal.None; devTeleport = true; return; }
             if (Btn(new Rect(x + bw + 10f, y, bw, 44f), "ЛАГЕРЬ", ok)) { OpenCamp(); return; }
@@ -850,8 +850,7 @@ namespace BladePath
         {
             foreach (var l in nodeLabels)
             {
-                UiKit.Rect(l.Key, new Color(0.028f, 0.023f, 0.02f, 0.78f));
-                UiKit.Rect(new Rect(l.Key.x, l.Key.yMax - 1f, l.Key.width, 1f), new Color(Gold.r, Gold.g, Gold.b, 0.45f));
+                VisualIdentity.RowPanel(new Rect(l.Key.x - 3f, l.Key.y - 2f, l.Key.width + 6f, l.Key.height + 4f), 0.95f);
                 UiKit.Text(l.Key, l.Value, 10.5f, new Color(0.96f, 0.88f, 0.68f, 0.98f), TextAnchor.MiddleCenter, false);
             }
         }
@@ -1184,8 +1183,7 @@ namespace BladePath
             float w = Mathf.Min(viewW - 20f, 373f);
             // под названием области (внизу закрывала подписи узлов — «СУНДУК» у нижнего края)
             Rect bar = new Rect(mapX + 14f, Profile.Cycle > 0 ? 62f : 46f, w, h);
-            UiKit.Rect(bar, new Color(0.035f, 0.025f, 0.020f, 0.79f));
-            UiKit.Rect(new Rect(bar.x, bar.y, 2f, h), new Color(Gold.r, Gold.g, Gold.b, 0.65f));
+            VisualIdentity.RowPanel(bar, 0.95f);
             float px = bar.x + 10f;
             for (int i = 0; i < JourneyLegendNames.Length; i++)
             {
@@ -1517,6 +1515,13 @@ namespace BladePath
             VisualIdentity.Portrait(r, UiKit.Tex(tex) != null ? tex : "UI/path_panorama");
         }
 
+        /// <summary>Высота текста так, как его разложит Lines: по ней окна подстраивают свою высоту под содержимое.</summary>
+        static float LinesH(float w, string s, int max, float size)
+        {
+            max = Mathf.Max(max, Mathf.FloorToInt(w / (size * 0.53f)));
+            return Wrap(s, max).Count * (size + 6f);
+        }
+
         float Lines(float x, float y, float w, string s, int max, float size, Color c)
         {
             // перенос по реальной ширине окна (≈0,5 кегля на букву), а не по заниженному числу символов:
@@ -1602,7 +1607,7 @@ namespace BladePath
                     Rect r = Card(660f, 380f);
                     Picture(new Rect(r.x, r.y, 260f, r.height), "UI/npc_2");
                     float x = r.x + 280f, w = r.width - 300f, y = r.y + 22f;
-                    UiKit.Text(new Rect(x, y, w, 26f), "ХРАМ", 20f, Gold, TextAnchor.MiddleLeft); y += 34f;
+                    VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "ХРАМ", 20f, TextAnchor.MiddleLeft); y += 34f;
                     y = Lines(x, y, w, "«Ками этих мест слышат тебя, путник. Выбери, чего просить на следующий бой.»", 40, 13f, Ink) + 12f;
                     string[] names = { "КЛИНОК: +20% УРОНА", "ДУХ: ПОЛНЫЙ ДУХ В НАЧАЛЕ", "ЖИЗНЬ: +25% ЗДОРОВЬЯ" };
                     for (int k = 0; k < 3; k++)
@@ -1614,7 +1619,7 @@ namespace BladePath
                     Rect r = Card(660f, 360f);
                     Picture(new Rect(r.x, r.y, 260f, r.height), "UI/npc_1");
                     float x = r.x + 280f, w = r.width - 300f, y = r.y + 22f;
-                    UiKit.Text(new Rect(x, y, w, 26f), "КУЗНЕЦ", 20f, Gold, TextAnchor.MiddleLeft); y += 34f;
+                    VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "КУЗНЕЦ", 20f, TextAnchor.MiddleLeft); y += 34f;
                     y = Lines(x, y, w, "«Покажи свою сталь. Для того, кто идёт к владыке, — полцены.»\n\nПока ты здесь, улучшение снаряжения стоит вдвое дешевле. Вернуться к кузнецу можно, коснувшись его на карте.", 40, 13f, Ink);
                     if (Btn(new Rect(x, r.yMax - 118f, w, 46f), "К НАКОВАЛЬНЕ", ok, true)) { Profile.CostMul = 0.5f; InventoryScreen.Show(0); }
                     if (Btn(new Rect(x, r.yMax - 64f, w, 46f), "УЙТИ", ok)) modal = Modal.None;
@@ -1625,7 +1630,7 @@ namespace BladePath
                     Rect r = Card(720f, 400f);
                     Picture(new Rect(r.x, r.y, 230f, r.height), "UI/npc_0");
                     float x = r.x + 248f, w = r.width - 266f, y = r.y + 18f;
-                    UiKit.Text(new Rect(x, y, w, 26f), "ТОРГОВЕЦ", 20f, Gold, TextAnchor.MiddleLeft);
+                    VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "ТОРГОВЕЦ", 20f, TextAnchor.MiddleLeft);
                     UiKit.Text(new Rect(x, y, w, 26f), Profile.Gold + " мон", 15f, Gold, TextAnchor.MiddleRight); y += 32f;
                     y = Lines(x, y, w, "«Всё с дальних дорог, господин. Дёшево не отдам — но и не обману.»", 46, 12.5f, Dim) + 6f;
                     if (stock != null)
@@ -1633,7 +1638,7 @@ namespace BladePath
                         {
                             Item it = stock[k];
                             Rect row = new Rect(x, y + k * 78f, w, 72f);
-                            UiKit.Rect(row, new Color(0.11f, 0.085f, 0.075f, 0.95f));
+                            VisualIdentity.RowPanel(row);
                             if (it == null) { UiKit.Text(row, "продано", 13f, Dim); continue; }
                             InventoryScreen.ItemIcon(new Rect(row.x + 6f, row.y + 6f, 60f, 60f), it);
                             Color rc = Profile.RarityColors[Mathf.Clamp(it.rarity, 0, 3)];
@@ -1652,7 +1657,7 @@ namespace BladePath
                 {
                     Rect r = Card(560f, 340f);
                     float x = r.x + 24f, y = r.y + 20f, w = r.width - 48f;
-                    UiKit.Text(new Rect(x, y, w, 28f), "ТАЙНИК", 22f, Gold); y += 36f;
+                    VisualIdentity.TitlePlaque(new Rect(x, y, w, 28f), "ТАЙНИК", 22f); y += 36f;
                     Texture2D ca = UiKit.Tex("UI/chest_anim");
                     float t = Time.unscaledTime - modalAt;
                     if (ca != null) { int cf = t < 0.25f ? 0 : t < 0.45f ? 1 : t < 0.65f ? 2 : 3; GUI.DrawTextureWithTexCoords(new Rect(r.center.x - 60f, y, 120f, 120f), ca, new Rect(cf * 0.25f, 0f, 0.25f, 1f)); }
@@ -1671,7 +1676,7 @@ namespace BladePath
                     Rect r = Card(660f, 360f);
                     Picture(new Rect(r.x, r.y, 260f, r.height), "UI/npc_3");
                     float x = r.x + 280f, w = r.width - 300f, y = r.y + 22f;
-                    UiKit.Text(new Rect(x, y, w, 26f), "ПРИВАЛ", 20f, Gold, TextAnchor.MiddleLeft); y += 34f;
+                    VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "ПРИВАЛ", 20f, TextAnchor.MiddleLeft); y += 34f;
                     y = Lines(x, y, w, "У костра греется старый мастер меча. «Отдохни. Или возьми боккэн — покажу, чего тебе не хватает.»", 40, 13f, Ink) + 14f;
                     int xpGain = Mathf.RoundToInt(Profile.XpToNext * 0.5f);
                     if (Btn(new Rect(x, y, w, 46f), "ТРЕНИРОВКА: +1 ОЧКО", ok, true)) { Profile.GivePoint(); Result("Час с боккэном. Мышцы ноют, но рука стала твёрже: +1 очко характеристик."); }
@@ -1685,7 +1690,7 @@ namespace BladePath
                     Rect r = Card(640f, 340f);
                     Picture(new Rect(r.x, r.y, 250f, r.height), "UI/npc_4");   // хижина травницы и пробуждение после поражения
                     float x = r.x + 270f, w = r.width - 290f, y = r.y + 22f;
-                    UiKit.Text(new Rect(x, y, w, 26f), "ХИЖИНА ТРАВНИЦЫ", 20f, Gold, TextAnchor.MiddleLeft); y += 34f;
+                    VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "ХИЖИНА ТРАВНИЦЫ", 20f, TextAnchor.MiddleLeft); y += 34f;
                     string tx = modal == Modal.Knocked
                         ? "Ты очнулся на циновке. Пахнет полынью и дымом. «Тебя принесли с дороги еле живого. Отлежался — иди. Вот, возьми на удачу». Травница даёт кость пути."
                         : revisit
@@ -1772,7 +1777,7 @@ namespace BladePath
             {
                 Rect r = Card(560f, 300f);
                 float x = r.x + 24f, w = r.width - 48f, y = r.y + 20f;
-                UiKit.Text(new Rect(x, y, w, 26f), "АЛТАРЬ", 20f, Gold); y += 40f;
+                VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "АЛТАРЬ", 20f); y += 40f;
                 string[] names = { "КЛИНОК: +20% УРОНА", "ДУХ: ПОЛНЫЙ ДУХ В НАЧАЛЕ", "ЖИЗНЬ: +25% ЗДОРОВЬЯ" };
                 for (int k = 0; k < 3; k++)
                 {
@@ -1796,7 +1801,7 @@ namespace BladePath
             {
                 Rect r = Card(560f, 300f);
                 float x = r.x + 24f, w = r.width - 48f, y = r.y + 20f;
-                UiKit.Text(new Rect(x, y, w, 26f), "ДОСКА ЗАДАНИЙ", 20f, Gold); y += 40f;
+                VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "ДОСКА ЗАДАНИЙ", 20f); y += 40f;
                 int gold = 60 + 30 * Campaign.Region + 40 * Profile.Cycle;
                 if (Btn(new Rect(x, y, w, 46f), "ПРОВОДИТЬ КАРАВАН: +1 КОСТЬ ПУТИ", ok, true)) { Campaign.AddRoll(); campBoard = true; campSub = 0; TavToast("Задание выполнено: +1 кость пути."); return; }
                 if (Btn(new Rect(x, y + 54f, w, 46f), "НАЙТИ БЕГЛЕЦА: +" + gold + " МОН", ok)) { Profile.AddGold(gold); campBoard = true; campSub = 0; TavToast("Задание выполнено: +" + gold + " мон."); return; }
@@ -1866,10 +1871,12 @@ namespace BladePath
             int gold = Profile.Gold;
             if (tavSub == 1)
             {
-                Rect r = Card(560f, 250f);
+                const string keeperText = "Одноглазый не улыбается. «Сакэ — двадцать мон. Крепкое. Наутро рука твёрже — или не проснёшься».";
+                // высота окна — по содержимому: заголовок, текст, кнопка действия, «НАЗАД»
+                Rect r = Card(560f, Mathf.Max(220f, 20f + 36f + LinesH(512f, keeperText, 52, 13f) + 12f + 46f + 18f + 50f));
                 float x = r.x + 24f, w = r.width - 48f, y = r.y + 20f;
-                UiKit.Text(new Rect(x, y, w, 26f), "ТРАКТИРЩИК", 20f, Gold); y += 32f;
-                y = Lines(x, y, w, "Одноглазый не улыбается. «Сакэ — двадцать мон. Крепкое. Наутро рука твёрже — или не проснёшься».", 52, 13f, Ink) + 10f;
+                VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "ТРАКТИРЩИК", 20f); y += 36f;
+                y = Lines(x, y, w, keeperText, 52, 13f, Ink) + 12f;
                 if (Btn(new Rect(x, y, w, 46f), "ЧАРКА САКЭ — 20 МОН", ok && gold >= 20, true))
                 {
                     Profile.AddGold(-20); int b = Random.Range(1, 4); Campaign.SetBlessing(b); tavKeeper = true; tavSub = 0;
@@ -1886,12 +1893,13 @@ namespace BladePath
             }
             if (tavSub == 3)
             {
-                Rect r = Card(580f, 260f);
-                float x = r.x + 24f, w = r.width - 48f, y = r.y + 20f;
                 int reward = 80 + 40 * Campaign.Region + 40 * Profile.Cycle;
-                UiKit.Text(new Rect(x, y, w, 26f), "ДОСКА НАГРАД", 20f, Gold); y += 32f;
-                y = Lines(x, y, w, Campaign.HasBounty ? "Заказ уже взят: победи сильного противника или владыку области — награда твоя."
-                    : "Листки с лицами. «Голова сильного бойца на дороге — " + reward + " мон. Голова владыки — вдвое».", 52, 13f, Ink) + 10f;
+                string boardText = Campaign.HasBounty ? "Заказ уже взят: победи сильного противника или владыку области — награда твоя."
+                    : "Листки с лицами. «Голова сильного бойца на дороге — " + reward + " мон. Голова владыки — вдвое».";
+                Rect r = Card(580f, Mathf.Max(220f, 20f + 36f + LinesH(532f, boardText, 52, 13f) + 12f + (Campaign.HasBounty ? 0f : 46f + 18f) + 50f));
+                float x = r.x + 24f, w = r.width - 48f, y = r.y + 20f;
+                VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "ДОСКА НАГРАД", 20f); y += 36f;
+                y = Lines(x, y, w, boardText, 52, 13f, Ink) + 12f;
                 if (!Campaign.HasBounty && Btn(new Rect(x, y, w, 46f), "ВЗЯТЬ ЗАКАЗ", ok, true)) { Campaign.TakeBounty(reward); tavBoard = true; tavSub = 0; TavToast("Заказ взят. Победи сильного противника или владыку — получишь " + reward + " мон (за владыку вдвое)."); }
                 if (Btn(new Rect(r.center.x - 70f, r.yMax - 50f, 140f, 38f), "НАЗАД", ok)) tavSub = 0;
                 return;
@@ -1899,14 +1907,15 @@ namespace BladePath
             if (tavSub == 4)
             {
                 // пьяный ронин и его приятели: расспросить — или нанять соратника по силе (бьётся на арене с подручным врага)
-                Rect r = Card(640f, 380f);
-                float x = r.x + 26f, w = r.width - 52f, y = r.y + 20f;
                 bool has = Profile.Ally >= 0;
-                UiKit.Text(new Rect(x, y, w, 26f), "ПЬЯНЫЙ РОНИН", 20f, Gold); y += 32f;
                 string intro = has
                     ? (Profile.AllyDown ? "«Твой соратник лежит у травницы — отнеси его к ней». Можно взять и другого — прежний уйдёт." : "«С тобой уже ходит " + Profile.AllyTierNames[SideDuel.Tier].ToLower() + ". Хочешь сильнее — плати, прежний уйдёт».")
                     : "Ронин трезвеет, стоит звякнуть кошелем. «Пока ты бьёшься с главным, мы займём его подручного. Сколько дашь — так и будем рубиться».";
-                y = Lines(x, y, w, intro, 58, 13f, Ink) + 8f;
+                // окно по содержимому: без пустой полосы между выбором соратника и нижними кнопками
+                Rect r = Card(640f, 20f + 36f + LinesH(588f, intro, 58, 13f) + 10f + 3f * 48f + 10f + 56f);
+                float x = r.x + 26f, w = r.width - 52f, y = r.y + 20f;
+                VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "ПЬЯНЫЙ РОНИН", 20f); y += 36f;
+                y = Lines(x, y, w, intro, 58, 13f, Ink) + 10f;
                 string[] who = { "УЧЕНИК", "ВОИН", "МАСТЕР" };
                 string[] hint = { "дёшево, слабый — продержится, но вряд ли победит", "крепкий рубака — на равных с подручным", "опасный клинок — может одолеть даже владыку" };
                 for (int t = 0; t < 3; t++)
@@ -2135,13 +2144,14 @@ namespace BladePath
          void DrawEvent(MapNode n, int at, bool ok)
         {
             int ev = Mathf.Clamp(n.ev, 0, EventCount - 1);
-            Rect r = Card(720f, 400f);
+            // окно по тексту события: длинный текст не уходит под кнопки, короткий — без пустоты (не ниже 360)
+            Rect r = Card(720f, Mathf.Clamp(22f + 36f + LinesH(354f, EvText[ev], 38, 13f) + 16f + 118f + 12f, 360f, 500f));
             // The authored illustrated event series is a real painted asset set.
             // The old pack02 variants were tiny procedural placeholders that
             // made all four encounters appear almost identical.
             Picture(new Rect(r.x, r.y, 330f, r.height), "UI/event_" + ev);
             float x = r.x + 348f, w = r.width - 366f, y = r.y + 22f;
-            UiKit.Text(new Rect(x, y, w, 26f), EvTitle[ev], 19f, Gold, TextAnchor.MiddleLeft); y += 34f;
+            VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), EvTitle[ev], 19f, TextAnchor.MiddleLeft); y += 36f;
             Lines(x, y, w, EvText[ev], 38, 13f, Ink);
             Rect b1 = new Rect(x, r.yMax - 118f, w, 46f), b2 = new Rect(x, r.yMax - 64f, w, 46f);
             int stage = Campaign.Region + 1;

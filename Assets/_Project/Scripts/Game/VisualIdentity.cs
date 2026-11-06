@@ -195,12 +195,59 @@ namespace BladePath
                 {
                     float bd = 30f * k;
                     Color o = GUI.color; GUI.color = c;
-                    GUI.DrawTexture(new Rect(vr.x + bd, vr.y + bd, vr.width - 2f * bd, vr.height - 2f * bd), board, ScaleMode.StretchToFill);
+                    Rect inner = new Rect(vr.x + bd, vr.y + bd, vr.width - 2f * bd, vr.height - 2f * bd);
+                    if (!BoardTile(inner, c)) { GUI.color = c; GUI.DrawTexture(inner, board, ScaleMode.StretchToFill); }
                     GUI.color = o;
                     UiKit.Slice(vr, frame, k, 0.2f, 0.1f, 0.3f, 0.12f, c);
                 }
                 else UiKit.Slice(vr, t, k, 0.2f, 0.1f, 0.3f, 0.12f, c);
             }
+        }
+
+        /// <summary>Тёмная доска окна: бесшовная плитка (UI/Kit/ui_board_tile), не растянутая картинка —
+        /// окно любого размера и пропорций без мыла и вытянутых волокон.</summary>
+        public static bool BoardTile(Rect r, Color c)
+        {
+            Texture2D t = UiKit.Tex("UI/Kit/ui_board_tile");
+            if (t == null) return false;
+            if (t.wrapMode != TextureWrapMode.Repeat) t.wrapMode = TextureWrapMode.Repeat;
+            const float tile = 200f;   // одна плитка на 200 единиц экрана: волокна в масштабе прежней доски
+            Color o = GUI.color; GUI.color = c;
+            GUI.DrawTextureWithTexCoords(r, t, new Rect(r.x / tile, -r.y / tile, r.width / tile, r.height / tile));
+            GUI.color = o;
+            return true;
+        }
+
+        /// <summary>Заголовок окна на плашке с золотыми концами и кистями (UI/Kit/ui_title_plaque).
+        /// Плашка по длине текста; тянется только гладкая середина. r — место под строку заголовка.</summary>
+        public static void TitlePlaque(Rect r, string text, float size, TextAnchor anchor = TextAnchor.MiddleCenter, Color? ink = null, float alpha = 1f)
+        {
+            Color c = ink ?? Brass;
+            c.a *= alpha;
+            // вариант без кистей: в окнах кисти свисали бы на текст под заголовком (полная — ui_title_plaque)
+            Texture2D t = UiKit.Tex("UI/Kit/ui_title_plaque_flat");
+            if (t == null) { UiKit.Text(r, text, size, c, anchor); return; }
+            float h = size * 2.4f;                           // тёмная полоса плашки ≈ 1,35 кегля
+            float k = h / t.height, cap = t.width * 0.155f * k;
+            float textW = text.Length * size * 0.74f;
+            // плашка не шире своего места: длинный заголовок ужмётся по тёмной середине
+            float w = Mathf.Min(textW + cap * 2f + size, r.width);
+            bool left = anchor == TextAnchor.MiddleLeft || anchor == TextAnchor.UpperLeft || anchor == TextAnchor.LowerLeft;
+            // слева плашка начинается от края места (картинка слева не перекрывается), справа — по центру места
+            float x = left ? r.x : r.center.x - w * 0.5f;
+            float y = r.center.y - h * 0.54f;                // центр тёмной полосы — 54% высоты текстуры
+            UiKit.Slice(new Rect(x, y, w, h), t, k, 0.155f, 0f, 0.5f, 0f, new Color(1f, 1f, 1f, alpha));
+            Rect tr = new Rect(x + cap * 0.85f, r.y, Mathf.Max(10f, w - cap * 1.7f), r.height);
+            UiKit.Text(tr, text, size, c, TextAnchor.MiddleCenter);
+        }
+
+        /// <summary>Утопленная строка/блок внутри окна (UI/Kit/ui_row_panel): золотая кромка и уголки, любой размер.</summary>
+        public static void RowPanel(Rect r, float alpha = 1f)
+        {
+            Texture2D t = UiKit.Tex("UI/Kit/ui_row_panel");
+            if (t == null) { UiKit.Rect(r, new Color(0.11f, 0.085f, 0.075f, 0.95f * alpha)); return; }
+            float k = Mathf.Clamp(r.height / t.height, 0.22f, 0.42f);   // уголки ~10–17 единиц при любой высоте строки
+            UiKit.Slice(r, t, k, 0.045f, 0f, 0.3f, 0f, new Color(1f, 1f, 1f, alpha));
         }
 
         /// <summary>Фон экрана снаряжения: оружейная самурая в золотой рамке (UI/Kit/ui_bg_armory) — цельная картина, без нарезки.</summary>

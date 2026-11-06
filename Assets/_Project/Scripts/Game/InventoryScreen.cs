@@ -267,9 +267,7 @@ namespace BladePath
             {
                 float y = 146f + i * 64f;
                 Rect row = new Rect(lx, y, lw, 60f);
-                VisualIdentity.Inset(row);
-                UiKit.Rect(new Rect(row.x, row.y, 3f, row.height),
-                    new Color(Gold.r, Gold.g, Gold.b, 0.33f));
+                VisualIdentity.RowPanel(row);   // утопленная строка с золотой кромкой и уголками
                 Texture2D g = UiKit.Tex(Profile.StatGlyph[i]);
                 Rect gr = new Rect(lx + 6f, y + 4f, 52f, 52f);
                 if (g != null) { Color o = GUI.color; GUI.color = new Color(0.95f, 0.82f, 0.55f, 1f); GUI.DrawTexture(gr, g); GUI.color = o; }
@@ -318,8 +316,7 @@ namespace BladePath
             Rect pr = new Rect(44f, 76f, lw, 432f);
             Texture2D pan = UiKit.Tex("UI/path_panorama");
             if (pan != null) GUI.DrawTexture(pr, pan, ScaleMode.ScaleAndCrop); else UiKit.Rect(pr, new Color(0.1f, 0.1f, 0.12f));
-            UiKit.Rect(new Rect(pr.x, pr.y, pr.width, 34f), new Color(0.03f, 0.02f, 0.02f, 0.78f));
-            UiKit.Rect(new Rect(pr.x, pr.y + 33f, pr.width, 1f), new Color(Gold.r, Gold.g, Gold.b, 0.55f));   // золотая кромка, как у плашек на карте
+            VisualIdentity.RowPanel(new Rect(pr.x, pr.y, pr.width, 36f), 0.97f);
             UiKit.Text(new Rect(pr.x + 12f, pr.y + 2f, pr.width - 24f, 30f), "ПУТЬ КЛИНКА" + (Profile.Cycle > 0 ? "   ·   КРУГ " + (Profile.Cycle + 1) : "") + "   ·   ПРОЙДЕН РАЗ: " + Records.Cleared, 15f, Gold, TextAnchor.MiddleLeft);
             int cur = Ladder.Index;
             // фонари вдоль тропы
@@ -339,7 +336,7 @@ namespace BladePath
                 // имя ступени на тёмной плашке: серым по горам не читалось
                 Rect nr = new Rect(c.x + s * 0.5f + 4f, c.y - 10f, 200f, 20f);
                 float nw = Ladder.Stages[i].name.Length * (now ? 13f : 11f) * 0.68f + 14f;
-                UiKit.Rect(new Rect(nr.x - 6f, nr.y - 1f, nw, 22f), new Color(0.03f, 0.02f, 0.02f, 0.72f));
+                VisualIdentity.RowPanel(new Rect(nr.x - 8f, nr.y - 3f, nw + 4f, 26f), 0.95f);
                 UiKit.Text(nr, Ladder.Stages[i].name, now ? 13f : 11f, now ? Gold : new Color(0.93f, 0.89f, 0.8f, done ? 1f : 0.85f), TextAnchor.MiddleLeft);
             }
             // справа — текущий противник
