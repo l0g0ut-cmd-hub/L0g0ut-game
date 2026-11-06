@@ -961,6 +961,12 @@ namespace BladePath
         // Both HP and KI use authored tip alpha with a calculated straight center.
         // Gold frames still use their original full-source UVs.
 
+        static float VisibleFraction(float f, float hiddenTip)
+        {
+            f = Mathf.Clamp01(f);
+            return f <= 0.0001f ? 0f : hiddenTip + (1f - hiddenTip) * f;
+        }
+
         static Rect FrameRect(Rect r, Texture2D frame, Rect win, bool mirror)
         {
             float fw = r.width / win.width, fh = r.height / win.height;
@@ -992,7 +998,9 @@ namespace BladePath
             float to = mirror ? 1f - leftSource / authoredWidth : rightSource / authoredWidth;
             float left = fr.x + fr.width * from;
             float right = fr.x + fr.width * to;
-            float width = (right - left) * Mathf.Clamp01(fraction);
+            // кончик клинка у таймера (~7% канала) почти закрыт золотом рамки: при любом ненулевом запасе он залит,
+            // остальное делится по видимой части — малый остаток духа не выглядит пустой полоской
+            float width = (right - left) * VisibleFraction(fraction, 0.07f);
             float start = mirror ? left : right - width;
             float clipTop = fr.y + fr.height * topSource / authoredHeight;
             float clipBottom = fr.y + fr.height * bottomSource / authoredHeight;
@@ -1058,7 +1066,9 @@ namespace BladePath
             float to = mirror ? 1f - leftSource / authoredWidth : rightSource / authoredWidth;
             float left = fr.x + fr.width * from;
             float right = fr.x + fr.width * to;
-            float width = (right - left) * Mathf.Clamp01(fraction);
+            // кончик клинка у таймера (~9% канала) почти закрыт золотом рамки: при любом ненулевом здоровье он залит,
+            // остальное делится по видимой части — «один удар до смерти» не выглядит пустой полоской
+            float width = (right - left) * VisibleFraction(fraction, 0.09f);
             float start = mirror ? left : right - width;
             float clipTop = fr.y + fr.height * Mathf.Lerp(topSource, bottomSource, Mathf.Clamp01(y0)) / authoredHeight;
             float clipBottom = fr.y + fr.height * Mathf.Lerp(topSource, bottomSource, Mathf.Clamp01(y1)) / authoredHeight;
