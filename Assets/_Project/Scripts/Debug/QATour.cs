@@ -87,9 +87,18 @@ namespace BladePath
         IEnumerator Shot(string name)
         {
             yield return new WaitForSecondsRealtime(Settle);
-            shotIndex++;
-            Debug.Log("QATOUR_SHOT " + shotIndex.ToString("00") + "_" + name);
+            Mark(name);
             yield return new WaitForSecondsRealtime(Hold);
+        }
+
+        /// <summary>Снимок: игра сама сохраняет ровно этот кадр (persistentDataPath/qa_NN_имя.png) и пишет метку в лог —
+        /// по метке скрипт делает и запасной screencap. Кадр игры не отстаёт, в отличие от экрана медленного эмулятора.</summary>
+        void Mark(string name)
+        {
+            shotIndex++;
+            string file = shotIndex.ToString("00") + "_" + name;
+            try { ScreenCapture.CaptureScreenshot("qa_" + file + ".png"); } catch (Exception ex) { Debug.LogWarning("QATOUR_WARN capture " + ex.Message); }
+            Debug.Log("QATOUR_SHOT " + file);
         }
 
         /// <summary>Шаг тура: исключение или превышение StepLimit — пропуск с пометкой в логе, тур продолжается.</summary>
@@ -233,7 +242,7 @@ namespace BladePath
             Campaign.RollDie();
             Set(map, "rollAt", Time.unscaledTime);
             yield return new WaitForSecondsRealtime(0.2f);
-            Debug.Log("QATOUR_SHOT " + (++shotIndex).ToString("00") + "_map_dice_roll");   // кость — сразу, пока крутится
+            Mark("map_dice_roll");   // кость — сразу, пока крутится
             yield return new WaitForSecondsRealtime(Hold);
 
             Campaign.DebugSteps(9);
@@ -242,7 +251,7 @@ namespace BladePath
 
             Call(map, "TravelOrRoll");
             yield return new WaitForSecondsRealtime(1.5f);
-            Debug.Log("QATOUR_SHOT " + (++shotIndex).ToString("00") + "_map_riding");   // на ходу
+            Mark("map_riding");   // на ходу
             float t = 0f;
             while (t < 35f)   // прибытие: или окно встречи/цели, или доехал
             {
@@ -393,7 +402,7 @@ namespace BladePath
             DuelManager.Immortal = true;
 
             yield return new WaitForSecondsRealtime(0.3f);
-            Debug.Log("QATOUR_SHOT " + (++shotIndex).ToString("00") + "_fight_intro");   // вступление — сразу, пока враг в полный рост
+            Mark("fight_intro");   // вступление — сразу, пока враг в полный рост
             yield return new WaitForSecondsRealtime(Hold);
             yield return Until(() => dm.State == DuelState.Fighting, 25f);
             foreach (EnemyAI e in FindObjectsByType<EnemyAI>(FindObjectsSortMode.None)) if (!e.autoPlayer && !e.sideFighter) enemyAi = e;
@@ -421,7 +430,7 @@ namespace BladePath
                 if (dm.ResurrectOffered)
                 {
                     yield return new WaitForSecondsRealtime(2.4f);   // кнопка появляется через 0,6 с, окно живёт 5 с; эмулятор отстаёт на ~2 с
-                    Debug.Log("QATOUR_SHOT " + (++shotIndex).ToString("00") + "_resurrect_offer");
+                    Mark("resurrect_offer");
                     yield return new WaitForSecondsRealtime(Hold);
                     if (dm.ResurrectOffered) dm.Resurrect();
                 }

@@ -42,11 +42,14 @@ pkill -f "adb logcat -v raw -s Unity:I" 2>/dev/null || true
 
 adb logcat -d > "$OUT/logcat.txt" || true
 grep -E 'QATOUR|Exception|Error' "$OUT/logcat.txt" | grep -v 'Unity   : \s*$' | head -300 > "$OUT/qatour_log.txt" || true
-for d in "/sdcard/Android/data/$PKG/files" "/storage/emulated/0/Android/data/$PKG/files"; do
-  for f in $(adb shell "ls $d/qa_*.png 2>/dev/null" | tr -d '\r'); do adb pull "$f" "$OUT/ingame/" >/dev/null 2>&1 || true; done
-done
+# кадры, сохранённые самой игрой (точные, без отставания экрана эмулятора) — основные снимки тура
+sleep 3
+adb pull "/sdcard/Android/data/$PKG/files/." "$OUT/ingame_raw" >/dev/null 2>&1 || adb pull "/storage/emulated/0/Android/data/$PKG/files/." "$OUT/ingame_raw" >/dev/null 2>&1 || true
+find "$OUT/ingame_raw" -name 'qa_*.png' -exec mv {} "$OUT/ingame/" \; 2>/dev/null || true
+rm -rf "$OUT/ingame_raw"
 n=$(ls "$OUT"/*.png 2>/dev/null | wc -l)
-echo "screenshots: $n, in-game: $(ls "$OUT"/ingame/*.png 2>/dev/null | wc -l), failed: $failed"
-# ни одного снимка или битые снимки — прогон красный, а не «успешный с пустой папкой»
-if [ "$n" -eq 0 ] || [ "$failed" -gt 0 ]; then exit 5; fi
+ni=$(ls "$OUT"/ingame/*.png 2>/dev/null | wc -l)
+echo "screenshots: $n, in-game: $ni, failed screencaps: $failed"
+# прогон красный, только если нет кадров ни игры, ни экрана; чёрный screencap при целом кадре игры — не провал
+if [ "$ni" -eq 0 ] && { [ "$n" -eq 0 ] || [ "$failed" -gt 0 ]; }; then exit 5; fi
 exit 0
