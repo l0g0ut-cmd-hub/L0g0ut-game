@@ -110,7 +110,7 @@ def check_design_system():
         "map lacquer panel":
             "VisualIdentity.KitSurface(r" in map_code or "VisualIdentity.Surface(r" in map_code,   # единый стиль (UI/Kit) с 2026-11-04
         "map event art uses authored illustrations":
-            'Picture(new Rect(r.x, r.y, 330f, r.height), "UI/event_" + ev)' in map_code,
+            'Picture(new Rect(r.x, r.y, pw, r.height), "UI/event_" + ev)' in map_code,
         "map NPC art not low-res placeholders":
             'Pack02Art(' not in map_code,
         "map herbalist preview":

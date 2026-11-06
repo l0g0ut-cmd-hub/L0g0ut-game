@@ -2344,9 +2344,10 @@ namespace BladePath
         /// <summary>Окно места: картина слева, заголовок, текст; высота — по тексту и числу кнопок.</summary>
         Rect PlaceCard(string art, string title, string text, int buttons, out float x, out float w)
         {
-            Rect r = Card(720f, Mathf.Clamp(22f + 36f + LinesH(354f, text, 38, 13f) + 16f + buttons * 54f + 10f, 360f, 500f));
-            Picture(new Rect(r.x, r.y, 330f, r.height), art);
-            x = r.x + 348f; w = r.width - 366f;
+            // картины мест вертикальные (2:3): узкая колонка, как у трактирщика, — без обрезки и сплющивания
+            Rect r = Card(720f, Mathf.Clamp(22f + 36f + LinesH(428f, text, 38, 13f) + 16f + buttons * 54f + 10f, 360f, 500f));
+            Picture(new Rect(r.x, r.y, 250f, r.height), art);
+            x = r.x + 268f; w = r.width - 292f;
             VisualIdentity.TitlePlaque(new Rect(x, r.y + 22f, w, 26f), title, 19f, TextAnchor.MiddleLeft);
             Lines(x, r.y + 58f, w, text, 38, 13f, Ink);
             return r;
@@ -2519,12 +2520,15 @@ namespace BladePath
         {
             int ev = Mathf.Clamp(n.ev, 0, EventCount - 1);
             // окно по тексту события: длинный текст не уходит под кнопки, короткий — без пустоты (не ниже 360)
-            Rect r = Card(720f, Mathf.Clamp(22f + 36f + LinesH(354f, EvText[ev], 38, 13f) + 16f + 118f + 12f, 360f, 500f));
+            // события 12+ нарисованы вертикально (2:3, 3:4) — узкая колонка картины, текст шире
+            bool tall = ev >= 12;
+            float pw = tall ? 250f : 330f, tx = tall ? 268f : 348f;
+            Rect r = Card(720f, Mathf.Clamp(22f + 36f + LinesH(720f - tx - 18f, EvText[ev], 38, 13f) + 16f + 118f + 12f, 360f, 500f));
             // The authored illustrated event series is a real painted asset set.
             // The old pack02 variants were tiny procedural placeholders that
             // made all four encounters appear almost identical.
-            Picture(new Rect(r.x, r.y, 330f, r.height), "UI/event_" + ev);
-            float x = r.x + 348f, w = r.width - 366f, y = r.y + 22f;
+            Picture(new Rect(r.x, r.y, pw, r.height), "UI/event_" + ev);
+            float x = r.x + tx, w = r.width - tx - 18f, y = r.y + 22f;
             VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), EvTitle[ev], 19f, TextAnchor.MiddleLeft); y += 36f;
             Lines(x, y, w, EvText[ev], 38, 13f, Ink);
             Rect b1 = new Rect(x, r.yMax - 118f, w, 46f), b2 = new Rect(x, r.yMax - 64f, w, 46f);
