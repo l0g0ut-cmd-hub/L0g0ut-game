@@ -20,6 +20,8 @@ Shader "BladePath/Character"
         _WoundMask ("Wound Mask (R)", 2D) = "white" {}
         _Wound ("Wound", Range(0,1)) = 0
         _WoundTri ("Wound 3D (UV3 = bind pose)", Float) = 0
+        _Dissolve ("Dissolve to ash", Range(0,1)) = 0
+        _DissolveEdge ("Dissolve edge glow", Color) = (1,0.42,0.12,1)
     }
     SubShader
     {
@@ -27,7 +29,7 @@ Shader "BladePath/Character"
         LOD 300
 
         CGPROGRAM
-        #pragma surface surf Standard fullforwardshadows vertex:vert
+        #pragma surface surf Standard fullforwardshadows vertex:vert addshadow
         #pragma target 3.0
         #pragma shader_feature_local _NORMALMAP
         #pragma shader_feature_local _METALLICGLOSSMAP
@@ -41,6 +43,8 @@ Shader "BladePath/Character"
         half _BP_Wetness;   // глобально из Weather: дождь 0…1
         half _BP_Snow;      // глобально из Weather: снег на верхних поверхностях 0…1
         half _BP_Day;       // глобально из DayNight: днём лунный контур почти не нужен (и выглядел бы синей каймой)
+        half _Dissolve;     // поверженный враг рассыпается пеплом снизу вверх (идея — AdultLink/VerticalDissolve, MIT; своя реализация)
+        fixed4 _DissolveEdge;
 
         struct Input
         {
@@ -120,6 +124,24 @@ Shader "BladePath/Character"
             half rim = 1.0h - saturate(abs(dot(normalize(IN.viewDir), o.Normal)));
             rim = pow(rim, _RimPower) * (1.0h - 0.65h * _BP_Day);
             o.Emission = tex2D(_EmissionMap, IN.uv_MainTex).rgb * _EmissionColor.rgb + _RimColor.rgb * rim;
+            // рассыпается пеплом: снизу вверх, рваный тлеющий край, у края ткань обугливается
+            if (_Dissolve > 0.001h)
+            {
+                half hgt, nz;
+                if (_WoundTri > 0.5h)
+                {
+                    float3 q = IN.bindPos.xyz * 3.1;
+                    hgt = IN.bindPos.w;
+                    nz = tex2D(_WoundMask, q.xy + 0.13).r * 0.5h + tex2D(_WoundMask, q.zy * 1.7 + 0.41).r * 0.5h;
+                }
+                else { hgt = saturate(IN.uv_MainTex.y); nz = tex2D(_WoundMask, IN.uv_MainTex * 7.0).r; }
+                half d = hgt * 0.62h + nz * 0.38h;
+                half cut = _Dissolve * 1.12h - 0.04h;
+                clip(d - cut);
+                half edge = 1.0h - saturate((d - cut) / 0.07h);
+                o.Albedo *= lerp(1.0h, 0.15h, edge);
+                o.Emission += _DissolveEdge.rgb * (edge * edge * 3.0h);
+            }
             o.Alpha = 1;
         }
         ENDCG

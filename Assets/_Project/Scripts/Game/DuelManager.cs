@@ -200,7 +200,7 @@ namespace BladePath
         public float Trail01(FighterController f) { float v; return hpTrail.TryGetValue(f, out v) ? Mathf.Clamp01(v / MaxHp(f)) : 1f; }
 
         /// <summary>Материалы тела бойца (без оружия) и их исходные цвета — для окраса ступени и «окровавленности».</summary>
-        class BodyMats { public List<Material> mats = new List<Material>(); public List<Color> baseCol = new List<Color>(); public List<Color> baseEm = new List<Color>(); public Color tint = Color.white; public float blood; public Color applied = Color.white; public float flashAt = -10f, flashK, woundApplied; }
+        class BodyMats { public List<Material> mats = new List<Material>(); public List<Color> baseCol = new List<Color>(); public List<Color> baseEm = new List<Color>(); public Color tint = Color.white; public float blood; public Color applied = Color.white; public float flashAt = -10f, flashK, woundApplied, dissolveApplied, ashAt; }
         readonly Dictionary<FighterController, BodyMats> bodyMats = new Dictionary<FighterController, BodyMats>();
         float enemyBaseSpeed = -1f, baseBladeLen = -1f;
 
@@ -237,6 +237,24 @@ namespace BladePath
             {
                 b.woundApplied = wound;
                 for (int i = 0; i < b.mats.Count; i++) if (b.mats[i].HasProperty("_Wound")) b.mats[i].SetFloat("_Wound", wound);
+            }
+            // победа в бою: поверженный враг через 2,2 с рассыпается пеплом за 2,6 с (Тень клана — фиолетовым дымом)
+            float dis = f == enemy && MatchOver && State == DuelState.PlayerWon && !ResurrectOffered ? Mathf.Clamp01((StateTime - 2.2f) / 2.6f) : 0f;
+            if (Mathf.Abs(dis - b.dissolveApplied) > 0.003f || (dis == 0f && b.dissolveApplied != 0f))
+            {
+                if (b.dissolveApplied == 0f && dis > 0f)
+                {
+                    Color edgeCol = Ladder.Current.model == 5 ? new Color(0.55f, 0.3f, 1f) : new Color(1f, 0.42f, 0.12f);
+                    for (int i = 0; i < b.mats.Count; i++) if (b.mats[i].HasProperty("_DissolveEdge")) b.mats[i].SetColor("_DissolveEdge", edgeCol);
+                }
+                b.dissolveApplied = dis;
+                for (int i = 0; i < b.mats.Count; i++) if (b.mats[i].HasProperty("_Dissolve")) b.mats[i].SetFloat("_Dissolve", dis);
+                // пепел поднимается от тела, пока оно тает
+                if (dis > 0.02f && dis < 0.98f && Juice.Instance != null && Time.unscaledTime >= b.ashAt)
+                {
+                    b.ashAt = Time.unscaledTime + 0.18f;
+                    Juice.Instance.Dust(f.transform.position + Vector3.up * (0.2f + dis * 1.5f), Vector3.up, 6);
+                }
             }
             Color k = BloodCol(b.blood * 0.4f) * b.tint;   // общий оттенок слабее — кровь теперь пятнами
             // вспышка попадания по самой модели: красно-белое свечение на 0,15 с
