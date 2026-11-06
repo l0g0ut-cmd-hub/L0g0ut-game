@@ -631,7 +631,8 @@ namespace BladePath
             }
 
             rainAudio = gameObject.AddComponent<AudioSource>();
-            rainAudio.clip = RainClip(); rainAudio.loop = true; rainAudio.volume = 0.35f; rainAudio.spatialBlend = 0f;
+            AudioClip rec = Resources.Load<AudioClip>("Audio/rain_loop");   // запись дождя в лесу (CC BY 4.0 Oculus), иначе синтез
+            rainAudio.clip = rec != null ? rec : RainClip(); rainAudio.loop = true; rainAudio.volume = 0.35f; rainAudio.spatialBlend = 0f;
             thunderAudio = gameObject.AddComponent<AudioSource>();
             thunder = ThunderClip(); thunderAudio.spatialBlend = 0f;
         }

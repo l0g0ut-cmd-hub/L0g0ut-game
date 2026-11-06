@@ -60,11 +60,18 @@ namespace BladePath
             // боль: короткое глухое «ых» (гласная «у/о»); смерть — долгий выдох с падающим тоном
             gruntA = Kiai(41, 0.82f, 880f, 470f, 0.24f); gruntB = Kiai(42, 0.72f, 920f, 500f, 0.24f);
             dieA = Kiai(43, 0.78f, 1000f, 620f, 0.75f); dieB = Kiai(44, 0.68f, 1050f, 640f, 0.75f);
+            // записанные звуки (Resources/Audio, CC0 Kenney и CC BY 4.0 Oculus Audio Pack — см. THIRD_PARTY_SOUNDS.md);
+            // если файла нет — остаётся синтезированный
+            swish = Sampled(swish, "swish", 6); whoosh = Sampled(whoosh, "swish", 6);
+            hit = Sampled(hit, "hit", 4); hitHeavy = Sampled(hitHeavy, "hitheavy", 3); stab = Sampled(stab, "stab", 1);
+            clang = Sampled(clang, "clang", 6);
+            step = Sampled(step, "step", 5); stepSnow = Sampled(stepSnow, "stepsnow", 5);
             stepVoice = gameObject.AddComponent<AudioSource>(); stepVoice.spatialBlend = 0f; stepVoice.playOnAwake = false;   // шаги не отнимают голоса у ударов
             ambient = gameObject.AddComponent<AudioSource>();
             ambient.clip = Wind(); ambient.loop = true; ambient.volume = 0.22f; ambient.spatialBlend = 0f; ambient.Play();
             crickets = gameObject.AddComponent<AudioSource>();   // ночные сверчки в саду храма; в дождь замолкают
-            crickets.clip = Crickets(); crickets.loop = true; crickets.volume = 0f; crickets.spatialBlend = 0f; crickets.Play();
+            AudioClip night = Resources.Load<AudioClip>("Audio/crickets_loop");
+            crickets.clip = night != null ? night : Crickets(); crickets.loop = true; crickets.volume = 0f; crickets.spatialBlend = 0f; crickets.Play();
             Shader sh = Shader.Find("Sprites/Default");
             if (sh != null)
             {
@@ -459,12 +466,54 @@ namespace BladePath
             if (low > 0f) Play(whoosh, low, pitch * 0.5f);
         }
         /// <summary>Добивание: клинок входит в грудь.</summary>
+        AudioClip[] diceCup, diceRoll, coins;
+        AudioClip[] LoadSet(string name, int n)
+        {
+            List<AudioClip> l = new List<AudioClip>(n);
+            for (int i = 1; i <= n; i++) { AudioClip c = Resources.Load<AudioClip>("Audio/" + name + "_" + i); if (c != null) l.Add(c); }
+            return l.ToArray();
+        }
+        void PlayOne(AudioClip[] set, float vol)
+        {
+            if (set == null || set.Length == 0 || voices == null) return;
+            AudioSource a = voices[voiceIdx]; voiceIdx = (voiceIdx + 1) % voices.Length;
+            a.pitch = Random.Range(0.96f, 1.04f); a.volume = vol; a.clip = set[Random.Range(0, set.Length)]; a.Play();
+        }
+        /// <summary>Кость пути на карте: стук кубика по столу.</summary>
+        public void DiceSound() { if (diceRoll == null) diceRoll = LoadSet("dice", 3); PlayOne(diceRoll, 0.75f); }
+        /// <summary>Чо-хан: кости гремят в стаканчике.</summary>
+        public void DiceCupSound() { if (diceCup == null) diceCup = LoadSet("dicecup", 3); PlayOne(diceCup, 0.8f); }
+        /// <summary>Покупка: звон монет.</summary>
+        public void CoinSound() { if (coins == null) coins = LoadSet("coins", 2); PlayOne(coins, 0.6f); }
+
         public void StabSound() { Play(stab, 1f, Random.Range(0.94f, 1.04f)); }
         /// <summary>Добивание: клинок выдернут.</summary>
         public void SquelchSound() { Play(squelch, 0.95f, Random.Range(0.95f, 1.05f)); }
 
+        readonly Dictionary<AudioClip, AudioClip[]> sampled = new Dictionary<AudioClip, AudioClip[]>();
+        /// <summary>Набор записанных вариантов name_1…name_n; первый вариант — ключ, при игре берётся случайный.</summary>
+        AudioClip Sampled(AudioClip synth, string name, int n)
+        {
+            List<AudioClip> l = new List<AudioClip>(n);
+            for (int i = 1; i <= n; i++) { AudioClip c = Resources.Load<AudioClip>("Audio/" + name + "_" + i); if (c != null) l.Add(c); }
+            if (l.Count == 0) return synth;
+            AudioClip[] arr = l.ToArray();
+            sampled[arr[0]] = arr;
+            return arr[0];
+        }
+        /// <summary>Случайный вариант записи. Высоту тона запись терпит хуже синтеза: уход от 1 ужимается вдвое
+        /// (синтезированный низкий «вжух» на 0,4 и звучал как пердёж).</summary>
+        AudioClip Pick(AudioClip c, ref float pitch)
+        {
+            AudioClip[] arr;
+            if (c == null || !sampled.TryGetValue(c, out arr)) return c;
+            pitch = Mathf.Clamp(1f + (pitch - 1f) * 0.45f, 0.72f, 1.4f);
+            return arr[Random.Range(0, arr.Length)];
+        }
+
         void Play(AudioClip c, float vol, float pitch)
         {
+            c = Pick(c, ref pitch);
             if (c == null || voices == null) return;
             AudioSource a = voices[voiceIdx]; voiceIdx = (voiceIdx + 1) % voices.Length;
             a.pitch = pitch; a.volume = vol; a.clip = c; a.Play();
@@ -668,10 +717,13 @@ namespace BladePath
             Prints(pos, toe, side);
             if (stepVoice != null)
             {
-                stepVoice.pitch = Random.Range(0.85f, 1.12f);
-                stepVoice.PlayOneShot(step, Mathf.Clamp(0.12f + 0.16f * k, 0.1f, 0.45f) * (snowy ? 0.55f : 1f));
+                float sp = Random.Range(0.85f, 1.12f);
+                AudioClip sc = Pick(step, ref sp);
+                stepVoice.pitch = sp;
+                stepVoice.PlayOneShot(sc, Mathf.Clamp(0.12f + 0.16f * k, 0.1f, 0.45f) * (snowy ? 0.55f : 1f));
                 if (wet && stepWet != null) stepVoice.PlayOneShot(stepWet, Mathf.Clamp(0.08f + 0.12f * k, 0.06f, 0.35f));
-                if (snowy && stepSnow != null) stepVoice.PlayOneShot(stepSnow, Mathf.Clamp(0.14f + 0.2f * k, 0.12f, 0.5f));
+                float sp2 = 1f;
+                if (snowy && stepSnow != null) stepVoice.PlayOneShot(Pick(stepSnow, ref sp2), Mathf.Clamp(0.14f + 0.2f * k, 0.12f, 0.5f));
             }
             if (footFx == null) footFx = MakeFootFx();
             if (footFx == null) return;

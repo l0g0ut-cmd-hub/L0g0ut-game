@@ -1478,7 +1478,7 @@ namespace BladePath
             }
             y += 57f;
             bool canRoll = Campaign.Rolls > 0 && Campaign.Steps <= 0 && Campaign.CurrentSettled && !Campaign.InFight && !Campaign.Training && !rolling;
-            if (canRoll && Btn(new Rect(x, y, w, 42f), "БРОСИТЬ КОСТЬ", interactive, true)) { Campaign.RollDie(); rollAt = Time.unscaledTime; Haptics.Pulse(30); if (Juice.Instance != null) Juice.Instance.Taiko(0.7f, 1.3f); }
+            if (canRoll && Btn(new Rect(x, y, w, 42f), "БРОСИТЬ КОСТЬ", interactive, true)) { Campaign.RollDie(); rollAt = Time.unscaledTime; Haptics.Pulse(30); if (Juice.Instance != null) Juice.Instance.DiceSound(); }
             if (canRoll) y += 48f;
             if (Campaign.Stuck && !rolling)
             {
@@ -1875,7 +1875,7 @@ namespace BladePath
                             UiKit.Text(new Rect(row.x + 76f, row.y + 30f, w - 200f, 18f), desc, 11f, Dim, TextAnchor.MiddleLeft, false);
                             int price = Profile.BuyPrice(it);
                             if (Btn(new Rect(row.xMax - 118f, row.y + 14f, 110f, 44f), price + " МОН", ok && Profile.Gold >= price))
-                                if (Profile.Spend(price)) { Profile.Give(it); stock[k] = null; Haptics.Pulse(25); if (Juice.Instance != null) Juice.Instance.Taiko(0.5f, 1.4f); }
+                                if (Profile.Spend(price)) { Profile.Give(it); stock[k] = null; Haptics.Pulse(25); if (Juice.Instance != null) Juice.Instance.CoinSound(); }
                         }
                     if (Btn(new Rect(x, r.yMax - 56f, 200f, 42f), "ПРОДАТЬ СВОЁ", ok, true)) { Profile.CostMul = 1f; InventoryScreen.Show(0); InventoryScreen.AtMarket = true; }   // продажа — только у торговца
                     if (Btn(new Rect(r.xMax - 150f, r.yMax - 56f, 132f, 42f), "УЙТИ", ok)) modal = Modal.None;

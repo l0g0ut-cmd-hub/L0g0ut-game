@@ -213,7 +213,7 @@ namespace BladePath
                             {
                                 betEven = k == 0; bumped = false; st = St.Throw; stAt = now; SetMood(0);
                                 t.Throw(); Haptics.Pulse(25);
-                                if (Juice.Instance != null) Juice.Instance.Taiko(0.5f, 1.6f);
+                                if (Juice.Instance != null) Juice.Instance.DiceCupSound();
                             }
                         if (VisualIdentity.KitButton(new Rect(16f, 540f - 58f, 150f, 42f), "ВСТАТЬ", ok)) { Leave(); return true; }
                         break;
