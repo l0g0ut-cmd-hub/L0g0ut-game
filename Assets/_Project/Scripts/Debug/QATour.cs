@@ -28,7 +28,7 @@ namespace BladePath
     {
         const float Settle = 3.5f;     // эмулятор без видеокарты рисует 1–3 кадра в секунду: даём экрану дорисоваться
         const float Hold = 2.5f;       // экран держится, пока screencap забирает кадр
-        const float StepLimit = 60f;   // шаг дольше этого — считается зависшим и пропускается
+        const float StepLimit = 150f;   // шаг дольше этого — считается зависшим и пропускается
         static QATour inst;
         int shotIndex, fails;
         MonoBehaviour map;
@@ -184,7 +184,7 @@ namespace BladePath
             {
                 yield return Step("ride", () => Ride());
                 yield return Step("node_windows", () => NodeWindows());
-                yield return Step("events", () => Events());
+                for (int k = 0; k < MapScreen.EventCount; k++) { int kk = k; yield return Step("event_" + k, () => EventShot(kk)); }
                 yield return Step("camp", () => Camp());
                 yield return Step("tavern", () => Tavern());
                 yield return Step("special_modals", () => SpecialModals());
@@ -265,7 +265,8 @@ namespace BladePath
             foreach (NodeType type in types)
             {
                 int i = NodeOf(type);
-                if (i < 0) { Debug.Log("QATOUR_INFO no node " + type); continue; }
+                if (i < 0) { i = Borrow(type); Debug.Log("QATOUR_INFO borrowed node for " + type); }
+                if (i < 0) { Fail("node_" + type, "no node"); continue; }
                 CloseMap();
                 bool ok = true;
                 try
@@ -280,33 +281,43 @@ namespace BladePath
                 catch (Exception ex) { Fail("node_" + type, ex.ToString()); ok = false; }
                 if (ok) yield return Shot("node_" + type.ToString().ToLower());
                 CloseMap();
+                GiveBack();
                 Supply();
             }
         }
 
-        /// <summary>Все события: одно место-событие, номер события подставляется по очереди.</summary>
-        IEnumerator Events()
+        /// <summary>Событие k: место-событие (или любое место, ставшее событием на время снимка), номер события подставлен.</summary>
+        IEnumerator EventShot(int k)
         {
             int ev = NodeOf(NodeType.Event);
-            if (ev < 0) { Debug.Log("QATOUR_INFO no event node"); yield break; }
-            for (int k = 0; k < MapScreen.EventCount; k++)
-            {
-                CloseMap();
-                bool ok = true;
-                try
-                {
-                    Campaign.DebugTeleport(ev);
-                    Campaign.Nodes[ev].ev = k;
-                    Campaign.Nodes[ev].done = false;
-                    Set(map, "revisit", false);
-                    Call(map, "OpenNode", ev);
-                    Set(map, "modalAt", Time.unscaledTime - 2f);
-                }
-                catch (Exception ex) { Fail("event_" + k, ex.ToString()); ok = false; }
-                if (ok) yield return Shot("event_" + k.ToString("00"));
-            }
+            if (ev < 0) ev = Borrow(NodeType.Event);
+            if (ev < 0) { Fail("event_" + k, "no node"); yield break; }
+            CloseMap();
+            Campaign.DebugTeleport(ev);
+            Campaign.Nodes[ev].ev = k;
+            Campaign.Nodes[ev].done = false;
+            Set(map, "revisit", false);
+            Call(map, "OpenNode", ev);
+            Set(map, "modalAt", Time.unscaledTime - 2f);
+            yield return Shot("event_" + k.ToString("00"));
             CloseMap();
         }
+
+        /// <summary>Места такого типа в области нет — на время снимка им становится непройденное место-не-бой (тип возвращается).</summary>
+        int Borrow(NodeType t)
+        {
+            for (int i = 1; i < Campaign.Nodes.Count; i++)
+            {
+                MapNode n = Campaign.Nodes[i];
+                if (n.Type == NodeType.Boss || n.Type == NodeType.Start || i == Campaign.At) continue;
+                borrowed = i; borrowedType = n.type; n.type = (int)t;
+                if (t == NodeType.Elite || t == NodeType.Ambush) n.enemy = Mathf.Clamp(n.enemy, 0, Ladder.Count - 1);
+                return i;
+            }
+            return -1;
+        }
+        int borrowed = -1, borrowedType;
+        void GiveBack() { if (borrowed >= 0 && borrowed < Campaign.Nodes.Count) Campaign.Nodes[borrowed].type = borrowedType; borrowed = -1; }
 
         IEnumerator Camp()
         {
@@ -394,6 +405,7 @@ namespace BladePath
             MonoBehaviour input = FindAny("PrototypeInput");
             if (input != null) { Set(input, "devOpen", true); yield return Shot("pause_dev_menu"); Set(input, "devOpen", false); }
             dm.SetPaused(false);
+            yield return new WaitForSecondsRealtime(3f);   // меню паузы уходит с экрана медленного эмулятора до следующего кадра
         }
 
         IEnumerator DefeatAndVictory()
@@ -408,8 +420,8 @@ namespace BladePath
                 yield return Until(() => dm.ResurrectOffered, 6f);
                 if (dm.ResurrectOffered)
                 {
-                    yield return new WaitForSecondsRealtime(0.8f);
-                    Debug.Log("QATOUR_SHOT " + (++shotIndex).ToString("00") + "_resurrect_offer");   // окно воскрешения живёт 5 с — снимок сразу
+                    yield return new WaitForSecondsRealtime(2.4f);   // кнопка появляется через 0,6 с, окно живёт 5 с; эмулятор отстаёт на ~2 с
+                    Debug.Log("QATOUR_SHOT " + (++shotIndex).ToString("00") + "_resurrect_offer");
                     yield return new WaitForSecondsRealtime(Hold);
                     if (dm.ResurrectOffered) dm.Resurrect();
                 }

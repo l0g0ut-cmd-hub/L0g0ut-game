@@ -480,7 +480,7 @@ namespace BladePath
                 string sub = duel.TimedOut ? "ВРЕМЯ ВЫШЛО" : "";
                 // «идеально» считается по последнему раунду — на итоге матча так и подписываем,
                 // иначе рядом со статистикой урона за весь бой это выглядит ошибкой
-                if (duel.Perfect && !duel.LastDraw) sub = duel.MatchOver ? "ИДЕАЛЬНЫЙ РАУНД" : "ИДЕАЛЬНО";
+                if (duel.Perfect && !duel.LastDraw && won) sub = duel.MatchOver ? "ИДЕАЛЬНЫЙ РАУНД" : "ИДЕАЛЬНО";   // «идеально» — только о своей победе: враг без царапины над «ПОРАЖЕНИЕМ» читался как похвала
                 // Keep the existing brush-paint style, but size the backing
                 // to the ENTIRE result heading (and optional "ИДЕАЛЬНО"),
                 // rather than stretching a 480-unit stroke under 800-unit text.
