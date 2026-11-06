@@ -56,6 +56,7 @@ namespace BladePath
         /// <summary>Погода в точке карты (доли 0..1): 0 ясно, 1 дождь, 2 гроза (гроза сильнее, если облака перекрываются).</summary>
         public static int SkyAt(int r, Vector2 p)
         {
+            if (Weather.NoRain) return 0;   // дождь и гроза выключены в меню разработчика
             Ensure(r);
             int sky = 0;
             foreach (Cloud c in clouds)
@@ -113,6 +114,7 @@ namespace BladePath
         public static void Draw(int r, Rect view, float u0, float uw)
         {
             if (Event.current.type != EventType.Repaint) return;
+            if (Weather.NoRain) return;   // без дождя и грозы — и тучи с карты убраны
             Ensure(r);
             Texture2D puffs = UiKit.Tex("UI/map_cloud_puffs"), bolts = UiKit.Tex("FX/map_lightning");
             Texture2D atlas = UiKit.Tex("UI/map_clouds"), old = UiKit.Tex("FX/cloud"), bolt = UiKit.Tex("FX/lightning"),

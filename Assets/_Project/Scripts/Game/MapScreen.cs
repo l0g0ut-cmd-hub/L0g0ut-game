@@ -86,6 +86,7 @@ namespace BladePath
         {
             int resume = !Campaign.Knocked && Campaign.ClearedRegion < 0 && plannedRegion == Campaign.Region ? sel : -1;
             Weather.MapSky = -1;   // вне боя с карты (тренировка с ронином) — погода как раньше
+            Weather.MapTime = -1;
             shownAt = Time.unscaledTime; sel = -1; previewPath.Clear(); moveTo = -1; modal = Modal.None; panU = -1f; continueRideAt = -1f;
             routeAutopilot = false; nextRouteAt = 0f; toastLines.Clear(); gambleTable = false;
             manualPan = false; panArmed = false; panDragging = false;
@@ -857,9 +858,9 @@ namespace BladePath
 
         void DrawDev(bool ok)
         {
-            Rect r = Card(520f, 470f);
-            float x = r.x + 24f, w = r.width - 48f, y = r.y + 18f;
-            VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "МЕНЮ РАЗРАБОТЧИКА", 20f); y += 38f;
+            Rect r = Card(520f, 528f);
+            float x = r.x + 24f, w = r.width - 48f, y = r.y + 16f;
+            VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "МЕНЮ РАЗРАБОТЧИКА", 20f); y += 36f;
             float bw = (w - 10f) * 0.5f;
             if (Btn(new Rect(x, y, bw, 44f), "ТЕЛЕПОРТ", ok, true)) { modal = Modal.None; devTeleport = true; return; }
             if (Btn(new Rect(x + bw + 10f, y, bw, 44f), "ЛАГЕРЬ", ok)) { OpenCamp(); return; }
@@ -876,7 +877,11 @@ namespace BladePath
             if (Btn(new Rect(x, y, w, 44f), "ВЫБРОСИТЬ КОСТЬ: 3 ХОДА", ok)) { Campaign.DebugSteps(3); }
             y += 52f;
             if (Btn(new Rect(x, y, w, 44f), SideDuel.Enabled ? "СОРАТНИКИ: ВКЛ" : "СОРАТНИКИ: ВЫКЛ", ok)) { SideDuel.Enabled = !SideDuel.Enabled; }
-            if (Btn(new Rect(r.center.x - 80f, r.yMax - 52f, 160f, 40f), "ЗАКРЫТЬ", ok)) modal = Modal.None;
+            y += 52f;
+            // время суток (по пути / утро / день / вечер / ночь / выкл — всегда день) и дождь с грозой — на карте и в боях
+            if (Btn(new Rect(x, y, bw, 44f), "ВРЕМЯ: " + DayCycle.ModeName(false), ok)) DayCycle.NextMode();
+            if (Btn(new Rect(x + bw + 10f, y, bw, 44f), Weather.NoRain ? "ДОЖДЬ/ГРОЗА: ВЫКЛ" : "ДОЖДЬ/ГРОЗА: ВКЛ", ok)) Weather.NoRain = !Weather.NoRain;
+            if (Btn(new Rect(r.center.x - 80f, r.yMax - 48f, 160f, 38f), "ЗАКРЫТЬ", ok)) modal = Modal.None;
         }
 
         bool Known(MapNode n)
@@ -2539,7 +2544,7 @@ namespace BladePath
         {
             // погода арены — от облака над местом боя в этот момент
             MapNode fn = Campaign.Nodes[at];
-            Weather.MapSky = MapClouds.SkyAt(Campaign.Region, new Vector2(fn.x, fn.y));
+            Weather.MapSky = MapClouds.SkyAt(Campaign.Region, new Vector2(fn.x, fn.y)); Weather.MapTime = DayCycle.Phase;   // бой — в то время суток, что на карте
             if (!rematchStarted) Campaign.BeginFight(at);
             Hide();
             DuelManager dm = DuelManager.Instance;
@@ -2568,7 +2573,7 @@ namespace BladePath
         void LeaveFight(bool dojo)
         {
             MapNode fn = Campaign.Current;
-            Weather.MapSky = MapClouds.SkyAt(Campaign.Region, new Vector2(fn.x, fn.y));
+            Weather.MapSky = MapClouds.SkyAt(Campaign.Region, new Vector2(fn.x, fn.y)); Weather.MapTime = DayCycle.Phase;   // бой — в то время суток, что на карте
             if (dojo) Campaign.BeginDojo(); else Campaign.BeginHunt();
             Hide();
             DuelManager dm = DuelManager.Instance;

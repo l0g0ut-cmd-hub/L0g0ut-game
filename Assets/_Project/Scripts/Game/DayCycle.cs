@@ -27,8 +27,40 @@ namespace BladePath
         static float shown = -1f;        // показанная фаза, непрерывно 0…4 (плавный переход, ночь → утро через 4)
         static float lastTick = -1f;
 
+        // ---- режим (меню разработчика на карте и в бою): по пути, одно время суток навсегда или выключено (всегда день)
+        public const int Auto = -1, Off = 4;
+        public static readonly string[] ModeNames = { "УТРО", "ДЕНЬ", "ВЕЧЕР", "НОЧЬ", "ВСЕГДА ДЕНЬ" };   // «всегда день» — смена выключена
+        static int mode = -2;
+        public static int Mode
+        {
+            get { if (mode == -2) mode = Mathf.Clamp(PlayerPrefs.GetInt("day_mode", Auto), Auto, Off); return mode; }
+            set { mode = Mathf.Clamp(value, Auto, Off); PlayerPrefs.SetInt("day_mode", mode); PlayerPrefs.Save(); }
+        }
+        public static string ModeName(bool fight) { return Mode == Auto ? (!fight ? "ПО ПУТИ" : Weather.MapTime >= 0 ? "ПО КАРТЕ" : "СЛУЧАЙНО") : ModeNames[Mode]; }
+        /// <summary>По кругу: по пути → утро → день → вечер → ночь → выкл → по пути.</summary>
+        public static void NextMode() { Mode = Mode >= Off ? Auto : Mode + 1; }
+        public static bool Enabled { get { return Mode != Off; } }
+
+        /// <summary>Время суток боя: −1 — случайно, как раньше (бой не с карты, режим «по пути»); иначе 0…3.</summary>
+        public static int FightTime(int fromMap)
+        {
+            int m = Mode;
+            if (m == Off) return Day;
+            if (m >= 0) return m;
+            return fromMap;
+        }
+
         static void Load() { if (step < 0) step = Mathf.Max(0, PlayerPrefs.GetInt("day_step", 0)); }
-        public static int Phase { get { Load(); return (step / StepsPerPhase) % 4; } }
+        public static int Phase
+        {
+            get
+            {
+                int m = Mode;
+                if (m == Off) return Day;
+                if (m >= 0) return m;
+                Load(); return (step / StepsPerPhase) % 4;
+            }
+        }
         /// <summary>Сколько шагов до следующей четверти суток.</summary>
         public static int StepsLeft { get { Load(); return StepsPerPhase - step % StepsPerPhase; } }
 
@@ -39,11 +71,13 @@ namespace BladePath
             int was = Phase;
             step++;
             PlayerPrefs.SetInt("day_step", step); PlayerPrefs.Save();
-            return Phase != was ? Coming[Phase] : null;
+            return Mode == Auto && Phase != was ? Coming[Phase] : null;   // время задано вручную или выключено — без уведомлений
         }
 
         public static string Hint()
         {
+            if (Mode == Off) return "Смена времени суток выключена: всегда день.";
+            if (Mode >= 0) return Names[Phase] + " — время суток задано в меню разработчика.";
             int left = StepsLeft;
             return Names[Phase] + ". До " + (Phase == Morning ? "дня" : Phase == Day ? "вечера" : Phase == Evening ? "ночи" : "утра") + " — "
                    + left + (left == 1 ? " шаг" : " шага") + " пути.";

@@ -85,6 +85,15 @@ namespace BladePath
         public static bool ForceNight;
         /// <summary>Погода с карты похода (MapClouds): −1 — как раньше, случайно; 0 — ясно; 1 — дождевое облако; 2 — грозовое.</summary>
         public static int MapSky = -1;
+        /// <summary>Время суток с карты похода (DayCycle): −1 — случайно, как раньше; 0 утро, 1 день, 2 вечер, 3 ночь.</summary>
+        public static int MapTime = -1;
+        /// <summary>Дождь и гроза выключены (меню разработчика): ни в бою, ни на карте.</summary>
+        public static bool NoRain
+        {
+            get { if (noRain < 0) noRain = PlayerPrefs.GetInt("wx_norain", 0); return noRain == 1; }
+            set { noRain = value ? 1 : 0; PlayerPrefs.SetInt("wx_norain", noRain); PlayerPrefs.Save(); }
+        }
+        static int noRain = -1;
         /// <summary>Гроза: дождь с молниями и громом. Дождь от обычного облака — без молний.</summary>
         public bool Storm { get; private set; }
         public void Roll()
@@ -99,6 +108,12 @@ namespace BladePath
             Dawn = Daytime && Random.value < dawnShare;
             Dusk = Daytime && !Dawn && Random.value < duskShare;
             if (Daytime && noClearDay >= 4) { Dawn = false; Dusk = false; }
+            // время суток с карты (или заданное в меню разработчика): утро — рассвет, день — ясный день, вечер — закат, ночь — ночь
+            int tod = DayCycle.FightTime(MapTime);
+            if (tod >= 0 && DayNight.Instance != null && !(ForceNight && tod != DayCycle.Night && DayCycle.Mode == DayCycle.Auto))
+            {
+                Daytime = tod != DayCycle.Night; Dawn = tod == DayCycle.Morning; Dusk = tod == DayCycle.Evening;
+            }
             nightStreak = Daytime ? 0 : nightStreak + 1;
             noClearDay = Daytime && !Dawn && !Dusk ? 0 : noClearDay + 1;
             if (DayNight.Instance != null) DayNight.Instance.Apply(Daytime, Dawn, Dusk);
@@ -112,12 +127,13 @@ namespace BladePath
                 // погоду определило облако над местом боя на карте (время суток — как раньше)
                 Raining = MapSky >= 1; Storm = MapSky == 2; Snowing = false;
             }
+            if (NoRain) { Raining = false; Storm = false; }
             if (Raining) StartRain(); else StopRain();
             if (Snowing) StartSnow(); else StopSnow();
             Foggy = MapSky < 0 && !Daytime && !Raining && !Snowing && Random.value < fogChance;
             if (Foggy) StartFog(); else StopFog();
             changeAt = MapSky < 0 && !Daytime && !Raining && !Snowing && Random.value < changeChance ? Time.time + Random.Range(25f, 55f) : -1f;
-            changeToSnow = Random.value < 0.4f; rumbled = false;
+            changeToSnow = NoRain || Random.value < 0.4f; rumbled = false;   // без дождя — смена погоды только на снег
             if (Dawn) EnsureBreaths();   // утро холодное — изо рта пар
             Critters(!Raining && !Snowing && !Daytime);
             DayCritters(Daytime);
