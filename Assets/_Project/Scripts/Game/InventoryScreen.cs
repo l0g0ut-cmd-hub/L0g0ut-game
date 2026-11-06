@@ -97,7 +97,8 @@ namespace BladePath
                 }
                 if (Profile.IsEquipped(it)) UiKit.Disc(new Vector2(r.x + 8f, r.y + 8f), 4f, Gold);
             }
-            Texture2D sh = rar >= 3 ? UiKit.Tex("UI/shine_frame") : null;
+            // рамки редкости (UI/frame_0…3): железо, сталь, золото с фиолетовым, кроваво-золотая с когтями
+            Texture2D sh = rar >= 3 && fr == null ? UiKit.Tex("UI/shine_frame") : null;
             if (sh != null)
             {
                 // легендарное: золотая рамка, по которой время от времени пробегает блик
@@ -370,6 +371,14 @@ namespace BladePath
                 Rect r = new Rect(x, y, 96f, 96f);
                 Item it = Profile.Equipped(s);
                 DrawItem(r, it, it != null && it == sel);
+                // пустая ячейка — золотой силуэт того, что в неё надевается (клинок, цуба, облачение, маска, амулет, тыква)
+                Texture2D sil = it == null && s < 6 ? UiKit.Tex("UI/slot_silhouettes") : null;
+                if (sil != null)
+                {
+                    Color o = GUI.color; GUI.color = new Color(1f, 1f, 1f, 0.34f);
+                    GUI.DrawTextureWithTexCoords(new Rect(r.x + r.width * 0.18f, r.y + r.height * 0.18f, r.width * 0.64f, r.height * 0.64f), sil, new Rect(s / 6f, 0f, 1f / 6f, 1f));
+                    GUI.color = o;
+                }
                 UiKit.Text(new Rect(x - 12f, y + 98f, 120f, 18f), Profile.SlotNames[s], 11f, new Color(0.8f, 0.76f, 0.68f));
                 if (GUI.Button(r, GUIContent.none, GUIStyle.none)) sel = it;
             }
