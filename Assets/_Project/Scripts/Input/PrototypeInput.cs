@@ -301,27 +301,19 @@ namespace BladePath
             Box(B.DevMenu, rx, 270f, 300f, 40f);
             Box(B.Stats, rx, 320f, 300f, 40f);
             Box(B.Gear, rx, 370f, 300f, 40f);
-            Box(B.Sound, lx, 420f, 300f, 40f);        // звук: выключатель и что звучит
-            Box(B.SoundScope, rx, 420f, 300f, 40f);
             // меню разработчика (вместо обычных кнопок паузы): отладка и проверка боя
-            // 8 рядов по 46: последний — время суток и дождь
-            Box(B.AiToggle, lx, 116f, 300f, 38f);
-            Box(B.DebugToggle, lx, 162f, 300f, 38f);
-            Box(B.EnemyImmortal, lx, 208f, 300f, 38f);
-            Box(B.AutoBattle, rx, 116f, 300f, 38f);
-            Box(B.AutoLevel, rx, 162f, 300f, 38f);
-            Box(B.Immortal, rx, 208f, 300f, 38f);
-            Box(B.WinFight, lx, 254f, 300f, 38f);
-            Box(B.Clavicle, rx, 254f, 300f, 38f);
-            Box(B.Twist, rx, 300f, 300f, 38f);
-            Box(B.Arena, lx, 300f, 300f, 38f);
-            Box(B.Ally, rx, 346f, 300f, 38f);
-            Box(B.AllyFeature, lx, 346f, 300f, 38f);
-            Box(B.AllyLevel, lx, 392f, 300f, 38f);
-            Box(B.AllyImmortal, rx, 392f, 300f, 38f);
-            Box(B.DayTime, lx, 438f, 300f, 38f);
-            Box(B.NoRain, rx, 438f, 300f, 38f);
-            Box(B.DevBack, cx - 150f, 484f, 300f, 36f);
+            // меню разработчика — три колонки по шесть кнопок (надписи сами ужимаются по ширине кнопки)
+            {
+                B[] dev = { B.AiToggle, B.AutoBattle, B.DebugToggle,
+                            B.AutoLevel, B.EnemyImmortal, B.Immortal,
+                            B.WinFight, B.Arena, B.Clavicle,
+                            B.Twist, B.AllyFeature, B.Ally,
+                            B.AllyLevel, B.AllyImmortal, B.DayTime,
+                            B.NoRain, B.Sound, B.SoundScope };
+                for (int k = 0; k < dev.Length; k++)
+                    Box(dev[k], cx - 313f + (k % 3) * 213f, 120f + (k / 3) * 46f, 200f, 38f);
+                Box(B.DevBack, cx - 150f, 404f, 300f, 38f);
+            }
             Box(B.OverAgain, cx - 210f, 314f, 200f, 56f);   // ниже панели итогов боя
             Box(B.OverMenu, cx + 10f, 314f, 200f, 56f);
             Box(B.OverGear, cx - 115f, 378f, 230f, 56f);   // сразу под «НА КАРТУ» / «В МЕНЮ», а не на дне экрана
@@ -332,9 +324,9 @@ namespace BladePath
             if (play && player != null && player.KiFull) active[(int)B.Super] = true;
             if (!paused) devOpen = false;
             if (paused && devOpen)
-                foreach (B b in new[] { B.AiToggle, B.DebugToggle, B.EnemyImmortal, B.AutoBattle, B.AutoLevel, B.Immortal, B.WinFight, B.Clavicle, B.Twist, B.Arena, B.Ally, B.AllyFeature, B.AllyLevel, B.AllyImmortal, B.DayTime, B.NoRain, B.DevBack }) active[(int)b] = true;
+                foreach (B b in new[] { B.AiToggle, B.DebugToggle, B.EnemyImmortal, B.AutoBattle, B.AutoLevel, B.Immortal, B.WinFight, B.Clavicle, B.Twist, B.Arena, B.Ally, B.AllyFeature, B.AllyLevel, B.AllyImmortal, B.DayTime, B.NoRain, B.Sound, B.SoundScope, B.DevBack }) active[(int)b] = true;
             else if (paused)
-                foreach (B b in new[] { B.Resume, B.Restart, B.Difficulty, B.Gfx, B.Vibro, B.CamReset, B.ToMenu, B.CamMode, B.TimerToggle, B.Gear, B.Stats, B.DevMenu, B.Sound, B.SoundScope }) active[(int)b] = true;
+                foreach (B b in new[] { B.Resume, B.Restart, B.Difficulty, B.Gfx, B.Vibro, B.CamReset, B.ToMenu, B.CamMode, B.TimerToggle, B.Gear, B.Stats, B.DevMenu }) active[(int)b] = true;
             if (over) { active[(int)B.OverAgain] = true; active[(int)B.OverMenu] = true; active[(int)B.OverGear] = true; }
 
             labels[(int)B.Resume] = "ПРОДОЛЖИТЬ";
@@ -554,7 +546,7 @@ namespace BladePath
             if (paused)
             {
                 UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, 0.65f));
-                Rect pr = new Rect(W * 0.5f - 340f, 54f, 680f, 422f);   // обычная пауза — с рядом «звук»   // меню разработчика — прежнего размера   // свиток-подложка под кнопками паузы
+                Rect pr = new Rect(W * 0.5f - 340f, 54f, 680f, 400f);   // обычная пауза — с рядом «звук»   // меню разработчика — прежнего размера   // свиток-подложка под кнопками паузы
                 Texture2D scroll = null;   // единый стиль: окно чёрного лака вместо свитка
                 if (scroll != null)
                 {
@@ -581,7 +573,7 @@ namespace BladePath
                 {
                     UiKit.Rect(new Rect(W * 0.5f - 200f, 64f, 400f, 46f), new Color(0.12f, 0.05f, 0.03f, 0.9f));
                     UiKit.Text(new Rect(W * 0.5f - 200f, 64f, 400f, 46f), "МЕНЮ РАЗРАБОТЧИКА", 24f, Gold);
-                    foreach (B b in new[] { B.AiToggle, B.DebugToggle, B.EnemyImmortal, B.AutoBattle, B.AutoLevel, B.Immortal, B.WinFight, B.Clavicle, B.Twist, B.Arena, B.Ally, B.AllyFeature, B.AllyLevel, B.AllyImmortal, B.DayTime, B.NoRain, B.DevBack }) DrawRectButton((int)b);
+                    foreach (B b in new[] { B.AiToggle, B.DebugToggle, B.EnemyImmortal, B.AutoBattle, B.AutoLevel, B.Immortal, B.WinFight, B.Clavicle, B.Twist, B.Arena, B.Ally, B.AllyFeature, B.AllyLevel, B.AllyImmortal, B.DayTime, B.NoRain, B.Sound, B.SoundScope, B.DevBack }) DrawRectButton((int)b);
                 }
                 else
                 {
@@ -589,9 +581,8 @@ namespace BladePath
                     DrawRectButton((int)B.Vibro); DrawRectButton((int)B.Difficulty); DrawRectButton((int)B.Gfx);
                     DrawRectButton((int)B.CamMode); DrawRectButton((int)B.TimerToggle); DrawRectButton((int)B.Gear); DrawRectButton((int)B.Stats);
                     DrawRectButton((int)B.DevMenu);
-                    DrawRectButton((int)B.Sound); DrawRectButton((int)B.SoundScope);
                 }
-                UiKit.Text(new Rect(W * 0.5f - 400f, devOpen ? 521f : 478f, 800f, 24f),
+                UiKit.Text(new Rect(W * 0.5f - 400f, 478f, 800f, 24f),
                     "ПУТЬ " + (Ladder.Index + 1) + "/" + Ladder.Count + "  ·  ПОБЕД " + Records.Wins + "  ·  ПОРАЖЕНИЙ " + Records.Losses + "  ·  ЛУЧШЕЕ " + Records.BestStage + "/" + Ladder.Count + (Records.Cleared > 0 ? "  ·  ПРОЙДЕН ×" + Records.Cleared : ""),
                     13f, new Color(0.85f, 0.8f, 0.7f, 0.9f));
             }
