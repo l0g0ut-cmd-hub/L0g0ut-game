@@ -37,6 +37,7 @@ namespace BladePath
         readonly Queue<int> routeQueue = new Queue<int>(16);
         int moveFrom = -1, moveTo = -1; float moveStart;
         int routeGoal = -1;   // distant selected node while travelling one hop towards it
+        readonly List<int> ridePlan = new List<int>();   // весь маршрут поездки к routeGoal (как его показали игроку)
         float continueRideAt = -1f;   // next hop of a multi-step ride (after a short pause on a passed place)
         float moveDuration = 1.25f;
         float rideCycleAt;
@@ -123,6 +124,9 @@ namespace BladePath
             // that opens an encounter (fight, event, chest, service) and when steps run out.
             if (sel != i && NextPreviewStep != i) return;
             routeGoal = sel != i ? sel : -1;   // remember the distant goal for the next hop
+            // маршрут, который игрок видел при выборе, — по нему и едем до цели, не перестраивая на каждом перегоне
+            if (routeGoal >= 0 && previewPath.Count > 1 && previewPath[0] == Campaign.At) { ridePlan.Clear(); ridePlan.AddRange(previewPath); }
+            else if (routeGoal < 0) ridePlan.Clear();
             routeAutopilot = false;
             revisit = Campaign.Nodes[i].done;
             freshTreasure = Campaign.Nodes[i].Type == NodeType.Treasure && !revisit;
@@ -165,7 +169,15 @@ namespace BladePath
                     if (!passing) OpenNode(i); else modal = Modal.None;
                     if (goal >= 0 && goal != Campaign.At && goal < Campaign.Nodes.Count)
                     {
-                        SelectNode(goal);
+                        // продолжаем по сохранённому маршруту; перестраиваем, только если он больше не ведёт от текущего места
+                        int here = ridePlan.IndexOf(Campaign.At);
+                        if (here >= 0 && here + 1 < ridePlan.Count && ridePlan[ridePlan.Count - 1] == goal)
+                        {
+                            sel = goal; plannedRegion = Campaign.Region;
+                            previewPath.Clear();
+                            for (int k = here; k < ridePlan.Count; k++) previewPath.Add(ridePlan[k]);
+                        }
+                        else SelectNode(goal);
                         // nothing to resolve here: continue the same ride to the goal
                         if (modal == Modal.None && Campaign.CanGo(NextPreviewStep)) continueRideAt = Time.unscaledTime + 0.3f;
                     }
@@ -656,41 +668,31 @@ namespace BladePath
                 previewPath.Add(start); previewPath.Add(index);
                 return;
             }
+            // Кратчайший маршрут: сначала меньше ходов кости (новые места), затем короче дорога. Раньше маршрут
+            // искался в ширину только по дорогам «вперёд», а если цель лежала вбок — откатом по пройденным
+            // местам: всадник делал крюк через уже пройденного кузнеца, хотя к сундуку вела своя дорога.
+            // Правила те же: вперёд — по дорогам похода; вбок и назад — только через пройденные места (или в саму цель).
+            TerrainRoads.Bind(Campaign.Region, nodes);
             int[] parents = new int[nodes.Count];
-            for (int i = 0; i < parents.Length; i++) parents[i] = -1;
-            routeQueue.Clear();
-            parents[start] = start;
-            routeQueue.Enqueue(start);
-            while (routeQueue.Count > 0 && parents[index] < 0)
+            float[] cost = new float[nodes.Count];
+            bool[] closed = new bool[nodes.Count];
+            for (int i = 0; i < parents.Length; i++) { parents[i] = -1; cost[i] = float.MaxValue; }
+            parents[start] = start; cost[start] = 0f;
+            while (true)
             {
-                int at = routeQueue.Dequeue();
-                foreach (int next in nodes[at].next)
+                int at = -1;
+                for (int i = 0; i < cost.Length; i++)
+                    if (!closed[i] && cost[i] < float.MaxValue && (at < 0 || cost[i] < cost[at])) at = i;
+                if (at < 0 || at == index) break;
+                closed[at] = true;
+                for (int next = 0; next < nodes.Count; next++)
                 {
-                    if (next < 0 || next >= parents.Length || parents[next] >= 0) continue;
-                    parents[next] = at;
-                    routeQueue.Enqueue(next);
-                }
-            }
-            // No forward road from here: the marker stays selected for its description,
-            // but there is no route and В ПУТЬ stays disabled.
-            // Вперёд не дойти — значит цель позади или на соседней ветке: путь по своим следам назад
-            // (через пройденные места) и оттуда вперёд. Шаги по пройденным местам бесплатны.
-            if (parents[index] < 0)
-            {
-                for (int i = 0; i < parents.Length; i++) parents[i] = -1;
-                routeQueue.Clear();
-                parents[start] = start;
-                routeQueue.Enqueue(start);
-                while (routeQueue.Count > 0 && parents[index] < 0)
-                {
-                    int at = routeQueue.Dequeue();
-                    for (int next = 0; next < nodes.Count; next++)
-                    {
-                        if (parents[next] >= 0 || !Campaign.Adjacent(at, next)) continue;
-                        if (next != index && !nodes[next].done) continue;   // через неизведанное — только вперёд
-                        parents[next] = at;
-                        routeQueue.Enqueue(next);
-                    }
+                    if (closed[next] || next == at) continue;
+                    bool forward = nodes[at].next.Contains(next);
+                    if (!forward && !(Campaign.Adjacent(at, next) && (nodes[next].done || next == index))) continue;
+                    if (!forward && !nodes[next].done && next != index) continue;   // через неизведанное — только вперёд
+                    float c = cost[at] + (nodes[next].done ? 0f : 100000f) + TerrainRoads.Route(at, next).lengthPixels;
+                    if (c < cost[next]) { cost[next] = c; parents[next] = at; }
                 }
             }
             if (parents[index] < 0) return;

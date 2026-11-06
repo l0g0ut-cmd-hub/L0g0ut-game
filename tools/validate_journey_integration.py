@@ -102,7 +102,11 @@ def check_routes():
     assert 'if (!interactive || i != hitNode || panDragging) continue;' in screen
     # One В ПУТЬ tap rides the whole route but stops at every new encounter.
     assert 'if (modal == Modal.None && !Campaign.InFight && Campaign.CanGo(hop)) Go(hop);' in screen
-    assert 'foreach (int next in nodes[at].next)' in screen, "Route preview must be forward-only"
+    # Маршрут: через неизведанное — только вперёд; кратчайший по ходам, затем по длине дороги;
+    # поездка идёт по показанному маршруту, без перестройки на каждом перегоне.
+    assert 'bool forward = nodes[at].next.Contains(next);' in screen, "Unvisited places only along forward roads"
+    assert 'if (!forward && !nodes[next].done && next != index) continue;' in screen
+    assert 'readonly List<int> ridePlan' in screen and 'int here = ridePlan.IndexOf(Campaign.At);' in screen
     assert 'if (UiKit.Tex(heroArt) != null)' in screen
     assert 'heroArt = "UI/npc_"' not in screen
     assert "float artHeight = artSpace >= 94f" in screen
