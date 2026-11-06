@@ -14,13 +14,11 @@ jobs:
           set -u
           mkdir -p out/pages out/files
           UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
-          SLUGS="looping-magic-aura-01-front looping-magic-aura-02-front looping-magic-aura-03-front looping-magic-aura-04-front looping-magic-aura-05-front
-          energy-burst-07 energy-burst-09 energy-burst-10 energy-burst-11 energy-burst-12 energy-burst-13 energy-burst-14
-          magical-shockwave-01-front magical-shield-block-01-front teleportation-01-front teleportation-02-front
-          spirit-flame-01-front spirit-flame-02-front spirit-flame-03-front spirit-flame-04-front spirit-flame-05-front spirit-flame-06-front
-          energy-swirl-01-top energy-swirl-03-top energy-swirl-05-top energy-leaks-01-angle energy-leaks-02-angle
-          magic-fire-loop-04-front magic-fire-loop-05-front magic-fire-loop-06-front magical-tornado-01-front candle-flame-01-loop-front
-          ground-fire-03-side shockwave-smoke-03-side thor-lightning-energy-arc-slomo-07-front thor-lightning-energy-arc-slomo-08-front lightning-arc-02-glow electric-arc-bolt-01"
+          SLUGS="large-campfire-smoke-loop large-campfire-no-smoke-loop campfire-03-loop-front woodfire-03-front woodfire-06-front
+          smoke-plume-small-rising-01-loop-front smoke-plume-medium-rising-03-loop-front smoke-plume-medium-rising-02-loop-front
+          steam-jet-continous-01-front steam-jet-continous-03-front
+          ground-fog-01a-front ground-fog-02a-front ground-fog-03a-front ground-fog-04a-front ground-fog-05a-front
+          falling-fog-loop-01-front fog-01-front fog-09-front fog-02-side"
           for s in $SLUGS; do
             curl -sL -A "$UA" "https://cgheven.com/assets/$s" -o "out/pages/$s.html" || true
             grep -oE 'https://cdn\.cgheven\.com/file/[^"\\ ]+' "out/pages/$s.html" | grep -viE 'preview|thumbnail|/Addons/|\.webm$|\.webp$|Thanos_Portal' | sort -u > "out/pages/$s.urls" || true
@@ -30,7 +28,7 @@ jobs:
             echo "$s -> ${pick:-NONE}" | tee -a out/log.txt
             if [ -n "$pick" ]; then
               ext="${pick##*.}"
-              curl -sL -A "$UA" --max-filesize 150000000 "$pick" -o "out/raw_$s.$ext" || echo "FAIL $s" >> out/log.txt
+              curl -sL -A "$UA" --max-filesize 400000000 "$pick" -o "out/raw_$s.$ext" || { echo "FAIL $s" >> out/log.txt; rm -f "out/raw_$s.$ext"; alt=$(grep -E '1K' "out/pages/$s.urls" | grep -iE 'H\.264|\.mp4$' | head -1); [ -n "$alt" ] && curl -sL -A "$UA" --max-filesize 400000000 "$alt" -o "out/raw_$s.${alt##*.}" && echo "$s ALT $alt" >> out/log.txt; }
             fi
           done
           # видео → кадры 256×256 (по 48 кадров на эффект), прозрачность из альфы ProRes или из яркости (чёрный фон)
@@ -42,7 +40,7 @@ jobs:
             dur=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$f" || echo 2)
             fps=$(python3 -c "print(max(1.0, 48.0/max(0.5, float('$dur'))))")
             mkdir -p "out/frames/$n"
-            ffmpeg -v error -i "$f" -vf "fps=$fps,format=rgba,scale=256:256:force_original_aspect_ratio=decrease,pad=256:256:(ow-iw)/2:(oh-ih)/2:color=black@0" -frames:v 48 "out/frames/$n/f_%02d.png" || echo "FFMPEG FAIL $n" >> out/log.txt
+            ffmpeg -v error -i "$f" -vf "fps=$fps,format=rgba,scale=384:384:force_original_aspect_ratio=decrease" -frames:v 48 "out/frames/$n/f_%02d.png" || echo "FFMPEG FAIL $n" >> out/log.txt
             ffprobe -v error -select_streams v:0 -show_entries stream=pix_fmt,width,height,nb_frames -of csv=p=0 "$f" | sed "s/^/$n: /" >> out/log.txt
           done
           rm -f out/raw_*
