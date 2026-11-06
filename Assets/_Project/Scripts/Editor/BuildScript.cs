@@ -98,6 +98,11 @@ namespace BladePath.EditorTools
             PlayerSettings.allowedAutorotateToLandscapeRight = true;
             PlayerSettings.allowedAutorotateToPortrait = false;
             PlayerSettings.allowedAutorotateToPortraitUpsideDown = false;
+            // окно сразу во весь экран и под вырезом камеры: иначе на старте Android сначала даёт окно
+            // с системными полосами, через мгновение убирает их — ширина меняется, и меню с самураем
+            // (оно центрируется по окну) съезжает на пару пикселей в первую секунду
+            PlayerSettings.Android.startInFullscreen = true;
+            PlayerSettings.Android.renderOutsideSafeArea = true;
 
             EditorUserBuildSettings.buildAppBundle = false;                 // APK, не AAB
             EditorUserBuildSettings.androidBuildType = AndroidBuildType.Release;   // подпись всё равно debug-ключом (без своего keystore)
