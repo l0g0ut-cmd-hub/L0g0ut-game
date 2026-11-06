@@ -617,7 +617,10 @@ namespace BladePath
                 else UiKit.Slice(vr, wood, vr.height / wood.height, 0.14f, 0.12f, 0.5f, 0f, Color.white);
             }
             else VisualIdentity.Surface(r, 0.98f, false);
-            UiKit.Text(r, labels[b], Mathf.Min(18f, r.height * 0.44f),
+            // шрифт ужимается под ширину кнопки: «СНАРЯЖЕНИЕ (+10)» не вылезает за золотые края
+            string label = labels[b] ?? "";
+            float fitSize = (r.width - 28f) / Mathf.Max(1f, label.Length * 0.76f);
+            UiKit.Text(r, label, Mathf.Min(18f, r.height * 0.44f, fitSize),
                 resultButton ? new Color(1f, 0.99f, 0.91f, 1f)
                     : h ? VisualIdentity.BrassLight : VisualIdentity.Parchment);
             GUI.backgroundColor = oldBackgroundTint;

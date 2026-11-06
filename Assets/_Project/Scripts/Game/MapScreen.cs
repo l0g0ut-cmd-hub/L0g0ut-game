@@ -1908,9 +1908,12 @@ namespace BladePath
             Rect drunkButton = OnScreen(CampRect(new Rect(1480f, 670f, 244f, 44f), s, ox, oy));
             Rect hearthButton = OnScreen(CampRect(new Rect(900f, 520f, 160f, 44f), s, ox, oy));
             Texture2D plaque = UiKit.Tex("UI/Kit/hud_banner");
+            // как ленты объявлений в бою: рваные концы не растягиваются, тянется только тёмная середина —
+            // плашка невысокая, а длинное название целиком в её тёмной части (центр тёмной полосы — 53% высоты)
+            const float plaqueW = 520f, plaqueH = 64f, plaqueY = 4f;
             if (plaque != null)
-                GUI.DrawTexture(new Rect(W * 0.5f - 230f, 2f, 460f, 460f * plaque.height / plaque.width), plaque, ScaleMode.StretchToFill, true);
-            UiKit.Text(new Rect(0f, 30f, W, 30f), "ТРАКТИР «ЧЁРНЫЙ ФОНАРЬ»", 20f, Gold);
+                UiKit.Slice(new Rect(W * 0.5f - plaqueW * 0.5f, plaqueY, plaqueW, plaqueH), plaque, plaqueH / plaque.height, 0.2f, 0.08f, 0.5f, 0f, Color.white);
+            UiKit.Text(new Rect(0f, plaqueY + plaqueH * 0.53f - 15f, W, 30f), "ТРАКТИР «ЧЁРНЫЙ ФОНАРЬ»", 18f, Gold);
             bool enabled = ok && !InventoryScreen.Open;
             if (Btn(ExitButtonRect(), tavFromCamp ? "В ЛАГЕРЬ" : "УЙТИ", enabled, true))
             {
