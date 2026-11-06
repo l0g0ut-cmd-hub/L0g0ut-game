@@ -323,20 +323,23 @@ namespace BladePath
         }
         /// <summary>Шаг на уже пройденное место (назад или по своим следам) — бесплатный: кость тратится только на новые места.</summary>
         public static bool FreeHop(int i) { return i >= 0 && i < D.nodes.Count && D.nodes[i].done; }
-        public static bool CanGo(int i) { return i >= 0 && i < D.nodes.Count && Current.done && Adjacent(D.at, i) && !InFight && !D.training && (D.steps > 0 || FreeHop(i)); }
+        /// <summary>С текущего места можно уходить: оно пройдено — или это услуга, через которую проехали насквозь
+        /// (она остаётся непосещённой, чтобы к ней вернуться, но держать героя не должна).</summary>
+        public static bool CurrentSettled { get { return Current.done || IsService(Current); } }
+        public static bool CanGo(int i) { return i >= 0 && i < D.nodes.Count && CurrentSettled && Adjacent(D.at, i) && !InFight && !D.training && (D.steps > 0 || FreeHop(i)); }
         public static int Rolls { get { return D.rolls; } }
         public static int Steps { get { return D.steps; } }
         public static int LastRoll { get { return D.lastRoll; } }
         public static bool Training { get { return D.training; } }
         public static bool Knocked { get { return D.knocked; } }
         public static void AckKnocked() { D.knocked = false; Save(); }
-        public static bool Stuck { get { return D.rolls <= 0 && D.steps <= 0 && Current.done && !InFight; } }
+        public static bool Stuck { get { return D.rolls <= 0 && D.steps <= 0 && CurrentSettled && !InFight; } }
         public static int GuideCost { get { return Mathf.RoundToInt((40 + 25 * D.region) * (1f + 0.4f * Profile.Cycle)); } }
 
         /// <summary>Бросок кости пути: 1–3 хода. Кость тратится.</summary>
         public static int RollDie()
         {
-            if (D.rolls <= 0 || D.steps > 0 || !Current.done || InFight || D.training) return 0;
+            if (D.rolls <= 0 || D.steps > 0 || !CurrentSettled || InFight || D.training) return 0;
             D.rolls--; D.lastRoll = UnityEngine.Random.Range(1, 4); D.steps = D.lastRoll; Save();
             return D.lastRoll;
         }
@@ -347,7 +350,7 @@ namespace BladePath
         /// <summary>Вызвать странствующего ронина: бой вне узла, победа — кость пути.</summary>
         public static void BeginTraining()
         {
-            if (InFight || D.training || !Current.done) return;
+            if (InFight || D.training || !CurrentSettled) return;
             D.training = true; D.fight = -1;
             Ladder.Index = DuelEnemy(D.region);
             Weather.ForceNight = false;

@@ -58,7 +58,7 @@ namespace BladePath
         bool NeedRollToGo()
         {
             int next = sel >= 0 ? (NextPreviewStep >= 0 ? NextPreviewStep : sel) : -1;
-            return next >= 0 && Campaign.Steps <= 0 && Campaign.Rolls > 0 && Campaign.Current.done && !Campaign.InFight
+            return next >= 0 && Campaign.Steps <= 0 && Campaign.Rolls > 0 && Campaign.CurrentSettled && !Campaign.InFight
                 && !Campaign.Training && moveTo < 0 && !Campaign.FreeHop(next) && Campaign.Adjacent(Campaign.At, next);
         }
 
@@ -89,7 +89,7 @@ namespace BladePath
             Campaign.CancelTraining();
             if (Campaign.Knocked) OpenModal(Modal.Knocked);
             else if (Campaign.ClearedRegion >= 0) OpenModal(Modal.RegionClear);
-            else if (Campaign.InFight || (!Campaign.Current.done && Campaign.Current.Type != NodeType.Start)) OpenNode(Campaign.At);
+            else if (Campaign.InFight || (!Campaign.CurrentSettled && Campaign.Current.Type != NodeType.Start)) OpenNode(Campaign.At);
         }
 
         void OpenModal(Modal m) { modal = m; modalAt = Time.unscaledTime; }
@@ -186,6 +186,14 @@ namespace BladePath
                     // всадника и не тратится — к ней можно вернуться; бой, событие и тайник по-прежнему останавливают
                     bool serviceOnTheWay = routeGoal >= 0 && routeGoal != i && !revisit && Campaign.IsService(Campaign.Nodes[i]);
                     Campaign.MoveTo(i, serviceOnTheWay); // persist only after the rider arrives
+                    if (Campaign.At != i)
+                    {
+                        // шаг не засчитан (правила похода не пустили) — поездка прекращается, а не продолжается
+                        // с прежнего места: иначе всадник метался между точками
+                        Debug.LogWarning("Map: arrival at " + i + " rejected, staying at " + Campaign.At);
+                        routeGoal = -1; continueRideAt = -1f; ridePlan.Clear(); rideFast = false; sel = -1; previewPath.Clear();
+                        return;
+                    }
                     if (freshTreasure) treasure = Profile.Treasure(Campaign.Region + 1);
                     freshTreasure = false; // rollback/revisit must not grant a second chest
                     if (Juice.Instance != null) Juice.Instance.Taiko(0.6f, 1.25f);
@@ -809,7 +817,7 @@ namespace BladePath
             }
 
             // Before selecting a destination, preview available next roads subtly.
-            if (previewPath.Count <= 1 && Campaign.Steps > 0 && Campaign.Current.done && !Campaign.InFight)
+            if (previewPath.Count <= 1 && Campaign.Steps > 0 && Campaign.CurrentSettled && !Campaign.InFight)
             {
                 for (int next = 0; next < Campaign.Nodes.Count; next++)
                     if (Campaign.Adjacent(Campaign.At, next))
@@ -820,14 +828,14 @@ namespace BladePath
             for (int i = 1; i < previewPath.Count; i++)
             {
                 bool withinDie = PathCost(i) <= Campaign.Steps;
-                Color tint = withinDie && Campaign.Current.done && !Campaign.InFight
+                Color tint = withinDie && Campaign.CurrentSettled && !Campaign.InFight
                     ? new Color(0.67f, 1f, 0.65f, 0.95f)
                     : new Color(1f, 0.35f, 0.29f, 0.67f);
                 DrawFootprintsOnRoad(previewPath[i - 1], previewPath[i], tint, 1f, withinDie);
             }
             // где всадник остановится на этом ходу, если цель дальше броска: пульсирующее кольцо на месте остановки
             int stopK = StopOfThisTurn();
-            if (stopK > 0 && stopK < previewPath.Count - 1 && Campaign.Current.done && !Campaign.InFight)
+            if (stopK > 0 && stopK < previewPath.Count - 1 && Campaign.CurrentSettled && !Campaign.InFight)
             {
                 MapNode sn = Campaign.Nodes[previewPath[stopK]];
                 Vector2 sp = P(sn);
@@ -1236,7 +1244,7 @@ namespace BladePath
         {
             if (Event.current.type != EventType.Repaint ||
                 previewPath.Count < 2 || moveTo >= 0 ||
-                DuelManager.Gfx != 1 || !Campaign.Current.done) return;
+                DuelManager.Gfx != 1 || !Campaign.CurrentSettled) return;
             List<MapNode> nodes = Campaign.Nodes;
             float clock = Time.unscaledTime;
             for (int i = 1; i < previewPath.Count; i++)
@@ -1357,7 +1365,7 @@ namespace BladePath
                 UiKit.Rect(new Rect(x + 61f + k * 43f, y + 44f, 36f, 4f), segment);
             }
             y += 57f;
-            bool canRoll = Campaign.Rolls > 0 && Campaign.Steps <= 0 && Campaign.Current.done && !Campaign.InFight && !Campaign.Training && !rolling;
+            bool canRoll = Campaign.Rolls > 0 && Campaign.Steps <= 0 && Campaign.CurrentSettled && !Campaign.InFight && !Campaign.Training && !rolling;
             if (canRoll && Btn(new Rect(x, y, w, 42f), "БРОСИТЬ КОСТЬ", interactive, true)) { Campaign.RollDie(); rollAt = Time.unscaledTime; Haptics.Pulse(30); if (Juice.Instance != null) Juice.Instance.Taiko(0.7f, 1.3f); }
             if (canRoll) y += 48f;
             if (Campaign.Stuck && !rolling)
@@ -1470,7 +1478,7 @@ namespace BladePath
             }
             else
             {
-                string tip = Campaign.InFight ? "Бой ещё не окончен." : !Campaign.Current.done ? "Ты на месте." : Campaign.Steps > 0 ? "Выбери цель. Светлые следы — доступные шаги, красные — сверх броска." : "Брось кость пути, чтобы идти дальше. Назад по своим следам — без кости.";
+                string tip = Campaign.InFight ? "Бой ещё не окончен." : !Campaign.CurrentSettled ? "Ты на месте." : Campaign.Steps > 0 ? "Выбери цель. Светлые следы — доступные шаги, красные — сверх броска." : "Брось кость пути, чтобы идти дальше. Назад по своим следам — без кости.";
                 foreach (string line in Wrap(tip, Mathf.Max(34, Mathf.FloorToInt(w / (12f * 0.53f)))))   // перенос по ширине панели, без пустоты справа
                     { if (y + 17f > PanelTextBottom) break; UiKit.Text(new Rect(x, y, w, 17f), line, 12f, Dim, TextAnchor.MiddleLeft, false); y += 17f; }
             }
