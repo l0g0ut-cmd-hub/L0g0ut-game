@@ -13,8 +13,10 @@ on:
     branches: [android-ui-qa]
 permissions:
   contents: write
+# Unity-лицензия нужна только при сборке APK; повтор на готовом APK идёт своей очередью
+# (иначе новые сборки APK вытесняли ждущий тур — в группе держится одно ожидающее задание)
 concurrency:
-  group: build-android
+  group: ${{ inputs.reuse_apk_run != '' && 'emulator-tour' || 'build-android' }}
   cancel-in-progress: false
 jobs:
   test:
