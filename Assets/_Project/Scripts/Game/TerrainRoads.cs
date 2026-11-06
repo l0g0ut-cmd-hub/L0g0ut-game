@@ -347,6 +347,15 @@ namespace BladePath
             return res;
         }
 
+        /// <summary>Место стоит прямо на мосту (узел дороги с пометкой «мост»): там не ставят домов и стоянок.</summary>
+        public static bool OnBridge(int region, Vector2 pos)
+        {
+            if (graphs == null) MakeGraphs();
+            Graph g = graphs[Mathf.Clamp(region, 0, 2)];
+            int h = Nearest(g, pos, region);
+            return h >= 0 && g.hubs[h].shore == 2 && Length(g.hubs[h].pos - pos) < 12f;
+        }
+
         // Diagnostics for build-time and debug tests: road crossings MUST contain
         // an actual bridge waypoint. Public inspection never modifies route data.
         public static bool UsesBridge(int from, int to)

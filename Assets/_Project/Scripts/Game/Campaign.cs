@@ -249,7 +249,7 @@ namespace BladePath
                     for (int i = 0; i < D.nodes.Count; i++)
                     {
                         MapNode n = D.nodes[i];
-                        if (n.layer >= 2 && n.layer <= L - 3 && n.Type != NodeType.Herbalist && n.Type != NodeType.Boss) pick.Add(i);
+                        if (n.layer >= 2 && n.layer <= L - 3 && n.Type != NodeType.Herbalist && n.Type != NodeType.Boss && !OnBridge(D, i)) pick.Add(i);
                     }
                     if (pick.Count == 0) for (int i = 1; i < D.nodes.Count - 1; i++) pick.Add(i);
                     D.tower = pick.Count > 0 ? pick[(D.region * 7 + D.nodes.Count) % pick.Count] : 0;
@@ -505,6 +505,10 @@ namespace BladePath
                     }
                 }
             }
+            // место на мосту — всегда бой (поединок на мосту): дом, лавка или стоянка на мосту смотрятся нелепо
+            foreach (MapNode bn in dd.nodes)
+                if (bn.Type != NodeType.Start && bn.Type != NodeType.Boss && TerrainRoads.OnBridge(region, new Vector2(bn.x, bn.y)) && !bn.IsFight)
+                { bn.type = (int)NodeType.Duel; bn.enemy = DuelEnemy(region); }
             // отряды: иногда на дороге ждут двое-трое — бьются по очереди (второй вступает, как только пал первый)
             foreach (MapNode sq in dd.nodes)
             {
@@ -541,7 +545,12 @@ namespace BladePath
                 if (!rest) dd.nodes[pre[UnityEngine.Random.Range(0, pre.Count)]].type = (int)(UnityEngine.Random.value < 0.5f ? NodeType.Shrine : NodeType.Rest);
             }
             // хижина травницы посреди области — сюда откидывает после поражения (иначе — к началу пути)
-            List<int> mid = layers[L / 2];
+            List<int> mid = new List<int>();
+            for (int dl = 0; dl <= 1 && mid.Count == 0; dl++)   // не на мосту; если весь средний ряд — мост, то рядом
+                foreach (int lr in new[] { L / 2 + dl, L / 2 - dl })
+                    if (lr > 0 && lr < L - 1)
+                        foreach (int ni in layers[lr]) if (!OnBridge(dd, ni) && !mid.Contains(ni)) mid.Add(ni);
+            if (mid.Count == 0) mid = layers[L / 2];
             dd.nodes[mid[UnityEngine.Random.Range(0, mid.Count)]].type = (int)NodeType.Herbalist;
             // трактиры: половина привалов — придорожные трактиры (ev = TavernEv); в каждой области хотя бы один
             {
@@ -552,7 +561,7 @@ namespace BladePath
                     int pickT = -1;
                     for (int ti = 0; ti < dd.nodes.Count && pickT < 0; ti++) if (dd.nodes[ti].Type == NodeType.Rest) pickT = ti;
                     for (int ti = 0; ti < dd.nodes.Count && pickT < 0; ti++)
-                        if (dd.nodes[ti].Type == NodeType.Duel && dd.nodes[ti].layer >= 2 && dd.nodes[ti].layer <= L - 3 && dd.nodes[ti].extra.Count == 0) pickT = ti;
+                        if (dd.nodes[ti].Type == NodeType.Duel && dd.nodes[ti].layer >= 2 && dd.nodes[ti].layer <= L - 3 && dd.nodes[ti].extra.Count == 0 && !OnBridge(dd, ti)) pickT = ti;
                     if (pickT >= 0) { dd.nodes[pickT].type = (int)NodeType.Rest; dd.nodes[pickT].ev = MapScreen.TavernEv; }
                 }
             }
@@ -587,7 +596,7 @@ namespace BladePath
                 for (int ci = 0; ci < dd.nodes.Count; ci++)
                 {
                     MapNode cn = dd.nodes[ci];
-                    if ((cn.layer == 1 || cn.layer == 2) && (cn.Type == NodeType.Duel || cn.Type == NodeType.Event && MapScreen.PlainEvent(cn.ev)) && (cn.extra == null || cn.extra.Count == 0)) hc.Add(ci);
+                    if ((cn.layer == 1 || cn.layer == 2) && !OnBridge(dd, ci) && (cn.Type == NodeType.Duel || cn.Type == NodeType.Event && MapScreen.PlainEvent(cn.ev)) && (cn.extra == null || cn.extra.Count == 0)) hc.Add(ci);
                 }
                 if (hc.Count > 0) dd.nodes[hc[UnityEngine.Random.Range(0, hc.Count)]].type = (int)NodeType.HunterCamp;
             }
@@ -596,6 +605,10 @@ namespace BladePath
             dd.steps = 0; dd.rolls = Mathf.Max(dd.rolls, 1);
             Save();
         }
+
+        static bool OnBridge(Data dd, int i) { return TerrainRoads.OnBridge(dd.region, new Vector2(dd.nodes[i].x, dd.nodes[i].y)); }
+        /// <summary>Место на мосту (там не рисуют домов и стоянок).</summary>
+        public static bool OnBridge(int i) { return i >= 0 && i < D.nodes.Count && OnBridge(D, i); }
 
         /// <summary>Встреча с ронином, которого ты перевязал: 65% — возвращает долг, 35% — предаёт (с бандой).
         /// Ставится на ещё не пройденное событие или бой не ближе двух рядов впереди.</summary>
@@ -606,7 +619,7 @@ namespace BladePath
             for (int i = 0; i < dd.nodes.Count; i++)
             {
                 MapNode n = dd.nodes[i];
-                if (n.done || i == dd.at || n.layer < fromLayer + 2 || n.layer < 2 || n.layer > L - 2) continue;
+                if (n.done || i == dd.at || n.layer < fromLayer + 2 || n.layer < 2 || n.layer > L - 2 || OnBridge(dd, i)) continue;
                 if ((n.Type == NodeType.Event && MapScreen.PlainEvent(n.ev)) || (n.Type == NodeType.Duel && (n.extra == null || n.extra.Count == 0))) pick.Add(i);
             }
             if (pick.Count == 0) return false;

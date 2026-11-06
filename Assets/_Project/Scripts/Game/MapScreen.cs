@@ -602,6 +602,7 @@ namespace BladePath
             for (int i = 0; i < ns.Count; i++)
             {
                 MapNode n = ns[i];
+                if (Campaign.OnBridge(i)) continue;   // на мосту ни домов, ни стоянок (старые сохранения — тоже)
                 int b = atlas != null ? BuildingOf(n) : -1;
                 int cp = b < 0 && camps != null ? CampOf(n, i) : -1;
                 int nb = b < 0 && cp < 0 && newAtlas != null ? NewPlace(n.Type) : -1;
