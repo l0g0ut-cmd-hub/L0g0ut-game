@@ -18,8 +18,8 @@ namespace BladePath
         public FighterController enemy;
 
         enum B { Stick, Jump, Dash, Overhead, Rising, Legs, Energy, Thrust, Slash, Pause,
-                 Resume, Restart, CamReset, AiToggle, DebugToggle, ToMenu, OverAgain, OverMenu, Block, Vibro, Difficulty, Super, Gfx, Heal, CamMode, TimerToggle, Gear, OverGear, Stats, AutoBattle, Immortal, DevMenu, DevBack, AutoLevel, EnemyImmortal, WinFight, Clavicle, Twist, Arena, Ally, AllyFeature, AllyLevel, AllyImmortal }
-        const int Count = 43;
+                 Resume, Restart, CamReset, AiToggle, DebugToggle, ToMenu, OverAgain, OverMenu, Block, Vibro, Difficulty, Super, Gfx, Heal, CamMode, TimerToggle, Gear, OverGear, Stats, AutoBattle, Immortal, DevMenu, DevBack, AutoLevel, EnemyImmortal, WinFight, Clavicle, Twist, Arena, Ally, AllyFeature, AllyLevel, AllyImmortal, Sound, SoundScope }
+        const int Count = 45;
         bool devOpen;   // пауза: открыто «меню разработчика»
 
         const float StickRadius = 84f;
@@ -116,6 +116,8 @@ namespace BladePath
             bool healBtn = down[(int)B.Heal];
             if (down[(int)B.CamReset] && CameraOrbit.Instance != null) CameraOrbit.Instance.ResetView();
             if (down[(int)B.DebugToggle] && debugViz != null) debugViz.visible = !debugViz.visible;
+            if (down[(int)B.Sound]) SoundSettings.Toggle();
+            if (down[(int)B.SoundScope]) SoundSettings.NextScope();
             if (down[(int)B.Vibro]) { Haptics.Enabled = !Haptics.Enabled; PlayerPrefs.SetInt("haptics", Haptics.Enabled ? 1 : 0); PlayerPrefs.Save(); if (Haptics.Enabled) Haptics.Pulse(40); }
             if (down[(int)B.Difficulty]) EnemyAI.Difficulty = (EnemyAI.Difficulty + 1) % 3;
             if (down[(int)B.Gfx]) DuelManager.Gfx = 1 - DuelManager.Gfx;
@@ -296,6 +298,8 @@ namespace BladePath
             Box(B.DevMenu, rx, 270f, 300f, 40f);
             Box(B.Stats, rx, 320f, 300f, 40f);
             Box(B.Gear, rx, 370f, 300f, 40f);
+            Box(B.Sound, lx, 420f, 300f, 40f);        // звук: выключатель и что звучит
+            Box(B.SoundScope, rx, 420f, 300f, 40f);
             // меню разработчика (вместо обычных кнопок паузы): отладка и проверка боя
             Box(B.AiToggle, lx, 120f, 300f, 40f);
             Box(B.DebugToggle, lx, 170f, 300f, 40f);
@@ -324,7 +328,7 @@ namespace BladePath
             if (paused && devOpen)
                 foreach (B b in new[] { B.AiToggle, B.DebugToggle, B.EnemyImmortal, B.AutoBattle, B.AutoLevel, B.Immortal, B.WinFight, B.Clavicle, B.Twist, B.Arena, B.Ally, B.AllyFeature, B.AllyLevel, B.AllyImmortal, B.DevBack }) active[(int)b] = true;
             else if (paused)
-                foreach (B b in new[] { B.Resume, B.Restart, B.Difficulty, B.Gfx, B.Vibro, B.CamReset, B.ToMenu, B.CamMode, B.TimerToggle, B.Gear, B.Stats, B.DevMenu }) active[(int)b] = true;
+                foreach (B b in new[] { B.Resume, B.Restart, B.Difficulty, B.Gfx, B.Vibro, B.CamReset, B.ToMenu, B.CamMode, B.TimerToggle, B.Gear, B.Stats, B.DevMenu, B.Sound, B.SoundScope }) active[(int)b] = true;
             if (over) { active[(int)B.OverAgain] = true; active[(int)B.OverMenu] = true; active[(int)B.OverGear] = true; }
 
             labels[(int)B.Resume] = "ПРОДОЛЖИТЬ";
@@ -349,6 +353,8 @@ namespace BladePath
             labels[(int)B.ToMenu] = "В МЕНЮ";
             labels[(int)B.Gfx] = "ГРАФИКА: " + (DuelManager.Gfx == 1 ? "ВЫСОКАЯ" : "ЭКОНОМ");
             labels[(int)B.Vibro] = "ВИБРАЦИЯ: " + (Haptics.Enabled ? "ВКЛ" : "ВЫКЛ");
+            labels[(int)B.Sound] = "ЗВУК: " + (SoundSettings.On ? "ВКЛ" : "ВЫКЛ");
+            labels[(int)B.SoundScope] = "ЗВУЧИТ: " + SoundSettings.ScopeName;
             labels[(int)B.Difficulty] = "СЛОЖНОСТЬ: " + EnemyAI.DifficultyName;
             labels[(int)B.CamMode] = "КАМЕРА: " + (CameraOrbit.FreeMode ? "СВОБОДНАЯ" : "БОЕВАЯ");
             labels[(int)B.TimerToggle] = "ТАЙМЕР БОЯ: " + (DuelManager.TimerOn ? "ВКЛ" : "ВЫКЛ");
@@ -540,14 +546,14 @@ namespace BladePath
             if (paused)
             {
                 UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, 0.65f));
-                Rect pr = new Rect(W * 0.5f - 340f, 54f, 680f, devOpen ? 422f : 376f);   // меню разработчика — прежнего размера   // свиток-подложка под кнопками паузы
+                Rect pr = new Rect(W * 0.5f - 340f, 54f, 680f, 422f);   // обычная пауза — с рядом «звук»   // меню разработчика — прежнего размера   // свиток-подложка под кнопками паузы
                 Texture2D scroll = null;   // единый стиль: окно чёрного лака вместо свитка
                 if (scroll != null)
                 {
                     // развёрнутый свиток макимоно: бумага с роликами по краям, на ней — горы тушью; ветка сакуры свисает с угла
                     Color o = GUI.color; GUI.color = new Color(0.86f, 0.82f, 0.74f, 1f);
                     // бумага в текстуре — x 14,6…86 %, y 15,8…85,7 %: растягиваем так, чтобы лист лёг на (pr.x−10, 48, pr.w+20, 432)
-                    Rect paper = new Rect(pr.x - 10f, 48f, pr.width + 20f, 432f);
+                    Rect paper = new Rect(pr.x - 10f, 48f, pr.width + 20f, pr.height + 56f);
                     float tw = paper.width / 0.714f, th = paper.height / 0.699f;
                     GUI.DrawTexture(new Rect(paper.x - 0.146f * tw, paper.y - 0.158f * th, tw, th), scroll, ScaleMode.StretchToFill);
                     GUI.color = new Color(1f, 1f, 1f, 0.5f);
@@ -575,8 +581,9 @@ namespace BladePath
                     DrawRectButton((int)B.Vibro); DrawRectButton((int)B.Difficulty); DrawRectButton((int)B.Gfx);
                     DrawRectButton((int)B.CamMode); DrawRectButton((int)B.TimerToggle); DrawRectButton((int)B.Gear); DrawRectButton((int)B.Stats);
                     DrawRectButton((int)B.DevMenu);
+                    DrawRectButton((int)B.Sound); DrawRectButton((int)B.SoundScope);
                 }
-                UiKit.Text(new Rect(W * 0.5f - 400f, devOpen ? 510f : 462f, 800f, 24f),
+                UiKit.Text(new Rect(W * 0.5f - 400f, devOpen ? 510f : 478f, 800f, 24f),
                     "ПУТЬ " + (Ladder.Index + 1) + "/" + Ladder.Count + "  ·  ПОБЕД " + Records.Wins + "  ·  ПОРАЖЕНИЙ " + Records.Losses + "  ·  ЛУЧШЕЕ " + Records.BestStage + "/" + Ladder.Count + (Records.Cleared > 0 ? "  ·  ПРОЙДЕН ×" + Records.Cleared : ""),
                     13f, new Color(0.85f, 0.8f, 0.7f, 0.9f));
             }

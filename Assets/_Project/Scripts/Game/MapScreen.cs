@@ -387,6 +387,12 @@ namespace BladePath
                 manualPan = false; panU = -1f;
             }
             // меню разработчика (отладка): телепорт, лагерь, трактир, следующая область
+            {   // звук: выключатель и что звучит (игра / музыка / оба) — слева от «РАЗРАБ.»
+                float sx = mapX + viewW - (uw < 0.999f ? 226f : 116f);
+                bool sndOk = interactive && modal == Modal.None && moveTo < 0;
+                if (Btn(new Rect(sx - 236f, 14f, 96f, 33f), SoundSettings.On ? "ЗВУК: ВКЛ" : "ЗВУК: ВЫКЛ", sndOk)) SoundSettings.Toggle();
+                if (Btn(new Rect(sx - 134f, 14f, 126f, 33f), SoundSettings.ScopeShortName, sndOk && SoundSettings.On)) SoundSettings.NextScope();
+            }
             if (Btn(new Rect(mapX + viewW - (uw < 0.999f ? 226f : 116f), 14f, 104f, 33f), devTeleport ? "ОТМЕНА" : "РАЗРАБ.", interactive && (modal == Modal.None || modal == Modal.Dev) && moveTo < 0))
             {
                 if (devTeleport) devTeleport = false; else OpenModal(Modal.Dev);
@@ -2082,9 +2088,7 @@ namespace BladePath
         }
         void TavToast(string text)
         {
-            toastLines.Clear();
-            foreach (string line in Wrap(text, 48)) { if (toastLines.Count >= 3) break; toastLines.Add(line); }
-            toastAt = Time.unscaledTime; Haptics.Pulse(25);
+            SetToast(text); Haptics.Pulse(25);
         }
         void DrawTavern(bool ok)
         {
@@ -2308,24 +2312,28 @@ namespace BladePath
         void Result(string message)
         {
             Campaign.Complete(Campaign.At);
-            toastLines.Clear();
-            foreach (string line in Wrap(message, 48))
-            {
-                if (toastLines.Count >= 3) break;
-                toastLines.Add(line);
-            }
-            toastAt = Time.unscaledTime;
+            SetToast(message);
             modal = Modal.None; // narrative rewards no longer demand an extra "ДАЛЕЕ" tap
             nextRouteAt = Time.unscaledTime + 1.0f;
         }
 
+        /// <summary>Сообщение целиком: раньше обрезалось на трёх строках (ворон-спутник, новые события терялись на полуслове).
+        /// Длинное висит дольше — по секунде на строку.</summary>
+        void SetToast(string text)
+        {
+            toastLines.Clear();
+            foreach (string line in Wrap(text, 52)) toastLines.Add(line);
+            toastAt = Time.unscaledTime;
+        }
+        float ToastTime { get { return Mathf.Clamp(2.5f + 1.1f * toastLines.Count, 4.5f, 10f); } }
+
         void DrawToast()
         {
             if (toastLines.Count == 0) return;
-            float age = Time.unscaledTime - toastAt;
-            if (age < 0f || age >= 4.5f) return;
-            float fade = Mathf.Clamp01(age / 0.2f) * Mathf.Clamp01((4.5f - age) / 0.7f);
-            float w = Mathf.Min(680f, W - 90f);
+            float age = Time.unscaledTime - toastAt, life = ToastTime;
+            if (age < 0f || age >= life) return;
+            float fade = Mathf.Clamp01(age / 0.2f) * Mathf.Clamp01((life - age) / 0.7f);
+            float w = Mathf.Min(720f, W - 90f);
             float h = 40f + toastLines.Count * 19f;
             // Centre reward notifications over the current camp/tavern/map view.
             Rect r = new Rect((W - w) * 0.5f, (540f - h) * 0.5f, w, h);

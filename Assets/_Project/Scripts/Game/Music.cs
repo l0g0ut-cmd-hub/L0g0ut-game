@@ -12,8 +12,13 @@ namespace BladePath
         AudioSource koto, drums;
         float drumVol;
 
+        static Music inst;
+        /// <summary>Источник — музыка (для выключателя «игра / музыка / оба»).</summary>
+        public static bool Owns(AudioSource s) { return inst != null && s != null && (s == inst.koto || s == inst.drums); }
+
         void Start()
         {
+            inst = this;
             koto = gameObject.AddComponent<AudioSource>();
             koto.clip = KotoLoop(); koto.loop = true; koto.volume = 0.32f; koto.spatialBlend = 0f; koto.Play();
             drums = gameObject.AddComponent<AudioSource>();
@@ -31,6 +36,7 @@ namespace BladePath
                 want = deciding ? 0.5f : 0.3f;
                 if (DuelManager.TimerOn && dm.TimeLeft < 10f) want = 0.6f;
             }
+            SoundSettings.Tick();
             drumVol = Mathf.MoveTowards(drumVol, want, Time.unscaledDeltaTime * 0.4f);
             drums.volume = drumVol;
             koto.volume = (dm != null && dm.Paused) ? 0.15f : 0.32f;
