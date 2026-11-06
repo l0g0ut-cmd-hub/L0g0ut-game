@@ -300,26 +300,12 @@ namespace BladePath
             // inner ornate frame smaller than the card (cropped text/icons).
             // Draw ONLY a thin luminous rim aligned to the painted card edges.
             // Traveller keeps its existing glow and geometry untouched.
-            Texture2D glow = difficulty ? null : UiKit.Tex("UI/selection/card_glow");
 
             for (int i = 0; i < cards.Length; i++)
             {
                 Rect r = new Rect(ox + cards[i].x * s, oy + cards[i].y * s, cards[i].width * s, cards[i].height * s);
-                if (i == chosen)
-                {
-                    if (difficulty)
-                        DrawDifficultySelectionGlow(r, s);
-                    else if (glow != null)
-                    {
-                        Color prev = GUI.color;
-                        GUI.color = new Color(1f, 1f, 1f,
-                            0.94f + 0.06f * Mathf.Sin(Time.unscaledTime * 3f));
-                        float pad = r.width * 0.09f;
-                        GUI.DrawTexture(new Rect(r.x-pad, r.y-pad,
-                            r.width+pad*2f, r.height+pad*2f), glow);
-                        GUI.color = prev;
-                    }
-                }
+                // выбранная карточка (сложность и путник) — одна золотая рамка по краям нарисованной карточки
+                if (i == chosen) DrawDifficultySelectionGlow(r, s);
                 if (GUI.Button(r, GUIContent.none, GUIStyle.none))
                 {
                     if (difficulty) chosenDifficulty = i;

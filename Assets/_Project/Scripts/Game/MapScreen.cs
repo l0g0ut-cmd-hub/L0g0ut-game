@@ -26,6 +26,7 @@ namespace BladePath
         static readonly Color Gold = VisualIdentity.Brass;
         static readonly Color Ink = VisualIdentity.Parchment;
         static readonly Color Dim = VisualIdentity.Subdued;
+        static readonly string[] EnemyTraits = { "обычный бой — учись отражать", "уходит в дым за спину, финтит", "бьёт по земле — перепрыгивай волну", "три фазы: залпы духа, затем дым" };
         static readonly string[] EnemyFullArt = { "UI/enemy_full_fallen", "UI/enemy_full_shadow", "UI/enemy_full_oni", "UI/enemy_full_shogun" };
 
         enum Modal { None, Fight, Shrine, Smith, Merchant, Treasure, Rest, Event, RegionClear, Herbalist, Knocked, Camp, Tavern, Dev }
@@ -1562,6 +1563,16 @@ namespace BladePath
                     if (Campaign.BlessingText.Length > 0) mods += Campaign.BlessingText + "\n";
                     if (mods.Length == 0) mods = "Честный поединок.";
                     y = Lines(x, y, w, mods.TrimEnd('\n'), 40, 12.5f, new Color(0.9f, 0.85f, 0.75f));
+                    // повадки и сила врага — те же, что на вкладке «Путь» в снаряжении (и пустоты над кнопками нет)
+                    if (y < r.yMax - 170f)
+                    {
+                        Ladder.Stage st = Ladder.Stages[e];
+                        y += 8f;
+                        UiKit.Text(new Rect(x, y, w, 18f), "Повадки: " + EnemyTraits[Mathf.Clamp(e, 0, EnemyTraits.Length - 1)], 12.5f,
+                            new Color(1f, 0.65f, 0.45f), TextAnchor.MiddleLeft, false); y += 22f;
+                        UiKit.Text(new Rect(x, y, w, 18f), "Жизней: " + Mathf.Max(1, st.marks) + "   ·   здоровье ×" + (st.hpMul * Profile.CycleHp).ToString("0.0")
+                            + "   ·   урон ×" + (st.dmgMul * Profile.CycleDmg).ToString("0.0"), 12f, Dim, TextAnchor.MiddleLeft, false); y += 22f;
+                    }
                     // Both actions need the full panel width. The old 38%-wide
                     // equipment button clipped its label and spilled outside the modal.
                     if (Btn(new Rect(x, r.yMax - 116f, w, 44f), "В БОЙ", ok, true))

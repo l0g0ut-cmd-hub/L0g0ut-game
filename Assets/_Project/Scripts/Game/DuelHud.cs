@@ -388,16 +388,19 @@ namespace BladePath
                     Rect captionPanel = new Rect(cx - 390f, 300f, 780f, captionH);
                     // подложка — та же тёмная плашка с золотом, что у объявлений боя и заголовка трактира
                     Texture2D capBan = UiKit.Tex("UI/Kit/hud_banner");
+                    string capTitle = "ПУТЬ " + (Ladder.Index + 1) + " / " + Ladder.Count
+                        + (Profile.Cycle > 0 ? "  ·  КРУГ " + (Profile.Cycle + 1) : "") + "  ·  " + Ladder.Current.name;
                     if (capBan != null)
                     {
-                        Rect cb = new Rect(captionPanel.x - 50f, captionPanel.y - 22f, captionPanel.width + 100f, captionPanel.height + 44f);
+                        // ширина — по длине названия: текст в тёмной середине (~60% ленты), рваные концы не раздуты
+                        // и правый конец не упирается в картинку врага справа
+                        float capW = Mathf.Clamp(capTitle.Length * 20f * 0.67f / 0.6f + 40f, 560f, 880f);
+                        Rect cb = new Rect(cx - capW * 0.5f, captionPanel.y - 14f, capW, captionPanel.height + 28f);
                         UiKit.Slice(cb, capBan, cb.height / capBan.height, 0.2f, 0.08f, 0.5f, 0f, new Color(1f, 1f, 1f, 0.95f * ta));
                     }
                     else UiKit.Rect(captionPanel, new Color(0.025f, 0.018f, 0.02f, 0.72f * ta));
                     Rect captionTitle = new Rect(cx - 365f, 308f, 730f, 34f);
-                    UiKit.Text(captionTitle, "ПУТЬ " + (Ladder.Index + 1) + " / " + Ladder.Count
-                        + (Profile.Cycle > 0 ? "  ·  КРУГ " + (Profile.Cycle + 1) : "")
-                        + "  ·  " + Ladder.Current.name, 20f, new Color(Gold.r, Gold.g, Gold.b, ta));
+                    UiKit.Text(captionTitle, capTitle, 20f, new Color(Gold.r, Gold.g, Gold.b, ta));
                     UiKit.Text(new Rect(cx - 365f, 338f, 730f, 24f), Ladder.Current.title, 15f,
                         new Color(0.9f, 0.88f, 0.82f, ta));
                     if (mk > 1) UiKit.Text(new Rect(cx - 400f, 362f, 800f, 24f), "ЖИЗНЕЙ: " + mk + " — СЛОМИ И ДОБЕЙ " + mk + " РАЗА", 15f, new Color(1f, 0.45f, 0.3f, ta * 0.95f));
