@@ -665,13 +665,10 @@ namespace BladePath
                     GUI.color = dimN ? new Color(0.72f, 0.7f, 0.68f, 0.9f) : Color.white;
                     GUI.DrawTextureWithTexCoords(rn, newAtlas, Cell3(nb));
                     if (glow != null)
-                        foreach (Vector3 l in NewBuildingLights[nb])
+                        for (int li = 0; li < NewBuildingLights[nb].Length; li++)
                         {
-                            float fl = 0.6f + 0.4f * Mathf.PerlinNoise(t * 3f + i * 3.1f + l.x * 9f, l.y * 7f);
-                            float g = l.z * sz * (1f + 0.25f * fl);
-                            Vector2 c = new Vector2(rn.x + l.x * sz, rn.y + l.y * sz);
-                            GUI.color = new Color(1f, 0.6f, 0.25f, (dimN ? 0.25f : 0.5f) * fl);
-                            GUI.DrawTexture(new Rect(c.x - g, c.y - g, g * 2f, g * 2f), glow);
+                            Vector3 l = NewBuildingLights[nb][li];
+                            WarmLight(glow, new Vector2(rn.x + l.x * sz, rn.y + l.y * sz), l.z * sz, i * 3.1f + li * 1.7f, nb == 5 && li == 0, dimN);   // у охотников первый — костёр
                         }
                     if (nb == 5) { MapFire(rn, sz, NewBuildingLights[5][0], dimN, i); MapSmoke(rn, sz, new Vector2(0.31f, 0.56f), false, dimN, i, 0.6f); }   // охотники: костёр под котлом
                     if (nb == 0) { MapSmoke(rn, sz, new Vector2(0.62f, 0.56f), true, dimN, i, 1f); MapSmoke(rn, sz, new Vector2(0.46f, 0.62f), true, dimN, i + 5, 0.65f); }   // онсэн: пар над источником
@@ -695,17 +692,22 @@ namespace BladePath
                 GUI.color = dim ? new Color(0.72f, 0.7f, 0.68f, 0.9f) : Color.white;
                 GUI.DrawTextureWithTexCoords(r, atlas, new Rect((b % 4) * 0.25f, b < 4 ? 0.5f : 0f, 0.25f, 0.5f));
                 if (glow == null || (b == 6 && n.done)) continue;
-                foreach (Vector3 l in BuildingLights[b])
+                for (int li = 0; li < BuildingLights[b].Length; li++)
                 {
-                    float fl = 0.6f + 0.4f * Mathf.PerlinNoise(t * 3f + i * 3.1f + l.x * 9f, l.y * 7f);
-                    float g = l.z * size * (1f + 0.25f * fl);
+                    Vector3 l = BuildingLights[b][li];
                     Vector2 c = new Vector2(r.x + l.x * size, r.y + l.y * size);
-                    GUI.color = b == 6 ? new Color(1f, 0.85f, 0.35f, 0.45f * fl) : new Color(1f, 0.6f, 0.25f, (dim ? 0.25f : 0.5f) * fl);
-                    GUI.DrawTexture(new Rect(c.x - g, c.y - g, g * 2f, g * 2f), glow);
+                    if (b == 6)
+                    {
+                        float fl = 0.6f + 0.4f * Mathf.PerlinNoise(t * 3f + i * 3.1f + l.x * 9f, l.y * 7f), g = l.z * size * (1f + 0.25f * fl);
+                        GUI.color = new Color(1f, 0.85f, 0.35f, 0.45f * fl);   // тайник: отблеск золота
+                        GUI.DrawTexture(new Rect(c.x - g, c.y - g, g * 2f, g * 2f), glow);
+                        continue;
+                    }
+                    WarmLight(glow, c, l.z * size, i * 3.1f + li * 1.7f, (b == 1 || b == 3) && li == 0, dim);   // горн и костёр — огонь, остальное — окна и фонари
                 }
                 // живой огонь, дым и пар там, где они нарисованы на домиках
                 if (b == 0) MapSmoke(r, size, new Vector2(0.51f, 0.2f), false, false, i, 1f);                  // трактир: дым из трубы
-                if (b == 1) MapFire(r, size, new Vector3(0.35f, 0.6f, 0.11f), false, i);                          // кузница: огонь в горне
+                if (b == 1) { MapFire(r, size, new Vector3(0.35f, 0.62f, 0.14f), false, i); MapFire(r, size, new Vector3(0.35f, 0.62f, 0.14f), false, i + 3); }   // два слоя со сдвигом фазы — пламя гуще                          // кузница: огонь в горне
                 if (b == 3) { MapFire(r, size, BuildingLights[3][0], dim, i); MapSmoke(r, size, new Vector2(0.37f, 0.46f), false, dim, i, 0.85f); }   // привал: костёр и дым над котлом
             }
             GUI.color = oc;
@@ -714,12 +716,39 @@ namespace BladePath
         // ---- живой огонь и туман (CGHEVEN, бесплатные видео 1K → листы кадров: UI/fx_campfire 16×13 — вся петля 208 кадров при 25 к/с, UI/fx_mist 6×5)
         const string FireSheet = "UI/fx_campfire", MistSheet = "UI/fx_mist", PuffSheet = "UI/fx_puff";
 
+        /// <summary>
+        /// Сила огней в окнах и фонарях: 1 — как сейчас (вечер), для будущей смены дня и ночи: днём ~0,35, ночью ~1,6.
+        /// Огонь костров и горна от неё зависит слабее — он виден и днём.
+        /// </summary>
+        public static float LightK = 1f;
+
+        /// <summary>
+        /// Тёплый свет: мягкий ореол и яркая сердцевина. Окна и фонари — ровный свет с лёгким колебанием (фитиль, сквозняк),
+        /// огонь — сильнее и чаще мерцает. У каждого огонька своя фаза.
+        /// </summary>
+        static void WarmLight(Texture2D glow, Vector2 c, float g, float seed, bool fire, bool dim)
+        {
+            float t = Time.unscaledTime, fl;
+            if (fire) fl = 0.65f + 0.35f * Mathf.PerlinNoise(t * 3.2f + seed, seed * 0.7f);
+            else fl = 0.86f + 0.1f * Mathf.PerlinNoise(t * 1.1f + seed, seed * 0.37f) + 0.04f * Mathf.Sin(t * 5.3f + seed * 2f);
+            float k = (fire ? Mathf.Lerp(1f, LightK, 0.35f) : LightK) * (dim ? 0.5f : 1f);
+            if (k <= 0.01f) return;
+            Color oc = GUI.color;
+            float h = g * (fire ? 1.25f : 1.55f) * (0.94f + 0.08f * fl);
+            GUI.color = new Color(1f, 0.58f, 0.24f, Mathf.Clamp01(0.34f * k * fl));
+            GUI.DrawTexture(new Rect(c.x - h, c.y - h, h * 2f, h * 2f), glow);
+            float cr = g * (fire ? 0.6f : 0.5f);
+            GUI.color = new Color(1f, 0.84f, 0.52f, Mathf.Clamp01(0.5f * k * fl));
+            GUI.DrawTexture(new Rect(c.x - cr, c.y - cr, cr * 2f, cr * 2f), glow);
+            GUI.color = oc;
+        }
+
         /// <summary>Пламя костра на домике карты: основание — в точке огня (доли ячейки), по высоте ~ пятой части домика.</summary>
         static void MapFire(Rect cell, float size, Vector3 at, bool dim, int i)
         {
             Texture2D fire = UiKit.Tex(FireSheet);
             if (fire == null) return;
-            float w = size * (at.z > 0.12f ? 0.15f : at.z), h = w * 84f / 64f;   // z — ширина пламени (у костров по умолчанию 0,15)
+            float w = size * (at.z > 0.15f ? 0.15f : at.z), h = w * 84f / 64f;   // z — ширина пламени (у костров по умолчанию 0,15)
             Vector2 c = new Vector2(cell.x + at.x * size, cell.y + at.y * size + size * 0.035f);
             Flip(new Rect(c.x - w * 0.5f, c.y - h, w, h), fire, 16, 13, 208, 25f, i * 1.37f, new Color(1f, 1f, 1f, dim ? 0.45f : 0.92f), false);
         }
