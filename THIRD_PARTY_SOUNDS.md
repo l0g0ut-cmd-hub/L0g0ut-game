@@ -20,3 +20,13 @@
 
 - `knifeSlice`, `knifeSlice2` — в составе `hit_*`, `hitheavy_*`, `stab_1`
 - `dicecup_1..3` — dieShuffle1..3; `dice_1..3` — diceThrow1..3; `coins_1..2` — handleCoins, handleCoins2
+
+## Подложки карты — CC0, Freesound (через https://github.com/funcoder/omarchy-ambient)
+Сделаны бесшовными петлями, громкость выровнена.
+
+- `amb_birds` — «Forest quiet atmosphere with some birds», felix.blume (freesound.org/s/414098)
+- `amb_wind` — «Wind on bushes with muffled gust of wind», felix.blume (freesound.org/s/711106)
+- `amb_stream` — «Relaxing River Sound», IceVFX (freesound.org/s/722875)
+
+## Подложка трактира — CC BY 4.0, Oculus Audio Pack 01
+- `amb_tavern` — CRWDConv_Restaurant_LOOP_01

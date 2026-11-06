@@ -179,8 +179,50 @@ namespace BladePath
             if (Juice.Instance != null) Juice.Instance.DashSound();
         }
 
+        // ---- звук карты (2026-11-07): своя подложка у каждой области и у лагеря/трактира, плавная смена.
+        // Записи CC0 (Freesound через omarchy-ambient) и CC BY 4.0 (Oculus) — см. THIRD_PARTY_SOUNDS.md
+        AudioSource ambA, ambB;
+        string ambCur;
+        float ambSwapAt = -10f;
+        string WantAmbience()
+        {
+            if (!Open) return null;
+            if (modal == Modal.Tavern || modal == Modal.Gamble) return "amb_tavern";   // гул голосов, стук чашек
+            if (modal == Modal.Camp || modal == Modal.Onsen) return "amb_stream";         // ручей у стоянки / у источника
+            MapNode cur = Campaign.Current;
+            if (MapClouds.SkyAt(Campaign.Region, new Vector2(cur.x, cur.y)) >= 1) return "rain_loop";   // герой под дождём — дождь в лесу
+            return Campaign.Region == 1 ? "amb_wind" : Campaign.Region == 2 ? "amb_wind" : "amb_birds";   // горы и сёгунат — ветер, лес — птицы
+        }
+        void UpdateAmbience()
+        {
+            if (ambA == null)
+            {
+                ambA = gameObject.AddComponent<AudioSource>(); ambB = gameObject.AddComponent<AudioSource>();
+                foreach (AudioSource s0 in new[] { ambA, ambB }) { s0.loop = true; s0.playOnAwake = false; s0.spatialBlend = 0f; s0.volume = 0f; }
+            }
+            string want = WantAmbience();
+            if (want != ambCur)
+            {
+                AudioClip c = want != null ? Resources.Load<AudioClip>("Audio/" + want) : null;
+                if (want == null || c != null)
+                {
+                    AudioSource t0 = ambA; ambA = ambB; ambB = t0;   // новая — в A, прежняя затухает в B
+                    ambA.clip = c; ambA.volume = 0f;
+                    if (c != null) { ambA.time = Random.Range(0f, Mathf.Max(0f, c.length - 1f)); ambA.Play(); }
+                    ambCur = want; ambSwapAt = Time.unscaledTime;
+                }
+            }
+            float k = Time.unscaledDeltaTime / 1.2f;
+            float target = ambCur == null ? 0f : ambCur == "amb_tavern" ? 0.55f : ambCur == "amb_birds" ? 0.4f : 0.35f;
+            ambA.volume = Mathf.MoveTowards(ambA.volume, target, k);
+            ambB.volume = Mathf.MoveTowards(ambB.volume, 0f, k);
+            if (ambB.volume <= 0f && ambB.isPlaying) ambB.Stop();
+            if (ambA.volume <= 0f && ambCur == null && ambA.isPlaying) ambA.Stop();
+        }
+
         void Update()
         {
+            UpdateAmbience();
             if (!Open) return;
             HandleMapPan();
             if (moveTo >= 0)
