@@ -1526,7 +1526,7 @@ namespace BladePath
             if (Btn(new Rect(x, 540f - 166f, w, 44f), "В ПУТЬ",
                 interactive && travelReady, true))
                 TravelOrRoll();
-            if (Btn(new Rect(x, 540f - 112f, w, 44f), "СНАРЯЖЕНИЕ" + (Profile.Points > 0 ? " (+" + Profile.Points + ")" : ""), interactive)) InventoryScreen.Show(0);
+            if (Btn(new Rect(x, 540f - 112f, w, 44f), "СНАРЯЖЕНИЕ" + (Profile.Points > 0 ? " (+" + Profile.Points + ")" : ""), interactive)) { Profile.CostMul = 1f; InventoryScreen.Show(0); }
             if (Btn(new Rect(x, 540f - 60f, w, 44f), "В МЕНЮ", interactive)) { Hide(); Time.timeScale = 1f; SceneManager.LoadScene(SceneNames.MainMenu); }
         }
 
@@ -1709,7 +1709,7 @@ namespace BladePath
                     if (Btn(new Rect(x, r.yMax - 116f, w, 44f), "В БОЙ", ok, true))
                         StartFight(at);
                     if (Btn(new Rect(x, r.yMax - 64f, w, 44f), "СНАРЯЖЕНИЕ", ok))
-                        InventoryScreen.Show(0);
+                        { Profile.CostMul = 1f; InventoryScreen.Show(0); }
                     break;
                 }
                 case Modal.Shrine:
@@ -1730,7 +1730,7 @@ namespace BladePath
                     Picture(new Rect(r.x, r.y, 260f, r.height), "UI/npc_1");
                     float x = r.x + 280f, w = r.width - 300f, y = r.y + 22f;
                     VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "КУЗНЕЦ", 20f, TextAnchor.MiddleLeft); y += 34f;
-                    y = Lines(x, y, w, "«Покажи свою сталь. Для того, кто идёт к владыке, — полцены.»\n\nПока ты здесь, улучшение снаряжения стоит вдвое дешевле. Вернуться к кузнецу можно, коснувшись его на карте.", 40, 13f, Ink);
+                    y = Lines(x, y, w, "«Покажи свою сталь. Для того, кто идёт к владыке, — полцены.»\n\nУлучшить снаряжение и вставить руну можно только у кузнеца — здесь за полцены. Вернуться к нему можно, коснувшись его на карте.", 40, 13f, Ink);
                     if (Btn(new Rect(x, r.yMax - 118f, w, 46f), "К НАКОВАЛЬНЕ", ok, true)) { Profile.CostMul = 0.5f; InventoryScreen.Show(0); }
                     if (Btn(new Rect(x, r.yMax - 64f, w, 46f), "УЙТИ", ok)) modal = Modal.None;
                     break;

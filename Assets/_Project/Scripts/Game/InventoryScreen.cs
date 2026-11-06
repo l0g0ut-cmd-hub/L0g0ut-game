@@ -29,7 +29,9 @@ namespace BladePath
 
         public static void Ensure() { if (inst == null) inst = new GameObject("InventoryScreen").AddComponent<InventoryScreen>(); }
         public static void Show(int tab = 0) { Ensure(); Open = true; inst.openedAt = Time.unscaledTime; inst.sel = null; inst.page = 0; inst.tab = tab; inst.pending = Profile.StatsCopy(); }
-        public static void Hide() { Open = false; if (DuelManager.Instance != null) DuelManager.Instance.ApplyProfile(); }
+        /// <summary>Снаряжение открыто у кузнеца (на карте или в лагере): только здесь можно улучшать предметы и ставить руны.</summary>
+        public static bool AtForge { get { return Profile.CostMul < 1f; } }
+        public static void Hide() { Open = false; Profile.CostMul = 1f; if (DuelManager.Instance != null) DuelManager.Instance.ApplyProfile(); }
 
         void OnGUI()
         {
@@ -153,7 +155,7 @@ namespace BladePath
             UiKit.Text(new Rect(gx + 40f, 24f, 140f, 40f), Profile.Gold + " МОН", 20f, Gold, TextAnchor.MiddleLeft);
             if (Btn(new Rect(W - 178f, 26f, 130f, 36f), "ГОТОВО")) { Hide(); return; }
 
-            VisualIdentity.Divider(new Rect(40f, 68f, W - 80f, 1f), 0.43f);   // рамка оружейной: все элементы внутри её золотой кромки и углов
+            VisualIdentity.Divider(new Rect(40f, 68f, W - 80f, 1f), 0.43f);
             if (tab == 1) { DrawUpgrade(W); return; }
             if (tab == 2) { DrawPath(W); return; }
             Rect stats = new Rect(40f, 76f, 284f, 432f);
@@ -419,7 +421,7 @@ namespace BladePath
             VisualIdentity.Inset(a, null, 0.6f);
             if (sel == null)
             {
-                UiKit.Text(a, "ВЫБЕРИ ПРЕДМЕТ", 13f, VisualIdentity.Subdued);
+                UiKit.Text(a, AtForge ? "КУЗНИЦА: ВЫБЕРИ ПРЕДМЕТ ДЛЯ УЛУЧШЕНИЯ" : "ВЫБЕРИ ПРЕДМЕТ", 13f, AtForge ? new Color(1f, 0.62f, 0.32f) : VisualIdentity.Subdued);
                 return;
             }
             Item it = sel;
@@ -487,12 +489,21 @@ namespace BladePath
             }
             // кнопки
             float bw = (a.width - 30f) / 3f, by = a.yMax - 40f;
-            if (it.slot == (int)Slot.Scroll) { if (Btn(new Rect(a.x + 10f, by, bw, 34f), "ПРОЧЕСТЬ")) { Profile.Learn(it); sel = null; return; } }
-            else if (Btn(new Rect(a.x + 10f, by, bw, 34f), Profile.IsEquipped(it) ? "СНЯТЬ" : "НАДЕТЬ")) Profile.Equip(it);
-            bool canUp = it.slot != (int)Slot.Scroll && it.level < Profile.MaxItemLevel;
-            int cost = Profile.UpgradeCost(it);
-            if (Btn(new Rect(a.x + 15f + bw, by, bw, 34f), canUp ? "КУЗНЕЦ " + cost : "МАКС.", canUp && Profile.Gold >= cost)) Profile.Upgrade(it);
-            if (Btn(new Rect(a.x + 20f + bw * 2f, by, bw, 34f), "ПРОДАТЬ " + Profile.SellPrice(it), true, true)) { Profile.Sell(it); sel = null; }
+            if (it.slot == (int)Slot.Scroll) { if (Btn(new Rect(a.x + 10f, by, AtForge ? bw : (a.width - 25f) * 0.5f, 34f), "ПРОЧЕСТЬ")) { Profile.Learn(it); sel = null; return; } }
+            else if (Btn(new Rect(a.x + 10f, by, AtForge ? bw : (a.width - 25f) * 0.5f, 34f), Profile.IsEquipped(it) ? "СНЯТЬ" : "НАДЕТЬ")) Profile.Equip(it);
+            // улучшение — только у кузнеца; в обычном снаряжении две кнопки во всю ширину
+            if (AtForge)
+            {
+                bool canUp = it.slot != (int)Slot.Scroll && it.level < Profile.MaxItemLevel;
+                int cost = Profile.UpgradeCost(it);
+                if (Btn(new Rect(a.x + 15f + bw, by, bw, 34f), canUp ? "УЛУЧШИТЬ " + cost : "МАКС.", canUp && Profile.Gold >= cost, true)) Profile.Upgrade(it);
+                if (Btn(new Rect(a.x + 20f + bw * 2f, by, bw, 34f), "ПРОДАТЬ " + Profile.SellPrice(it), true)) { Profile.Sell(it); sel = null; }
+            }
+            else
+            {
+                float hw = (a.width - 25f) * 0.5f;
+                if (Btn(new Rect(a.x + 15f + hw, by, hw, 34f), "ПРОДАТЬ " + Profile.SellPrice(it), true, true)) { Profile.Sell(it); sel = null; }
+            }
         }
 
     }

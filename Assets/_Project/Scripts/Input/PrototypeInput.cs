@@ -101,7 +101,7 @@ namespace BladePath
             if (InventoryScreen.Open || MapScreen.Open) return;   // снаряжение или карта открыты — бой и кнопки не слушают касания
             Layout();
             Poll();
-            if (down[(int)B.Gear] || down[(int)B.OverGear]) { InventoryScreen.Show(0); return; }
+            if (down[(int)B.Gear] || down[(int)B.OverGear]) { Profile.CostMul = 1f; InventoryScreen.Show(0); return; }   // в бою — без кузницы
             if (down[(int)B.Stats]) { InventoryScreen.Show(1); return; }
 
             Vector2 kb = Vector2.zero;
