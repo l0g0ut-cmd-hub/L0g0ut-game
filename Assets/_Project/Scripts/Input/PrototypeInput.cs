@@ -287,13 +287,14 @@ namespace BladePath
             Box(B.Difficulty, lx, 220f, 300f, 40f);
             Box(B.Gfx, lx, 270f, 300f, 40f);
             Box(B.Vibro, lx, 320f, 300f, 40f);
-            Box(B.Gear, lx, 370f, 300f, 40f);
-            Box(B.ToMenu, lx, 420f, 300f, 40f);
+            // две колонки по шесть кнопок: «СНАРЯЖЕНИЕ» — рядом с «ПРОКАЧКОЙ», справа не остаётся пустой дыры
+            Box(B.ToMenu, lx, 370f, 300f, 40f);
             Box(B.CamMode, rx, 120f, 300f, 40f);
             Box(B.CamReset, rx, 170f, 300f, 40f);
             Box(B.TimerToggle, rx, 220f, 300f, 40f);
             Box(B.DevMenu, rx, 270f, 300f, 40f);
             Box(B.Stats, rx, 320f, 300f, 40f);
+            Box(B.Gear, rx, 370f, 300f, 40f);
             // меню разработчика (вместо обычных кнопок паузы): отладка и проверка боя
             Box(B.AiToggle, lx, 120f, 300f, 40f);
             Box(B.DebugToggle, lx, 170f, 300f, 40f);
@@ -523,7 +524,7 @@ namespace BladePath
             if (paused)
             {
                 UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, 0.65f));
-                Rect pr = new Rect(W * 0.5f - 340f, 54f, 680f, 422f);   // свиток-подложка под кнопками паузы
+                Rect pr = new Rect(W * 0.5f - 340f, 54f, 680f, devOpen ? 422f : 376f);   // меню разработчика — прежнего размера   // свиток-подложка под кнопками паузы
                 Texture2D scroll = null;   // единый стиль: окно чёрного лака вместо свитка
                 if (scroll != null)
                 {
@@ -544,8 +545,7 @@ namespace BladePath
                 else
                 {
                     VisualIdentity.KitSurface(pr, 0.98f);
-                    UiKit.Text(new Rect(W * 0.5f - 200f, 62f, 400f, 50f),
-                        "ПАУЗА", 40f, Gold);
+                    VisualIdentity.TitlePlaque(new Rect(W * 0.5f - 200f, 64f, 400f, 44f), "ПАУЗА", 30f, TextAnchor.MiddleCenter, Gold);
                 }
                 if (devOpen)
                 {
@@ -560,7 +560,7 @@ namespace BladePath
                     DrawRectButton((int)B.CamMode); DrawRectButton((int)B.TimerToggle); DrawRectButton((int)B.Gear); DrawRectButton((int)B.Stats);
                     DrawRectButton((int)B.DevMenu);
                 }
-                UiKit.Text(new Rect(W * 0.5f - 400f, 510f, 800f, 24f),
+                UiKit.Text(new Rect(W * 0.5f - 400f, devOpen ? 510f : 462f, 800f, 24f),
                     "ПУТЬ " + (Ladder.Index + 1) + "/" + Ladder.Count + "  ·  ПОБЕД " + Records.Wins + "  ·  ПОРАЖЕНИЙ " + Records.Losses + "  ·  ЛУЧШЕЕ " + Records.BestStage + "/" + Ladder.Count + (Records.Cleared > 0 ? "  ·  ПРОЙДЕН ×" + Records.Cleared : ""),
                     13f, new Color(0.85f, 0.8f, 0.7f, 0.9f));
             }

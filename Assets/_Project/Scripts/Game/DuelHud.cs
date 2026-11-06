@@ -635,7 +635,7 @@ namespace BladePath
             Rect r = new Rect(W * 0.5f - 380f, 112f, 760f, 30f);
             VisualIdentity.KitSurface(r, 0.92f * a);   // подсказка на плашке-тосте в стиле игры
             UiKit.Rect(new Rect(r.x + 8f, r.yMax - 3f, (r.width - 16f) * Mathf.Clamp01(lt / 3.6f), 2f), new Color(Gold.r, Gold.g, Gold.b, a));
-            UiKit.Text(r, Tips[i], 14f, new Color(1f, 0.95f, 0.85f, a));
+            UiKit.Text(new Rect(r.x + 30f, r.y, r.width - 60f, r.height), Tips[i], 13f, new Color(1f, 0.95f, 0.85f, a));   // текст внутри плашки, не на её концах
         }
 
         void Finish() { tutDone = 1; PlayerPrefs.SetInt("tut_v2", 1); }

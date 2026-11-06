@@ -67,7 +67,7 @@ namespace BladePath
         IEnumerator Shot(string name)
         {
             // дать кадру дорисоваться (IMGUI, видео), затем метка для screencap и запасной снимок самой игрой
-            yield return new WaitForSecondsRealtime(1.2f);
+            yield return new WaitForSecondsRealtime(0.6f);
             shotIndex++;
             string file = shotIndex.ToString("00") + "_" + name;
             Debug.Log("QATOUR_SHOT " + file);
@@ -141,7 +141,7 @@ namespace BladePath
                 if (at >= 0)
                 {
                     try { Call(map, "StartFight", at, false); } catch (Exception ex) { Debug.LogWarning("QATOUR_FAIL fight " + ex); }
-                    yield return new WaitForSecondsRealtime(0.6f);
+                    yield return new WaitForSecondsRealtime(1.6f);   // экран боя проявляется из чёрного ~1 с
                     yield return Step("intro", () => Shot("fight_intro"));
                     yield return new WaitForSecondsRealtime(4f);
                     yield return Step("fight", () => Shot("fight"));
