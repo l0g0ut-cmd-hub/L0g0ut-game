@@ -1567,14 +1567,6 @@ namespace BladePath
                 lp.born = Time.unscaledTime; lp.size = 26f; Popups.Add(lp);
                 return;
             }
-            if (target == player && Immortal && dmg >= Hp(player)) dmg = Mathf.Max(0f, Hp(player) - 1f);   // отладка: бессмертие
-            if (target == enemy && EnemyImmortal && dmg >= Hp(enemy)) dmg = Mathf.Max(0f, Hp(enemy) - 1f);
-            if (target == player && dmg >= Hp(player) && Hp(player) > 1f && Campaign.CatNineLives)
-            {
-                dmg = Hp(player) - 1f;
-                Campaign.UseCatLife();
-                Announce("ДЕВЯТЬ ЖИЗНЕЙ", new Color(1f, 0.85f, 0.35f), "кот-хранитель отдал за тебя одну из своих");
-            }
             // удар во время глотка из тыквы: глоток сорван (если ещё не успел подействовать — лечения не будет, тыква потрачена)
             // удар по накапливающему срывает накопление
             // игрока лёгкие удары не срывают: накопление теряет часть прогресса; срывают тяжёлые (сверху, по ногам, натиск, накопленный)
@@ -1676,6 +1668,16 @@ namespace BladePath
                 hp[player] = Mathf.Min(MaxHp(player), hp[player] + Mathf.Min(dmg, Hp(target)) * 0.08f);   // «Жажда стали»
             if (!chip && attacker == player && Profile.B.lifesteal > 0f && hp.ContainsKey(player) && !player.Dead)
                 hp[player] = Mathf.Min(MaxHp(player), hp[player] + Mathf.Min(dmg, Hp(target)) * Profile.B.lifesteal);   // руна «Вампиризм»
+            // защиты от смертельного удара — ПОСЛЕ всех множителей (крит, контрудар, серия, броня, круг):
+            // раньше они срабатывали до множителей, и урезанный удар снова становился смертельным
+            if (target == player && Immortal && dmg >= Hp(player)) dmg = Mathf.Max(0f, Hp(player) - 1f);   // отладка: бессмертие
+            if (target == enemy && EnemyImmortal && dmg >= Hp(enemy)) dmg = Mathf.Max(0f, Hp(enemy) - 1f);
+            if (target == player && dmg >= Hp(player) && Hp(player) > 1f && Campaign.CatNineLives)
+            {
+                dmg = Hp(player) - 1f;
+                Campaign.UseCatLife();
+                Announce("ДЕВЯТЬ ЖИЗНЕЙ", new Color(1f, 0.85f, 0.35f), "кот-хранитель отдал за тебя одну из своих");
+            }
             hp[target] = Mathf.Max(0f, Hp(target) - dmg);
             // финальный противник «Пути» на половине здоровья впадает в ярость
             if (target == enemy && Ladder.IsLast && !Enraged && !FoeStandIn && Marks(enemy) <= 1 && before01 > 0.5f && Hp01(target) <= 0.5f && Hp(target) > 0f)
