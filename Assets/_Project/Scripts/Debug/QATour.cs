@@ -21,7 +21,7 @@ namespace BladePath
     /// </summary>
     public class QATour : MonoBehaviour
     {
-        const float Hold = 3.5f;   // сколько держать экран после метки: screencap на эмуляторе медленный
+        const float Hold = 2.5f;   // сколько держать экран после метки: screencap на эмуляторе медленный
         static QATour inst;
         string dir;
         int shotIndex;
@@ -67,7 +67,8 @@ namespace BladePath
         IEnumerator Shot(string name)
         {
             // дать кадру дорисоваться (IMGUI, видео), затем метка для screencap и запасной снимок самой игрой
-            yield return new WaitForSecondsRealtime(0.6f);
+            // эмулятор без видеокарты рисует 1–3 кадра в секунду: экрану нужно время, чтобы дойти до screencap
+            yield return new WaitForSecondsRealtime(3.5f);
             shotIndex++;
             string file = shotIndex.ToString("00") + "_" + name;
             Debug.Log("QATOUR_SHOT " + file);
@@ -118,7 +119,9 @@ namespace BladePath
             // ---------- карта похода ----------
             float wait = 0f;
             while (SceneManager.GetActiveScene().name != SceneNames.Prototype && wait < 60f) { wait += 0.5f; yield return new WaitForSecondsRealtime(0.5f); }
-            yield return new WaitForSecondsRealtime(8f);   // сцена, карта, облака
+            wait = 0f;
+            while (!MapScreen.Open && wait < 40f) { wait += 0.5f; yield return new WaitForSecondsRealtime(0.5f); }
+            yield return new WaitForSecondsRealtime(6f);   // экран загрузки «Путь клинка» и проявление карты
             yield return Step("map", () => Shot("map"));
             MonoBehaviour map = FindAny("MapScreen");
             if (map != null)
@@ -141,7 +144,7 @@ namespace BladePath
                 if (at >= 0)
                 {
                     try { Call(map, "StartFight", at, false); } catch (Exception ex) { Debug.LogWarning("QATOUR_FAIL fight " + ex); }
-                    yield return new WaitForSecondsRealtime(1.6f);   // экран боя проявляется из чёрного ~1 с
+                    yield return new WaitForSecondsRealtime(0.5f);   // вступление снимается в начале (враг в полный рост)
                     yield return Step("intro", () => Shot("fight_intro"));
                     yield return new WaitForSecondsRealtime(4f);
                     yield return Step("fight", () => Shot("fight"));
@@ -153,7 +156,7 @@ namespace BladePath
                         dm.SetPaused(false);
                         yield return new WaitForSecondsRealtime(0.5f);
                         dm.DebugWin();
-                        yield return new WaitForSecondsRealtime(2.5f);
+                        yield return new WaitForSecondsRealtime(4f);   // красная вспышка удара проходит, появляются кнопки итога
                         yield return Step("victory", () => Shot("victory"));
                     }
                 }
