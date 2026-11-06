@@ -464,7 +464,14 @@ namespace BladePath
 
             if (active[(int)B.Stick]) DrawStick();
             // первый раунд: пока враг представляется в полный рост справа, кнопки атак приглушены и не спорят с ним
-            introDim = duel != null && duel.State == DuelState.Intro && duel.Round == 1 && !paused ? 0.18f : 1f;
+            // ровно пока виден враг в полный рост (та же кривая, что у картинки в DuelHud) и никогда — во время выхвата:
+            // на «РУБИ!» кнопку «сверху» нужно видеть сразу
+            introDim = 1f;
+            if (duel != null && duel.State == DuelState.Intro && duel.Round == 1 && !paused && !duel.IaiWaiting)
+            {
+                float ia = Mathf.Clamp01(duel.StateTime / 0.5f) * Mathf.Clamp01((duel.IntroLength - duel.StateTime) / 0.5f);
+                introDim = 1f - 0.82f * ia;
+            }
 
             bool canAct = player != null && player.CanAct && player.weapon != null && player.weapon.Phase == SwingPhase.Idle;
             bool air = player != null && !player.Grounded;
