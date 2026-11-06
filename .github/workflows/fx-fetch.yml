@@ -9,39 +9,50 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
-      - name: Download flipbooks
+      - name: Download free itch.io music (Megumi Ryu, Japanese loops)
         run: |
           set -u
           mkdir -p out/pages out/files
           UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
-          SLUGS="energy-burst-11 energy-burst-12 energy-burst-09 energy-burst-13 magical-shockwave-01-front looping-magic-aura-01-front looping-magic-aura-04-front looping-magic-aura-05-front cannon-spark-01-front cannon-spark-03-front cannon-spark-05-front"
-          for s in $SLUGS; do
-            curl -sL -A "$UA" "https://cgheven.com/assets/$s" -o "out/pages/$s.html" || true
-            grep -oE 'https://cdn\.cgheven\.com/file/[^"\\ ]+' "out/pages/$s.html" | grep -viE 'preview|thumbnail|/Addons/|\.webm$|\.webp$|Thanos_Portal' | sort -u > "out/pages/$s.urls" || true
-            # видео 1K: сначала ProRes 4444 (с прозрачностью), иначе H.264
-            pick=$(grep -E '1K' "out/pages/$s.urls" | grep -iE 'ProRes|\.mov$' | head -1)
-            [ -z "$pick" ] && pick=$(grep -E '1K' "out/pages/$s.urls" | grep -iE '\.mp4$' | head -1)
-            echo "$s -> ${pick:-NONE}" | tee -a out/log.txt
-            if [ -n "$pick" ]; then
-              ext="${pick##*.}"
-              curl -sL -A "$UA" --max-filesize 400000000 "$pick" -o "out/raw_$s.$ext" || { echo "FAIL $s" >> out/log.txt; rm -f "out/raw_$s.$ext"; alt=$(grep -E '1K' "out/pages/$s.urls" | grep -iE 'H\.264|\.mp4$' | head -1); [ -n "$alt" ] && curl -sL -A "$UA" --max-filesize 400000000 "$alt" -o "out/raw_$s.${alt##*.}" && echo "$s ALT $alt" >> out/log.txt; }
-            fi
+          J=cookies.txt
+          curl -sL -A "$UA" -c $J -b $J "https://megumi-ryu.itch.io" -o out/pages/index.html
+          grep -oE 'https://megumi-ryu\.itch\.io/[a-z0-9-]+' out/pages/index.html | sort -u > out/pages/all.txt
+          grep -iE 'japan|town|tanuki|oinari|folklore|festival|edo|kyoto|tea|shrine' out/pages/all.txt > out/pages/pick.txt || true
+          cat out/pages/pick.txt | tee -a out/log.txt
+          for p in $(cat out/pages/pick.txt | head -14); do
+            n=$(basename "$p")
+            curl -sL -A "$UA" -c $J -b $J "$p" -o "out/pages/$n.html"
+            csrf=$(grep -oE 'name="csrf_token" value="[^"]+"' "out/pages/$n.html" | head -1 | sed 's/.*value="//;s/"$//')
+            [ -z "$csrf" ] && csrf=$(grep -oE '"csrf_token":"[^"]+"' "out/pages/$n.html" | head -1 | sed 's/.*:"//;s/"$//')
+            # бесплатная загрузка: страница загрузок (download_url) → ссылки на файлы
+            dl=$(curl -sL -A "$UA" -c $J -b $J -X POST -d "csrf_token=$csrf" "$p/download_url")
+            echo "$n download_url: $(echo "$dl" | head -c 200)" >> out/log.txt
+            durl=$(echo "$dl" | grep -oE '"url":"[^"]+"' | head -1 | sed 's/"url":"//;s/"$//;s#\\/#/#g')
+            [ -z "$durl" ] && continue
+            curl -sL -A "$UA" -c $J -b $J "$durl" -o "out/pages/$n.dl.html"
+            csrf2=$(grep -oE 'name="csrf_token" value="[^"]+"' "out/pages/$n.dl.html" | head -1 | sed 's/.*value="//;s/"$//')
+            for u in $(grep -oE 'data-upload_id="[0-9]+"' "out/pages/$n.dl.html" | grep -oE '[0-9]+' | sort -u); do
+              base=$(echo "$durl" | sed 's#/download/.*##')
+              key=$(echo "$durl" | grep -oE '/download/[^?]+' | sed 's#/download/##')
+              r=$(curl -sL -A "$UA" -c $J -b $J -X POST -d "csrf_token=$csrf2" "$base/file/$u?key=$key&source=game_download")
+              fu=$(echo "$r" | grep -oE '"url":"[^"]+"' | head -1 | sed 's/"url":"//;s/"$//;s#\\/#/#g')
+              echo "$n upload $u -> ${fu:0:120}" >> out/log.txt
+              [ -n "$fu" ] && curl -sL -A "$UA" --max-filesize 300000000 "$fu" -o "out/files/${n}_$u.bin"
+            done
           done
-          # видео → кадры 256×256 (по 48 кадров на эффект), прозрачность из альфы ProRes или из яркости (чёрный фон)
-          sudo apt-get -qq update >/dev/null && sudo apt-get -qq install -y ffmpeg >/dev/null
-          mkdir -p out/frames
-          for f in out/raw_*; do
+          cd out/files; for f in *.bin; do [ -f "$f" ] || continue; file "$f" >> ../log.txt; done
+          mkdir -p ../audio
+          for f in *.bin; do
             [ -f "$f" ] || continue
-            n=$(basename "$f"); n="${n#raw_}"; n="${n%.*}"
-            dur=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$f" || echo 2)
-            fps=25
-            mkdir -p "out/frames/$n"
-            ffmpeg -v error -i "$f" -vf "fps=$fps,format=rgba,scale=256:256:force_original_aspect_ratio=decrease" -frames:v 400 "out/frames/$n/f_%02d.png" || echo "FFMPEG FAIL $n" >> out/log.txt
-            ffprobe -v error -select_streams v:0 -show_entries stream=pix_fmt,width,height,nb_frames -of csv=p=0 "$f" | sed "s/^/$n: /" >> out/log.txt
+            if file "$f" | grep -qi zip; then mkdir -p "x_$f"; unzip -q -o "$f" -d "x_$f"; fi
           done
-          rm -f out/raw_*
-          rm -f out/pages/*.html
-          du -sh out/files; ls -la out/files
+          sudo apt-get -qq update >/dev/null && sudo apt-get -qq install -y ffmpeg >/dev/null
+          find . -type f \( -iname '*.mp3' -o -iname '*.ogg' -o -iname '*.wav' \) | while read a; do
+            o="../audio/$(echo "$a" | sed 's#^\./##; s#[/ ]#_#g').ogg"
+            ffmpeg -v error -y -i "$a" -vn -ac 2 -ar 44100 -c:a libvorbis -q:a 5 "$o" && echo "OK $a" >> ../log.txt
+          done
+          cd ..; rm -rf files pages/*.html
+          ls -la audio >> log.txt; du -sh audio
       - name: Publish to fx-out
         env:
           GH_TOKEN: ${{ github.token }}
