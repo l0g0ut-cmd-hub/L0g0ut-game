@@ -338,13 +338,13 @@ namespace BladePath
             // справа — текущий противник
             float rx = pr.xMax + 20f, rw = W - rx - 46f;
             Rect rp = new Rect(rx, 76f, rw, 432f);
-            UiKit.Rect(rp, new Color(0f, 0f, 0f, 0.4f));
+            VisualIdentity.KitSurface(rp, 0.95f);   // враг на панели в стиле игры (картинки врагов теперь с прозрачным фоном)
             Texture2D ef = UiKit.Tex(EnemyFull[Mathf.Clamp(cur, 0, EnemyFull.Length - 1)]);
             if (ef != null)
             {
-                float h = 300f, w = h * ef.width / Mathf.Max(1f, ef.height);
+                float h = 284f, w = h * ef.width / Mathf.Max(1f, ef.height);
                 if (w > rw - 20f) { w = rw - 20f; h = w * ef.height / Mathf.Max(1f, ef.width); }
-                GUI.DrawTexture(new Rect(rx + (rw - w) * 0.5f, 72f, w, h), ef);
+                GUI.DrawTexture(new Rect(rx + (rw - w) * 0.5f, 88f, w, h), ef);   // внутри рамки панели
             }
             Ladder.Stage st = Ladder.Current;
             UiKit.Text(new Rect(rx + 10f, 378f, rw - 20f, 26f), "СЛЕДУЮЩИЙ: " + st.name, 17f, Gold);

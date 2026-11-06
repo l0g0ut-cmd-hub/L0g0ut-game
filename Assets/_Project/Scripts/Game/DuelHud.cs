@@ -532,7 +532,7 @@ namespace BladePath
                     float left = Mathf.Clamp01(1f - oa / DuelManager.ResurrectWindow);
                     float pulse = 1f + 0.05f * Mathf.Sin(Time.unscaledTime * 6f);
                     Rect br = new Rect(cx - 170f, 330f, 340f, 120f);
-                    UiKit.Rect(new Rect(br.x, br.y, br.width, br.height), new Color(0f, 0f, 0f, 0.5f));
+                    VisualIdentity.KitSurface(br, 0.96f);   // та же золотая подложка, что у окон игры, а не голый чёрный прямоугольник
                     DrawBrush("UI/ru_revive", new Vector2(cx, br.y + 46f), 62f * pulse, 1f, 1f);
                     UiKit.Text(new Rect(br.x, br.y + 86f, br.width, 28f), "ВОСКРЕСНУТЬ", 22f, new Color(0.95f, 0.9f, 0.8f, 1f));
                     UiKit.Rect(new Rect(br.x, br.yMax + 6f, br.width * left, 4f), new Color(0.9f, 0.15f, 0.1f, 0.9f));
@@ -630,8 +630,8 @@ namespace BladePath
             float lt = t - i * 3.6f;
             float a = Mathf.Clamp01(lt / 0.25f) * Mathf.Clamp01((3.6f - lt) / 0.3f);
             Rect r = new Rect(W * 0.5f - 380f, 112f, 760f, 30f);
-            UiKit.Rect(r, new Color(0f, 0f, 0f, 0.55f * a));
-            UiKit.Rect(new Rect(r.x, r.yMax - 2f, r.width * Mathf.Clamp01(lt / 3.6f), 2f), new Color(Gold.r, Gold.g, Gold.b, a));
+            VisualIdentity.KitSurface(r, 0.92f * a);   // подсказка на плашке-тосте в стиле игры
+            UiKit.Rect(new Rect(r.x + 8f, r.yMax - 3f, (r.width - 16f) * Mathf.Clamp01(lt / 3.6f), 2f), new Color(Gold.r, Gold.g, Gold.b, a));
             UiKit.Text(r, Tips[i], 14f, new Color(1f, 0.95f, 0.85f, a));
         }
 
