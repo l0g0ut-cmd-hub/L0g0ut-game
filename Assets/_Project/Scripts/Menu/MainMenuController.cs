@@ -147,40 +147,11 @@ namespace BladePath
             return new Rect((Screen.width - w) * 0.5f, (Screen.height - h) * 0.5f, w, h);
         }
 
-        // BP-051: a restrained CINEMATIC side extension, not bulky battle panels.
-        // Texture is procedurally rendered once at native pillar resolution.
-        // No changes to video dimensions, video pixels or button hitboxes.
-        static Texture2D menuPillarTexture;
+        // Боковые панели меню (временно — колонны храма). Занимают только чёрные поля
+        // по бокам видео; видео, кнопки и зоны нажатия не двигаются.
         static Texture2D MenuPillarTexture()
         {
-            if (menuPillarTexture != null) return menuPillarTexture;
-            const int width = 192, height = 1024;
-            Texture2D t = new Texture2D(width, height, TextureFormat.RGBA32, false);
-            t.wrapMode = TextureWrapMode.Clamp;
-            t.filterMode = FilterMode.Bilinear;
-            Color32[] p = new Color32[width * height];
-            for (int y = 0; y < height; y++)
-                for (int x = 0; x < width; x++)
-                {
-                    float u = (float)x / (width - 1);
-                    float v = (float)y / (height - 1);
-                    float grain = Mathf.PerlinNoise(x * 0.07f + 19f, y * 0.012f) * 0.065f;
-                    float cloud = Mathf.PerlinNoise(x * 0.017f + 51f, y * 0.004f + 13f) * 0.085f;
-                    float edge = Mathf.Pow(u, 3f) * 0.12f;
-                    float accent = Mathf.Exp(-Mathf.Pow((u - 0.975f) * 180f, 2f));
-                    float inlay = Mathf.Exp(-Mathf.Pow((u - 0.915f) * 130f, 2f));
-                    Color baseColor = new Color(0.035f + grain + cloud * 0.5f,
-                        0.031f + grain * 0.65f + cloud * 0.39f,
-                        0.061f + grain * 0.76f + cloud * 0.65f, 1f);
-                    baseColor = Color.Lerp(baseColor, new Color(0.23f, 0.11f, 0.09f), edge);
-                    baseColor = Color.Lerp(baseColor, new Color(0.67f, 0.40f, 0.19f), inlay * 0.56f);
-                    baseColor = Color.Lerp(baseColor, new Color(0.92f, 0.63f, 0.30f), accent * 0.7f);
-                    p[y * width + x] = baseColor;
-                }
-            t.SetPixels32(p);
-            t.Apply(false, true);
-            menuPillarTexture = t;
-            return t;
+            return UiKit.Tex("UI/menu_side_column");
         }
 
         static void DrawSideBorders(Rect video)
@@ -189,30 +160,21 @@ namespace BladePath
             float right = Mathf.Max(0f, Screen.width - video.xMax);
             if (left < 1f && right < 1f) return;
             Texture2D panel = MenuPillarTexture();
-            Texture2D blossom = UiKit.Tex("UI/sakura_branch");
+            if (panel == null) return;
             Color saved = GUI.color;
             GUI.color = Color.white;
-            if (left > 0f) DrawMenuPillar(new Rect(0f, 0f, left, Screen.height), panel, blossom, false);
-            if (right > 0f) DrawMenuPillar(new Rect(video.xMax, 0f, right, Screen.height), panel, blossom, true);
+            // высота — во весь экран, ширина по пропорции; внутренний край прилегает к видео,
+            // лишнее уходит за внешний край экрана
+            float w = Screen.height * panel.width / (float)panel.height;
+            if (left > 0f) DrawMenuPillar(new Rect(video.x - w, 0f, w, Screen.height), panel, false);
+            if (right > 0f) DrawMenuPillar(new Rect(video.xMax, 0f, w, Screen.height), panel, true);
             GUI.color = saved;
         }
 
-        static void DrawMenuPillar(Rect area, Texture2D panel, Texture2D blossom, bool mirror)
+        static void DrawMenuPillar(Rect area, Texture2D panel, bool mirror)
         {
-            GUI.color = Color.white;
             GUI.DrawTextureWithTexCoords(area, panel,
                 mirror ? new Rect(1f, 0f, -1f, 1f) : new Rect(0f, 0f, 1f, 1f));
-            // Sparse petals from the existing game art; never obscure the video.
-            if (blossom != null && area.width > 45f)
-            {
-                GUI.color = new Color(1f, 0.8f, 0.78f, 0.17f);
-                float bw = area.width * 0.78f;
-                float bh = Mathf.Min(area.height * 0.27f, bw * 2.0f);
-                GUI.DrawTextureWithTexCoords(new Rect(area.x + (area.width-bw)*0.5f,
-                    area.y + area.height*0.075f, bw, bh), blossom,
-                    mirror ? new Rect(1f, 0f, -1f, 1f) : new Rect(0f, 0f, 1f, 1f));
-            }
-            GUI.color = Color.white;
         }
 
         void OnGUI()
@@ -384,61 +346,25 @@ namespace BladePath
             }
         }
 
-        // BP-051: a single translucent ornament-shaped halo matched to the
-        // actual card edges; no second square frame, text clipping or baked glow.
-        static Texture2D difficultySelectionHalo;
+        // Рамка выбранной карточки сложности: готовая золотая рамка с прозрачным проёмом.
+        // Проём рамки (в пикселях текстуры 592x915) совмещается с краями нарисованной карточки.
+        const float FrameTexW = 592f, FrameTexH = 915f;
+        const float FrameInL = 61.2f, FrameInT = 82.2f, FrameInR = 531.6f, FrameInB = 834.6f;
         static Texture2D DifficultySelectionHalo()
         {
-            if (difficultySelectionHalo != null) return difficultySelectionHalo;
-            const int w=180, h=264;
-            Vector2[] path = {
-                new Vector2(0.075f,0.042f), new Vector2(0.38f,0.042f),
-                new Vector2(0.50f,0.010f), new Vector2(0.62f,0.042f),
-                new Vector2(0.925f,0.042f), new Vector2(0.975f,0.075f),
-                new Vector2(0.975f,0.920f), new Vector2(0.925f,0.955f),
-                new Vector2(0.62f,0.955f), new Vector2(0.50f,0.993f),
-                new Vector2(0.38f,0.955f), new Vector2(0.075f,0.955f),
-                new Vector2(0.025f,0.920f), new Vector2(0.025f,0.075f)
-            };
-            Texture2D t = new Texture2D(w,h,TextureFormat.RGBA32,false);
-            t.wrapMode=TextureWrapMode.Clamp;
-            t.filterMode=FilterMode.Bilinear;
-            Color[] pixels=new Color[w*h];
-            for(int y=0;y<h;y++) for(int x=0;x<w;x++)
-            {
-                Vector2 p=new Vector2(x,y);
-                float nearest=100000f;
-                for(int j=0;j<path.Length;j++)
-                {
-                    Vector2 a=new Vector2(path[j].x*(w-1),path[j].y*(h-1));
-                    Vector2 b=new Vector2(path[(j+1)%path.Length].x*(w-1),
-                        path[(j+1)%path.Length].y*(h-1));
-                    Vector2 delta=b-a;
-                    float amount=Mathf.Clamp01(Vector2.Dot(p-a,delta) /
-                        Mathf.Max(0.0001f,delta.sqrMagnitude));
-                    nearest=Mathf.Min(nearest,Vector2.Distance(p,a+amount*delta));
-                }
-                float soft=Mathf.Exp(-nearest*nearest/36f)*0.42f;
-                float rim=Mathf.Exp(-nearest*nearest/1.8f)*0.58f;
-                pixels[y*w+x]=new Color(1f,0.78f+0.17f*rim,0.36f+0.26f*rim,
-                    Mathf.Clamp01(soft+rim));
-            }
-            t.SetPixels(pixels);
-            t.Apply(false,true);
-            difficultySelectionHalo=t;
-            return t;
+            return UiKit.Tex("UI/selection/difficulty_select_frame");
         }
         static void DrawDifficultySelectionGlow(Rect card, float s)
         {
-            Texture2D halo=DifficultySelectionHalo();
-            Color old=GUI.color;
-            GUI.color=new Color(1f,1f,1f,
-                0.92f+0.08f*Mathf.Sin(Time.unscaledTime*3f));
-            float margin=6f*s;
-            GUI.DrawTexture(new Rect(card.x-margin,card.y-margin,
-                card.width+margin*2f,card.height+margin*2f),
-                halo,ScaleMode.StretchToFill,true);
-            GUI.color=old;
+            Texture2D frame = DifficultySelectionHalo();
+            if (frame == null) return;
+            Rect c = new Rect(card.x - 2f * s, card.y - 2f * s, card.width + 4f * s, card.height + 4f * s);
+            float kx = c.width / (FrameInR - FrameInL), ky = c.height / (FrameInB - FrameInT);
+            Color old = GUI.color;
+            GUI.color = new Color(1f, 1f, 1f, 0.9f + 0.1f * Mathf.Sin(Time.unscaledTime * 3f));
+            GUI.DrawTexture(new Rect(c.x - FrameInL * kx, c.y - FrameInT * ky, FrameTexW * kx, FrameTexH * ky),
+                frame, ScaleMode.StretchToFill, true);
+            GUI.color = old;
         }
 
         /// <summary>Clickable area aligned with a button painted into the screen art.

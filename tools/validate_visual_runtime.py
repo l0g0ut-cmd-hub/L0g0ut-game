@@ -86,7 +86,8 @@ assert 'DrawBrush("UI/brush_stroke", new Vector2(cx, 318f)' not in hud_code
 # Cards have calibrated painted bounds; no rectangular rim or second frame.
 assert 'static Texture2D DifficultySelectionHalo()' in menu
 assert 'static void DrawDifficultySelectionGlow(Rect card, float s)' in menu
-assert 'GUI.DrawTexture(new Rect(card.x-margin,card.y-margin,' in menu
+assert 'UI/selection/difficulty_select_frame' in menu
+assert (ROOT / "Assets/_Project/Resources/UI/selection/difficulty_select_frame.png").is_file()
 assert 'DrawDifficultySelectionGlow(r, s);' in menu
 assert 'SelRect(355f, 149f, 704f, 654f)' in menu
 assert 'SelRect(735f, 149f, 1085f, 654f)' in menu
@@ -111,6 +112,8 @@ assert 'float left = Mathf.Max(0f, video.x);' in menu
 assert 'float right = Mathf.Max(0f, Screen.width - video.xMax);' in menu
 assert 'static Texture2D MenuPillarTexture()' in menu
 assert 'static void DrawMenuPillar(' in menu
+assert 'UiKit.Tex("UI/menu_side_column")' in menu
+assert (ROOT / "Assets/_Project/Resources/UI/menu_side_column.jpg").is_file()
 assert 'UiKit.Tex("UI/Kit/ui_sidepanel")' not in menu
 assert 'UiKit.Tex("UI/menu_side_borders")' not in menu
 assert 'float k = vr.width / CW;' in menu
