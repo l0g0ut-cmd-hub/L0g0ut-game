@@ -1760,6 +1760,7 @@ namespace BladePath
                             if (Btn(new Rect(row.xMax - 118f, row.y + 14f, 110f, 44f), price + " МОН", ok && Profile.Gold >= price))
                                 if (Profile.Spend(price)) { Profile.Give(it); stock[k] = null; Haptics.Pulse(25); if (Juice.Instance != null) Juice.Instance.Taiko(0.5f, 1.4f); }
                         }
+                    if (Btn(new Rect(x, r.yMax - 56f, 200f, 42f), "ПРОДАТЬ СВОЁ", ok, true)) { Profile.CostMul = 1f; InventoryScreen.Show(0); InventoryScreen.AtMarket = true; }   // продажа — только у торговца
                     if (Btn(new Rect(r.xMax - 150f, r.yMax - 56f, 132f, 42f), "УЙТИ", ok)) modal = Modal.None;
                     break;
                 }
