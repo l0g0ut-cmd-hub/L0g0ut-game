@@ -2,6 +2,8 @@ name: Fetch FX (cgheven)
 on:
   push:
     branches: [fx-fetch]
+permissions:
+  contents: write
 jobs:
   fetch:
     runs-on: ubuntu-latest
@@ -19,5 +21,11 @@ jobs:
             f=$(echo "$p" | tr '/' '_'); curl -sL -A "$UA" "https://cgheven.com/$p" -o "out/html/$f.html" || true
           done
           ls -la out/html
-      - uses: actions/upload-artifact@v4
-        with: { name: fx-discovery, path: out, retention-days: 3 }
+      - name: Publish to fx-out
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd out; git init -q; git checkout -q -b fx-out
+          git -c user.name=ci -c user.email=ci@local add -A
+          git -c user.name=ci -c user.email=ci@local commit -qm "fx $GITHUB_SHA"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" fx-out
