@@ -132,7 +132,11 @@ namespace BladePath
                         if (stocks.TryGetValue(i, out kept) && kept.Key == at) stock = kept.Value;
                         else
                         {
-                            stock = new List<Item>(); for (int k = 0; k < 3; k++) stock.Add(Profile.Roll(Campaign.Region + 1, 60, k == 0 && Random.value < 0.4f)); Item sc = Random.value < 0.5f ? Profile.NewScroll() : null; if (sc != null) stock[2] = sc;
+                            // товар по всем ячейкам: по 2 предмета на каждую (12) + 1–2 свитка; один-два — получше
+                            stock = new List<Item>();
+                            for (int sl = 0; sl < Profile.SlotCount; sl++)
+                                for (int k = 0; k < 2; k++) stock.Add(Profile.Roll(Campaign.Region + 1, 60, k == 1 && Random.value < 0.18f, sl));
+                            for (int k = 0; k < 2; k++) { Item sc = k == 0 || Random.value < 0.5f ? Profile.NewScroll() : null; if (sc != null && !stock.Exists(o => o != null && o.slot == sc.slot && o.tech == sc.tech)) stock.Add(sc); }
                             stocks[i] = new KeyValuePair<Vector2, List<Item>>(at, stock);
                         }
                         stockNode = i;
@@ -192,7 +196,7 @@ namespace BladePath
             if (modal == Modal.Camp || modal == Modal.Onsen) return "amb_stream";         // ручей у стоянки / у источника
             MapNode cur = Campaign.Current;
             if (MapClouds.SkyAt(Campaign.Region, new Vector2(cur.x, cur.y)) >= 1) return "rain_loop";   // герой под дождём — дождь в лесу
-            return Campaign.Region == 1 ? "amb_wind" : Campaign.Region == 2 ? "amb_wind" : "amb_birds";   // горы и сёгунат — ветер, лес — птицы
+            return "amb_wind";   // везде ветер: пение птиц в лесу раздражало (2026-11-07)
         }
         void UpdateAmbience()
         {
@@ -894,6 +898,104 @@ namespace BladePath
                 for (float x = -step + off; x < W + step; x += step, j++)
                     Flip(new Rect(x - w * 0.2f, y, w, h), mist, 6, 5, 30, 3f, layer * 4.1f + (j - first) * 2.9f, tint, true);
             }
+        }
+
+        // ---- торговец: вкладки по ячейкам (UI/shop_tabs 4×4: обычные и выбранные), список товаров с прокруткой (UI/shop_scroll_*)
+        int shopCat = -1;            // −1 — всё, 0…5 — ячейки, 6 — свитки
+        float shopScroll, shopDragY, shopDragStart; bool shopDragging, shopDragged;
+        static readonly string[] ShopCatNames = { "ВСЁ", "КЛИНКИ", "ЦУБЫ", "ОБЛАЧЕНИЕ", "МАСКИ", "АМУЛЕТЫ", "ТЫКВЫ", "СВИТКИ" };
+        static int ShopTabCell(int cat, bool on)   // cat: −1 всё, 0..6
+        {
+            int n = cat < 0 ? 11 : cat <= 3 ? cat : cat == 4 ? 8 : cat == 5 ? 9 : 10;
+            return on ? n + 4 : n;   // выбранные — рядом ниже
+        }
+
+        void DrawMerchant(bool ok)
+        {
+            Rect r = Card(880f, 476f);
+            Picture(new Rect(r.x, r.y, 190f, r.height), "UI/npc_0");
+            float x = r.x + 204f, w = r.xMax - 22f - x, y = r.y + 16f;
+            VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "ТОРГОВЕЦ", 20f, TextAnchor.MiddleLeft);
+            UiKit.Text(new Rect(x, y, w, 26f), Profile.Gold + " мон", 15f, Gold, TextAnchor.MiddleRight); y += 30f;
+            y = Lines(x, y, w, "«Всё с дальних дорог, господин. Дёшево не отдам — но и не обману.»", 70, 12f, Dim) + 4f;
+            // вкладки — столбец слева
+            Texture2D tabs = UiKit.Tex("UI/shop_tabs");
+            float tabS = 40f, ty = y;
+            for (int c = -1; c <= 6; c++)
+            {
+                Rect tr = new Rect(x, ty + (c + 1) * (tabS + 3f), tabS, tabS);
+                bool on = shopCat == c;
+                if (tabs != null && Event.current.type == EventType.Repaint)
+                {
+                    int cell = ShopTabCell(c, on);
+                    GUI.DrawTextureWithTexCoords(tr, tabs, new Rect((cell % 4) * 0.25f, 1f - (cell / 4 + 1) * 0.25f, 0.25f, 0.25f));
+                    UiFx.DrawPress(tr);
+                }
+                else if (tabs == null) UiKit.Text(tr, ShopCatNames[c + 1].Substring(0, 2), 11f, on ? Gold : Dim);
+                if (ok && GUI.Button(tr, GUIContent.none, GUIStyle.none) && shopCat != c) { shopCat = c; shopScroll = 0f; UiFx.Pressed(tr); }
+            }
+            // список выбранной категории
+            Rect list = new Rect(x + tabS + 12f, y, w - tabS - 12f - 30f, r.yMax - 64f - y);
+            List<int> show = new List<int>();
+            if (stock != null)
+                for (int k = 0; k < stock.Count; k++)
+                {
+                    Item it = stock[k];
+                    if (it == null) continue;   // проданное убирается из списка
+                    int cat = it.slot >= Profile.SlotCount ? 6 : it.slot;
+                    if (shopCat < 0 || shopCat == cat) show.Add(k);
+                }
+            UiKit.Text(new Rect(list.x, list.y - 2f, list.width, 16f), ShopCatNames[shopCat + 1] + "  ·  " + show.Count, 11f, Dim, TextAnchor.UpperRight, false);
+            const float rowH = 66f, gap = 6f;
+            float total = show.Count * (rowH + gap), view = list.height - 14f;
+            float maxScroll = Mathf.Max(0f, total - view);
+            // прокрутка пальцем (и колесом в редакторе); протяжка не нажимает кнопки «купить»
+            Event e = Event.current;
+            Rect listIn = new Rect(list.x, list.y + 14f, list.width + 30f, view);
+            if (ok && e.type == EventType.MouseDown && listIn.Contains(e.mousePosition)) { shopDragging = true; shopDragged = false; shopDragY = e.mousePosition.y; shopDragStart = shopScroll; }
+            if (shopDragging && e.type == EventType.MouseDrag)
+            {
+                float d = e.mousePosition.y - shopDragY;
+                if (Mathf.Abs(d) > 8f) shopDragged = true;
+                if (shopDragged) shopScroll = Mathf.Clamp(shopDragStart - d, 0f, maxScroll);
+            }
+            if (e.type == EventType.MouseUp) shopDragging = false;
+            if (e.type == EventType.ScrollWheel && listIn.Contains(e.mousePosition)) { shopScroll = Mathf.Clamp(shopScroll + e.delta.y * 20f, 0f, maxScroll); e.Use(); }
+            shopScroll = Mathf.Clamp(shopScroll, 0f, maxScroll);
+            GUI.BeginGroup(new Rect(list.x, list.y + 14f, list.width, view));
+            bool buyOk = ok && !shopDragged;
+            if (show.Count == 0) UiKit.Text(new Rect(0f, 0f, list.width, 60f), "этот товар раскупили", 13f, Dim);
+            for (int q = 0; q < show.Count; q++)
+            {
+                int k = show[q];
+                Item it = stock[k];
+                Rect row = new Rect(0f, q * (rowH + gap) - shopScroll, list.width, rowH);
+                if (row.yMax < 0f || row.y > view) continue;
+                VisualIdentity.RowPanel(row);
+                InventoryScreen.ItemIcon(new Rect(row.x + 5f, row.y + 5f, 56f, 56f), it);
+                Color rc = Profile.RarityColors[Mathf.Clamp(it.rarity, 0, 3)];
+                float tw = row.width - 70f - 124f;
+                UiKit.Text(new Rect(row.x + 70f, row.y + 6f, tw, 22f), it.name, 14f, rc, TextAnchor.MiddleLeft, false);
+                string desc = it.slot >= Profile.SlotCount ? "Свиток с приёмом" : Profile.SlotNames[Mathf.Clamp(it.slot, 0, Profile.SlotNames.Length - 1)] + " · " + Profile.RarityNames[Mathf.Clamp(it.rarity, 0, 3)];
+                if (it.mods != null && it.mods.Count > 0) desc += " · " + Profile.ModText((ModId)it.mods[0].stat, it.mods[0].value);
+                UiKit.Text(new Rect(row.x + 70f, row.y + 30f, tw, 18f), desc, 11f, Dim, TextAnchor.MiddleLeft, false);
+                int price = Profile.BuyPrice(it);
+                if (Btn(new Rect(row.xMax - 118f, row.y + 12f, 110f, 42f), price + " МОН", buyOk && Profile.Gold >= price))
+                    if (Profile.Spend(price)) { Profile.Give(it); stock[k] = null; Haptics.Pulse(25); UiFx.Play("coins", 0.8f); }
+            }
+            GUI.EndGroup();
+            // полоса прокрутки
+            if (maxScroll > 0f && Event.current.type == EventType.Repaint)
+            {
+                Rect track = new Rect(list.xMax + 8f, list.y + 14f, 20f, view);
+                Texture2D tt = UiKit.Tex("UI/shop_scroll_track"), th = UiKit.Tex("UI/shop_scroll_thumb");
+                if (tt != null) GUI.DrawTexture(track, tt, ScaleMode.StretchToFill); else UiKit.Rect(track, new Color(0f, 0f, 0f, 0.5f));
+                float thH = Mathf.Max(44f, view * view / total), thY = track.y + (view - thH) * (shopScroll / maxScroll);
+                Rect thumb = new Rect(track.x - 2f, thY, 24f, thH);
+                if (th != null) GUI.DrawTexture(thumb, th, ScaleMode.StretchToFill); else UiKit.Rect(thumb, Gold);
+            }
+            if (Btn(new Rect(x, r.yMax - 54f, 200f, 40f), "ПРОДАТЬ СВОЁ", ok, true)) { Profile.CostMul = 1f; InventoryScreen.Show(0); InventoryScreen.AtMarket = true; }   // продажа — только у торговца
+            if (Btn(new Rect(r.xMax - 150f, r.yMax - 54f, 132f, 40f), "УЙТИ", ok)) modal = Modal.None;
         }
 
         bool devTeleport;   // меню разработчика: следующее нажатие на карту — телепорт
@@ -2132,35 +2234,7 @@ namespace BladePath
                     if (Btn(new Rect(x, r.yMax - 64f, w, 46f), "УЙТИ", ok)) modal = Modal.None;
                     break;
                 }
-                case Modal.Merchant:
-                {
-                    Rect r = Card(720f, 400f);
-                    Picture(new Rect(r.x, r.y, 230f, r.height), "UI/npc_0");
-                    float x = r.x + 248f, w = r.width - 266f, y = r.y + 18f;
-                    VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "ТОРГОВЕЦ", 20f, TextAnchor.MiddleLeft);
-                    UiKit.Text(new Rect(x, y, w, 26f), Profile.Gold + " мон", 15f, Gold, TextAnchor.MiddleRight); y += 32f;
-                    y = Lines(x, y, w, "«Всё с дальних дорог, господин. Дёшево не отдам — но и не обману.»", 46, 12.5f, Dim) + 6f;
-                    if (stock != null)
-                        for (int k = 0; k < stock.Count; k++)
-                        {
-                            Item it = stock[k];
-                            Rect row = new Rect(x, y + k * 78f, w, 72f);
-                            VisualIdentity.RowPanel(row);
-                            if (it == null) { UiKit.Text(row, "продано", 13f, Dim); continue; }
-                            InventoryScreen.ItemIcon(new Rect(row.x + 6f, row.y + 6f, 60f, 60f), it);
-                            Color rc = Profile.RarityColors[Mathf.Clamp(it.rarity, 0, 3)];
-                            UiKit.Text(new Rect(row.x + 76f, row.y + 6f, w - 200f, 22f), it.name, 14f, rc, TextAnchor.MiddleLeft, false);
-                            string desc = it.slot >= Profile.SlotNames.Length - 1 ? "Свиток с приёмом" : Profile.SlotNames[Mathf.Clamp(it.slot, 0, Profile.SlotNames.Length - 1)] + " · " + Profile.RarityNames[Mathf.Clamp(it.rarity, 0, 3)];
-                            if (it.mods != null && it.mods.Count > 0) desc += " · " + Profile.ModText((ModId)it.mods[0].stat, it.mods[0].value);
-                            UiKit.Text(new Rect(row.x + 76f, row.y + 30f, w - 200f, 18f), desc, 11f, Dim, TextAnchor.MiddleLeft, false);
-                            int price = Profile.BuyPrice(it);
-                            if (Btn(new Rect(row.xMax - 118f, row.y + 14f, 110f, 44f), price + " МОН", ok && Profile.Gold >= price))
-                                if (Profile.Spend(price)) { Profile.Give(it); stock[k] = null; Haptics.Pulse(25); if (Juice.Instance != null) Juice.Instance.CoinSound(); }
-                        }
-                    if (Btn(new Rect(x, r.yMax - 56f, 200f, 42f), "ПРОДАТЬ СВОЁ", ok, true)) { Profile.CostMul = 1f; InventoryScreen.Show(0); InventoryScreen.AtMarket = true; }   // продажа — только у торговца
-                    if (Btn(new Rect(r.xMax - 150f, r.yMax - 56f, 132f, 42f), "УЙТИ", ok)) modal = Modal.None;
-                    break;
-                }
+                case Modal.Merchant: DrawMerchant(ok); break;
                 case Modal.Treasure:
                 {
                     Rect r = Card(560f, 340f);

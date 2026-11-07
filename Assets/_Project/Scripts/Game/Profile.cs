@@ -464,7 +464,9 @@ namespace BladePath
         public static int Companion { get { return D.companion; } }
         public static void SetCompanion(int c) { D.companion = Mathf.Clamp(c, -1, 2); Save(); }
 
-        public static Item Roll(int stage, int score, bool bossDrop)
+        public static Item Roll(int stage, int score, bool bossDrop) { return Roll(stage, score, bossDrop, -1); }
+        /// <summary>Предмет заданной ячейки (slot ≥ 0) или любой (−1) — торговец раскладывает товар по всем ячейкам.</summary>
+        public static Item Roll(int stage, int score, bool bossDrop, int forcedSlot)
         {
             float shift = stage * 0.6f + D.cycle * 1.2f + Mathf.Clamp(score, 0, 120) / 60f;
             float[] w = { Mathf.Max(8f, 60f - shift * 9f), 28f + shift * 2f, 10f + shift * 4f, 2f + shift * 2f };
@@ -472,7 +474,7 @@ namespace BladePath
             int rarity = 0;
             while (rarity < 3 && x > w[rarity]) { x -= w[rarity]; rarity++; }
             if (bossDrop) rarity = Mathf.Max(rarity, 2);
-            int slot = UnityEngine.Random.Range(0, SlotCount);
+            int slot = forcedSlot >= 0 && forcedSlot < SlotCount ? forcedSlot : UnityEngine.Random.Range(0, SlotCount);
             Item made = Make(slot, rarity, 1f + 0.22f * stage + 0.4f * D.cycle);
             // предмет комплекта клана: не ниже «добротного», только клинок, цуба, облачение, маска
             if (slot <= (int)Slot.Mask && rarity >= 1 && UnityEngine.Random.value < (bossDrop ? 0.35f : 0.14f))
@@ -522,13 +524,13 @@ namespace BladePath
         /// </summary>
         static readonly int[][][] Icons =
         {
-            // 0–15 — UI/items (4×4), 16–51 — UI/items2 (6×6), 52–87 — UI/items3 (6×6)
-            new[] { new[] { 0, 16, 21, 52 }, new[] { 3, 21, 19, 17, 53, 57 }, new[] { 1, 17, 18, 19, 54, 57 }, new[] { 2, 20, 18, 55, 56 } },   // клинок
-            new[] { new[] { 4, 27, 58 }, new[] { 4, 22, 26, 58, 59 }, new[] { 5, 23, 24, 60, 63 }, new[] { 5, 25, 24, 61, 62 } },               // цуба
-            new[] { new[] { 6, 28, 33, 30, 64 }, new[] { 6, 29, 30, 66, 67 }, new[] { 7, 31, 29, 65, 68 }, new[] { 7, 32, 69 } },               // облачение
-            new[] { new[] { 39, 11, 70, 75 }, new[] { 34, 36, 11, 72 }, new[] { 35, 38, 36, 11, 71, 73 }, new[] { 37, 38, 74 } },               // маска
-            new[] { new[] { 8, 9, 41, 76, 77 }, new[] { 8, 9, 42, 79, 80 }, new[] { 10, 40, 42, 78 }, new[] { 43, 10, 81 } },                   // амулет
-            new[] { new[] { 12, 45, 83 }, new[] { 12, 44, 83 }, new[] { 13, 44, 45, 82 }, new[] { 13, 84 } },                                   // тыква
+            // 0–15 — UI/items (4×4), 16–51 — UI/items2 (6×6), 52–87 — UI/items3 (6×6), 88–123 — UI/items4 (6×6: ряд на ячейку, слева простые, справа легендарный)
+            new[] { new[] { 0, 16, 21, 52, 88, 89 }, new[] { 3, 21, 19, 17, 53, 57, 90 }, new[] { 1, 17, 18, 19, 54, 57, 91, 92 }, new[] { 2, 20, 18, 55, 56, 93 } },   // клинок
+            new[] { new[] { 4, 27, 58, 94, 95 }, new[] { 4, 22, 26, 58, 59, 96 }, new[] { 5, 23, 24, 60, 63, 97, 98 }, new[] { 5, 25, 24, 61, 62, 99 } },   // цуба
+            new[] { new[] { 6, 28, 33, 30, 64, 100, 101 }, new[] { 6, 29, 30, 66, 67, 102 }, new[] { 7, 31, 29, 65, 68, 103, 104 }, new[] { 7, 32, 69, 105 } },   // облачение
+            new[] { new[] { 39, 11, 70, 75, 106, 107 }, new[] { 34, 36, 11, 72, 108 }, new[] { 35, 38, 36, 11, 71, 73, 109, 110 }, new[] { 37, 38, 74, 111 } },   // маска
+            new[] { new[] { 8, 9, 41, 76, 77, 112, 113 }, new[] { 8, 9, 42, 79, 80, 114 }, new[] { 10, 40, 42, 78, 115, 116 }, new[] { 43, 10, 81, 117 } },   // амулет
+            new[] { new[] { 12, 45, 83, 118, 119 }, new[] { 12, 44, 83, 120 }, new[] { 13, 44, 45, 82, 121, 122 }, new[] { 13, 84, 123 } },   // тыква
         };
         static readonly int[] ScrollIcons = { 14, 46, 47, 48, 85, 86, 87 };
 

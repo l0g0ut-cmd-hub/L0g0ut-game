@@ -68,8 +68,8 @@ namespace BladePath
             }
             if (it != null)
             {
-                bool second = it.icon >= 16, third = it.icon >= 52;
-                Texture2D atlas = UiKit.Tex(third ? "UI/items3" : second ? "UI/items2" : "UI/items");
+                bool second = it.icon >= 16, third = it.icon >= 52, fourth = it.icon >= 88;
+                Texture2D atlas = UiKit.Tex(fourth ? "UI/items4" : third ? "UI/items3" : second ? "UI/items2" : "UI/items");
                 Rect ir = new Rect(r.x + r.width * 0.15f, r.y + r.height * 0.15f, r.width * 0.7f, r.height * 0.7f);   // внутри проёма рамки
                 Texture2D setAtlas = it.set >= 0 && it.slot <= 3 ? UiKit.Tex("UI/set_items") : null;
                 if (setAtlas != null)
@@ -79,7 +79,7 @@ namespace BladePath
                 }
                 else if (atlas != null)
                 {
-                    int n = second ? 6 : 4, k = third ? it.icon - 52 : second ? it.icon - 16 : it.icon;
+                    int n = second ? 6 : 4, k = fourth ? it.icon - 88 : third ? it.icon - 52 : second ? it.icon - 16 : it.icon;
                     float u = 1f / n;
                     GUI.DrawTextureWithTexCoords(ir, atlas, new Rect((k % n) * u, 1f - (k / n + 1) * u, u, u));
                 }
@@ -457,14 +457,10 @@ namespace BladePath
         {
             if (sel != null && !Profile.Items.Contains(sel)) sel = null;
             VisualIdentity.Inset(a, null, 0.6f);
-            // прочитан свиток / кузнец улучшил вещь — вспышка в карточке
-            float fxA = Time.unscaledTime - Mathf.Max(learnFxAt, upFxAt);
+            // кузнец улучшил вещь — короткая золотая вспышка у названия (кольцо и вспышка у свитка убраны — смотрелись огненным кольцом не к месту)
+            float fxA = Time.unscaledTime - upFxAt;
             if (fxA < UiFx.FlashGold.Length)
-            {
-                Vector2 fc = new Vector2(a.x + Mathf.Min(70f, a.width * 0.3f), a.y + 24f);
-                UiFx.Draw(UiFx.Around(fc, 120f), UiFx.FlashGold, fxA, new Color(1f, 1f, 1f, 0.7f), 0.6f);
-                if (fxA < UiFx.Ring.Length) UiFx.Draw(new Rect(fc.x - 90f, fc.y - 15f, 180f, 60f), UiFx.Ring, fxA, new Color(1f, 0.82f, 0.45f, 0.9f));
-            }
+                UiFx.Draw(UiFx.Around(new Vector2(a.x + 40f, a.y + 20f), 90f), UiFx.FlashGold, fxA, new Color(1f, 1f, 1f, 0.55f), 0.6f);
             if (sel == null)
             {
                 UiKit.Text(a, AtForge ? "КУЗНИЦА: ВЫБЕРИ ПРЕДМЕТ ДЛЯ УЛУЧШЕНИЯ" : AtMarket ? "ТОРГОВЕЦ: ВЫБЕРИ ПРЕДМЕТ НА ПРОДАЖУ" : "ВЫБЕРИ ПРЕДМЕТ", 13f, AtForge || AtMarket ? new Color(1f, 0.62f, 0.32f) : VisualIdentity.Subdued);

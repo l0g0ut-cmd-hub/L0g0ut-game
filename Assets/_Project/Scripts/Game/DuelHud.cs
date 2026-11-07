@@ -373,16 +373,7 @@ namespace BladePath
                 UiKit.Text(new Rect(cx - 300f, 108f, 600f, 28f), deciding ? "РЕШАЮЩИЙ РАУНД" : "РАУНД", 20f, new Color(0.95f, 0.9f, 0.8f, ta));   // номер — цифрой в круге ниже
                 if (duel.Round == 1)
                 {
-                    // враг в полный рост справа — представление противника, как у боссов
-                    Texture2D ef = UiKit.Tex(EnemyFullArt[Mathf.Clamp(Ladder.Index, 0, EnemyFullArt.Length - 1)]);
-                    if (ef != null)
-                    {
-                        float ia = Mathf.Clamp01(duel.StateTime / 0.5f) * Mathf.Clamp01((duel.IntroLength - duel.StateTime) / 0.5f);
-                        float h = 380f, w = h * ef.width / Mathf.Max(1f, ef.height), slide = (1f - Mathf.Clamp01(duel.StateTime / 0.6f)) * 60f;
-                        Color oc = GUI.color; GUI.color = new Color(1f, 1f, 1f, 0.92f * ia);
-                        GUI.DrawTexture(new Rect(W - w - 30f + slide, 120f, w, h), ef);
-                        GUI.color = oc;
-                    }
+                    // портрет врага в полный рост справа убран — владелец счёл его визуальным мусором (2026-11-07)
                     // Intro opponent caption: size the backing to ALL caption rows,
                     // not to the old narrow brush stroke. Keep symmetric inner padding
                     // so even long path/opponent titles remain inside the dark panel.
