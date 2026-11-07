@@ -397,11 +397,14 @@ namespace BladePath
                 // постоянное пламя духа у ног выбранного путника (петля), при выборе — вспыхивает ярче, у ног расходится кольцо
                 Vector2 feet = new Vector2(r.x + r.width * 0.5f, r.y + r.height * 0.775f);
                 // листы пламени обрезаны по своему содержимому — у синего и красного пламя в кадре шире; ширина выровнена по фиолетовому
-                float aw = r.width * 1.2f * (i == 0 ? 0.72f : i == 1 ? 0.85f : 1f);
+                // замеры листов пламени (по всем кадрам): ширина видимого пламени, середина и самый плотный низ в долях кадра
+                float wdK = i == 0 ? 0.844f : i == 1 ? 0.688f : 0.562f, cxK = i == 0 ? 0.508f : 0.5f, baseK = i == 0 ? 0.98f : 0.988f;
+                float aw = r.width * 1.2f * 0.562f / wdK;   // видимая ширина у всех как у Рэна
+                float baseY = feet.y + r.width * 0.07f;      // основание пламени у всех на одной линии (у ног), без зазора
                 UiFx.Sheet aura = i == 0 ? UiFx.AuraBlue : i == 1 ? UiFx.AuraRed : UiFx.AuraViolet;
                 float boost = age < 1.2f ? 1f - age / 1.2f : 0f;
                 Color c = HeroAura[Mathf.Clamp(i, 0, 2)];
-                UiFx.Draw(new Rect(feet.x - aw * 0.5f, feet.y - aw * 0.93f, aw, aw), aura, t + i * 1.3f, new Color(c.r, c.g, c.b, 0.6f + 0.4f * boost));
+                UiFx.Draw(new Rect(feet.x - aw * cxK, baseY - aw * baseK, aw, aw), aura, t + i * 1.3f, new Color(c.r, c.g, c.b, 0.6f + 0.4f * boost));
                 if (age < UiFx.Ring.Length)
                 {
                     // кольцо — у ног, над табличкой с именем
@@ -425,14 +428,17 @@ namespace BladePath
                 // постоянное пламя духа за медальоном (как у путника): лёгко — синее, воин — золотое, мастер — красное
                 {
                     UiFx.Sheet aura = i == 0 ? UiFx.AuraBlue : UiFx.AuraRed;
-                    float aw = r.width * 0.95f * (i == 0 ? 0.72f : 0.85f);
+                    float dWd = i == 0 ? 0.844f : 0.688f, dCx = i == 0 ? 0.508f : 0.5f;
+                    float aw = r.width * 0.56f / dWd;   // видимая ширина пламени у всех одна
                     Color ac = i == 0 ? new Color(0.8f, 1f, 0.95f, 1f) : i == 1 ? new Color(1f, 0.9f, 0.45f, 1f) : new Color(1f, 0.8f, 0.75f, 1f);
                     float boost = age < 1.2f ? 1f - age / 1.2f : 0f;
-                    Vector2 foot = new Vector2(icon.x, r.y + r.height * 0.965f);
-                    float baseK = i == 0 ? 0.95f : 0.975f;   // где в кадре самый плотный низ пламени (синий лист — 0,95, красный — 0,975): основание у всех на одной линии   // основание пламени — сразу под табличкой с подписью
-                    UiFx.Draw(new Rect(foot.x - aw * 0.5f, foot.y - aw * baseK, aw, aw), aura, t + i * 1.3f, new Color(ac.r, ac.g, ac.b, 1f));
+                    // основание — по нижней внутренней грани таблички с подписью (0,935 высоты карточки); высота пламени у всех одна:
+                    // в листах пламя стоит по-разному (синий: верх 0,844, низ 0,98 кадра; красный: 0,805 и 0,988) — кадр растягивается по высоте
+                    Vector2 foot = new Vector2(r.x + r.width * 0.5f, r.y + r.height * 0.935f);   // по центру таблички
+                    float baseK = i == 0 ? 0.98f : 0.988f, visK = i == 0 ? 0.136f : 0.183f, ah = r.width * 0.15f / visK;
+                    UiFx.Draw(new Rect(foot.x - aw * dCx, foot.y - ah * baseK, aw, ah), aura, t + i * 1.3f, new Color(ac.r, ac.g, ac.b, 1f));
                     // ярче: второй слой того же пламени со сдвигом по фазе (свет складывается); при нажатии вспыхивает ещё ярче
-                    UiFx.Draw(new Rect(foot.x - aw * 0.5f, foot.y - aw * baseK, aw, aw), aura, t + i * 1.3f + 1.7f, new Color(ac.r, ac.g, ac.b, 0.6f + 0.4f * boost));
+                    UiFx.Draw(new Rect(foot.x - aw * dCx, foot.y - ah * baseK, aw, ah), aura, t + i * 1.3f + 1.7f, new Color(ac.r, ac.g, ac.b, 0.6f + 0.4f * boost));
                 }
                 // кольцо по надписи убрано (владельцу не понравилось)
                 UiFx.Sheet fl = i == 0 ? UiFx.FlashWhite : i == 1 ? UiFx.FlashGold : UiFx.FlashRed;
