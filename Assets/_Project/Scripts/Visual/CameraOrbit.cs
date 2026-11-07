@@ -42,7 +42,8 @@ namespace BladePath
         float koK, cineYaw;   // кинематографичный облёт после KO
         bool introPlaying;
         float superK, autoD, autoV;
-        float dbK, dbYaw; Vector3 dbFocus;   // добивание: камера ближе, фокус на груди противника
+        float dbK, dbYaw; Vector3 dbFocus;
+        float lockK, lockYaw;   // сцепка клинков: камера крупно, ниже и медленно обходит пару   // добивание: камера ближе, фокус на груди противника
         public void Shake(float amount) { shakeAmp = Mathf.Max(shakeAmp, amount); }
         /// <summary>Резкий «наезд» объективом на тяжёлом ударе (FOV уменьшается и возвращается).</summary>
         public void Punch(float degrees) { fovPunch = Mathf.Max(fovPunch, degrees); }
@@ -95,7 +96,7 @@ namespace BladePath
             ResetView(true);
             yawV = pitchV = distV = midVx = midVz = 0f; panV = Vector3.zero;
             midX = targetX; midZ = targetZ;
-            cineYaw = 0f; koK = 0f; dbK = 0f; superK = 0f; shakeAmp = 0f; fovPunch = 0f;
+            cineYaw = 0f; koK = 0f; dbK = 0f; superK = 0f; shakeAmp = 0f; fovPunch = 0f; lockK = 0f; lockYaw = 0f;
             snapAuto = true;
             camTouches.Clear();   // палец, лежавший на экране с прошлого раунда, не докручивает камеру
         }
@@ -283,8 +284,14 @@ namespace BladePath
             dbK = Mathf.MoveTowards(dbK, db ? 1f : 0f, udt / (db ? 0.3f : 0.9f));
             float dbs = dbK * dbK * (3f - 2f * dbK);
             if (dbs > 0f) focus = Vector3.Lerp(focus, dbFocus, dbs);
-            Quaternion rot = Quaternion.Euler(pitch + 4f * ck + 14f * ik - 4f * superK - 3f * dbs, yaw + cineYaw - 40f * ik + 22f * superK + dbYaw * dbs, 0f);
-            Vector3 pos = focus + rot * new Vector3(0f, 0f, -(dist + autoD) * (1f - 0.3f * ck + 0.5f * ik - 0.45f * superK) * (1f - 0.33f * dbs));
+            // сцепка клинков (редкий момент): наезд на точку сцепки, взгляд чуть снизу, медленный обход пары
+            bool lk = !free && dm != null && dm.LockActive;
+            lockK = Mathf.MoveTowards(lockK, lk ? 1f : 0f, udt / (lk ? 0.25f : 0.5f));
+            if (lk) lockYaw += 9f * udt; else lockYaw = Mathf.Lerp(lockYaw, 0f, 1f - Mathf.Exp(-4f * udt));
+            float lks = lockK * lockK * (3f - 2f * lockK);
+            if (lks > 0f && dm != null) focus = Vector3.Lerp(focus, dm.LockPoint - Vector3.up * 0.1f, lks * 0.7f);
+            Quaternion rot = Quaternion.Euler(pitch + 4f * ck + 14f * ik - 4f * superK - 3f * dbs - 6f * lks, yaw + cineYaw - 40f * ik + 22f * superK + dbYaw * dbs + (12f + lockYaw) * lks, 0f);
+            Vector3 pos = focus + rot * new Vector3(0f, 0f, -(dist + autoD) * (1f - 0.3f * ck + 0.5f * ik - 0.45f * superK) * (1f - 0.33f * dbs) * (1f - 0.4f * lks));
             if (pos.y < 0.15f) pos.y = 0.15f;
             // лёгкое «дыхание» камеры с рук
             float tt = Time.unscaledTime;

@@ -147,6 +147,7 @@ namespace BladePath
             if (Input.GetKeyDown(KeyCode.F1) && debugViz != null) { /* сам визуализатор переключает видимость по F1 */ }
 #endif
             if (duel != null && duel.IaiWaiting && !Paused && (aOver || aRise || aLegs || aThrust || aSlash)) { duel.IaiPress(); return; }   // выхват (под паузой — нет)
+            if (duel != null && duel.LockActive && !Paused && (aOver || aRise || aLegs || aThrust || aSlash || aEnergy)) { duel.LockPush(); return; }   // сцепка клинков: любой удар — давить
             if (menu) { Time.timeScale = 1f; SceneManager.LoadScene(SceneNames.MainMenu); return; }
             if (reset)
             {

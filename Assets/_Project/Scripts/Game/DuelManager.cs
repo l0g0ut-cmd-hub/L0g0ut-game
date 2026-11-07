@@ -427,6 +427,7 @@ namespace BladePath
             if (Round < 1) Round = 1;
             Time.timeScale = 1f;
             Paused = false; Slowmo = false; hitStopUntil = 0f;
+            LockActive = false; beatUntil = 0f; StopFlame();
             companionAt = -1f; poisonUntil = 0f;
             if (player != null) { player.ResetFighter(); hp[player] = MaxHp(player); hpTrail[player] = MaxHp(player); lastSwing[player] = -1; }
             bleedUntil = 0f;
@@ -601,6 +602,7 @@ namespace BladePath
             ApplyTimeScale();
 
             CheckClash();
+            UpdateLock();
             UpdateCharge(player); UpdateCharge(enemy);
             UpdateSuper();
             UpdateDeathblow();
@@ -868,6 +870,7 @@ namespace BladePath
                 PostFX.Kick(0.014f);
                 hitStopUntil = Time.unscaledTime + (db.cut ? 0.12f : 0.14f);
                 Haptics.Pulse(t == player ? 120 : 80);
+                if (DeathblowLethal) FinalBeat(hit, 0.6f);   // последний удар раунда: кадр замирает, кровь висит в воздухе
             }
             // дзюмондзи: второй, встречный рез — веер крови в другую сторону, жертву разворачивает обратно
             if (dbStage == 1 && db.contact2 > 0f && !dbSecond && st >= db.contact2)
@@ -1122,6 +1125,142 @@ namespace BladePath
 
         int lastClashA = -1, lastClashB = -1;
 
+        // ---------------------------------------------------------------- пламя клинка
+        /// <summary>Пять удачных попаданий подряд (без пропущенного удара) — клинок героя загорается на 10 с: урон ×1,25.</summary>
+        public const int FlameHits = 5;
+        public const float FlameTime = 10f;
+        int heroStreak;
+        float flameUntil;
+        public bool FlameOn { get { return Time.unscaledTime < flameUntil; } }
+        public int HeroStreak { get { return heroStreak; } }
+
+        void StartFlame()
+        {
+            flameUntil = Time.unscaledTime + FlameTime; heroStreak = 0;
+            if (player != null) FlameBlade.Ignite(player.weapon, FlameTime);
+            Announce("ПЛАМЯ КЛИНКА", new Color(1f, 0.55f, 0.15f), "пять попаданий подряд — клинок горит, удары сильнее");
+            if (Juice.Instance != null) Juice.Instance.Taiko(1f, 0.8f);
+            if (CameraOrbit.Instance != null) CameraOrbit.Instance.Punch(2.5f);
+            Haptics.Pulse(60);
+        }
+
+        void StopFlame()
+        {
+            flameUntil = 0f; heroStreak = 0;
+            if (player != null) FlameBlade.Extinguish(player.weapon);
+        }
+
+        // ---------------------------------------------------------------- последний удар раунда, как в самурайском кино
+        /// <summary>
+        /// Смертельный удар раунда: кадр замирает (~0,6 с почти стоп, мир серый, кровь висит в воздухе), звенит сталь —
+        /// и только потом всё срывается с места и проигравший падает.
+        /// </summary>
+        float beatUntil;
+        public float FinalBeatAt { get; private set; } = -10f;
+        public Vector3 FinalBeatPos { get; private set; }
+        public bool InFinalBeat { get { return Time.unscaledTime < beatUntil; } }
+        void FinalBeat(Vector3 at, float len)
+        {
+            beatUntil = Time.unscaledTime + len;
+            hitStopUntil = Mathf.Max(hitStopUntil, beatUntil);
+            FinalBeatAt = Time.unscaledTime; FinalBeatPos = at;
+            if (Juice.Instance != null) Juice.Instance.BeatSting();
+            Haptics.Pulse(90);
+        }
+
+        // ---------------------------------------------------------------- сцепка клинков (редко)
+        /// <summary>
+        /// Иногда сшибка переходит в сцепку: клинки сцеплены, бойцы давят друг на друга, камера крупно.
+        /// Частые нажатия удара двигают перевес; кто пересилил — отбрасывает соперника (тот теряет равновесие и открыт).
+        /// Редко: треть сшибок и не чаще раза в 35 с.
+        /// </summary>
+        public bool LockActive { get; private set; }
+        public float LockPower { get { return lockPower; } }   // −1…1: + перевес героя
+        public float LockAge { get { return Time.unscaledTime - lockStart; } }
+        public Vector3 LockPoint { get; private set; }
+        public const float LockMax = 2.8f;
+        float lockStart, lockPower, lockNextSpark, lockCooldownUntil, lockEnemyRate;
+        Vector3 lockMid, lockDir;
+
+        void StartLock(Vector3 p)
+        {
+            LockActive = true; lockStart = Time.unscaledTime; lockPower = 0f; lockCooldownUntil = Time.unscaledTime + 35f;
+            lockNextSpark = Time.unscaledTime + 0.15f;
+            player.weapon.ResetState(); enemy.weapon.ResetState();
+            Freeze(true);
+            player.TakeKnockback(); enemy.TakeKnockback(); player.StopDash(); enemy.StopDash();
+            Vector3 pp = player.transform.position, ep = enemy.transform.position;
+            lockDir = ep - pp; lockDir.y = 0f; lockDir = lockDir.sqrMagnitude > 1e-4f ? lockDir.normalized : Vector3.right;
+            lockMid = (pp + ep) * 0.5f; lockMid.y = 0f;
+            LockPoint = new Vector3(lockMid.x, p.y, lockMid.z);
+            player.transform.rotation = Quaternion.LookRotation(lockDir, Vector3.up);
+            enemy.transform.rotation = Quaternion.LookRotation(-lockDir, Vector3.up);
+            lockEnemyRate = EnemyAI.Difficulty == 0 ? 0.3f : EnemyAI.Difficulty == 1 ? 0.42f : 0.55f;
+            if (Juice.Instance != null) { Juice.Instance.Clash(LockPoint); Juice.Instance.Taiko(1f, 0.85f); }
+            if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.06f);
+            hitStopUntil = Time.unscaledTime + 0.1f;
+            Haptics.Pulse(70);
+            Announce("СЦЕПКА КЛИНКОВ", new Color(1f, 0.85f, 0.45f), "жми удар чаще — пересиль");
+        }
+
+        /// <summary>Нажатие удара во время сцепки — герой давит.</summary>
+        public void LockPush()
+        {
+            if (!LockActive || Paused) return;
+            lockPower = Mathf.Min(1f, lockPower + 0.11f);
+            if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.012f);
+            Haptics.Pulse(12);
+        }
+
+        void UpdateLock()
+        {
+            if (!LockActive) return;
+            if (State != DuelState.Fighting || player == null || enemy == null || player.Dead || enemy.Dead) { LockActive = false; return; }
+            if (Paused) return;
+            float dt = Time.unscaledDeltaTime, t = Time.unscaledTime;
+            // враг давит волнами; автобой давит за героя
+            lockPower -= lockEnemyRate * dt * (0.6f + 0.8f * Mathf.PerlinNoise(t * 1.7f, 3.3f));
+            if (AutoBattle) lockPower += 0.5f * dt * (0.6f + 0.8f * Mathf.PerlinNoise(t * 1.3f, 7.1f));
+            lockPower = Mathf.Clamp(lockPower, -1f, 1f);
+            // кто давит — тот теснит: пара сдвигается в сторону проигрывающего
+            float shove = 0.2f * lockPower + 0.015f * Mathf.Sin(t * 23f);
+            Vector3 pp = lockMid - lockDir * (0.62f - shove), ep = lockMid + lockDir * (0.62f + shove);
+            pp.y = player.transform.position.y; ep.y = enemy.transform.position.y;
+            player.transform.position = pp; enemy.transform.position = ep;
+            LockPoint = new Vector3(lockMid.x, LockPoint.y, lockMid.z) + lockDir * shove;
+            if (t >= lockNextSpark && Juice.Instance != null)
+            {
+                lockNextSpark = t + 0.14f + 0.1f * UnityEngine.Random.value;
+                Juice.Instance.LockGrind(LockPoint);   // скрежет и искры там, где клинки сцеплены
+            }
+            if (lockPower >= 1f) EndLock(player);
+            else if (lockPower <= -1f) EndLock(enemy);
+            else if (LockAge > LockMax) EndLock(lockPower >= 0f ? player : enemy);
+        }
+
+        void EndLock(FighterController win)
+        {
+            LockActive = false;
+            Freeze(false);
+            FighterController lose = win == player ? enemy : player;
+            Vector3 away = lose.transform.position - win.transform.position; away.y = 0f;
+            lose.Knockback(away, 3.2f);   // сильный отброс: скольжение, край двора, жаровня
+            lose.AddPosture(35f);
+            lose.Stun(0.9f);
+            if (lose.weapon != null) lose.weapon.Down(0.6f);
+            counterUntil[win] = Time.unscaledTime + 1.1f;   // пересилил — окно контратаки
+            if (Juice.Instance != null) { Juice.Instance.Clash(LockPoint); Juice.Instance.Taiko(1.1f, 0.7f); }
+            if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(0.1f); CameraOrbit.Instance.Punch(3f); }
+            PostFX.Kick(0.01f);
+            hitStopUntil = Time.unscaledTime + 0.1f;
+            Haptics.Pulse(win == player ? 80 : 110);
+            Popup cp = new Popup();
+            cp.world = LockPoint + Vector3.up * 0.3f; cp.size = 34f; cp.born = Time.unscaledTime;
+            cp.text = win == player ? "ПЕРЕСИЛИЛ!" : "ВРАГ ПЕРЕСИЛИЛ";
+            cp.color = win == player ? new Color(0.5f, 0.9f, 1f) : new Color(1f, 0.4f, 0.3f);
+            Popups.Add(cp);
+        }
+
         /// <summary>Сшибка: оба бьют одновременно и клинки пересеклись — удары гасятся, бойцов отбрасывает.</summary>
         void CheckClash()
         {
@@ -1136,6 +1275,10 @@ namespace BladePath
             if (SegDist(a0, a1, b0, b1, out pa, out pb) > 0.09f) return;
             lastClashA = a.SwingId; lastClashB = b.SwingId;
             Vector3 p = (pa + pb) * 0.5f;
+            // изредка сшибка переходит в сцепку клинков
+            if (Time.unscaledTime > lockCooldownUntil && player.Grounded && enemy.Grounded && !SuperActive && !IaiWaiting
+                && (SideDuel.Instance == null || !SideDuel.Held(player)) && UnityEngine.Random.value < 0.34f)
+            { StartLock(p); return; }
             a.ResetState(); b.ResetState();
             player.Stun(0.3f); enemy.Stun(0.3f);
             player.Knockback(player.transform.position - enemy.transform.position, 2.2f);
@@ -1617,6 +1760,7 @@ namespace BladePath
                 lp.born = Time.unscaledTime; lp.size = 26f; Popups.Add(lp);
                 return;
             }
+            if (!chip && target == player && dmg > 0f) heroStreak = 0;   // пропустил удар — серия к пламени клинка сначала
             // удар во время глотка из тыквы: глоток сорван (если ещё не успел подействовать — лечения не будет, тыква потрачена)
             // удар по накапливающему срывает накопление
             // игрока лёгкие удары не срывают: накопление теряет часть прогресса; срывают тяжёлые (сверху, по ногам, натиск, накопленный)
@@ -1666,6 +1810,24 @@ namespace BladePath
                         Popup tp = new Popup(); tp.world = point + Vector3.up * 0.7f; tp.text = "ТОЧНЫЙ УДАР"; tp.color = new Color(1f, 0.9f, 0.5f); tp.born = Time.unscaledTime; tp.size = 22f; Popups.Add(tp);
                     }
                     if (Profile.B.bleedDps > 0f) bleedUntil = Time.time + 3f;
+                    if (FlameOn)
+                    {
+                        // горящий клинок: удар сильнее и жжёт — вспышка огня в ране
+                        if (!lethal) dmg *= 1.25f;
+                        target.AddPosture(6f);
+                        if (Juice.Instance != null) Juice.Instance.FlameHit(point);
+                    }
+                    else
+                    {
+                        heroStreak++;
+                        if (heroStreak >= FlameHits) StartFlame();
+                        else if (heroStreak >= 3)
+                        {
+                            Popup fp = new Popup(); fp.world = player.transform.position + Vector3.up * 2.2f;
+                            fp.text = "ЖАР " + heroStreak + "/" + FlameHits; fp.color = new Color(1f, 0.6f, 0.25f); fp.born = Time.unscaledTime; fp.size = 20f;
+                            Popups.Add(fp);
+                        }
+                    }
                 }
                 else if (target == player && !lethal) dmg *= Profile.B.armorMul * Profile.CycleDmg;
                 // накопленный удар: ×1,5 / ×2 / ×2,6 и сильный удар по равновесию
@@ -1797,6 +1959,7 @@ namespace BladePath
                     if (Juice.Instance != null) Juice.Instance.Heartbeat();
                     return;
                 }
+                if (!chip) FinalBeat(point, 0.5f);   // смертельный удар: кадр замирает, потом падение
                 EndRound(target, attacker);
             }
         }
@@ -1868,7 +2031,9 @@ namespace BladePath
 
         void UpdateResurrectOffer()
         {
-            PostFX.Desaturate(ResurrectOffered ? 0.85f : (State == DuelState.PlayerLost && !TimedOut ? 0.6f : 0f));
+            float desat = ResurrectOffered ? 0.85f : (State == DuelState.PlayerLost && !TimedOut ? 0.6f : 0f);
+            if (Time.unscaledTime < beatUntil + 0.1f) desat = Mathf.Max(desat, 0.9f);   // замерший кадр последнего удара — почти без цвета
+            PostFX.Desaturate(desat);
             if (!ResurrectOffered) return;
             if (ResurrectOfferAge > ResurrectWindow) { ResurrectOffered = false; EndRound(player, offerKiller); }
         }

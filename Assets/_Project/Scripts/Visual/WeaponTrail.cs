@@ -45,11 +45,26 @@ namespace BladePath
             return m;
         }
 
+        static readonly Dictionary<WeaponController, WeaponTrail> byWeapon = new Dictionary<WeaponController, WeaponTrail>();
+        /// <summary>След этого клинка (если прикреплён).</summary>
+        public static WeaponTrail Of(WeaponController w) { WeaponTrail t; return w != null && byWeapon.TryGetValue(w, out t) && t != null ? t : null; }
+        public string Tex { get; private set; }
+
+        /// <summary>Сменить вид следа на ходу (пламя клинка — огненный, потом обратно).</summary>
+        public void SetLook(Color c, string tex)
+        {
+            color = c;
+            Material tm = TexMat(tex);
+            if (trailRenderer != null) trailRenderer.sharedMaterial = tm != null ? tm : Mat();
+            textured = tm != null; Tex = tex;
+        }
+
         public static WeaponTrail Attach(WeaponController w, Color c, string tex = null)
         {
             GameObject g = new GameObject("WeaponTrail");
             WeaponTrail t = g.AddComponent<WeaponTrail>();
-            t.weapon = w; t.color = c;
+            t.weapon = w; t.color = c; t.Tex = tex;
+            if (w != null) byWeapon[w] = t;
             g.AddComponent<MeshFilter>().sharedMesh = t.mesh = new Mesh { name = "trail" };
             t.mesh.MarkDynamic();
             MeshRenderer r = g.AddComponent<MeshRenderer>();
@@ -143,6 +158,8 @@ namespace BladePath
         void OnDestroy()
         {
             if (mesh != null) Destroy(mesh);
+            WeaponTrail cur;
+            if (weapon != null && byWeapon.TryGetValue(weapon, out cur) && cur == this) byWeapon.Remove(weapon);
         }
 
         static Vector3 CR(Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3, float t)

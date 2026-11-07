@@ -279,6 +279,42 @@ namespace BladePath
                 }
             }
 
+            // последний удар раунда: в замершем кадре через точку удара проходит тонкая белая черта иай — раскрывается
+            // от центра за 0,12 с и тает к концу паузы
+            float fbAge = Time.unscaledTime - duel.FinalBeatAt;
+            if (fbAge < 0.75f && Camera.main != null)
+            {
+                Vector3 fbScr = Camera.main.WorldToScreenPoint(duel.FinalBeatPos);
+                if (fbScr.z > 0f)
+                {
+                    Vector2 fbC = new Vector2(fbScr.x / UiKit.Scale, (Screen.height - fbScr.y) / UiKit.Scale);
+                    float fbOpen = Mathf.Clamp01(fbAge / 0.12f), fbFade = Mathf.Clamp01((0.75f - fbAge) / 0.3f);
+                    float fbHalf = W * 0.7f * fbOpen;
+                    Texture2D fbTex = UiKit.Tex("FX/glow_pool");
+                    Vector2 fbA0 = fbC + new Vector2(-fbHalf, fbHalf * 0.16f), fbA1 = fbC + new Vector2(fbHalf, -fbHalf * 0.16f);
+                    UiKit.Streak(fbA0, fbA1, 14f, new Color(1f, 0.92f, 0.85f, 0.45f * fbFade), fbTex);
+                    UiKit.Line(fbA0, fbA1, 2f, new Color(1f, 1f, 1f, 0.9f * fbFade));
+                }
+            }
+
+            // сцепка клинков: полоса перевеса по центру (герой — синий слева, враг — красный справа) и подсказка
+            if (duel.LockActive)
+            {
+                float lkW = 340f, lkH = 14f, lkY = 392f;
+                float lkA = Mathf.Clamp01(duel.LockAge / 0.2f);
+                Rect lkR = new Rect(W * 0.5f - lkW * 0.5f, lkY, lkW, lkH);
+                UiKit.Rect(new Rect(lkR.x - 3f, lkR.y - 3f, lkR.width + 6f, lkR.height + 6f), new Color(0f, 0f, 0f, 0.6f * lkA));
+                float lkMid = lkR.x + lkW * 0.5f + duel.LockPower * lkW * 0.5f;
+                UiKit.Rect(new Rect(lkR.x, lkR.y, lkMid - lkR.x, lkH), new Color(0.35f, 0.75f, 1f, 0.9f * lkA));
+                UiKit.Rect(new Rect(lkMid, lkR.y, lkR.xMax - lkMid, lkH), new Color(0.95f, 0.3f, 0.22f, 0.9f * lkA));
+                UiKit.Rect(new Rect(lkMid - 2f, lkR.y - 5f, 4f, lkH + 10f), new Color(1f, 0.95f, 0.8f, lkA));
+                float lkPulse = 0.75f + 0.25f * Mathf.Sin(Time.unscaledTime * 12f);
+                UiKit.Text(new Rect(W * 0.5f - 200f, lkY - 40f, 400f, 34f), "ЖМИ УДАР — ДАВИ!", 22f * lkPulse + 4f, new Color(1f, 0.88f, 0.55f, lkA));
+                // сколько осталось
+                float lkLeft = Mathf.Clamp01(1f - duel.LockAge / DuelManager.LockMax);
+                UiKit.Rect(new Rect(lkR.x, lkR.yMax + 6f, lkW * lkLeft, 3f), new Color(1f, 1f, 1f, 0.5f * lkA));
+            }
+
             // таймер раунда (выключен в настройках — в медальоне знак бесконечности из двух колечек)
             Vector2 tc = new Vector2(cx, 28f);
             Texture2D tmed = UiKit.Tex("UI/Kit/hud_timer");
