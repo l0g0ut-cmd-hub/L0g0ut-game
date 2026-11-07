@@ -382,6 +382,9 @@ namespace BladePath
             Matrix4x4 old = UiKit.Begin();
             W = UiKit.Width;
             bool interactive = !InventoryScreen.Open;
+            // сообщение (утро, награда, подсказка) — касание в любом месте убирает его сразу, а не ждать, пока растает
+            if (interactive && Event.current.type == EventType.MouseDown && toastLines.Count > 0 && Time.unscaledTime - toastAt > 0.15f && Time.unscaledTime - toastAt < ToastTime)
+            { toastAt = -100f; Event.current.Use(); }
             UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0.03f, 0.025f, 0.02f, 1f));
             // панель справа ужимается, чтобы карта влезла целиком (раньше на широком телефоне не хватало ~10 px — карта «листалась» впустую)
             // карты шире экрана (MapGeom) — панель обычной ширины, карта листается за всадником
@@ -1539,6 +1542,9 @@ namespace BladePath
                         continue;
                     }
                     if (i == Campaign.At && (n.Type == NodeType.Smith || n.Type == NodeType.Merchant || n.Type == NodeType.Gamble || n.Type == NodeType.HunterCamp || n.IsTavern)) { revisit = true; OpenNode(i); }
+                    // окно места закрыли касанием мимо — касание самого места открывает его снова (ронин в розыске, бой, событие…)
+                    else if (i == Campaign.At && Campaign.HuntAt == i) OpenModal(Modal.Hunt);
+                    else if (i == Campaign.At && !Campaign.CurrentSettled && !Campaign.InFight && n.Type != NodeType.Start) OpenNode(i);
                     // повторное касание уже выбранного места — то же, что «В ПУТЬ» (с броском кости, если ходов нет)
                     else if (i == sel && moveTo < 0 && Time.unscaledTime - rollAt >= RollTime) TravelOrRoll();
                     else { SelectNode(i); Haptics.Pulse(10); }
@@ -2145,7 +2151,31 @@ namespace BladePath
                 new Color(0.015f, 0.012f, 0.012f, 0.82f * a));   // карта и боковая панель под окном уходят в тень, их кнопки не путаются с кнопками окна
             Rect r = new Rect((W - w) * 0.5f, (540f - h) * 0.5f + (1f - a) * 20f, w, h);
             VisualIdentity.KitSurface(r, a);
+            cardRect = r;
             return r;
+        }
+        Rect cardRect;   // окно, нарисованное в этом кадре: касание мимо него закрывает окно (CloseByTapOutside)
+
+        /// <summary>
+        /// Касание мимо всплывающего окна закрывает его сразу — как кнопка «уйти/закрыть/в путь» этого окна.
+        /// Окна с обязательным выбором (бой, храм, привал, событие, ронин в розыске) тоже закрываются: место остаётся
+        /// неразрешённым, идти дальше нельзя, а касание места на карте открывает окно снова.
+        /// Не закрываются: экран области пройдена, лагерь и трактир (это сцены, у них своя кнопка), бой уже идёт, игра в кости за столом.
+        /// </summary>
+        void CloseByTapOutside(bool ok)
+        {
+            Event e = Event.current;
+            if (!ok || e.type != EventType.MouseDown || cardRect.width <= 0f || cardRect.Contains(e.mousePosition)) return;
+            switch (modal)
+            {
+                case Modal.RegionClear: case Modal.Camp: case Modal.Tavern: return;
+                case Modal.Fight: if (Campaign.InFight) return; break;
+                case Modal.Gamble: if (gambleTable) return; break;
+                case Modal.Treasure: if (Time.unscaledTime - modalAt <= 0.6f) return; break;
+                case Modal.Knocked: Campaign.AckKnocked(); break;
+            }
+            modal = Modal.None;
+            e.Use();
         }
 
         void Picture(Rect r, string tex)
@@ -2175,6 +2205,14 @@ namespace BladePath
             MapNode n = Campaign.InFight ? Campaign.FightNode : Campaign.Current;
             int at = Campaign.InFight ? Campaign.Nodes.IndexOf(n) : Campaign.At;
             bool ok = interactive && Time.unscaledTime - modalAt > 0.25f;
+            cardRect = new Rect(0f, 0f, 0f, 0f);
+            Modal drawn = modal;
+            DrawModalBody(n, at, ok);
+            if (modal == drawn) CloseByTapOutside(ok);   // кнопки окна уже отработали касание — сюда доходит только касание мимо них
+        }
+
+        void DrawModalBody(MapNode n, int at, bool ok)
+        {
             switch (modal)
             {
                 case Modal.Fight:

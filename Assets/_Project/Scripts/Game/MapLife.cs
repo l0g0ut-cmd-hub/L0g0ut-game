@@ -85,8 +85,8 @@ namespace BladePath
                     new[] { P(2120, 200, w), P(2200, 230, w), P(2280, 270, w), P(2330, 300, w) },
                     new[] { P(2292, 320, w), P(2284, 440, w), P(2300, 560, w), P(2312, 650, w), P(2330, 760, w), P(2322, 880, w), P(2332, 1020, w) },
                     new[] { P(2230, 640, w), P(2300, 700, w), P(2380, 700, w) } });
-                // печи углежогов: нарисованный дым — у левой поднимается и уходит влево, у правой — вверх и чуть вправо
-                r.smoke = Join(r.smoke, new[] { new Vector4(1708f / w, 736f / 1024f, 76f, -46f), new Vector4(1781f / w, 724f / 1024f, 46f, 14f) });
+                // печи углежогов: нарисованный дым — у левой поднимается и уходит влево (до ~1595,600 на картине — клубы тянутся на всю длину), у правой — вверх и чуть вправо
+                r.smoke = Join(r.smoke, new[] { new Vector4(1708f / w, 736f / 1024f, 84f, -78f), new Vector4(1781f / w, 724f / 1024f, 46f, 14f) });
                 r.lights = Join(r.lights, new[] {
                     Q(1876, 733, 5, w), Q(1897, 736, 5, w),                         // хижина углежогов: окно и дверь
                     Q(1957, 786, 5, w), Q(1988, 791, 5, w), Q(2010, 790, 5, w),     // вторая хижина
@@ -290,16 +290,17 @@ namespace BladePath
                     Vector2 src = S(new Vector2(sm.x, sm.y));
                     if (!Vis(src)) continue;
                     float size = sm.z * k, side = sm.w * k;
-                    for (int p = 0; p < 10; p++)
+                    for (int p = 0; p < 12; p++)
                     {
-                        float run = t / 4.6f + p / 10f + si * 0.173f;
+                        float run = t / 4.6f + p / 12f + si * 0.173f;
                         float u = run - Mathf.Floor(run);
                         int seed = Mathf.FloorToInt(run) * 7 + p * 13 + si * 31;
                         // сначала столбом вверх, потом сносит вбок — как нарисовано на карте
                         float rise = size * (1f - (1f - u) * (1f - u * 0.4f));
-                        float drift = side * Mathf.Pow(u, 2.2f) + Mathf.Sin(u * 3f + seed) * 0.04f * size;
+                        float drift = side * Mathf.Pow(u, 1.8f) + Mathf.Sin(u * 3f + seed) * 0.04f * size;
                         float sz = size * Mathf.Lerp(0.14f, 0.6f, Mathf.Sqrt(u));
-                        float al = Mathf.Clamp01(u / 0.12f) * (1f - u) * (1f - u * 0.6f) * 0.85f;
+                        // тает только в самом конце: клуб виден почти до верха столба — анимация тянется на всю длину нарисованного дыма
+                        float al = Mathf.Clamp01(u / 0.12f) * (1f - Mathf.Pow(u, 2.5f)) * 0.5f;
                         GUI.color = new Color(0.62f, 0.61f, 0.63f, al);
                         Rect pr = new Rect(src.x + drift - sz * 0.5f, src.y - rise - sz * 0.5f, sz, sz);
                         if (wisp != null)

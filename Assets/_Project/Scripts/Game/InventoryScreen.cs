@@ -200,6 +200,8 @@ namespace BladePath
                 sel.rune >= 0 ? "«" + Profile.RuneNames[sel.rune] + "»: " + Profile.RuneHints[sel.rune] : "коснись значка, чтобы вставить руну",
                 11.5f, new Color(0.7f, 0.85f, 1f), TextAnchor.UpperLeft, false);
             if (Btn(new Rect(r.x + r.width - 110f, r.yMax - 44f, 94f, 32f), "ЗАКРЫТЬ")) runeModal = false;
+            // касание мимо окна — закрыть сразу (как «ЗАКРЫТЬ»)
+            if (runeModal && a >= 1f && Event.current.type == EventType.MouseDown && !r.Contains(Event.current.mousePosition)) { runeModal = false; Event.current.Use(); }
         }
 
         void DrawStats(Rect a)

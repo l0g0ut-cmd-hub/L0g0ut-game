@@ -543,10 +543,16 @@ namespace BladePath
             DrawSuper();
             DrawPause();
 
+            if (!paused) pausedAt = -1f; else if (pausedAt < 0f) pausedAt = Time.unscaledTime;
             if (paused)
             {
                 UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, 0.65f));
-                Rect pr = new Rect(W * 0.5f - 340f, 54f, 680f, 400f);   // обычная пауза — с рядом «звук»   // меню разработчика — прежнего размера   // свиток-подложка под кнопками паузы
+                Rect pr = new Rect(W * 0.5f - 340f, 54f, 680f, 400f);
+                // касание мимо окна паузы — продолжить бой сразу (кроме меню разработчика и открытого снаряжения;
+                // первые 0,3 с не считаются — то же касание, что открыло паузу, не закрывает её)
+                if (!devOpen && !InventoryScreen.Open && duel != null && Time.unscaledTime - pausedAt > 0.3f
+                    && Event.current.type == EventType.MouseDown && !new Rect(pr.x - 10f, 48f, pr.width + 20f, pr.height + 56f).Contains(Event.current.mousePosition))
+                { duel.SetPaused(false); Event.current.Use(); }   // обычная пауза — с рядом «звук»   // меню разработчика — прежнего размера   // свиток-подложка под кнопками паузы
                 Texture2D scroll = null;   // единый стиль: окно чёрного лака вместо свитка
                 if (scroll != null)
                 {
@@ -834,6 +840,8 @@ namespace BladePath
             UiKit.Line(c + new Vector2(-r * 0.1f, r * 0.05f), c + new Vector2(r * 0.45f, -r * 0.45f), 4f, w);
             UiKit.Text(new Rect(c.x - r, c.y + r * 0.3f, r * 2f, r * 0.5f), "ДУХ!", 12f, new Color(1f, 0.95f, 0.8f), TextAnchor.MiddleCenter, false);
         }
+
+        float pausedAt = -1f;   // когда открылась пауза (касание мимо окна закрывает её не сразу же)
 
         void DrawPause()
         {
