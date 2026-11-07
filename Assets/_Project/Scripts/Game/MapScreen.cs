@@ -737,7 +737,7 @@ namespace BladePath
                         for (int li = 0; li < NewBuildingLights[nb].Length; li++)
                         {
                             Vector3 l = NewBuildingLights[nb][li];
-                            WarmLight(glow, new Vector2(rn.x + l.x * sz, rn.y + l.y * sz), l.z * sz, i * 3.1f + li * 1.7f, nb == 5 && li == 0, dimN);   // у охотников первый — костёр
+                            WarmLight(glow, new Vector2(rn.x + l.x * sz, rn.y + l.y * sz), l.z * sz, i * 3.1f + li * 1.7f, (nb == 5 || nb == 4) && li == 0, dimN);   // огонь (горит всегда): у охотников — костёр, в святилище — свечи; остальное — окна и фонари
                         }
                     if (nb == 5) MapFire(rn, sz, NewBuildingLights[5][0], dimN, i);   // охотники: костёр под котлом
                     continue;
@@ -1089,8 +1089,13 @@ namespace BladePath
                     Vector2 hut = new Vector2(tr.x + 0.5f * tr.width, tr.y + 0.2f * tr.height), lamp = new Vector2(tr.x + 0.71f * tr.width, tr.y + 0.26f * tr.height);
                     float g1 = lit ? 26f + 5f * pulse : 9f + 2f * pulse, g2 = lit ? 13f + 3f * pulse : 6f;
                     GUI.color = new Color(1f, 0.66f, 0.28f, lit ? 0.75f : 0.35f);
-                    GUI.DrawTexture(new Rect(hut.x - g1, hut.y - g1, g1 * 2f, g1 * 2f), glow);
-                    GUI.DrawTexture(new Rect(lamp.x - g2, lamp.y - g2, g2 * 2f, g2 * 2f), glow);
+                    GUI.DrawTexture(new Rect(hut.x - g1, hut.y - g1, g1 * 2f, g1 * 2f), glow);   // сигнальный огонь площадки — горит всегда
+                    float lampK = Mathf.Clamp01(DayCycle.LightK);   // фонарь у площадки — только вечером и ночью
+                    if (lampK > 0.01f)
+                    {
+                        GUI.color = new Color(1f, 0.66f, 0.28f, (lit ? 0.75f : 0.35f) * lampK);
+                        GUI.DrawTexture(new Rect(lamp.x - g2, lamp.y - g2, g2 * 2f, g2 * 2f), glow);
+                    }
                 }
                 GUI.color = oc;
                 return;
@@ -1650,7 +1655,7 @@ namespace BladePath
                     (boss ? 1.9f : 2.8f) + i * 1.2f);
                 Color tint = boss ? new Color(1f, 0.20f, 0.08f, 0.09f + wave * 0.06f)
                     : herb ? new Color(0.50f, 1f, 0.35f, 0.08f + wave * 0.05f)
-                    : shrine ? new Color(1f, 0.77f, 0.42f, 0.06f + wave * 0.055f)
+                    : shrine ? new Color(1f, 0.77f, 0.42f, (0.06f + wave * 0.055f) * Mathf.Clamp01(DayCycle.LightK))   // тёплый ореол фонарей храма — вечером и ночью
                     : new Color(1f, 0.80f, 0.32f, 0.05f + wave * 0.045f);
                 UiKit.Disc(point, (boss ? 65f : 48f) + wave * 5f, tint);
             }
