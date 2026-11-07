@@ -83,6 +83,23 @@ namespace BladePath
             if (instant) { yaw = yawT; pitch = pitchT; dist = distT; pan = panT; }
         }
 
+        bool snapAuto;
+
+        /// <summary>
+        /// Начало каждого боя и раунда — всегда один и тот же вид: сбоку, бойцы в профиль, по центру.
+        /// Раньше в новый раунд переносилось всё, что накопилось: поворот пальцем (любое касание мимо кнопок крутит камеру),
+        /// облёт после KO, отъезд и середина между бойцами с прошлого раунда — начальный вид выходил «как попало».
+        /// </summary>
+        void RoundStartView(float targetX, float targetZ)
+        {
+            ResetView(true);
+            yawV = pitchV = distV = midVx = midVz = 0f; panV = Vector3.zero;
+            midX = targetX; midZ = targetZ;
+            cineYaw = 0f; koK = 0f; dbK = 0f; superK = 0f; shakeAmp = 0f; fovPunch = 0f;
+            snapAuto = true;
+            camTouches.Clear();   // палец, лежавший на экране с прошлого раунда, не докручивает камеру
+        }
+
         void Update()
         {
 #if ENABLE_LEGACY_INPUT_MANAGER
@@ -123,6 +140,8 @@ namespace BladePath
                 }
             }
             if (mine.Count == 0) return;
+            // пока идёт вступление раунда, камеру пальцем не крутим — раунд начинается с обычного вида
+            if (!FreeMode && DuelManager.Instance != null && DuelManager.Instance.State == DuelState.Intro) return;
 
             float h = Mathf.Max(1f, Screen.height);
             if (mine.Count == 1)
@@ -145,6 +164,7 @@ namespace BladePath
         {
             if (Input.touchCount > 0) return;
             Vector2 m = Input.mousePosition;
+            if (!FreeMode && DuelManager.Instance != null && DuelManager.Instance.State == DuelState.Intro) { lastMouse = m; return; }
             bool press = Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1);
             if (press) lastMouse = m;
             bool onButton = PrototypeInput.Instance != null && PrototypeInput.Instance.IsOverButton(m);
@@ -225,7 +245,7 @@ namespace BladePath
             {
                 float u = Mathf.Clamp01(dm.StateTime / Mathf.Max(0.1f, dm.IntroLength * 0.9f));
                 ik = 1f - u * u * (3f - 2f * u);
-                if (!introPlaying) { cineYaw = 0f; introPlaying = true; }
+                if (!introPlaying) { introPlaying = true; RoundStartView(targetX, targetZ); }
             }
             else introPlaying = false;
 
@@ -239,6 +259,7 @@ namespace BladePath
                 sep = dd.magnitude;
             }
             float want = free ? 0f : Mathf.Max(0f, 2.4f + sep * 1.35f - dist);
+            if (snapAuto) { autoD = want; autoV = 0f; snapAuto = false; }   // начало раунда — сразу нужный отъезд, без доезда с прошлого раунда
             autoD = Mathf.SmoothDamp(autoD, want, ref autoV, 0.35f, Mathf.Infinity, sdt);
             // супер-удар: наезд на атакующего
             float sk = 0f;
