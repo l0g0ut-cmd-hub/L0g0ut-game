@@ -191,8 +191,7 @@ namespace BladePath
 
         static void Load()
         {
-            string s = PlayerPrefs.GetString("campaign_v1", "");
-            if (!string.IsNullOrEmpty(s)) { try { d = JsonUtility.FromJson<Data>(s); } catch { d = null; } }
+            d = SafeSave.Read<Data>("campaign_v1");   // испорчено — резервная копия, а не новый поход
             if (d == null || d.nodes == null || d.nodes.Count == 0) { d = new Data(); Generate(0); }
             if (d.at < 0 || d.at >= d.nodes.Count) d.at = 0;
             MigrateSpots(d);
@@ -239,7 +238,7 @@ namespace BladePath
             if (dd.seen != null) for (int i = 0; i < dd.seen.Count; i++) dd.seen[i] = new Vector2(dd.seen[i].x * u, dd.seen[i].y);
             dd.roadsVer = 3;
         }
-        public static void Save() { PlayerPrefs.SetString("campaign_v1", JsonUtility.ToJson(D)); PlayerPrefs.Save(); }
+        public static void Save() { SafeSave.Write("campaign_v1", JsonUtility.ToJson(D)); }
         public static void Restart()
         {
             d = new Data();

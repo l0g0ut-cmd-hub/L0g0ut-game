@@ -77,8 +77,7 @@ namespace BladePath
 
         static void Load()
         {
-            string js = PlayerPrefs.GetString("profile_v1", "");
-            try { d = string.IsNullOrEmpty(js) ? null : JsonUtility.FromJson<Data>(js); } catch { d = null; }
+            d = SafeSave.Read<Data>("profile_v1");   // испорчено — резервная копия, а не новый герой
             if (d == null) d = new Data();
             if (d.stats == null || d.stats.Length != StatCount) d.stats = new int[StatCount];
             if (d.equipped == null || d.equipped.Length != SlotCount) d.equipped = new[] { -1, -1, -1, -1, -1, -1 };
@@ -86,7 +85,7 @@ namespace BladePath
             dirty = true;
         }
 
-        public static void Save() { PlayerPrefs.SetString("profile_v1", JsonUtility.ToJson(D)); PlayerPrefs.Save(); dirty = true; }
+        public static void Save() { SafeSave.Write("profile_v1", JsonUtility.ToJson(D)); dirty = true; }
 
         public static int Level { get { return D.level; } }
         public static int Xp { get { return D.xp; } }

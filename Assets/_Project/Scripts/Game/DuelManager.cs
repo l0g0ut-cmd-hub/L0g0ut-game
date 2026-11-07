@@ -43,6 +43,7 @@ namespace BladePath
 
         public struct Popup { public Vector3 world; public string text; public Color color; public float born; public float size; }
         public readonly List<Popup> Popups = new List<Popup>();
+        readonly List<FighterController> trailKeys = new List<FighterController>(2);
         public event Action<FighterController, float> Damaged;
 
         /// <summary>Крупные объявления по центру экрана: «ПЕРВАЯ КРОВЬ», «10 СЕКУНД!» и т.п.</summary>
@@ -506,7 +507,8 @@ namespace BladePath
 
             // «шлейф» полоски здоровья догоняет текущее значение с задержкой
             float dt = Time.unscaledDeltaTime;
-            foreach (FighterController f in new List<FighterController>(hpTrail.Keys))
+            trailKeys.Clear(); trailKeys.AddRange(hpTrail.Keys);   // без нового списка каждый кадр (мусор для GC → подёргивания)
+            foreach (FighterController f in trailKeys)
             {
                 float cur = hp[f], tr = hpTrail[f];
                 if (tr > cur && SinceHit(f) > 0.45f) tr = Mathf.MoveTowards(tr, cur, MaxHp(f) * 0.35f * dt);

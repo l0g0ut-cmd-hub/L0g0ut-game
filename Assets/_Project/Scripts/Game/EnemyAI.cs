@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace BladePath
@@ -341,8 +342,11 @@ namespace BladePath
             if (!busy && Time.time >= ballCheckAt)
             {
                 ballCheckAt = Time.time + 0.08f;
-                foreach (EnergyProjectile e in FindObjectsByType<EnergyProjectile>(FindObjectsSortMode.None))
+                IReadOnlyList<EnergyProjectile> balls = EnergyProjectile.Active;
+                for (int bi = 0; bi < balls.Count; bi++)
                 {
+                    EnergyProjectile e = balls[bi];
+                    if (e == null) continue;
                     if (e.owner != target || e.GetInstanceID() == lastBall) continue;
                     Vector3 rel = self.transform.position + Vector3.up * 1.1f - e.transform.position;
                     float closing = Vector3.Dot(rel.normalized, e.velocity.normalized);

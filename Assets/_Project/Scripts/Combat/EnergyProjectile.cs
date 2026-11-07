@@ -16,6 +16,8 @@ namespace BladePath
         public float lifeSeconds = 2.5f;
 
         static readonly List<EnergyProjectile> active = new List<EnergyProjectile>();
+        /// <summary>Летящие шары (без поиска по сцене: FindObjectsByType каждый раз создаёт массив — мусор для GC).</summary>
+        public static IReadOnlyList<EnergyProjectile> Active { get { return active; } }
         static readonly RaycastHit[] castBuf = new RaycastHit[8];
         static readonly Collider[] overlapBuf = new Collider[8];
         float born;
