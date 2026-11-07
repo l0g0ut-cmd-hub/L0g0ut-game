@@ -19,3 +19,6 @@ build.log
 ci.log
 ci-scrubbed.log
 put.json
+
+# библиотека эффектов (tools/vfx_library/fetch.sh)
+tools/vfx_library/src/

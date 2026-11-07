@@ -282,6 +282,7 @@ namespace BladePath
                 pos.z = Mathf.Clamp(pos.z, -6.5f, 3.2f);
                 pos.y = Mathf.Min(pos.y, 6f);
             }
+            float roll = 0f;
             if (shakeAmp > 0.0005f)
             {
                 // Smooth camera impulse: noisy handheld impact rather than
@@ -292,10 +293,14 @@ namespace BladePath
                     Mathf.PerlinNoise(9.1f, shakeTime) - 0.5f,
                     Mathf.PerlinNoise(shakeTime, 41.2f) - 0.5f) * (2f * shakeAmp);
                 pos += impulse;
+                // лёгкий крен кадра (навык game-feel: тряска = сдвиг + поворот): до ~1,5° на самом тяжёлом ударе,
+                // на фоновой дрожи ярости — доли градуса. Свой шум, чтобы крен не повторял сдвиг
+                roll = (Mathf.PerlinNoise(shakeTime * 0.8f, 63.7f) - 0.5f) * 2f * shakeAmp * 11f;
                 shakeAmp *= Mathf.Exp(-14f * Time.unscaledDeltaTime);
             }
             transform.position = pos;
             transform.rotation = Quaternion.LookRotation(focus - pos, Vector3.up);
+            if (roll != 0f) transform.rotation *= Quaternion.AngleAxis(roll, Vector3.forward);
             Focus = focus;
             if (cam == null) cam = GetComponent<Camera>();
             if (cam != null)

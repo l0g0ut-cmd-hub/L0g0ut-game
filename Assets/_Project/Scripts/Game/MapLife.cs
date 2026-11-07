@@ -279,8 +279,11 @@ namespace BladePath
                     }
                 }
             // дым из нарисованных печей и труб: клубы поднимаются, растут, уходят по ветру и тают
-            Texture2D puff = r.smoke.Length > 0 ? UiKit.Tex("UI/fx_puff") : null;
-            if (puff != null)
+            // клуб — покадровый объёмный дым 8×8 (Brackeys VFX Bundle, CC0): за жизнь клуба проигрываются все 64 кадра,
+            // дым клубится внутри, а не плывёт неподвижной кляксой. Нет листа — прежние четыре клуба fx_puff
+            Texture2D wisp = r.smoke.Length > 0 ? UiKit.Tex("UI/fx_smoke_wisp") : null;
+            Texture2D puff = r.smoke.Length > 0 && wisp == null ? UiKit.Tex("UI/fx_puff") : null;
+            if (puff != null || wisp != null)
                 for (int si = 0; si < r.smoke.Length; si++)
                 {
                     Vector4 sm = r.smoke[si];
@@ -298,9 +301,19 @@ namespace BladePath
                         float sz = size * Mathf.Lerp(0.14f, 0.6f, Mathf.Sqrt(u));
                         float al = Mathf.Clamp01(u / 0.12f) * (1f - u) * (1f - u * 0.6f) * 0.85f;
                         GUI.color = new Color(0.62f, 0.61f, 0.63f, al);
-                        int c = seed & 3;
-                        GUI.DrawTextureWithTexCoords(new Rect(src.x + drift - sz * 0.5f, src.y - rise - sz * 0.5f, sz, sz), puff,
-                            new Rect((c % 2) * 0.5f, c < 2 ? 0.5f : 0f, 0.5f, 0.5f));
+                        Rect pr = new Rect(src.x + drift - sz * 0.5f, src.y - rise - sz * 0.5f, sz, sz);
+                        if (wisp != null)
+                        {
+                            int fr = Mathf.Min(63, (int)(u * 64f));
+                            float fu = (fr % 8) * 0.125f, fv = 1f - (fr / 8 + 1) * 0.125f;
+                            // соседние клубы зеркалятся — столб не выглядит одной повторяющейся картинкой
+                            GUI.DrawTextureWithTexCoords(pr, wisp, (seed & 1) == 0 ? new Rect(fu, fv, 0.125f, 0.125f) : new Rect(fu + 0.125f, fv, -0.125f, 0.125f));
+                        }
+                        else
+                        {
+                            int c = seed & 3;
+                            GUI.DrawTextureWithTexCoords(pr, puff, new Rect((c % 2) * 0.5f, c < 2 ? 0.5f : 0f, 0.5f, 0.5f));
+                        }
                     }
                 }
             // блуждающие огни (кладбище сёгуната): парят, кружат и меркнут

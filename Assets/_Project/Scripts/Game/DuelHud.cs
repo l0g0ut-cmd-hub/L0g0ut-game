@@ -172,10 +172,17 @@ namespace BladePath
                     float age = Time.unscaledTime - p.born;
                     Vector3 sp = cam.WorldToScreenPoint(p.world);
                     if (sp.z < 0f) continue;
-                    Vector2 v = new Vector2(sp.x / UiKit.Scale, (Screen.height - sp.y) / UiKit.Scale - age * 46f);
+                    // навык game-feel: цифра «выстреливает» (быстрый подъём с замедлением), а не ползёт ровно;
+                    // каждая уходит чуть в свою сторону — серия ударов расходится веером, а не стопкой в одной точке
+                    // сторона — от данных самой надписи (не от индекса: список сдвигается, когда старые исчезают)
+                    float side = Mathf.Sin(p.born * 137.3f + p.world.x * 13.1f + p.world.z * 7.7f + (p.text != null ? p.text.Length : 0) * 1.9f);
+                    float rise = 42f * (1f - Mathf.Exp(-age * 3.6f)) + 12f * age;
+                    float fan = side * 26f * (1f - Mathf.Exp(-age * 3f));
+                    Vector2 v = new Vector2(sp.x / UiKit.Scale + fan, (Screen.height - sp.y) / UiKit.Scale - rise);
                     v.y = Mathf.Max(v.y, 136f);   // надписи над головой не заплывают на полоски здоровья и духа
                     Color c = p.color; c.a = Mathf.Clamp01(1.6f - age * 1.6f);
-                    float sz = p.size * (1f + Mathf.Max(0f, 0.25f - age) * 2f);
+                    // упругий «удар» размера: 1,55 → 0,9 → 1 (затухающая пружина), вместо простого линейного сжатия
+                    float sz = p.size * (1f + 0.55f * Mathf.Exp(-age * 9f) * Mathf.Cos(age * 16f));
                     UiKit.Text(new Rect(v.x - 60f, v.y - 20f, 120f, 40f), p.text, sz, c);
                 }
             }
