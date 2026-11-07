@@ -51,11 +51,75 @@ namespace BladePath
             },
         };
 
-        /// <summary>Расстояние (в точках карты 810×540) от точки до ближайшей воды или лавы этой области — чтобы ставить здания не на мост и не в реку.</summary>
+        // Карты расширены на восток (MapGeom): точки выше сняты со старых картин — x переводится в доли новой карты;
+        // для новых частей точки — в пикселях широкой картины (TexW×1024).
+        static MapLife()
+        {
+            for (int ri = 0; ri < regions.Length; ri++)
+            {
+                Region r = regions[ri]; float u = MapGeom.OldU(ri);
+                foreach (Vector2[] pl in r.rivers) for (int i = 0; i < pl.Length; i++) pl[i].x *= u;
+                for (int i = 0; i < r.falls.Length; i++) { r.falls[i].x *= u; r.falls[i].w *= u; }
+                for (int i = 0; i < r.lights.Length; i++) r.lights[i].x *= u;
+                for (int i = 0; i < r.steam.Length; i++) r.steam[i].x *= u;
+                for (int i = 0; i < r.wisps.Length; i++) r.wisps[i].x *= u;
+                for (int i = 0; i < r.pulses.Length; i++) r.pulses[i].x *= u;
+                if (ri < NewParts.Length) NewParts[ri](r, MapGeom.TexW[ri]);
+            }
+        }
+        static Vector2 P(float x, float y, int w) { return new Vector2(x / w, y / 1024f); }
+        static Vector3 Q(float x, float y, float s, int w) { return new Vector3(x / w, y / 1024f, s); }
+        static T[] Join<T>(T[] a, T[] b) { T[] c = new T[a.Length + b.Length]; a.CopyTo(c, 0); b.CopyTo(c, a.Length); return c; }
+
+        // новые (восточные) части карт: вода/лава, окна и фонари (на картине не горят — свет даёт игра), дым и пар, огни
+        static readonly System.Action<Region, int>[] NewParts =
+        {
+            (r, w) =>   // лес теней — глушь: хижины углежогов, деревня синоби на утёсах, лодочный сарай, каменные фонари у кедра
+            {
+                r.rivers = Join(r.rivers, new[] { new[] { P(2120, 250, w), P(2170, 262, w), P(2220, 276, w), P(2270, 292, w) } });   // чёрное озеро (медленные блики)
+                r.lights = Join(r.lights, new[] {
+                    Q(1876, 733, 5, w), Q(1897, 736, 5, w),                         // хижина углежогов: окно и дверь
+                    Q(1957, 786, 5, w), Q(1988, 791, 5, w), Q(2010, 790, 5, w),     // вторая хижина
+                    Q(2438, 397, 5, w), Q(2462, 400, 5, w), Q(2538, 397, 5, w),     // деревня синоби: дома на помостах
+                    Q(2538, 323, 5, w), Q(2548, 492, 5, w), Q(2580, 281, 5, w), Q(2490, 123, 6, w),   // …верхний дом, нижний, крайний; дозорная вышка
+                    Q(2348, 268, 5, w), Q(2368, 268, 5, w), Q(2386, 268, 5, w),     // лодочный сарай
+                    Q(1625, 496, 5, w), Q(1655, 523, 5, w), Q(1940, 465, 5, w), Q(1962, 547, 5, w),   // каменные фонари у кедра и заставы
+                });
+                r.steam = Join(r.steam, new[] { Q(1706, 722, 40, w), Q(1774, 700, 40, w), Q(2262, 700, 60, w), Q(2300, 810, 55, w) });   // дым печей; туман в ущелье
+            },
+            (r, w) =>   // горы Они — пылающее сердце: лавопад у кратера, лавовое озеро, огонь в штольнях и за воротами крепости
+            {
+                r.rivers = Join(r.rivers, new[] {
+                    new[] { P(2448, 292, w), P(2456, 344, w), P(2448, 400, w), P(2432, 460, w), P(2422, 520, w), P(2440, 580, w), P(2468, 640, w), P(2500, 700, w) },
+                    new[] { P(1640, 762, w), P(1720, 792, w), P(1800, 818, w), P(1880, 832, w), P(1950, 852, w) },
+                    new[] { P(1650, 880, w), P(1740, 902, w), P(1820, 922, w), P(1900, 942, w) } });
+                r.lights = Join(r.lights, new[] { Q(1646, 440, 7, w), Q(1752, 465, 6, w), Q(2350, 232, 8, w) });   // штольни рудника; огонь за воротами
+                r.steam = Join(r.steam, new[] { Q(1890, 800, 50, w), Q(1700, 650, 45, w), Q(2200, 900, 45, w) });
+                r.pulses = Join(r.pulses, new[] { new Vector4(2372f / w, 108f / 1024f, 140f, 1f) });   // кратер дышит
+            },
+            (r, w) =>   // сёгунат — владения сёгуна: цитадель на острове, склады гавани, призрачная сакура
+            {
+                r.rivers = Join(r.rivers, new[] {
+                    new[] { P(2250, 444, w), P(2400, 470, w), P(2550, 482, w), P(2700, 470, w), P(2812, 460, w) },
+                    new[] { P(1950, 984, w), P(2100, 992, w), P(2300, 986, w), P(2500, 972, w) } });
+                r.lights = Join(r.lights, new[] {
+                    Q(2554, 149, 4, w), Q(2567, 149, 4, w), Q(2593, 147, 4, w), Q(2611, 146, 4, w),   // главная башня цитадели, по ярусам
+                    Q(2605, 170, 4, w), Q(2524, 202, 4, w), Q(2534, 207, 4, w), Q(2594, 200, 4, w), Q(2614, 199, 4, w),
+                    Q(2634, 223, 4, w), Q(2533, 257, 4, w), Q(2599, 257, 4, w),
+                    Q(2337, 247, 4, w), Q(2347, 247, 4, w), Q(2357, 247, 4, w),     // угловая башня (запад)
+                    Q(2755, 254, 4, w), Q(2775, 254, 4, w),                         // угловая башня (восток)
+                    Q(1688, 870, 5, w), Q(1831, 846, 5, w), Q(1717, 915, 5, w), Q(1854, 903, 5, w),   // склады гавани: окна и ворота
+                });
+                r.lights = Join(r.lights, new[] { Q(2412, 722, 5, w) });   // каменный фонарь у призрачной рощи
+                r.wisps = Join(r.wisps, new[] { Q(2350, 620, 10, w), Q(2500, 640, 10, w), Q(2610, 600, 10, w) });   // огоньки в призрачной роще
+            },
+        };
+
+        /// <summary>Расстояние (в точках карты) от точки до ближайшей воды или лавы этой области — чтобы ставить здания не на мост и не в реку.</summary>
         public static float DistToWater(int region, Vector2 uv)
         {
             Region r = regions[Mathf.Clamp(region, 0, regions.Length - 1)];
-            float best = 1e9f; Vector2 k = new Vector2(810f, 540f), q = Vector2.Scale(uv, k);
+            float best = 1e9f; Vector2 k = MapGeom.Pts(region), q = Vector2.Scale(uv, k);
             foreach (Vector2[] pl in r.rivers)
                 for (int i = 1; i < pl.Length; i++)
                 {
@@ -71,11 +135,11 @@ namespace BladePath
         static Vector2 Along(Vector2[] pl, float u)
         {
             float total = 0f;
-            for (int i = 1; i < pl.Length; i++) total += Vector2.Scale(pl[i] - pl[i - 1], new Vector2(810f, 540f)).magnitude;
+            for (int i = 1; i < pl.Length; i++) total += Vector2.Scale(pl[i] - pl[i - 1], new Vector2(1440f, 540f)).magnitude;
             float d = Mathf.Repeat(u, 1f) * total;
             for (int i = 1; i < pl.Length; i++)
             {
-                float seg = Vector2.Scale(pl[i] - pl[i - 1], new Vector2(810f, 540f)).magnitude;
+                float seg = Vector2.Scale(pl[i] - pl[i - 1], new Vector2(1440f, 540f)).magnitude;
                 if (d <= seg) return Vector2.Lerp(pl[i - 1], pl[i], seg > 0f ? d / seg : 0f);
                 d -= seg;
             }
@@ -93,7 +157,7 @@ namespace BladePath
             Region r = regions[Mathf.Clamp(region, 0, regions.Length - 1)];
             Texture2D glow = UiKit.Tex("FX/glow_pool");
             if (glow == null) return;
-            float t = Time.unscaledTime, k = view.width / uw / 810f;
+            float t = Time.unscaledTime, k = view.width / uw / MapGeom.W(region);
             Color oc = GUI.color;
             foreach (Vector3 l in r.lights)
             {
@@ -117,7 +181,7 @@ namespace BladePath
             float t = Time.unscaledTime;
             Texture2D glow = UiKit.Tex("FX/glow_pool"), mist = SoftSprites.Fog;
             Color oc = GUI.color;
-            float k = view.width / uw / 810f;   // точек экрана на точку карты 810
+            float k = view.width / uw / MapGeom.W(region);   // точек экрана на точку карты
             System.Func<Vector2, Vector2> S = p => new Vector2(view.x + (p.x - u0) / uw * view.width, p.y * view.height);
             System.Func<Vector2, bool> Vis = p => p.x > view.x - 60f && p.x < view.xMax + 60f;
 
@@ -132,7 +196,7 @@ namespace BladePath
                     float u = H(seed) + t * (r.lava ? 0.008f : 0.02f) * (0.7f + 0.6f * H(seed + 3f));
                     Vector2 p = Along(pl, u);
                     Vector2 q = Along(pl, u + 0.004f);
-                    Vector2 dir = Vector2.Scale(q - p, new Vector2(810f, 540f)).normalized;
+                    Vector2 dir = Vector2.Scale(q - p, MapGeom.Pts(region)).normalized;
                     Vector2 side = new Vector2(-dir.y, dir.x);
                     Vector2 sp = S(p) + side * (H(seed + 7f) - 0.5f) * 14f * k;
                     if (!Vis(sp)) continue;

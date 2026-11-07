@@ -9,7 +9,7 @@ namespace BladePath.EditorTools
     /// </summary>
     public class IllustrationImport : AssetPostprocessor
     {
-        public override uint GetVersion() { return 3; }
+        public override uint GetVersion() { return 4; }
 
         static bool IsIllustration(string path)
         {
@@ -42,6 +42,17 @@ namespace BladePath.EditorTools
 
         void OnPreprocessTexture()
         {
+            // широкие карты областей (2610…2815 × 1024): без растяжения до степени двойки и без ужатия до 2048 —
+            // иначе картина мылится по горизонтали (MapGeom)
+            if (assetPath.StartsWith("Assets/_Project/Resources/UI/map_wide_"))
+            {
+                TextureImporter tw = (TextureImporter)assetImporter;
+                tw.npotScale = TextureImporterNPOTScale.None;
+                tw.mipmapEnabled = false;
+                tw.wrapMode = UnityEngine.TextureWrapMode.Clamp;
+                tw.maxTextureSize = 4096;
+                return;
+            }
             if (!IsIllustration(assetPath)) return;
             TextureImporter ti = (TextureImporter)assetImporter;
             ti.npotScale = TextureImporterNPOTScale.None;

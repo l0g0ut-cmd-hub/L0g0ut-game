@@ -2,6 +2,7 @@
 
 Дороги проложены вручную по нарисованным тропам, мостам и лестницам трёх карт
 (проверка: ни один маршрут между соседними слоями не пересекает воду или лаву, кроме мостов).
+С 2026-11-07 карты расширены на восток: map_roads.json собирает tools/map_extend/extend_roads.py из map_roads_old1536.json.
 Скрипт переписывает два блока между маркерами:
   Campaign.cs      — // ROADS-SPOTS BEGIN … // ROADS-SPOTS END   (места на карте по слоям)
   TerrainRoads.cs  — // ROADS-GRAPH BEGIN … // ROADS-GRAPH END   (узлы дорог и связи)
@@ -30,6 +31,8 @@ def spots_block():
             out.append("                new[] { " + ", ".join("new Vector2(%s, %s)" % (f(x), f(y)) for _, x, y in layer) + " },")
         out.append("            },")
     out.append("        };")
+    out.append("        // бывшие логова старых карт (до расширения на восток) — теперь сильный противник по дороге к владыке")
+    out.append("        static readonly Vector2[] LairSpots = { " + ", ".join("new Vector2(%s, %s)" % (f(DATA[r]["lair"][0]), f(DATA[r]["lair"][1])) for r in "012") + " };")
     out.append("        // ROADS-SPOTS END")
     return "\n".join(out)
 

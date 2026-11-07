@@ -370,7 +370,8 @@ namespace BladePath
         // ------------------------------------------------------------------ отрисовка
 
         float W, mapX, mapW, viewW, u0;   // карта: 810×540 при высоте экрана 540; видимое окно — [u0, u0 + viewW/810]
-        const float MapH = 540f, MapFullW = 810f;
+        const float MapH = 540f;
+        static float MapFullW { get { return MapGeom.Wc; } }   // ширина карты области в точках (карты расширены — MapGeom)
 
         Vector2 P(MapNode n) { return new Vector2(mapX + (n.x - u0) * MapFullW, n.y * MapH); }
 
@@ -383,7 +384,8 @@ namespace BladePath
             bool interactive = !InventoryScreen.Open;
             UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0.03f, 0.025f, 0.02f, 1f));
             // панель справа ужимается, чтобы карта влезла целиком (раньше на широком телефоне не хватало ~10 px — карта «листалась» впустую)
-            float panel = Mathf.Clamp(Mathf.Min(W * 0.3f, W - MapFullW), 250f, 340f);
+            // карты шире экрана (MapGeom) — панель обычной ширины, карта листается за всадником
+            float panel = W - MapFullW >= 250f ? Mathf.Clamp(Mathf.Min(W * 0.3f, W - MapFullW), 250f, 340f) : Mathf.Clamp(W * 0.3f, 250f, 340f);
             viewW = Mathf.Min(MapFullW, W - panel);
             mapX = Mathf.Max(0f, (W - panel - MapFullW) * 0.5f);
             float uw = viewW / MapFullW;
@@ -626,7 +628,7 @@ namespace BladePath
         {
             List<MapNode> ns = Campaign.Nodes;
             TerrainRoads.Bind(Campaign.Region, ns);
-            Vector2 k = new Vector2(810f, 540f);
+            Vector2 k = MapGeom.Pts(Campaign.Region);
             List<int> idx = new List<int>();
             for (int i = 0; i < ns.Count; i++) if (HasBuilding(ns[i], i)) idx.Add(i);
             Vector2[] spots = new Vector2[BuildingSpots.Length + FarSpots.Length];
@@ -653,7 +655,7 @@ namespace BladePath
                     float dRoad = 1e9f; foreach (Vector2 rp in road) dRoad = Mathf.Min(dRoad, Mathf.Min((rp - basePt).magnitude, (rp - center).magnitude));
                     float dWater = 1e9f;   // по основанию, центру и бокам спрайта (74 точки шириной)
                     foreach (Vector2 wp in new[] { basePt, center, basePt + new Vector2(-30f, -8f), basePt + new Vector2(30f, -8f) })
-                        dWater = Mathf.Min(dWater, MapLife.DistToWater(Campaign.Region, new Vector2(wp.x / 810f, wp.y / 540f)));
+                        dWater = Mathf.Min(dWater, MapLife.DistToWater(Campaign.Region, new Vector2(wp.x / MapGeom.Wc, wp.y / 540f)));
                     float dNode = 1e9f; for (int o = 0; o < ns.Count; o++) if (o != i) dNode = Mathf.Min(dNode, (Vector2.Scale(new Vector2(ns[o].x, ns[o].y), k) - center).magnitude);
                     // река широкая (линия — её середина): ближе ~60 точек к середине здание стоит на воде или на самом берегу — сильный штраф
                     float far = si >= BuildingSpots.Length ? 14f : sp.magnitude > 50f ? 6f : 0f;
@@ -2186,7 +2188,7 @@ namespace BladePath
                         }
                     }
                     float x = r.x + 258f, w = r.width - 278f, y = r.y + 22f;   // портрет теперь 2:3 и уже — текст ближе к нему
-                    UiKit.Text(new Rect(x, y, w, 18f), Campaign.TypeNames[n.type], 13f, n.Type == NodeType.Boss ? new Color(1f, 0.4f, 0.3f) : Dim, TextAnchor.MiddleLeft); y += 22f;
+                    UiKit.Text(new Rect(x, y, w, 18f), NodeName(n), 13f, n.Type == NodeType.Boss ? new Color(1f, 0.4f, 0.3f) : Dim, TextAnchor.MiddleLeft); y += 22f;
                     // имя противника — крупно: сразу видно, с кем бой
                     UiKit.Text(new Rect(x, y, w, 30f), Ladder.Stages[e].name.ToUpper(), 24f, n.Type == NodeType.Boss ? new Color(1f, 0.4f, 0.3f) : Gold, TextAnchor.MiddleLeft); y += 34f;
                     UiKit.Text(new Rect(x, y, w, 20f), Ladder.Stages[e].title, 13f, new Color(0.9f, 0.85f, 0.75f), TextAnchor.MiddleLeft, false); y += 28f;
@@ -2860,7 +2862,7 @@ namespace BladePath
 
         /// <summary>Привал с ev = TavernEv — придорожный трактир (свой значок, вход в трактир).</summary>
         public const int TavernEv = 99;
-        static string NodeName(MapNode n) { return n.IsTavern ? "ТРАКТИР" : Campaign.TypeNames[n.type]; }
+        static string NodeName(MapNode n) { return n.IsTavern ? "ТРАКТИР" : n.lair && n.Type == NodeType.Elite ? "СТРАЖ ЛОГОВА" : Campaign.TypeNames[n.type]; }
         static string NodeHint(MapNode n)
         {
             string h = n.IsTavern ? "Мрачный трактир у дороги: сакэ, кости, заказы на головы и пьяные слухи." : Campaign.TypeHints[n.type];

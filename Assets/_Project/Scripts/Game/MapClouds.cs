@@ -20,13 +20,15 @@ namespace BladePath
             region = r;
             Random.State st = Random.state;
             Random.InitState(9173 + r * 131);
-            clouds = new Cloud[4];
+            // карты расширены (MapGeom): облаков больше, размер и скорость — в долях широкой карты, на глаз как прежде
+            float u = MapGeom.OldU(r);
+            clouds = new Cloud[Mathf.Max(4, Mathf.RoundToInt(4f / u))];
             for (int i = 0; i < clouds.Length; i++)
                 clouds[i] = new Cloud
                 {
                     x0 = Random.value * 1.4f, y = Random.Range(0.18f, 0.82f),
-                    speed = Random.Range(0.006f, 0.011f) * (Random.value < 0.5f ? 1f : -1f),   // доля карты в секунду: пересекает за 1,5–3 мин
-                    size = Random.Range(0.2f, 0.28f), sky = i % 2 == 0 ? 1 : 2,
+                    speed = Random.Range(0.006f, 0.011f) * u * (Random.value < 0.5f ? 1f : -1f),   // 1,5–3 мин на старую ширину карты
+                    size = Random.Range(0.2f, 0.28f) * u, sky = i % 2 == 0 ? 1 : 2,
                     period = Random.Range(110f, 220f), phase = Random.value * 6.283f,
                 };
             Random.state = st;
@@ -63,7 +65,7 @@ namespace BladePath
             {
                 Vector2 d = Center(c) - p;
                 float t = Time.realtimeSinceStartup, k = Swell(c, t);
-                float rx = c.size * 0.46f * k, ry = c.size * 0.46f * k * 1.5f;   // облако квадратное, карта 810×540 — по высоте в долях оно в 1,5 раза больше
+                float rx = c.size * 0.46f * k, ry = c.size * 0.46f * k * MapGeom.W(r) / 540f;   // облако квадратное: по высоте в долях оно больше во столько, во сколько карта шире
                 // облако висит над тенью (рисуется выше на 0,2 своей ширины): место под дождём — и под тенью, и под самим облаком,
                 // иначе игрок видит тучу над местом, а в бою ясно
                 Vector2 body = d - new Vector2(0f, c.size * k * 0.3f);   // центр облака выше тени на карте

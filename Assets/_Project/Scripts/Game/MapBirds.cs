@@ -65,7 +65,7 @@ namespace BladePath
                 if (u >= 1f) { flocks.RemoveAt(fi); continue; }
                 Texture2D tex = f.crow ? crow : white;
                 if (tex == null) continue;
-                Vector2 dir = (f.to - f.from); dir.y *= 540f / 810f;
+                Vector2 dir = (f.to - f.from); dir.y *= 540f / MapGeom.Wc;
                 float ang = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg + 90f;   // спрайт смотрит вверх
                 Vector2 c = Vector2.Lerp(f.from, f.to, u);
                 c.y += 0.015f * Mathf.Sin(u * 9f);   // лёгкая волна пролёта

@@ -16,6 +16,7 @@ namespace BladePath
         public int ev = -1;         // событие: 0 раненый ронин, 1 монах, 2 разбойники, 3 кицунэ, 4 чайный домик, 5 дева в храме, 6 монах на мосту, 7 беженцы, 8 кот-хранитель
         public bool done;
         public List<int> next = new List<int>();
+        public bool lair;           // бывшее логово старой карты (сильный противник — страж логова)
         public List<int> extra = new List<int>();   // отряд: противники, которые вступают по очереди после первого (ступени Ladder)
         public NodeType Type { get { return (NodeType)type; } }
         public bool IsTavern { get { return Type == NodeType.Rest && ev == MapScreen.TavernEv; } }
@@ -33,7 +34,7 @@ namespace BladePath
         class Data
         {
             public int region;
-            public int roadsVer;        // 2 — места на новых дорогах (2026-11-03)
+            public int roadsVer;        // 2 — места на новых дорогах (2026-11-03); 3 — карты расширены на восток (2026-11-07)
             public int catBuff;         // благословение кота-хранителя: 0 нет, 1 «Кошачья удача», 2 «Девять жизней»
             public int catFights;       // сколько боёв ещё действует
             public bool catLifeUsed;    // «Девять жизней» уже спасли
@@ -96,35 +97,50 @@ namespace BladePath
         {
             new[]   // лес теней
             {
-                new[] { new Vector2(0.215f, 0.722f) },
-                new[] { new Vector2(0.225f, 0.585f), new Vector2(0.3f, 0.885f) },
-                new[] { new Vector2(0.465f, 0.66f), new Vector2(0.575f, 0.615f) },
-                new[] { new Vector2(0.52f, 0.52f), new Vector2(0.67f, 0.55f) },
-                new[] { new Vector2(0.605f, 0.462f), new Vector2(0.715f, 0.445f) },
-                new[] { new Vector2(0.785f, 0.395f), new Vector2(0.875f, 0.3f) },
-                new[] { new Vector2(0.858f, 0.16f) },
+                new[] { new Vector2(0.127f, 0.722f) },
+                new[] { new Vector2(0.132f, 0.585f), new Vector2(0.177f, 0.885f) },
+                new[] { new Vector2(0.274f, 0.66f), new Vector2(0.338f, 0.615f) },
+                new[] { new Vector2(0.306f, 0.52f), new Vector2(0.394f, 0.55f) },
+                new[] { new Vector2(0.356f, 0.462f), new Vector2(0.421f, 0.445f) },
+                new[] { new Vector2(0.462f, 0.395f), new Vector2(0.515f, 0.3f) },
+                new[] { new Vector2(0.505f, 0.16f), new Vector2(0.63f, 0.533f) },
+                new[] { new Vector2(0.703f, 0.6f) },
+                new[] { new Vector2(0.752f, 0.477f), new Vector2(0.723f, 0.781f) },
+                new[] { new Vector2(0.784f, 0.578f), new Vector2(0.725f, 0.91f) },
+                new[] { new Vector2(0.838f, 0.59f), new Vector2(0.869f, 0.717f) },
+                new[] { new Vector2(0.946f, 0.408f) },
             },
             new[]   // горы они
             {
-                new[] { new Vector2(0.19f, 0.67f) },
-                new[] { new Vector2(0.272f, 0.555f), new Vector2(0.345f, 0.805f) },
-                new[] { new Vector2(0.195f, 0.415f), new Vector2(0.37f, 0.445f) },
-                new[] { new Vector2(0.445f, 0.47f), new Vector2(0.58f, 0.535f) },
-                new[] { new Vector2(0.66f, 0.37f), new Vector2(0.73f, 0.465f) },
-                new[] { new Vector2(0.76f, 0.35f), new Vector2(0.89f, 0.43f) },
-                new[] { new Vector2(0.805f, 0.235f) },
+                new[] { new Vector2(0.112f, 0.67f) },
+                new[] { new Vector2(0.16f, 0.555f), new Vector2(0.203f, 0.805f) },
+                new[] { new Vector2(0.115f, 0.415f), new Vector2(0.218f, 0.445f) },
+                new[] { new Vector2(0.262f, 0.47f), new Vector2(0.341f, 0.535f) },
+                new[] { new Vector2(0.388f, 0.37f), new Vector2(0.43f, 0.465f) },
+                new[] { new Vector2(0.447f, 0.35f), new Vector2(0.524f, 0.43f) },
+                new[] { new Vector2(0.474f, 0.235f), new Vector2(0.613f, 0.502f) },
+                new[] { new Vector2(0.719f, 0.635f) },
+                new[] { new Vector2(0.764f, 0.504f), new Vector2(0.762f, 0.914f) },
+                new[] { new Vector2(0.711f, 0.365f), new Vector2(0.831f, 0.435f), new Vector2(0.815f, 0.748f) },
+                new[] { new Vector2(0.897f, 0.262f) },
             },
             new[]   // сёгунат
             {
-                new[] { new Vector2(0.335f, 0.665f) },
-                new[] { new Vector2(0.13f, 0.46f), new Vector2(0.375f, 0.79f) },
-                new[] { new Vector2(0.19f, 0.378f), new Vector2(0.465f, 0.612f) },
-                new[] { new Vector2(0.588f, 0.455f), new Vector2(0.63f, 0.58f) },
-                new[] { new Vector2(0.72f, 0.42f), new Vector2(0.78f, 0.6f) },
-                new[] { new Vector2(0.9f, 0.468f), new Vector2(0.86f, 0.585f) },
-                new[] { new Vector2(0.87f, 0.19f) },
+                new[] { new Vector2(0.183f, 0.665f) },
+                new[] { new Vector2(0.071f, 0.46f), new Vector2(0.205f, 0.79f) },
+                new[] { new Vector2(0.104f, 0.378f), new Vector2(0.254f, 0.612f) },
+                new[] { new Vector2(0.321f, 0.455f), new Vector2(0.344f, 0.58f) },
+                new[] { new Vector2(0.393f, 0.42f), new Vector2(0.426f, 0.6f) },
+                new[] { new Vector2(0.491f, 0.468f), new Vector2(0.469f, 0.585f) },
+                new[] { new Vector2(0.475f, 0.19f), new Vector2(0.584f, 0.646f) },
+                new[] { new Vector2(0.676f, 0.609f), new Vector2(0.707f, 0.771f) },
+                new[] { new Vector2(0.75f, 0.547f), new Vector2(0.783f, 0.695f) },
+                new[] { new Vector2(0.75f, 0.395f), new Vector2(0.807f, 0.451f), new Vector2(0.859f, 0.721f) },
+                new[] { new Vector2(0.905f, 0.328f) },
             },
         };
+        // бывшие логова старых карт (до расширения на восток) — теперь сильный противник по дороге к владыке
+        static readonly Vector2[] LairSpots = { new Vector2(0.505f, 0.16f), new Vector2(0.474f, 0.235f), new Vector2(0.475f, 0.19f) };
         // ROADS-SPOTS END
         // доп. места (x, y, ряд) — середины длинных нарисованных дорог (узлы дорог со степенью 2, не мосты), подобраны так,
         // чтобы до соседних мест было ≥ 58 точек карты 810×540 (иначе домики налезают)
@@ -191,7 +207,8 @@ namespace BladePath
         /// <summary>Старое сохранение: каждое место переезжает на новое место своего слоя (ближайшее старое → тот же номер).</summary>
         static void MigrateSpots(Data dd)
         {
-            if (dd.roadsVer >= 2) return;
+            if (dd.roadsVer >= 3) return;
+            if (dd.roadsVer == 2) { WidenOldSave(dd); return; }
             int r = Mathf.Clamp(dd.region, 0, Spots.Length - 1);
             foreach (MapNode n in dd.nodes)
             {
@@ -203,10 +220,24 @@ namespace BladePath
                     float dist = (olds[k] - new Vector2(n.x, n.y)).sqrMagnitude;
                     if (dist < bd) { bd = dist; best = k; }
                 }
-                Vector2 p = news[Mathf.Min(best, news.Length - 1)];
+                Vector2 p = news[Mathf.Min(best, news.Length - 1)];   // Spots — уже в долях широкой карты
+                if (n.layer >= Spots[r].Length - 1 || n.Type == NodeType.Boss) p = LairSpots[r];   // старый владыка — на старом логове
                 n.x = p.x; n.y = p.y;
             }
-            dd.roadsVer = 2;
+            dd.roadsVer = 3;
+            if (dd.seen != null) dd.seen.Clear();
+        }
+
+        /// <summary>
+        /// Сохранение до расширения карт (места в долях старой картины 1536 px): места и разведанное переводятся в доли широкой.
+        /// Эта область доигрывается на старых местах (владыка — на прежнем логове); новые части карты — со следующей области.
+        /// </summary>
+        static void WidenOldSave(Data dd)
+        {
+            float u = MapGeom.OldU(dd.region);
+            foreach (MapNode n in dd.nodes) n.x *= u;
+            if (dd.seen != null) for (int i = 0; i < dd.seen.Count; i++) dd.seen[i] = new Vector2(dd.seen[i].x * u, dd.seen[i].y);
+            dd.roadsVer = 3;
         }
         public static void Save() { PlayerPrefs.SetString("campaign_v1", JsonUtility.ToJson(D)); PlayerPrefs.Save(); }
         public static void Restart()
@@ -276,9 +307,9 @@ namespace BladePath
             if (!D.towerLit && D.nodes.Count > 0)
             {   // герой у подножия смотровой башни — на ней загорается сигнальный огонь
                 MapNode tw = D.nodes[Tower];
-                if (((new Vector2(tw.x, tw.y) - p) * new Vector2(810f, 540f)).sqrMagnitude < 30f * 30f) { D.towerLit = true; Save(); }
+                if (((new Vector2(tw.x, tw.y) - p) * MapGeom.Pts(D.region)).sqrMagnitude < 30f * 30f) { D.towerLit = true; Save(); }
             }
-            if (((last - p) * new Vector2(810f, 540f)).sqrMagnitude < 144f) return;
+            if (((last - p) * MapGeom.Pts(D.region)).sqrMagnitude < 144f) return;
             D.seen.Add(p);
             if (D.seen.Count > 600) D.seen.RemoveRange(0, D.seen.Count - 600);
         }
@@ -455,14 +486,14 @@ namespace BladePath
             Save();
         }
 
-        public static string MapTexture(int region) { return "UI/map_" + Mathf.Clamp(region, 0, 2); }
+        public static string MapTexture(int region) { return MapGeom.Texture(region); }   // широкие карты; UI/map_0 остаётся для главного меню
 
         // ---------------- генерация карты области ----------------
 
         static void Generate(int region)
         {
             Data dd = d;
-            dd.region = region; dd.nodes.Clear(); dd.at = 0; dd.fight = -1; dd.roadsVer = 2;
+            dd.region = region; dd.nodes.Clear(); dd.at = 0; dd.fight = -1; dd.roadsVer = 3;
             if (dd.travelled == null) dd.travelled = new List<int>();
             dd.travelled.Clear(); dd.travelled.Add(0);
             if (dd.seen == null) dd.seen = new List<Vector2>();
@@ -493,8 +524,9 @@ namespace BladePath
             foreach (Vector3 e in ExtraSpots[Mathf.Clamp(region, 0, ExtraSpots.Length - 1)])
             {
                 int l = Mathf.Clamp((int)e.z, 1, L - 2);
+                Vector2 ep = MapGeom.FromOld(region, new Vector2(e.x, e.y));   // доп. места сняты со старых картин
                 layers[l].Add(dd.nodes.Count);
-                dd.nodes.Add(new MapNode { layer = l, x = e.x, y = e.y });
+                dd.nodes.Add(new MapNode { layer = l, x = ep.x, y = ep.y });
             }
             // дороги — ровно нарисованные на карте (раньше — по номерам мест, и «соседи» соединялись через чужие места)
             LinkByRoads(dd);
@@ -520,6 +552,13 @@ namespace BladePath
                             : MapScreen.RandomEvent();
                     }
                 }
+            }
+            // бывшее логово старой карты — сильный противник (страж логова) на пути к новому владыке
+            for (int li = 0; li < dd.nodes.Count; li++)
+            {
+                MapNode ln = dd.nodes[li]; Vector2 lp = LairSpots[Mathf.Clamp(region, 0, LairSpots.Length - 1)];
+                if (Mathf.Abs(ln.x - lp.x) < 0.004f && Mathf.Abs(ln.y - lp.y) < 0.006f && ln.Type != NodeType.Boss)
+                { ln.type = (int)NodeType.Elite; ln.enemy = Mathf.Clamp(region, 0, Ladder.Count - 1); ln.lair = true; }
             }
             // место на мосту — всегда бой (поединок на мосту): дом, лавка или стоянка на мосту смотрятся нелепо
             foreach (MapNode bn in dd.nodes)
@@ -596,7 +635,7 @@ namespace BladePath
             for (int dl = 0; dl <= 1 && mid.Count == 0; dl++)   // не на мосту; если весь средний ряд — мост, то рядом
                 foreach (int lr in new[] { L / 2 + dl, L / 2 - dl })
                     if (lr > 0 && lr < L - 1)
-                        foreach (int ni in layers[lr]) if (!OnBridge(dd, ni) && !mid.Contains(ni)) mid.Add(ni);
+                        foreach (int ni in layers[lr]) if (!OnBridge(dd, ni) && !mid.Contains(ni) && !dd.nodes[ni].lair) mid.Add(ni);   // не на мосту и не на старом логове
             if (mid.Count == 0) mid = layers[L / 2];
             dd.nodes[mid[UnityEngine.Random.Range(0, mid.Count)]].type = (int)NodeType.Herbalist;
             // трактиры: половина привалов — придорожные трактиры (ev = TavernEv); в каждой области хотя бы один
