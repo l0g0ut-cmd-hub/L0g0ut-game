@@ -385,7 +385,7 @@ namespace BladePath
         {
             pickAt = Time.unscaledTime; pickIdx = i; pickDiff = difficulty;
             if (difficulty) UiFx.Play(i == 2 ? "ui_taiko_heavy" : "ui_taiko", i == 0 ? 0.55f : 0.9f, 0.03f);   // без колокольчика
-            else UiFx.Play("ui_draw", 0.9f, 0.04f);   // клинок выходит из ножен
+            else UiFx.Play("ui_taiko", 0.9f, 0.03f);   // как у выбора сложности — удар тайко
         }
 
         void DrawPickFx(Rect r, int i, bool difficulty)
@@ -421,6 +421,15 @@ namespace BladePath
                     float pulse = 0.75f + 0.25f * Mathf.Sin(t * 2.4f);
                     Color oc = GUI.color; GUI.color = new Color(c.r, c.g, c.b, 0.32f * pulse);
                     GUI.DrawTexture(UiFx.Around(icon, r.width * 0.5f), glow); GUI.color = oc;
+                }
+                // постоянное пламя духа за медальоном (как у путника): лёгко — синее, воин — золотое, мастер — красное
+                {
+                    UiFx.Sheet aura = i == 0 ? UiFx.AuraBlue : UiFx.AuraRed;
+                    float aw = r.width * 0.95f * (i == 0 ? 0.72f : 0.85f);
+                    Color ac = i == 0 ? new Color(0.8f, 1f, 0.95f, 1f) : i == 1 ? new Color(1f, 0.9f, 0.45f, 1f) : new Color(1f, 0.8f, 0.75f, 1f);
+                    float boost = age < 1.2f ? 1f - age / 1.2f : 0f;
+                    Vector2 foot = icon + new Vector2(0f, r.width * 0.3f);
+                    UiFx.Draw(new Rect(foot.x - aw * 0.5f, foot.y - aw * 0.93f, aw, aw), aura, t + i * 1.3f, new Color(ac.r, ac.g, ac.b, 0.55f + 0.4f * boost));
                 }
                 if (age < UiFx.Ring.Length)
                 {
