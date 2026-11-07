@@ -535,7 +535,7 @@ namespace BladePath
             }
             // кнопки
             float bw = (a.width - 30f) / 3f, by = a.yMax - 40f;
-            if (it.slot == (int)Slot.Scroll) { if (Btn(new Rect(a.x + 10f, by, AtForge ? bw : AtMarket ? (a.width - 25f) * 0.5f : a.width - 20f, 34f), "ПРОЧЕСТЬ")) { Profile.Learn(it); UiFx.Play("ui_scroll", 0.9f); UiFx.Play("ui_bell", 0.45f); learnFxAt = Time.unscaledTime; sel = null; return; } }
+            if (it.slot == (int)Slot.Scroll) { if (Btn(new Rect(a.x + 10f, by, AtForge ? bw : AtMarket ? (a.width - 25f) * 0.5f : a.width - 20f, 34f), "ПРОЧЕСТЬ")) { Profile.Learn(it); UiFx.Play("ui_scroll", 0.9f); learnFxAt = Time.unscaledTime; sel = null; return; } }
             else if (Btn(new Rect(a.x + 10f, by, AtForge ? bw : AtMarket ? (a.width - 25f) * 0.5f : a.width - 20f, 34f), Profile.IsEquipped(it) ? "СНЯТЬ" : "НАДЕТЬ"))
             {
                 bool wasOn = Profile.IsEquipped(it);

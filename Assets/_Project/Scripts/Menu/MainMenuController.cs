@@ -384,7 +384,7 @@ namespace BladePath
         void Picked(int i, bool difficulty)
         {
             pickAt = Time.unscaledTime; pickIdx = i; pickDiff = difficulty;
-            if (difficulty) UiFx.Play(i == 0 ? "ui_bell" : i == 1 ? "ui_taiko" : "ui_taiko_heavy", i == 0 ? 0.7f : 0.9f, 0.03f);
+            if (difficulty) UiFx.Play(i == 2 ? "ui_taiko_heavy" : "ui_taiko", i == 0 ? 0.55f : 0.9f, 0.03f);   // без колокольчика
             else UiFx.Play("ui_draw", 0.9f, 0.04f);   // клинок выходит из ножен
         }
 
@@ -396,7 +396,8 @@ namespace BladePath
             {
                 // постоянное пламя духа у ног выбранного путника (петля), при выборе — вспыхивает ярче, у ног расходится кольцо
                 Vector2 feet = new Vector2(r.x + r.width * 0.5f, r.y + r.height * 0.775f);
-                float aw = r.width * 1.2f;
+                // листы пламени обрезаны по своему содержимому — у синего и красного пламя в кадре шире; ширина выровнена по фиолетовому
+                float aw = r.width * 1.2f * (i == 0 ? 0.72f : i == 1 ? 0.85f : 1f);
                 UiFx.Sheet aura = i == 0 ? UiFx.AuraBlue : i == 1 ? UiFx.AuraRed : UiFx.AuraViolet;
                 float boost = age < 1.2f ? 1f - age / 1.2f : 0f;
                 Color c = HeroAura[Mathf.Clamp(i, 0, 2)];
@@ -423,8 +424,10 @@ namespace BladePath
                 }
                 if (age < UiFx.Ring.Length)
                 {
-                    float rw = r.width * (i == 2 ? 1.0f : 0.8f);
-                    UiFx.Draw(new Rect(icon.x - rw * 0.5f, icon.y - rw / 6f - r.width * 0.04f, rw, rw / 3f), UiFx.Ring, age, new Color(c.r, c.g, c.b, 0.8f));
+                    // кольцо — по надписи «ЛЕГКО / ВОИН / МАСТЕР» (табличка под медальоном)
+                    Vector2 title = new Vector2(r.x + r.width * 0.5f, r.y + r.height * 0.8f);
+                    float rw = r.width * (i == 2 ? 0.95f : 0.85f), rh = rw / 3f;
+                    UiFx.Draw(new Rect(title.x - rw * 0.5f, title.y - rh * 0.5f, rw, rh), UiFx.Ring, age, new Color(c.r, c.g, c.b, 0.85f));
                 }
                 UiFx.Sheet fl = i == 0 ? UiFx.FlashWhite : i == 1 ? UiFx.FlashGold : UiFx.FlashRed;
                 if (age < fl.Length)
