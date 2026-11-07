@@ -429,7 +429,9 @@ namespace BladePath
                     Color ac = i == 0 ? new Color(0.8f, 1f, 0.95f, 1f) : i == 1 ? new Color(1f, 0.9f, 0.45f, 1f) : new Color(1f, 0.8f, 0.75f, 1f);
                     float boost = age < 1.2f ? 1f - age / 1.2f : 0f;
                     Vector2 foot = new Vector2(icon.x, r.y + r.height * 0.965f);   // основание пламени — сразу под табличкой с подписью
-                    UiFx.Draw(new Rect(foot.x - aw * 0.5f, foot.y - aw * 0.93f, aw, aw), aura, t + i * 1.3f, new Color(ac.r, ac.g, ac.b, 0.55f + 0.4f * boost));
+                    UiFx.Draw(new Rect(foot.x - aw * 0.5f, foot.y - aw * 0.93f, aw, aw), aura, t + i * 1.3f, new Color(ac.r, ac.g, ac.b, 1f));
+                    // ярче: второй слой того же пламени со сдвигом по фазе (свет складывается); при нажатии вспыхивает ещё ярче
+                    UiFx.Draw(new Rect(foot.x - aw * 0.5f, foot.y - aw * 0.93f, aw, aw), aura, t + i * 1.3f + 1.7f, new Color(ac.r, ac.g, ac.b, 0.6f + 0.4f * boost));
                 }
                 // кольцо по надписи убрано (владельцу не понравилось)
                 UiFx.Sheet fl = i == 0 ? UiFx.FlashWhite : i == 1 ? UiFx.FlashGold : UiFx.FlashRed;
