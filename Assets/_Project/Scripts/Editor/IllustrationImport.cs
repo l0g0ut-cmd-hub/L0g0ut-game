@@ -16,7 +16,7 @@ namespace BladePath.EditorTools
             if (!path.StartsWith("Assets/_Project/Resources/UI/")) return false;
             string name = System.IO.Path.GetFileNameWithoutExtension(path);
             if (name.StartsWith("place_")) return true;
-            if (name.StartsWith("fx_ui_") || name == "fx_campfire" || name == "fx_mist" || name == "map_daytime" || name.StartsWith("shop_") || name == "items4") return true;   // листы кадров — без растяжения до степени двойки (кадры не мылятся)
+            if (name.StartsWith("fx_ui_") || name == "fx_campfire" || name == "fx_mist" || name == "map_daytime" || name.StartsWith("shop_") || name == "items4" || name == "items5" || name == "items6") return true;   // листы кадров — без растяжения до степени двойки (кадры не мылятся)
             if (name.StartsWith("event_"))
             {
                 int n;

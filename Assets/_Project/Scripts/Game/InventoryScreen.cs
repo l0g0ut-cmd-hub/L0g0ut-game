@@ -69,7 +69,8 @@ namespace BladePath
             if (it != null)
             {
                 bool second = it.icon >= 16, third = it.icon >= 52, fourth = it.icon >= 88;
-                Texture2D atlas = UiKit.Tex(fourth ? "UI/items4" : third ? "UI/items3" : second ? "UI/items2" : "UI/items");
+                int extra = it.icon >= 160 ? 6 : it.icon >= 124 ? 5 : 0;   // UI/items5, UI/items6 — по 36 (6×6)
+                Texture2D atlas = UiKit.Tex(extra > 0 ? "UI/items" + extra : fourth ? "UI/items4" : third ? "UI/items3" : second ? "UI/items2" : "UI/items");
                 Rect ir = new Rect(r.x + r.width * 0.15f, r.y + r.height * 0.15f, r.width * 0.7f, r.height * 0.7f);   // внутри проёма рамки
                 Texture2D setAtlas = it.set >= 0 && it.slot <= 3 ? UiKit.Tex("UI/set_items") : null;
                 if (setAtlas != null)
@@ -79,7 +80,7 @@ namespace BladePath
                 }
                 else if (atlas != null)
                 {
-                    int n = second ? 6 : 4, k = fourth ? it.icon - 88 : third ? it.icon - 52 : second ? it.icon - 16 : it.icon;
+                    int n = second ? 6 : 4, k = extra == 6 ? it.icon - 160 : extra == 5 ? it.icon - 124 : fourth ? it.icon - 88 : third ? it.icon - 52 : second ? it.icon - 16 : it.icon;
                     float u = 1f / n;
                     GUI.DrawTextureWithTexCoords(ir, atlas, new Rect((k % n) * u, 1f - (k / n + 1) * u, u, u));
                 }
