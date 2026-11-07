@@ -38,7 +38,9 @@ namespace BladePath
         }
         public static string ModeName(bool fight) { return Mode == Auto ? (!fight ? "ПО ПУТИ" : Weather.MapTime >= 0 ? "ПО КАРТЕ" : "СЛУЧАЙНО") : ModeNames[Mode]; }
         /// <summary>По кругу: по пути → утро → день → вечер → ночь → выкл → по пути.</summary>
-        public static void NextMode() { Mode = Mode >= Off ? Auto : Mode + 1; }
+        public static void NextMode() { Mode = Mode >= Off ? Auto : Mode + 1; Snap(); }
+        /// <summary>Сразу показать выбранное время суток, без 6-секундного перетекания (меню разработчика).</summary>
+        public static void Snap() { shown = Phase; lastTick = -1f; }
         public static bool Enabled { get { return Mode != Off; } }
 
         /// <summary>Время суток боя: −1 — случайно, как раньше (бой не с карты, режим «по пути»); иначе 0…3.</summary>
