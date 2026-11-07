@@ -59,7 +59,7 @@ namespace BladePath
         public float Ki01 { get { return Mathf.Clamp01(Ki / Mathf.Max(1f, kiMax)); } }
         public bool CanEnergy { get { return Ki >= energyCost; } }
         Vector3 knockVel;
-        float bumpAt;
+        float bumpAt, slideDustAt, edgeAt;
         float lastDashAt = -10f;
         /// <summary>Секунд с начала последнего рывка (удар из рывка — «иай»).</summary>
         public float SinceDash { get { return Time.time - lastDashAt; } }
@@ -378,7 +378,14 @@ namespace BladePath
             if (knockVel.sqrMagnitude > 1e-4f)
             {
                 delta += knockVel * dt;
-                knockVel = Vector3.MoveTowards(knockVel, Vector3.zero, 10f * dt);
+                float ks = knockVel.magnitude;
+                // тяжёлый отброс — боец скользит по камням дольше (торможение мягче), из-под ног летит пыль
+                knockVel = Vector3.MoveTowards(knockVel, Vector3.zero, (ks > 2.2f ? 6.5f : 10f) * dt);
+                if (ks > 1.6f && Time.time > slideDustAt && Juice.Instance != null && Grounded)
+                {
+                    slideDustAt = Time.time + 0.06f;
+                    Juice.Instance.Dust(transform.position + Vector3.up * 0.04f - knockVel.normalized * 0.15f, -knockVel, 2);
+                }
             }
             if (weapon != null) delta += fwd * (weapon.CurrentLunge * dt);   // бросок вперёд в ударе из прыжка
             if (delta.sqrMagnitude > 1e-10f) Move(delta);
@@ -389,8 +396,18 @@ namespace BladePath
         {
             Vector3 pos = transform.position;
             Vector3 np = pos + delta;
+            Vector3 raw = np;
             np.x = Mathf.Clamp(np.x, -arenaHalfWidth, arenaHalfWidth);
             np.z = Mathf.Clamp(np.z, -arenaHalfDepth, Mathf.Min(arenaHalfDepth, arenaBackDepth));
+            // отброшенный тяжёлым ударом долетел до края двора: удар, пыль, отскок назад и короткая потеря опоры
+            if (knockVel.sqrMagnitude > 4f && (raw.x != np.x || raw.z != np.z) && Time.time > edgeAt && !Dead)
+            {
+                edgeAt = Time.time + 0.8f;
+                if (Juice.Instance != null) Juice.Instance.EdgeSlam(np, knockVel);
+                Vector3 n = new Vector3(raw.x != np.x ? -Mathf.Sign(raw.x) : 0f, 0f, raw.z != np.z ? -Mathf.Sign(raw.z) : 0f).normalized;
+                knockVel = Vector3.Reflect(knockVel, n) * 0.3f;
+                Stun(0.35f);
+            }
 
             // препятствия (жаровни и т.п.): выталкиваем наружу, получается скольжение вдоль
             for (int i = 0; i < ArenaObstacle.All.Count; i++)
@@ -400,6 +417,9 @@ namespace BladePath
                 Vector3 d = np - o.transform.position; d.y = 0f;
                 float r = o.radius + 0.25f;
                 float m = d.magnitude;
+                // тяжёлый отброс сносит жаровню, даже если боец лишь задел её краем (зона шире корпуса)
+                if (m < r + 0.45f && knockVel.sqrMagnitude > 4.84f && Time.time > bumpAt && Juice.Instance != null)
+                { bumpAt = Time.time + 0.7f; Juice.Instance.ObstacleBump(o, knockVel); if (DuelManager.Instance != null) DuelManager.Instance.Burn(this, o.transform.position); }
                 if (m < r)
                 {
                     np = o.transform.position + (m > 1e-4f ? d / m : Vector3.right) * r + Vector3.up * np.y;

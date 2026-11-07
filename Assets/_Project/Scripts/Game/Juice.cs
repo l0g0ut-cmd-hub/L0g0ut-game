@@ -394,6 +394,12 @@ namespace BladePath
         {
             if (o == null) return;
             Play(hitHeavy, 0.55f, 0.7f); Play(clang, 0.28f, 0.5f);
+            // тяжёлым ударом вбили в жаровню — она валится, угли рассыпаются и горят (BrazierTopple)
+            if (vel.magnitude >= 2.2f && o.name.StartsWith("Brazier"))
+            {
+                BrazierTopple bt = o.GetComponent<BrazierTopple>(); if (bt == null) bt = o.gameObject.AddComponent<BrazierTopple>();
+                if (!bt.Down) { bt.Topple(vel); Play(clang, 0.4f, 0.42f); return; }
+            }
             Wobble wb = o.GetComponent<Wobble>(); if (wb == null) wb = o.gameObject.AddComponent<Wobble>();
             wb.Kick(vel, Mathf.Clamp(vel.magnitude * 2.2f, 4f, 10f));
             foreach (ParticleSystem ps in o.GetComponentsInChildren<ParticleSystem>())
@@ -408,6 +414,24 @@ namespace BladePath
                     ps.Emit(e, 1);
                 }
             }
+        }
+
+        /// <summary>Сбитая жаровня грохнулась о камни.</summary>
+        public void ObstacleThud() { Play(hitHeavy, 0.5f, 0.62f); Play(clang, 0.32f, 0.45f); }
+
+        /// <summary>
+        /// Отброшенный тяжёлым ударом долетел до края двора: пыль и каменная крошка у ног, глухой удар, камера вздрагивает.
+        /// (Сам боец отскакивает назад и на миг теряет опору — FighterController.)
+        /// </summary>
+        public void EdgeSlam(Vector3 pos, Vector3 vel)
+        {
+            pos.y = 0.02f;
+            Dust(pos + Vector3.up * 0.05f, -vel, 14);
+            FxSprite rb = FxSprite.SpawnAlpha("rock_burst", pos + Vector3.up * 0.5f, 1.2f, 4, 2, 8, 14f, false, 0.6f);
+            if (rb != null) rb.tint = new Color(0.62f, 0.6f, 0.58f, 0.9f);
+            Play(hitHeavy, 0.5f, 0.8f);
+            if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(0.07f); CameraOrbit.Instance.Punch(1.5f); }
+            Haptics.Pulse(40);
         }
 
         /// <summary>Киай на тяжёлых ударах: сверху и в прыжке — через раз, добивание и натиск — всегда; не чаще раза в 1,5 с у бойца.</summary>
@@ -1001,6 +1025,7 @@ namespace BladePath
         // Invalidate pooled marks so LateUpdate cannot re-enable stale decals.
         public void ClearBattleDecals()
         {
+            BrazierTopple.ResetAll();   // новый раунд — сбитые жаровни снова стоят и горят
             // Invalidate coroutines (especially FountainDecals) before clearing
             // marks: otherwise the old execution can repaint the clean arena.
             battleFxGeneration++;

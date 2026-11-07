@@ -1706,7 +1706,7 @@ namespace BladePath
                 Stats st = StatsOf(attacker);
                 st.hits++; st.damage += (int)Mathf.Min(dmg, Hp(target)); st.maxCombo = Mathf.Max(st.maxCombo, c);
                 bool heavy = dmg >= 20f || dmg >= Hp(target);
-                target.Knockback(target.transform.position - attacker.transform.position, dmg >= Hp(target) ? 3.2f : (heavy ? 2.4f : 1.4f));
+                target.Knockback(target.transform.position - attacker.transform.position, dmg >= Hp(target) ? 3.8f : (heavy ? 2.8f : 1.4f));   // тяжёлый удар отбрасывает заметно: скольжение с пылью, край двора, жаровни
                 if (heavy && Juice.Instance != null) Juice.Instance.Dust(target.transform.position + Vector3.up * 0.05f, target.transform.position - attacker.transform.position, 10);
                 attacker.AddKi(10f);
                 if (Juice.Instance != null && attacker.weapon != null) Juice.Instance.BloodyBlade(attacker.weapon, 0.22f);
