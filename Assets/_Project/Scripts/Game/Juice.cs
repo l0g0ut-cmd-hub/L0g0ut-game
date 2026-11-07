@@ -549,7 +549,7 @@ namespace BladePath
             if (strength > 0.6f) Shreds(point, dir, strength);
             HurtVoice(bleedAt, strength, kill);
             if (bleedAt != null) Bleed(bleedAt, Mathf.Lerp(1.2f, 3.5f, Mathf.Clamp01(strength - 0.4f)), strength);
-            if (kill) { Play(boom, 1f, 1f); PetalBurst(60); }
+            if (kill) PetalBurst(60);   // синтезированный «бум» (глухой тон 70→28 Гц, 1 с) после убийства звучал как пердёж — убран (2026-11-07)
             else if (strength > 1.2f) PetalBurst(12);
         }
 
@@ -954,7 +954,7 @@ namespace BladePath
             Shockwave(pos + Vector3.up * 0.05f, 2.6f, new Color(1f, 0.6f, 0.4f, 0.35f), 0.3f);
             Dust(pos, Vector3.up, 34);
             GroundCrack(pos, 1.6f);
-            Play(boom, 0.8f, 0.75f); Taiko(1f, 0.7f);
+            Play(hitHeavy, 0.8f, 0.8f); Taiko(1f, 0.7f);   // вместо синтезированного «бума»
             if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(0.12f); CameraOrbit.Instance.Punch(3f); }
             Haptics.Pulse(90);
         }
