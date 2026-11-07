@@ -425,21 +425,7 @@ namespace BladePath
                     Color oc = GUI.color; GUI.color = new Color(c.r, c.g, c.b, 0.16f * pulse);   // эффекты выбора сложности — вдвое прозрачнее (просьба владельца)
                     GUI.DrawTexture(UiFx.Around(icon, r.width * 0.5f), glow); GUI.color = oc;
                 }
-                // постоянное пламя духа за медальоном (как у путника): лёгко — синее, воин — золотое, мастер — красное
-                {
-                    UiFx.Sheet aura = i == 0 ? UiFx.AuraBlue : UiFx.AuraRed;
-                    float dWd = i == 0 ? 0.844f : 0.688f, dCx = i == 0 ? 0.508f : 0.5f;
-                    float aw = r.width * 0.56f / dWd;   // видимая ширина пламени у всех одна
-                    Color ac = i == 0 ? new Color(0.8f, 1f, 0.95f, 1f) : i == 1 ? new Color(1f, 0.9f, 0.45f, 1f) : new Color(1f, 0.8f, 0.75f, 1f);
-                    float boost = age < 1.2f ? 1f - age / 1.2f : 0f;
-                    // основание — по нижней внутренней грани таблички с подписью (0,935 высоты карточки); высота пламени у всех одна:
-                    // в листах пламя стоит по-разному (синий: верх 0,844, низ 0,98 кадра; красный: 0,805 и 0,988) — кадр растягивается по высоте
-                    Vector2 foot = new Vector2(r.x + r.width * 0.5f, r.y + r.height * 0.935f);   // по центру таблички
-                    float baseK = i == 0 ? 0.98f : 0.988f, visK = i == 0 ? 0.136f : 0.183f, ah = r.width * 0.15f / visK;
-                    UiFx.Draw(new Rect(foot.x - aw * dCx, foot.y - ah * baseK, aw, ah), aura, t + i * 1.3f, new Color(ac.r, ac.g, ac.b, 0.5f));
-                    // ярче: второй слой того же пламени со сдвигом по фазе (свет складывается); при нажатии вспыхивает ещё ярче
-                    UiFx.Draw(new Rect(foot.x - aw * dCx, foot.y - ah * baseK, aw, ah), aura, t + i * 1.3f + 1.7f, new Color(ac.r, ac.g, ac.b, 0.3f + 0.2f * boost));
-                }
+                // пламя на табличке сложности убрано совсем (просьба владельца) — остались свечение медальона и вспышка при выборе
                 // кольцо по надписи убрано (владельцу не понравилось)
                 UiFx.Sheet fl = i == 0 ? UiFx.FlashWhite : i == 1 ? UiFx.FlashGold : UiFx.FlashRed;
                 if (age < fl.Length)

@@ -155,7 +155,7 @@ namespace BladePath
             Texture2D coin = UiKit.Tex("UI/coins");
             float gx = W - 330f;
             if (coin != null) GUI.DrawTexture(new Rect(gx, 26f, 36f, 36f), coin); else UiKit.Disc(new Vector2(gx + 18f, 44f), 12f, Gold);
-            UiKit.Text(new Rect(gx + 40f, 24f, 140f, 40f), Profile.Gold + " МОН", 20f, Gold, TextAnchor.MiddleLeft);
+            UiKit.Text(new Rect(gx + 40f, 24f, 108f, 40f), Profile.Gold + " МОН", 20f, Gold, TextAnchor.MiddleLeft);
             if (Btn(new Rect(W - 178f, 26f, 130f, 36f), "ГОТОВО")) { Hide(); return; }
 
             VisualIdentity.Divider(new Rect(40f, 68f, W - 80f, 1f), 0.43f);
@@ -220,7 +220,7 @@ namespace BladePath
                 else { UiKit.Disc(gr.center, 15f, new Color(0.3f, 0.2f, 0.1f)); UiKit.Text(gr, Profile.StatNames[i].Substring(0, 1), 16f, Gold); }
                 UiKit.Text(new Rect(a.x + 42f, y, 170f, 20f), Profile.StatNames[i], 15f, Ink, TextAnchor.MiddleLeft);
                 // подсказка не вылезает за колонку: длинные («−4% к откату рывка, +1,5% к скорости») — чуть мельче
-                float hw = a.width - 50f, hs = Mathf.Min(10f, hw / Mathf.Max(1f, Profile.StatHint[i].Length * 0.52f));
+                float hw = pts > 0 ? 252f - 42f - 6f : a.width - 50f, hs = Mathf.Min(10f, hw / Mathf.Max(1f, Profile.StatHint[i].Length * 0.52f));
                 UiKit.Text(new Rect(a.x + 42f, y + 20f, hw, 16f), Profile.StatHint[i], hs, new Color(0.75f, 0.72f, 0.65f), TextAnchor.MiddleLeft, false);
                 UiKit.Text(new Rect(a.x + 190f, y, 50f, 22f), Profile.Stat(i).ToString(), 20f, Gold, TextAnchor.MiddleRight);
                 if (pts > 0 && Btn(new Rect(a.x + 252f, y + 2f, 36f, 32f), "+")) { Profile.AddPoint(i); pending = Profile.StatsCopy(); }
@@ -469,14 +469,16 @@ namespace BladePath
             }
             Item it = sel;
             Color rc = Profile.RarityColors[it.rarity];
-            UiKit.Rect(new Rect(a.x + 5f, a.y + 4f, 3f, 32f),
+            // карточка невысокая (≈132 под сеткой сумки): название и «слот · редкость» — одной строкой,
+            // строки свойств по 14 — тогда комплект и руна помещаются над кнопками, а не уходят под «НАДЕТЬ»
+            UiKit.Rect(new Rect(a.x + 5f, a.y + 4f, 3f, 20f),
                 new Color(rc.r, rc.g, rc.b, 0.92f));
-            UiKit.Text(new Rect(a.x + 14f, a.y + 4f, a.width - 24f, 22f),
+            UiKit.Text(new Rect(a.x + 14f, a.y + 3f, a.width * 0.64f - 14f, 22f),
                 it.name + (it.level > 0 ? "  +" + it.level : ""), 16f, rc, TextAnchor.MiddleLeft);
-            UiKit.Text(new Rect(a.x + 14f, a.y + 24f, a.width - 24f, 16f),
+            UiKit.Text(new Rect(a.x + a.width * 0.64f, a.y + 5f, a.width * 0.36f - 10f, 18f),
                 Profile.SlotNames[it.slot] + "  ·  " + Profile.RarityNames[it.rarity],
-                10.5f, VisualIdentity.Subdued, TextAnchor.MiddleLeft, false);
-            float y = a.y + 42f;
+                10.5f, VisualIdentity.Subdued, TextAnchor.MiddleRight, false);
+            float y = a.y + 27f;
             if (it.slot == (int)Slot.Scroll)
             {
                 int t = Mathf.Clamp(it.tech, 0, 5);
@@ -489,6 +491,11 @@ namespace BladePath
             else
             {
                 Item cur = Profile.Equipped(it.slot);
+                // карточка невысокая (под сеткой сумки): у вещи комплекта свойства — в левой колонке, комплект и руна — в правой,
+                // иначе строки комплекта уходили под кнопку «НАДЕТЬ»
+                bool two = it.set >= 0;
+                float colW = two ? (a.width - 30f) * 0.5f : a.width - 20f;
+                float rx = two ? a.x + 20f + colW : a.x + 10f;
                 foreach (Mod m in it.mods)
                 {
                     float v = it.Value(m);
@@ -499,32 +506,35 @@ namespace BladePath
                         float cv = 0f; foreach (Mod cm in cur.mods) if (cm.stat == m.stat) cv += cur.Value(cm);
                         mc = v > cv + 1e-4f ? new Color(0.55f, 0.9f, 0.45f) : v < cv - 1e-4f ? new Color(0.95f, 0.55f, 0.45f) : Ink;
                     }
-                    UiKit.Text(new Rect(a.x + 10f, y, a.width - 20f, 15f), Profile.ModText((ModId)m.stat, v), 11.5f, mc, TextAnchor.MiddleLeft, false);
-                    y += 15f;
+                    UiKit.Text(new Rect(a.x + 10f, y, colW, 14f), Profile.ModText((ModId)m.stat, v), 11.5f, mc, TextAnchor.MiddleLeft, false);
+                    y += 14f;
                 }
+                float leftY = y;
+                if (two) y = a.y + 27f;
                 // комплект клана: сколько надето и что даёт
                 if (it.set >= 0)
                 {
                     int have = Profile.SetPieces(it.set);
                     Color sc = new Color(0.95f, 0.78f, 0.35f);
-                    UiKit.Text(new Rect(a.x + 10f, y + 2f, a.width - 20f, 15f), "Комплект " + Profile.SetNames[it.set] + ": " + have + "/4", 11.5f, sc, TextAnchor.MiddleLeft, false); y += 16f;
-                    UiKit.Text(new Rect(a.x + 16f, y, a.width - 26f, 15f), "2: " + Profile.SetBonus2[it.set], 11f, have >= 2 ? sc : Dimmed, TextAnchor.MiddleLeft, false); y += 15f;
-                    UiKit.Text(new Rect(a.x + 16f, y, a.width - 26f, 15f), "4: " + Profile.SetBonus4[it.set], 11f, have >= 4 ? sc : Dimmed, TextAnchor.MiddleLeft, false); y += 15f;
+                    UiKit.Text(new Rect(rx, y, colW, 14f), "Комплект " + Profile.SetNames[it.set] + ": " + have + "/4", 11.5f, sc, TextAnchor.MiddleLeft, false); y += 14f;
+                    UiKit.Text(new Rect(rx + 6f, y, colW - 6f, 14f), "2: " + Profile.SetBonus2[it.set], 11f, have >= 2 ? sc : Dimmed, TextAnchor.MiddleLeft, false); y += 14f;
+                    UiKit.Text(new Rect(rx + 6f, y, colW - 6f, 14f), "4: " + Profile.SetBonus4[it.set], 11f, have >= 4 ? sc : Dimmed, TextAnchor.MiddleLeft, false); y += 14f;
                 }
                 // руна клинка: у кузнеца (на карте или в лагере) — вставить или заменить
                 if (it.slot == (int)Slot.Blade)
                 {
                     if (it.rune >= 0)
                     {
-                        UiKit.Text(new Rect(a.x + 10f, y + 2f, a.width - 20f, 15f), "Руна «" + Profile.RuneNames[it.rune] + "»: " + Profile.RuneHints[it.rune], 11.5f, new Color(0.7f, 0.85f, 1f), TextAnchor.MiddleLeft, false);
-                        y += 17f;
+                        UiKit.Text(new Rect(rx, y + 1f, colW, 14f), "Руна «" + Profile.RuneNames[it.rune] + "»: " + Profile.RuneHints[it.rune], 11.5f, new Color(0.7f, 0.85f, 1f), TextAnchor.MiddleLeft, false);
+                        y += 15f;
                     }
+                    if (two) y = leftY;   // кнопка руны — под свойствами, в левой колонке
                     if (Profile.CostMul < 1f)
                     {
                         // сетка значков рун раньше рисовалась прямо тут и у предметов с несколькими эффектами
                         // вылезала за карточку (обрезалась кнопками снизу) — теперь это отдельное окно
                         string label = (it.rune >= 0 ? "ЗАМЕНИТЬ РУНУ: " : "ВСТАВИТЬ РУНУ: ") + Profile.RuneCost + " мон";
-                        if (Btn(new Rect(a.x + 10f, y + 2f, a.width - 20f, 26f), label, Profile.Gold >= Profile.RuneCost))
+                        if (Btn(new Rect(a.x + 10f, y + 1f, colW, 24f), label, Profile.Gold >= Profile.RuneCost))
                         { runeModal = true; runeModalAt = Time.unscaledTime; }
                         y += 30f;
                     }

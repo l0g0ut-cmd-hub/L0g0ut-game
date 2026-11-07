@@ -972,7 +972,11 @@ namespace BladePath
             UiKit.Text(new Rect(list.x, list.y - 2f, list.width, 16f), ShopCatNames[shopCat + 1] + "  ·  " + show.Count, 11f, Dim, TextAnchor.UpperRight, false);
             const float rowH = 66f, gap = 6f;
             float total = show.Count * (rowH + gap), view = list.height - 14f;
-            float maxScroll = Mathf.Max(0f, total - view);
+            // строки без GUI.BeginGroup: внутри группы UiKit.Text (свой масштаб GUI.matrix) уезжал и обрезался —
+            // названия и цены пропадали, надпись «раскупили» ложилась на реплику торговца. Видны только целые строки:
+            // прокрутка встаёт по строкам, частично видимых строк нет — обрезать нечего
+            int fit = Mathf.Max(1, Mathf.FloorToInt((view + gap) / (rowH + gap)));
+            float maxScroll = Mathf.Max(0, show.Count - fit) * (rowH + gap);
             // прокрутка пальцем (и колесом в редакторе); протяжка не нажимает кнопки «купить»
             Event e = Event.current;
             Rect listIn = new Rect(list.x, list.y + 14f, list.width + 30f, view);
@@ -986,15 +990,14 @@ namespace BladePath
             if (e.type == EventType.MouseUp) shopDragging = false;
             if (e.type == EventType.ScrollWheel && listIn.Contains(e.mousePosition)) { shopScroll = Mathf.Clamp(shopScroll + e.delta.y * 20f, 0f, maxScroll); e.Use(); }
             shopScroll = Mathf.Clamp(shopScroll, 0f, maxScroll);
-            GUI.BeginGroup(new Rect(list.x, list.y + 14f, list.width, view));
             bool buyOk = ok && !shopDragged;
-            if (show.Count == 0) UiKit.Text(new Rect(0f, 0f, list.width, 60f), "этот товар раскупили", 13f, Dim);
-            for (int q = 0; q < show.Count; q++)
+            if (show.Count == 0) UiKit.Text(new Rect(list.x, list.y + 14f, list.width, 60f), "этот товар раскупили", 13f, Dim);
+            int first = Mathf.Clamp(Mathf.RoundToInt(shopScroll / (rowH + gap)), 0, Mathf.Max(0, show.Count - fit));
+            for (int q = first; q < show.Count && q < first + fit; q++)
             {
                 int k = show[q];
                 Item it = stock[k];
-                Rect row = new Rect(0f, q * (rowH + gap) - shopScroll, list.width, rowH);
-                if (row.yMax < 0f || row.y > view) continue;
+                Rect row = new Rect(list.x, list.y + 14f + (q - first) * (rowH + gap), list.width, rowH);
                 VisualIdentity.RowPanel(row);
                 InventoryScreen.ItemIcon(new Rect(row.x + 5f, row.y + 5f, 56f, 56f), it);
                 Color rc = Profile.RarityColors[Mathf.Clamp(it.rarity, 0, 3)];
@@ -1007,14 +1010,13 @@ namespace BladePath
                 if (Btn(new Rect(row.xMax - 118f, row.y + 12f, 110f, 42f), price + " МОН", buyOk && Profile.Gold >= price))
                     if (Profile.Spend(price)) { Profile.Give(it); stock[k] = null; Haptics.Pulse(25); UiFx.Play("coins", 0.8f); }
             }
-            GUI.EndGroup();
             // полоса прокрутки
             if (maxScroll > 0f && Event.current.type == EventType.Repaint)
             {
                 Rect track = new Rect(list.xMax + 8f, list.y + 14f, 20f, view);
                 Texture2D tt = UiKit.Tex("UI/shop_scroll_track"), th = UiKit.Tex("UI/shop_scroll_thumb");
                 if (tt != null) GUI.DrawTexture(track, tt, ScaleMode.StretchToFill); else UiKit.Rect(track, new Color(0f, 0f, 0f, 0.5f));
-                float thH = Mathf.Max(44f, view * view / total), thY = track.y + (view - thH) * (shopScroll / maxScroll);
+                float thH = Mathf.Max(44f, view * view / total), thY = track.y + (view - thH) * Mathf.Clamp01(first * (rowH + gap) / maxScroll);
                 Rect thumb = new Rect(track.x - 2f, thY, 24f, thH);
                 if (th != null) GUI.DrawTexture(thumb, th, ScaleMode.StretchToFill); else UiKit.Rect(thumb, Gold);
             }
