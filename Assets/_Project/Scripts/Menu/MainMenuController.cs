@@ -422,7 +422,7 @@ namespace BladePath
                 if (glow != null)
                 {
                     float pulse = 0.75f + 0.25f * Mathf.Sin(t * 2.4f);
-                    Color oc = GUI.color; GUI.color = new Color(c.r, c.g, c.b, 0.32f * pulse);
+                    Color oc = GUI.color; GUI.color = new Color(c.r, c.g, c.b, 0.16f * pulse);   // эффекты выбора сложности — вдвое прозрачнее (просьба владельца)
                     GUI.DrawTexture(UiFx.Around(icon, r.width * 0.5f), glow); GUI.color = oc;
                 }
                 // постоянное пламя духа за медальоном (как у путника): лёгко — синее, воин — золотое, мастер — красное
@@ -436,14 +436,14 @@ namespace BladePath
                     // в листах пламя стоит по-разному (синий: верх 0,844, низ 0,98 кадра; красный: 0,805 и 0,988) — кадр растягивается по высоте
                     Vector2 foot = new Vector2(r.x + r.width * 0.5f, r.y + r.height * 0.935f);   // по центру таблички
                     float baseK = i == 0 ? 0.98f : 0.988f, visK = i == 0 ? 0.136f : 0.183f, ah = r.width * 0.15f / visK;
-                    UiFx.Draw(new Rect(foot.x - aw * dCx, foot.y - ah * baseK, aw, ah), aura, t + i * 1.3f, new Color(ac.r, ac.g, ac.b, 1f));
+                    UiFx.Draw(new Rect(foot.x - aw * dCx, foot.y - ah * baseK, aw, ah), aura, t + i * 1.3f, new Color(ac.r, ac.g, ac.b, 0.5f));
                     // ярче: второй слой того же пламени со сдвигом по фазе (свет складывается); при нажатии вспыхивает ещё ярче
-                    UiFx.Draw(new Rect(foot.x - aw * dCx, foot.y - ah * baseK, aw, ah), aura, t + i * 1.3f + 1.7f, new Color(ac.r, ac.g, ac.b, 0.6f + 0.4f * boost));
+                    UiFx.Draw(new Rect(foot.x - aw * dCx, foot.y - ah * baseK, aw, ah), aura, t + i * 1.3f + 1.7f, new Color(ac.r, ac.g, ac.b, 0.3f + 0.2f * boost));
                 }
                 // кольцо по надписи убрано (владельцу не понравилось)
                 UiFx.Sheet fl = i == 0 ? UiFx.FlashWhite : i == 1 ? UiFx.FlashGold : UiFx.FlashRed;
                 if (age < fl.Length)
-                    UiFx.Draw(UiFx.Around(icon, r.width * (i == 2 ? 0.78f : 0.62f)), fl, age, new Color(1f, 1f, 1f, i == 0 ? 0.6f : 0.75f), 0.6f);
+                    UiFx.Draw(UiFx.Around(icon, r.width * (i == 2 ? 0.78f : 0.62f)), fl, age, new Color(1f, 1f, 1f, i == 0 ? 0.3f : 0.375f), 0.6f);
             }
         }
 

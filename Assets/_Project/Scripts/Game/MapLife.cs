@@ -15,7 +15,7 @@ namespace BladePath
             public Vector4[] falls = new Vector4[0];    // x, y верх, высота, ширина (доли)
             public Vector3[] lights = new Vector3[0];   // x, y, размер (точки карты)
             public Vector3[] steam = new Vector3[0];    // x, y, размер
-            public Vector3[] smoke = new Vector3[0];    // дым из нарисованных печей и труб: x, y (устье), размер столба (точки карты)
+            public Vector4[] smoke = new Vector4[0];    // дым из нарисованных печей и труб: x, y (устье), высота столба и снос вбок (точки карты; − влево) — по нарисованному дыму
             public Vector2[][] still = new Vector2[0][]; // стоячая вода и пропасти: без бликов, только чтобы не ставить домики в воду и над обрывом
             public Vector3[] wisps = new Vector3[0];    // x, y, размах
             public Vector4[] pulses = new Vector4[0];   // x, y, размер, оттенок (0 — тёплый, 1 — красный)
@@ -85,7 +85,8 @@ namespace BladePath
                     new[] { P(2120, 200, w), P(2200, 230, w), P(2280, 270, w), P(2330, 300, w) },
                     new[] { P(2292, 320, w), P(2284, 440, w), P(2300, 560, w), P(2312, 650, w), P(2330, 760, w), P(2322, 880, w), P(2332, 1020, w) },
                     new[] { P(2230, 640, w), P(2300, 700, w), P(2380, 700, w) } });
-                r.smoke = Join(r.smoke, new[] { Q(1704, 738, 80, w), Q(1774, 716, 80, w) });   // печи углежогов
+                // печи углежогов: нарисованный дым — у левой поднимается и уходит влево, у правой — вверх и чуть вправо
+                r.smoke = Join(r.smoke, new[] { new Vector4(1708f / w, 736f / 1024f, 76f, -46f), new Vector4(1781f / w, 724f / 1024f, 46f, 14f) });
                 r.lights = Join(r.lights, new[] {
                     Q(1876, 733, 5, w), Q(1897, 736, 5, w),                         // хижина углежогов: окно и дверь
                     Q(1957, 786, 5, w), Q(1988, 791, 5, w), Q(2010, 790, 5, w),     // вторая хижина
@@ -282,18 +283,19 @@ namespace BladePath
             if (puff != null)
                 for (int si = 0; si < r.smoke.Length; si++)
                 {
-                    Vector3 sm = r.smoke[si];
-                    Vector2 src = S(sm);
+                    Vector4 sm = r.smoke[si];
+                    Vector2 src = S(new Vector2(sm.x, sm.y));
                     if (!Vis(src)) continue;
-                    float size = sm.z * k;
+                    float size = sm.z * k, side = sm.w * k;
                     for (int p = 0; p < 10; p++)
                     {
                         float run = t / 4.6f + p / 10f + si * 0.173f;
                         float u = run - Mathf.Floor(run);
                         int seed = Mathf.FloorToInt(run) * 7 + p * 13 + si * 31;
-                        float rise = u * size * 0.9f;
-                        float drift = (Mathf.Sin(u * 3f + seed) * 0.05f + u * u * 0.22f) * size;
-                        float sz = size * Mathf.Lerp(0.12f, 0.55f, Mathf.Sqrt(u));
+                        // сначала столбом вверх, потом сносит вбок — как нарисовано на карте
+                        float rise = size * (1f - (1f - u) * (1f - u * 0.4f));
+                        float drift = side * Mathf.Pow(u, 2.2f) + Mathf.Sin(u * 3f + seed) * 0.04f * size;
+                        float sz = size * Mathf.Lerp(0.14f, 0.6f, Mathf.Sqrt(u));
                         float al = Mathf.Clamp01(u / 0.12f) * (1f - u) * (1f - u * 0.6f) * 0.85f;
                         GUI.color = new Color(0.62f, 0.61f, 0.63f, al);
                         int c = seed & 3;
