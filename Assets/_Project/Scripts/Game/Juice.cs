@@ -464,7 +464,7 @@ namespace BladePath
             // быстрее рабочая фаза — выше и резче (0,14 с — обычный удар)
             pitch *= Mathf.Clamp(Mathf.Pow(0.14f / Mathf.Max(0.03f, p.strikeTime), 0.18f), 0.9f, 1.2f);
             Play(swish, vol, pitch * Random.Range(0.95f, 1.05f));
-            if (low > 0f) Play(whoosh, low, pitch * 0.5f);
+            // низкий подголосок «вжух» (тот же свист на пол-тона ниже вдвое) на добивании и ударах сверху звучал как пердёж — убран (2026-11-07)
         }
         /// <summary>Добивание: клинок входит в грудь.</summary>
         AudioClip[] diceCup, diceRoll, coins;
@@ -489,7 +489,7 @@ namespace BladePath
 
         public void StabSound() { Play(stab, 1f, Random.Range(0.94f, 1.04f)); }
         /// <summary>Добивание: клинок выдернут.</summary>
-        public void SquelchSound() { Play(squelch, 0.95f, Random.Range(0.95f, 1.05f)); }
+        public void SquelchSound() { }   // синтезированный «хлюп» при добивании звучал как пердёж — убран (2026-11-07); остаётся удар клинка StabSound
 
         readonly Dictionary<AudioClip, AudioClip[]> sampled = new Dictionary<AudioClip, AudioClip[]>();
         /// <summary>Набор записанных вариантов name_1…name_n; первый вариант — ключ, при игре берётся случайный.</summary>
