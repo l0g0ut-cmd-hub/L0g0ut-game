@@ -142,6 +142,22 @@ namespace BladePath
             GUI.matrix = m;
         }
 
+        /// <summary>Мягкий штрих вдоль отрезка a→b: мягкая текстура (tex), растянутая по длине и повёрнутая — блик на воде без жёсткой «черты».</summary>
+        public static void Streak(Vector2 a, Vector2 b, float thickness, Color c, Texture2D tex)
+        {
+            if (tex == null) { Line(a, b, thickness, c); return; }
+            Vector2 d = b - a;
+            float len = d.magnitude;
+            if (len < 0.01f) return;
+            float ang = Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg;
+            Matrix4x4 m = GUI.matrix;
+            GUI.matrix = m * Matrix4x4.TRS(new Vector3(a.x, a.y, 0f), Quaternion.Euler(0f, 0f, ang), Vector3.one);
+            Color o = GUI.color; GUI.color = c;
+            GUI.DrawTexture(new Rect(0f, -thickness * 0.5f, len, thickness), tex);
+            GUI.color = o;
+            GUI.matrix = m;
+        }
+
         static Font display, body, digits;
         static bool fontsLoaded;
         static void LoadFonts()

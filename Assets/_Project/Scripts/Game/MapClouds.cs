@@ -146,11 +146,22 @@ namespace BladePath
                     float speed = 1.1f + 0.6f * Hash(q * 3.7f + i);
                     float ph = Mathf.Repeat(t * speed + hq * 5f, 1f);
                     float fx = sx + (hq - 0.5f) * w * 0.72f;
-                    float y0 = cc.y + w * 0.12f, y1 = sy + w * 0.2f;
-                    float fy = Mathf.Lerp(y0, y1, ph);
+                    // капли падают на разную «глубину» под тучей (не все на одну линию) и у земли разбиваются брызгами
+                    float y0 = cc.y + w * 0.12f, y1 = sy + w * Mathf.Lerp(-0.02f, 0.22f, Hash(q * 2.3f + i * 0.9f));
+                    float fy = Mathf.Lerp(y0, y1, Mathf.Min(1f, ph / 0.88f));
                     float len = 9f + 9f * Hash(q * 1.9f + i * 0.3f);
-                    float a = Mathf.Lerp(0.28f, 0.5f, storm) * Mathf.Sin(ph * Mathf.PI) * (0.6f + 0.4f * Hash(q + i * 2f));
-                    UiKit.Line(new Vector2(fx + len * 0.3f, fy - len), new Vector2(fx, fy), 1.1f, new Color(0.78f, 0.84f, 0.98f, a));
+                    if (ph < 0.88f)
+                    {
+                        float a = Mathf.Lerp(0.28f, 0.5f, storm) * Mathf.Sin(ph / 0.88f * Mathf.PI * 0.85f + 0.15f) * (0.6f + 0.4f * Hash(q + i * 2f));
+                        UiKit.Line(new Vector2(fx + len * 0.3f, fy - len), new Vector2(fx, fy), 1.1f, new Color(0.78f, 0.84f, 0.98f, a));
+                    }
+                    else if (glow != null)
+                    {
+                        // брызги: маленькое светлое пятнышко расходится вширь и гаснет
+                        float sp = (ph - 0.88f) / 0.12f, bw = 3f + 5f * sp;
+                        GUI.color = new Color(0.82f, 0.88f, 1f, Mathf.Lerp(0.35f, 0.55f, storm) * (1f - sp));
+                        GUI.DrawTexture(new Rect(fx - bw, y1 - bw * 0.3f, bw * 2f, bw * 0.6f), glow);
+                    }
                 }
                 if (atlas != null || puffs != null)
                 {

@@ -19,6 +19,10 @@ namespace BladePath
             public Vector2[][] still = new Vector2[0][]; // стоячая вода и пропасти: без бликов, только чтобы не ставить домики в воду и над обрывом
             public Vector3[] wisps = new Vector3[0];    // x, y, размах
             public Vector4[] pulses = new Vector4[0];   // x, y, размер, оттенок (0 — тёплый, 1 — красный)
+            public Vector3[] fog = new Vector3[0];      // полосы тумана поверх нарисованного: x, y, ширина (точки карты) — клубятся и медленно плывут
+            public Vector2[][] flows = new Vector2[0][]; // туман, стекающий по руслу (ущелье под водопадом): клубы ползут по линии
+            public Vector2[] lake = new Vector2[0];     // стоячая вода: места, где по очереди вспыхивает и гаснет мягкий блик (не рябь полосами)
+            public Vector4[] petals = new Vector4[0];   // облетающая сакура: x, y, ширина, высота области (доли карты)
         }
         static Vector2 V(float x, float y) { return new Vector2(x / 768f, y / 512f); }
         static Vector3 L(float x, float y, float s) { return new Vector3(x / 768f, y / 512f, s); }
@@ -27,7 +31,8 @@ namespace BladePath
         {
             new Region   // лес теней
             {
-                rivers = new[] { new[] { V(158, 95), V(185, 150), V(205, 200), V(240, 250), V(285, 300), V(330, 325), V(375, 345), V(400, 380), V(430, 415), V(465, 450), V(500, 485), V(540, 512) } },
+                // русло обведено по картине (каждые ~50 px, сверено наложением): прежняя ломаная срезала изгибы, блики ложились на камни и траву
+                rivers = new[] { new[] { V(155, 100), V(160, 115), V(167.5f, 142.5f), V(185, 165), V(200, 190), V(207.5f, 200), V(220, 220), V(240, 245), V(260, 260), V(277.5f, 287.5f), V(295, 312.5f), V(320, 330), V(345, 350), V(370, 365), V(400, 390), V(425, 415), V(440, 440), V(457.5f, 465), V(495, 487.5f), V(515, 512) } },
                 falls = new[] { new Vector4(148f / 768f, 30f / 512f, 70f / 512f, 26f / 768f), new Vector4(278f / 768f, 278f / 512f, 26f / 512f, 18f / 768f), new Vector4(200f / 768f, 185f / 512f, 25f / 512f, 14f / 768f) },
                 lights = new[] { L(421, 129, 6), L(560, 211, 6), L(437, 224, 6), L(510, 223, 6), L(370, 281, 6), L(478, 329, 6), L(243, 406, 6), L(253, 406, 6), L(536, 402, 5), L(544, 402, 5), L(555, 453, 5), L(561, 453, 5), L(581, 461, 5), L(586, 461, 5), L(655, 336, 5), L(659, 335, 4), L(69, 329, 5), L(77, 332, 5), L(88, 334, 5), L(111, 329, 5), L(117, 328, 5), L(69, 312, 5), L(30, 349, 5), L(37, 348, 5), L(43, 347, 5), L(54, 344, 5), L(125, 346, 5), L(135, 347, 5), L(142, 348, 5), L(148, 350, 5), L(153, 351, 5), L(161, 350, 5), L(169, 336, 5), L(58, 443, 5), L(67, 442, 5), L(72, 441, 5), L(90, 435, 5), L(93, 435, 5), L(634, 33, 5), L(647, 35, 5), L(633, 52, 5), L(645, 53, 5), L(655, 54, 5), L(685, 54, 5), L(695, 54, 5), L(632, 71, 5), L(647, 72, 5), L(665, 74, 5), L(684, 73, 5), L(702, 74, 5) },   // окна и фонари — точно по нарисованным (сверено на увеличении 9–10×)
             },
@@ -45,7 +50,9 @@ namespace BladePath
             },
             new Region   // проклятый сёгунат
             {
-                rivers = new[] { new[] { V(210, 160), V(222, 220), V(250, 268), V(300, 300), V(345, 335), V(385, 365), V(430, 410), V(480, 445), V(530, 472), V(600, 498), V(660, 512) } },
+                // русло от водопада под мостом к низу карты — по картине; второй рукав приходит слева и сливается под водопадом
+                rivers = new[] { new[] { V(215, 160), V(210, 195), V(205, 225), V(210, 240), V(235, 260), V(265, 280), V(295, 300), V(325, 315), V(355, 335), V(370, 362.5f), V(400, 387.5f), V(430, 410), V(465, 427.5f), V(500, 445), V(540, 460), V(590, 480), V(630, 497.5f), V(660, 512) },
+                                 new[] { V(150, 235), V(180, 242.5f), V(210, 240) } },
                 falls = new[] { new Vector4(200f / 768f, 95f / 512f, 70f / 512f, 26f / 768f) },
                 lights = new[] { L(99, 313, 5), L(76, 324, 5), L(92, 330, 5), L(100, 331, 5), L(107, 331, 5), L(120, 330, 5), L(127, 329, 5), L(34, 339, 5), L(26, 358, 5), L(45, 365, 5), L(61, 371, 5), L(70, 358, 5), L(82, 358, 5), L(87, 357, 5), L(92, 370, 5), L(80, 372, 5), L(111, 359, 5), L(167, 308, 5), L(149, 312, 5), L(136, 314, 5), L(132, 328, 5), L(164, 346, 5), L(147, 345, 5), L(222, 343, 5), L(215, 342, 5), L(235, 342, 5), L(228, 367, 5), L(216, 376, 5), L(206, 377, 5), L(190, 377, 5), L(146, 393, 5), L(124, 417, 5), L(134, 416, 5), L(152, 412, 5), L(158, 414, 5), L(143, 412, 5), L(102, 406, 5), L(114, 409, 5), L(209, 417, 5), L(215, 415, 5), L(222, 415, 5), L(231, 414, 5), L(279, 448, 5), L(287, 449, 5), L(295, 450, 5), L(313, 448, 5), L(321, 446, 5), L(289, 428, 4), L(312, 428, 4), L(332, 438, 4), L(145, 161, 5), L(155, 163, 5), L(165, 162, 5), L(413, 158, 4), L(417, 158, 4), L(422, 158, 4), L(428, 158, 4), L(435, 158, 4), L(410, 177, 4), L(415, 177, 4), L(420, 177, 4), L(428, 177, 4), L(435, 176, 4), L(408, 195, 4), L(412, 195, 4), L(420, 196, 4), L(427, 195, 4), L(437, 195, 4), L(402, 213, 4), L(406, 214, 4), L(413, 214, 4), L(420, 215, 4), L(427, 214, 4), L(436, 214, 4), L(636, 31, 4), L(641, 31, 4), L(656, 31, 4), L(661, 32, 4), L(630, 48, 4), L(644, 46, 4), L(654, 46, 4), L(639, 64, 4), L(626, 66, 4), L(621, 66, 4), L(596, 71, 4), L(591, 71, 4), L(669, 69, 4), L(599, 86, 4), L(607, 85, 4), L(616, 84, 4), L(633, 84, 4), L(657, 86, 4), L(670, 84, 4), L(677, 85, 4), L(693, 86, 4) },   // окна сёгуната — по нарисованным горящим окнам (сверено на увеличении 7–12×), без бликов на полу
                 wisps = new[] { L(530, 185, 10), L(585, 214, 10), L(635, 236, 10), L(505, 303, 10), L(735, 296, 10) },
@@ -96,6 +103,12 @@ namespace BladePath
                     Q(1625, 496, 5, w), Q(1655, 523, 5, w), Q(1940, 465, 5, w), Q(1962, 547, 5, w),   // каменные фонари у кедра и заставы
                 });
                 r.steam = Join(r.steam, new[] { Q(2262, 700, 60, w), Q(2300, 810, 55, w) });   // туман в ущелье
+                // озеро сбрасывается в ущелье водопадом (на картине — белые струи у края озера), туман стекает по ущелью вниз
+                r.falls = Join(r.falls, new[] { new Vector4(2295f / w, 360f / 1024f, 120f / 1024f, 36f / w) });
+                r.flows = Join(r.flows, new[] { new[] { P(2290, 480, w), P(2300, 570, w), P(2320, 670, w), P(2330, 750, w), P(2350, 850, w), P(2370, 950, w), P(2380, 1024, w) } });
+                r.lake = Join(r.lake, new[] { P(2080, 240, w), P(2110, 300, w), P(2200, 290, w), P(2260, 320, w), P(2280, 265, w), P(2370, 315, w) });
+                // полосы тумана — на нарисованном тумане: у водопада, у замка, у руин, у бамбука, у кедра, за холмом святилища
+                r.fog = Join(r.fog, new[] { Q(480, 160, 70, w), Q(700, 190, 60, w), Q(545, 430, 55, w), Q(280, 515, 60, w), Q(1090, 370, 65, w), Q(1380, 600, 60, w) });
             },
             (r, w) =>   // горы Они — пылающее сердце: лавопад у кратера, лавовое озеро, огонь в штольнях и за воротами крепости
             {
@@ -122,6 +135,9 @@ namespace BladePath
                 });
                 r.lights = Join(r.lights, new[] { Q(2412, 722, 5, w) });   // каменный фонарь у призрачной рощи
                 r.wisps = Join(r.wisps, new[] { Q(2350, 620, 10, w), Q(2500, 640, 10, w), Q(2610, 600, 10, w) });   // огоньки в призрачной роще
+                r.petals = Join(r.petals, new[] { new Vector4(2130f / w, 520f / 1024f, 590f / w, 240f / 1024f) });   // призрачная сакура облетает
+                r.lake = Join(r.lake, new[] { P(2330, 390, w), P(2480, 460, w), P(2560, 510, w), P(2620, 420, w), P(2700, 480, w), P(2760, 550, w), P(2640, 540, w), P(2440, 1000, w), P(2520, 1010, w) });
+                r.fog = Join(r.fog, new[] { Q(555, 345, 70, w), Q(1000, 310, 70, w), Q(1275, 840, 65, w), Q(825, 665, 55, w), Q(2200, 500, 70, w), Q(1600, 380, 60, w), Q(660, 280, 60, w) });
             },
         };
 
@@ -156,6 +172,20 @@ namespace BladePath
         }
 
         static float H(float a) { float x = Mathf.Sin(a * 12.9898f) * 43758.5453f; return x - Mathf.Floor(x); }
+
+        /// <summary>Кадр листа (cols×rows, frames кадров туда-обратно) с наплывом в следующий — плавно и при малой частоте.</summary>
+        static void FlipCell(Rect r, Texture2D tex, int cols, int rows, int frames, float fps, float phase, Color tint)
+        {
+            float f = (Time.unscaledTime + phase) * fps;
+            int span = frames * 2 - 2;
+            int a = (int)Mathf.Repeat(Mathf.Floor(f), span), b = (a + 1) % span;
+            float kf = f - Mathf.Floor(f);
+            if (a >= frames) a = span - a; if (b >= frames) b = span - b;
+            GUI.color = tint;
+            GUI.DrawTextureWithTexCoords(r, tex, new Rect((a % cols) / (float)cols, 1f - (a / cols + 1) / (float)rows, 1f / cols, 1f / rows));
+            GUI.color = new Color(tint.r, tint.g, tint.b, tint.a * kf);
+            GUI.DrawTextureWithTexCoords(r, tex, new Rect((b % cols) / (float)cols, 1f - (b / cols + 1) / (float)rows, 1f / cols, 1f / rows));
+        }
 
         static Vector2 Along(Vector2[] pl, float u)
         {
@@ -235,8 +265,9 @@ namespace BladePath
                     }
                     else
                     {
-                        float len = (4f + 6f * H(seed + 4f)) * k;
-                        UiKit.Line(sp - dir * len, sp + dir * len, 1.3f, new Color(0.85f, 0.95f, 1f, 0.18f + 0.4f * tw * tw));
+                        // мягкий блик по течению (мягкое пятно, вытянутое вдоль русла), а не жёсткая черта — тонкие линии читались «штрихами»
+                        float len = (5f + 7f * H(seed + 4f)) * k;
+                        UiKit.Streak(sp - dir * len, sp + dir * len, 2.6f * k, new Color(0.85f, 0.95f, 1f, 0.16f + 0.42f * tw * tw), glow);
                     }
                 }
             }
@@ -278,6 +309,65 @@ namespace BladePath
                         GUI.DrawTexture(new Rect(q.x - sz * 0.5f, q.y - sz * 0.35f, sz, sz * 0.7f), mist);
                     }
                 }
+            // туман, стекающий по ущелью: клубы ползут вниз по линии, растут и тают
+            if (mist != null)
+                foreach (Vector2[] fl in r.flows)
+                    for (int i = 0; i < 9; i++)
+                    {
+                        float u = Mathf.Repeat(t * 0.012f + i / 9f, 1f);
+                        Vector2 p = S(Along(fl, u));
+                        if (!Vis(p)) continue;
+                        float sz = (46f + 30f * H(i * 3.1f)) * k * (0.8f + 0.4f * u);
+                        float a = Mathf.Sin(u * Mathf.PI) * 0.2f;
+                        GUI.color = new Color(0.9f, 0.9f, 0.95f, a);
+                        GUI.DrawTexture(new Rect(p.x - sz * 0.5f + Mathf.Sin(t * 0.3f + i) * 6f * k, p.y - sz * 0.3f, sz, sz * 0.6f), mist);
+                    }
+            // полосы тумана над нарисованным туманом: лист fx_mist (30 кадров туда-обратно) клубится, полоса дышит и плывёт
+            Texture2D fogSheet = r.fog.Length > 0 ? UiKit.Tex("UI/fx_mist") : null;
+            if (fogSheet != null)
+                for (int i = 0; i < r.fog.Length; i++)
+                {
+                    Vector3 f = r.fog[i];
+                    Vector2 p = S(f) + new Vector2(Mathf.Sin(t * 0.05f + i * 1.7f) * 14f * k, 0f);
+                    if (!Vis(p)) continue;
+                    float fw = f.z * k * 2f, fh = fw * 0.5f;
+                    float a = 0.13f + 0.06f * Mathf.Sin(t * 0.21f + i * 2.3f);
+                    FlipCell(new Rect(p.x - fw * 0.5f, p.y - fh * 0.5f, fw, fh), fogSheet, 6, 5, 30, 2.5f, i * 3.7f, new Color(0.92f, 0.92f, 0.96f, a));
+                }
+            // стоячая вода: в разных местах по очереди проступает мягкий блик и гаснет (3–5 с), едва смещаясь
+            if (glow != null)
+                for (int i = 0; i < r.lake.Length; i++)
+                {
+                    float per = 3f + 2f * H(i * 2.7f + 0.3f);
+                    float ph = Mathf.Repeat(t / per + H(i * 5.1f), 1f);
+                    float a = Mathf.Sin(ph * Mathf.PI); a *= a;
+                    if (a < 0.02f) continue;
+                    Vector2 p = S(r.lake[i]) + new Vector2((ph - 0.5f) * 6f * k, 0f);
+                    if (!Vis(p)) continue;
+                    float len = (7f + 6f * H(i * 1.3f)) * k;
+                    UiKit.Streak(p - new Vector2(len, 0f), p + new Vector2(len, 0f), 2.2f * k, new Color(0.82f, 0.88f, 1f, 0.3f * a), glow);
+                }
+            // облетающая сакура: лепестки FX/petals8 (4×2) падают, раскачиваясь, и тают у земли
+            Texture2D pet = r.petals.Length > 0 ? UiKit.Tex("FX/petals8") : null;
+            if (pet != null)
+                foreach (Vector4 ar in r.petals)
+                    for (int i = 0; i < 22; i++)
+                    {
+                        float life = 7f + 4f * H(i * 1.9f);
+                        float run = t / life + H(i * 4.3f), ph = run - Mathf.Floor(run);
+                        float seed = i * 13.7f + Mathf.Floor(run) * 3.1f;
+                        Vector2 uv = new Vector2(ar.x + ar.z * H(seed), ar.y + ar.w * (0.15f + 0.85f * ph));
+                        Vector2 p = S(uv) + new Vector2(Mathf.Sin(t * 1.3f + seed) * 9f * k + ph * 14f * k, 0f);
+                        if (!Vis(p)) continue;
+                        float ps = (5.5f + 2.5f * H(seed + 1f)) * k;
+                        float a = Mathf.Clamp01(ph / 0.1f) * Mathf.Clamp01((1f - ph) / 0.2f) * 0.9f;
+                        int c = (int)(H(seed + 2f) * 8f) % 8;
+                        bool fl = Mathf.Sin(t * 2.1f + seed) < 0f;   // лепесток переворачивается в полёте
+                        Rect cell = new Rect((c % 4) * 0.25f, c < 4 ? 0.5f : 0f, 0.25f, 0.5f);
+                        if (fl) cell = new Rect(cell.x + 0.25f, cell.y, -0.25f, 0.5f);
+                        GUI.color = new Color(1f, 0.93f, 0.97f, a);   // бледные, призрачные
+                        GUI.DrawTextureWithTexCoords(new Rect(p.x - ps, p.y - ps * 0.5f, ps * 2f, ps), pet, cell);
+                    }
             // дым из нарисованных печей и труб: клубы поднимаются, растут, уходят по ветру и тают
             // клуб — покадровый объёмный дым 8×8 (Brackeys VFX Bundle, CC0): за жизнь клуба проигрываются все 64 кадра,
             // дым клубится внутри, а не плывёт неподвижной кляксой. Нет листа — прежние четыре клуба fx_puff
