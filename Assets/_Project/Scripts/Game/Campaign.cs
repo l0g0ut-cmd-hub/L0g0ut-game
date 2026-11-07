@@ -126,6 +126,14 @@ namespace BladePath
             },
         };
         // ROADS-SPOTS END
+        // доп. места (x, y, ряд) — середины длинных нарисованных дорог (узлы дорог со степенью 2, не мосты), подобраны так,
+        // чтобы до соседних мест было ≥ 58 точек карты 810×540 (иначе домики налезают)
+        static readonly Vector3[][] ExtraSpots =
+        {
+            new[] { new Vector3(0.33f, 0.636f, 1), new Vector3(0.212f, 0.835f, 1) },                                   // лес теней
+            new[] { new Vector3(0.275f, 0.69f, 1) },                                                                 // горы Они
+            new[] { new Vector3(0.24f, 0.545f, 1), new Vector3(0.91f, 0.33f, 5), new Vector3(0.8f, 0.432f, 4) },      // сёгунат
+        };
         // Места до перекладки дорог (2026-11-03): по ним старые сохранения переносятся на новые места.
         static readonly Vector2[][][] OldSpots =
         {
@@ -480,6 +488,14 @@ namespace BladePath
                     dd.nodes.Add(new MapNode { layer = l, x = p.x, y = p.y });
                 }
             }
+            // дополнительные места на длинных отрезках дорог (развилки-середины нарисованных дорог, ≥ 58 точек от других мест,
+            // чтобы домики не налезали друг на друга); ряд — по ближайшим местам
+            foreach (Vector3 e in ExtraSpots[Mathf.Clamp(region, 0, ExtraSpots.Length - 1)])
+            {
+                int l = Mathf.Clamp((int)e.z, 1, L - 2);
+                layers[l].Add(dd.nodes.Count);
+                dd.nodes.Add(new MapNode { layer = l, x = e.x, y = e.y });
+            }
             // дороги — ровно нарисованные на карте (раньше — по номерам мест, и «соседи» соединялись через чужие места)
             LinkByRoads(dd);
             // что в узлах
@@ -533,6 +549,37 @@ namespace BladePath
                         b.enemy = DuelEnemy(region);
                         if (b.Type == NodeType.Event) b.ev = MapScreen.RandomEvent();
                     }
+            // разнообразие: кузнец, торговец, онсэн, додзё, игорный дом, святилище клана — не больше одного на область;
+            // храм и привал — не больше двух; торговец есть всегда (вместо лишнего кузнеца или обычного боя в середине пути)
+            {
+                Dictionary<NodeType, int> cnt = new Dictionary<NodeType, int>();
+                List<int> order = new List<int>(); for (int k = 0; k < dd.nodes.Count; k++) order.Add(k);
+                for (int k = order.Count - 1; k > 0; k--) { int j = UnityEngine.Random.Range(0, k + 1); int tmp = order[k]; order[k] = order[j]; order[j] = tmp; }
+                foreach (int k in order)
+                {
+                    MapNode n = dd.nodes[k]; NodeType t = n.Type;
+                    int max = t == NodeType.Smith || t == NodeType.Merchant || t == NodeType.Onsen || t == NodeType.Dojo || t == NodeType.Gamble || t == NodeType.ClanShrine ? 1
+                            : t == NodeType.Shrine || t == NodeType.Rest ? 2 : 99;
+                    int c; cnt.TryGetValue(t, out c);
+                    if (c < max) { cnt[t] = c + 1; continue; }
+                    int m; cnt.TryGetValue(NodeType.Merchant, out m);
+                    n.type = (int)(m == 0 && !OnBridge(dd, k) ? NodeType.Merchant : UnityEngine.Random.value < 0.6f ? NodeType.Duel : NodeType.Event);
+                    n.enemy = DuelEnemy(region);
+                    if (n.Type == NodeType.Event) n.ev = MapScreen.RandomEvent();
+                    int c2; cnt.TryGetValue(n.Type, out c2); cnt[n.Type] = c2 + 1;
+                }
+                int mm; cnt.TryGetValue(NodeType.Merchant, out mm);
+                if (mm == 0)
+                {
+                    List<int> dl = new List<int>();
+                    for (int k = 0; k < dd.nodes.Count; k++)
+                    {
+                        MapNode n = dd.nodes[k];
+                        if ((n.Type == NodeType.Duel || n.Type == NodeType.Event) && n.layer >= 2 && n.layer <= L - 3 && !OnBridge(dd, k) && (n.extra == null || n.extra.Count == 0)) dl.Add(k);
+                    }
+                    if (dl.Count > 0) dd.nodes[dl[UnityEngine.Random.Range(0, dl.Count)]].type = (int)NodeType.Merchant;
+                }
+            }
             // перед владыкой — хотя бы одна передышка (храм или привал), если есть выбор
             // (среди мест, откуда к владыке ведёт дорога)
             List<int> pre = new List<int>();
@@ -602,6 +649,17 @@ namespace BladePath
             }
             // раненый ронин, которого перевязали в прошлой области, встречается снова
             if (dd.roninDebt && PlaceRoninReturn(dd, 0)) dd.roninDebt = false;
+            // торговец мог быть занят травницей или трактиром — тогда ещё раз: обычный бой или простое событие в середине пути
+            if (!dd.nodes.Exists(x => x.Type == NodeType.Merchant))
+            {
+                List<int> dl = new List<int>();
+                for (int k = 0; k < dd.nodes.Count; k++)
+                {
+                    MapNode n = dd.nodes[k];
+                    if ((n.Type == NodeType.Duel || n.Type == NodeType.Event && MapScreen.PlainEvent(n.ev)) && n.layer >= 2 && n.layer <= L - 3 && !OnBridge(dd, k) && (n.extra == null || n.extra.Count == 0) && k != dd.hunt) dl.Add(k);
+                }
+                if (dl.Count > 0) dd.nodes[dl[UnityEngine.Random.Range(0, dl.Count)]].type = (int)NodeType.Merchant;
+            }
             dd.steps = 0; dd.rolls = Mathf.Max(dd.rolls, 1);
             Save();
         }
