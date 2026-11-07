@@ -28,7 +28,7 @@ namespace BladePath
     /// </summary>
     public static class MapPads
     {
-        public const float Size = 53f;   // домик в точках карты (было 74 — налезал на соседей и на нарисованное)
+        public const float Size = 74f;   // домик в точках карты (площадки проверены и при этом размере)
         static readonly Vector4[][] Pads =
         {
 %s

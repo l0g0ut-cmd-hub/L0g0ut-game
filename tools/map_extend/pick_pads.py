@@ -9,6 +9,6 @@ out={}
 for r,m in D.items():
     W=m['width']; sp={n:(x*W,y*1024) for l in m['spots'] for n,x,y in l}
     for n,x,y in EX[r]: sp[n]=(x*1536,y*1024)
-    out[r]={n:[round(sp[n][0]+OFF[k-1][0]),round(sp[n][1]+OFF[k-1][1]),0.72] for n,k in PICK[r].items()}
+    out[r]={n:[round(sp[n][0]+OFF[k-1][0]),round(sp[n][1]+OFF[k-1][1]),1.0] for n,k in PICK[r].items()}
 json.dump(out,open('tools/map_pads.json','w'),indent=1)
 print({r:len(v) for r,v in out.items()})

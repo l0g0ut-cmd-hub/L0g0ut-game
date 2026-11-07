@@ -9,7 +9,7 @@ namespace BladePath
     /// </summary>
     public static class MapPads
     {
-        public const float Size = 53f;   // домик в точках карты (было 74 — налезал на соседей и на нарисованное)
+        public const float Size = 74f;   // домик в точках карты (площадки проверены и при этом размере)
         static readonly Vector4[][] Pads =
         {
             new[] { new Vector4(0.1324f, 0.585f, 0.167f, 0.5996f), new Vector4(0.1766f, 0.885f, 0.1766f, 0.9873f), new Vector4(0.3384f, 0.615f, 0.3728f, 0.6299f), new Vector4(0.306f, 0.52f, 0.3406f, 0.5342f), new Vector4(0.3943f, 0.55f, 0.4287f, 0.5645f), new Vector4(0.356f, 0.462f, 0.3215f, 0.4766f), new Vector4(0.4208f, 0.445f, 0.392f, 0.5283f), new Vector4(0.462f, 0.395f, 0.4621f, 0.4971f), new Vector4(0.7034f, 0.5996f, 0.7379f, 0.6143f), new Vector4(0.7234f, 0.7812f, 0.6946f, 0.8643f), new Vector4(0.7839f, 0.5781f, 0.7494f, 0.5928f), new Vector4(0.1942f, 0.636f, 0.1943f, 0.7383f) },
