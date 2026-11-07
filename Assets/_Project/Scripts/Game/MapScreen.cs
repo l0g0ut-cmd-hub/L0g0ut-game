@@ -697,12 +697,26 @@ namespace BladePath
         /// </summary>
         bool lightPass;
 
+        /// <summary>
+        /// Домик днём и вечером: снизу дневной спрайт (свет погашен), поверх — вечерний (окна и фонари нарисованы горящими)
+        /// с прозрачностью по времени суток: утром и днём 0, к вечеру плавно 1. Нет дневного атласа — как раньше.
+        /// </summary>
+        static void DayNightCell(Rect r, Texture2D night, Texture2D day, Rect uv, Color tint)
+        {
+            Color oc = GUI.color;
+            float k = day != null ? Mathf.Clamp01(DayCycle.LightK / 0.85f) : 1f;
+            if (day != null && k < 0.999f) { GUI.color = tint; GUI.DrawTextureWithTexCoords(r, day, uv); }
+            if (k > 0.001f) { GUI.color = new Color(tint.r, tint.g, tint.b, tint.a * k); GUI.DrawTextureWithTexCoords(r, night, uv); }
+            GUI.color = oc;
+        }
+
         void DrawBuildings()
         {
             if (Event.current.type != EventType.Repaint) return;
             // свой набор у каждой области: лес (_0), горы Они (общий), сёгунат (_2)
             Texture2D atlas = Campaign.Region != 1 ? UiKit.Tex("UI/map_buildings_" + Campaign.Region) : null, glow = UiKit.Tex("FX/glow_pool");
             if (atlas == null) atlas = UiKit.Tex("UI/map_buildings");
+            Texture2D dayAtlas = atlas != null ? UiKit.Tex("UI/" + atlas.name + "_day") : null;   // дневная версия: окна и фонари погашены, огонь горит
             Texture2D camps = UiKit.Tex("UI/map_camps_" + Campaign.Region);   // стоянки у боёв и места событий — свой набор у каждой области
             Texture2D newAtlas = UiKit.Tex(NewBuildings);
             if (atlas == null && camps == null && newAtlas == null) return;
@@ -727,8 +741,7 @@ namespace BladePath
                     bool dimN = n.done && n.Type != NodeType.Gamble && n.Type != NodeType.HunterCamp;
                     if (!lightPass)
                     {
-                        GUI.color = dimN ? new Color(0.72f, 0.7f, 0.68f, 0.9f) : Color.white;
-                        GUI.DrawTextureWithTexCoords(rn, newAtlas, Cell3(nb));
+                        DayNightCell(rn, newAtlas, UiKit.Tex(NewBuildings + "_day"), Cell3(nb), dimN ? new Color(0.72f, 0.7f, 0.68f, 0.9f) : Color.white);
                         if (nb == 5) MapSmoke(rn, sz, new Vector2(0.31f, 0.56f), false, dimN, i, 0.6f);   // охотники: дым над котлом
                         if (nb == 0) { MapSmoke(rn, sz, new Vector2(0.62f, 0.56f), true, dimN, i, 1f); MapSmoke(rn, sz, new Vector2(0.46f, 0.62f), true, dimN, i + 5, 0.65f); }   // онсэн: пар над источником
                         continue;
@@ -760,8 +773,7 @@ namespace BladePath
                 bool dim = n.done && b != 0 && b != 1 && b != 2;   // пройденные приглушены (трактир, кузница и лавка — живые всегда)
                 if (!lightPass)
                 {
-                    GUI.color = dim ? new Color(0.72f, 0.7f, 0.68f, 0.9f) : Color.white;
-                    GUI.DrawTextureWithTexCoords(r, atlas, new Rect((b % 4) * 0.25f, b < 4 ? 0.5f : 0f, 0.25f, 0.5f));
+                    DayNightCell(r, atlas, dayAtlas, new Rect((b % 4) * 0.25f, b < 4 ? 0.5f : 0f, 0.25f, 0.5f), dim ? new Color(0.72f, 0.7f, 0.68f, 0.9f) : Color.white);
                     if (b == 0) MapSmoke(r, size, new Vector2(0.51f, 0.2f), false, false, i, 1f);                       // трактир: дым из трубы
                     if (b == 3) MapSmoke(r, size, new Vector2(0.37f, 0.46f), false, dim, i, 0.85f);                    // привал: дым над котлом
                     continue;
@@ -1082,8 +1094,7 @@ namespace BladePath
             {
                 // новая сторожевая башня (ячейка 3 домиков): огонь горит в фонарях площадки, а не в жаровне сверху
                 Rect tr = new Rect(p.x - 40f, p.y - 66f, 80f, 80f);
-                GUI.color = lit ? Color.white : new Color(0.78f, 0.76f, 0.84f, 1f);
-                GUI.DrawTextureWithTexCoords(tr, towerNew, Cell3(3));
+                DayNightCell(tr, towerNew, UiKit.Tex(NewBuildings + "_day"), Cell3(3), lit ? Color.white : new Color(0.78f, 0.76f, 0.84f, 1f));
                 if (glow != null)
                 {
                     Vector2 hut = new Vector2(tr.x + 0.5f * tr.width, tr.y + 0.2f * tr.height), lamp = new Vector2(tr.x + 0.71f * tr.width, tr.y + 0.26f * tr.height);
