@@ -1,0 +1,4 @@
+commit=f1e669e942b42838e9789ea8fcf8d01b47c69586
+source=bladepath-development
+workflow=42368541808
+type=COMPOSITION PREVIEW (NOT Android screen capture)
