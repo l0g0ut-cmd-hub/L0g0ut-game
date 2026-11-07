@@ -575,7 +575,8 @@ namespace BladePath
             new Vector3[0],                                                                   // лавка
             new[] { new Vector3(0.375f, 0.68f, 0.2f) },                                       // привал: костёр
             new[] { new Vector3(0.68f, 0.5f, 0.1f) },                                         // травница: окно
-            new[] { new Vector3(0.29f, 0.43f, 0.1f), new Vector3(0.8f, 0.41f, 0.1f), new Vector3(0.49f, 0.43f, 0.1f) },   // храм: фонари
+            new[] { new Vector3(0.23f, 0.48f, 0.045f), new Vector3(0.275f, 0.485f, 0.045f), new Vector3(0.785f, 0.46f, 0.045f), new Vector3(0.845f, 0.462f, 0.045f),
+                    new Vector3(0.52f, 0.52f, 0.06f) },   // храм: по метке владельца — по два окошка в каждом каменном фонаре и огонь у входа в алтарь
             new[] { new Vector3(0.46f, 0.48f, 0.16f) },                                       // тайник: золото
             new Vector3[0],                                                                   // засада
         };
@@ -610,6 +611,15 @@ namespace BladePath
         readonly Dictionary<int, Vector2> buildingOff = new Dictionary<int, Vector2>();
         string buildingKey;
         bool HasBuilding(MapNode n, int i) { return !Campaign.OnBridge(i) && (BuildingOf(n) >= 0 || CampOf(n, i) >= 0 || NewPlace(n.Type) >= 0); }
+
+        /// <summary>Основание домика на экране: площадка, выбранная по карте (MapPads). Нет площадки — домика нет.</summary>
+        bool PadAt(MapNode n, out Vector2 screen)
+        {
+            Vector2 uv;
+            if (!MapPads.Get(Campaign.Region, n.x, n.y, out uv)) { screen = Vector2.zero; return false; }
+            screen = new Vector2(mapX + (uv.x - u0) * MapFullW, uv.y * MapH);
+            return true;
+        }
 
         Vector2 BuildingOffset(int i, int tower)
         {
@@ -729,17 +739,17 @@ namespace BladePath
             for (int i = 0; i < ns.Count; i++)
             {
                 MapNode n = ns[i];
-                if (Campaign.OnBridge(i)) continue;   // на мосту ни домов, ни стоянок (старые сохранения — тоже)
+                if (Campaign.OnBridge(i) || MapLife.DistToStill(Campaign.Region, new Vector2(n.x, n.y)) < 45f) continue;   // на мосту и на краю ущелья ни домов, ни стоянок (висели над пропастью)
                 int b = atlas != null ? BuildingOf(n) : -1;
                 int cp = b < 0 && camps != null ? CampOf(n, i) : -1;
                 int nb = b < 0 && cp < 0 && newAtlas != null ? NewPlace(n.Type) : -1;
                 if (nb >= 0 && Known(n))
                 {
-                    Vector2 pn = P(n);
+                    Vector2 pn;
+                    if (!PadAt(n, out pn)) continue;   // у места нет площадки (вода, пропасть, лес вокруг) — только значок
                     if (pn.x < mapX - 80f || pn.x > mapX + viewW + 80f) continue;
-                    const float sz = 74f;
-                    Vector2 o = BuildingOffset(i, tower);
-                    Rect rn = new Rect(pn.x + o.x - sz * 0.5f, pn.y + o.y - sz * 0.78f, sz, sz);
+                    const float sz = MapPads.Size;
+                    Rect rn = new Rect(pn.x - sz * 0.5f, pn.y - sz * 0.78f, sz, sz);
                     bool dimN = n.done && n.Type != NodeType.Gamble && n.Type != NodeType.HunterCamp;
                     if (!lightPass)
                     {
@@ -759,11 +769,11 @@ namespace BladePath
                 }
                 if ((b < 0 && cp < 0) || !Known(n)) continue;
                 if (b == 7 && n.done) continue;   // засада после боя — убрана с дороги
-                Vector2 p = P(n);
+                Vector2 p;
+                if (!PadAt(n, out p)) continue;   // у места нет площадки — только значок
                 if (p.x < mapX - 80f || p.x > mapX + viewW + 80f) continue;
-                const float size = 74f;
-                Vector2 off = BuildingOffset(i, tower);
-                Rect r = new Rect(p.x + off.x - size * 0.5f, p.y + off.y - size * 0.78f, size, size);
+                const float size = MapPads.Size;
+                Rect r = new Rect(p.x - size * 0.5f, p.y - size * 0.78f, size, size);
                 if (cp >= 0)
                 {
                     if (lightPass) continue;

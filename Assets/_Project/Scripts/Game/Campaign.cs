@@ -560,6 +560,10 @@ namespace BladePath
                 if (Mathf.Abs(ln.x - lp.x) < 0.004f && Mathf.Abs(ln.y - lp.y) < 0.006f && ln.Type != NodeType.Boss)
                 { ln.type = (int)NodeType.Elite; ln.enemy = Mathf.Clamp(region, 0, Ladder.Count - 1); ln.lair = true; }
             }
+            // место на краю ущелья — тоже бой: дом или стоянка там висели над пропастью
+            foreach (MapNode cn in dd.nodes)
+                if (cn.Type != NodeType.Start && cn.Type != NodeType.Boss && !cn.IsFight && MapLife.DistToStill(region, new Vector2(cn.x, cn.y)) < 45f)
+                { cn.type = (int)NodeType.Duel; cn.enemy = DuelEnemy(region); }
             // место на мосту — всегда бой (поединок на мосту): дом, лавка или стоянка на мосту смотрятся нелепо
             foreach (MapNode bn in dd.nodes)
                 if (bn.Type != NodeType.Start && bn.Type != NodeType.Boss && TerrainRoads.OnBridge(region, new Vector2(bn.x, bn.y)) && !bn.IsFight)
@@ -699,8 +703,49 @@ namespace BladePath
                 }
                 if (dl.Count > 0) dd.nodes[dl[UnityEngine.Random.Range(0, dl.Count)]].type = (int)NodeType.Merchant;
             }
+            HousesOnPads(dd);
             dd.steps = 0; dd.rolls = Mathf.Max(dd.rolls, 1);
             Save();
+        }
+
+        /// <summary>Место с домиком (услуга: кузнец, лавка, храм, привал/трактир, травница, тайник, онсэн, додзё…).</summary>
+        static bool NeedsHouse(MapNode n)
+        {
+            switch (n.Type)
+            {
+                case NodeType.Smith: case NodeType.Merchant: case NodeType.Rest: case NodeType.Herbalist: case NodeType.Shrine: case NodeType.Treasure:
+                case NodeType.Onsen: case NodeType.Dojo: case NodeType.Gamble: case NodeType.ClanShrine: case NodeType.HunterCamp: return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Услуги с домиком — только там, где на карте есть площадка под него (MapPads: открытая земля, выбрана по картине).
+        /// Без площадки (у воды, над пропастью, в лесу) услуга меняется местом с обычным боем или простым событием, у которого площадка есть.
+        /// </summary>
+        static void HousesOnPads(Data dd)
+        {
+            for (int i = 0; i < dd.nodes.Count; i++)
+            {
+                MapNode a = dd.nodes[i];
+                if (!NeedsHouse(a) || MapPads.Has(dd.region, a.x, a.y)) continue;
+                int best = -1; float bd = float.MaxValue;
+                for (int j = 0; j < dd.nodes.Count; j++)
+                {
+                    MapNode b = dd.nodes[j];
+                    if (j == i || b.lair || b.layer <= 0 || b.Type == NodeType.Boss || !MapPads.Has(dd.region, b.x, b.y)) continue;
+                    bool plain = (b.Type == NodeType.Duel && (b.extra == null || b.extra.Count == 0)) || (b.Type == NodeType.Event && MapScreen.PlainEvent(b.ev));
+                    if (!plain) continue;
+                    float d = Mathf.Abs(b.layer - a.layer) * 10f + (new Vector2(b.x - a.x, b.y - a.y)).sqrMagnitude;
+                    if (d < bd) { bd = d; best = j; }
+                }
+                if (best < 0) continue;
+                MapNode c = dd.nodes[best];
+                int t = a.type, ev = a.ev, en = a.enemy; List<int> ex = a.extra;
+                a.type = c.type; a.ev = c.ev; a.enemy = c.enemy; a.extra = c.extra;
+                c.type = t; c.ev = ev; c.enemy = en; c.extra = ex;
+                if (dd.hunt == i) dd.hunt = best;
+            }
         }
 
         static bool OnBridge(Data dd, int i) { return TerrainRoads.OnBridge(dd.region, new Vector2(dd.nodes[i].x, dd.nodes[i].y)); }

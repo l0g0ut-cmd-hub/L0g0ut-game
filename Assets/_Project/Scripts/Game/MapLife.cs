@@ -15,6 +15,8 @@ namespace BladePath
             public Vector4[] falls = new Vector4[0];    // x, y верх, высота, ширина (доли)
             public Vector3[] lights = new Vector3[0];   // x, y, размер (точки карты)
             public Vector3[] steam = new Vector3[0];    // x, y, размер
+            public Vector3[] smoke = new Vector3[0];    // дым из нарисованных печей и труб: x, y (устье), размер столба (точки карты)
+            public Vector2[][] still = new Vector2[0][]; // стоячая вода и пропасти: без бликов, только чтобы не ставить домики в воду и над обрывом
             public Vector3[] wisps = new Vector3[0];    // x, y, размах
             public Vector4[] pulses = new Vector4[0];   // x, y, размер, оттенок (0 — тёплый, 1 — красный)
         }
@@ -62,6 +64,8 @@ namespace BladePath
                 for (int i = 0; i < r.falls.Length; i++) { r.falls[i].x *= u; r.falls[i].w *= u; }
                 for (int i = 0; i < r.lights.Length; i++) r.lights[i].x *= u;
                 for (int i = 0; i < r.steam.Length; i++) r.steam[i].x *= u;
+                for (int i = 0; i < r.smoke.Length; i++) r.smoke[i].x *= u;
+                foreach (Vector2[] pl in r.still) for (int i = 0; i < pl.Length; i++) pl[i].x *= u;
                 for (int i = 0; i < r.wisps.Length; i++) r.wisps[i].x *= u;
                 for (int i = 0; i < r.pulses.Length; i++) r.pulses[i].x *= u;
                 if (ri < NewParts.Length) NewParts[ri](r, MapGeom.TexW[ri]);
@@ -76,7 +80,12 @@ namespace BladePath
         {
             (r, w) =>   // лес теней — глушь: хижины углежогов, деревня синоби на утёсах, лодочный сарай, каменные фонари у кедра
             {
-                r.rivers = Join(r.rivers, new[] { new[] { P(2120, 250, w), P(2170, 262, w), P(2220, 276, w), P(2270, 292, w) } });   // чёрное озеро (медленные блики)
+                // чёрное озеро и ущелье — без бликов (на озере рябь смотрелась полосами); только чтобы домики не вставали в воду и над пропастью
+                r.still = Join(r.still, new[] {
+                    new[] { P(2120, 200, w), P(2200, 230, w), P(2280, 270, w), P(2330, 300, w) },
+                    new[] { P(2292, 320, w), P(2284, 440, w), P(2300, 560, w), P(2312, 650, w), P(2330, 760, w), P(2322, 880, w), P(2332, 1020, w) },
+                    new[] { P(2230, 640, w), P(2300, 700, w), P(2380, 700, w) } });
+                r.smoke = Join(r.smoke, new[] { Q(1704, 738, 80, w), Q(1774, 716, 80, w) });   // печи углежогов
                 r.lights = Join(r.lights, new[] {
                     Q(1876, 733, 5, w), Q(1897, 736, 5, w),                         // хижина углежогов: окно и дверь
                     Q(1957, 786, 5, w), Q(1988, 791, 5, w), Q(2010, 790, 5, w),     // вторая хижина
@@ -85,7 +94,7 @@ namespace BladePath
                     Q(2348, 268, 5, w), Q(2368, 268, 5, w), Q(2386, 268, 5, w),     // лодочный сарай
                     Q(1625, 496, 5, w), Q(1655, 523, 5, w), Q(1940, 465, 5, w), Q(1962, 547, 5, w),   // каменные фонари у кедра и заставы
                 });
-                r.steam = Join(r.steam, new[] { Q(1706, 722, 40, w), Q(1774, 700, 40, w), Q(2262, 700, 60, w), Q(2300, 810, 55, w) });   // дым печей; туман в ущелье
+                r.steam = Join(r.steam, new[] { Q(2262, 700, 60, w), Q(2300, 810, 55, w) });   // туман в ущелье
             },
             (r, w) =>   // горы Они — пылающее сердце: лавопад у кратера, лавовое озеро, огонь в штольнях и за воротами крепости
             {
@@ -99,7 +108,7 @@ namespace BladePath
             },
             (r, w) =>   // сёгунат — владения сёгуна: цитадель на острове, склады гавани, призрачная сакура
             {
-                r.rivers = Join(r.rivers, new[] {
+                r.still = Join(r.still, new[] {   // озеро у цитадели и гавань — стоячая вода, без бликов
                     new[] { P(2250, 444, w), P(2400, 470, w), P(2550, 482, w), P(2700, 470, w), P(2812, 460, w) },
                     new[] { P(1950, 984, w), P(2100, 992, w), P(2300, 986, w), P(2500, 972, w) } });
                 r.lights = Join(r.lights, new[] {
@@ -120,7 +129,22 @@ namespace BladePath
         {
             Region r = regions[Mathf.Clamp(region, 0, regions.Length - 1)];
             float best = 1e9f; Vector2 k = MapGeom.Pts(region), q = Vector2.Scale(uv, k);
-            foreach (Vector2[] pl in r.rivers)
+            foreach (Vector2[] pl in Join(r.rivers, r.still))
+                for (int i = 1; i < pl.Length; i++)
+                {
+                    Vector2 a = Vector2.Scale(pl[i - 1], k), b = Vector2.Scale(pl[i], k), ab = b - a;
+                    float t = Mathf.Clamp01(Vector2.Dot(q - a, ab) / Mathf.Max(1e-4f, ab.sqrMagnitude));
+                    best = Mathf.Min(best, (a + ab * t - q).magnitude);
+                }
+            return best;
+        }
+
+        /// <summary>Расстояние (точки карты) до ближайшей пропасти или стоячей воды (still) — места на краю ущелья не держат домиков.</summary>
+        public static float DistToStill(int region, Vector2 uv)
+        {
+            Region r = regions[Mathf.Clamp(region, 0, regions.Length - 1)];
+            float best = 1e9f; Vector2 k = MapGeom.Pts(region), q = Vector2.Scale(uv, k);
+            foreach (Vector2[] pl in r.still)
                 for (int i = 1; i < pl.Length; i++)
                 {
                     Vector2 a = Vector2.Scale(pl[i - 1], k), b = Vector2.Scale(pl[i], k), ab = b - a;
@@ -251,6 +275,30 @@ namespace BladePath
                         Vector2 q = p + new Vector2(10f * k * Mathf.Sin(t * 0.4f + i * 2f), -ph * 60f * k);
                         GUI.color = new Color(0.95f, 0.95f, 0.92f, 0.2f * Mathf.Sin(ph * Mathf.PI));
                         GUI.DrawTexture(new Rect(q.x - sz * 0.5f, q.y - sz * 0.35f, sz, sz * 0.7f), mist);
+                    }
+                }
+            // дым из нарисованных печей и труб: клубы поднимаются, растут, уходят по ветру и тают
+            Texture2D puff = r.smoke.Length > 0 ? UiKit.Tex("UI/fx_puff") : null;
+            if (puff != null)
+                for (int si = 0; si < r.smoke.Length; si++)
+                {
+                    Vector3 sm = r.smoke[si];
+                    Vector2 src = S(sm);
+                    if (!Vis(src)) continue;
+                    float size = sm.z * k;
+                    for (int p = 0; p < 10; p++)
+                    {
+                        float run = t / 4.6f + p / 10f + si * 0.173f;
+                        float u = run - Mathf.Floor(run);
+                        int seed = Mathf.FloorToInt(run) * 7 + p * 13 + si * 31;
+                        float rise = u * size * 0.9f;
+                        float drift = (Mathf.Sin(u * 3f + seed) * 0.05f + u * u * 0.22f) * size;
+                        float sz = size * Mathf.Lerp(0.12f, 0.55f, Mathf.Sqrt(u));
+                        float al = Mathf.Clamp01(u / 0.12f) * (1f - u) * (1f - u * 0.6f) * 0.85f;
+                        GUI.color = new Color(0.62f, 0.61f, 0.63f, al);
+                        int c = seed & 3;
+                        GUI.DrawTextureWithTexCoords(new Rect(src.x + drift - sz * 0.5f, src.y - rise - sz * 0.5f, sz, sz), puff,
+                            new Rect((c % 2) * 0.5f, c < 2 ? 0.5f : 0f, 0.5f, 0.5f));
                     }
                 }
             // блуждающие огни (кладбище сёгуната): парят, кружат и меркнут
