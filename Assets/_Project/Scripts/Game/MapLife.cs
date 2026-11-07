@@ -181,9 +181,12 @@ namespace BladePath
             int a = (int)Mathf.Repeat(Mathf.Floor(f), span), b = (a + 1) % span;
             float kf = f - Mathf.Floor(f);
             if (a >= frames) a = span - a; if (b >= frames) b = span - b;
-            GUI.color = tint;
+            // ровный наплыв (без скачка плотности на смене кадра — иначе туман мерцает), кадры сглажены по времени
+            kf = kf * kf * (3f - 2f * kf);
+            float ab = tint.a * kf;
+            GUI.color = new Color(tint.r, tint.g, tint.b, tint.a * (1f - kf) / Mathf.Max(0.001f, 1f - ab));
             GUI.DrawTextureWithTexCoords(r, tex, new Rect((a % cols) / (float)cols, 1f - (a / cols + 1) / (float)rows, 1f / cols, 1f / rows));
-            GUI.color = new Color(tint.r, tint.g, tint.b, tint.a * kf);
+            GUI.color = new Color(tint.r, tint.g, tint.b, ab);
             GUI.DrawTextureWithTexCoords(r, tex, new Rect((b % cols) / (float)cols, 1f - (b / cols + 1) / (float)rows, 1f / cols, 1f / rows));
         }
 
@@ -332,7 +335,7 @@ namespace BladePath
                     if (!Vis(p)) continue;
                     float fw = f.z * k * 2f, fh = fw * 0.5f;
                     float a = 0.13f + 0.06f * Mathf.Sin(t * 0.21f + i * 2.3f);
-                    FlipCell(new Rect(p.x - fw * 0.5f, p.y - fh * 0.5f, fw, fh), fogSheet, 6, 5, 30, 2.5f, i * 3.7f, new Color(0.92f, 0.92f, 0.96f, a));
+                    FlipCell(new Rect(p.x - fw * 0.5f, p.y - fh * 0.5f, fw, fh), fogSheet, 6, 5, 30, 0.8f, i * 3.7f, new Color(0.92f, 0.92f, 0.96f, a));
                 }
             // стоячая вода: в разных местах по очереди проступает мягкий блик и гаснет (3–5 с), едва смещаясь
             if (glow != null)
@@ -380,18 +383,20 @@ namespace BladePath
                     Vector2 src = S(new Vector2(sm.x, sm.y));
                     if (!Vis(src)) continue;
                     float size = sm.z * k, side = sm.w * k;
-                    for (int p = 0; p < 12; p++)
+                    // нарисованный дым с картины стёрт (tools/map_extend/desmoke_kilns.py) — шлейф целиком даёт этот дым:
+                    // 16 плотных клубов, сплошной столб без просветов
+                    for (int p = 0; p < 16; p++)
                     {
-                        float run = t / 4.6f + p / 12f + si * 0.173f;
+                        float run = t / 4.6f + p / 16f + si * 0.173f;
                         float u = run - Mathf.Floor(run);
                         int seed = Mathf.FloorToInt(run) * 7 + p * 13 + si * 31;
                         // сначала столбом вверх, потом сносит вбок — как нарисовано на карте
                         float rise = size * (1f - (1f - u) * (1f - u * 0.4f));
                         float drift = side * Mathf.Pow(u, 1.8f) + Mathf.Sin(u * 3f + seed) * 0.04f * size;
-                        float sz = size * Mathf.Lerp(0.14f, 0.6f, Mathf.Sqrt(u));
+                        float sz = size * Mathf.Lerp(0.16f, 0.7f, Mathf.Sqrt(u));
                         // тает только в самом конце: клуб виден почти до верха столба — анимация тянется на всю длину нарисованного дыма
-                        float al = Mathf.Clamp01(u / 0.12f) * (1f - Mathf.Pow(u, 2.5f)) * 0.5f;
-                        GUI.color = new Color(0.62f, 0.61f, 0.63f, al);
+                        float al = Mathf.Clamp01(u / 0.12f) * (1f - Mathf.Pow(u, 2.5f)) * 0.78f;
+                        GUI.color = new Color(0.9f, 0.88f, 0.92f, al);
                         Rect pr = new Rect(src.x + drift - sz * 0.5f, src.y - rise - sz * 0.5f, sz, sz);
                         if (wisp != null)
                         {

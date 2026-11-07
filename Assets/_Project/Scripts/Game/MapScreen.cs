@@ -895,9 +895,12 @@ namespace BladePath
             float k = f - Mathf.Floor(f);
             if (pingPong) { if (a >= frames) a = span - a; if (b >= frames) b = span - b; }
             Color oc = GUI.color;
-            GUI.color = tint;
+            // ровный наплыв: нижний кадр ослаблен так, чтобы суммарная плотность не прыгала на смене кадра
+            // (раньше нижний шёл в полную силу + верхний сверху → к концу кадра гуще, затем скачок — туман «мерцал»)
+            float ab = tint.a * k;
+            GUI.color = new Color(tint.r, tint.g, tint.b, tint.a * (1f - k) / Mathf.Max(0.001f, 1f - ab));
             GUI.DrawTextureWithTexCoords(r, tex, FlipCell(a, cols, rows));
-            GUI.color = new Color(tint.r, tint.g, tint.b, tint.a * k);
+            GUI.color = new Color(tint.r, tint.g, tint.b, ab);
             GUI.DrawTextureWithTexCoords(r, tex, FlipCell(b, cols, rows));
             GUI.color = oc;
         }
