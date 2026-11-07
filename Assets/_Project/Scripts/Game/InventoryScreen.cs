@@ -441,8 +441,8 @@ namespace BladePath
                 "СУМКА  " + all.Count + " / " + Profile.BagSize);
             if (pages > 1)
             {
-                if (Btn(new Rect(a.xMax - 92f, a.y, 40f, 26f), "<", page > 0)) page--;
-                if (Btn(new Rect(a.xMax - 44f, a.y, 40f, 26f), ">", page < pages - 1)) page++;
+                if (Btn(new Rect(a.xMax - 100f, a.y - 2f, 46f, 30f), "<", page > 0)) page--;   // крупнее: 40×26 мимо пальца
+                if (Btn(new Rect(a.xMax - 50f, a.y - 2f, 46f, 30f), ">", page < pages - 1)) page++;
             }
             for (int i = 0; i < per; i++)
             {
