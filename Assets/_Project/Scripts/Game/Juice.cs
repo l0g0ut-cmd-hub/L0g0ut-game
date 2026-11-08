@@ -1413,9 +1413,12 @@ namespace BladePath
         {
             FighterController f = t.f;
             DuelManager dm = DuelManager.Instance;
-            bool want = f != null && f.gameObject.activeInHierarchy && f.KiFull && dm != null && dm.State == DuelState.Fighting && !MapScreen.Open;
-            // кольцо пламени вокруг ног (основное); нет листа — прежнее плоское пламя ниже
-            if (want && t.kiRing == null && t.kiAura == null)
+            bool active = f != null && f.gameObject.activeInHierarchy && dm != null && dm.State == DuelState.Fighting && !MapScreen.Open;
+            bool want = active && f.KiFull;
+            // кольцо пламени вокруг ног (основное): проступает с 12% духа и растёт вместе с ним; нет листа — прежнее плоское ниже
+            float lvl = active ? Mathf.InverseLerp(0.12f, 1f, f.Ki01) : 0f;
+            bool wantRing = active && f.Ki01 >= 0.12f;
+            if (wantRing && t.kiRing == null && t.kiAura == null)
             {
                 bool hero = dm.player == f;
                 Color c = hero ? new Color(0.3f, 0.65f, 1f) : Ladder.Current.model == 5 ? new Color(0.72f, 0.4f, 1f) : new Color(1f, 0.32f, 0.1f);
@@ -1423,7 +1426,7 @@ namespace BladePath
             }
             if (t.kiRing != null)
             {
-                if (want) t.kiRing.FadeIn(); else { t.kiRing.FadeOut(); t.kiRing = null; }   // гаснет плавно и удаляет себя
+                if (wantRing) t.kiRing.SetLevel(lvl, f.KiFull); else { t.kiRing.FadeOut(); t.kiRing = null; }   // гаснет плавно и удаляет себя
                 return;
             }
             if (want && t.kiAura == null)

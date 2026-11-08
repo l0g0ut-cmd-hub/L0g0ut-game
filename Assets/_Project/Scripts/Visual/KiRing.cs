@@ -26,6 +26,9 @@ namespace BladePath
         Transform target;
         Color tint;
         float k, want = 1f, spin;
+        // сила пламени по накоплению духа (2026-11-09, владелец: «сильнее по мере накопления, а не только при полном»):
+        // level 0…1 — низкое прозрачное пламя → высокое и яркое; full — дух полон: ещё выше, ярче, сильнее дышит, вспышка
+        float fullK, flareAt = -10f; bool wasFull;
         Mesh mesh; Material mat;
         Vector3[] v; Vector2[] uv; Color[] col; Vector3[] normals;
         const int Rings = 4;   // основной: кадр и следующий; зеркальный: кадр и следующий
@@ -56,6 +59,16 @@ namespace BladePath
         public void FadeOut() { want = 0f; }
         public void FadeIn() { want = 1f; }
 
+        /// <summary>Сила пламени: level 0…1 по накоплению духа, full — дух полон.</summary>
+        public void SetLevel(float level, bool full)
+        {
+            want = Mathf.Clamp01(level);
+            if (full && !wasFull) flareAt = Time.unscaledTime;   // дух набран — пламя вспыхивает
+            wasFull = full;
+            fullTarget = full ? 1f : 0f;
+        }
+        float fullTarget;
+
         void Build()
         {
             int perRing = Arcs * (Seg + 1) * 2;
@@ -83,7 +96,8 @@ namespace BladePath
         {
             if (target == null || !target.gameObject.activeInHierarchy) { Destroy(gameObject); return; }
             float dt = Time.unscaledDeltaTime;
-            k = Mathf.MoveTowards(k, want, dt / (want > 0f ? 0.35f : 0.45f));
+            k = Mathf.MoveTowards(k, want, dt / (want >= k ? 0.6f : 0.35f));   // растёт вслед за духом, при трате спадает быстрее
+            fullK = Mathf.MoveTowards(fullK, fullTarget, dt / 0.3f);
             if (k <= 0f && want <= 0f) { Destroy(gameObject); return; }
             spin += 9f * dt;
             if (rig == null || !rig.isActiveAndEnabled) rig = target.GetComponentInChildren<HeroRigDriver>();   // облик мог смениться
@@ -108,7 +122,9 @@ namespace BladePath
 
             float ft = Time.unscaledTime * Fps;
             int f0 = (int)ft; float kf = ft - f0; kf = kf * kf * (3f - 2f * kf);
-            float breathe = 0.92f + 0.08f * Mathf.Sin(Time.unscaledTime * 2.3f);
+            float fa = Time.unscaledTime - flareAt;
+            float flare = fa < 0.8f ? Mathf.Sin(Mathf.Clamp01(fa / 0.8f) * Mathf.PI) * (1f - fa / 0.8f) : 0f;   // всплеск при наборе
+            float breathe = (0.92f + (0.08f + 0.06f * fullK) * Mathf.Sin(Time.unscaledTime * (2.3f + 1.2f * fullK))) * (1f + 0.15f * fullK + 0.45f * flare);
             FillRing(0, f0 % Frames, 0f, false, (1f - kf), 1f, view, breathe);
             FillRing(1, (f0 + 1) % Frames, 0f, false, kf, 1f, view, breathe);
             int g0 = f0 + 13;
@@ -123,7 +139,7 @@ namespace BladePath
             int perRing = Arcs * (Seg + 1) * 2;
             float fu = (frame % Cols) / (float)Cols, fv = 1f - (frame / Cols + 1) / (float)Rows;
             float du = 1f / Cols, dv = 1f / Rows;
-            float h = Height * hK * breathe * Mathf.Lerp(0.6f, 1f, k);
+            float h = Height * hK * breathe * Mathf.Lerp(0.3f, 1f, k);   // мало духа — низкие языки, полный — во всю высоту
             Color top = new Color(tint.r, tint.g, tint.b, 1f);
             Color bot = Color.Lerp(top, Color.white, 0.3f);
             for (int a = 0; a < Arcs; a++)
@@ -141,7 +157,7 @@ namespace BladePath
                     uv[i] = new Vector2(tu, fv); uv[i + 1] = new Vector2(tu, fv + dv);
                     // стенка «ребром» к камере (по краям кольца на экране) прозрачнее: иначе там огонь накладывается и вспыхивает
                     float facing = Mathf.Abs(Vector3.Dot(n, view));
-                    float a2 = alpha * k * (0.15f + 0.85f * facing);
+                    float a2 = alpha * Mathf.Lerp(0.25f, 1f, k) * Mathf.Min(1f, k * 6f) * (1f + 0.15f * fullK) * (0.15f + 0.85f * facing);
                     col[i] = new Color(bot.r, bot.g, bot.b, a2);
                     col[i + 1] = new Color(top.r, top.g, top.b, a2);
                 }
