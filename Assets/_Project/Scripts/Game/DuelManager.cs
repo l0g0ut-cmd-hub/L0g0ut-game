@@ -1126,8 +1126,9 @@ namespace BladePath
         int lastClashA = -1, lastClashB = -1;
 
         // ---------------------------------------------------------------- пламя клинка
-        /// <summary>Пять удачных попаданий подряд (без пропущенного удара) — клинок героя загорается на 10 с: урон ×1,25.</summary>
-        public const int FlameHits = 5;
+        /// <summary>Три удачных попадания подряд (без пропущенного удара) — клинок героя раскаляется на 10 с: урон ×1,25.
+        /// (было 5 — владелец: «много, делай 3», 2026-11-08)</summary>
+        public const int FlameHits = 3;
         public const float FlameTime = 10f;
         int heroStreak;
         float flameUntil;
@@ -1138,7 +1139,7 @@ namespace BladePath
         {
             flameUntil = Time.unscaledTime + FlameTime; heroStreak = 0;
             if (player != null) FlameBlade.Ignite(player.weapon, FlameTime);
-            Announce("ПЛАМЯ КЛИНКА", new Color(1f, 0.55f, 0.15f), "пять попаданий подряд — клинок горит, удары сильнее");
+            Announce("ПЛАМЯ КЛИНКА", new Color(1f, 0.55f, 0.15f), "три попадания подряд — клинок раскалён, удары сильнее");
             if (Juice.Instance != null) Juice.Instance.Taiko(1f, 0.8f);
             if (CameraOrbit.Instance != null) CameraOrbit.Instance.Punch(2.5f);
             Haptics.Pulse(60);
@@ -1821,7 +1822,7 @@ namespace BladePath
                     {
                         heroStreak++;
                         if (heroStreak >= FlameHits) StartFlame();
-                        else if (heroStreak >= 3)
+                        else if (heroStreak >= FlameHits - 1)
                         {
                             Popup fp = new Popup(); fp.world = player.transform.position + Vector3.up * 2.2f;
                             fp.text = "ЖАР " + heroStreak + "/" + FlameHits; fp.color = new Color(1f, 0.6f, 0.25f); fp.born = Time.unscaledTime; fp.size = 20f;
