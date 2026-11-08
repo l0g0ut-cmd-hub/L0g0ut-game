@@ -45,7 +45,8 @@ namespace BladePath
             public int bloodSteps;   // наступил в лужу крови — столько ещё кровавых отпечатков
             public float dripAt;     // тяжело ранен — капает кровь
             public float scrapeAt;   // остриё чиркнуло по камню (низкая подсечка) — искры не чаще раза в 60 мс
-            public FxSprite kiAura; public Transform kiAnchor;   // дух полон — пламя ауры у ног (CGHEVEN, CC0)
+            public FxSprite kiAura; public Transform kiAnchor;   // дух полон — пламя ауры у ног (CGHEVEN, CC0) — запасное
+            public KiRing kiRing;                                 // дух полон — кольцо пламени вокруг ног (лист FX/ki_ring_fire)
         }
         readonly List<Tracked> tracked = new List<Tracked>();
 
@@ -1413,6 +1414,18 @@ namespace BladePath
             FighterController f = t.f;
             DuelManager dm = DuelManager.Instance;
             bool want = f != null && f.gameObject.activeInHierarchy && f.KiFull && dm != null && dm.State == DuelState.Fighting && !MapScreen.Open;
+            // кольцо пламени вокруг ног (основное); нет листа — прежнее плоское пламя ниже
+            if (want && t.kiRing == null && t.kiAura == null)
+            {
+                bool hero = dm.player == f;
+                Color c = hero ? new Color(0.3f, 0.65f, 1f) : Ladder.Current.model == 5 ? new Color(0.72f, 0.4f, 1f) : new Color(1f, 0.32f, 0.1f);
+                t.kiRing = KiRing.Create(f.transform, c);
+            }
+            if (t.kiRing != null)
+            {
+                if (want) t.kiRing.FadeIn(); else { t.kiRing.FadeOut(); t.kiRing = null; }   // гаснет плавно и удаляет себя
+                return;
+            }
             if (want && t.kiAura == null)
             {
                 bool hero = dm.player == f;
