@@ -26,9 +26,11 @@ namespace BladePath
         LineRenderer coreOuter, coreInner;
         // лента пламени из листа FX/blade_fire
         GameObject ribbonGo; Mesh ribbon; Material ribbonMat; MeshRenderer ribbonR;
-        readonly Vector3[] rv = new Vector3[4]; readonly Vector2[] ruv = new Vector2[4]; Color[] rcol = new Color[4];
+        // 4 полосы: кадр и следующий с наплывом (плавно, без рывков между 32 кадрами) + зеркальный слой со сдвигом фазы —
+        // огонь не повторяется одним и тем же рисунком
+        readonly Vector3[] rv = new Vector3[16]; readonly Vector2[] ruv = new Vector2[16]; readonly Color[] rcol = new Color[16];
         const int SheetCols = 4, SheetRows = 8, SheetFrames = 32;
-        const float SheetFps = 20f;
+        const float SheetFps = 16f;
         const float CoreV = 44f / 128f, CoreU0 = 45f / 512f, CoreU1 = 447f / 512f;   // замер листа: сердцевина в кадре   // раскалённая сердцевина вдоль лезвия: оранжевый ореол и бело-жёлтая нить поверх огня
         Light glow;
         Color trailWas; string trailTexWas; bool trailSwapped;
@@ -69,8 +71,7 @@ namespace BladePath
                 coreInner = MakeCore("FlameBladeCore", 0.024f, new Color(1f, 0.95f, 0.75f, 1f), 3);
             }
             GameObject lo = new GameObject("FlameBladeLight");
-            lo.transform.SetParent(weapon.bladeRoot, false);
-            lo.transform.localPosition = Vector3.forward * (weapon.bladeLength * 0.6f);
+            lo.transform.position = BladePoint(0.6f);   // в мировых координатах, каждый кадр (LateUpdate)
             glow = lo.AddComponent<Light>();
             glow.type = LightType.Point; glow.color = new Color(1f, 0.5f, 0.2f); glow.range = 2f; glow.intensity = 0.8f;
             WeaponTrail tr = WeaponTrail.Of(weapon);
@@ -139,7 +140,7 @@ namespace BladePath
             ribbonGo = new GameObject("FlameBladeRibbon");
             ribbon = new Mesh(); ribbon.MarkDynamic();
             ribbon.vertices = rv; ribbon.uv = ruv;
-            ribbon.triangles = new[] { 0, 2, 1, 1, 2, 3 };
+            ribbon.triangles = new[] { 0, 2, 1, 1, 2, 3, 4, 6, 5, 5, 6, 7, 8, 10, 9, 9, 10, 11, 12, 14, 13, 13, 14, 15 };
             ribbonGo.AddComponent<MeshFilter>().sharedMesh = ribbon;
             ribbonR = ribbonGo.AddComponent<MeshRenderer>();
             ribbonMat = new Material(add); ribbonMat.mainTexture = tex;
@@ -168,17 +169,31 @@ namespace BladePath
             if (Vector3.Dot(side, up) < 0f) side = -side;   // огонь — всегда к верху экрана
             // кадр листа: по ширине сердцевина занимает CoreU0…CoreU1, по высоте лежит на CoreV снизу
             float w = core / (CoreU1 - CoreU0), h = w * (128f / 512f) * 1.35f * (0.85f + 0.15f * k);   // языки выше, как на ориентире владельца
-            Vector3 left = a - d * (w * CoreU0), right = left + d * w;
-            Vector3 down = -side * (h * CoreV), top = side * (h * (1f - CoreV));
-            rv[0] = left + down; rv[1] = right + down; rv[2] = left + top; rv[3] = right + top;
-            int f = (int)(Time.unscaledTime * SheetFps) % SheetFrames;
-            float u0 = (f % SheetCols) / (float)SheetCols, v0 = 1f - (f / SheetCols + 1) / (float)SheetRows;
-            float du = 1f / SheetCols, dv = 1f / SheetRows;
-            ruv[0] = new Vector2(u0, v0); ruv[1] = new Vector2(u0 + du, v0); ruv[2] = new Vector2(u0, v0 + dv); ruv[3] = new Vector2(u0 + du, v0 + dv);
-            Color c = new Color(1f, 1f, 1f, k);
-            for (int i = 0; i < 4; i++) rcol[i] = c;
+            float ft = Time.unscaledTime * SheetFps;
+            int f0 = (int)ft; float kf = ft - f0; kf = kf * kf * (3f - 2f * kf);
+            // основной слой: кадр f и f+1 с наплывом
+            Quad(0, a, d, side, w, h, f0 % SheetFrames, false, k * (1f - kf));
+            Quad(4, a, d, side, w, h, (f0 + 1) % SheetFrames, false, k * kf);
+            // зеркальный слой: на полфазы вперёд, ниже и слабее
+            int g0 = f0 + 13;
+            Quad(8, a, d, side, w, h * 0.85f, g0 % SheetFrames, true, 0.45f * k * (1f - kf));
+            Quad(12, a, d, side, w, h * 0.85f, (g0 + 1) % SheetFrames, true, 0.45f * k * kf);
             ribbon.vertices = rv; ribbon.uv = ruv; ribbon.colors = rcol;
             ribbon.RecalculateBounds();
+        }
+
+        void Quad(int i, Vector3 a, Vector3 d, Vector3 side, float w, float h, int f, bool mirror, float alpha)
+        {
+            // зеркальная полоса — та же сердцевина на стали, только кадр отражён по длине (U)
+            Vector3 left = a - d * (w * (mirror ? 1f - CoreU1 : CoreU0)), right = left + d * w;
+            Vector3 down = -side * (h * CoreV), top = side * (h * (1f - CoreV));
+            rv[i] = left + down; rv[i + 1] = right + down; rv[i + 2] = left + top; rv[i + 3] = right + top;
+            float u0 = (f % SheetCols) / (float)SheetCols, v0 = 1f - (f / SheetCols + 1) / (float)SheetRows;
+            float du = 1f / SheetCols, dv = 1f / SheetRows;
+            float ua = mirror ? u0 + du : u0, ub = mirror ? u0 : u0 + du;
+            ruv[i] = new Vector2(ua, v0); ruv[i + 1] = new Vector2(ub, v0); ruv[i + 2] = new Vector2(ua, v0 + dv); ruv[i + 3] = new Vector2(ub, v0 + dv);
+            Color c = new Color(1f, 1f, 1f, alpha);
+            rcol[i] = rcol[i + 1] = rcol[i + 2] = rcol[i + 3] = c;
         }
 
         /// <summary>Светящаяся нить вдоль лезвия (поверх огня): мягкая текстура, ширина в метрах, повёрнута к камере.</summary>
@@ -209,9 +224,10 @@ namespace BladePath
 
         ParticleSystem MakeEmbers()
         {
+            // искры ставятся на клинок в мировых координатах каждый кадр (LateUpdate): у bladeRoot бывает свой масштаб,
+            // и дочерний объект со смещением в локальных единицах уезжал в сторону — искры шли «рядом», а не от меча
             GameObject g = new GameObject("FlameBladeEmbers");
-            g.transform.SetParent(weapon.bladeRoot, false);
-            g.transform.localPosition = Vector3.forward * (weapon.bladeLength * 0.55f);
+            g.transform.SetPositionAndRotation(BladePoint(0.55f), weapon.bladeRoot.rotation);
             ParticleSystem ps = g.AddComponent<ParticleSystem>();
             ps.Stop();
             var main = ps.main;
@@ -243,6 +259,8 @@ namespace BladePath
             ps.Play();
             return ps;
         }
+
+        Vector3 BladePoint(float t) { Transform br = weapon.bladeRoot; return br.position + br.forward * (weapon.bladeLength * t); }
 
         void SetGlow(Color c)
         {
@@ -310,9 +328,11 @@ namespace BladePath
 
         void LateUpdate()
         {
-            if (!on || ribbon == null) return;
-            float left = until - Time.unscaledTime;
-            UpdateRibbon(Mathf.Clamp01(left / 1.5f));   // после анимации кадра — лента точно на клинке
+            if (!on || weapon == null || weapon.bladeRoot == null) return;
+            // после анимации кадра: лента, искры и свет — точно на клинке
+            if (embers != null) embers.transform.SetPositionAndRotation(BladePoint(0.55f), weapon.bladeRoot.rotation);
+            if (glow != null) glow.transform.position = BladePoint(0.6f);
+            if (ribbon != null) UpdateRibbon(Mathf.Clamp01((until - Time.unscaledTime) / 1.5f));
         }
 
         void OnDestroy() { Clear(); }

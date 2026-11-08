@@ -1417,12 +1417,17 @@ namespace BladePath
             {
                 bool hero = dm.player == f;
                 string tex = hero ? "fx_aura_blue" : Ladder.Current.model == 5 ? "fx_aura_violet" : "fx_aura_red";
+                // основание пламени — на полу: спрайт 1,9 м по центру якоря, а низ огня в кадре у синего листа на 9,4% от
+                // нижнего края, у красного/фиолетового — у самого края (замер по всем 36 кадрам). Раньше якорь стоял на 0,55 м —
+                // нижняя треть пламени уходила под землю
+                float baseFrac = hero ? 0.094f : 0.01f;
+                float ay = 1.9f * (0.5f - baseFrac) + 0.02f;
                 if (t.kiAnchor == null)
                 {
                     t.kiAnchor = new GameObject("KiAuraAnchor").transform;
                     t.kiAnchor.SetParent(f.transform, false);
-                    t.kiAnchor.localPosition = new Vector3(0f, 0.55f, 0f);
                 }
+                t.kiAnchor.localPosition = new Vector3(0f, ay, 0f);
                 t.kiAura = FxSprite.Spawn(tex, t.kiAnchor.position, 1.9f, 6, 6, 36, 14f, true);
                 if (t.kiAura != null) { t.kiAura.follow = t.kiAnchor; t.kiAura.tint = new Color(1f, 1f, 1f, 0.75f); }
             }
