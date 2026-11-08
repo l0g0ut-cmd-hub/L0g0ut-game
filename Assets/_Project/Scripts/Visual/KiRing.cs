@@ -16,7 +16,12 @@ namespace BladePath
     public class KiRing : MonoBehaviour
     {
         const int Cols = 4, Rows = 8, Frames = 32, Arcs = 3, Seg = 16;
-        const float Fps = 12f, Radius = 0.5f, Height = 0.8f;
+        const float Fps = 12f, Height = 0.85f;
+        // кольцо — вокруг обеих стоп: центр между стопами, радиус — половина расстояния между ними + запас
+        // (владелец: на макете круг был не по центру бойца, ноги в стойке выходили за кольцо)
+        const float MinRadius = 0.62f, Margin = 0.28f;
+        float radius = MinRadius; Vector3 center; bool hasCenter;
+        HeroRigDriver rig;
 
         Transform target;
         Color tint;
@@ -33,6 +38,7 @@ namespace BladePath
             GameObject g = new GameObject("KiRing");
             KiRing r = g.AddComponent<KiRing>();
             r.target = follow; r.tint = c;
+            r.rig = follow.GetComponentInChildren<HeroRigDriver>();
             r.mat = new Material(add) { mainTexture = tex };
             if (r.mat.HasProperty("_TintColor")) r.mat.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0.5f));
             r.Build();
@@ -80,7 +86,19 @@ namespace BladePath
             k = Mathf.MoveTowards(k, want, dt / (want > 0f ? 0.35f : 0.45f));
             if (k <= 0f && want <= 0f) { Destroy(gameObject); return; }
             spin += 9f * dt;
-            Vector3 p = target.position; p.y = 0.01f;   // основание — на полу
+            if (rig == null || !rig.isActiveAndEnabled) rig = target.GetComponentInChildren<HeroRigDriver>();   // облик мог смениться
+            Vector3 want3 = target.position; float wantR = MinRadius;
+            if (rig != null && rig.footL != null && rig.footR != null)
+            {
+                Vector3 a = rig.footL.position, b = rig.footR.position; a.y = b.y = 0f;
+                want3 = (a + b) * 0.5f;
+                wantR = Mathf.Max(MinRadius, Vector3.Distance(a, b) * 0.5f + Margin);
+            }
+            // сглажено — кольцо не дёргается за каждым шагом
+            float sm = 1f - Mathf.Exp(-10f * dt);
+            if (!hasCenter) { center = want3; radius = wantR; hasCenter = true; }
+            else { center = Vector3.Lerp(center, want3, sm); radius = Mathf.Lerp(radius, wantR, 1f - Mathf.Exp(-4f * dt)); }
+            Vector3 p = center; p.y = 0.01f;   // основание — на полу
             transform.SetPositionAndRotation(p, Quaternion.Euler(0f, spin, 0f));
 
             Camera cam = Camera.main;
@@ -116,7 +134,7 @@ namespace BladePath
                     float u = s / (float)Seg;
                     float ang = (rotDeg + (a + u) * 360f / Arcs) * Mathf.Deg2Rad;
                     Vector3 n = new Vector3(Mathf.Cos(ang), 0f, Mathf.Sin(ang));
-                    Vector3 basePos = n * Radius;
+                    Vector3 basePos = n * radius;
                     int i = b0 + s * 2;
                     v[i] = basePos; v[i + 1] = basePos + Vector3.up * h;
                     float tu = fu + (mirror ? 1f - u : u) * du;
