@@ -4,7 +4,11 @@ using UnityEngine;
 namespace BladePath
 {
     /// <summary>
-    /// Пламя клинка (переделано 2026-11-08 дважды: четыре костра-спрайта — плохо; одно свечение стали — «клинок просто меняет цвет»).
+    /// Пламя клинка. Главное — покадровый лист FX/blade_fire (сделан владельцем в ChatGPT по нашему промту: 4×8 = 32 кадра,
+    /// огонь вдоль прямой с раскалённой сердцевиной, бесшовный цикл): лента натянута вдоль лезвия, повёрнута к камере и всегда
+    /// горит «вверх» по экрану, все 32 кадра по кругу. Ниже — прежние слои (язычки-частицы на взмахе, нити сердцевины), они
+    /// остаются запасным вариантом, если листа нет.
+    /// (История 2026-11-08: четыре костра-спрайта — плохо; одно свечение стали — «клинок просто меняет цвет».)
     /// Теперь по всей длине клинка горит живое пламя: множество маленьких языков огня (частицы с листом FX/brazier_fire, все 8 кадров
     /// за жизнь языка) рождаются вдоль лезвия, лижут вверх и тают; в мировом пространстве — на взмахе огонь тянется шлейфом.
     /// Сталь под огнём лишь чуть накалена (слабое свечение шейдера BladePath/Blade), с клинка срываются искры-угольки
@@ -19,7 +23,13 @@ namespace BladePath
         Renderer[] steel = new Renderer[0];
         MaterialPropertyBlock mpb;
         ParticleSystem embers, flames;
-        LineRenderer coreOuter, coreInner;   // раскалённая сердцевина вдоль лезвия: оранжевый ореол и бело-жёлтая нить поверх огня
+        LineRenderer coreOuter, coreInner;
+        // лента пламени из листа FX/blade_fire
+        GameObject ribbonGo; Mesh ribbon; Material ribbonMat; MeshRenderer ribbonR;
+        readonly Vector3[] rv = new Vector3[4]; readonly Vector2[] ruv = new Vector2[4]; Color[] rcol = new Color[4];
+        const int SheetCols = 4, SheetRows = 8, SheetFrames = 32;
+        const float SheetFps = 20f;
+        const float CoreV = 44f / 128f, CoreU0 = 45f / 512f, CoreU1 = 447f / 512f;   // замер листа: сердцевина в кадре   // раскалённая сердцевина вдоль лезвия: оранжевый ореол и бело-жёлтая нить поверх огня
         Light glow;
         Color trailWas; string trailTexWas; bool trailSwapped;
         static readonly Color Hot = new Color(1f, 0.36f, 0.08f);
@@ -51,9 +61,13 @@ namespace BladePath
                 if (r is MeshRenderer && r.sharedMaterial != null && r.sharedMaterial.HasProperty("_EmissionColor") && r.sharedMaterial.name.Contains("Steel")) list.Add(r);
             steel = list.ToArray();
             embers = MakeEmbers();
-            flames = MakeFlames();
-            coreOuter = MakeCore("FlameBladeCoreGlow", 0.075f, new Color(1f, 0.45f, 0.1f, 0.55f), 2);
-            coreInner = MakeCore("FlameBladeCore", 0.024f, new Color(1f, 0.95f, 0.75f, 1f), 3);
+            if (!MakeRibbon())
+            {
+                // листа нет — прежний огонь из язычков и нитей
+                flames = MakeFlames();
+                coreOuter = MakeCore("FlameBladeCoreGlow", 0.075f, new Color(1f, 0.45f, 0.1f, 0.55f), 2);
+                coreInner = MakeCore("FlameBladeCore", 0.024f, new Color(1f, 0.95f, 0.75f, 1f), 3);
+            }
             GameObject lo = new GameObject("FlameBladeLight");
             lo.transform.SetParent(weapon.bladeRoot, false);
             lo.transform.localPosition = Vector3.forward * (weapon.bladeLength * 0.6f);
@@ -115,6 +129,56 @@ namespace BladePath
             r.sortingOrder = 1;
             ps.Play();
             return ps;
+        }
+
+        bool MakeRibbon()
+        {
+            Texture2D tex = Resources.Load<Texture2D>("FX/blade_fire");
+            Shader add = Shader.Find("Legacy Shaders/Particles/Additive");
+            if (tex == null || add == null) return false;
+            ribbonGo = new GameObject("FlameBladeRibbon");
+            ribbon = new Mesh(); ribbon.MarkDynamic();
+            ribbon.vertices = rv; ribbon.uv = ruv;
+            ribbon.triangles = new[] { 0, 2, 1, 1, 2, 3 };
+            ribbonGo.AddComponent<MeshFilter>().sharedMesh = ribbon;
+            ribbonR = ribbonGo.AddComponent<MeshRenderer>();
+            ribbonMat = new Material(add); ribbonMat.mainTexture = tex;
+            if (ribbonMat.HasProperty("_TintColor")) ribbonMat.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0.5f));
+            ribbonR.sharedMaterial = ribbonMat;
+            ribbonR.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            ribbonR.receiveShadows = false;
+            ribbonR.sortingOrder = 2;
+            UpdateRibbon(1f);
+            return true;
+        }
+
+        /// <summary>Лента вдоль лезвия: сердцевина листа ложится на сталь, огонь — в сторону «верха» экрана.</summary>
+        void UpdateRibbon(float k)
+        {
+            if (ribbon == null || weapon == null || weapon.bladeRoot == null) return;
+            Camera cam = Camera.main;
+            Transform br = weapon.bladeRoot;
+            float len = weapon.bladeLength;
+            Vector3 a = br.position + br.forward * (len * 0.03f), b = br.position + br.forward * (len * 1.0f);
+            Vector3 d = b - a; float core = d.magnitude; if (core < 1e-4f) return; d /= core;
+            Vector3 view = cam != null ? (cam.transform.position - (a + b) * 0.5f).normalized : Vector3.back;
+            Vector3 side = Vector3.Cross(d, view);
+            if (side.sqrMagnitude < 1e-6f) side = Vector3.up; side.Normalize();
+            Vector3 up = cam != null ? cam.transform.up : Vector3.up;
+            if (Vector3.Dot(side, up) < 0f) side = -side;   // огонь — всегда к верху экрана
+            // кадр листа: по ширине сердцевина занимает CoreU0…CoreU1, по высоте лежит на CoreV снизу
+            float w = core / (CoreU1 - CoreU0), h = w * (128f / 512f) * 1.35f * (0.85f + 0.15f * k);   // языки выше, как на ориентире владельца
+            Vector3 left = a - d * (w * CoreU0), right = left + d * w;
+            Vector3 down = -side * (h * CoreV), top = side * (h * (1f - CoreV));
+            rv[0] = left + down; rv[1] = right + down; rv[2] = left + top; rv[3] = right + top;
+            int f = (int)(Time.unscaledTime * SheetFps) % SheetFrames;
+            float u0 = (f % SheetCols) / (float)SheetCols, v0 = 1f - (f / SheetCols + 1) / (float)SheetRows;
+            float du = 1f / SheetCols, dv = 1f / SheetRows;
+            ruv[0] = new Vector2(u0, v0); ruv[1] = new Vector2(u0 + du, v0); ruv[2] = new Vector2(u0, v0 + dv); ruv[3] = new Vector2(u0 + du, v0 + dv);
+            Color c = new Color(1f, 1f, 1f, k);
+            for (int i = 0; i < 4; i++) rcol[i] = c;
+            ribbon.vertices = rv; ribbon.uv = ruv; ribbon.colors = rcol;
+            ribbon.RecalculateBounds();
         }
 
         /// <summary>Светящаяся нить вдоль лезвия (поверх огня): мягкая текстура, ширина в метрах, повёрнута к камере.</summary>
@@ -215,6 +279,10 @@ namespace BladePath
             embers = null;
             if (glow != null) Destroy(glow.gameObject);
             glow = null;
+            if (ribbonGo != null) Destroy(ribbonGo);
+            if (ribbon != null) Destroy(ribbon);
+            if (ribbonMat != null) Destroy(ribbonMat);
+            ribbonGo = null; ribbon = null; ribbonMat = null; ribbonR = null;
             if (coreOuter != null) Destroy(coreOuter.gameObject);
             if (coreInner != null) Destroy(coreInner.gameObject);
             coreOuter = coreInner = null;
@@ -238,6 +306,13 @@ namespace BladePath
             if (embers != null) { var em = embers.emission; em.rateOverTime = 45f * k; }
             if (flames != null) { var fe = flames.emission; fe.rateOverTime = 80f * k; }
             if (glow != null) glow.intensity = 0.8f * k * flick;
+        }
+
+        void LateUpdate()
+        {
+            if (!on || ribbon == null) return;
+            float left = until - Time.unscaledTime;
+            UpdateRibbon(Mathf.Clamp01(left / 1.5f));   // после анимации кадра — лента точно на клинке
         }
 
         void OnDestroy() { Clear(); }
