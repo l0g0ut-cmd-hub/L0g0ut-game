@@ -1426,7 +1426,14 @@ namespace BladePath
             }
             if (t.kiRing != null)
             {
-                if (wantRing) t.kiRing.SetLevel(lvl, f.KiFull); else { t.kiRing.FadeOut(); t.kiRing = null; }   // гаснет плавно и удаляет себя
+                if (wantRing)
+                {
+                    t.kiRing.SetLevel(lvl, f.KiFull);
+                    // накопление ступеней и 0,8 с после выпуска удара — только эффект ступеней, кольцо духа временно убрано
+                    ChargeSystem cs = ChargeSystem.Instance;
+                    t.kiRing.Hide(cs != null && (cs.IsCharging(f) || cs.SinceRelease(f) < 0.8f));
+                }
+                else { t.kiRing.FadeOut(); t.kiRing = null; }   // гаснет плавно и удаляет себя
                 return;
             }
             if (want && t.kiAura == null)

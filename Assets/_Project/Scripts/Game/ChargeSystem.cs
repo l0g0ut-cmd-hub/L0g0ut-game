@@ -42,6 +42,8 @@ namespace BladePath
         public static void Ensure(GameObject host) { if (Instance == null) host.AddComponent<ChargeSystem>(); }
 
         public bool IsCharging(FighterController f) { return f != null && active.ContainsKey(f); }
+        /// <summary>Сколько секунд назад боец выпустил накопленный удар (никогда — бесконечность).</summary>
+        public float SinceRelease(FighterController f) { float t; return f != null && releaseAt.TryGetValue(f, out t) ? Time.time - t : float.PositiveInfinity; }
 
         /// <summary>Окно встречи духа: оба выпустили накопленный удар не дальше друг от друга, с.</summary>
         public const float ClashWindow = 0.45f;

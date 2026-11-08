@@ -29,6 +29,9 @@ namespace BladePath
         // сила пламени по накоплению духа (2026-11-09, владелец: «сильнее по мере накопления, а не только при полном»):
         // level 0…1 — низкое прозрачное пламя → высокое и яркое; full — дух полон: ещё выше, ярче, сильнее дышит, вспышка
         float fullK, flareAt = -10f; bool wasFull;
+        // идёт накопление ступеней — кольцо духа временно убрано, чтобы эффекты не складывались (владелец, 2026-11-09)
+        float hideK = 1f; bool hidden;
+        public void Hide(bool h) { hidden = h; }
         Mesh mesh; Material mat;
         Vector3[] v; Vector2[] uv; Color[] col; Vector3[] normals;
         const int Rings = 4;   // основной: кадр и следующий; зеркальный: кадр и следующий
@@ -98,6 +101,7 @@ namespace BladePath
             float dt = Time.unscaledDeltaTime;
             k = Mathf.MoveTowards(k, want, dt / (want >= k ? 0.6f : 0.35f));   // растёт вслед за духом, при трате спадает быстрее
             fullK = Mathf.MoveTowards(fullK, fullTarget, dt / 0.3f);
+            hideK = Mathf.MoveTowards(hideK, hidden ? 0f : 1f, dt / (hidden ? 0.15f : 0.5f));   // гаснет быстро, возвращается мягко
             if (k <= 0f && want <= 0f) { Destroy(gameObject); return; }
             spin += 9f * dt;
             if (rig == null || !rig.isActiveAndEnabled) rig = target.GetComponentInChildren<HeroRigDriver>();   // облик мог смениться
@@ -157,7 +161,7 @@ namespace BladePath
                     uv[i] = new Vector2(tu, fv); uv[i + 1] = new Vector2(tu, fv + dv);
                     // стенка «ребром» к камере (по краям кольца на экране) прозрачнее: иначе там огонь накладывается и вспыхивает
                     float facing = Mathf.Abs(Vector3.Dot(n, view));
-                    float a2 = alpha * Mathf.Lerp(0.25f, 1f, k) * Mathf.Min(1f, k * 6f) * (1f + 0.15f * fullK) * (0.15f + 0.85f * facing);
+                    float a2 = alpha * hideK * Mathf.Lerp(0.25f, 1f, k) * Mathf.Min(1f, k * 6f) * (1f + 0.15f * fullK) * (0.15f + 0.85f * facing);
                     col[i] = new Color(bot.r, bot.g, bot.b, a2);
                     col[i + 1] = new Color(top.r, top.g, top.b, a2);
                 }
