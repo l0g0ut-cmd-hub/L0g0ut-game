@@ -298,12 +298,12 @@ namespace BladePath
             Box(B.Vibro, lx, 320f, 300f, 40f);
             // две колонки по шесть кнопок: «СНАРЯЖЕНИЕ» — рядом с «ПРОКАЧКОЙ», справа не остаётся пустой дыры
             Box(B.ToMenu, lx, 370f, 300f, 40f);
+            // таймер боя перенесён в меню разработчика (владелец, 2026-11-09) — справа пять кнопок
             Box(B.CamMode, rx, 120f, 300f, 40f);
             Box(B.CamReset, rx, 170f, 300f, 40f);
-            Box(B.TimerToggle, rx, 220f, 300f, 40f);
-            Box(B.DevMenu, rx, 270f, 300f, 40f);
-            Box(B.Stats, rx, 320f, 300f, 40f);
-            Box(B.Gear, rx, 370f, 300f, 40f);
+            Box(B.DevMenu, rx, 220f, 300f, 40f);
+            Box(B.Stats, rx, 270f, 300f, 40f);
+            Box(B.Gear, rx, 320f, 300f, 40f);
             // меню разработчика (вместо обычных кнопок паузы): отладка и проверка боя
             // меню разработчика — три колонки по шесть кнопок (надписи сами ужимаются по ширине кнопки)
             {
@@ -312,13 +312,11 @@ namespace BladePath
                             B.WinFight, B.Arena, B.Clavicle,
                             B.Twist, B.AllyFeature, B.Ally,
                             B.AllyLevel, B.AllyImmortal, B.DayTime,
-                            B.NoRain, B.Sound, B.SoundScope };
+                            B.NoRain, B.Sound, B.SoundScope,
+                            B.TimerToggle, B.Perf, B.PerfCut };   // таймер боя — здесь (убран из обычной паузы); замер кадров
                 for (int k = 0; k < dev.Length; k++)
-                    Box(dev[k], cx - 313f + (k % 3) * 213f, 120f + (k / 3) * 46f, 200f, 38f);
-                Box(B.DevBack, cx - 100f, 404f, 200f, 38f);
-                // замер производительности: слева от «НАЗАД» — показ кадров, справа — что выключить для сравнения
-                Box(B.Perf, cx - 313f, 404f, 200f, 38f);
-                Box(B.PerfCut, cx + 113f, 404f, 200f, 38f);
+                    Box(dev[k], cx - 313f + (k % 3) * 213f, 116f + (k / 3) * 42f, 200f, 36f);
+                Box(B.DevBack, cx - 150f, 414f, 300f, 36f);
             }
             Box(B.OverAgain, cx - 210f, 314f, 200f, 56f);   // ниже панели итогов боя
             Box(B.OverMenu, cx + 10f, 314f, 200f, 56f);
@@ -330,9 +328,9 @@ namespace BladePath
             if (play && player != null && player.KiFull) active[(int)B.Super] = true;
             if (!paused) devOpen = false;
             if (paused && devOpen)
-                foreach (B b in new[] { B.AiToggle, B.DebugToggle, B.EnemyImmortal, B.AutoBattle, B.AutoLevel, B.Immortal, B.WinFight, B.Clavicle, B.Twist, B.Arena, B.Ally, B.AllyFeature, B.AllyLevel, B.AllyImmortal, B.DayTime, B.NoRain, B.Sound, B.SoundScope, B.Perf, B.PerfCut, B.DevBack }) active[(int)b] = true;
+                foreach (B b in new[] { B.AiToggle, B.DebugToggle, B.EnemyImmortal, B.AutoBattle, B.AutoLevel, B.Immortal, B.WinFight, B.Clavicle, B.Twist, B.Arena, B.Ally, B.AllyFeature, B.AllyLevel, B.AllyImmortal, B.DayTime, B.NoRain, B.Sound, B.SoundScope, B.TimerToggle, B.Perf, B.PerfCut, B.DevBack }) active[(int)b] = true;
             else if (paused)
-                foreach (B b in new[] { B.Resume, B.Restart, B.Difficulty, B.Gfx, B.Vibro, B.CamReset, B.ToMenu, B.CamMode, B.TimerToggle, B.Gear, B.Stats, B.DevMenu }) active[(int)b] = true;
+                foreach (B b in new[] { B.Resume, B.Restart, B.Difficulty, B.Gfx, B.Vibro, B.CamReset, B.ToMenu, B.CamMode, B.Gear, B.Stats, B.DevMenu }) active[(int)b] = true;
             if (over) { active[(int)B.OverAgain] = true; active[(int)B.OverMenu] = true; active[(int)B.OverGear] = true; }
 
             labels[(int)B.Resume] = "ПРОДОЛЖИТЬ";
@@ -587,13 +585,13 @@ namespace BladePath
                 {
                     UiKit.Rect(new Rect(W * 0.5f - 200f, 64f, 400f, 46f), new Color(0.12f, 0.05f, 0.03f, 0.9f));
                     UiKit.Text(new Rect(W * 0.5f - 200f, 64f, 400f, 46f), "МЕНЮ РАЗРАБОТЧИКА", 24f, Gold);
-                    foreach (B b in new[] { B.AiToggle, B.DebugToggle, B.EnemyImmortal, B.AutoBattle, B.AutoLevel, B.Immortal, B.WinFight, B.Clavicle, B.Twist, B.Arena, B.Ally, B.AllyFeature, B.AllyLevel, B.AllyImmortal, B.DayTime, B.NoRain, B.Sound, B.SoundScope, B.Perf, B.PerfCut, B.DevBack }) DrawRectButton((int)b);
+                    foreach (B b in new[] { B.AiToggle, B.DebugToggle, B.EnemyImmortal, B.AutoBattle, B.AutoLevel, B.Immortal, B.WinFight, B.Clavicle, B.Twist, B.Arena, B.Ally, B.AllyFeature, B.AllyLevel, B.AllyImmortal, B.DayTime, B.NoRain, B.Sound, B.SoundScope, B.TimerToggle, B.Perf, B.PerfCut, B.DevBack }) DrawRectButton((int)b);
                 }
                 else
                 {
                     DrawRectButton((int)B.Resume); DrawRectButton((int)B.Restart); DrawRectButton((int)B.CamReset); DrawRectButton((int)B.ToMenu);
                     DrawRectButton((int)B.Vibro); DrawRectButton((int)B.Difficulty); DrawRectButton((int)B.Gfx);
-                    DrawRectButton((int)B.CamMode); DrawRectButton((int)B.TimerToggle); DrawRectButton((int)B.Gear); DrawRectButton((int)B.Stats);
+                    DrawRectButton((int)B.CamMode); DrawRectButton((int)B.Gear); DrawRectButton((int)B.Stats);
                     DrawRectButton((int)B.DevMenu);
                 }
                 UiKit.Text(new Rect(W * 0.5f - 400f, 478f, 800f, 24f),
