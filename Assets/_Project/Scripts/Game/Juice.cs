@@ -420,6 +420,23 @@ namespace BladePath
         /// <summary>Последний удар раунда: тонкий высокий звон стали в замершем кадре.</summary>
         public void BeatSting() { Play(clang, 0.55f, 1.95f); Play(clang, 0.3f, 2.4f); }
 
+        /// <summary>Кровавая волна сорвалась с клинка: свист стали и высокий звон (без низкого гула).</summary>
+        public void WaveLaunch(Vector3 pos)
+        {
+            Play(swish, 0.95f, Random.Range(0.82f, 0.9f));
+            Play(clang, 0.22f, 1.75f);
+            SparkLight(pos, new Color(1f, 0.2f, 0.12f), 2.2f, 3.2f, 0.12f);
+        }
+
+        /// <summary>Кровавая волна попала: тяжёлый удар, звон, красные искры; в блок — больше звона, меньше удара.</summary>
+        public void WaveHit(Vector3 pos, bool blocked)
+        {
+            Play(hitHeavy, blocked ? 0.45f : 0.9f, Random.Range(0.95f, 1.05f));
+            Play(clang, blocked ? 0.6f : 0.3f, blocked ? 1.2f : 1.45f);
+            Sparks(pos, Vector3.up, blocked ? 18 : 12, 1.1f);
+            SparkLight(pos, new Color(1f, 0.18f, 0.1f), 3f, 3.8f, 0.16f);
+        }
+
         /// <summary>Удар горящим клинком: вспышка огня в ране и искры-угольки.</summary>
         public void FlameHit(Vector3 pos)
         {

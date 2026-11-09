@@ -24,6 +24,7 @@ namespace BladePath
         class Charge
         {
             public FighterController f; public float start; public int level; public Color col;
+            public bool wave; public SheetFx sheetPillar;   // кровавая волна: красное накопление, на отпускании — волна к врагу
             public Transform sigil, anchor, early, pillar, pool; public Material sigilMat, earlyMat, pillarMat, poolMat; public ParticleSystem rise; public FxSprite flame, inhale, embers; public Light light; public float pillarAspect = 1.3f; public int pillarFrames = 1, pillarCols = 1, pillarRows = 1;
             public Transform draw, emberAnchor; public Material drawMat;
             public float kv, popAt = -10f, boltAt;
@@ -35,6 +36,7 @@ namespace BladePath
         readonly Dictionary<FighterController, int> strikeLevel = new Dictionary<FighterController, int>();
         readonly Dictionary<FighterController, float> waveAt = new Dictionary<FighterController, float>();
         readonly Dictionary<FighterController, int> waveLvl = new Dictionary<FighterController, int>();
+        readonly Dictionary<FighterController, Vector2Int> waveSwing = new Dictionary<FighterController, Vector2Int>();   // кровавая волна: x — ступень, y — замах
         readonly Dictionary<FighterController, Vector2Int> slashLvl = new Dictionary<FighterController, Vector2Int>();   // x — ступень, y — замах   // полумесяц энергии — на фазе удара
 
         void Awake() { Instance = this; }
@@ -69,11 +71,16 @@ namespace BladePath
             return Ladder.Current.aura;
         }
 
-        public bool Begin(FighterController f)
+        public bool Begin(FighterController f) { return Begin(f, false); }
+        /// <summary>Кровавая волна (кнопка «ВОЛНА»): то же накопление по ступеням, но красное; отпустил — волна летит к врагу.</summary>
+        public bool BeginWave(FighterController f) { return Begin(f, true); }
+        public bool IsWave(FighterController f) { Charge c; return f != null && active.TryGetValue(f, out c) && c.wave; }
+
+        bool Begin(FighterController f, bool wave)
         {
             if (f == null || active.ContainsKey(f) || !f.CanAct || f.Ki < KiCost[0]) return false;
             if (f.weapon != null && f.weapon.Phase != SwingPhase.Idle) return false;
-            Charge c = new Charge { f = f, start = Time.time, level = -1, col = ColorOf(f) };
+            Charge c = new Charge { f = f, start = Time.time, level = -1, wave = wave, col = wave ? BloodWave.Red : ColorOf(f) };
             Build(c);
             active[f] = c;
             f.Charging = true;
@@ -98,6 +105,19 @@ namespace BladePath
             if (lvl < 0) return false;
             while (lvl > 0 && f.Ki < KiCost[lvl]) lvl--;
             if (f.Ki < KiCost[lvl]) return false;
+            if (c.wave)
+            {
+                // кровавая волна: взмах на месте, волна срывается с клинка в фазе удара (Update → BloodWave.Launch)
+                if (!f.Attack(AttackType.Overhead, false)) return false;
+                f.AddKi(-KiCost[lvl]);
+                waveSwing[f] = new Vector2Int(lvl, f.weapon != null ? f.weapon.SwingId : -1);
+                releaseAt[f] = Time.time;
+                if (lvl >= 2) BigReleaseAt = Time.unscaledTime;
+                GroundFlash.Spawn("FX/crack_glow", f.transform.position + f.transform.forward * 0.5f, 1.0f + 0.5f * lvl, 1.4f + 0.7f * lvl, c.col, 0.9f, 0f, true);
+                if (Juice.Instance != null) { Juice.Instance.Taiko(0.9f, 0.85f + 0.1f * lvl); Juice.Instance.Dust(f.transform.position + Vector3.up * 0.05f, f.transform.forward, 10 + 6 * lvl); }
+                Haptics.Pulse(35 + 20 * lvl);
+                return true;
+            }
             f.AddKi(-KiCost[lvl]);
             FighterController t = f.opponent;
             if (t != null)
@@ -171,7 +191,7 @@ namespace BladePath
             if (add == null) add = Shader.Find("Legacy Shaders/Particles/Additive");
             Shader soft = Shader.Find("Legacy Shaders/Particles/Additive");
             // узор на полу: свой у героя (кристальный компас) и у врагов; пока нет атласа — золотая печать
-            Texture2D sig = Resources.Load<Texture2D>(SigilFor(c.f));
+            Texture2D sig = Resources.Load<Texture2D>(SigilFor(c));
             if (sig == null) sig = Resources.Load<Texture2D>("FX/seal_circle");
             if (sig != null && add != null)
             {
@@ -184,7 +204,7 @@ namespace BladePath
                 c.sigil.rotation = Quaternion.Euler(90f, 0f, 0f);
             }
             // ранняя ступень узора (горит только ядро) — гаснет по мере того, как раскрывается полный
-            c.early = GroundQuad("ChargeSigilEarly", Resources.Load<Texture2D>(SigilFor(c.f) + "_early"), add, out c.earlyMat);
+            c.early = GroundQuad("ChargeSigilEarly", Resources.Load<Texture2D>(SigilFor(c) + "_early"), add, out c.earlyMat);
             // пятно света под ногами
             c.pool = GroundQuad("ChargePool", Resources.Load<Texture2D>("FX/glow_pool"), add, out c.poolMat);
             // столб ауры: вертикальная плоскость, всегда повёрнута к камере
@@ -211,9 +231,15 @@ namespace BladePath
             }
             if (c.rageMat != null) c.rageMat.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0f));
             // анимированный столб (4 кадра цикла), запасной — статичный
-            Texture2D pt = Resources.Load<Texture2D>(PillarFor(c.f).Replace("pillar_", "pillar_loop_"));
+            // кровавая волна: красный столб владельца — 16 кадров (вход 4 → качание 5…12 → хвост 13…16 на отпускании), с наплывом
+            if (c.wave)
+            {
+                c.sheetPillar = SheetFx.Spawn("pillar_loop_blood", c.f.transform.position, 4, 4, 0, 16, 13f, true, 1f, 2f);
+                if (c.sheetPillar != null) { c.sheetPillar.bottomAnchor = true; c.sheetPillar.intro = 4; c.sheetPillar.loopFrom = 4; c.sheetPillar.loopTo = 11; c.sheetPillar.tint = new Color(1f, 1f, 1f, 0f); }
+            }
+            Texture2D pt = c.wave ? null : Resources.Load<Texture2D>(PillarFor(c).Replace("pillar_", "pillar_loop_"));
             if (pt != null) { SheetDims(pt, out c.pillarCols, out c.pillarRows); c.pillarFrames = c.pillarCols * c.pillarRows; }
-            else pt = Resources.Load<Texture2D>(PillarFor(c.f));
+            else if (!c.wave) pt = Resources.Load<Texture2D>(PillarFor(c));
             if (pt != null && add != null)
             {
                 GameObject g = new GameObject("ChargePillar");
@@ -271,15 +297,17 @@ namespace BladePath
             c.light = lg.AddComponent<Light>(); c.light.type = LightType.Point; c.light.color = c.col; c.light.range = 3f; c.light.intensity = 0f; c.light.shadows = LightShadows.None;
         }
 
-        string SigilFor(FighterController f)
+        string SigilFor(Charge c)
         {
+            if (c.wave) return "FX/sigil_blood";
+            FighterController f = c.f;
             DuelManager dm = DuelManager.Instance;
             if (dm != null && dm.player == f) return "FX/sigil_ice";
             int s = Ladder.Index;
             return s == 2 ? "FX/sigil_flame" : s == 3 ? "FX/sigil_sun" : "FX/sigil_storm";
         }
 
-        string PillarFor(FighterController f) { return SigilFor(f).Replace("sigil_", "pillar_"); }
+        string PillarFor(Charge c) { return SigilFor(c).Replace("sigil_", "pillar_"); }
 
         Transform GroundQuad(string name, Texture2D tex, Shader add, out Material mat)
         {
@@ -349,6 +377,7 @@ namespace BladePath
             if (c.poolMat != null) Destroy(c.poolMat);
             if (c.pillar != null) Destroy(c.pillar.gameObject);
             if (c.pillarMat != null) Destroy(c.pillarMat);
+            if (c.sheetPillar != null) { c.sheetPillar.fadeOut = 0.3f; c.sheetPillar.PlayOut(12, 4, 14f); c.sheetPillar = null; }   // столб доигрывает хвост и гаснет
         }
 
         void PoseVisuals(Charge c, FighterController f, float t)
@@ -419,6 +448,14 @@ namespace BladePath
                 float pa = Mathf.Clamp01((t - 0.15f) / 0.4f) * (0.15f + 0.45f * k);
                 c.pillarMat.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0.5f * pa * (1f - 0.75f * c.ex)));
                 if (c.pillarFrames > 1) c.pillarMat.mainTextureOffset = FrameUV((int)(Time.time * 12f) % c.pillarFrames, c.pillarCols, c.pillarRows);
+            }
+            if (c.sheetPillar != null)
+            {
+                float w = Mathf.Lerp(0.9f, 2.2f, k) * pulse;
+                c.sheetPillar.transform.position = new Vector3(f.transform.position.x, 0f, f.transform.position.z);
+                c.sheetPillar.width = w; c.sheetPillar.aspect = 2f * Mathf.Lerp(0.7f, 1.25f, k);
+                float pa = Mathf.Clamp01((t - 0.15f) / 0.4f) * (0.3f + 0.6f * k);
+                c.sheetPillar.tint = new Color(1f, 1f, 1f, pa * (1f - 0.75f * c.ex));
             }
             if (c.rise != null)
             {
@@ -562,6 +599,20 @@ namespace BladePath
                 f.SetMoveVector(Vector2.zero);
             }
             if (drop != null) foreach (FighterController f in drop) Cancel(f);
+            // кровавая волна срывается с клинка в фазе удара (или сразу, если взмах сорвали)
+            if (waveSwing.Count > 0)
+            {
+                List<FighterController> wd = null;
+                foreach (KeyValuePair<FighterController, Vector2Int> kv in waveSwing)
+                {
+                    FighterController a = kv.Key;
+                    bool gone = a == null || a.weapon == null || kv.Value.y != a.weapon.SwingId;
+                    if (!gone && a.weapon.Phase == SwingPhase.Windup) continue;
+                    (wd ?? (wd = new List<FighterController>())).Add(a);
+                    if (a != null && !a.Dead && (dm == null || dm.State == DuelState.Fighting)) BloodWave.Launch(a, kv.Value.x);
+                }
+                if (wd != null) foreach (FighterController a in wd) waveSwing.Remove(a);
+            }
             // со II ступени: клинок выпускает огромный полумесяц энергии — в момент удара, по ходу взмаха
             if (slashLvl.Count > 0)
             {

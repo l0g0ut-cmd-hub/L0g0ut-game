@@ -18,8 +18,8 @@ namespace BladePath
         public FighterController enemy;
 
         enum B { Stick, Jump, Dash, Overhead, Rising, Legs, Energy, Thrust, Slash, Pause,
-                 Resume, Restart, CamReset, AiToggle, DebugToggle, ToMenu, OverAgain, OverMenu, Block, Vibro, Difficulty, Super, Gfx, Heal, CamMode, TimerToggle, Gear, OverGear, Stats, AutoBattle, Immortal, DevMenu, DevBack, AutoLevel, EnemyImmortal, WinFight, Clavicle, Twist, Arena, Ally, AllyFeature, AllyLevel, AllyImmortal, Sound, SoundScope, DayTime, NoRain, Perf, PerfCut }
-        const int Count = 49;
+                 Resume, Restart, CamReset, AiToggle, DebugToggle, ToMenu, OverAgain, OverMenu, Block, Vibro, Difficulty, Super, Gfx, Heal, CamMode, TimerToggle, Gear, OverGear, Stats, AutoBattle, Immortal, DevMenu, DevBack, AutoLevel, EnemyImmortal, WinFight, Clavicle, Twist, Arena, Ally, AllyFeature, AllyLevel, AllyImmortal, Sound, SoundScope, DayTime, NoRain, Perf, PerfCut, Wave }
+        const int Count = 50;
         bool devOpen;   // пауза: открыто «меню разработчика»
 
         const float StickRadius = 84f;
@@ -108,6 +108,7 @@ namespace BladePath
             bool jump = down[(int)B.Jump], dash = down[(int)B.Dash];
             bool aThrust = down[(int)B.Thrust], aSlash = down[(int)B.Slash];
             bool aOver = down[(int)B.Overhead], aRise = down[(int)B.Rising], aLegs = down[(int)B.Legs], aEnergy = down[(int)B.Energy];
+            bool aWave = down[(int)B.Wave];   // кровавая волна: удержание — красное накопление, отпустил — волна к врагу
             bool enemyAttack = false, enemyCycle = false, toggleAi = down[(int)B.AiToggle];
             bool reset = down[(int)B.Restart] || down[(int)B.OverAgain];
             bool menu = down[(int)B.ToMenu] || down[(int)B.OverMenu];
@@ -135,6 +136,7 @@ namespace BladePath
             aRise |= Input.GetKeyDown(KeyCode.K);
             aLegs |= Input.GetKeyDown(KeyCode.N);
             aEnergy |= Input.GetKeyDown(KeyCode.M);
+            aWave |= Input.GetKeyDown(KeyCode.V);
             superBtn |= Input.GetKeyDown(KeyCode.U);
             healBtn |= Input.GetKeyDown(KeyCode.H);
             aThrust |= Input.GetKeyDown(KeyCode.I);
@@ -213,6 +215,11 @@ namespace BladePath
 #endif
                 ChargeSystem cs = ChargeSystem.Instance;
                 bool charging = cs != null && cs.IsCharging(player);
+                bool wHeld = held[(int)B.Wave];
+#if ENABLE_LEGACY_INPUT_MANAGER
+                wHeld |= Input.GetKey(KeyCode.V);
+#endif
+                if (aWave && !charging && cs != null && cs.BeginWave(player)) { charging = true; energyPending = false; }
                 if (aEnergy) { energyPending = true; energyDownAt = Time.unscaledTime; }
                 if (energyPending && eHeld && cs != null && Time.unscaledTime - energyDownAt >= 0.28f && cs.Begin(player)) { energyPending = false; charging = true; }
                 if (charging)
@@ -225,7 +232,7 @@ namespace BladePath
                     else if (aLegs) { rt = AttackType.LegSweep; other = true; }
                     else if (aOver) other = true;
                     if (dash || jump || blockHeld) cs.Cancel(player);
-                    else if (other || !eHeld) cs.Release(player, rt);
+                    else if (other || !(cs.IsWave(player) ? wHeld : eHeld)) cs.Release(player, rt);
                     aOver = aRise = aLegs = aThrust = aSlash = false;
                 }
                 else if (energyPending && !eHeld) { energyPending = false; player.Attack(AttackType.Energy); }
@@ -282,6 +289,7 @@ namespace BladePath
             p = At(194f, 212f); Circle(B.Dash, p.x, p.y, 28f);
             p = At(232f, 214f); Circle(B.Jump, p.x, p.y, 28f);
             p = At(268f, 212f); Circle(B.Energy, p.x, p.y, 25f);
+            p = At(262f, 280f); Circle(B.Wave, p.x, p.y, 25f);   // кровавая волна — над «ШАРОМ», у правого края
             // «дух» — рядом с дугой внизу, под большим пальцем: на месте над дугой (238°, 286) кнопка
             // висела посреди экрана поверх боя
             p = At(186f, 292f); Circle(B.Super, p.x, p.y, 30f);
@@ -323,7 +331,7 @@ namespace BladePath
 
             for (int i = 0; i < Count; i++) active[i] = false;
             if (play)
-                foreach (B b in new[] { B.Stick, B.Jump, B.Dash, B.Block, B.Overhead, B.Legs, B.Energy, B.Thrust, B.Pause, B.Heal }) active[(int)b] = true;
+                foreach (B b in new[] { B.Stick, B.Jump, B.Dash, B.Block, B.Overhead, B.Legs, B.Energy, B.Thrust, B.Pause, B.Heal, B.Wave }) active[(int)b] = true;
             if (play && player != null && player.KiFull) active[(int)B.Super] = true;
             if (!paused) devOpen = false;
             if (paused && devOpen)
@@ -528,6 +536,7 @@ namespace BladePath
                 DrawAttack(B.Energy, Icon.Orb, "ШАР", canAct && player.CanEnergy);
                 DrawKiRing(B.Energy, player != null ? Mathf.Clamp01(player.Ki / Mathf.Max(1f, player.energyCost)) : 0f);
             }
+            DrawWave(player, chg);
             DrawAttack(B.Jump, Icon.Jump, "ПРЫЖОК", player != null && player.CanAct && player.Grounded);
             DrawAttack(B.Block, Icon.Shield, "БЛОК", player != null && player.CanAct && !player.GuardBroken && player.weapon != null && player.weapon.Phase == SwingPhase.Idle);
             DrawAttack(B.Dash, Icon.Dash, "РЫВОК", player != null && player.CanAct && player.DashReady01 >= 1f);
@@ -737,6 +746,43 @@ namespace BladePath
             DrawIcon(icon, c + new Vector2(0f, -r * 0.12f), r * 0.5f, new Color(1f, 1f, 1f, 0.95f * a), r >= 50f ? 4f : 3f);
             if (!string.IsNullOrEmpty(name))
                 UiKit.Text(new Rect(c.x - r, c.y + r * 0.45f, r * 2f, r * 0.45f), name, Mathf.Max(8f, r * 0.24f), new Color(0.95f, 0.88f, 0.7f, a), TextAnchor.MiddleCenter, false);
+        }
+
+        /// <summary>Кнопка «ВОЛНА»: каменный круг, в нём красный полумесяц из листа полёта волны; при накоплении — ступень и кольцо.</summary>
+        void DrawWave(FighterController pl, bool chg)
+        {
+            int i = (int)B.Wave;
+            if (!active[i] || pl == null) return;
+            ChargeSystem cs = ChargeSystem.Instance;
+            bool mine = chg && cs != null && cs.IsWave(pl);
+            bool ready = mine || (pl.CanAct && pl.Ki >= ChargeSystem.KiCost[0] && !chg);
+            Vector2 c = ctr[i]; float r = rad[i];
+            bool h = held[i] || mine;
+            float a = (ready ? 1f : 0.45f) * introDim;
+            Texture2D bt = UiKit.Tex("UI/btn_base");
+            UiKit.Disc(c + new Vector2(0f, 3f), r * 0.98f, new Color(0f, 0f, 0f, 0.16f * a));
+            if (bt != null) UiKit.Image(c, r * (h ? 1.05f : 1.12f), bt, h ? new Color(1f, 0.6f, 0.55f, 1f) : new Color(1f, 1f, 1f, (ready ? 0.6f : 0.3f) * introDim));
+            else UiKit.Disc(c, r, new Color(0.06f, 0.05f, 0.07f, 0.72f * a));
+            Texture2D wt = UiKit.Tex("UI/btn_wave_icon");
+            if (wt != null)
+            {
+                float pul = mine ? 1f + 0.08f * Mathf.Sin(Time.unscaledTime * 14f) : 1f;
+                UiKit.Image(c + new Vector2(0f, -r * 0.1f), r * 0.78f * pul, wt, new Color(1f, 1f, 1f, (ready ? 1f : 0.5f) * introDim));
+            }
+            int cl = mine ? cs.Level(pl) : -1;
+            string name = !mine ? "ВОЛНА" : cl < 0 ? "НАКОПЛЕНИЕ" : cl == 0 ? "I" : cl == 1 ? "II" : cl == 2 ? "III" : "IV";
+            UiKit.Text(new Rect(c.x - r, c.y + r * 0.42f, r * 2f, r * 0.42f), name, Mathf.Max(8f, r * (mine && cl >= 0 ? 0.3f : 0.22f)), new Color(1f, 0.8f, 0.72f, 0.9f * a), TextAnchor.MiddleCenter, false);
+            // кольцо: при накоплении — прогресс ступеней, иначе — хватает ли духа (красные точки)
+            float k = mine ? cs.Progress(pl) : Mathf.Clamp01(pl.Ki / Mathf.Max(1f, ChargeSystem.KiCost[0]));
+            const int N = 20;
+            for (int sgm = 0; sgm < N; sgm++)
+            {
+                float ang = -Mathf.PI * 0.5f + sgm / (float)N * Mathf.PI * 2f;
+                bool on = sgm < Mathf.FloorToInt(k * N + 0.001f);
+                Color col = on ? new Color(1f, 0.28f, 0.2f, 0.95f) : new Color(0f, 0f, 0f, 0.4f);
+                col.a *= introDim;
+                UiKit.Disc(c + new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * (r + 6f), 2.4f, col);
+            }
         }
 
         /// <summary>Кольцо из точек вокруг кнопки шара: заполненность = накопленный дух до стоимости шара.</summary>
