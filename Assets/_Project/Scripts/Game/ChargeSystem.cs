@@ -18,8 +18,9 @@ namespace BladePath
         public static readonly float[] KiCost = { 15f, 25f, 40f, 60f };
         public static readonly float[] DmgMul = { 1.5f, 2.0f, 2.6f, 3.4f };
         // кровавая волна (владелец: «быстрее копить, дешевле по духу — чтобы с полным духом слать по три подряд»):
-        // ступени втрое быстрее обычных, высшая — за ~1 с; три волны IV ступени = 96 духа из 100
-        public static readonly float[] WaveLevelAt = { 0.2f, 0.42f, 0.66f, 1.0f };
+        // ступени — середина между обычными и прежними быстрыми (владелец: «слишком быстро, давай средне»): высшая — за 1,75 с;
+        // три волны IV ступени = 96 духа из 100
+        public static readonly float[] WaveLevelAt = { 0.35f, 0.75f, 1.15f, 1.75f };
         public static readonly float[] WaveKiCost = { 8f, 14f, 22f, 32f };
         static float[] At(Charge c) { return c.wave ? WaveLevelAt : LevelAt; }
         static float[] Cost(Charge c) { return c.wave ? WaveKiCost : KiCost; }
