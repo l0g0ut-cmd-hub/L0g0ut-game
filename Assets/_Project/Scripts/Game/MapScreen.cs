@@ -2226,10 +2226,14 @@ namespace BladePath
                     Texture2D art = UiKit.Tex(EnemyFullArt[e]);
                     if (art != null)
                     {
-                        float ah = r.height - 20f, aw = ah * art.width / Mathf.Max(1f, art.height);
-                        Rect ar = new Rect(r.x + 10f, r.y + 10f, Mathf.Min(aw, 260f), ah);
-                        // Keep the enemy artwork bright. The Portrait routine draws its
-                        // inset only *behind* the picture; never place another inset over it.
+                        // окно под картину ровно в её пропорциях (внутри Portrait — отступ 3 px с каждой стороны):
+                        // картина не растягивается и не обрезается
+                        float asp = art.width / Mathf.Max(1f, (float)art.height);
+                        float ah = r.height - 20f, aw = (ah - 6f) * asp + 6f;
+                        if (aw > 240f) { aw = 240f; ah = (aw - 6f) / asp + 6f; }
+                        Rect ar = new Rect(r.x + 10f, r.y + (r.height - ah) * 0.5f, aw, ah);
+                        // Цельная картина врага с фоном (2026-11-09, владелец через ChatGPT, в стиле карточек путников).
+                        // Не затемнять: Portrait рисует подложку только под картинкой, поверх ничего не класть.
                         VisualIdentity.Portrait(ar, EnemyFullArt[e]);
                         // Reuse the existing gilded panel-frame asset so the portrait
                         // matches the card and the rest of the UI, rather than adding

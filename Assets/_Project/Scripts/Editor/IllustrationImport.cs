@@ -9,13 +9,16 @@ namespace BladePath.EditorTools
     /// </summary>
     public class IllustrationImport : AssetPostprocessor
     {
-        public override uint GetVersion() { return 4; }
+        public override uint GetVersion() { return 5; }
 
         static bool IsIllustration(string path)
         {
             if (!path.StartsWith("Assets/_Project/Resources/UI/")) return false;
             string name = System.IO.Path.GetFileNameWithoutExtension(path);
             if (name.StartsWith("place_")) return true;
+            // картины в окнах карты (2026-11-09): враги и NPC 683×1024 уходили в 512×1024 — окно строилось по этим размерам,
+            // и картина выходила сплюснутой по ширине на четверть; фоны привала, игорного дома, таверны, конца области — тоже
+            if (name.StartsWith("enemy_full_") || name.StartsWith("npc_") || name.StartsWith("region_clear_") || name == "camp" || name == "dice_bg" || name == "tavern") return true;
             if (name.StartsWith("fx_ui_") || name == "fx_campfire" || name == "fx_mist" || name == "map_daytime" || name.StartsWith("shop_") || name == "items4" || name == "items5" || name == "items6") return true;   // листы кадров — без растяжения до степени двойки (кадры не мылятся)
             if (name.StartsWith("event_"))
             {

@@ -350,13 +350,20 @@ namespace BladePath
             // справа — текущий противник
             float rx = pr.xMax + 20f, rw = W - rx - 46f;
             Rect rp = new Rect(rx, 76f, rw, 432f);
-            VisualIdentity.KitSurface(rp, 0.95f);   // враг на панели в стиле игры (картинки врагов теперь с прозрачным фоном)
-            Texture2D ef = UiKit.Tex(EnemyFull[Mathf.Clamp(cur, 0, EnemyFull.Length - 1)]);
+            VisualIdentity.KitSurface(rp, 0.95f);
+            // враг — цельная картина с фоном (2026-11-09, в стиле карточек путников) в той же золочёной рамке, что в окне дуэли
+            string efPath = EnemyFull[Mathf.Clamp(cur, 0, EnemyFull.Length - 1)];
+            Texture2D ef = UiKit.Tex(efPath);
             if (ef != null)
             {
-                float h = 284f, w = h * ef.width / Mathf.Max(1f, ef.height);
-                if (w > rw - 20f) { w = rw - 20f; h = w * ef.height / Mathf.Max(1f, ef.width); }
-                GUI.DrawTexture(new Rect(rx + (rw - w) * 0.5f, 88f, w, h), ef);   // внутри рамки панели
+                // окно ровно в пропорциях картины (Portrait отступает 3 px внутрь) — без растяжения и обрезки
+                float asp = ef.width / Mathf.Max(1f, (float)ef.height);
+                float h = 280f, w = (h - 6f) * asp + 6f;
+                if (w > rw - 24f) { w = rw - 24f; h = (w - 6f) / asp + 6f; }
+                Rect ar = new Rect(rx + (rw - w) * 0.5f, 90f, w, h);
+                VisualIdentity.Portrait(ar, efPath);
+                Texture2D pf = UiKit.Tex("UI/Kit/ui_panel_frame");
+                if (pf != null) UiKit.Slice(new Rect(ar.x - 5f, ar.y - 5f, ar.width + 10f, ar.height + 10f), pf, 0.27f, 0.2f, 0.1f, 0.3f, 0.12f, Color.white);
             }
             Ladder.Stage st = Ladder.Current;
             UiKit.Text(new Rect(rx + 10f, 378f, rw - 20f, 26f), "СЛЕДУЮЩИЙ: " + st.name, 17f, Gold);
