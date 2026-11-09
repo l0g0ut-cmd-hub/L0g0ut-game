@@ -234,8 +234,13 @@ namespace BladePath
             // кровавая волна: красный столб владельца — 16 кадров (вход 4 → качание 5…12 → хвост 13…16 на отпускании), с наплывом
             if (c.wave)
             {
-                c.sheetPillar = SheetFx.Spawn("pillar_loop_blood", c.f.transform.position, 4, 4, 0, 16, 13f, true, 1f, 2f);
-                if (c.sheetPillar != null) { c.sheetPillar.bottomAnchor = true; c.sheetPillar.intro = 4; c.sheetPillar.loopFrom = 4; c.sheetPillar.loopTo = 11; c.sheetPillar.tint = new Color(1f, 1f, 1f, 0f); }
+                c.sheetPillar = SheetFx.Spawn("pillar_loop_blood", c.f.transform.position, 4, 4, 0, 16, 10f, true, 1f, 2f);
+                if (c.sheetPillar != null)
+                {
+                    c.sheetPillar.bottomAnchor = true; c.sheetPillar.intro = 4; c.sheetPillar.loopFrom = 4; c.sheetPillar.loopTo = 11; c.sheetPillar.tint = new Color(1f, 1f, 1f, 0f);
+                    // второй, зеркальный слой со сдвигом на 4 кадра: языки не повторяются, рваные переходы листа сглажены (владелец: «рваное»)
+                    c.sheetPillar.mirrorLayer = true; c.sheetPillar.mirrorShift = 4; c.sheetPillar.mirrorAlpha = 0.55f; c.sheetPillar.mirrorScale = 0.86f;
+                }
             }
             Texture2D pt = c.wave ? null : Resources.Load<Texture2D>(PillarFor(c).Replace("pillar_", "pillar_loop_"));
             if (pt != null) { SheetDims(pt, out c.pillarCols, out c.pillarRows); c.pillarFrames = c.pillarCols * c.pillarRows; }
@@ -452,8 +457,10 @@ namespace BladePath
             if (c.sheetPillar != null)
             {
                 float w = Mathf.Lerp(0.9f, 2.2f, k) * pulse;
-                c.sheetPillar.transform.position = new Vector3(f.transform.position.x, 0f, f.transform.position.z);
-                c.sheetPillar.width = w; c.sheetPillar.aspect = 2f * Mathf.Lerp(0.7f, 1.25f, k);
+                c.sheetPillar.aspect = 2f * Mathf.Lerp(0.6f, 1.0f, k);
+                // основание чуть под землёй: вспышка у пола выходит из камня, а не висит у колен (владелец)
+                c.sheetPillar.transform.position = new Vector3(f.transform.position.x, -0.03f * w * c.sheetPillar.aspect, f.transform.position.z);
+                c.sheetPillar.width = w;
                 float pa = Mathf.Clamp01((t - 0.15f) / 0.4f) * (0.3f + 0.6f * k);
                 c.sheetPillar.tint = new Color(1f, 1f, 1f, pa * (1f - 0.75f * c.ex));
             }

@@ -20,9 +20,12 @@ namespace BladePath
         public Transform follow; public Vector3 followOffset;
         // вступление и качание: сначала кадры first…first+intro−1, потом туда-обратно loopFrom…loopTo (лист без бесшовного круга)
         public int intro = -1, loopFrom, loopTo;
+        // второй слой: тот же лист зеркально, со сдвигом по кадрам и чуть ниже — рисунок не повторяется, переходы мягче
+        // (на листах ChatGPT соседние кадры сильно разные — один слой выглядит рваным)
+        public bool mirrorLayer; public int mirrorShift = 4; public float mirrorAlpha = 0.5f, mirrorScale = 0.88f;
         float born;
         Mesh mesh; MeshRenderer mr;
-        readonly Vector3[] v = new Vector3[8]; readonly Vector2[] uv = new Vector2[8]; readonly Color[] col = new Color[8];
+        readonly Vector3[] v = new Vector3[16]; readonly Vector2[] uv = new Vector2[16]; readonly Color[] col = new Color[16];
         static readonly Dictionary<string, Material> mats = new Dictionary<string, Material>();
 
         public float Age { get { return Time.time - born; } }
@@ -59,7 +62,7 @@ namespace BladePath
             s.mesh = new Mesh { name = "SheetFx" };
             s.mesh.MarkDynamic();
             s.mesh.vertices = s.v; s.mesh.uv = s.uv; s.mesh.colors = s.col;
-            s.mesh.triangles = new[] { 0, 2, 1, 0, 3, 2, 4, 6, 5, 4, 7, 6 };
+            s.mesh.triangles = new[] { 0, 2, 1, 0, 3, 2, 4, 6, 5, 4, 7, 6, 8, 10, 9, 8, 11, 10, 12, 14, 13, 12, 15, 14 };
             g.AddComponent<MeshFilter>().sharedMesh = s.mesh;
             s.mr = g.AddComponent<MeshRenderer>();
             s.mr.sharedMaterial = m;
@@ -104,13 +107,22 @@ namespace BladePath
             Vector3 up = Vector3.up * h;
             Vector3 b0 = bottomAnchor ? Vector3.zero : -up * 0.5f;
             Vector3 L = -right * hw + b0, R = right * hw + b0;
-            Quad(0, f0, L, R, up, a * (1f - k));
-            Quad(4, f1, L, R, up, a * k);
+            Quad(0, f0, L, R, up, a * (1f - k), flipX);
+            Quad(4, f1, L, R, up, a * k, flipX);
+            if (mirrorLayer)
+            {
+                int j = i0 + mirrorShift;
+                Vector3 up2 = up * mirrorScale, b2 = bottomAnchor ? Vector3.zero : -up2 * 0.5f;
+                Vector3 L2 = -right * hw * mirrorScale + b2, R2 = right * hw * mirrorScale + b2;
+                Quad(8, Seq(j), L2, R2, up2, a * mirrorAlpha * (1f - k), !flipX);
+                Quad(12, Seq(j + 1), L2, R2, up2, a * mirrorAlpha * k, !flipX);
+            }
+            else for (int q = 8; q < 16; q++) { v[q] = Vector3.zero; col[q] = Color.clear; }
             mesh.vertices = v; mesh.uv = uv; mesh.colors = col;
             mesh.RecalculateBounds();
         }
 
-        void Quad(int o, int frame, Vector3 L, Vector3 R, Vector3 up, float alpha)
+        void Quad(int o, int frame, Vector3 L, Vector3 R, Vector3 up, float alpha, bool flipX)
         {
             float du = 1f / cols, dv = 1f / rows;
             float u0 = (frame % cols) * du, v0 = 1f - (frame / cols + 1) * dv;

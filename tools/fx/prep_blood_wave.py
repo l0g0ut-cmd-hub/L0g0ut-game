@@ -8,7 +8,7 @@
       bwave_fly     8×4 кадров 192×256 → клетки 256×256 (кадр по центру), 2048×1024
       bwave_launch  6×4 кадров 256×256 → сетка 8×4 (24 заняты), 2048×1024
       bwave_hit     6×4 кадров 256×256 → сетка 8×4 (24 заняты), 2048×1024
-      pillar_loop_blood 4×4 кадров 256×384 → клетки 256×512 (низ кадра на низу клетки), 1024×2048
+      pillar_loop_blood 4×4 кадров 256×384 → клетки 256×512 (основание пламени опущено к низу клетки), 1024×2048
   * sigil_blood 1024² и sigil_blood_early (только ядро узора — первая ступень);
   * UI/btn_wave_icon — значок кнопки «ВОЛНА»: кадр полёта с прозрачностью по яркости (интерфейс не умеет сложение цвета).
 """
@@ -35,14 +35,17 @@ def feather(cell, px=6):
     return cell * m[..., None]
 
 
-def repack(a, cols, rows, cw, ch, ocols, orows, ow, oh, anchor="center"):
+def repack(a, cols, rows, cw, ch, ocols, orows, ow, oh, anchor="center", drop=0):
     out = np.zeros((orows * oh, ocols * ow, 3), np.float32)
     for i in range(cols * rows):
         cx, cy = i % cols, i // cols
-        cell = feather(a[cy * ch:(cy + 1) * ch, cx * cw:(cx + 1) * cw])
+        cell = a[cy * ch:(cy + 1) * ch, cx * cw:(cx + 1) * cw]
         ox, oy = i % ocols, i // ocols
         x0 = ox * ow + (ow - cw) // 2
         y0 = oy * oh + ((oh - ch) // 2 if anchor == "center" else oh - ch)
+        if drop:   # сдвиг вниз: основание пламени — у самого низа клетки (на земле), низ кадра уходит за край
+            cell = np.concatenate([np.zeros((drop, cw, 3), np.float32), cell[:ch - drop]], 0)
+        cell = feather(cell)
         out[y0:y0 + ch, x0:x0 + cw] = cell
     return out
 
@@ -65,7 +68,7 @@ def main():
     print("btn_wave_icon 256 x 256")
     save(repack(load(launch), 6, 4, 256, 256, 8, 4, 256, 256), "bwave_launch")
     save(repack(load(hit), 6, 4, 256, 256, 8, 4, 256, 256), "bwave_hit")
-    save(repack(load(pillar), 4, 4, 256, 384, 4, 4, 256, 512, anchor="bottom"), "pillar_loop_blood")
+    save(repack(load(pillar), 4, 4, 256, 384, 4, 4, 256, 512, anchor="bottom", drop=22), "pillar_loop_blood")   # вспышка основания была на 32 px выше низа кадра
     s = Image.fromarray(load(sigil).astype(np.uint8)).resize((1024, 1024), Image.LANCZOS)
     sa = np.asarray(s).astype(np.float32)
     save(sa, "sigil_blood")
