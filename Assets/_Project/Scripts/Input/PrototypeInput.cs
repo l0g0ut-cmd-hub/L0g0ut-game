@@ -759,19 +759,27 @@ namespace BladePath
             Vector2 c = ctr[i]; float r = rad[i];
             bool h = held[i] || mine;
             float a = (ready ? 1f : 0.45f) * introDim;
-            Texture2D bt = UiKit.Tex("UI/btn_base");
             UiKit.Disc(c + new Vector2(0f, 3f), r * 0.98f, new Color(0f, 0f, 0f, 0.16f * a));
-            if (bt != null) UiKit.Image(c, r * (h ? 1.05f : 1.12f), bt, h ? new Color(1f, 0.6f, 0.55f, 1f) : new Color(1f, 1f, 1f, (ready ? 0.6f : 0.3f) * introDim));
-            else UiKit.Disc(c, r, new Color(0.06f, 0.05f, 0.07f, 0.72f * a));
-            Texture2D wt = UiKit.Tex("UI/btn_wave_icon");
-            if (wt != null)
-            {
-                float pul = mine ? 1f + 0.08f * Mathf.Sin(Time.unscaledTime * 14f) : 1f;
-                UiKit.Image(c + new Vector2(0f, -r * 0.1f), r * 0.78f * pul, wt, new Color(1f, 1f, 1f, (ready ? 1f : 0.5f) * introDim));
-            }
             int cl = mine ? cs.Level(pl) : -1;
-            string name = !mine ? "ВОЛНА" : cl < 0 ? "НАКОПЛЕНИЕ" : cl == 0 ? "I" : cl == 1 ? "II" : cl == 2 ? "III" : "IV";
-            UiKit.Text(new Rect(c.x - r, c.y + r * 0.42f, r * 2f, r * 0.42f), name, Mathf.Max(8f, r * (mine && cl >= 0 ? 0.3f : 0.22f)), new Color(1f, 0.8f, 0.72f, 0.9f * a), TextAnchor.MiddleCenter, false);
+            // нарисованная кнопка владельца (как «шар», «укол», «прыжок»): в покое полупрозрачная, нажатая/копит — яркая и красноватая
+            Texture2D ft = UiKit.Tex("UI/btn_wave");
+            if (ft != null)
+            {
+                float pul = mine ? 1f + 0.05f * Mathf.Sin(Time.unscaledTime * 14f) : 1f;
+                UiKit.Image(c, r * (h ? 1.06f : 1.12f) * pul, ft, h ? new Color(1f, 0.7f, 0.62f, 1f) : new Color(1f, 1f, 1f, (ready ? 0.6f : 0.3f) * introDim));
+                if (mine && cl >= 0)
+                    UiKit.Text(new Rect(c.x - r, c.y + r * 0.5f, r * 2f, r * 0.42f), cl == 0 ? "I" : cl == 1 ? "II" : cl == 2 ? "III" : "IV", r * 0.34f, new Color(1f, 0.85f, 0.75f, a), TextAnchor.MiddleCenter, false);
+            }
+            else
+            {
+                // запасная: камень и красный полумесяц из листа полёта
+                Texture2D bt = UiKit.Tex("UI/btn_base");
+                if (bt != null) UiKit.Image(c, r * (h ? 1.05f : 1.12f), bt, h ? new Color(1f, 0.6f, 0.55f, 1f) : new Color(1f, 1f, 1f, (ready ? 0.6f : 0.3f) * introDim));
+                Texture2D wt = UiKit.Tex("UI/btn_wave_icon");
+                if (wt != null) UiKit.Image(c + new Vector2(0f, -r * 0.1f), r * 0.78f, wt, new Color(1f, 1f, 1f, (ready ? 1f : 0.5f) * introDim));
+                string name = !mine ? "ВОЛНА" : cl < 0 ? "НАКОПЛЕНИЕ" : cl == 0 ? "I" : cl == 1 ? "II" : cl == 2 ? "III" : "IV";
+                UiKit.Text(new Rect(c.x - r, c.y + r * 0.42f, r * 2f, r * 0.42f), name, Mathf.Max(8f, r * 0.22f), new Color(1f, 0.8f, 0.72f, 0.9f * a), TextAnchor.MiddleCenter, false);
+            }
             // кольцо: при накоплении — прогресс ступеней, иначе — хватает ли духа (красные точки)
             float k = mine ? cs.Progress(pl) : Mathf.Clamp01(pl.Ki / Mathf.Max(1f, ChargeSystem.KiCost[0]));
             const int N = 20;
