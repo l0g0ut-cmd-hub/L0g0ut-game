@@ -284,7 +284,7 @@ namespace BladePath
             float dbs = dbK * dbK * (3f - 2f * dbK);
             if (dbs > 0f) focus = Vector3.Lerp(focus, dbFocus, dbs);
             Quaternion rot = Quaternion.Euler(pitch + 4f * ck + 14f * ik - 4f * superK - 3f * dbs, yaw + cineYaw - 40f * ik + 22f * superK + dbYaw * dbs, 0f);
-            Vector3 pos = focus + rot * new Vector3(0f, 0f, -(dist + autoD) * (1f - 0.3f * ck + 0.5f * ik - 0.45f * superK) * (1f - 0.33f * dbs)));
+            Vector3 pos = focus + rot * new Vector3(0f, 0f, -(dist + autoD) * (1f - 0.3f * ck + 0.5f * ik - 0.45f * superK) * (1f - 0.33f * dbs));
             if (pos.y < 0.15f) pos.y = 0.15f;
             // лёгкое «дыхание» камеры с рук
             float tt = Time.unscaledTime;
