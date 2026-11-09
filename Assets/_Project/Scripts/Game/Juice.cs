@@ -420,14 +420,6 @@ namespace BladePath
         /// <summary>Последний удар раунда: тонкий высокий звон стали в замершем кадре.</summary>
         public void BeatSting() { Play(clang, 0.55f, 1.95f); Play(clang, 0.3f, 2.4f); }
 
-        /// <summary>Сцепка клинков: скрежет стали и сноп искр из точки, где клинки сцеплены.</summary>
-        public void LockGrind(Vector3 pos)
-        {
-            Play(clang, 0.35f, Random.Range(1.15f, 1.45f));
-            Sparks(pos, Vector3.up, 10, 0.8f);
-            SparkLight(pos, new Color(1f, 0.75f, 0.45f), 1.6f, 2.4f, 0.08f);
-        }
-
         /// <summary>Удар горящим клинком: вспышка огня в ране и искры-угольки.</summary>
         public void FlameHit(Vector3 pos)
         {

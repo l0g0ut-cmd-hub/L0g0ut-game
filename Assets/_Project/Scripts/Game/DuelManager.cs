@@ -427,7 +427,7 @@ namespace BladePath
             if (Round < 1) Round = 1;
             Time.timeScale = 1f;
             Paused = false; Slowmo = false; hitStopUntil = 0f;
-            LockActive = false; beatUntil = 0f; StopFlame();
+            beatUntil = 0f; StopFlame();
             companionAt = -1f; poisonUntil = 0f;
             if (player != null) { player.ResetFighter(); hp[player] = MaxHp(player); hpTrail[player] = MaxHp(player); lastSwing[player] = -1; }
             bleedUntil = 0f;
@@ -602,7 +602,6 @@ namespace BladePath
             ApplyTimeScale();
 
             CheckClash();
-            UpdateLock();
             UpdateCharge(player); UpdateCharge(enemy);
             UpdateSuper();
             UpdateDeathblow();
@@ -1169,99 +1168,6 @@ namespace BladePath
             Haptics.Pulse(90);
         }
 
-        // ---------------------------------------------------------------- сцепка клинков (редко)
-        /// <summary>
-        /// Иногда сшибка переходит в сцепку: клинки сцеплены, бойцы давят друг на друга, камера крупно.
-        /// Частые нажатия удара двигают перевес; кто пересилил — отбрасывает соперника (тот теряет равновесие и открыт).
-        /// Редко: треть сшибок и не чаще раза в 35 с.
-        /// </summary>
-        public bool LockActive { get; private set; }
-        public float LockPower { get { return lockPower; } }   // −1…1: + перевес героя
-        public float LockAge { get { return Time.unscaledTime - lockStart; } }
-        public Vector3 LockPoint { get; private set; }
-        public const float LockMax = 2.8f;
-        float lockStart, lockPower, lockNextSpark, lockCooldownUntil, lockEnemyRate;
-        Vector3 lockMid, lockDir;
-
-        void StartLock(Vector3 p)
-        {
-            LockActive = true; lockStart = Time.unscaledTime; lockPower = 0f; lockCooldownUntil = Time.unscaledTime + 35f;
-            lockNextSpark = Time.unscaledTime + 0.15f;
-            player.weapon.ResetState(); enemy.weapon.ResetState();
-            Freeze(true);
-            player.TakeKnockback(); enemy.TakeKnockback(); player.StopDash(); enemy.StopDash();
-            Vector3 pp = player.transform.position, ep = enemy.transform.position;
-            lockDir = ep - pp; lockDir.y = 0f; lockDir = lockDir.sqrMagnitude > 1e-4f ? lockDir.normalized : Vector3.right;
-            lockMid = (pp + ep) * 0.5f; lockMid.y = 0f;
-            LockPoint = new Vector3(lockMid.x, p.y, lockMid.z);
-            player.transform.rotation = Quaternion.LookRotation(lockDir, Vector3.up);
-            enemy.transform.rotation = Quaternion.LookRotation(-lockDir, Vector3.up);
-            lockEnemyRate = EnemyAI.Difficulty == 0 ? 0.3f : EnemyAI.Difficulty == 1 ? 0.42f : 0.55f;
-            if (Juice.Instance != null) { Juice.Instance.Clash(LockPoint); Juice.Instance.Taiko(1f, 0.85f); }
-            if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.06f);
-            hitStopUntil = Time.unscaledTime + 0.1f;
-            Haptics.Pulse(70);
-            Announce("СЦЕПКА КЛИНКОВ", new Color(1f, 0.85f, 0.45f), "жми удар чаще — пересиль");
-        }
-
-        /// <summary>Нажатие удара во время сцепки — герой давит.</summary>
-        public void LockPush()
-        {
-            if (!LockActive || Paused) return;
-            lockPower = Mathf.Min(1f, lockPower + 0.11f);
-            if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.012f);
-            Haptics.Pulse(12);
-        }
-
-        void UpdateLock()
-        {
-            if (!LockActive) return;
-            if (State != DuelState.Fighting || player == null || enemy == null || player.Dead || enemy.Dead) { LockActive = false; return; }
-            if (Paused) return;
-            float dt = Time.unscaledDeltaTime, t = Time.unscaledTime;
-            // враг давит волнами; автобой давит за героя
-            lockPower -= lockEnemyRate * dt * (0.6f + 0.8f * Mathf.PerlinNoise(t * 1.7f, 3.3f));
-            if (AutoBattle) lockPower += 0.5f * dt * (0.6f + 0.8f * Mathf.PerlinNoise(t * 1.3f, 7.1f));
-            lockPower = Mathf.Clamp(lockPower, -1f, 1f);
-            // кто давит — тот теснит: пара сдвигается в сторону проигрывающего
-            float shove = 0.2f * lockPower + 0.015f * Mathf.Sin(t * 23f);
-            Vector3 pp = lockMid - lockDir * (0.62f - shove), ep = lockMid + lockDir * (0.62f + shove);
-            pp.y = player.transform.position.y; ep.y = enemy.transform.position.y;
-            player.transform.position = pp; enemy.transform.position = ep;
-            LockPoint = new Vector3(lockMid.x, LockPoint.y, lockMid.z) + lockDir * shove;
-            if (t >= lockNextSpark && Juice.Instance != null)
-            {
-                lockNextSpark = t + 0.14f + 0.1f * UnityEngine.Random.value;
-                Juice.Instance.LockGrind(LockPoint);   // скрежет и искры там, где клинки сцеплены
-            }
-            if (lockPower >= 1f) EndLock(player);
-            else if (lockPower <= -1f) EndLock(enemy);
-            else if (LockAge > LockMax) EndLock(lockPower >= 0f ? player : enemy);
-        }
-
-        void EndLock(FighterController win)
-        {
-            LockActive = false;
-            Freeze(false);
-            FighterController lose = win == player ? enemy : player;
-            Vector3 away = lose.transform.position - win.transform.position; away.y = 0f;
-            lose.Knockback(away, 3.2f);   // сильный отброс: скольжение, край двора, жаровня
-            lose.AddPosture(35f);
-            lose.Stun(0.9f);
-            if (lose.weapon != null) lose.weapon.Down(0.6f);
-            counterUntil[win] = Time.unscaledTime + 1.1f;   // пересилил — окно контратаки
-            if (Juice.Instance != null) { Juice.Instance.Clash(LockPoint); Juice.Instance.Taiko(1.1f, 0.7f); }
-            if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(0.1f); CameraOrbit.Instance.Punch(3f); }
-            PostFX.Kick(0.01f);
-            hitStopUntil = Time.unscaledTime + 0.1f;
-            Haptics.Pulse(win == player ? 80 : 110);
-            Popup cp = new Popup();
-            cp.world = LockPoint + Vector3.up * 0.3f; cp.size = 34f; cp.born = Time.unscaledTime;
-            cp.text = win == player ? "ПЕРЕСИЛИЛ!" : "ВРАГ ПЕРЕСИЛИЛ";
-            cp.color = win == player ? new Color(0.5f, 0.9f, 1f) : new Color(1f, 0.4f, 0.3f);
-            Popups.Add(cp);
-        }
-
         /// <summary>Сшибка: оба бьют одновременно и клинки пересеклись — удары гасятся, бойцов отбрасывает.</summary>
         void CheckClash()
         {
@@ -1276,10 +1182,6 @@ namespace BladePath
             if (SegDist(a0, a1, b0, b1, out pa, out pb) > 0.09f) return;
             lastClashA = a.SwingId; lastClashB = b.SwingId;
             Vector3 p = (pa + pb) * 0.5f;
-            // изредка сшибка переходит в сцепку клинков
-            if (Time.unscaledTime > lockCooldownUntil && player.Grounded && enemy.Grounded && !SuperActive && !IaiWaiting
-                && (SideDuel.Instance == null || !SideDuel.Held(player)) && UnityEngine.Random.value < 0.34f)
-            { StartLock(p); return; }
             a.ResetState(); b.ResetState();
             player.Stun(0.3f); enemy.Stun(0.3f);
             player.Knockback(player.transform.position - enemy.transform.position, 2.2f);
