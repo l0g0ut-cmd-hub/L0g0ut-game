@@ -40,10 +40,10 @@ namespace BladePath
             float hgt = 1.8f + 0.3f * level;   // высота полумесяца, м
             float cell = hgt / 0.85f;            // полумесяц занимает ~85% высоты кадра
             w.fly = SheetFx.Spawn("bwave_fly", w.pos + Vector3.up * (hgt * 0.5f + 0.05f), 8, 4, 0, 32, 26f, true, cell);
-            if (w.fly != null) { w.fly.flipX = w.flip; w.fly.tint = new Color(1f, 1f, 1f, 0f); }
+            if (w.fly != null) { w.fly.flipX = w.flip; w.fly.tint = new Color(1f, 1f, 1f, 0f); w.fly.faceCam = 1f; }   // сверху — полумесяц лицом, а не ребром
             // выпуск у клинка: дуга режет воздух, полумесяц отрывается
             SheetFx l = SheetFx.Spawn("bwave_launch", a.transform.position + d * 0.9f + Vector3.up * 1.15f, 8, 4, 0, 24, 34f, false, 2.4f + 0.3f * level);
-            if (l != null) l.flipX = w.flip;
+            if (l != null) { l.flipX = w.flip; l.faceCam = 1f; }
             GameObject lg = new GameObject("BloodWaveLight");
             lg.transform.SetParent(g.transform, false);
             w.lt = lg.AddComponent<Light>(); w.lt.type = LightType.Point; w.lt.color = Red; w.lt.range = 3.5f + 0.5f * level; w.lt.intensity = 0f; w.lt.shadows = LightShadows.None;
@@ -105,7 +105,7 @@ namespace BladePath
             DuelManager.Instance.ForceHit(target, owner, dmg, post, at);
             if (!target.Dead) target.Knockback(dir, blocked ? 1.2f : 1.8f + 0.4f * level);
             SheetFx h = SheetFx.Spawn("bwave_hit", at, 8, 4, 0, 24, 32f, false, 2.4f + 0.35f * level);
-            if (h != null) h.flipX = flip;
+            if (h != null) { h.flipX = flip; h.faceCam = 1f; }
             if (Juice.Instance != null) Juice.Instance.WaveHit(at, blocked);
             if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(0.05f + 0.025f * level); CameraOrbit.Instance.Punch(2f + level); }
             GroundFlash.Spawn("FX/shock_ring", new Vector3(at.x, 0.02f, at.z), 0.8f, 2.6f + 0.6f * level, Red, 0.45f, 0f);

@@ -30,6 +30,9 @@ namespace BladePath
         public float sway, swaySpeed = 3.2f, swayFreq = 5f, swayPhase;
         // низ плоскости мягко гаснет (доля высоты): там, где пламя стоит на полу, нет резкой черты — сверху плоскость не видна
         public float bottomFade;
+        // поворот к камере: 0 — плоскость стоит вертикально (поворот только вокруг вертикали), 1 — целиком лицом к камере.
+        // Сверху вертикальная плоскость видна ребром — линией (владелец, скриншоты сверху); наклон к камере это убирает
+        public float faceCam;
         const int Bands = 8, PerLayer = (Bands + 1) * 2;
         float born;
         Mesh mesh; MeshRenderer mr;
@@ -120,7 +123,16 @@ namespace BladePath
             if (cam != null) { right = cam.transform.right; right.y = 0f; right = right.sqrMagnitude > 1e-4f ? right.normalized : Vector3.right; }
             transform.rotation = Quaternion.identity;
             float hw = width * 0.5f, h = width * aspect;
-            Vector3 up = Vector3.up * h;
+            Vector3 upDir = Vector3.up;
+            if (cam != null && faceCam > 0f)
+            {
+                Vector3 cu = cam.transform.up;
+                upDir = Vector3.Lerp(Vector3.up, cu, faceCam);
+                upDir = upDir.sqrMagnitude > 1e-4f ? upDir.normalized : Vector3.up;
+                right = Vector3.Cross(upDir, cam.transform.forward).normalized * -1f;
+                if (Vector3.Dot(right, cam.transform.right) < 0f) right = -right;
+            }
+            Vector3 up = upDir * h;
             Vector3 b0 = bottomAnchor ? Vector3.zero : -up * 0.5f;
             Vector3 L = -right * hw + b0, R = right * hw + b0;
             float tt = Time.time * swaySpeed + swayPhase;

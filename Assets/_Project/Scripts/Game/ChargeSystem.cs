@@ -243,7 +243,7 @@ namespace BladePath
                     SheetFx fx = SheetFx.Spawn("pillar_loop_blood", c.f.transform.position, 4, 4, 0, 16, 9f, true, 1f, 2f);
                     if (fx == null) continue;
                     fx.bottomAnchor = true; fx.intro = 4; fx.loopFrom = 4; fx.loopTo = 11; fx.tint = new Color(1f, 1f, 1f, 0f);
-                    fx.frameShift = i * 3; fx.flipX = (i & 1) == 1; fx.bottomFade = 0.16f;
+                    fx.frameShift = i * 3; fx.flipX = (i & 1) == 1; fx.bottomFade = 0.16f; fx.faceCam = 0.55f;   // наклон к камере: сверху языки видны, а не ребром
                     fx.sway = i == 0 ? 0.07f : 0.11f; fx.swaySpeed = 2.6f + 0.45f * i; fx.swayFreq = 4.5f + 0.6f * i; fx.swayPhase = i * 1.7f;
                     if (i == 0) { fx.mirrorLayer = true; fx.mirrorShift = 4; fx.mirrorAlpha = 0.5f; fx.mirrorScale = 0.86f; }
                     c.flames[i] = fx;
