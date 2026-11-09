@@ -155,6 +155,7 @@ namespace BladePath.EditorTools
             AddShojiShadows(look);
             AddCameraOccluders(env);
             MarkStatic(env);
+            PruneFarShadows(env);
             AddMist(look);
             AddFireflies(look);
             AddDragonflies(look);
@@ -941,6 +942,50 @@ namespace BladePath.EditorTools
             g.AddComponent<MeshFilter>(); g.AddComponent<MeshRenderer>();
             BladePath.FloorReflection fr = g.AddComponent<BladePath.FloorReflection>();
             fr.source = src; fr.lightRef = l; fr.baseIntensity = baseI; fr.color = c; fr.width = width; fr.length = length; fr.strength = strength;
+        }
+
+        /// <summary>
+        /// Оптимизация 2026-11-09 (декорации — самое дорогое по замеру владельца): живую тень оставляем только тем деревьям,
+        /// кустам и постройкам, чья тень может упасть на площадку боя — при любом освещении: луна, день, рассвет, закат
+        /// (направления — как в DayNight). Тени дальних крон падали за ограду и в сад, а считались каждый кадр.
+        /// Проверка с запасом: тень — от низа предмета до проекции его верха на землю по свету, площадка расширена на 1,2 м.
+        /// </summary>
+        static void PruneFarShadows(Transform root)
+        {
+            Vector3[] toLight =
+            {
+                -(Quaternion.Euler(38f, -35f, 0f) * Vector3.forward),   // луна (Moonlight)
+                new Vector3(-0.55f, 0.8f, 0.25f),                         // день (DayNight.sunDir)
+                new Vector3(-0.8f, 0.2f, 0.55f),                          // рассвет (dawnSunDir)
+                new Vector3(0.42f, 0.07f, 0.9f),                          // закат (duskSunDir)
+            };
+            const float ax = 3.6f + 1.2f, az = 2.7f + 1.2f;   // площадка (FloorReflection.bounds) + запас
+            int off = 0, kept = 0;
+            foreach (MeshRenderer r in root.GetComponentsInChildren<MeshRenderer>(true))
+            {
+                if (r.shadowCastingMode == UnityEngine.Rendering.ShadowCastingMode.Off) continue;
+                Bounds b = r.bounds;
+                bool reach = false;
+                foreach (Vector3 tl in toLight)
+                {
+                    Vector3 L = tl.normalized;
+                    if (L.y <= 0.02f) { reach = true; break; }
+                    // все углы коробки предмета, спроецированные на землю вдоль света
+                    float minX = float.MaxValue, maxX = float.MinValue, minZ = float.MaxValue, maxZ = float.MinValue;
+                    for (int i = 0; i < 8; i++)
+                    {
+                        Vector3 c = new Vector3((i & 1) == 0 ? b.min.x : b.max.x, (i & 2) == 0 ? b.min.y : b.max.y, (i & 4) == 0 ? b.min.z : b.max.z);
+                        Vector3 g = c - L * (Mathf.Max(0f, c.y) / L.y);   // точка тени на полу
+                        minX = Mathf.Min(minX, Mathf.Min(g.x, c.x)); maxX = Mathf.Max(maxX, Mathf.Max(g.x, c.x));
+                        minZ = Mathf.Min(minZ, Mathf.Min(g.z, c.z)); maxZ = Mathf.Max(maxZ, Mathf.Max(g.z, c.z));
+                    }
+                    if (maxX > -ax && minX < ax && maxZ > -az && minZ < az) { reach = true; break; }
+                }
+                if (reach) { kept++; continue; }
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                off++;
+            }
+            Debug.Log("PruneFarShadows: живая тень отключена у " + off + " объектов, оставлена у " + kept);
         }
 
         static void MarkStatic(Transform root)

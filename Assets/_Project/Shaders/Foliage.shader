@@ -1,3 +1,6 @@
+// Оптимизация 2026-11-09 (замер владельца: больше всего кадров съедают декорации): освещение BlinnPhong вместо полного PBR
+// Standard (листья почти матовые — реалистичный блик на них не виден; мокрый блеск сохранён), noforwardadd — свет жаровен и зала
+// ложится на листву без отдельного прохода на каждый источник, без лишних вариантов (лайтмапы, отложенный рендер).
 // Листва и трава с ветром: PBR как у Standard (альфа-срез, тусклое самосвечение под цвет листа — чтобы ночью не уходило в чёрное),
 // вершины качаются в мировых координатах (работает и со статическим батчингом): трава — сильнее к верхушке (uv.y),
 // карточки крон — лёгкий трепет по месту. На порыве (глобально _BP_Wind из WindGusts) всё гнётся по ветру сильнее.
@@ -9,6 +12,7 @@ Shader "BladePath/Foliage"
         _MainTex ("Albedo (A = cutout)", 2D) = "white" {}
         _Cutoff ("Alpha Cutoff", Range(0,1)) = 0.45
         _Glossiness ("Smoothness", Range(0,1)) = 0.12
+        _SpecColor ("Specular", Color) = (0.55,0.55,0.55,1)
         _EmissionColor ("Emission", Color) = (0,0,0,1)
         _Sway ("Sway (0 карточка кроны … 1 трава)", Range(0,1)) = 0
         _Flutter ("Flutter amount", Float) = 0.035
@@ -20,7 +24,7 @@ Shader "BladePath/Foliage"
         Cull Off
 
         CGPROGRAM
-        #pragma surface surf Standard alphatest:_Cutoff vertex:vert addshadow
+        #pragma surface surf BlinnPhong alphatest:_Cutoff vertex:vert addshadow noforwardadd halfasview nolightmap nodynlightmap nodirlightmap nometa nolppv noshadowmask exclude_path:deferred exclude_path:prepass
         #pragma target 3.0
 
         sampler2D _MainTex;
@@ -51,7 +55,7 @@ Shader "BladePath/Foliage"
             v.vertex = mul(unity_WorldToObject, float4(wp, 1.0));
         }
 
-        void surf (Input IN, inout SurfaceOutputStandard o)
+        void surf (Input IN, inout SurfaceOutput o)
         {
             fixed4 t = tex2D(_MainTex, IN.uv_MainTex);
             fixed4 c = t * _Color;
@@ -59,8 +63,9 @@ Shader "BladePath/Foliage"
             float wet = saturate(_BP_Wetness);
             float snow = saturate(_BP_Snow) * saturate(IN.worldNormal.y * 0.5 + 0.6) * lerp(1.0, IN.uv_MainTex.y, _Sway);
             o.Albedo = lerp(c.rgb * (1.0 - 0.28 * wet), fixed3(0.78, 0.8, 0.84), snow * 0.55);
-            o.Metallic = 0;
-            o.Smoothness = lerp(_Glossiness, 0.3, wet);   // выше — отражение неба на мокрых листьях читалось розово-белыми пятнами
+            // блик: сухие листья — едва, мокрые — блестят (как было при Smoothness 0,12 → 0,3)
+            o.Specular = 0.3;
+            o.Gloss = lerp(_Glossiness * 0.4, 0.45, wet);
             o.Emission = t.rgb * _EmissionColor.rgb;   // как у Standard с _EmissionMap = альбедо
             // роса на рассвете: редкие капли на травинках вспыхивают и гаснут (мерцают по своей фазе), трава чуть влажно блестит
             if (_BP_Dew > 0.01 && _Sway > 0.5)
@@ -70,7 +75,7 @@ Shader "BladePath/Foliage"
                 float tw = 0.5 + 0.5 * sin(_Time.y * 2.6 + h * 80.0);
                 float dew = _BP_Dew * (1.0 - saturate(_BP_Snow * 2.0));
                 o.Emission += step(0.992, h) * tw * tw * dew * fixed3(1.0, 0.95, 0.86) * 1.1;
-                o.Smoothness = max(o.Smoothness, 0.32 * dew);
+                o.Gloss = max(o.Gloss, 0.45 * dew);
             }
             o.Alpha = c.a;
         }
