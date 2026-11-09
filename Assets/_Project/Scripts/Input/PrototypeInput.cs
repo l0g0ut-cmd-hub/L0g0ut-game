@@ -18,8 +18,8 @@ namespace BladePath
         public FighterController enemy;
 
         enum B { Stick, Jump, Dash, Overhead, Rising, Legs, Energy, Thrust, Slash, Pause,
-                 Resume, Restart, CamReset, AiToggle, DebugToggle, ToMenu, OverAgain, OverMenu, Block, Vibro, Difficulty, Super, Gfx, Heal, CamMode, TimerToggle, Gear, OverGear, Stats, AutoBattle, Immortal, DevMenu, DevBack, AutoLevel, EnemyImmortal, WinFight, Clavicle, Twist, Arena, Ally, AllyFeature, AllyLevel, AllyImmortal, Sound, SoundScope, DayTime, NoRain }
-        const int Count = 47;
+                 Resume, Restart, CamReset, AiToggle, DebugToggle, ToMenu, OverAgain, OverMenu, Block, Vibro, Difficulty, Super, Gfx, Heal, CamMode, TimerToggle, Gear, OverGear, Stats, AutoBattle, Immortal, DevMenu, DevBack, AutoLevel, EnemyImmortal, WinFight, Clavicle, Twist, Arena, Ally, AllyFeature, AllyLevel, AllyImmortal, Sound, SoundScope, DayTime, NoRain, Perf, PerfCut }
+        const int Count = 49;
         bool devOpen;   // пауза: открыто «меню разработчика»
 
         const float StickRadius = 84f;
@@ -174,6 +174,8 @@ namespace BladePath
             if (down[(int)B.Arena]) ArenaVariants.Toggle();   // тест цельной арены из Meshy
             // время суток и дождь — сразу пересчитать погоду и свет арены (без перезапуска боя)
             if (down[(int)B.DayTime]) { DayCycle.NextMode(); if (Weather.Instance != null) Weather.Instance.Roll(); }
+            if (down[(int)B.Perf]) { PerfProbe.Ensure(); PerfProbe.Show = !PerfProbe.Show; return; }
+            if (down[(int)B.PerfCut]) { PerfProbe.Ensure(); PerfProbe.Show = true; PerfProbe.NextCut(); return; }
             if (down[(int)B.NoRain]) { Weather.NoRain = !Weather.NoRain; if (Weather.Instance != null) Weather.Instance.Roll(); }
             if (down[(int)B.AllyLevel]) SideDuel.AiLevel = (SideDuel.AiLevel + 1) % 3;
             if (down[(int)B.AllyImmortal]) SideDuel.ImmortalMode = (SideDuel.ImmortalMode + 1) % 4;
@@ -313,7 +315,10 @@ namespace BladePath
                             B.NoRain, B.Sound, B.SoundScope };
                 for (int k = 0; k < dev.Length; k++)
                     Box(dev[k], cx - 313f + (k % 3) * 213f, 120f + (k / 3) * 46f, 200f, 38f);
-                Box(B.DevBack, cx - 150f, 404f, 300f, 38f);
+                Box(B.DevBack, cx - 100f, 404f, 200f, 38f);
+                // замер производительности: слева от «НАЗАД» — показ кадров, справа — что выключить для сравнения
+                Box(B.Perf, cx - 313f, 404f, 200f, 38f);
+                Box(B.PerfCut, cx + 113f, 404f, 200f, 38f);
             }
             Box(B.OverAgain, cx - 210f, 314f, 200f, 56f);   // ниже панели итогов боя
             Box(B.OverMenu, cx + 10f, 314f, 200f, 56f);
@@ -325,7 +330,7 @@ namespace BladePath
             if (play && player != null && player.KiFull) active[(int)B.Super] = true;
             if (!paused) devOpen = false;
             if (paused && devOpen)
-                foreach (B b in new[] { B.AiToggle, B.DebugToggle, B.EnemyImmortal, B.AutoBattle, B.AutoLevel, B.Immortal, B.WinFight, B.Clavicle, B.Twist, B.Arena, B.Ally, B.AllyFeature, B.AllyLevel, B.AllyImmortal, B.DayTime, B.NoRain, B.Sound, B.SoundScope, B.DevBack }) active[(int)b] = true;
+                foreach (B b in new[] { B.AiToggle, B.DebugToggle, B.EnemyImmortal, B.AutoBattle, B.AutoLevel, B.Immortal, B.WinFight, B.Clavicle, B.Twist, B.Arena, B.Ally, B.AllyFeature, B.AllyLevel, B.AllyImmortal, B.DayTime, B.NoRain, B.Sound, B.SoundScope, B.Perf, B.PerfCut, B.DevBack }) active[(int)b] = true;
             else if (paused)
                 foreach (B b in new[] { B.Resume, B.Restart, B.Difficulty, B.Gfx, B.Vibro, B.CamReset, B.ToMenu, B.CamMode, B.TimerToggle, B.Gear, B.Stats, B.DevMenu }) active[(int)b] = true;
             if (over) { active[(int)B.OverAgain] = true; active[(int)B.OverMenu] = true; active[(int)B.OverGear] = true; }
@@ -348,6 +353,8 @@ namespace BladePath
             labels[(int)B.Ally] = "СОРАТНИК: " + (Profile.Ally < 0 ? "НЕТ" : Profile.AllyDown ? "ПАЛ" : Profile.AllyTierNames[Mathf.Clamp(Profile.Ally, 0, 2)]);
             labels[(int)B.DayTime] = "ВРЕМЯ СУТОК: " + DayCycle.ModeName(true);
             labels[(int)B.NoRain] = "ДОЖДЬ И ГРОЗА: " + (Weather.NoRain ? "ВЫКЛ" : "ВКЛ");
+            labels[(int)B.Perf] = "ЗАМЕР: " + (PerfProbe.Show ? "ВКЛ" : "ВЫКЛ");
+            labels[(int)B.PerfCut] = "ОТКЛ: " + PerfProbe.CutNames[PerfProbe.Cut];
             labels[(int)B.Arena] = "АРЕНА: " + ArenaVariants.Names[Mathf.Clamp(ArenaVariants.Current, 0, ArenaVariants.Names.Length - 1)];
             labels[(int)B.Clavicle] = "РУКИ: " + (HeroRigDriver.DebugAnimSword ? "МОКАП" : "СТАРЫЙ IK");
             labels[(int)B.Twist] = "РУКИ: СКРУТКА " + Mathf.RoundToInt(HeroRigDriver.DebugTwistShare * 100f) + "%";
@@ -580,7 +587,7 @@ namespace BladePath
                 {
                     UiKit.Rect(new Rect(W * 0.5f - 200f, 64f, 400f, 46f), new Color(0.12f, 0.05f, 0.03f, 0.9f));
                     UiKit.Text(new Rect(W * 0.5f - 200f, 64f, 400f, 46f), "МЕНЮ РАЗРАБОТЧИКА", 24f, Gold);
-                    foreach (B b in new[] { B.AiToggle, B.DebugToggle, B.EnemyImmortal, B.AutoBattle, B.AutoLevel, B.Immortal, B.WinFight, B.Clavicle, B.Twist, B.Arena, B.Ally, B.AllyFeature, B.AllyLevel, B.AllyImmortal, B.DayTime, B.NoRain, B.Sound, B.SoundScope, B.DevBack }) DrawRectButton((int)b);
+                    foreach (B b in new[] { B.AiToggle, B.DebugToggle, B.EnemyImmortal, B.AutoBattle, B.AutoLevel, B.Immortal, B.WinFight, B.Clavicle, B.Twist, B.Arena, B.Ally, B.AllyFeature, B.AllyLevel, B.AllyImmortal, B.DayTime, B.NoRain, B.Sound, B.SoundScope, B.Perf, B.PerfCut, B.DevBack }) DrawRectButton((int)b);
                 }
                 else
                 {
