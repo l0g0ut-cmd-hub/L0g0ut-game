@@ -54,6 +54,7 @@ namespace BladePath
         float midX, midZ, midVx, midVz;
         FighterController[] fighters;
         readonly HashSet<int> camTouches = new HashSet<int>();
+        readonly HashSet<int> liveIds = new HashSet<int>();
         readonly List<Touch> touchBuffer = new List<Touch>(2);
         float lastTapTime = -10f;
         Vector2 lastTapPos;
@@ -119,12 +120,22 @@ namespace BladePath
             int tc = Input.touchCount;
             List<Touch> mine = touchBuffer;
             mine.Clear();
+            // пальцы, которых уже нет на экране, — из списка камеры вон (номер пальца Android выдаёт заново: потерянное
+            // «отпускание» превращало следующее касание кнопки в поворот камеры — владелец: «крутит камеру при нажатии скилов»)
+            if (camTouches.Count > 0)
+            {
+                liveIds.Clear();
+                for (int i = 0; i < tc; i++) liveIds.Add(Input.GetTouch(i).fingerId);
+                camTouches.IntersectWith(liveIds);
+            }
             for (int i = 0; i < tc; i++)
             {
                 Touch t = Input.GetTouch(i);
                 if (t.phase == TouchPhase.Began)
                 {
-                    bool onButton = PrototypeInput.Instance != null && PrototypeInput.Instance.IsOverButton(t.position);
+                    camTouches.Remove(t.fingerId);
+                    // у кнопок — с запасом: палец, лёгший рядом с кнопкой или стиком, камеру не крутит
+                    bool onButton = PrototypeInput.Instance != null && PrototypeInput.Instance.IsOverButton(t.position, 26f);
                     diagTouch = string.Format("камера: касание ({0:F0},{1:F0}) из {2}x{3} на кнопке={4}", t.position.x, t.position.y, Screen.width, Screen.height, onButton);
                     if (!onButton)
                     {
@@ -142,6 +153,8 @@ namespace BladePath
             if (mine.Count == 0) return;
             // пока идёт вступление раунда, камеру пальцем не крутим — раунд начинается с обычного вида
             if (!FreeMode && DuelManager.Instance != null && DuelManager.Instance.State == DuelState.Intro) return;
+            // пока игрок копит ступени (дух или волна) — камера не крутится: второй палец, лежащий на экране, сдвигал вид
+            if (!FreeMode && DuelManager.Instance != null && ChargeSystem.Instance != null && ChargeSystem.Instance.IsCharging(DuelManager.Instance.player)) return;
 
             float h = Mathf.Max(1f, Screen.height);
             if (mine.Count == 1)

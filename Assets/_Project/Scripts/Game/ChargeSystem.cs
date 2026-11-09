@@ -17,6 +17,12 @@ namespace BladePath
         public static readonly float[] LevelAt = { 0.5f, 1.1f, 1.7f, 2.6f };
         public static readonly float[] KiCost = { 15f, 25f, 40f, 60f };
         public static readonly float[] DmgMul = { 1.5f, 2.0f, 2.6f, 3.4f };
+        // кровавая волна (владелец: «быстрее копить, дешевле по духу — чтобы с полным духом слать по три подряд»):
+        // ступени втрое быстрее обычных, высшая — за ~1 с; три волны IV ступени = 96 духа из 100
+        public static readonly float[] WaveLevelAt = { 0.2f, 0.42f, 0.66f, 1.0f };
+        public static readonly float[] WaveKiCost = { 8f, 14f, 22f, 32f };
+        static float[] At(Charge c) { return c.wave ? WaveLevelAt : LevelAt; }
+        static float[] Cost(Charge c) { return c.wave ? WaveKiCost : KiCost; }
         public const int Max = 3;
         public static float BigReleaseAt = -10f;   // удар с III ступени и выше — для линий скорости на экране   // IV ступень — «ЯРОСТЬ»: аура в багровый, второй узор и столб, гул, молнии и трещины
         static readonly Color Crimson = new Color(1f, 0.07f, 0.05f);
@@ -58,11 +64,11 @@ namespace BladePath
             if (f == null || !active.TryGetValue(f, out c)) return;
             c.start = Mathf.Min(Time.time, c.start + seconds);
             int lvl = -1; float tt = Time.time - c.start;
-            for (int i = 0; i <= Max; i++) if (tt >= LevelAt[i]) lvl = i;
+            for (int i = 0; i <= Max; i++) if (tt >= At(c)[i]) lvl = i;
             if (lvl < c.level) c.level = lvl;
         }
         public int Level(FighterController f) { Charge c; return active.TryGetValue(f, out c) ? c.level : -1; }
-        public float Progress(FighterController f) { Charge c; return active.TryGetValue(f, out c) ? Mathf.Clamp01((Time.time - c.start) / LevelAt[Max]) : 0f; }
+        public float Progress(FighterController f) { Charge c; return active.TryGetValue(f, out c) ? Mathf.Clamp01((Time.time - c.start) / At(c)[Max]) : 0f; }
 
         public Color ColorOf(FighterController f)
         {
@@ -78,7 +84,7 @@ namespace BladePath
 
         bool Begin(FighterController f, bool wave)
         {
-            if (f == null || active.ContainsKey(f) || !f.CanAct || f.Ki < KiCost[0]) return false;
+            if (f == null || active.ContainsKey(f) || !f.CanAct || f.Ki < (wave ? WaveKiCost[0] : KiCost[0])) return false;
             if (f.weapon != null && f.weapon.Phase != SwingPhase.Idle) return false;
             Charge c = new Charge { f = f, start = Time.time, level = -1, wave = wave, col = wave ? BloodWave.Red : ColorOf(f) };
             Build(c);
@@ -103,13 +109,14 @@ namespace BladePath
             int lvl = c.level;
             Cleanup(c); active.Remove(f); f.Charging = false;
             if (lvl < 0) return false;
-            while (lvl > 0 && f.Ki < KiCost[lvl]) lvl--;
-            if (f.Ki < KiCost[lvl]) return false;
+            float[] cost = Cost(c);
+            while (lvl > 0 && f.Ki < cost[lvl]) lvl--;
+            if (f.Ki < cost[lvl]) return false;
             if (c.wave)
             {
                 // кровавая волна: взмах на месте, волна срывается с клинка в фазе удара (Update → BloodWave.Launch)
                 if (!f.Attack(AttackType.Overhead, false)) return false;
-                f.AddKi(-KiCost[lvl]);
+                f.AddKi(-cost[lvl]);
                 waveSwing[f] = new Vector2Int(lvl, f.weapon != null ? f.weapon.SwingId : -1);
                 releaseAt[f] = Time.time;
                 GroundFlash.Spawn("FX/crack_glow", f.transform.position + f.transform.forward * 0.5f, 1.0f + 0.5f * lvl, 1.4f + 0.7f * lvl, c.col, 0.9f, 0f, true);
@@ -575,12 +582,13 @@ namespace BladePath
                 // враг копит — он раскрылся: дух игрока растёт быстрее (успеть накопить навстречу или ударить)
                 if (dm != null && dm.player != null && f != dm.player && !dm.player.Dead) dm.player.AddKi(9f * Time.deltaTime);
                 float t = Time.time - c.start;
-                int lvl = t >= LevelAt[3] ? 3 : t >= LevelAt[2] ? 2 : t >= LevelAt[1] ? 1 : t >= LevelAt[0] ? 0 : -1;
-                while (lvl >= 0 && f.Ki < KiCost[lvl]) lvl--;   // духа не хватает — выше не поднимется
+                float[] la = At(c), kc = Cost(c);
+                int lvl = t >= la[3] ? 3 : t >= la[2] ? 2 : t >= la[1] ? 1 : t >= la[0] ? 0 : -1;
+                while (lvl >= 0 && f.Ki < kc[lvl]) lvl--;   // духа не хватает — выше не поднимется
                 // облик ступени догоняет ступень; внутри ступени узор чуть подрастает к следующей (если на неё хватит духа)
-                float kt = lvl < 0 ? 0.12f * Mathf.Clamp01(t / LevelAt[0]) : Mathf.Min(1f, (lvl + 1) / 3f);
-                if (lvl >= 0 && lvl < 2 && f.Ki >= KiCost[lvl + 1]) kt += 0.07f * Mathf.Clamp01((t - LevelAt[lvl]) / (LevelAt[lvl + 1] - LevelAt[lvl]));
-                c.kv = Mathf.MoveTowards(c.kv, kt, Time.deltaTime * 1.8f);
+                float kt = lvl < 0 ? 0.12f * Mathf.Clamp01(t / la[0]) : Mathf.Min(1f, (lvl + 1) / 3f);
+                if (lvl >= 0 && lvl < 2 && f.Ki >= kc[lvl + 1]) kt += 0.07f * Mathf.Clamp01((t - la[lvl]) / (la[lvl + 1] - la[lvl]));
+                c.kv = Mathf.MoveTowards(c.kv, kt, Time.deltaTime * (c.wave ? 4f : 1.8f));   // волна копится быстрее — облик успевает
                 c.ex = Mathf.MoveTowards(c.ex, lvl >= Max ? 1f : 0f, Time.deltaTime * (lvl >= Max ? 1.5f : 3f));   // багровый круг проступает, пока выжигается
                 if (lvl > c.level)
                 {

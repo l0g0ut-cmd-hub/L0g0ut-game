@@ -79,12 +79,14 @@ namespace BladePath
         bool Paused { get { return duel != null && duel.Paused; } }
         bool Over { get { return duel != null && (duel.State == DuelState.PlayerWon || duel.State == DuelState.PlayerLost) && duel.MatchOver && duel.StateTime > 1.3f; } }
 
-        public bool IsOverButton(Vector2 screenPx)
+        public bool IsOverButton(Vector2 screenPx) { return IsOverButton(screenPx, 10f); }
+        /// <summary>Касание у кнопок боя с запасом margin (для камеры: палец рядом с кнопкой — не поворот камеры).</summary>
+        public bool IsOverButton(Vector2 screenPx, float margin)
         {
             float sc = Mathf.Max(0.01f, Screen.height / 540f);
             Vector2 p = new Vector2(screenPx.x / sc, (Screen.height - screenPx.y) / sc);
             for (int b = 0; b < Count; b++)
-                if (active[b] && Hit(b, p, 10f)) return true;
+                if (active[b] && Hit(b, p, margin)) return true;
             return false;
         }
 
@@ -759,7 +761,7 @@ namespace BladePath
             if (!active[i] || pl == null) return;
             ChargeSystem cs = ChargeSystem.Instance;
             bool mine = chg && cs != null && cs.IsWave(pl);
-            bool ready = mine || (pl.CanAct && pl.Ki >= ChargeSystem.KiCost[0] && !chg);
+            bool ready = mine || (pl.CanAct && pl.Ki >= ChargeSystem.WaveKiCost[0] && !chg);
             Vector2 c = ctr[i]; float r = rad[i];
             bool h = held[i] || mine;
             float a = (ready ? 1f : 0.45f) * introDim;
@@ -785,7 +787,7 @@ namespace BladePath
                 UiKit.Text(new Rect(c.x - r, c.y + r * 0.42f, r * 2f, r * 0.42f), name, Mathf.Max(8f, r * 0.22f), new Color(1f, 0.8f, 0.72f, 0.9f * a), TextAnchor.MiddleCenter, false);
             }
             // кольцо: при накоплении — прогресс ступеней, иначе — хватает ли духа (красные точки)
-            float k = mine ? cs.Progress(pl) : Mathf.Clamp01(pl.Ki / Mathf.Max(1f, ChargeSystem.KiCost[0]));
+            float k = mine ? cs.Progress(pl) : Mathf.Clamp01(pl.Ki / Mathf.Max(1f, ChargeSystem.WaveKiCost[0]));
             const int N = 20;
             for (int sgm = 0; sgm < N; sgm++)
             {
