@@ -92,6 +92,7 @@ namespace BladePath
         /// <summary>Таймер раунда (настройка «timer»): выключен — время не идёт, ничьей по времени нет, на экране его нет.</summary>
         /// <summary>Отладка (меню паузы): игроком управляет ИИ / игрок не умирает (здоровье не падает ниже 1).</summary>
         public static bool AutoBattle, Immortal, EnemyImmortal;
+        public static bool InfiniteKi;   // меню разработчика: дух игрока всегда полный (проверка ступеней, волны, приёмов духа)
         /// <summary>Сложность ИИ, который ведёт игрока в автобое: 0 ученик, 1 воин, 2 мастер.</summary>
         public static int AutoLevel = 1;
 
@@ -487,6 +488,7 @@ namespace BladePath
 
         void Update()
         {
+            if (InfiniteKi && player != null && !player.Dead) player.AddKi(1000f);
             if (resolver == null && CombatResolver.Instance != null)
             {
                 resolver = CombatResolver.Instance;

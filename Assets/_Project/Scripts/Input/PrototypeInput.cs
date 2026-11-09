@@ -18,8 +18,8 @@ namespace BladePath
         public FighterController enemy;
 
         enum B { Stick, Jump, Dash, Overhead, Rising, Legs, Energy, Thrust, Slash, Pause,
-                 Resume, Restart, CamReset, AiToggle, DebugToggle, ToMenu, OverAgain, OverMenu, Block, Vibro, Difficulty, Super, Gfx, Heal, CamMode, TimerToggle, Gear, OverGear, Stats, AutoBattle, Immortal, DevMenu, DevBack, AutoLevel, EnemyImmortal, WinFight, Clavicle, Twist, Arena, Ally, AllyFeature, AllyLevel, AllyImmortal, Sound, SoundScope, DayTime, NoRain, Perf, PerfCut, Wave }
-        const int Count = 50;
+                 Resume, Restart, CamReset, AiToggle, DebugToggle, ToMenu, OverAgain, OverMenu, Block, Vibro, Difficulty, Super, Gfx, Heal, CamMode, TimerToggle, Gear, OverGear, Stats, AutoBattle, Immortal, DevMenu, DevBack, AutoLevel, EnemyImmortal, WinFight, Clavicle, Twist, Arena, Ally, AllyFeature, AllyLevel, AllyImmortal, Sound, SoundScope, DayTime, NoRain, Perf, PerfCut, Wave, InfKi }
+        const int Count = 51;
         bool devOpen;   // пауза: открыто «меню разработчика»
 
         const float StickRadius = 84f;
@@ -165,6 +165,7 @@ namespace BladePath
             if (toggleAi && ai != null) ai.aiEnabled = !ai.aiEnabled;
             if (down[(int)B.Immortal]) DuelManager.Immortal = !DuelManager.Immortal;
             if (down[(int)B.EnemyImmortal]) DuelManager.EnemyImmortal = !DuelManager.EnemyImmortal;
+            if (down[(int)B.InfKi]) DuelManager.InfiniteKi = !DuelManager.InfiniteKi;
             if (down[(int)B.AutoLevel]) DuelManager.AutoLevel = (DuelManager.AutoLevel + 1) % 3;
             if (down[(int)B.DevMenu]) devOpen = true;
             if (down[(int)B.DevBack]) devOpen = false;
@@ -320,10 +321,11 @@ namespace BladePath
                             B.Twist, B.AllyFeature, B.Ally,
                             B.AllyLevel, B.AllyImmortal, B.DayTime,
                             B.NoRain, B.Sound, B.SoundScope,
-                            B.TimerToggle, B.Perf, B.PerfCut };   // таймер боя — здесь (убран из обычной паузы); замер кадров
+                            B.TimerToggle, B.Perf, B.PerfCut,
+                            B.InfKi };   // таймер боя — здесь (убран из обычной паузы); замер кадров; бесконечный дух
                 for (int k = 0; k < dev.Length; k++)
                     Box(dev[k], cx - 313f + (k % 3) * 213f, 116f + (k / 3) * 42f, 200f, 36f);
-                Box(B.DevBack, cx - 150f, 414f, 300f, 36f);
+                Box(B.DevBack, cx - 150f, 458f, 300f, 36f);   // ниже восьмого ряда
             }
             Box(B.OverAgain, cx - 210f, 314f, 200f, 56f);   // ниже панели итогов боя
             Box(B.OverMenu, cx + 10f, 314f, 200f, 56f);
@@ -335,7 +337,7 @@ namespace BladePath
             if (play && player != null && player.KiFull) active[(int)B.Super] = true;
             if (!paused) devOpen = false;
             if (paused && devOpen)
-                foreach (B b in new[] { B.AiToggle, B.DebugToggle, B.EnemyImmortal, B.AutoBattle, B.AutoLevel, B.Immortal, B.WinFight, B.Clavicle, B.Twist, B.Arena, B.Ally, B.AllyFeature, B.AllyLevel, B.AllyImmortal, B.DayTime, B.NoRain, B.Sound, B.SoundScope, B.TimerToggle, B.Perf, B.PerfCut, B.DevBack }) active[(int)b] = true;
+                foreach (B b in new[] { B.AiToggle, B.DebugToggle, B.EnemyImmortal, B.AutoBattle, B.AutoLevel, B.Immortal, B.WinFight, B.Clavicle, B.Twist, B.Arena, B.Ally, B.AllyFeature, B.AllyLevel, B.AllyImmortal, B.DayTime, B.NoRain, B.Sound, B.SoundScope, B.TimerToggle, B.Perf, B.PerfCut, B.InfKi, B.DevBack }) active[(int)b] = true;
             else if (paused)
                 foreach (B b in new[] { B.Resume, B.Restart, B.Difficulty, B.Gfx, B.Vibro, B.CamReset, B.ToMenu, B.CamMode, B.Gear, B.Stats, B.DevMenu }) active[(int)b] = true;
             if (over) { active[(int)B.OverAgain] = true; active[(int)B.OverMenu] = true; active[(int)B.OverGear] = true; }
@@ -348,6 +350,7 @@ namespace BladePath
             labels[(int)B.AutoBattle] = "АВТОБОЙ: " + (DuelManager.AutoBattle ? "ВКЛ" : "ВЫКЛ");
             labels[(int)B.Immortal] = "БЕССМЕРТИЕ ИГРОКА: " + (DuelManager.Immortal ? "ВКЛ" : "ВЫКЛ");
             labels[(int)B.EnemyImmortal] = "БЕССМЕРТИЕ ВРАГА: " + (DuelManager.EnemyImmortal ? "ВКЛ" : "ВЫКЛ");
+            labels[(int)B.InfKi] = "БЕСКОНЕЧНЫЙ ДУХ: " + (DuelManager.InfiniteKi ? "ВКЛ" : "ВЫКЛ");
             labels[(int)B.AutoLevel] = "ИИ ИГРОКА: " + (DuelManager.AutoLevel == 0 ? "УЧЕНИК" : DuelManager.AutoLevel == 1 ? "ВОИН" : "МАСТЕР");
             labels[(int)B.DevMenu] = "МЕНЮ РАЗРАБОТЧИКА";
             labels[(int)B.DevBack] = "НАЗАД";
@@ -593,7 +596,7 @@ namespace BladePath
                 {
                     UiKit.Rect(new Rect(W * 0.5f - 200f, 64f, 400f, 46f), new Color(0.12f, 0.05f, 0.03f, 0.9f));
                     UiKit.Text(new Rect(W * 0.5f - 200f, 64f, 400f, 46f), "МЕНЮ РАЗРАБОТЧИКА", 24f, Gold);
-                    foreach (B b in new[] { B.AiToggle, B.DebugToggle, B.EnemyImmortal, B.AutoBattle, B.AutoLevel, B.Immortal, B.WinFight, B.Clavicle, B.Twist, B.Arena, B.Ally, B.AllyFeature, B.AllyLevel, B.AllyImmortal, B.DayTime, B.NoRain, B.Sound, B.SoundScope, B.TimerToggle, B.Perf, B.PerfCut, B.DevBack }) DrawRectButton((int)b);
+                    foreach (B b in new[] { B.AiToggle, B.DebugToggle, B.EnemyImmortal, B.AutoBattle, B.AutoLevel, B.Immortal, B.WinFight, B.Clavicle, B.Twist, B.Arena, B.Ally, B.AllyFeature, B.AllyLevel, B.AllyImmortal, B.DayTime, B.NoRain, B.Sound, B.SoundScope, B.TimerToggle, B.Perf, B.PerfCut, B.InfKi, B.DevBack }) DrawRectButton((int)b);
                 }
                 else
                 {

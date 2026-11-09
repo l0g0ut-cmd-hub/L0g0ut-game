@@ -23,9 +23,17 @@ namespace BladePath
         // второй слой: тот же лист зеркально, со сдвигом по кадрам и чуть ниже — рисунок не повторяется, переходы мягче
         // (на листах ChatGPT соседние кадры сильно разные — один слой выглядит рваным)
         public bool mirrorLayer; public int mirrorShift = 4; public float mirrorAlpha = 0.5f, mirrorScale = 0.88f;
+        // сдвиг по кадрам качания (несколько языков из одного листа не повторяют друг друга)
+        public int frameShift;
+        // колыхание: плоскость нарезана на полосы по высоте, полосы гнутся волной, бегущей вверх, — пламя течёт между
+        // кадрами непрерывно, а не только сменой картинок (владелец: «как будто в пару кадров»)
+        public float sway, swaySpeed = 3.2f, swayFreq = 5f, swayPhase;
+        // низ плоскости мягко гаснет (доля высоты): там, где пламя стоит на полу, нет резкой черты — сверху плоскость не видна
+        public float bottomFade;
+        const int Bands = 8, PerLayer = (Bands + 1) * 2;
         float born;
         Mesh mesh; MeshRenderer mr;
-        readonly Vector3[] v = new Vector3[16]; readonly Vector2[] uv = new Vector2[16]; readonly Color[] col = new Color[16];
+        readonly Vector3[] v = new Vector3[PerLayer * 4]; readonly Vector2[] uv = new Vector2[PerLayer * 4]; readonly Color[] col = new Color[PerLayer * 4];
         static readonly Dictionary<string, Material> mats = new Dictionary<string, Material>();
 
         public float Age { get { return Time.time - born; } }
@@ -43,7 +51,7 @@ namespace BladePath
                 if (i < intro) return first + i;
                 int n = loopTo - loopFrom + 1;
                 if (n <= 1) return loopFrom;
-                int per = 2 * (n - 1), p = (i - intro) % per;
+                int per = 2 * (n - 1), p = (i - intro + frameShift) % per;
                 return p < n - 1 ? loopFrom + p : loopTo - (p - (n - 1));
             }
             return first + (loop ? i % count : Mathf.Min(i, count - 1));
@@ -62,7 +70,15 @@ namespace BladePath
             s.mesh = new Mesh { name = "SheetFx" };
             s.mesh.MarkDynamic();
             s.mesh.vertices = s.v; s.mesh.uv = s.uv; s.mesh.colors = s.col;
-            s.mesh.triangles = new[] { 0, 2, 1, 0, 3, 2, 4, 6, 5, 4, 7, 6, 8, 10, 9, 8, 11, 10, 12, 14, 13, 12, 15, 14 };
+            int[] tri = new int[4 * Bands * 6]; int t = 0;
+            for (int l = 0; l < 4; l++)
+                for (int b = 0; b < Bands; b++)
+                {
+                    int o = l * PerLayer + b * 2;   // o — левый низ полосы, o+1 — правый низ, o+2/o+3 — верх
+                    tri[t++] = o; tri[t++] = o + 2; tri[t++] = o + 1;
+                    tri[t++] = o + 1; tri[t++] = o + 2; tri[t++] = o + 3;
+                }
+            s.mesh.triangles = tri;
             g.AddComponent<MeshFilter>().sharedMesh = s.mesh;
             s.mr = g.AddComponent<MeshRenderer>();
             s.mr.sharedMaterial = m;
@@ -107,30 +123,42 @@ namespace BladePath
             Vector3 up = Vector3.up * h;
             Vector3 b0 = bottomAnchor ? Vector3.zero : -up * 0.5f;
             Vector3 L = -right * hw + b0, R = right * hw + b0;
-            Quad(0, f0, L, R, up, a * (1f - k), flipX);
-            Quad(4, f1, L, R, up, a * k, flipX);
+            float tt = Time.time * swaySpeed + swayPhase;
+            Quad(0, f0, L, R, up, right, a * (1f - k), flipX, tt);
+            Quad(PerLayer, f1, L, R, up, right, a * k, flipX, tt);
             if (mirrorLayer)
             {
                 int j = i0 + mirrorShift;
                 Vector3 up2 = up * mirrorScale, b2 = bottomAnchor ? Vector3.zero : -up2 * 0.5f;
                 Vector3 L2 = -right * hw * mirrorScale + b2, R2 = right * hw * mirrorScale + b2;
-                Quad(8, Seq(j), L2, R2, up2, a * mirrorAlpha * (1f - k), !flipX);
-                Quad(12, Seq(j + 1), L2, R2, up2, a * mirrorAlpha * k, !flipX);
+                Quad(PerLayer * 2, Seq(j), L2, R2, up2, right, a * mirrorAlpha * (1f - k), !flipX, tt + 2.1f);
+                Quad(PerLayer * 3, Seq(j + 1), L2, R2, up2, right, a * mirrorAlpha * k, !flipX, tt + 2.1f);
             }
-            else for (int q = 8; q < 16; q++) { v[q] = Vector3.zero; col[q] = Color.clear; }
+            else for (int q = PerLayer * 2; q < PerLayer * 4; q++) { v[q] = Vector3.zero; col[q] = Color.clear; }
             mesh.vertices = v; mesh.uv = uv; mesh.colors = col;
             mesh.RecalculateBounds();
         }
 
-        void Quad(int o, int frame, Vector3 L, Vector3 R, Vector3 up, float alpha, bool flipX)
+        void Quad(int o, int frame, Vector3 L, Vector3 R, Vector3 up, Vector3 right, float alpha, bool flipX, float tt)
         {
             float du = 1f / cols, dv = 1f / rows;
             float u0 = (frame % cols) * du, v0 = 1f - (frame / cols + 1) * dv;
             float ul = flipX ? u0 + du : u0, ur = flipX ? u0 : u0 + du;
-            v[o] = L; v[o + 1] = R; v[o + 2] = R + up; v[o + 3] = L + up;
-            uv[o] = new Vector2(ul, v0); uv[o + 1] = new Vector2(ur, v0); uv[o + 2] = new Vector2(ur, v0 + dv); uv[o + 3] = new Vector2(ul, v0 + dv);
             Color c = new Color(tint.r, tint.g, tint.b, alpha);
-            col[o] = col[o + 1] = col[o + 2] = col[o + 3] = c;
+            float wdt = (R - L).magnitude;
+            for (int b = 0; b <= Bands; b++)
+            {
+                float y = b / (float)Bands;
+                // волна идёт снизу вверх, у основания пламя стоит, кверху гнётся сильнее
+                float off = sway <= 0f ? 0f : sway * wdt * Mathf.Pow(y, 1.4f) * (Mathf.Sin(tt - y * swayFreq) + 0.45f * Mathf.Sin(tt * 1.73f - y * swayFreq * 1.6f + 1.3f));
+                Vector3 sh = up * y + right * off;
+                int i = o + b * 2;
+                v[i] = L + sh; v[i + 1] = R + sh;
+                float vv = v0 + dv * y;
+                uv[i] = new Vector2(ul, vv); uv[i + 1] = new Vector2(ur, vv);
+                if (bottomFade > 0f) { float fb = Mathf.Clamp01(y / bottomFade); fb = fb * fb * (3f - 2f * fb); col[i] = col[i + 1] = new Color(c.r, c.g, c.b, c.a * fb); }
+                else col[i] = col[i + 1] = c;
+            }
         }
 
         void OnDestroy() { if (mesh != null) Destroy(mesh); }

@@ -24,7 +24,7 @@ namespace BladePath
         class Charge
         {
             public FighterController f; public float start; public int level; public Color col;
-            public bool wave; public SheetFx sheetPillar;   // кровавая волна: красное накопление, на отпускании — волна к врагу
+            public bool wave; public SheetFx[] flames; public float flameSpin;   // кровавая волна: красное накопление, на отпускании — волна к врагу
             public Transform sigil, anchor, early, pillar, pool; public Material sigilMat, earlyMat, pillarMat, poolMat; public ParticleSystem rise; public FxSprite flame, inhale, embers; public Light light; public float pillarAspect = 1.3f; public int pillarFrames = 1, pillarCols = 1, pillarRows = 1;
             public Transform draw, emberAnchor; public Material drawMat;
             public float kv, popAt = -10f, boltAt;
@@ -234,13 +234,21 @@ namespace BladePath
             // кровавая волна: красный столб владельца — 16 кадров (вход 4 → качание 5…12 → хвост 13…16 на отпускании), с наплывом
             if (c.wave)
             {
-                c.sheetPillar = SheetFx.Spawn("pillar_loop_blood", c.f.transform.position, 4, 4, 0, 16, 10f, true, 1f, 2f);
-                if (c.sheetPillar != null)
+                // объём (владелец: «плоское»): не одна плоскость, а костёр из языков — средний и четыре вокруг бойца по кругу.
+                // Каждый язык повёрнут к камере, свой сдвиг по кадрам, своё колыхание; задние прячутся за бойцом, передние
+                // горят поверх — пламя стоит вокруг, а не картинкой. Круг медленно поворачивается.
+                c.flames = new SheetFx[5];
+                for (int i = 0; i < c.flames.Length; i++)
                 {
-                    c.sheetPillar.bottomAnchor = true; c.sheetPillar.intro = 4; c.sheetPillar.loopFrom = 4; c.sheetPillar.loopTo = 11; c.sheetPillar.tint = new Color(1f, 1f, 1f, 0f);
-                    // второй, зеркальный слой со сдвигом на 4 кадра: языки не повторяются, рваные переходы листа сглажены (владелец: «рваное»)
-                    c.sheetPillar.mirrorLayer = true; c.sheetPillar.mirrorShift = 4; c.sheetPillar.mirrorAlpha = 0.55f; c.sheetPillar.mirrorScale = 0.86f;
+                    SheetFx fx = SheetFx.Spawn("pillar_loop_blood", c.f.transform.position, 4, 4, 0, 16, 9f, true, 1f, 2f);
+                    if (fx == null) continue;
+                    fx.bottomAnchor = true; fx.intro = 4; fx.loopFrom = 4; fx.loopTo = 11; fx.tint = new Color(1f, 1f, 1f, 0f);
+                    fx.frameShift = i * 3; fx.flipX = (i & 1) == 1; fx.bottomFade = 0.16f;
+                    fx.sway = i == 0 ? 0.07f : 0.11f; fx.swaySpeed = 2.6f + 0.45f * i; fx.swayFreq = 4.5f + 0.6f * i; fx.swayPhase = i * 1.7f;
+                    if (i == 0) { fx.mirrorLayer = true; fx.mirrorShift = 4; fx.mirrorAlpha = 0.5f; fx.mirrorScale = 0.86f; }
+                    c.flames[i] = fx;
                 }
+                c.flameSpin = Random.value * 360f;
             }
             Texture2D pt = c.wave ? null : Resources.Load<Texture2D>(PillarFor(c).Replace("pillar_", "pillar_loop_"));
             if (pt != null) { SheetDims(pt, out c.pillarCols, out c.pillarRows); c.pillarFrames = c.pillarCols * c.pillarRows; }
@@ -382,7 +390,11 @@ namespace BladePath
             if (c.poolMat != null) Destroy(c.poolMat);
             if (c.pillar != null) Destroy(c.pillar.gameObject);
             if (c.pillarMat != null) Destroy(c.pillarMat);
-            if (c.sheetPillar != null) { c.sheetPillar.fadeOut = 0.3f; c.sheetPillar.PlayOut(12, 4, 14f); c.sheetPillar = null; }   // столб доигрывает хвост и гаснет
+            if (c.flames != null)   // языки доигрывают хвост листа (кадры 13…16) и гаснут
+            {
+                foreach (SheetFx fx in c.flames) if (fx != null) { fx.fadeOut = 0.3f; fx.PlayOut(12, 4, 14f); }
+                c.flames = null;
+            }
         }
 
         void PoseVisuals(Charge c, FighterController f, float t)
@@ -454,15 +466,26 @@ namespace BladePath
                 c.pillarMat.SetColor("_TintColor", new Color(0.5f, 0.5f, 0.5f, 0.5f * pa * (1f - 0.75f * c.ex)));
                 if (c.pillarFrames > 1) c.pillarMat.mainTextureOffset = FrameUV((int)(Time.time * 12f) % c.pillarFrames, c.pillarCols, c.pillarRows);
             }
-            if (c.sheetPillar != null)
+            if (c.flames != null)
             {
-                float w = Mathf.Lerp(0.9f, 2.2f, k) * pulse;
-                c.sheetPillar.aspect = 2f * Mathf.Lerp(0.6f, 1.0f, k);
-                // основание чуть под землёй: вспышка у пола выходит из камня, а не висит у колен (владелец)
-                c.sheetPillar.transform.position = new Vector3(f.transform.position.x, -0.03f * w * c.sheetPillar.aspect, f.transform.position.z);
-                c.sheetPillar.width = w;
-                float pa = Mathf.Clamp01((t - 0.15f) / 0.4f) * (0.3f + 0.6f * k);
-                c.sheetPillar.tint = new Color(1f, 1f, 1f, pa * (1f - 0.75f * c.ex));
+                float w = Mathf.Lerp(0.9f, 2.0f, k) * pulse;
+                float asp = 2f * Mathf.Lerp(0.6f, 1.0f, k);
+                float pa = Mathf.Clamp01((t - 0.15f) / 0.4f) * (0.3f + 0.6f * k) * (1f - 0.75f * c.ex);
+                c.flameSpin += 22f * Time.deltaTime;
+                float rad = Mathf.Lerp(0.22f, 0.42f, k);   // языки вокруг ног; с духом костёр шире
+                for (int i = 0; i < c.flames.Length; i++)
+                {
+                    SheetFx fx = c.flames[i];
+                    if (fx == null) continue;
+                    float sc = i == 0 ? 1f : 0.62f + 0.06f * (i % 2);
+                    Vector3 off = Vector3.zero;
+                    if (i > 0) { float ang = (c.flameSpin + (i - 1) * 90f) * Mathf.Deg2Rad; off = new Vector3(Mathf.Cos(ang), 0f, Mathf.Sin(ang)) * rad; }
+                    fx.width = w * sc; fx.aspect = asp * (i == 0 ? 1f : 0.9f);
+                    // основание — на полу, низ языка растворяется в свечении узора: ни висящего у колен огня, ни черты по земле,
+                    // которую сверху видно как ребро плоскости (владелец)
+                    fx.transform.position = new Vector3(f.transform.position.x + off.x, 0.01f, f.transform.position.z + off.z);
+                    fx.tint = new Color(1f, 1f, 1f, pa * (i == 0 ? 0.85f : 0.6f));
+                }
             }
             if (c.rise != null)
             {
