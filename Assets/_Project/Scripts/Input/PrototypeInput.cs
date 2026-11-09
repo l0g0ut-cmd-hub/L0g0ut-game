@@ -323,9 +323,10 @@ namespace BladePath
                             B.NoRain, B.Sound, B.SoundScope,
                             B.TimerToggle, B.Perf, B.PerfCut,
                             B.InfKi };   // таймер боя — здесь (убран из обычной паузы); замер кадров; бесконечный дух
+                // восемь рядов — плотнее (шаг 37), чтобы «НАЗАД» осталась внутри окна (на 458 она уплывала под окно — владелец)
                 for (int k = 0; k < dev.Length; k++)
-                    Box(dev[k], cx - 313f + (k % 3) * 213f, 116f + (k / 3) * 42f, 200f, 36f);
-                Box(B.DevBack, cx - 150f, 458f, 300f, 36f);   // ниже восьмого ряда
+                    Box(dev[k], cx - 313f + (k % 3) * 213f, 114f + (k / 3) * 37f, 200f, 33f);
+                Box(B.DevBack, cx - 150f, 412f, 300f, 34f);
             }
             Box(B.OverAgain, cx - 210f, 314f, 200f, 56f);   // ниже панели итогов боя
             Box(B.OverMenu, cx + 10f, 314f, 200f, 56f);
