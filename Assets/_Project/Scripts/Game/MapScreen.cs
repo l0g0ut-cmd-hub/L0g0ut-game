@@ -2224,6 +2224,7 @@ namespace BladePath
                     Rect r = Card(640f, 350f);
                     int e = Mathf.Clamp(n.enemy, 0, Ladder.Count - 1);
                     Texture2D art = UiKit.Tex(EnemyFullArt[e]);
+                    float artRight = r.x + 232f;   // правый край портрета — текст встаёт сразу за ним, без пустой полосы
                     if (art != null)
                     {
                         // окно под картину ровно в её пропорциях (внутри Portrait — отступ 3 px с каждой стороны):
@@ -2232,6 +2233,7 @@ namespace BladePath
                         float ah = r.height - 20f, aw = (ah - 6f) * asp + 6f;
                         if (aw > 240f) { aw = 240f; ah = (aw - 6f) / asp + 6f; }
                         Rect ar = new Rect(r.x + 10f, r.y + (r.height - ah) * 0.5f, aw, ah);
+                        artRight = ar.xMax;
                         // Цельная картина врага с фоном (2026-11-09, владелец через ChatGPT, в стиле карточек путников).
                         // Не затемнять: Portrait рисует подложку только под картинкой, поверх ничего не класть.
                         VisualIdentity.Portrait(ar, EnemyFullArt[e]);
@@ -2245,7 +2247,7 @@ namespace BladePath
                             UiKit.Slice(edge, portraitFrame, 0.27f, 0.2f, 0.1f, 0.3f, 0.12f, Color.white);
                         }
                     }
-                    float x = r.x + 258f, w = r.width - 278f, y = r.y + 22f;   // портрет теперь 2:3 и уже — текст ближе к нему
+                    float x = artRight + 26f, w = r.xMax - 20f - x, y = r.y + 22f;   // текст сразу за портретом (отступ под рамку)
                     UiKit.Text(new Rect(x, y, w, 18f), NodeName(n), 13f, n.Type == NodeType.Boss ? new Color(1f, 0.4f, 0.3f) : Dim, TextAnchor.MiddleLeft); y += 22f;
                     // имя противника — крупно: сразу видно, с кем бой
                     UiKit.Text(new Rect(x, y, w, 30f), Ladder.Stages[e].name.ToUpper(), 24f, n.Type == NodeType.Boss ? new Color(1f, 0.4f, 0.3f) : Gold, TextAnchor.MiddleLeft); y += 34f;
