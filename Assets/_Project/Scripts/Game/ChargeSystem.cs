@@ -471,8 +471,9 @@ namespace BladePath
             }
             if (c.flames != null)
             {
-                float w = Mathf.Lerp(0.9f, 2.0f, k) * pulse;
-                float asp = 2f * Mathf.Lerp(0.6f, 1.0f, k);
+                // высота языков: на высшей ступени — чуть выше бойца (~2,2 м видимого огня), не до неба (владелец)
+                float w = Mathf.Lerp(0.9f, 1.8f, k) * pulse;
+                float asp = 2f * Mathf.Lerp(0.55f, 0.8f, k);
                 float pa = Mathf.Clamp01((t - 0.15f) / 0.4f) * (0.3f + 0.6f * k) * (1f - 0.75f * c.ex);
                 c.flameSpin += 22f * Time.deltaTime;
                 float rad = Mathf.Lerp(0.22f, 0.42f, k);   // языки вокруг ног; с духом костёр шире
