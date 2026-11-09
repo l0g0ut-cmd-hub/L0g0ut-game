@@ -33,6 +33,9 @@ namespace BladePath
         // поворот к камере: 0 — плоскость стоит вертикально (поворот только вокруг вертикали), 1 — целиком лицом к камере.
         // Сверху вертикальная плоскость видна ребром — линией (владелец, скриншоты сверху); наклон к камере это убирает
         public float faceCam;
+        // направление полёта в мире: плоскость лицом к камере, правый край кадра (+x листа) смотрит туда, куда летит эффект
+        // на экране. Иначе сверху волна, летящая «вверх» по экрану, рисовалась боком (владелец)
+        public Vector3 alignDir;
         const int Bands = 8, PerLayer = (Bands + 1) * 2;
         float born;
         Mesh mesh; MeshRenderer mr;
@@ -131,6 +134,14 @@ namespace BladePath
                 upDir = upDir.sqrMagnitude > 1e-4f ? upDir.normalized : Vector3.up;
                 right = Vector3.Cross(upDir, cam.transform.forward).normalized * -1f;
                 if (Vector3.Dot(right, cam.transform.right) < 0f) right = -right;
+            }
+            if (cam != null && alignDir.sqrMagnitude > 1e-6f)
+            {
+                Vector3 fw = cam.transform.forward;
+                Vector3 ds = alignDir - fw * Vector3.Dot(alignDir, fw);
+                if (ds.sqrMagnitude < 1e-4f) ds = cam.transform.right * Mathf.Sign(Vector3.Dot(alignDir, cam.transform.right) + 1e-4f);
+                right = ds.normalized;
+                upDir = Vector3.Cross(fw, right).normalized;   // поворот в плоскости экрана, без зеркала
             }
             Vector3 up = upDir * h;
             Vector3 b0 = bottomAnchor ? Vector3.zero : -up * 0.5f;

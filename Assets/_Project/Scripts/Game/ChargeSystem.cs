@@ -24,7 +24,7 @@ namespace BladePath
         class Charge
         {
             public FighterController f; public float start; public int level; public Color col;
-            public bool wave; public SheetFx[] flames; public float flameSpin;   // кровавая волна: красное накопление, на отпускании — волна к врагу
+            public bool wave; public SheetFx[] flames; public float flameSpin; public KiRing ring;   // кровавая волна: красное накопление, на отпускании — волна к врагу
             public Transform sigil, anchor, early, pillar, pool; public Material sigilMat, earlyMat, pillarMat, poolMat; public ParticleSystem rise; public FxSprite flame, inhale, embers; public Light light; public float pillarAspect = 1.3f; public int pillarFrames = 1, pillarCols = 1, pillarRows = 1;
             public Transform draw, emberAnchor; public Material drawMat;
             public float kv, popAt = -10f, boltAt;
@@ -112,7 +112,6 @@ namespace BladePath
                 f.AddKi(-KiCost[lvl]);
                 waveSwing[f] = new Vector2Int(lvl, f.weapon != null ? f.weapon.SwingId : -1);
                 releaseAt[f] = Time.time;
-                if (lvl >= 2) BigReleaseAt = Time.unscaledTime;
                 GroundFlash.Spawn("FX/crack_glow", f.transform.position + f.transform.forward * 0.5f, 1.0f + 0.5f * lvl, 1.4f + 0.7f * lvl, c.col, 0.9f, 0f, true);
                 if (Juice.Instance != null) { Juice.Instance.Taiko(0.9f, 0.85f + 0.1f * lvl); Juice.Instance.Dust(f.transform.position + Vector3.up * 0.05f, f.transform.forward, 10 + 6 * lvl); }
                 Haptics.Pulse(35 + 20 * lvl);
@@ -209,12 +208,13 @@ namespace BladePath
             c.pool = GroundQuad("ChargePool", Resources.Load<Texture2D>("FX/glow_pool"), add, out c.poolMat);
             // столб ауры: вертикальная плоскость, всегда повёрнута к камере
             // ярость (IV): второй узор и столб — багровые; пока нет своего атласа — огненный лотос и огненный столб
-            Texture2D rs = Resources.Load<Texture2D>("FX/sigil_rage_pulse");   // 4 кадра пульса
+            // кровавая волна — без багровых узора и столба ярости с молниями: красное на красном сливалось в кашу (владелец)
+            Texture2D rs = c.wave ? null : Resources.Load<Texture2D>("FX/sigil_rage_pulse");   // 4 кадра пульса
             c.ragePulse = rs != null;
-            if (rs == null) rs = Resources.Load<Texture2D>("FX/sigil_rage") ?? Resources.Load<Texture2D>("FX/sigil_flame");
+            if (rs == null && !c.wave) rs = Resources.Load<Texture2D>("FX/sigil_rage") ?? Resources.Load<Texture2D>("FX/sigil_flame");
             c.rage = GroundQuad("ChargeRageSigil", rs, add, out c.rageMat);
             if (c.ragePulse && c.rageMat != null) c.rageMat.mainTextureScale = new Vector2(0.25f, 1f);
-            Texture2D rp = Resources.Load<Texture2D>("FX/pillar_loop_rage") ?? Resources.Load<Texture2D>("FX/pillar_loop_flame");
+            Texture2D rp = c.wave ? null : Resources.Load<Texture2D>("FX/pillar_loop_rage") ?? Resources.Load<Texture2D>("FX/pillar_loop_flame");
             if (rp != null && add != null)
             {
                 GameObject g = new GameObject("ChargeRagePillar");
@@ -243,12 +243,14 @@ namespace BladePath
                     SheetFx fx = SheetFx.Spawn("pillar_loop_blood", c.f.transform.position, 4, 4, 0, 16, 9f, true, 1f, 2f);
                     if (fx == null) continue;
                     fx.bottomAnchor = true; fx.intro = 4; fx.loopFrom = 4; fx.loopTo = 11; fx.tint = new Color(1f, 1f, 1f, 0f);
-                    fx.frameShift = i * 3; fx.flipX = (i & 1) == 1; fx.bottomFade = 0.16f; fx.faceCam = 0.55f;   // наклон к камере: сверху языки видны, а не ребром
+                    fx.frameShift = i * 3; fx.flipX = (i & 1) == 1; fx.bottomFade = 0.26f; fx.faceCam = 0.55f;   // наклон к камере: сверху языки видны, а не ребром
                     fx.sway = i == 0 ? 0.07f : 0.11f; fx.swaySpeed = 2.6f + 0.45f * i; fx.swayFreq = 4.5f + 0.6f * i; fx.swayPhase = i * 1.7f;
                     if (i == 0) { fx.mirrorLayer = true; fx.mirrorShift = 4; fx.mirrorAlpha = 0.5f; fx.mirrorScale = 0.86f; }
                     c.flames[i] = fx;
                 }
                 c.flameSpin = Random.value * 360f;
+                // стена огня кольцом у ног (тот же цилиндр, что у кольца духа): объём со всех сторон и сверху (владелец: «сверху не видно»)
+                c.ring = KiRing.Create(c.f.transform, BloodWave.Red);
             }
             Texture2D pt = c.wave ? null : Resources.Load<Texture2D>(PillarFor(c).Replace("pillar_", "pillar_loop_"));
             if (pt != null) { SheetDims(pt, out c.pillarCols, out c.pillarRows); c.pillarFrames = c.pillarCols * c.pillarRows; }
@@ -395,6 +397,7 @@ namespace BladePath
                 foreach (SheetFx fx in c.flames) if (fx != null) { fx.fadeOut = 0.3f; fx.PlayOut(12, 4, 14f); }
                 c.flames = null;
             }
+            if (c.ring != null) { c.ring.FadeOut(); c.ring = null; }
         }
 
         void PoseVisuals(Charge c, FighterController f, float t)
@@ -427,7 +430,7 @@ namespace BladePath
             {
                 int fr; float da;
                 if (t < 0.6f) { fr = Mathf.Min(11, (int)(t / 0.6f * 12f)); da = 1f; }
-                else if (c.level >= 2) { fr = 12 + (int)(Time.time * 14f) % 4; da = 0.55f; }
+                else if (c.level >= 2 && !c.wave) { fr = 12 + (int)(Time.time * 14f) % 4; da = 0.55f; }   // волна — без разрядов по ободу
                 else { fr = 11; da = Mathf.Lerp(0.8f, 0.12f, Mathf.Clamp01((t - 0.6f) / 0.5f)); }
                 c.drawMat.mainTextureOffset = new Vector2((fr % 4) * 0.25f, 0.75f - (fr / 4) * 0.25f);
                 float sd = Mathf.Lerp(0.9f, 3.4f, 1f - (1f - k) * (1f - k)) * pulse * 1.16f;
@@ -484,8 +487,10 @@ namespace BladePath
                     // основание — на полу, низ языка растворяется в свечении узора: ни висящего у колен огня, ни черты по земле,
                     // которую сверху видно как ребро плоскости (владелец)
                     fx.transform.position = new Vector3(f.transform.position.x + off.x, 0.01f, f.transform.position.z + off.z);
-                    fx.tint = new Color(1f, 1f, 1f, pa * (i == 0 ? 0.85f : 0.6f));
+                    // белый жар у основания пяти языков складывался в белое пятно у ног — тон чуть красный, яркость ниже
+                    fx.tint = new Color(1f, 0.78f, 0.72f, pa * (i == 0 ? 0.62f : 0.45f));
                 }
+                if (c.ring != null) c.ring.SetLevel(Mathf.Clamp01(0.25f + 0.75f * k), c.level >= Max);
             }
             if (c.rise != null)
             {
@@ -591,7 +596,7 @@ namespace BladePath
                     GroundFlash.Spawn("FX/shock_ring", f.transform.position, 1.0f, 3.2f + 1.4f * lvl, c.col, 0.5f, 0f);
                     FxSprite fl = FxSprite.Spawn("charge_flecks", f.transform.position + Vector3.up * 1.0f, 1.6f + 0.6f * lvl, 1, 1, 1, 1f, false, 0.45f);
                     if (fl != null) { fl.tint = Color.Lerp(c.col, Color.white, 0.4f); fl.grow = 1.5f; }
-                    if (lvl >= 2) GroundFlash.SpawnSheet("FX/lightning_burst", f.transform.position, 3.4f, 4.2f, c.col, 0.4f, 4, 1, 4);   // третья ступень — разряд по земле
+                    if (lvl >= 2 && !c.wave) GroundFlash.SpawnSheet("FX/lightning_burst", f.transform.position, 3.4f, 4.2f, c.col, 0.4f, 4, 1, 4);   // третья ступень — разряд по земле
                     if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.02f + 0.02f * lvl);
                     Haptics.Pulse(25 + 15 * lvl);
                     if (lvl >= Max)
@@ -601,8 +606,11 @@ namespace BladePath
                         GroundFlash.SpawnSheet("FX/shock_dust", f.transform.position, 4f, 6.5f, Crimson, 0.7f, 4, 1, 4);
                         GroundFlash.Spawn("FX/rage_ring", f.transform.position, 1.5f, 7.5f, Color.white, 0.6f, 0f);
                         // круг выжигается в землю: искра → трещины-лучи → кольца и когти → вспышка (16 кадров за 0,7 с)
-                        GroundFlash.SpawnSheet("FX/rage_ignite", f.transform.position, 4.4f, 4.6f, Color.white, 0.7f, 4, 4, 16);
-                        GroundFlash.Spawn("FX/rage_cracks", f.transform.position, 3.5f, 4.2f, Color.white, 2.5f, 0f, true);
+                        if (!c.wave)
+                        {
+                            GroundFlash.SpawnSheet("FX/rage_ignite", f.transform.position, 4.4f, 4.6f, Color.white, 0.7f, 4, 4, 16);
+                            GroundFlash.Spawn("FX/rage_cracks", f.transform.position, 3.5f, 4.2f, Color.white, 2.5f, 0f, true);
+                        }
                         FxSprite re = FxSprite.Spawn("rage_embers", f.transform.position + Vector3.up * 1.3f, 3.0f, 1, 1, 1, 1f, false, 0.9f);
                         if (re != null) { re.grow = 0.5f; re.tint = new Color(1f, 1f, 1f, 0.9f); }
                         if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(0.1f); CameraOrbit.Instance.Punch(4f); }
@@ -613,12 +621,12 @@ namespace BladePath
                 // ярость держится: багровые молнии чаще, трещины, сердцебиение, земля дрожит
                 if (c.level >= Max)
                 {
-                    if (Time.time >= c.crackAt) { c.crackAt = Time.time + Random.Range(0.6f, 0.9f); GroundFlash.Spawn("FX/rage_cracks", f.transform.position + new Vector3(Random.Range(-1.2f, 1.2f), 0f, Random.Range(-1.2f, 1.2f)), 1.6f, 2.0f, Color.white, 1.2f, 0f, true); }
+                    if (!c.wave && Time.time >= c.crackAt) { c.crackAt = Time.time + Random.Range(0.6f, 0.9f); GroundFlash.Spawn("FX/rage_cracks", f.transform.position + new Vector3(Random.Range(-1.2f, 1.2f), 0f, Random.Range(-1.2f, 1.2f)), 1.6f, 2.0f, Color.white, 1.2f, 0f, true); }
                     if (Time.time >= c.beatAt) { c.beatAt = Time.time + 0.55f; if (Juice.Instance != null) Juice.Instance.Heartbeat(); if (f == (dm != null ? dm.player : null)) Haptics.Pulse(20); }
                     if (CameraOrbit.Instance != null) CameraOrbit.Instance.Shake(0.012f);
                 }
                 // третья ступень держится: разряды по земле, свет мигает
-                if (c.level >= 2 && Time.time >= c.boltAt)
+                if (c.level >= 2 && !c.wave && Time.time >= c.boltAt)   // волна — без молний по земле (белые разряды по всему двору)
                 {
                     c.boltAt = Time.time + (c.level >= Max ? Random.Range(0.15f, 0.3f) : Random.Range(0.35f, 0.6f));
                     Vector3 bp = f.transform.position + new Vector3(Random.Range(-0.4f, 0.4f), 0f, Random.Range(-0.4f, 0.4f));

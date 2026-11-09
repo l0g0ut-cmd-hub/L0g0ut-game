@@ -37,13 +37,13 @@ namespace BladePath
             w.pos = a.transform.position + d * 0.8f;
             Camera cam = Camera.main;
             w.flip = cam != null && Vector3.Dot(d, cam.transform.right) < 0f;   // летит влево по экрану — лист зеркально
-            float hgt = 1.8f + 0.3f * level;   // высота полумесяца, м
+            float hgt = 1.45f + 0.2f * level;   // высота полумесяца, м (сверху лицом к камере прежний был на полдвора)
             float cell = hgt / 0.85f;            // полумесяц занимает ~85% высоты кадра
             w.fly = SheetFx.Spawn("bwave_fly", w.pos + Vector3.up * (hgt * 0.5f + 0.05f), 8, 4, 0, 32, 26f, true, cell);
-            if (w.fly != null) { w.fly.flipX = w.flip; w.fly.tint = new Color(1f, 1f, 1f, 0f); w.fly.faceCam = 1f; }   // сверху — полумесяц лицом, а не ребром
+            if (w.fly != null) { w.fly.tint = new Color(1f, 1f, 1f, 0f); w.fly.faceCam = 1f; w.fly.alignDir = d; }   // лицом к камере, острием по ходу полёта   // сверху — полумесяц лицом, а не ребром
             // выпуск у клинка: дуга режет воздух, полумесяц отрывается
-            SheetFx l = SheetFx.Spawn("bwave_launch", a.transform.position + d * 0.9f + Vector3.up * 1.15f, 8, 4, 0, 24, 34f, false, 2.4f + 0.3f * level);
-            if (l != null) { l.flipX = w.flip; l.faceCam = 1f; }
+            SheetFx l = SheetFx.Spawn("bwave_launch", a.transform.position + d * 0.9f + Vector3.up * 1.15f, 8, 4, 0, 24, 34f, false, 1.9f + 0.25f * level);
+            if (l != null) { l.faceCam = 1f; l.alignDir = d; }
             GameObject lg = new GameObject("BloodWaveLight");
             lg.transform.SetParent(g.transform, false);
             w.lt = lg.AddComponent<Light>(); w.lt.type = LightType.Point; w.lt.color = Red; w.lt.range = 3.5f + 0.5f * level; w.lt.intensity = 0f; w.lt.shadows = LightShadows.None;
@@ -75,7 +75,7 @@ namespace BladePath
             {
                 float hgt = fly.width * 0.85f;
                 fly.transform.position = pos + Vector3.up * (hgt * 0.5f + 0.05f);
-                fly.tint = new Color(1f, 1f, 1f, 0.95f * k * fade);
+                fly.tint = new Color(1f, 0.85f, 0.82f, 0.8f * k * fade);   // без пересвета в белое
                 fly.width *= fadeAt < 0f ? 1f : 1f + 0.8f * dt;              // гаснет — чуть расходится
             }
             if (lt != null) { lt.transform.position = pos + Vector3.up * 1.0f; lt.intensity = (1.6f + 0.4f * level) * k * fade; }
@@ -104,12 +104,12 @@ namespace BladePath
             Vector3 at = target.transform.position + Vector3.up * 1.1f;
             DuelManager.Instance.ForceHit(target, owner, dmg, post, at);
             if (!target.Dead) target.Knockback(dir, blocked ? 1.2f : 1.8f + 0.4f * level);
-            SheetFx h = SheetFx.Spawn("bwave_hit", at, 8, 4, 0, 24, 32f, false, 2.4f + 0.35f * level);
-            if (h != null) { h.flipX = flip; h.faceCam = 1f; }
+            SheetFx h = SheetFx.Spawn("bwave_hit", at, 8, 4, 0, 24, 32f, false, 2.0f + 0.3f * level);
+            if (h != null) { h.faceCam = 1f; h.alignDir = dir; }
             if (Juice.Instance != null) Juice.Instance.WaveHit(at, blocked);
             if (CameraOrbit.Instance != null) { CameraOrbit.Instance.Shake(0.05f + 0.025f * level); CameraOrbit.Instance.Punch(2f + level); }
             GroundFlash.Spawn("FX/shock_ring", new Vector3(at.x, 0.02f, at.z), 0.8f, 2.6f + 0.6f * level, Red, 0.45f, 0f);
-            PostFX.Kick(0.006f + 0.002f * level);
+            PostFX.Kick(0.003f + 0.001f * level);
             Haptics.Pulse(60 + 20 * level);
             fadeAt = Time.time;   // волна разбилась о врага
         }
