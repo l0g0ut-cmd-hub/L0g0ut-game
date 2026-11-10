@@ -1,0 +1,1246 @@
+PROBE|Ally|rest|Hips|0.000|0.846|0.000|fw 0.00 0.00 1.00|up 0.00 1.00 0.00
+PROBE|Ally|rest|Spine|0.000|1.019|0.000|fw 0.00 0.00 1.00|up 0.00 1.00 0.00
+PROBE|Ally|rest|Chest|0.000|1.183|0.000|fw 0.00 0.00 1.00|up 0.00 1.00 0.00
+PROBE|Ally|rest|Neck|0.000|1.411|0.000|fw 0.00 0.00 1.00|up 0.00 1.00 0.00
+PROBE|Ally|rest|Head|0.000|1.492|0.000|fw 0.00 0.00 1.00|up 0.00 1.00 0.00
+PROBE|Ally|rest|Shoulder.L|-0.055|1.365|0.000|fw 0.11 0.99 0.11|up -0.99 0.11 0.00
+PROBE|Ally|rest|UpperArm.L|-0.218|1.383|0.000|fw -0.43 0.24 -0.87|up -0.49 -0.87 0.00
+PROBE|Ally|rest|Forearm.L|-0.346|1.156|0.000|fw -0.54 -0.04 -0.84|up -0.44 -0.84 0.33
+PROBE|Ally|rest|Hand.L|-0.455|0.946|0.082|fw -0.08 -0.07 -0.99|up -0.07 -0.99 0.07
+PROBE|Ally|rest|Shoulder.R|0.055|1.365|0.000|fw -0.11 0.99 0.11|up 0.99 0.11 0.00
+PROBE|Ally|rest|UpperArm.R|0.218|1.383|0.000|fw 0.43 0.24 -0.87|up 0.49 -0.87 0.00
+PROBE|Ally|rest|Forearm.R|0.346|1.156|0.000|fw 0.54 -0.04 -0.84|up 0.44 -0.84 0.33
+PROBE|Ally|rest|Hand.R|0.455|0.946|0.082|fw 0.08 -0.07 -0.99|up 0.07 -0.99 0.07
+PROBE|Ally|rest|UpperLeg.L|-0.155|0.846|0.000|fw -0.16 -0.09 -0.98|up -0.16 -0.98 0.12
+PROBE|Ally|rest|LowerLeg.L|-0.218|0.458|0.048|fw -0.17 0.27 -0.95|up -0.19 -0.95 -0.24
+PROBE|Ally|rest|Foot.L|-0.291|0.102|-0.042|fw -0.58 -0.75 -0.30|up -0.10 -0.30 0.95
+PROBE|Ally|rest|UpperLeg.R|0.155|0.846|0.000|fw 0.16 -0.09 -0.98|up 0.16 -0.98 0.12
+PROBE|Ally|rest|LowerLeg.R|0.218|0.458|0.048|fw 0.17 0.27 -0.95|up 0.19 -0.95 -0.24
+PROBE|Ally|rest|Foot.R|0.291|0.102|-0.042|fw 0.58 -0.75 -0.30|up 0.10 -0.30 0.95
+PROBE|Ally|rest|model|0.000|0.000|0.000|rot (0.00, 0.00, 0.00)
+PROBE|Ally|clip|Ronin_Rig|Idle len 2
+PROBE|Ally|anim|Hips|-0.016|0.848|0.000|fw 0.00 0.00 1.00|up -0.02 1.00 0.00
+PROBE|Ally|anim|Spine|-0.020|1.021|0.000|fw -0.01 0.01 1.00|up -0.01 1.00 -0.01
+PROBE|Ally|anim|Chest|-0.021|1.185|-0.001|fw 0.00 0.02 1.00|up 0.00 1.00 -0.02
+PROBE|Ally|anim|Neck|-0.021|1.412|-0.006|fw 0.00 0.02 1.00|up 0.00 1.00 -0.02
+PROBE|Ally|anim|Head|-0.021|1.494|-0.008|fw 0.01 0.01 1.00|up -0.01 1.00 -0.01
+PROBE|Ally|anim|Shoulder.L|-0.075|1.367|-0.005|fw 0.11 0.99 0.09|up -0.99 0.11 0.00
+PROBE|Ally|anim|UpperArm.L|-0.239|1.385|-0.005|fw -0.43 0.22 -0.88|up -0.49 -0.87 0.02
+PROBE|Ally|anim|Forearm.L|-0.367|1.158|0.001|fw -0.55 -0.06 -0.83|up -0.44 -0.83 0.35
+PROBE|Ally|anim|Hand.L|-0.476|0.951|0.087|fw -0.08 -0.09 -0.99|up -0.07 -0.99 0.09
+PROBE|Ally|anim|Shoulder.R|0.034|1.367|-0.005|fw -0.11 0.99 0.09|up 0.99 0.11 -0.01
+PROBE|Ally|anim|UpperArm.R|0.198|1.384|-0.006|fw 0.42 0.22 -0.88|up 0.49 -0.87 0.02
+PROBE|Ally|anim|Forearm.R|0.325|1.157|-0.002|fw 0.54 -0.06 -0.84|up 0.44 -0.83 0.34
+PROBE|Ally|anim|Hand.R|0.434|0.949|0.085|fw 0.07 -0.09 -0.99|up 0.07 -0.99 0.09
+PROBE|Ally|anim|UpperLeg.L|-0.171|0.845|0.000|fw -0.16 -0.08 -0.98|up -0.14 -0.98 0.10
+PROBE|Ally|anim|LowerLeg.L|-0.227|0.455|0.041|fw -0.17 0.24 -0.95|up -0.18 -0.96 -0.21
+PROBE|Ally|anim|Foot.L|-0.293|0.095|-0.039|fw -0.57 -0.77 -0.29|up -0.09 -0.29 0.95
+PROBE|Ally|anim|UpperLeg.R|0.138|0.851|0.000|fw 0.16 -0.11 -0.98|up 0.18 -0.97 0.14
+PROBE|Ally|anim|LowerLeg.R|0.210|0.465|0.055|fw 0.16 0.30 -0.94|up 0.21 -0.94 -0.26
+PROBE|Ally|anim|Foot.R|0.289|0.113|-0.044|fw 0.60 -0.74 -0.31|up 0.11 -0.31 0.95
+PROBE|Ally|anim|model|0.000|0.000|0.000|rot (0.00, 0.00, 0.00)
+PROBE|Ally|idle|Hips|-0.016|0.753|0.000|fw 0.57 -0.02 0.82|up 0.00 1.00 0.03
+PROBE|Ally|idle|Spine|-0.017|0.926|0.005|fw 0.63 -0.09 0.77|up 0.05 1.00 0.07
+PROBE|Ally|idle|Chest|-0.009|1.089|0.017|fw 0.73 -0.07 0.68|up 0.06 1.00 0.05
+PROBE|Ally|idle|Neck|0.004|1.316|0.028|fw 0.73 -0.07 0.68|up 0.06 1.00 0.05
+PROBE|Ally|idle|Head|0.009|1.398|0.032|fw 0.40 -0.02 0.92|up 0.01 1.00 0.02
+PROBE|Ally|idle|Shoulder.L|-0.036|1.271|0.066|fw 0.21 0.98 0.04|up -0.67 0.11 0.73
+PROBE|Ally|idle|UpperArm.L|-0.146|1.289|0.187|fw -0.96 -0.02 -0.27|up 0.11 -0.93 -0.34
+PROBE|Ally|idle|Forearm.L|-0.117|1.045|0.099|fw -0.23 -0.73 -0.65|up 0.97 -0.24 -0.08
+PROBE|Ally|idle|Hand.L|0.125|0.986|0.079|fw -0.13 0.00 -0.99|up 0.80 -0.59 -0.10
+PROBE|Ally|idle|Shoulder.R|0.039|1.270|-0.014|fw 0.06 0.98 0.20|up 0.68 0.11 -0.72
+PROBE|Ally|idle|UpperArm.R|0.151|1.288|-0.133|fw 0.07 -0.50 -0.87|up 0.53 -0.72 0.46
+PROBE|Ally|idle|Forearm.R|0.288|1.101|-0.015|fw 0.28 -0.91 -0.29|up -0.42 -0.39 0.82
+PROBE|Ally|idle|Hand.R|0.182|1.003|0.190|fw 0.26 -0.21 -0.94|up -0.63 -0.78 0.00
+PROBE|Ally|idle|UpperLeg.L|-0.143|0.750|0.089|fw -0.23 -0.69 -0.69|up -0.04 -0.70 0.72
+PROBE|Ally|idle|LowerLeg.L|-0.160|0.474|0.373|fw -0.27 -0.05 -0.96|up 0.11 -0.99 0.02
+PROBE|Ally|idle|Foot.L|-0.120|0.102|0.380|fw -0.52 -0.75 -0.40|up -0.26 -0.30 0.92
+PROBE|Ally|idle|UpperLeg.R|0.110|0.756|-0.089|fw 0.01 0.31 -0.95|up 0.51 -0.82 -0.27
+PROBE|Ally|idle|LowerLeg.R|0.314|0.433|-0.194|fw -0.08 0.46 -0.89|up -0.15 -0.88 -0.44
+PROBE|Ally|idle|Foot.R|0.260|0.102|-0.360|fw -0.14 -0.75 -0.64|up 0.94 -0.30 0.15
+PROBE|Ally|idle|model|0.000|-0.095|0.000|rot (0.00, 0.00, 0.00)
+PROBE|Ally|rt_anim0|Hips|0.000|0.751|0.000|fw 0.00 0.00 1.00|up 0.00 1.00 0.00
+PROBE|Ally|rt_anim0|Spine|0.000|0.924|0.000|fw -0.02 0.00 1.00|up 0.00 1.00 0.00
+PROBE|Ally|rt_anim0|Chest|0.000|1.088|0.000|fw 0.00 0.00 1.00|up 0.00 1.00 0.00
+PROBE|Ally|rt_anim0|Neck|0.000|1.315|0.000|fw -0.01 0.00 1.00|up 0.00 1.00 0.00
+PROBE|Ally|rt_anim0|Head|0.000|1.397|0.000|fw -0.03 0.00 1.00|up 0.00 1.00 0.00
+PROBE|Ally|rt_anim0|Shoulder.L|-0.055|1.270|0.000|fw 0.11 0.99 0.11|up -0.99 0.11 0.00
+PROBE|Ally|rt_anim0|UpperArm.L|-0.218|1.288|0.001|fw -0.43 0.24 -0.87|up -0.49 -0.87 0.00
+PROBE|Ally|rt_anim0|Forearm.L|-0.346|1.061|0.001|fw -0.55 -0.04 -0.84|up -0.44 -0.84 0.33
+PROBE|Ally|rt_anim0|Hand.L|-0.455|0.851|0.084|fw -0.08 -0.07 -0.99|up -0.07 -0.99 0.07
+PROBE|Ally|rt_anim0|Shoulder.R|0.055|1.270|0.000|fw -0.11 0.99 0.11|up 0.99 0.11 0.00
+PROBE|Ally|rt_anim0|UpperArm.R|0.218|1.288|-0.001|fw 0.42 0.24 -0.87|up 0.49 -0.87 0.00
+PROBE|Ally|rt_anim0|Forearm.R|0.346|1.061|-0.001|fw 0.54 -0.04 -0.84|up 0.44 -0.84 0.33
+PROBE|Ally|rt_anim0|Hand.R|0.455|0.851|0.080|fw 0.07 -0.07 -1.00|up 0.07 -0.99 0.07
+PROBE|Ally|rt_anim0|UpperLeg.L|-0.155|0.751|0.000|fw -0.16 -0.09 -0.98|up -0.16 -0.98 0.12
+PROBE|Ally|rt_anim0|LowerLeg.L|-0.218|0.363|0.048|fw -0.17 0.27 -0.95|up -0.19 -0.95 -0.24
+PROBE|Ally|rt_anim0|Foot.L|-0.291|0.007|-0.042|fw -0.58 -0.75 -0.30|up -0.10 -0.30 0.95
+PROBE|Ally|rt_anim0|UpperLeg.R|0.155|0.751|0.000|fw 0.16 -0.09 -0.98|up 0.16 -0.98 0.12
+PROBE|Ally|rt_anim0|LowerLeg.R|0.218|0.363|0.048|fw 0.17 0.27 -0.95|up 0.19 -0.95 -0.24
+PROBE|Ally|rt_anim0|Foot.R|0.291|0.007|-0.042|fw 0.58 -0.75 -0.30|up 0.10 -0.30 0.95
+PROBE|Ally|rt_anim0|model|0.000|-0.095|0.000|rot (0.00, 0.00, 0.00)
+PROBE|Ally|rt_anim1|Hips|-0.001|0.743|0.000|fw 0.00 0.00 1.00|up 0.00 1.00 0.00
+PROBE|Ally|rt_anim1|Spine|-0.001|0.916|0.000|fw -0.01 -0.01 1.00|up 0.00 1.00 0.01
+PROBE|Ally|rt_anim1|Chest|-0.001|1.080|0.001|fw 0.00 -0.02 1.00|up 0.00 1.00 0.02
+PROBE|Ally|rt_anim1|Neck|-0.001|1.307|0.006|fw -0.01 -0.02 1.00|up 0.00 1.00 0.02
+PROBE|Ally|rt_anim1|Head|-0.001|1.389|0.008|fw -0.02 -0.02 1.00|up 0.00 1.00 0.02
+PROBE|Ally|rt_anim1|Shoulder.L|-0.056|1.262|0.005|fw 0.11 0.99 0.13|up -0.99 0.11 0.00
+PROBE|Ally|rt_anim1|UpperArm.L|-0.220|1.280|0.006|fw -0.43 0.26 -0.87|up -0.49 -0.87 -0.02
+PROBE|Ally|rt_anim1|Forearm.L|-0.347|1.052|0.002|fw -0.55 -0.03 -0.84|up -0.44 -0.84 0.31
+PROBE|Ally|rt_anim1|Hand.L|-0.456|0.841|0.079|fw -0.08 -0.04 -1.00|up -0.07 -1.00 0.05
+PROBE|Ally|rt_anim1|Shoulder.R|0.053|1.262|0.005|fw -0.11 0.99 0.13|up 0.99 0.11 0.00
+PROBE|Ally|rt_anim1|UpperArm.R|0.217|1.280|0.005|fw 0.42 0.26 -0.87|up 0.49 -0.87 -0.02
+PROBE|Ally|rt_anim1|Forearm.R|0.344|1.052|0.000|fw 0.54 -0.03 -0.84|up 0.44 -0.84 0.31
+PROBE|Ally|rt_anim1|Hand.R|0.454|0.841|0.077|fw 0.07 -0.04 -1.00|up 0.07 -1.00 0.05
+PROBE|Ally|rt_anim1|UpperLeg.L|-0.156|0.743|0.000|fw -0.16 -0.13 -0.98|up -0.16 -0.98 0.15
+PROBE|Ally|rt_anim1|LowerLeg.L|-0.219|0.356|0.061|fw -0.17 0.30 -0.94|up -0.19 -0.94 -0.26
+PROBE|Ally|rt_anim1|Foot.L|-0.291|0.003|-0.038|fw -0.58 -0.75 -0.30|up -0.10 -0.30 0.95
+PROBE|Ally|rt_anim1|UpperLeg.R|0.154|0.743|0.000|fw 0.16 -0.13 -0.98|up 0.16 -0.97 0.16
+PROBE|Ally|rt_anim1|LowerLeg.R|0.218|0.357|0.062|fw 0.17 0.30 -0.94|up 0.20 -0.94 -0.27
+PROBE|Ally|rt_anim1|Foot.R|0.291|0.004|-0.038|fw 0.59 -0.75 -0.30|up 0.10 -0.30 0.95
+PROBE|Ally|rt_anim1|model|0.000|-0.095|0.000|rot (0.00, 0.00, 0.00)
+PROBE|Ally|rt_idle|Hips|0.000|0.678|0.000|fw 0.57 -0.02 0.82|up 0.01 1.00 0.02
+PROBE|Ally|rt_idle|Spine|0.002|0.851|0.003|fw 0.63 -0.17 0.76|up 0.11 0.99 0.13
+PROBE|Ally|rt_idle|Chest|0.020|1.013|0.024|fw 0.70 -0.30 0.65|up 0.22 0.95 0.21
+PROBE|Ally|rt_idle|Neck|0.070|1.230|0.070|fw 0.70 -0.30 0.65|up 0.22 0.95 0.21
+PROBE|Ally|rt_idle|Head|0.088|1.308|0.087|fw 0.40 -0.08 0.91|up 0.04 1.00 0.06
+PROBE|Ally|rt_idle|Shoulder.L|0.022|1.186|0.101|fw 0.37 0.91 0.19|up -0.65 0.11 0.75
+PROBE|Ally|rt_idle|UpperArm.L|-0.085|1.204|0.225|fw -0.97 -0.03 -0.25|up 0.11 -0.93 -0.34
+PROBE|Ally|rt_idle|Forearm.L|-0.055|0.960|0.137|fw -0.23 -0.74 -0.64|up 0.97 -0.24 -0.08
+PROBE|Ally|rt_idle|Hand.L|0.187|0.901|0.118|fw -0.13 0.00 -0.99|up 0.80 -0.59 -0.10
+PROBE|Ally|rt_idle|Shoulder.R|0.097|1.186|0.021|fw 0.22 0.91 0.35|up 0.70 0.11 -0.70
+PROBE|Ally|rt_idle|UpperArm.R|0.213|1.204|-0.095|fw 0.14 -0.45 -0.88|up 0.52 -0.72 0.46
+PROBE|Ally|rt_idle|Forearm.R|0.349|1.016|0.024|fw 0.32 -0.91 -0.27|up -0.43 -0.39 0.82
+PROBE|Ally|rt_idle|Hand.R|0.243|0.919|0.228|fw 0.26 -0.21 -0.94|up -0.63 -0.78 0.00
+PROBE|Ally|rt_idle|UpperLeg.L|-0.127|0.678|0.089|fw -0.22 -0.82 -0.53|up -0.09 -0.52 0.85
+PROBE|Ally|rt_idle|LowerLeg.L|-0.163|0.471|0.425|fw -0.26 0.09 -0.96|up 0.11 -0.99 -0.12
+PROBE|Ally|rt_idle|Foot.L|-0.120|0.102|0.380|fw -0.52 -0.75 -0.40|up -0.26 -0.30 0.92
+PROBE|Ally|rt_idle|UpperLeg.R|0.127|0.678|-0.089|fw -0.16 0.15 -0.97|up 0.67 -0.70 -0.22
+PROBE|Ally|rt_idle|LowerLeg.R|0.394|0.399|-0.177|fw -0.52 0.61 -0.60|up -0.36 -0.79 -0.49
+PROBE|Ally|rt_idle|Foot.R|0.260|0.102|-0.360|fw -0.14 -0.75 -0.64|up 0.94 -0.30 0.15
+PROBE|Ally|rt_idle|model|0.000|-0.095|0.000|rot (0.00, 0.00, 0.00)
+PROBE|Ally|rt_info|root False avatar null state 125937960 cull AlwaysAnimate
+PROBE|Ally|oh0.26|Hips|-0.016|0.727|0.153|fw 0.47 -0.01 0.88|up -0.01 1.00 0.02
+PROBE|Ally|oh0.26|Spine|-0.018|0.899|0.156|fw 0.67 -0.01 0.75|up -0.01 1.00 0.02
+PROBE|Ally|oh0.26|Chest|-0.020|1.063|0.159|fw 0.89 0.07 0.45|up -0.06 1.00 -0.03
+PROBE|Ally|oh0.26|Neck|-0.035|1.290|0.151|fw 0.89 0.07 0.45|up -0.06 1.00 -0.03
+PROBE|Ally|oh0.26|Head|-0.040|1.372|0.149|fw 0.50 0.01 0.86|up -0.01 1.00 -0.01
+PROBE|Ally|oh0.26|Shoulder.L|-0.056|1.245|0.202|fw 0.18 0.92 -0.34|up -0.17 0.37 0.91
+PROBE|Ally|oh0.26|UpperArm.L|-0.085|1.306|0.352|fw -0.88 0.28 -0.38|up 0.04 0.84 0.54
+PROBE|Ally|oh0.26|Forearm.L|-0.075|1.526|0.492|fw -0.45 0.15 -0.88|up 0.89 0.06 -0.45
+PROBE|Ally|oh0.26|Hand.L|0.148|1.541|0.380|fw -0.08 -0.77 -0.64|up 0.85 0.29 -0.45
+PROBE|Ally|oh0.26|Shoulder.R|-0.007|1.245|0.104|fw -0.18 0.91 0.37|up 0.59 0.40 -0.70
+PROBE|Ally|oh0.26|UpperArm.R|0.089|1.311|-0.011|fw 0.52 -0.09 -0.85|up 0.85 0.09 0.51
+PROBE|Ally|oh0.26|Forearm.R|0.312|1.335|0.122|fw 0.71 0.18 0.69|up -0.51 0.80 0.32
+PROBE|Ally|oh0.26|Hand.R|0.185|1.535|0.201|fw -0.26 -0.96 0.07|up -0.45 0.18 0.87
+PROBE|Ally|oh0.26|UpperLeg.L|-0.153|0.724|0.226|fw -0.23 -0.69 -0.69|up -0.05 -0.69 0.72
+PROBE|Ally|oh0.26|LowerLeg.L|-0.174|0.448|0.511|fw -0.28 0.30 -0.91|up 0.15 -0.93 -0.35
+PROBE|Ally|oh0.26|Foot.L|-0.120|0.102|0.380|fw -0.52 -0.75 -0.40|up -0.26 -0.30 0.92
+PROBE|Ally|oh0.26|UpperLeg.R|0.120|0.730|0.079|fw -0.04 0.56 -0.83|up 0.34 -0.77 -0.53
+PROBE|Ally|oh0.26|LowerLeg.R|0.257|0.423|-0.132|fw -0.03 0.61 -0.79|up 0.01 -0.79 -0.61
+PROBE|Ally|oh0.26|Foot.R|0.260|0.127|-0.360|fw -0.30 -0.66 -0.69|up 0.85 -0.52 0.12
+PROBE|Ally|oh0.26|model|0.000|-0.122|0.153|rot (0.00, 0.00, 0.00)
+PROBE|Ally|oh0.36|Hips|-0.016|0.713|0.169|fw 0.47 -0.01 0.88|up -0.01 1.00 0.02
+PROBE|Ally|oh0.36|Spine|-0.019|0.886|0.172|fw 0.59 -0.01 0.81|up 0.00 1.00 0.02
+PROBE|Ally|oh0.36|Chest|-0.019|1.050|0.175|fw 0.77 0.04 0.64|up -0.03 1.00 -0.03
+PROBE|Ally|oh0.36|Neck|-0.026|1.277|0.168|fw 0.77 0.04 0.64|up -0.03 1.00 -0.03
+PROBE|Ally|oh0.36|Head|-0.028|1.359|0.166|fw 0.41 0.01 0.91|up -0.01 1.00 0.00
+PROBE|Ally|oh0.36|Shoulder.L|-0.059|1.232|0.212|fw 0.17 0.98 -0.10|up -0.49 0.18 0.85
+PROBE|Ally|oh0.36|UpperArm.L|-0.141|1.261|0.352|fw -0.83 0.42 -0.35|up -0.41 -0.03 0.91
+PROBE|Ally|oh0.36|Forearm.L|-0.247|1.252|0.590|fw -0.53 0.75 -0.41|up 0.84 0.40 -0.36
+PROBE|Ally|oh0.36|Hand.L|-0.036|1.351|0.500|fw 0.36 0.14 -0.92|up 0.85 0.37 0.39
+PROBE|Ally|oh0.36|Shoulder.R|0.010|1.231|0.127|fw -0.16 0.95 0.27|up 0.77 0.29 -0.57
+PROBE|Ally|oh0.36|UpperArm.R|0.136|1.279|0.033|fw 0.75 -0.51 -0.43|up 0.46 -0.06 0.88
+PROBE|Ally|oh0.36|Forearm.R|0.258|1.263|0.263|fw 0.28 -0.47 0.84|up -0.61 0.59 0.53
+PROBE|Ally|oh0.36|Hand.R|0.105|1.410|0.396|fw -0.18 -0.89 -0.42|up -0.75 -0.15 0.64
+PROBE|Ally|oh0.36|UpperLeg.L|-0.153|0.710|0.241|fw -0.23 -0.70 -0.67|up -0.06 -0.68 0.73
+PROBE|Ally|oh0.36|LowerLeg.L|-0.176|0.440|0.530|fw -0.28 0.35 -0.89|up 0.15 -0.90 -0.40
+PROBE|Ally|oh0.36|Foot.L|-0.120|0.102|0.380|fw -0.52 -0.75 -0.40|up -0.26 -0.30 0.92
+PROBE|Ally|oh0.36|UpperLeg.R|0.120|0.716|0.096|fw -0.05 0.57 -0.82|up 0.36 -0.75 -0.55
+PROBE|Ally|oh0.36|LowerLeg.R|0.263|0.418|-0.122|fw -0.05 0.63 -0.77|up -0.01 -0.77 -0.64
+PROBE|Ally|oh0.36|Foot.R|0.260|0.129|-0.360|fw -0.32 -0.65 -0.69|up 0.84 -0.54 0.12
+PROBE|Ally|oh0.36|model|0.000|-0.135|0.169|rot (0.00, 0.00, 0.00)
+PROBE|Ally|oh0.49|Hips|-0.016|0.675|0.198|fw 0.33 -0.02 0.94|up -0.01 1.00 0.03
+PROBE|Ally|oh0.49|Spine|-0.018|0.848|0.202|fw 0.36 -0.07 0.93|up 0.02 1.00 0.06
+PROBE|Ally|oh0.49|Chest|-0.016|1.011|0.213|fw 0.42 -0.03 0.91|up 0.01 1.00 0.02
+PROBE|Ally|oh0.49|Neck|-0.013|1.239|0.218|fw 0.42 -0.03 0.91|up 0.01 1.00 0.02
+PROBE|Ally|oh0.49|Head|-0.012|1.321|0.220|fw 0.20 -0.01 0.98|up 0.00 1.00 0.01
+PROBE|Ally|oh0.49|Shoulder.L|-0.063|1.193|0.240|fw 0.16 0.98 0.08|up -0.90 0.11 0.42
+PROBE|Ally|oh0.49|UpperArm.L|-0.211|1.212|0.310|fw -0.43 0.67 -0.61|up -0.74 -0.65 -0.19
+PROBE|Ally|oh0.49|Forearm.L|-0.403|1.043|0.261|fw -0.04 -0.61 -0.79|up 0.99 -0.14 0.06
+PROBE|Ally|oh0.49|Hand.L|-0.156|1.009|0.276|fw -0.31 0.64 -0.70|up 0.83 -0.18 -0.53
+PROBE|Ally|oh0.49|Shoulder.R|0.036|1.193|0.194|fw -0.04 0.98 0.17|up 0.90 0.11 -0.42
+PROBE|Ally|oh0.49|UpperArm.R|0.185|1.211|0.126|fw 0.18 -0.46 -0.87|up -0.05 -0.89 0.46
+PROBE|Ally|oh0.49|Forearm.R|0.171|0.980|0.245|fw -0.17 -0.71 -0.69|up -0.90 -0.17 0.39
+PROBE|Ally|oh0.49|Hand.R|-0.055|0.938|0.343|fw 0.05 0.34 -0.94|up -0.93 -0.32 -0.17
+PROBE|Ally|oh0.49|UpperLeg.L|-0.162|0.672|0.249|fw -0.24 -0.75 -0.62|up -0.06 -0.62 0.78
+PROBE|Ally|oh0.49|LowerLeg.L|-0.186|0.425|0.558|fw -0.31 0.41 -0.86|up 0.18 -0.86 -0.48
+PROBE|Ally|oh0.49|Foot.L|-0.120|0.102|0.380|fw -0.52 -0.75 -0.40|up -0.26 -0.30 0.92
+PROBE|Ally|oh0.49|UpperLeg.R|0.130|0.678|0.147|fw -0.06 0.64 -0.76|up 0.33 -0.71 -0.62
+PROBE|Ally|oh0.49|LowerLeg.R|0.262|0.398|-0.101|fw -0.06 0.69 -0.72|up 0.00 -0.72 -0.69
+PROBE|Ally|oh0.49|Foot.R|0.260|0.128|-0.360|fw -0.31 -0.65 -0.69|up 0.84 -0.53 0.12
+PROBE|Ally|oh0.49|model|0.000|-0.173|0.198|rot (0.00, 0.00, 0.00)
+PROBE|Ally|oh0.64|Hips|-0.016|0.676|0.195|fw 0.31 -0.02 0.95|up -0.01 1.00 0.03
+PROBE|Ally|oh0.64|Spine|-0.018|0.849|0.200|fw 0.27 -0.10 0.96|up 0.02 1.00 0.10
+PROBE|Ally|oh0.64|Chest|-0.015|1.012|0.216|fw 0.24 -0.09 0.97|up 0.02 1.00 0.08
+PROBE|Ally|oh0.64|Neck|-0.010|1.238|0.235|fw 0.23 -0.09 0.97|up 0.02 1.00 0.08
+PROBE|Ally|oh0.64|Head|-0.008|1.320|0.242|fw 0.11 -0.02 0.99|up 0.00 1.00 0.02
+PROBE|Ally|oh0.64|Shoulder.L|-0.064|1.193|0.244|fw 0.15 0.97 0.16|up -0.96 0.11 0.25
+PROBE|Ally|oh0.64|UpperArm.L|-0.223|1.211|0.285|fw -0.29 0.72 -0.63|up -0.70 -0.61 -0.38
+PROBE|Ally|oh0.64|Forearm.L|-0.404|1.052|0.186|fw -0.26 0.30 -0.92|up 0.95 -0.06 -0.29
+PROBE|Ally|oh0.64|Hand.L|-0.166|1.038|0.113|fw 0.18 0.86 -0.48|up 0.97 -0.23 -0.05
+PROBE|Ally|oh0.64|Shoulder.R|0.042|1.193|0.218|fw -0.06 0.97 0.21|up 0.97 0.11 -0.23
+PROBE|Ally|oh0.64|UpperArm.R|0.201|1.211|0.180|fw 0.25 -0.04 -0.97|up -0.27 -0.96 -0.03
+PROBE|Ally|oh0.64|Forearm.R|0.130|0.960|0.173|fw -0.01 -0.34 -0.94|up -0.99 -0.11 0.05
+PROBE|Ally|oh0.64|Hand.R|-0.118|0.932|0.185|fw 0.51 0.52 -0.68|up -0.76 -0.09 -0.64
+PROBE|Ally|oh0.64|UpperLeg.L|-0.164|0.673|0.243|fw -0.24 -0.75 -0.61|up -0.06 -0.62 0.78
+PROBE|Ally|oh0.64|LowerLeg.L|-0.186|0.427|0.553|fw -0.31 0.40 -0.86|up 0.18 -0.87 -0.46
+PROBE|Ally|oh0.64|Foot.L|-0.120|0.102|0.380|fw -0.52 -0.75 -0.40|up -0.26 -0.30 0.92
+PROBE|Ally|oh0.64|UpperLeg.R|0.131|0.679|0.148|fw -0.06 0.65 -0.76|up 0.33 -0.71 -0.63
+PROBE|Ally|oh0.64|LowerLeg.R|0.262|0.399|-0.100|fw -0.06 0.69 -0.72|up -0.01 -0.72 -0.69
+PROBE|Ally|oh0.64|Foot.R|0.260|0.130|-0.360|fw -0.32 -0.65 -0.69|up 0.83 -0.54 0.12
+PROBE|Ally|oh0.64|model|0.000|-0.172|0.195|rot (0.00, 0.00, 0.00)
+PROBE|Ally|shader|Ronin_Body|Ronin|BladePath/Character|supported True
+PROBE|Ally|loco|Ally_LocoF|len 1.12 loop True
+PROBE|Ally|loco|Ally_LocoF|ph 0|hips 0.018 0.960 -0.002|L -0.292 0.225 0.186|R 0.226 0.190 -0.293
+PROBE|Ally|loco|Ally_LocoF|ph 1|hips 0.004 0.950 -0.003|L -0.281 0.205 0.236|R 0.216 0.254 -0.451
+PROBE|Ally|loco|Ally_LocoF|ph 2|hips -0.010 0.958 0.005|L -0.282 0.203 0.085|R 0.256 0.392 -0.396
+PROBE|Ally|loco|Ally_LocoF|ph 3|hips -0.018 0.966 -0.007|L -0.284 0.195 -0.087|R 0.286 0.391 -0.163
+PROBE|Ally|loco|Ally_LocoF|ph 4|hips -0.017 0.959 -0.012|L -0.282 0.191 -0.276|R 0.294 0.238 0.132
+PROBE|Ally|loco|Ally_LocoF|ph 5|hips -0.005 0.943 -0.001|L -0.301 0.253 -0.424|R 0.298 0.200 0.211
+PROBE|Ally|loco|Ally_LocoF|ph 6|hips 0.010 0.953 0.014|L -0.330 0.408 -0.325|R 0.279 0.203 0.058
+PROBE|Ally|loco|Ally_LocoF|ph 7|hips 0.018 0.962 0.004|L -0.317 0.357 -0.104|R 0.259 0.203 -0.104
+PROBE|Ally|loco|Ally_LocoB|len 0.97 loop True
+PROBE|Ally|loco|Ally_LocoB|ph 0|hips -0.018 0.907 -0.011|L -0.196 0.114 -0.127|R 0.231 0.149 0.076
+PROBE|Ally|loco|Ally_LocoB|ph 1|hips -0.018 0.912 0.016|L -0.200 0.103 0.022|R 0.210 0.264 -0.226
+PROBE|Ally|loco|Ally_LocoB|ph 2|hips -0.007 0.893 0.030|L -0.194 0.090 0.181|R 0.195 0.243 -0.368
+PROBE|Ally|loco|Ally_LocoB|ph 3|hips 0.009 0.894 -0.006|L -0.205 0.119 0.329|R 0.156 0.158 -0.293
+PROBE|Ally|loco|Ally_LocoB|ph 4|hips 0.022 0.906 -0.020|L -0.243 0.184 0.133|R 0.154 0.120 -0.153
+PROBE|Ally|loco|Ally_LocoB|ph 5|hips 0.018 0.917 -0.006|L -0.275 0.276 -0.152|R 0.172 0.109 -0.009
+PROBE|Ally|loco|Ally_LocoB|ph 6|hips 0.004 0.900 0.008|L -0.273 0.224 -0.331|R 0.194 0.098 0.136
+PROBE|Ally|loco|Ally_LocoB|ph 7|hips -0.011 0.890 -0.010|L -0.204 0.131 -0.273|R 0.222 0.107 0.263
+PROBE|Ally|loco|Ally_LocoS1|len 1.13 loop True
+PROBE|Ally|loco|Ally_LocoS1|ph 0|hips -0.011 0.872 0.014|L -0.481 0.125 -0.091|R 0.512 0.135 -0.062
+PROBE|Ally|loco|Ally_LocoS1|ph 1|hips -0.058 0.909 0.003|L -0.421 0.127 -0.090|R 0.484 0.181 -0.056
+PROBE|Ally|loco|Ally_LocoS1|ph 2|hips -0.051 0.935 -0.005|L -0.351 0.123 -0.085|R 0.290 0.174 -0.101
+PROBE|Ally|loco|Ally_LocoS1|ph 3|hips -0.023 0.937 -0.002|L -0.283 0.121 -0.090|R 0.183 0.143 -0.108
+PROBE|Ally|loco|Ally_LocoS1|ph 4|hips 0.004 0.927 -0.006|L -0.225 0.149 -0.109|R 0.237 0.115 -0.095
+PROBE|Ally|loco|Ally_LocoS1|ph 5|hips 0.037 0.934 -0.010|L -0.248 0.199 -0.097|R 0.301 0.116 -0.083
+PROBE|Ally|loco|Ally_LocoS1|ph 6|hips 0.057 0.936 -0.002|L -0.408 0.218 -0.072|R 0.371 0.126 -0.082
+PROBE|Ally|loco|Ally_LocoS1|ph 7|hips 0.046 0.900 0.008|L -0.510 0.188 -0.054|R 0.457 0.127 -0.084
+PROBE|Ally|loco|Ally_LocoS2|len 1.22 loop True
+PROBE|Ally|loco|Ally_LocoS2|ph 0|hips 0.009 0.925 -0.005|L -0.206 0.111 -0.071|R 0.236 0.118 -0.090
+PROBE|Ally|loco|Ally_LocoS2|ph 1|hips -0.022 0.937 -0.008|L -0.269 0.109 -0.069|R 0.207 0.148 -0.103
+PROBE|Ally|loco|Ally_LocoS2|ph 2|hips -0.054 0.942 -0.006|L -0.340 0.111 -0.058|R 0.314 0.177 -0.091
+PROBE|Ally|loco|Ally_LocoS2|ph 3|hips -0.064 0.927 0.006|L -0.409 0.115 -0.054|R 0.441 0.183 -0.049
+PROBE|Ally|loco|Ally_LocoS2|ph 4|hips -0.025 0.892 0.018|L -0.473 0.120 -0.053|R 0.497 0.163 -0.072
+PROBE|Ally|loco|Ally_LocoS2|ph 5|hips 0.046 0.891 0.011|L -0.521 0.168 -0.034|R 0.448 0.128 -0.090
+PROBE|Ally|loco|Ally_LocoS2|ph 6|hips 0.068 0.924 -0.005|L -0.399 0.194 -0.049|R 0.383 0.132 -0.088
+PROBE|Ally|loco|Ally_LocoS2|ph 7|hips 0.042 0.931 -0.012|L -0.213 0.164 -0.077|R 0.309 0.123 -0.086
+PROBE|Ally|sole_F|slide mean 0.05 max 0.44 m/s (n 92)|soleMinY -0.009
+PROBE|Ally|walk_F|v 1.20|slide mean 0.19 max 0.93 m/s (n 46)|footMinY walk 0.102 all 0.031|hips 0.723..0.749 end -0.01 0.75 0.00|Loco x 0.00 z 1.00 tempo 1.03
+PROBE|Ally|sole_B|slide mean 0.02 max 0.21 m/s (n 66)|soleMinY -0.004
+PROBE|Ally|walk_B|v 1.02|slide mean 0.23 max 2.53 m/s (n 47)|footMinY walk 0.100 all 0.074|hips 0.748..0.785 end -0.01 0.75 0.00|Loco x 0.00 z -1.00 tempo 0.85
+PROBE|Ally|sole_R|slide mean 0.07 max 0.44 m/s (n 72)|soleMinY -0.008
+PROBE|Ally|walk_R|v 0.72|slide mean 0.17 max 0.76 m/s (n 54)|footMinY walk 0.102 all 0.075|hips 0.731..0.803 end -0.01 0.75 0.00|Loco x 1.00 z 0.00 tempo 1.55
+PROBE|Ally|sole_L|slide mean 0.07 max 0.89 m/s (n 86)|soleMinY -0.020
+PROBE|Ally|walk_L|v 0.72|slide mean 0.23 max 0.47 m/s (n 47)|footMinY walk 0.102 all 0.044|hips 0.719..0.807 end -0.01 0.75 0.00|Loco x -1.00 z 0.00 tempo 1.60
+PROBE|Ally|sole_FR|slide mean 0.05 max 0.41 m/s (n 63)|soleMinY -0.006
+PROBE|Ally|walk_FR|v 0.96|slide mean 0.17 max 0.68 m/s (n 46)|footMinY walk 0.103 all 0.068|hips 0.746..0.779 end -0.01 0.75 0.00|Loco x 0.71 z 0.71 tempo 1.42
+PROBE|Ally|sole_Rcircle|slide mean 0.09 max 0.51 m/s (n 69)|soleMinY -0.008
+PROBE|Ally|walk_Rcircle|v 0.72|slide mean 0.18 max 0.60 m/s (n 54)|footMinY walk 0.102 all 0.074|hips 0.728..0.803 end -0.01 0.75 0.00|Loco x 1.00 z -0.04 tempo 1.71
+PROBE|Ally|rag|t0.0|minY 0.206|hips 2.37 0.84 -0.04|head 2.38 1.49 0.00|center 2.40 0.84 -0.02|maxV 1.65
+PROBE|Ally|rag|t0.2|minY 0.228|hips 1.02 0.76 1.15|head 1.16 1.38 1.14|center 1.19 0.79 1.12|maxV 2.73
+PROBE|Ally|rag|t0.5|minY 0.149|hips 0.58 0.22 1.04|head 0.51 0.71 1.43|center 0.72 0.38 1.15|maxV 3.94
+PROBE|Ally|rag|t1.0|minY 0.068|hips 0.46 0.14 1.07|head -0.03 0.12 1.48|center 0.37 0.17 1.12|maxV 0.72
+PROBE|Ally|rag|t2.0|minY 0.045|hips 0.46 0.14 1.07|head 0.01 0.12 1.51|center 0.40 0.13 1.11|maxV 0.22
+PROBE|Ally|rag|t3.0|minY 0.045|hips 0.46 0.14 1.07|head 0.01 0.12 1.51|center 0.41 0.13 1.11|maxV 0.07
+PROBE|Ally|rag|restored hips 0.000 0.846 0.000
+PROBE|Enemy|rest|Hips|-0.004|0.917|0.000|fw -0.01 -0.07 1.00|up 0.00 1.00 0.07
+PROBE|Enemy|rest|Spine|-0.003|1.052|0.009|fw -0.01 -0.07 1.00|up 0.00 1.00 0.07
+PROBE|Enemy|rest|Chest|-0.002|1.322|0.028|fw -0.02 -0.07 1.00|up 0.01 1.00 0.07
+PROBE|Enemy|rest|Neck|-0.001|1.423|0.035|fw -0.02 -0.07 1.00|up 0.01 1.00 0.07
+PROBE|Enemy|rest|Head|0.000|1.495|0.040|fw -0.02 -0.06 1.00|up 0.01 1.00 0.06
+PROBE|Enemy|rest|Shoulder.L|-0.038|1.373|0.025|fw 0.00 1.00 0.00|up -1.00 0.00 -0.03
+PROBE|Enemy|rest|UpperArm.L|-0.182|1.373|0.020|fw -0.36 0.35 -0.86|up -0.49 -0.86 -0.15
+PROBE|Enemy|rest|Forearm.L|-0.325|1.120|-0.024|fw -0.57 0.08 -0.82|up -0.51 -0.81 0.28
+PROBE|Enemy|rest|Hand.L|-0.466|0.895|0.052|fw -0.41 0.03 -0.91|up -0.39 -0.91 0.15
+PROBE|Enemy|rest|Shoulder.R|0.036|1.367|0.025|fw 0.00 1.00 0.00|up 1.00 0.00 -0.01
+PROBE|Enemy|rest|UpperArm.R|0.191|1.367|0.023|fw 0.37 0.35 -0.86|up 0.48 -0.86 -0.15
+PROBE|Enemy|rest|Forearm.R|0.329|1.119|-0.018|fw 0.59 0.09 -0.80|up 0.52 -0.81 0.29
+PROBE|Enemy|rest|Hand.R|0.472|0.896|0.063|fw 0.35 -0.02 -0.94|up 0.31 -0.94 0.14
+PROBE|Enemy|rest|UpperLeg.L|-0.124|0.826|0.003|fw -0.13 -0.14 -0.98|up -0.14 -0.98 0.16
+PROBE|Enemy|rest|LowerLeg.L|-0.175|0.469|0.061|fw -0.07 0.30 -0.95|up -0.09 -0.95 -0.29
+PROBE|Enemy|rest|Foot.L|-0.206|0.134|-0.041|fw -0.95 0.00 -0.32|up -0.30 -0.31 0.90
+PROBE|Enemy|rest|UpperLeg.R|0.122|0.827|0.005|fw 0.16 -0.14 -0.98|up 0.14 -0.98 0.17
+PROBE|Enemy|rest|LowerLeg.R|0.174|0.472|0.065|fw 0.09 0.30 -0.95|up 0.10 -0.95 -0.29
+PROBE|Enemy|rest|Foot.R|0.209|0.141|-0.038|fw 0.94 -0.09 -0.32|up 0.28 -0.33 0.90
+PROBE|Enemy|rest|model|0.000|0.000|0.000|rot (0.00, 359.55, 0.00)
+PROBE|Enemy|clip|Samurai_Rig|Idle len 2.5
+PROBE|Enemy|anim|Hips|-0.021|0.919|0.000|fw -0.01 -0.07 1.00|up -0.01 1.00 0.07
+PROBE|Enemy|anim|Spine|-0.023|1.054|0.009|fw -0.03 -0.06 1.00|up 0.00 1.00 0.06
+PROBE|Enemy|anim|Chest|-0.024|1.324|0.026|fw -0.02 -0.05 1.00|up 0.01 1.00 0.05
+PROBE|Enemy|anim|Neck|-0.023|1.425|0.031|fw -0.02 -0.05 1.00|up 0.01 1.00 0.05
+PROBE|Enemy|anim|Head|-0.022|1.497|0.034|fw -0.02 -0.05 1.00|up 0.00 1.00 0.05
+PROBE|Enemy|anim|Shoulder.L|-0.060|1.375|0.022|fw 0.00 1.00 -0.02|up -1.00 0.00 -0.03
+PROBE|Enemy|anim|UpperArm.L|-0.204|1.376|0.018|fw -0.36 0.34 -0.87|up -0.49 -0.86 -0.13
+PROBE|Enemy|anim|Forearm.L|-0.348|1.121|-0.020|fw -0.57 0.06 -0.82|up -0.51 -0.81 0.30
+PROBE|Enemy|anim|Hand.L|-0.489|0.899|0.061|fw -0.41 0.01 -0.91|up -0.39 -0.91 0.17
+PROBE|Enemy|anim|Shoulder.R|0.014|1.369|0.022|fw 0.00 1.00 -0.02|up 1.00 0.00 -0.02
+PROBE|Enemy|anim|UpperArm.R|0.169|1.368|0.020|fw 0.37 0.33 -0.87|up 0.48 -0.87 -0.13
+PROBE|Enemy|anim|Forearm.R|0.306|1.119|-0.017|fw 0.59 0.07 -0.80|up 0.51 -0.80 0.31
+PROBE|Enemy|anim|Hand.R|0.449|0.898|0.068|fw 0.34 -0.04 -0.94|up 0.31 -0.94 0.15
+PROBE|Enemy|anim|UpperLeg.L|-0.139|0.826|0.003|fw -0.13 -0.13 -0.98|up -0.12 -0.98 0.14
+PROBE|Enemy|anim|LowerLeg.L|-0.183|0.466|0.055|fw -0.08 0.27 -0.96|up -0.07 -0.96 -0.27
+PROBE|Enemy|anim|Foot.L|-0.208|0.129|-0.039|fw -0.95 -0.02 -0.32|up -0.29 -0.31 0.90
+PROBE|Enemy|anim|UpperLeg.R|0.107|0.831|0.005|fw 0.16 -0.16 -0.97|up 0.16 -0.97 0.18
+PROBE|Enemy|anim|LowerLeg.R|0.166|0.478|0.071|fw 0.08 0.33 -0.94|up 0.12 -0.94 -0.32
+PROBE|Enemy|anim|Foot.R|0.207|0.151|-0.039|fw 0.94 -0.07 -0.32|up 0.28 -0.33 0.90
+PROBE|Enemy|anim|model|0.000|0.000|0.000|rot (0.00, 359.55, 0.00)
+PROBE|Enemy|idle|Hips|-0.021|0.824|0.000|fw -0.58 -0.09 0.81|up -0.06 1.00 0.07
+PROBE|Enemy|idle|Spine|-0.030|0.958|0.009|fw -0.65 -0.16 0.74|up -0.11 0.99 0.12
+PROBE|Enemy|idle|Chest|-0.058|1.226|0.041|fw -0.73 -0.14 0.66|up -0.10 0.99 0.11
+PROBE|Enemy|idle|Neck|-0.068|1.326|0.052|fw -0.74 -0.14 0.66|up -0.10 0.99 0.11
+PROBE|Enemy|idle|Head|-0.075|1.398|0.059|fw -0.37 -0.08 0.92|up -0.02 1.00 0.08
+PROBE|Enemy|idle|Shoulder.L|-0.083|1.277|0.015|fw -0.05 1.00 0.05|up -0.66 0.00 -0.75
+PROBE|Enemy|idle|UpperArm.L|-0.178|1.278|-0.093|fw 0.02 -0.35 -0.94|up -0.55 -0.79 0.29
+PROBE|Enemy|idle|Forearm.L|-0.340|1.046|-0.008|fw -0.24 -0.85 -0.47|up 0.45 -0.53 0.72
+PROBE|Enemy|idle|Hand.L|-0.214|0.901|0.189|fw -0.30 -0.33 -0.90|up 0.58 -0.80 0.10
+PROBE|Enemy|idle|Shoulder.R|-0.032|1.271|0.069|fw -0.05 1.00 0.05|up 0.69 0.00 0.72
+PROBE|Enemy|idle|UpperArm.R|0.075|1.270|0.180|fw 0.95 0.18 -0.25|up 0.23 -0.95 0.19
+PROBE|Enemy|idle|Forearm.R|0.141|0.997|0.234|fw 0.35 -0.94 0.05|up -0.88 -0.31 0.37
+PROBE|Enemy|idle|Hand.R|-0.101|0.911|0.337|fw 0.57 -0.26 -0.78|up -0.65 -0.72 -0.24
+PROBE|Enemy|idle|UpperLeg.L|-0.118|0.731|-0.067|fw 0.03 0.36 -0.93|up -0.50 -0.80 -0.33
+PROBE|Enemy|idle|LowerLeg.L|-0.301|0.437|-0.188|fw 0.20 0.50 -0.84|up 0.12 -0.86 -0.49
+PROBE|Enemy|idle|Foot.L|-0.260|0.134|-0.360|fw 0.06 0.00 -1.00|up -0.95 -0.31 -0.06
+PROBE|Enemy|idle|UpperLeg.R|0.082|0.736|0.075|fw 0.24 -0.66 -0.71|up 0.10 -0.71 0.70
+PROBE|Enemy|idle|LowerLeg.R|0.120|0.479|0.330|fw 0.18 -0.14 -0.97|up 0.00 -0.99 0.14
+PROBE|Enemy|idle|Foot.R|0.120|0.134|0.380|fw 0.87 -0.09 -0.48|up 0.43 -0.33 0.84
+PROBE|Enemy|idle|model|0.000|-0.095|0.000|rot (0.00, 359.55, 0.00)
+PROBE|Enemy|rt_anim0|Hips|-0.004|0.822|0.000|fw -0.01 -0.07 1.00|up 0.00 1.00 0.07
+PROBE|Enemy|rt_anim0|Spine|-0.003|0.957|0.009|fw -0.03 -0.07 1.00|up 0.00 1.00 0.07
+PROBE|Enemy|rt_anim0|Chest|-0.002|1.227|0.028|fw -0.02 -0.07 1.00|up 0.01 1.00 0.07
+PROBE|Enemy|rt_anim0|Neck|-0.001|1.328|0.035|fw -0.03 -0.07 1.00|up 0.01 1.00 0.07
+PROBE|Enemy|rt_anim0|Head|-0.001|1.400|0.040|fw -0.05 -0.06 1.00|up 0.01 1.00 0.06
+PROBE|Enemy|rt_anim0|Shoulder.L|-0.038|1.278|0.025|fw 0.00 1.00 0.00|up -1.00 0.00 -0.03
+PROBE|Enemy|rt_anim0|UpperArm.L|-0.182|1.278|0.021|fw -0.36 0.35 -0.86|up -0.49 -0.86 -0.15
+PROBE|Enemy|rt_anim0|Forearm.L|-0.326|1.025|-0.023|fw -0.57 0.08 -0.82|up -0.51 -0.81 0.28
+PROBE|Enemy|rt_anim0|Hand.L|-0.466|0.800|0.054|fw -0.41 0.03 -0.91|up -0.39 -0.91 0.15
+PROBE|Enemy|rt_anim0|Shoulder.R|0.036|1.272|0.025|fw 0.00 1.00 0.00|up 1.00 0.00 -0.02
+PROBE|Enemy|rt_anim0|UpperArm.R|0.190|1.272|0.023|fw 0.37 0.35 -0.86|up 0.48 -0.86 -0.15
+PROBE|Enemy|rt_anim0|Forearm.R|0.329|1.024|-0.020|fw 0.59 0.09 -0.80|up 0.52 -0.81 0.29
+PROBE|Enemy|rt_anim0|Hand.R|0.471|0.801|0.061|fw 0.34 -0.02 -0.94|up 0.31 -0.94 0.13
+PROBE|Enemy|rt_anim0|UpperLeg.L|-0.124|0.731|0.003|fw -0.13 -0.14 -0.98|up -0.14 -0.98 0.16
+PROBE|Enemy|rt_anim0|LowerLeg.L|-0.175|0.374|0.061|fw -0.07 0.30 -0.95|up -0.09 -0.95 -0.29
+PROBE|Enemy|rt_anim0|Foot.L|-0.206|0.039|-0.041|fw -0.95 0.00 -0.32|up -0.30 -0.31 0.90
+PROBE|Enemy|rt_anim0|UpperLeg.R|0.122|0.732|0.005|fw 0.16 -0.14 -0.98|up 0.14 -0.98 0.17
+PROBE|Enemy|rt_anim0|LowerLeg.R|0.174|0.377|0.065|fw 0.09 0.30 -0.95|up 0.10 -0.95 -0.29
+PROBE|Enemy|rt_anim0|Foot.R|0.209|0.046|-0.038|fw 0.94 -0.09 -0.32|up 0.28 -0.33 0.90
+PROBE|Enemy|rt_anim0|model|0.000|-0.095|0.000|rot (0.00, 359.55, 0.00)
+PROBE|Enemy|rt_anim1|Hips|-0.005|0.815|0.000|fw -0.01 -0.07 1.00|up 0.00 1.00 0.07
+PROBE|Enemy|rt_anim1|Spine|-0.004|0.950|0.009|fw -0.02 -0.08 1.00|up 0.00 1.00 0.08
+PROBE|Enemy|rt_anim1|Chest|-0.004|1.219|0.030|fw -0.02 -0.09 1.00|up 0.01 1.00 0.09
+PROBE|Enemy|rt_anim1|Neck|-0.002|1.321|0.038|fw -0.03 -0.09 1.00|up 0.01 1.00 0.09
+PROBE|Enemy|rt_anim1|Head|-0.002|1.393|0.045|fw -0.04 -0.08 1.00|up 0.01 1.00 0.08
+PROBE|Enemy|rt_anim1|Shoulder.L|-0.039|1.271|0.027|fw 0.00 1.00 0.02|up -1.00 0.00 -0.03
+PROBE|Enemy|rt_anim1|UpperArm.L|-0.183|1.271|0.023|fw -0.36 0.37 -0.86|up -0.49 -0.86 -0.16
+PROBE|Enemy|rt_anim1|Forearm.L|-0.327|1.018|-0.025|fw -0.57 0.09 -0.82|up -0.51 -0.82 0.26
+PROBE|Enemy|rt_anim1|Hand.L|-0.467|0.793|0.048|fw -0.41 0.04 -0.91|up -0.39 -0.91 0.13
+PROBE|Enemy|rt_anim1|Shoulder.R|0.035|1.264|0.027|fw 0.00 1.00 0.02|up 1.00 0.00 -0.01
+PROBE|Enemy|rt_anim1|UpperArm.R|0.189|1.264|0.025|fw 0.37 0.37 -0.86|up 0.48 -0.86 -0.16
+PROBE|Enemy|rt_anim1|Forearm.R|0.328|1.018|-0.021|fw 0.59 0.10 -0.80|up 0.52 -0.81 0.28
+PROBE|Enemy|rt_anim1|Hand.R|0.470|0.793|0.057|fw 0.34 -0.01 -0.94|up 0.31 -0.94 0.12
+PROBE|Enemy|rt_anim1|UpperLeg.L|-0.125|0.724|0.003|fw -0.13 -0.17 -0.98|up -0.14 -0.97 0.18
+PROBE|Enemy|rt_anim1|LowerLeg.L|-0.175|0.368|0.070|fw -0.07 0.31 -0.95|up -0.09 -0.95 -0.31
+PROBE|Enemy|rt_anim1|Foot.L|-0.206|0.035|-0.038|fw -0.95 0.00 -0.32|up -0.30 -0.31 0.90
+PROBE|Enemy|rt_anim1|UpperLeg.R|0.121|0.725|0.005|fw 0.16 -0.17 -0.97|up 0.14 -0.97 0.19
+PROBE|Enemy|rt_anim1|LowerLeg.R|0.174|0.372|0.074|fw 0.09 0.32 -0.94|up 0.10 -0.94 -0.32
+PROBE|Enemy|rt_anim1|Foot.R|0.209|0.043|-0.035|fw 0.94 -0.09 -0.32|up 0.28 -0.33 0.90
+PROBE|Enemy|rt_anim1|model|0.000|-0.095|0.000|rot (0.00, 359.55, 0.00)
+PROBE|Enemy|rt_idle|Hips|-0.004|0.742|0.000|fw -0.58 -0.09 0.81|up -0.05 1.00 0.08
+PROBE|Enemy|rt_idle|Spine|-0.010|0.877|0.010|fw -0.63 -0.23 0.74|up -0.15 0.97 0.18
+PROBE|Enemy|rt_idle|Chest|-0.050|1.140|0.059|fw -0.69 -0.37 0.62|up -0.26 0.93 0.26
+PROBE|Enemy|rt_idle|Neck|-0.077|1.234|0.085|fw -0.69 -0.37 0.62|up -0.26 0.93 0.26
+PROBE|Enemy|rt_idle|Head|-0.096|1.301|0.104|fw -0.37 -0.13 0.92|up -0.05 0.99 0.12
+PROBE|Enemy|rt_idle|Shoulder.L|-0.084|1.190|0.041|fw -0.22 0.95 0.20|up -0.66 0.01 -0.75
+PROBE|Enemy|rt_idle|UpperArm.L|-0.179|1.191|-0.067|fw -0.06 -0.31 -0.95|up -0.55 -0.79 0.29
+PROBE|Enemy|rt_idle|Forearm.L|-0.340|0.959|0.018|fw -0.29 -0.85 -0.44|up 0.45 -0.53 0.72
+PROBE|Enemy|rt_idle|Hand.L|-0.215|0.814|0.216|fw -0.30 -0.33 -0.90|up 0.58 -0.80 0.10
+PROBE|Enemy|rt_idle|Shoulder.R|-0.032|1.183|0.095|fw -0.22 0.95 0.20|up 0.69 0.01 0.72
+PROBE|Enemy|rt_idle|UpperArm.R|0.074|1.184|0.206|fw 0.97 0.20 -0.16|up 0.23 -0.95 0.19
+PROBE|Enemy|rt_idle|Forearm.R|0.141|0.911|0.260|fw 0.37 -0.93 0.08|up -0.87 -0.31 0.37
+PROBE|Enemy|rt_idle|Hand.R|-0.101|0.824|0.364|fw 0.57 -0.26 -0.78|up -0.65 -0.72 -0.24
+PROBE|Enemy|rt_idle|UpperLeg.L|-0.103|0.651|-0.068|fw 0.23 0.15 -0.96|up -0.70 -0.66 -0.27
+PROBE|Enemy|rt_idle|LowerLeg.L|-0.360|0.410|-0.167|fw 0.68 0.57 -0.46|up 0.28 -0.79 -0.55
+PROBE|Enemy|rt_idle|Foot.L|-0.260|0.134|-0.360|fw 0.06 0.00 -1.00|up -0.95 -0.31 -0.06
+PROBE|Enemy|rt_idle|UpperLeg.R|0.097|0.652|0.075|fw 0.23 -0.85 -0.48|up 0.12 -0.47 0.88
+PROBE|Enemy|rt_idle|LowerLeg.R|0.142|0.482|0.393|fw 0.14 0.03 -0.99|up -0.06 -1.00 -0.04
+PROBE|Enemy|rt_idle|Foot.R|0.120|0.134|0.380|fw 0.87 -0.09 -0.48|up 0.43 -0.33 0.84
+PROBE|Enemy|rt_idle|model|0.000|-0.095|0.000|rot (0.00, 359.55, 0.00)
+PROBE|Enemy|rt_info|root False avatar null state 125937960 cull AlwaysAnimate
+PROBE|Enemy|oh0.26|Hips|-0.021|0.781|0.152|fw -0.58 -0.08 0.81|up -0.06 1.00 0.06
+PROBE|Enemy|oh0.26|Spine|-0.029|0.915|0.160|fw -0.78 -0.08 0.61|up -0.05 1.00 0.06
+PROBE|Enemy|oh0.26|Chest|-0.043|1.185|0.176|fw -0.96 0.00 0.27|up 0.01 1.00 0.01
+PROBE|Enemy|oh0.26|Neck|-0.042|1.287|0.177|fw -0.97 0.00 0.26|up 0.01 1.00 0.01
+PROBE|Enemy|oh0.26|Head|-0.042|1.359|0.178|fw -0.59 -0.04 0.81|up -0.01 1.00 0.04
+PROBE|Enemy|oh0.26|Shoulder.L|-0.046|1.236|0.139|fw 0.17 0.96 0.22|up -0.49 0.27 -0.83
+PROBE|Enemy|oh0.26|UpperArm.L|-0.116|1.276|0.020|fw -0.51 -0.24 -0.82|up -0.85 0.03 0.52
+PROBE|Enemy|oh0.26|Forearm.L|-0.367|1.285|0.174|fw -0.84 -0.03 0.55|up 0.30 0.81 0.51
+PROBE|Enemy|oh0.26|Hand.L|-0.284|1.507|0.314|fw -0.02 -1.00 0.09|up 0.07 0.09 0.99
+PROBE|Enemy|oh0.26|Shoulder.R|-0.026|1.230|0.211|fw 0.02 0.95 -0.30|up 0.06 0.30 0.95
+PROBE|Enemy|oh0.26|UpperArm.R|-0.016|1.276|0.358|fw -0.25 -0.02 -0.97|up 0.41 0.90 -0.12
+PROBE|Enemy|oh0.26|Forearm.R|0.101|1.535|0.323|fw 0.14 -0.33 -0.94|up -0.97 -0.22 -0.07
+PROBE|Enemy|oh0.26|Hand.R|-0.168|1.475|0.305|fw 0.12 -0.56 -0.82|up -0.76 0.48 -0.43
+PROBE|Enemy|oh0.26|UpperLeg.L|-0.119|0.688|0.086|fw 0.07 0.60 -0.79|up -0.36 -0.73 -0.58
+PROBE|Enemy|oh0.26|LowerLeg.L|-0.251|0.422|-0.128|fw 0.17 0.65 -0.74|up -0.03 -0.75 -0.66
+PROBE|Enemy|oh0.26|Foot.L|-0.260|0.159|-0.360|fw 0.05 0.07 -1.00|up -0.85 -0.52 -0.08
+PROBE|Enemy|oh0.26|UpperLeg.R|0.082|0.693|0.228|fw 0.27 -0.71 -0.65|up 0.15 -0.64 0.75
+PROBE|Enemy|oh0.26|LowerLeg.R|0.135|0.460|0.503|fw 0.14 0.34 -0.93|up -0.04 -0.93 -0.35
+PROBE|Enemy|oh0.26|Foot.R|0.120|0.134|0.380|fw 0.87 -0.09 -0.48|up 0.43 -0.33 0.84
+PROBE|Enemy|oh0.26|model|0.000|-0.138|0.153|rot (0.00, 359.55, 0.00)
+PROBE|Enemy|oh0.36|Hips|-0.021|0.764|0.168|fw -0.52 -0.08 0.85|up -0.05 1.00 0.06
+PROBE|Enemy|oh0.36|Spine|-0.028|0.898|0.177|fw -0.67 -0.08 0.74|up -0.05 1.00 0.06
+PROBE|Enemy|oh0.36|Chest|-0.042|1.168|0.193|fw -0.83 -0.03 0.56|up -0.02 1.00 0.03
+PROBE|Enemy|oh0.36|Neck|-0.044|1.270|0.196|fw -0.83 -0.03 0.56|up -0.02 1.00 0.03
+PROBE|Enemy|oh0.36|Head|-0.045|1.342|0.198|fw -0.46 -0.05 0.89|up -0.01 1.00 0.05
+PROBE|Enemy|oh0.36|Shoulder.L|-0.058|1.219|0.161|fw 0.11 0.99 0.07|up -0.72 0.12 -0.68
+PROBE|Enemy|oh0.36|UpperArm.L|-0.162|1.237|0.064|fw -0.60 -0.69 -0.41|up -0.46 -0.13 0.88
+PROBE|Enemy|oh0.36|Forearm.L|-0.297|1.199|0.323|fw -0.30 -0.53 0.79|up 0.60 0.54 0.59
+PROBE|Enemy|oh0.36|Hand.L|-0.130|1.347|0.486|fw -0.10 -0.96 -0.26|up 0.54 -0.27 0.80
+PROBE|Enemy|oh0.36|Shoulder.R|-0.016|1.213|0.222|fw -0.05 0.98 -0.17|up 0.38 0.17 0.91
+PROBE|Enemy|oh0.36|UpperArm.R|0.042|1.239|0.363|fw 0.57 0.51 -0.64|up 0.40 0.51 0.76
+PROBE|Enemy|oh0.36|Forearm.R|0.157|1.386|0.580|fw 0.35 0.75 -0.56|up -0.80 -0.08 -0.60
+PROBE|Enemy|oh0.36|Hand.R|-0.064|1.365|0.415|fw -0.14 0.46 -0.88|up -0.83 0.43 0.36
+PROBE|Enemy|oh0.36|UpperLeg.L|-0.124|0.671|0.109|fw 0.08 0.64 -0.77|up -0.35 -0.70 -0.62
+PROBE|Enemy|oh0.36|LowerLeg.L|-0.254|0.414|-0.117|fw 0.18 0.68 -0.71|up -0.02 -0.72 -0.69
+PROBE|Enemy|oh0.36|Foot.L|-0.260|0.161|-0.360|fw 0.05 0.08 -1.00|up -0.84 -0.53 -0.09
+PROBE|Enemy|oh0.36|UpperLeg.R|0.087|0.676|0.237|fw 0.27 -0.73 -0.63|up 0.15 -0.61 0.78
+PROBE|Enemy|oh0.36|LowerLeg.R|0.140|0.453|0.519|fw 0.15 0.39 -0.91|up -0.06 -0.91 -0.40
+PROBE|Enemy|oh0.36|Foot.R|0.120|0.134|0.380|fw 0.87 -0.09 -0.48|up 0.43 -0.33 0.84
+PROBE|Enemy|oh0.36|model|0.000|-0.155|0.169|rot (0.00, 359.55, 0.00)
+PROBE|Enemy|oh0.49|Hips|-0.021|0.715|0.198|fw -0.35 -0.09 0.93|up -0.04 1.00 0.08
+PROBE|Enemy|oh0.49|Spine|-0.027|0.850|0.208|fw -0.39 -0.14 0.91|up -0.05 0.99 0.12
+PROBE|Enemy|oh0.49|Chest|-0.042|1.118|0.242|fw -0.44 -0.10 0.89|up -0.03 1.00 0.09
+PROBE|Enemy|oh0.49|Neck|-0.045|1.219|0.251|fw -0.44 -0.10 0.89|up -0.03 1.00 0.09
+PROBE|Enemy|oh0.49|Head|-0.047|1.291|0.258|fw -0.23 -0.07 0.97|up -0.01 1.00 0.07
+PROBE|Enemy|oh0.49|Shoulder.L|-0.073|1.170|0.225|fw -0.01 1.00 0.03|up -0.89 0.00 -0.45
+PROBE|Enemy|oh0.49|UpperArm.L|-0.201|1.170|0.160|fw -0.09 -0.37 -0.93|up 0.07 -0.93 0.36
+PROBE|Enemy|oh0.49|Forearm.L|-0.181|0.896|0.267|fw 0.16 -0.69 -0.71|up 0.94 -0.10 0.31
+PROBE|Enemy|oh0.49|Hand.L|0.079|0.869|0.354|fw -0.23 0.08 -0.97|up 0.81 -0.53 -0.23
+PROBE|Enemy|oh0.49|Shoulder.R|-0.006|1.163|0.257|fw -0.01 1.00 0.03|up 0.91 0.00 0.41
+PROBE|Enemy|oh0.49|UpperArm.R|0.135|1.163|0.320|fw 0.41 0.67 -0.62|up 0.84 -0.54 -0.03
+PROBE|Enemy|oh0.49|Forearm.R|0.375|1.007|0.311|fw 0.59 -0.75 -0.30|up -0.59 -0.65 0.47
+PROBE|Enemy|oh0.49|Hand.R|0.212|0.827|0.442|fw 0.12 0.12 -0.98|up -0.55 -0.82 -0.17
+PROBE|Enemy|oh0.49|UpperLeg.L|-0.133|0.622|0.159|fw 0.10 0.71 -0.70|up -0.34 -0.64 -0.69
+PROBE|Enemy|oh0.49|LowerLeg.L|-0.258|0.389|-0.094|fw 0.19 0.74 -0.64|up 0.00 -0.65 -0.76
+PROBE|Enemy|oh0.49|Foot.L|-0.260|0.161|-0.360|fw 0.05 0.08 -1.00|up -0.85 -0.53 -0.08
+PROBE|Enemy|oh0.49|UpperLeg.R|0.098|0.628|0.243|fw 0.29 -0.79 -0.54|up 0.15 -0.52 0.84
+PROBE|Enemy|oh0.49|LowerLeg.R|0.151|0.437|0.549|fw 0.17 0.47 -0.87|up -0.09 -0.87 -0.49
+PROBE|Enemy|oh0.49|Foot.R|0.120|0.134|0.380|fw 0.87 -0.09 -0.48|up 0.43 -0.33 0.84
+PROBE|Enemy|oh0.49|model|0.000|-0.203|0.198|rot (0.00, 359.55, 0.00)
+PROBE|Enemy|oh0.64|Hips|-0.021|0.718|0.195|fw -0.33 -0.09 0.94|up -0.04 1.00 0.08
+PROBE|Enemy|oh0.64|Spine|-0.027|0.852|0.206|fw -0.31 -0.17 0.93|up -0.05 0.99 0.16
+PROBE|Enemy|oh0.64|Chest|-0.041|1.119|0.249|fw -0.27 -0.15 0.95|up -0.03 0.99 0.15
+PROBE|Enemy|oh0.64|Neck|-0.044|1.220|0.265|fw -0.27 -0.15 0.95|up -0.03 0.99 0.15
+PROBE|Enemy|oh0.64|Head|-0.046|1.291|0.276|fw -0.14 -0.08 0.99|up 0.00 1.00 0.08
+PROBE|Enemy|oh0.64|Shoulder.L|-0.076|1.171|0.241|fw -0.02 1.00 0.08|up -0.96 0.00 -0.28
+PROBE|Enemy|oh0.64|UpperArm.L|-0.214|1.171|0.201|fw -0.20 0.15 -0.97|up 0.01 -0.99 -0.16
+PROBE|Enemy|oh0.64|Forearm.L|-0.211|0.880|0.155|fw 0.12 -0.38 -0.92|up 0.98 0.19 0.05
+PROBE|Enemy|oh0.64|Hand.L|0.060|0.932|0.170|fw -0.67 0.25 -0.70|up 0.63 -0.29 -0.72
+PROBE|Enemy|oh0.64|Shoulder.R|-0.004|1.164|0.260|fw -0.02 1.00 0.08|up 0.97 0.00 0.24
+PROBE|Enemy|oh0.64|UpperArm.R|0.146|1.164|0.297|fw 0.20 0.72 -0.67|up 0.94 -0.33 -0.07
+PROBE|Enemy|oh0.64|Forearm.R|0.416|1.070|0.277|fw 0.46 0.08 -0.89|up -0.65 -0.66 -0.39
+PROBE|Enemy|oh0.64|Hand.R|0.237|0.888|0.169|fw -0.39 0.55 -0.74|up -0.64 -0.74 -0.20
+PROBE|Enemy|oh0.64|UpperLeg.L|-0.133|0.625|0.158|fw 0.10 0.71 -0.70|up -0.34 -0.64 -0.69
+PROBE|Enemy|oh0.64|LowerLeg.L|-0.259|0.391|-0.095|fw 0.19 0.74 -0.64|up 0.00 -0.65 -0.76
+PROBE|Enemy|oh0.64|Foot.L|-0.260|0.162|-0.360|fw 0.05 0.08 -1.00|up -0.84 -0.54 -0.09
+PROBE|Enemy|oh0.64|UpperLeg.R|0.099|0.630|0.238|fw 0.29 -0.79 -0.54|up 0.14 -0.52 0.84
+PROBE|Enemy|oh0.64|LowerLeg.R|0.151|0.440|0.544|fw 0.17 0.45 -0.88|up -0.09 -0.88 -0.47
+PROBE|Enemy|oh0.64|Foot.R|0.120|0.134|0.380|fw 0.87 -0.09 -0.48|up 0.43 -0.33 0.84
+PROBE|Enemy|oh0.64|model|0.000|-0.201|0.195|rot (0.00, 359.55, 0.00)
+PROBE|Enemy|shader|Samurai_Body|Samurai2_Body|BladePath/Character|supported True
+PROBE|Enemy|loco|Undead_LocoF|len 1.12 loop True
+PROBE|Enemy|loco|Undead_LocoF|ph 0|hips 0.011 0.943 -0.002|L -0.178 0.238 0.143|R 0.138 0.214 -0.247
+PROBE|Enemy|loco|Undead_LocoF|ph 1|hips -0.001 0.934 -0.003|L -0.169 0.220 0.180|R 0.129 0.266 -0.374
+PROBE|Enemy|loco|Undead_LocoF|ph 2|hips -0.012 0.941 0.004|L -0.178 0.221 0.059|R 0.155 0.394 -0.316
+PROBE|Enemy|loco|Undead_LocoF|ph 3|hips -0.019 0.948 -0.006|L -0.186 0.214 -0.082|R 0.175 0.400 -0.128
+PROBE|Enemy|loco|Undead_LocoF|ph 4|hips -0.018 0.941 -0.010|L -0.185 0.207 -0.237|R 0.182 0.259 0.107
+PROBE|Enemy|loco|Undead_LocoF|ph 5|hips -0.008 0.928 0.000|L -0.204 0.258 -0.355|R 0.186 0.224 0.168
+PROBE|Enemy|loco|Undead_LocoF|ph 6|hips 0.005 0.937 0.012|L -0.214 0.402 -0.263|R 0.180 0.229 0.047
+PROBE|Enemy|loco|Undead_LocoF|ph 7|hips 0.012 0.944 0.003|L -0.201 0.362 -0.087|R 0.164 0.230 -0.088
+PROBE|Enemy|loco|Undead_LocoB|len 0.97 loop True
+PROBE|Enemy|loco|Undead_LocoB|ph 0|hips -0.019 0.897 -0.009|L -0.108 0.152 -0.136|R 0.135 0.185 0.052
+PROBE|Enemy|loco|Undead_LocoB|ph 1|hips -0.019 0.902 0.014|L -0.106 0.140 -0.009|R 0.121 0.286 -0.191
+PROBE|Enemy|loco|Undead_LocoB|ph 2|hips -0.009 0.885 0.025|L -0.092 0.128 0.127|R 0.114 0.264 -0.315
+PROBE|Enemy|loco|Undead_LocoB|ph 3|hips 0.004 0.886 -0.005|L -0.098 0.145 0.243|R 0.087 0.191 -0.261
+PROBE|Enemy|loco|Undead_LocoB|ph 4|hips 0.015 0.896 -0.017|L -0.130 0.212 0.087|R 0.084 0.159 -0.147
+PROBE|Enemy|loco|Undead_LocoB|ph 5|hips 0.011 0.906 -0.005|L -0.163 0.295 -0.144|R 0.095 0.147 -0.028
+PROBE|Enemy|loco|Undead_LocoB|ph 6|hips 0.000 0.892 0.007|L -0.168 0.247 -0.297|R 0.109 0.136 0.096
+PROBE|Enemy|loco|Undead_LocoB|ph 7|hips -0.014 0.883 -0.008|L -0.118 0.167 -0.259|R 0.128 0.137 0.196
+PROBE|Enemy|loco|Undead_LocoS1|len 1.13 loop True
+PROBE|Enemy|loco|Undead_LocoS1|ph 0|hips 0.001 0.868 0.013|L -0.357 0.153 -0.094|R 0.367 0.150 -0.083
+PROBE|Enemy|loco|Undead_LocoS1|ph 1|hips -0.049 0.892 0.005|L -0.306 0.151 -0.100|R 0.370 0.184 -0.074
+PROBE|Enemy|loco|Undead_LocoS1|ph 2|hips -0.051 0.918 -0.003|L -0.245 0.152 -0.102|R 0.231 0.198 -0.102
+PROBE|Enemy|loco|Undead_LocoS1|ph 3|hips -0.029 0.925 -0.003|L -0.185 0.152 -0.105|R 0.101 0.187 -0.108
+PROBE|Enemy|loco|Undead_LocoS1|ph 4|hips -0.007 0.915 -0.003|L -0.135 0.169 -0.111|R 0.133 0.155 -0.105
+PROBE|Enemy|loco|Undead_LocoS1|ph 5|hips 0.021 0.918 -0.009|L -0.128 0.215 -0.100|R 0.183 0.150 -0.100
+PROBE|Enemy|loco|Undead_LocoS1|ph 6|hips 0.042 0.925 -0.004|L -0.244 0.226 -0.085|R 0.239 0.154 -0.098
+PROBE|Enemy|loco|Undead_LocoS1|ph 7|hips 0.040 0.901 0.005|L -0.362 0.204 -0.071|R 0.312 0.157 -0.094
+PROBE|Enemy|loco|Undead_LocoS2|len 1.22 loop True
+PROBE|Enemy|loco|Undead_LocoS2|ph 0|hips 0.004 0.913 -0.004|L -0.102 0.150 -0.083|R 0.150 0.149 -0.093
+PROBE|Enemy|loco|Undead_LocoS2|ph 1|hips -0.023 0.923 -0.006|L -0.155 0.145 -0.086|R 0.126 0.177 -0.100
+PROBE|Enemy|loco|Undead_LocoS2|ph 2|hips -0.050 0.927 -0.004|L -0.216 0.145 -0.081|R 0.215 0.195 -0.093
+PROBE|Enemy|loco|Undead_LocoS2|ph 3|hips -0.058 0.914 0.006|L -0.277 0.145 -0.076|R 0.327 0.193 -0.072
+PROBE|Enemy|loco|Undead_LocoS2|ph 4|hips -0.025 0.884 0.015|L -0.333 0.142 -0.070|R 0.368 0.176 -0.084
+PROBE|Enemy|loco|Undead_LocoS2|ph 5|hips 0.035 0.884 0.009|L -0.371 0.177 -0.053|R 0.328 0.152 -0.094
+PROBE|Enemy|loco|Undead_LocoS2|ph 6|hips 0.053 0.912 -0.004|L -0.265 0.206 -0.060|R 0.273 0.159 -0.093
+PROBE|Enemy|loco|Undead_LocoS2|ph 7|hips 0.032 0.918 -0.011|L -0.110 0.195 -0.084|R 0.210 0.153 -0.093
+PROBE|Enemy|sole_F|slide mean 0.04 max 0.26 m/s (n 90)|soleMinY -0.012
+PROBE|Enemy|walk_F|v 1.20|slide mean 0.25 max 0.83 m/s (n 45)|footMinY walk 0.134 all 0.076|hips 0.793..0.815 end -0.02 0.82 0.00|Loco x 0.00 z 1.00 tempo 1.07
+PROBE|Enemy|sole_B|slide mean 0.02 max 0.21 m/s (n 59)|soleMinY -0.006
+PROBE|Enemy|walk_B|v 1.02|slide mean 0.24 max 1.48 m/s (n 35)|footMinY walk 0.126 all 0.103|hips 0.809..0.842 end -0.02 0.82 0.00|Loco x 0.00 z -1.00 tempo 0.88
+PROBE|Enemy|sole_R|slide mean 0.07 max 0.46 m/s (n 71)|soleMinY -0.009
+PROBE|Enemy|walk_R|v 0.72|slide mean 0.20 max 0.84 m/s (n 53)|footMinY walk 0.133 all 0.096|hips 0.807..0.860 end -0.02 0.82 0.00|Loco x 1.00 z 0.00 tempo 1.59
+PROBE|Enemy|sole_L|slide mean 0.08 max 0.94 m/s (n 88)|soleMinY -0.020
+PROBE|Enemy|walk_L|v 0.72|slide mean 0.30 max 0.64 m/s (n 49)|footMinY walk 0.140 all 0.101|hips 0.801..0.867 end -0.02 0.82 0.00|Loco x -1.00 z 0.00 tempo 1.65
+PROBE|Enemy|sole_FR|slide mean 0.04 max 0.36 m/s (n 64)|soleMinY -0.007
+PROBE|Enemy|walk_FR|v 0.96|slide mean 0.23 max 0.84 m/s (n 45)|footMinY walk 0.135 all 0.106|hips 0.817..0.841 end -0.02 0.82 0.00|Loco x 0.71 z 0.71 tempo 1.49
+PROBE|Enemy|sole_Rcircle|slide mean 0.09 max 0.51 m/s (n 67)|soleMinY -0.009
+PROBE|Enemy|walk_Rcircle|v 0.72|slide mean 0.20 max 0.70 m/s (n 55)|footMinY walk 0.134 all 0.095|hips 0.806..0.860 end -0.02 0.82 0.00|Loco x 1.00 z -0.03 tempo 1.76
+PROBE|Enemy|rag|t0.0|minY 0.228|hips 0.11 0.89 1.27|head 0.14 1.49 1.20|center 0.12 0.84 1.24|maxV 1.65
+PROBE|Enemy|rag|t0.2|minY 0.220|hips 1.49 0.81 0.00|head 1.47 1.39 0.02|center 1.32 0.82 -0.04|maxV 3.46
+PROBE|Enemy|rag|t0.5|minY 0.134|hips 2.07 0.15 -0.08|head 2.46 0.52 0.14|center 1.99 0.28 -0.04|maxV 5.38
+PROBE|Enemy|rag|t1.0|minY 0.045|hips 2.31 0.15 0.02|head 2.88 0.12 0.09|center 2.31 0.13 -0.04|maxV 0.10
+PROBE|Enemy|rag|t2.0|minY 0.045|hips 2.31 0.13 0.03|head 2.89 0.12 0.09|center 2.31 0.13 -0.04|maxV 0.00
+PROBE|Enemy|rag|t3.0|minY 0.045|hips 2.31 0.13 0.03|head 2.89 0.12 0.09|center 2.31 0.13 -0.04|maxV 0.00
+PROBE|Enemy|rag|restored hips -0.004 0.917 0.000
+PROBE|Player|rest|Hips|0.052|1.006|-0.050|fw 0.08 0.04 1.00|up 0.02 1.00 -0.04
+PROBE|Player|rest|Spine|0.055|1.135|-0.056|fw 0.13 0.00 0.99|up -0.03 1.00 0.01
+PROBE|Player|rest|Chest|0.048|1.393|-0.054|fw 0.03 0.33 0.94|up 0.07 0.94 -0.33
+PROBE|Player|rest|Neck|0.051|1.440|-0.070|fw 0.07 -0.08 0.99|up 0.04 1.00 0.08
+PROBE|Player|rest|Head|0.058|1.596|-0.058|fw 0.09 0.02 1.00|up 0.01 1.00 -0.02
+PROBE|Player|rest|Shoulder.L|0.012|1.384|-0.043|fw -0.09 0.99 -0.09|up -0.99 -0.09 -0.03
+PROBE|Player|rest|UpperArm.L|-0.111|1.372|-0.047|fw -0.56 0.23 -0.80|up -0.51 -0.85 0.11
+PROBE|Player|rest|Forearm.L|-0.238|1.163|-0.020|fw -0.70 0.07 -0.71|up -0.48 -0.78 0.40
+PROBE|Player|rest|Hand.L|-0.350|0.980|0.073|fw -0.56 -0.06 -0.83|up -0.36 -0.88 0.31
+PROBE|Player|rest|Shoulder.R|0.085|1.408|-0.070|fw 0.21 0.94 -0.28|up 0.96 -0.26 -0.13
+PROBE|Player|rest|UpperArm.R|0.218|1.373|-0.088|fw 0.39 0.21 -0.90|up 0.53 -0.85 0.03
+PROBE|Player|rest|Forearm.R|0.342|1.172|-0.082|fw 0.53 0.07 -0.84|up 0.55 -0.79 0.28
+PROBE|Player|rest|Hand.R|0.481|0.975|-0.012|fw 0.40 -0.02 -0.92|up 0.44 -0.87 0.22
+PROBE|Player|rest|UpperLeg.L|-0.066|0.888|-0.059|fw -0.12 -0.21 -0.97|up 0.00 -0.98 0.21
+PROBE|Player|rest|LowerLeg.L|-0.064|0.517|0.021|fw -0.22 0.23 -0.95|up -0.16 -0.97 -0.20
+PROBE|Player|rest|Foot.L|-0.124|0.147|-0.056|fw -0.37 -0.65 -0.66|up -0.05 -0.69 0.72
+PROBE|Player|rest|UpperLeg.R|0.165|0.887|-0.089|fw -0.04 -0.22 -0.97|up 0.08 -0.97 0.22
+PROBE|Player|rest|LowerLeg.R|0.193|0.517|-0.007|fw 0.02 0.23 -0.97|up 0.11 -0.97 -0.23
+PROBE|Player|rest|Foot.R|0.236|0.150|-0.093|fw 0.24 -0.66 -0.71|up 0.20 -0.69 0.70
+PROBE|Player|rest|model|0.000|0.000|0.000|rot (0.00, 5.99, 0.00)
+PROBE|Player|clip|Dzin_Player_Rig|Idle len 2
+PROBE|Player|anim|Hips|0.034|1.008|-0.048|fw 0.08 0.04 1.00|up 0.00 1.00 -0.04
+PROBE|Player|anim|Spine|0.034|1.137|-0.054|fw 0.12 0.00 0.99|up -0.04 1.00 0.00
+PROBE|Player|anim|Chest|0.025|1.395|-0.053|fw 0.03 0.35 0.94|up 0.07 0.93 -0.35
+PROBE|Player|anim|Neck|0.028|1.441|-0.071|fw 0.07 -0.06 1.00|up 0.04 1.00 0.05
+PROBE|Player|anim|Head|0.035|1.598|-0.062|fw 0.10 0.03 0.99|up 0.00 1.00 -0.03
+PROBE|Player|anim|Shoulder.L|-0.011|1.386|-0.042|fw -0.09 0.99 -0.11|up -0.99 -0.10 -0.03
+PROBE|Player|anim|UpperArm.L|-0.134|1.374|-0.045|fw -0.56 0.22 -0.80|up -0.51 -0.85 0.13
+PROBE|Player|anim|Forearm.L|-0.260|1.165|-0.013|fw -0.70 0.05 -0.71|up -0.48 -0.77 0.42
+PROBE|Player|anim|Hand.L|-0.372|0.985|0.084|fw -0.56 -0.08 -0.82|up -0.36 -0.87 0.33
+PROBE|Player|anim|Shoulder.R|0.063|1.410|-0.070|fw 0.21 0.93 -0.30|up 0.96 -0.26 -0.13
+PROBE|Player|anim|UpperArm.R|0.195|1.374|-0.088|fw 0.39 0.19 -0.90|up 0.53 -0.85 0.04
+PROBE|Player|anim|Forearm.R|0.320|1.173|-0.077|fw 0.53 0.05 -0.85|up 0.55 -0.78 0.29
+PROBE|Player|anim|Hand.R|0.458|0.979|-0.003|fw 0.40 -0.04 -0.92|up 0.45 -0.86 0.24
+PROBE|Player|anim|UpperLeg.L|-0.081|0.888|-0.057|fw -0.12 -0.19 -0.97|up 0.02 -0.98 0.19
+PROBE|Player|anim|LowerLeg.L|-0.073|0.515|0.015|fw -0.22 0.20 -0.95|up -0.13 -0.98 -0.18
+PROBE|Player|anim|Foot.L|-0.124|0.142|-0.053|fw -0.36 -0.67 -0.65|up -0.04 -0.69 0.72
+PROBE|Player|anim|UpperLeg.R|0.149|0.892|-0.087|fw -0.04 -0.24 -0.97|up 0.10 -0.97 0.23
+PROBE|Player|anim|LowerLeg.R|0.186|0.524|0.001|fw 0.02 0.26 -0.97|up 0.13 -0.96 -0.26
+PROBE|Player|anim|Foot.R|0.234|0.160|-0.096|fw 0.25 -0.64 -0.72|up 0.22 -0.69 0.69
+PROBE|Player|anim|model|0.000|0.000|0.000|rot (0.00, 5.99, 0.00)
+PROBE|Player|idle|Hips|0.034|0.913|-0.048|fw 0.64 0.02 0.77|up -0.01 1.00 -0.02
+PROBE|Player|idle|Spine|0.033|1.042|-0.050|fw 0.73 -0.09 0.68|up 0.04 0.99 0.10
+PROBE|Player|idle|Chest|0.042|1.299|-0.025|fw 0.73 0.26 0.64|up -0.14 0.96 -0.23
+PROBE|Player|idle|Neck|0.035|1.347|-0.036|fw 0.77 -0.15 0.62|up 0.14 0.99 0.07
+PROBE|Player|idle|Head|0.057|1.502|-0.025|fw 0.49 0.00 0.87|up 0.01 1.00 -0.01
+PROBE|Player|idle|Shoulder.L|0.026|1.289|0.008|fw -0.07 1.00 0.06|up -0.71 -0.09 0.70
+PROBE|Player|idle|UpperArm.L|-0.062|1.277|0.095|fw -0.92 0.36 -0.13|up -0.33 -0.91 -0.24
+PROBE|Player|idle|Forearm.L|-0.142|1.052|0.035|fw -0.39 -0.83 -0.39|up 0.91 -0.41 -0.03
+PROBE|Player|idle|Hand.L|0.071|0.957|0.028|fw -0.39 -0.46 -0.80|up 0.75 -0.66 0.01
+PROBE|Player|idle|Shoulder.R|0.057|1.315|-0.063|fw -0.01 0.95 -0.30|up 0.54 -0.25 -0.81
+PROBE|Player|idle|UpperArm.R|0.132|1.281|-0.174|fw 0.04 -0.41 -0.91|up 0.63 -0.70 0.35
+PROBE|Player|idle|Forearm.R|0.279|1.116|-0.093|fw 0.40 -0.84 -0.36|up -0.27 -0.49 0.83
+PROBE|Player|idle|Hand.R|0.211|0.993|0.115|fw 0.44 -0.55 -0.71|up -0.44 -0.82 0.37
+PROBE|Player|idle|UpperLeg.L|-0.067|0.793|0.008|fw -0.14 -0.64 -0.75|up -0.10 -0.75 0.66
+PROBE|Player|idle|LowerLeg.L|-0.105|0.509|0.257|fw -0.20 -0.31 -0.93|up -0.04 -0.95 0.32
+PROBE|Player|idle|Foot.L|-0.120|0.147|0.380|fw -0.25 -0.65 -0.71|up -0.18 -0.69 0.70
+PROBE|Player|idle|UpperLeg.R|0.105|0.798|-0.148|fw -0.16 0.10 -0.98|up 0.57 -0.80 -0.17
+PROBE|Player|idle|LowerLeg.R|0.321|0.492|-0.215|fw -0.31 0.41 -0.86|up -0.16 -0.91 -0.38
+PROBE|Player|idle|Foot.R|0.260|0.147|-0.360|fw -0.63 -0.66 -0.42|up 0.73 -0.69 -0.02
+PROBE|Player|idle|model|0.000|-0.095|0.000|rot (0.00, 5.99, 0.00)
+PROBE|Player|rt_anim0|Hips|0.052|0.911|-0.050|fw 0.08 0.04 1.00|up 0.02 1.00 -0.04
+PROBE|Player|rt_anim0|Spine|0.055|1.040|-0.056|fw 0.12 0.00 0.99|up -0.03 1.00 0.01
+PROBE|Player|rt_anim0|Chest|0.048|1.298|-0.054|fw 0.03 0.33 0.94|up 0.07 0.94 -0.33
+PROBE|Player|rt_anim0|Neck|0.051|1.345|-0.070|fw 0.06 -0.08 1.00|up 0.04 1.00 0.08
+PROBE|Player|rt_anim0|Head|0.058|1.501|-0.058|fw 0.06 0.02 1.00|up 0.01 1.00 -0.02
+PROBE|Player|rt_anim0|Shoulder.L|0.012|1.289|-0.043|fw -0.09 0.99 -0.09|up -1.00 -0.09 -0.03
+PROBE|Player|rt_anim0|UpperArm.L|-0.111|1.277|-0.046|fw -0.56 0.23 -0.80|up -0.51 -0.85 0.11
+PROBE|Player|rt_anim0|Forearm.L|-0.238|1.068|-0.019|fw -0.70 0.07 -0.71|up -0.48 -0.78 0.40
+PROBE|Player|rt_anim0|Hand.L|-0.350|0.885|0.074|fw -0.56 -0.06 -0.82|up -0.36 -0.88 0.31
+PROBE|Player|rt_anim0|Shoulder.R|0.085|1.313|-0.070|fw 0.21 0.94 -0.28|up 0.96 -0.26 -0.14
+PROBE|Player|rt_anim0|UpperArm.R|0.218|1.278|-0.089|fw 0.39 0.21 -0.90|up 0.53 -0.85 0.03
+PROBE|Player|rt_anim0|Forearm.R|0.342|1.077|-0.083|fw 0.53 0.07 -0.85|up 0.55 -0.79 0.28
+PROBE|Player|rt_anim0|Hand.R|0.481|0.880|-0.014|fw 0.40 -0.02 -0.92|up 0.44 -0.87 0.22
+PROBE|Player|rt_anim0|UpperLeg.L|-0.066|0.793|-0.059|fw -0.12 -0.21 -0.97|up 0.00 -0.98 0.21
+PROBE|Player|rt_anim0|LowerLeg.L|-0.064|0.422|0.021|fw -0.22 0.23 -0.95|up -0.16 -0.97 -0.20
+PROBE|Player|rt_anim0|Foot.L|-0.124|0.052|-0.056|fw -0.37 -0.65 -0.66|up -0.05 -0.69 0.72
+PROBE|Player|rt_anim0|UpperLeg.R|0.165|0.792|-0.089|fw -0.04 -0.22 -0.97|up 0.08 -0.97 0.22
+PROBE|Player|rt_anim0|LowerLeg.R|0.193|0.422|-0.007|fw 0.02 0.23 -0.97|up 0.11 -0.97 -0.23
+PROBE|Player|rt_anim0|Foot.R|0.236|0.055|-0.093|fw 0.24 -0.66 -0.71|up 0.20 -0.69 0.70
+PROBE|Player|rt_anim0|model|0.000|-0.095|0.000|rot (0.00, 5.99, 0.00)
+PROBE|Player|rt_anim1|Hips|0.051|0.902|-0.050|fw 0.08 0.04 1.00|up 0.02 1.00 -0.04
+PROBE|Player|rt_anim1|Spine|0.053|1.031|-0.056|fw 0.12 -0.01 0.99|up -0.03 1.00 0.02
+PROBE|Player|rt_anim1|Chest|0.046|1.289|-0.051|fw 0.03 0.31 0.95|up 0.07 0.95 -0.31
+PROBE|Player|rt_anim1|Neck|0.050|1.336|-0.067|fw 0.06 -0.10 0.99|up 0.04 0.99 0.10
+PROBE|Player|rt_anim1|Head|0.057|1.492|-0.052|fw 0.08 0.00 1.00|up 0.01 1.00 0.00
+PROBE|Player|rt_anim1|Shoulder.L|0.011|1.280|-0.041|fw -0.09 0.99 -0.06|up -1.00 -0.09 -0.03
+PROBE|Player|rt_anim1|UpperArm.L|-0.113|1.268|-0.045|fw -0.56 0.25 -0.79|up -0.51 -0.85 0.09
+PROBE|Player|rt_anim1|Forearm.L|-0.239|1.059|-0.022|fw -0.70 0.08 -0.71|up -0.48 -0.79 0.38
+PROBE|Player|rt_anim1|Hand.L|-0.352|0.875|0.067|fw -0.56 -0.04 -0.83|up -0.36 -0.89 0.29
+PROBE|Player|rt_anim1|Shoulder.R|0.084|1.304|-0.067|fw 0.21 0.94 -0.26|up 0.96 -0.26 -0.14
+PROBE|Player|rt_anim1|UpperArm.R|0.216|1.269|-0.087|fw 0.39 0.23 -0.89|up 0.52 -0.85 0.01
+PROBE|Player|rt_anim1|Forearm.R|0.340|1.068|-0.085|fw 0.53 0.09 -0.84|up 0.55 -0.79 0.26
+PROBE|Player|rt_anim1|Hand.R|0.479|0.870|-0.020|fw 0.40 -0.01 -0.92|up 0.44 -0.87 0.20
+PROBE|Player|rt_anim1|UpperLeg.L|-0.067|0.784|-0.059|fw -0.12 -0.24 -0.96|up 0.01 -0.97 0.24
+PROBE|Player|rt_anim1|LowerLeg.L|-0.063|0.416|0.033|fw -0.22 0.26 -0.94|up -0.16 -0.96 -0.23
+PROBE|Player|rt_anim1|Foot.L|-0.123|0.048|-0.054|fw -0.37 -0.66 -0.66|up -0.05 -0.69 0.72
+PROBE|Player|rt_anim1|UpperLeg.R|0.164|0.784|-0.089|fw -0.04 -0.26 -0.97|up 0.08 -0.96 0.25
+PROBE|Player|rt_anim1|LowerLeg.R|0.194|0.417|0.007|fw 0.02 0.26 -0.97|up 0.11 -0.96 -0.26
+PROBE|Player|rt_anim1|Foot.R|0.236|0.052|-0.091|fw 0.24 -0.66 -0.72|up 0.21 -0.69 0.70
+PROBE|Player|rt_anim1|model|0.000|-0.095|0.000|rot (0.00, 5.99, 0.00)
+PROBE|Player|rt_idle|Hips|0.052|0.831|-0.050|fw 0.64 0.02 0.77|up 0.00 1.00 -0.03
+PROBE|Player|rt_idle|Spine|0.053|0.960|-0.054|fw 0.73 -0.17 0.67|up 0.10 0.98 0.14
+PROBE|Player|rt_idle|Chest|0.078|1.214|-0.016|fw 0.75 0.03 0.66|up 0.04 1.00 -0.09
+PROBE|Player|rt_idle|Neck|0.079|1.264|-0.021|fw 0.72 -0.37 0.59|up 0.32 0.93 0.21
+PROBE|Player|rt_idle|Head|0.129|1.409|0.012|fw 0.48 -0.05 0.87|up 0.05 1.00 0.03
+PROBE|Player|rt_idle|Shoulder.L|0.059|1.203|0.015|fw 0.11 0.97 0.20|up -0.72 -0.06 0.69
+PROBE|Player|rt_idle|UpperArm.L|-0.030|1.196|0.101|fw -0.93 0.35 -0.07|up -0.32 -0.91 -0.26
+PROBE|Player|rt_idle|Forearm.L|-0.110|0.972|0.037|fw -0.38 -0.85 -0.37|up 0.91 -0.41 -0.02
+PROBE|Player|rt_idle|Hand.L|0.103|0.877|0.033|fw -0.39 -0.46 -0.80|up 0.75 -0.66 0.02
+PROBE|Player|rt_idle|Shoulder.R|0.096|1.233|-0.052|fw 0.17 0.97 -0.16|up 0.50 -0.23 -0.84
+PROBE|Player|rt_idle|UpperArm.R|0.164|1.201|-0.168|fw 0.11 -0.36 -0.92|up 0.63 -0.70 0.35
+PROBE|Player|rt_idle|Forearm.R|0.312|1.037|-0.085|fw 0.45 -0.83 -0.35|up -0.27 -0.49 0.82
+PROBE|Player|rt_idle|Hand.R|0.243|0.913|0.121|fw 0.44 -0.55 -0.71|up -0.44 -0.82 0.36
+PROBE|Player|rt_idle|UpperLeg.L|-0.051|0.713|0.008|fw -0.13 -0.85 -0.51|up -0.15 -0.49 0.86
+PROBE|Player|rt_idle|LowerLeg.L|-0.110|0.526|0.333|fw -0.08 -0.12 -0.99|up -0.03 -0.99 0.12
+PROBE|Player|rt_idle|Foot.L|-0.120|0.147|0.380|fw -0.25 -0.65 -0.71|up -0.18 -0.69 0.70
+PROBE|Player|rt_idle|UpperLeg.R|0.121|0.713|-0.149|fw -0.28 -0.13 -0.95|up 0.73 -0.67 -0.12
+PROBE|Player|rt_idle|LowerLeg.R|0.400|0.459|-0.195|fw -0.71 0.55 -0.44|up -0.37 -0.82 -0.43
+PROBE|Player|rt_idle|Foot.R|0.260|0.147|-0.360|fw -0.63 -0.66 -0.42|up 0.73 -0.69 -0.02
+PROBE|Player|rt_idle|model|0.000|-0.095|0.000|rot (0.00, 5.99, 0.00)
+PROBE|Player|rt_info|root False avatar null state 125937960 cull AlwaysAnimate
+PROBE|Player|oh0.26|Hips|0.034|0.893|0.104|fw 0.63 0.03 0.77|up -0.02 1.00 -0.02
+PROBE|Player|oh0.26|Spine|0.032|1.022|0.101|fw 0.84 -0.01 0.54|up -0.02 1.00 0.05
+PROBE|Player|oh0.26|Chest|0.027|1.280|0.114|fw 0.89 0.40 0.23|up -0.36 0.92 -0.18
+PROBE|Player|oh0.26|Neck|0.009|1.325|0.105|fw 0.98 -0.01 0.22|up 0.02 1.00 -0.04
+PROBE|Player|oh0.26|Head|0.012|1.482|0.099|fw 0.65 0.04 0.76|up -0.02 1.00 -0.03
+PROBE|Player|oh0.26|Shoulder.L|0.028|1.272|0.152|fw -0.13 0.97 -0.19|up -0.05 0.19 0.98
+PROBE|Player|oh0.26|UpperArm.L|0.022|1.295|0.273|fw -0.46 0.06 -0.89|up -0.40 0.88 0.26
+PROBE|Player|oh0.26|Forearm.L|-0.078|1.510|0.338|fw 0.01 -0.23 -0.97|up 1.00 -0.09 0.03
+PROBE|Player|oh0.26|Hand.L|0.154|1.489|0.345|fw 0.30 -0.95 0.04|up 0.95 0.29 -0.14
+PROBE|Player|oh0.26|Shoulder.R|0.021|1.294|0.073|fw -0.32 0.94 -0.13|up 0.41 0.01 -0.91
+PROBE|Player|oh0.26|UpperArm.R|0.078|1.296|-0.053|fw -0.09 0.07 -0.99|up 0.99 0.13 -0.08
+PROBE|Player|oh0.26|Forearm.R|0.311|1.327|-0.073|fw 0.95 0.15 0.27|up -0.31 0.60 0.74
+PROBE|Player|oh0.26|Hand.R|0.235|1.478|0.112|fw 0.07 -0.93 0.37|up -0.06 0.36 0.93
+PROBE|Player|oh0.26|UpperLeg.L|-0.066|0.773|0.161|fw -0.16 -0.72 -0.67|up -0.15 -0.65 0.74
+PROBE|Player|oh0.26|LowerLeg.L|-0.123|0.524|0.443|fw -0.11 0.16 -0.98|up 0.01 -0.99 -0.16
+PROBE|Player|oh0.26|Foot.L|-0.120|0.147|0.380|fw -0.25 -0.65 -0.71|up -0.18 -0.69 0.70
+PROBE|Player|oh0.26|UpperLeg.R|0.106|0.777|0.005|fw -0.23 0.33 -0.91|up 0.50 -0.77 -0.40
+PROBE|Player|oh0.26|LowerLeg.R|0.294|0.485|-0.148|fw -0.32 0.55 -0.77|up -0.09 -0.82 -0.56
+PROBE|Player|oh0.26|Foot.R|0.260|0.171|-0.360|fw -0.76 -0.47 -0.45|up 0.55 -0.83 -0.06
+PROBE|Player|oh0.26|model|0.000|-0.115|0.153|rot (0.00, 5.99, 0.00)
+PROBE|Player|oh0.36|Hips|0.034|0.873|0.120|fw 0.58 0.03 0.82|up -0.02 1.00 -0.03
+PROBE|Player|oh0.36|Spine|0.032|1.002|0.117|fw 0.74 -0.02 0.68|up -0.02 1.00 0.04
+PROBE|Player|oh0.36|Chest|0.028|1.260|0.128|fw 0.78 0.37 0.51|up -0.26 0.93 -0.27
+PROBE|Player|oh0.36|Neck|0.015|1.306|0.115|fw 0.85 -0.04 0.52|up 0.05 1.00 -0.01
+PROBE|Player|oh0.36|Head|0.023|1.463|0.112|fw 0.52 0.03 0.85|up -0.01 1.00 -0.03
+PROBE|Player|oh0.36|Shoulder.L|0.017|1.251|0.164|fw -0.13 0.99 -0.04|up -0.50 -0.03 0.86
+PROBE|Player|oh0.36|UpperArm.L|-0.046|1.247|0.271|fw 0.27 0.56 -0.78|up -0.85 0.52 0.07
+PROBE|Player|oh0.36|Forearm.L|-0.256|1.374|0.288|fw 0.53 0.64 -0.55|up 0.85 -0.39 0.36
+PROBE|Player|oh0.36|Hand.L|-0.059|1.283|0.373|fw 0.40 -0.69 -0.60|up 0.84 0.01 0.55
+PROBE|Player|oh0.36|Shoulder.R|0.036|1.274|0.087|fw -0.14 0.92 -0.36|up 0.67 -0.18 -0.72
+PROBE|Player|oh0.36|UpperArm.R|0.128|1.249|-0.013|fw 0.51 -0.23 -0.83|up 0.86 0.11 0.50
+PROBE|Player|oh0.36|Forearm.R|0.330|1.275|0.106|fw 0.58 -0.30 0.76|up -0.70 0.30 0.65
+PROBE|Player|oh0.36|Hand.R|0.154|1.349|0.268|fw -0.02 -1.00 -0.03|up -0.57 -0.01 0.82
+PROBE|Player|oh0.36|UpperLeg.L|-0.070|0.753|0.170|fw -0.16 -0.76 -0.63|up -0.15 -0.61 0.78
+PROBE|Player|oh0.36|LowerLeg.L|-0.127|0.520|0.465|fw -0.09 0.22 -0.97|up 0.02 -0.98 -0.22
+PROBE|Player|oh0.36|Foot.L|-0.120|0.147|0.380|fw -0.25 -0.65 -0.71|up -0.18 -0.69 0.70
+PROBE|Player|oh0.36|UpperLeg.R|0.113|0.757|0.027|fw -0.25 0.35 -0.90|up 0.52 -0.74 -0.43
+PROBE|Player|oh0.36|LowerLeg.R|0.311|0.476|-0.135|fw -0.36 0.60 -0.72|up -0.13 -0.79 -0.59
+PROBE|Player|oh0.36|Foot.R|0.260|0.174|-0.360|fw -0.77 -0.45 -0.46|up 0.53 -0.84 -0.07
+PROBE|Player|oh0.36|model|0.000|-0.135|0.169|rot (0.00, 5.99, 0.00)
+PROBE|Player|oh0.49|Hips|0.034|0.857|0.149|fw 0.41 0.02 0.91|up -0.01 1.00 -0.02
+PROBE|Player|oh0.49|Spine|0.034|0.986|0.147|fw 0.48 -0.07 0.87|up -0.01 1.00 0.08
+PROBE|Player|oh0.49|Chest|0.032|1.243|0.168|fw 0.43 0.30 0.85|up -0.07 0.95 -0.30
+PROBE|Player|oh0.49|Neck|0.029|1.290|0.153|fw 0.48 -0.11 0.87|up 0.08 0.99 0.08
+PROBE|Player|oh0.49|Head|0.042|1.447|0.165|fw 0.30 0.01 0.95|up 0.00 1.00 -0.01
+PROBE|Player|oh0.49|Shoulder.L|0.004|1.234|0.194|fw -0.11 0.99 -0.01|up -0.91 -0.09 0.39
+PROBE|Player|oh0.49|UpperArm.L|-0.109|1.222|0.242|fw 0.01 0.86 -0.50|up -0.96 -0.14 -0.26
+PROBE|Player|oh0.49|Forearm.L|-0.344|1.187|0.178|fw -0.62 -0.61 -0.49|up 0.61 -0.77 0.19
+PROBE|Player|oh0.49|Hand.L|-0.203|1.007|0.223|fw -0.43 0.06 -0.90|up 0.59 -0.74 -0.33
+PROBE|Player|oh0.49|Shoulder.R|0.059|1.259|0.138|fw 0.08 0.94 -0.32|up 0.80 -0.25 -0.54
+PROBE|Player|oh0.49|UpperArm.R|0.171|1.224|0.064|fw 0.19 -0.52 -0.83|up 0.01 -0.85 0.53
+PROBE|Player|oh0.49|Forearm.R|0.173|1.024|0.190|fw 0.02 -0.67 -0.74|up -0.82 -0.44 0.38
+PROBE|Player|oh0.49|Hand.R|-0.032|0.915|0.284|fw 0.10 -0.03 -0.99|up -0.79 -0.61 -0.06
+PROBE|Player|oh0.49|UpperLeg.L|-0.078|0.737|0.177|fw -0.17 -0.78 -0.60|up -0.15 -0.58 0.80
+PROBE|Player|oh0.49|LowerLeg.L|-0.134|0.516|0.481|fw -0.09 0.26 -0.96|up 0.04 -0.96 -0.26
+PROBE|Player|oh0.49|Foot.L|-0.120|0.147|0.380|fw -0.25 -0.65 -0.71|up -0.18 -0.69 0.70
+PROBE|Player|oh0.49|UpperLeg.R|0.129|0.741|0.072|fw -0.25 0.43 -0.86|up 0.46 -0.73 -0.50
+PROBE|Player|oh0.49|LowerLeg.R|0.304|0.463|-0.119|fw -0.33 0.63 -0.70|up -0.12 -0.76 -0.63
+PROBE|Player|oh0.49|Foot.R|0.260|0.173|-0.360|fw -0.77 -0.45 -0.46|up 0.54 -0.84 -0.07
+PROBE|Player|oh0.49|model|0.000|-0.151|0.198|rot (0.00, 5.99, 0.00)
+PROBE|Player|oh0.64|Hips|0.034|0.854|0.147|fw 0.39 0.02 0.92|up -0.01 1.00 -0.02
+PROBE|Player|oh0.64|Spine|0.034|0.983|0.145|fw 0.41 -0.10 0.91|up 0.00 0.99 0.11
+PROBE|Player|oh0.64|Chest|0.033|1.239|0.174|fw 0.27 0.25 0.93|up 0.00 0.97 -0.26
+PROBE|Player|oh0.64|Neck|0.033|1.287|0.161|fw 0.31 -0.16 0.94|up 0.08 0.99 0.14
+PROBE|Player|oh0.64|Head|0.046|1.442|0.184|fw 0.22 0.00 0.98|up 0.01 1.00 0.00
+PROBE|Player|oh0.64|Shoulder.L|0.001|1.229|0.193|fw -0.09 1.00 0.02|up -0.97 -0.09 0.21
+PROBE|Player|oh0.64|UpperArm.L|-0.119|1.218|0.220|fw 0.22 0.91 -0.35|up -0.85 0.01 -0.53
+PROBE|Player|oh0.64|Forearm.L|-0.329|1.220|0.090|fw -0.22 0.12 -0.97|up 0.57 -0.79 -0.23
+PROBE|Player|oh0.64|Hand.L|-0.195|1.037|0.036|fw 0.06 0.56 -0.82|up 0.64 -0.65 -0.40
+PROBE|Player|oh0.64|Shoulder.R|0.066|1.256|0.150|fw 0.15 0.96 -0.25|up 0.89 -0.24 -0.40
+PROBE|Player|oh0.64|UpperArm.R|0.188|1.222|0.096|fw 0.24 -0.15 -0.96|up -0.15 -0.98 0.12
+PROBE|Player|oh0.64|Forearm.R|0.152|0.990|0.123|fw 0.21 -0.35 -0.92|up -0.93 -0.37 -0.07
+PROBE|Player|oh0.64|Hand.R|-0.080|0.899|0.106|fw 0.51 0.11 -0.85|up -0.75 -0.42 -0.50
+PROBE|Player|oh0.64|UpperLeg.L|-0.079|0.734|0.172|fw -0.17 -0.79 -0.59|up -0.15 -0.57 0.81
+PROBE|Player|oh0.64|LowerLeg.L|-0.135|0.516|0.478|fw -0.09 0.25 -0.96|up 0.04 -0.97 -0.26
+PROBE|Player|oh0.64|Foot.L|-0.120|0.147|0.380|fw -0.25 -0.65 -0.71|up -0.18 -0.69 0.70
+PROBE|Player|oh0.64|UpperLeg.R|0.130|0.738|0.071|fw -0.25 0.43 -0.87|up 0.48 -0.73 -0.50
+PROBE|Player|oh0.64|LowerLeg.R|0.311|0.463|-0.118|fw -0.34 0.64 -0.69|up -0.13 -0.76 -0.64
+PROBE|Player|oh0.64|Foot.R|0.260|0.174|-0.360|fw -0.77 -0.44 -0.46|up 0.53 -0.85 -0.07
+PROBE|Player|oh0.64|model|0.000|-0.154|0.195|rot (0.00, 5.99, 0.00)
+PROBE|Player|shader|Dzin_Player_Body|Meshy_Dzin|BladePath/Character|supported True
+PROBE|Player|loco|HeroVariant_0_LocoF|len 1.12 loop True
+PROBE|Player|loco|HeroVariant_0_LocoF|ph 0|hips 0.052 1.027 -0.040|L -0.088 0.243 0.071|R 0.214 0.349 -0.433
+PROBE|Player|loco|HeroVariant_0_LocoF|ph 1|hips 0.043 1.040 -0.048|L -0.084 0.230 -0.072|R 0.219 0.445 -0.261
+PROBE|Player|loco|HeroVariant_0_LocoF|ph 2|hips 0.042 1.034 -0.057|L -0.069 0.223 -0.223|R 0.203 0.326 -0.026
+PROBE|Player|loco|HeroVariant_0_LocoF|ph 3|hips 0.049 1.021 -0.052|L -0.067 0.236 -0.373|R 0.186 0.256 0.168
+PROBE|Player|loco|HeroVariant_0_LocoF|ph 4|hips 0.059 1.022 -0.032|L -0.089 0.362 -0.382|R 0.200 0.244 0.058
+PROBE|Player|loco|HeroVariant_0_LocoF|ph 5|hips 0.072 1.035 -0.036|L -0.099 0.416 -0.214|R 0.201 0.240 -0.082
+PROBE|Player|loco|HeroVariant_0_LocoF|ph 6|hips 0.074 1.034 -0.043|L -0.100 0.289 0.022|R 0.189 0.232 -0.235
+PROBE|Player|loco|HeroVariant_0_LocoF|ph 7|hips 0.066 1.024 -0.049|L -0.087 0.251 0.178|R 0.193 0.246 -0.395
+PROBE|Player|loco|HeroVariant_0_LocoB|len 0.97 loop True
+PROBE|Player|loco|HeroVariant_0_LocoB|ph 0|hips 0.047 0.971 -0.058|L 0.018 0.171 -0.288|R 0.124 0.174 0.162
+PROBE|Player|loco|HeroVariant_0_LocoB|ph 1|hips 0.041 0.988 -0.053|L 0.009 0.167 -0.154|R 0.160 0.227 -0.035
+PROBE|Player|loco|HeroVariant_0_LocoB|ph 2|hips 0.040 0.988 -0.027|L -0.001 0.159 -0.015|R 0.177 0.312 -0.288
+PROBE|Player|loco|HeroVariant_0_LocoB|ph 3|hips 0.051 0.970 -0.021|L -0.003 0.156 0.133|R 0.173 0.254 -0.386
+PROBE|Player|loco|HeroVariant_0_LocoB|ph 4|hips 0.069 0.975 -0.054|L -0.023 0.189 0.219|R 0.139 0.193 -0.308
+PROBE|Player|loco|HeroVariant_0_LocoB|ph 5|hips 0.079 0.987 -0.059|L -0.044 0.256 0.010|R 0.124 0.175 -0.184
+PROBE|Player|loco|HeroVariant_0_LocoB|ph 6|hips 0.073 0.993 -0.045|L -0.052 0.311 -0.236|R 0.120 0.167 -0.054
+PROBE|Player|loco|HeroVariant_0_LocoB|ph 7|hips 0.057 0.976 -0.038|L -0.027 0.234 -0.366|R 0.120 0.162 0.079
+PROBE|Player|loco|HeroVariant_0_LocoS1|len 1.13 loop True
+PROBE|Player|loco|HeroVariant_0_LocoS1|ph 0|hips 0.061 0.954 -0.031|L -0.259 0.154 -0.160|R 0.413 0.154 -0.110
+PROBE|Player|loco|HeroVariant_0_LocoS1|ph 1|hips 0.009 0.980 -0.045|L -0.205 0.158 -0.158|R 0.414 0.190 -0.104
+PROBE|Player|loco|HeroVariant_0_LocoS1|ph 2|hips 0.008 1.007 -0.054|L -0.137 0.165 -0.155|R 0.276 0.213 -0.142
+PROBE|Player|loco|HeroVariant_0_LocoS1|ph 3|hips 0.031 1.014 -0.050|L -0.072 0.167 -0.150|R 0.140 0.207 -0.161
+PROBE|Player|loco|HeroVariant_0_LocoS1|ph 4|hips 0.054 1.004 -0.048|L -0.029 0.184 -0.146|R 0.170 0.173 -0.154
+PROBE|Player|loco|HeroVariant_0_LocoS1|ph 5|hips 0.085 1.007 -0.051|L -0.031 0.231 -0.134|R 0.218 0.170 -0.148
+PROBE|Player|loco|HeroVariant_0_LocoS1|ph 6|hips 0.106 1.014 -0.044|L -0.152 0.238 -0.133|R 0.274 0.171 -0.142
+PROBE|Player|loco|HeroVariant_0_LocoS1|ph 7|hips 0.103 0.989 -0.035|L -0.268 0.207 -0.139|R 0.356 0.168 -0.125
+PROBE|Player|loco|HeroVariant_0_LocoS2|len 1.22 loop True
+PROBE|Player|loco|HeroVariant_0_LocoS2|ph 0|hips 0.000 1.000 -0.043|L -0.177 0.154 -0.134|R 0.370 0.198 -0.108
+PROBE|Player|loco|HeroVariant_0_LocoS2|ph 1|hips 0.039 0.968 -0.030|L -0.239 0.146 -0.134|R 0.409 0.174 -0.111
+PROBE|Player|loco|HeroVariant_0_LocoS2|ph 2|hips 0.102 0.974 -0.032|L -0.276 0.184 -0.117|R 0.369 0.161 -0.121
+PROBE|Player|loco|HeroVariant_0_LocoS2|ph 3|hips 0.118 1.002 -0.044|L -0.150 0.216 -0.113|R 0.307 0.170 -0.126
+PROBE|Player|loco|HeroVariant_0_LocoS2|ph 4|hips 0.092 1.006 -0.052|L 0.005 0.208 -0.117|R 0.239 0.167 -0.134
+PROBE|Player|loco|HeroVariant_0_LocoS2|ph 5|hips 0.063 1.001 -0.048|L 0.002 0.164 -0.116|R 0.177 0.164 -0.138
+PROBE|Player|loco|HeroVariant_0_LocoS2|ph 6|hips 0.034 1.013 -0.054|L -0.050 0.162 -0.126|R 0.169 0.198 -0.146
+PROBE|Player|loco|HeroVariant_0_LocoS2|ph 7|hips 0.007 1.017 -0.054|L -0.111 0.160 -0.133|R 0.274 0.208 -0.123
+PROBE|Player|trace_F|30|L p0 h 0.051 v 3.94 free2 off 0.000 lift 0.014|R p1 h 0.000 v 0.00 LOCK1 off 0.059 lift 0.000
+PROBE|Player|trace_F|31|L p0 h 0.051 v 3.14 free2 off 0.000 lift 0.019|R p1 h 0.000 v 0.00 LOCK1 off 0.061 lift 0.000
+PROBE|Player|trace_F|32|L p0 h 0.030 v 1.24 free2 off 0.000 lift 0.008|R p1 h 0.000 v 0.00 LOCK1 off 0.064 lift 0.000
+PROBE|Player|trace_F|33|L p0 h 0.011 v 0.11 LOCK0 off 0.000 lift 0.003|R p1 h 0.000 v 0.00 LOCK1 off 0.070 lift 0.000
+PROBE|Player|trace_F|34|L p0 h 0.006 v 0.00 LOCK0 off 0.005 lift 0.001|R p2 h -0.020 v 0.35 LOCK2 off 0.070 lift 0.000
+PROBE|Player|trace_F|35|L p0 h 0.000 v 0.00 LOCK0 off 0.008 lift 0.000|R p2 h -0.015 v 0.00 LOCK2 off 0.069 lift 0.000
+PROBE|Player|trace_F|36|L p0 h 0.000 v 0.00 LOCK0 off 0.008 lift 0.000|R p2 h 0.017 v 0.00 LOCK2 off 0.065 lift 0.000
+PROBE|Player|trace_F|37|L p0 h 0.000 v 0.00 LOCK0 off 0.007 lift 0.000|R p2 h 0.072 v 0.68 free2 off 0.040 lift 0.013
+PROBE|Player|trace_F|38|L p0 h 0.000 v 0.00 LOCK0 off 0.008 lift 0.000|R p2 h 0.111 v 1.61 free2 off 0.025 lift 0.013
+PROBE|Player|trace_F|39|L p0 h 0.000 v 0.00 LOCK0 off 0.010 lift 0.000|R p2 h 0.134 v 2.72 free2 off 0.015 lift 0.009
+PROBE|Player|trace_F|40|L p0 h 0.000 v 0.00 LOCK0 off 0.012 lift 0.000|R p2 h 0.139 v 3.24 free2 off 0.010 lift 0.006
+PROBE|Player|trace_F|41|L p0 h 0.000 v 0.00 LOCK0 off 0.015 lift 0.000|R p2 h 0.130 v 3.64 free2 off 0.006 lift 0.004
+PROBE|Player|trace_F|42|L p0 h 0.000 v 0.00 LOCK0 off 0.018 lift 0.000|R p2 h 0.114 v 4.01 free2 off 0.004 lift 0.003
+PROBE|Player|trace_F|43|L p1 h 0.000 v 0.10 LOCK1 off 0.018 lift 0.000|R p1 h 0.119 v 4.13 free2 off 0.002 lift 0.002
+PROBE|Player|trace_F|44|L p1 h 0.000 v 0.00 LOCK1 off 0.018 lift 0.000|R p1 h 0.102 v 4.12 free2 off 0.001 lift 0.001
+PROBE|Player|trace_F|45|L p1 h 0.000 v 0.00 LOCK1 off 0.015 lift 0.000|R p0 h 0.082 v 4.11 free2 off 0.001 lift 0.001
+PROBE|Player|trace_F|46|L p1 h 0.000 v 0.00 LOCK1 off 0.011 lift 0.000|R p0 h 0.059 v 4.36 free2 off 0.001 lift 0.001
+PROBE|Player|trace_F|47|L p1 h 0.000 v 0.00 LOCK1 off 0.015 lift 0.000|R p0 h 0.052 v 4.13 free2 off 0.000 lift 0.009
+PROBE|Player|trace_F|48|L p1 h 0.000 v 0.00 LOCK1 off 0.020 lift 0.000|R p0 h 0.054 v 2.84 free2 off 0.000 lift 0.010
+PROBE|Player|trace_F|49|L p1 h 0.000 v 0.00 LOCK1 off 0.026 lift 0.000|R p0 h 0.030 v 0.24 free2 off 0.000 lift 0.003
+PROBE|Player|trace_F|50|L p2 h -0.020 v 0.28 LOCK2 off 0.026 lift 0.000|R p0 h 0.010 v 0.46 LOCK0 off 0.000 lift 0.001
+PROBE|Player|trace_F|51|L p2 h -0.005 v 0.00 LOCK2 off 0.031 lift 0.000|R p0 h 0.000 v 0.00 LOCK0 off 0.002 lift 0.000
+PROBE|Player|trace_F|52|L p2 h 0.023 v 0.00 LOCK2 off 0.034 lift 0.000|R p0 h 0.000 v 0.00 LOCK0 off 0.013 lift 0.000
+PROBE|Player|trace_F|53|L p2 h 0.068 v 0.92 free2 off 0.021 lift 0.007|R p0 h 0.000 v 0.00 LOCK0 off 0.017 lift 0.000
+PROBE|Player|trace_F|54|L p2 h 0.101 v 1.82 free2 off 0.013 lift 0.007|R p0 h 0.000 v 0.00 LOCK0 off 0.017 lift 0.000
+PROBE|Player|trace_F|55|L p2 h 0.116 v 2.80 free2 off 0.008 lift 0.005|R p0 h 0.000 v 0.00 LOCK0 off 0.018 lift 0.000
+PROBE|Player|trace_F|56|L p2 h 0.113 v 3.27 free2 off 0.005 lift 0.003|R p0 h 0.000 v 0.00 LOCK0 off 0.022 lift 0.000
+PROBE|Player|trace_F|57|L p2 h 0.098 v 3.70 free2 off 0.003 lift 0.002|R p0 h 0.000 v 0.00 LOCK0 off 0.027 lift 0.000
+PROBE|Player|trace_F|58|L p2 h 0.081 v 4.04 free2 off 0.002 lift 0.001|R p0 h 0.000 v 0.00 LOCK0 off 0.033 lift 0.000
+PROBE|Player|trace_F|59|L p1 h 0.083 v 4.03 free2 off 0.001 lift 0.001|R p0 h 0.000 v 0.00 LOCK0 off 0.040 lift 0.000
+PROBE|Player|trace_F|60|L p1 h 0.065 v 4.01 free2 off 0.001 lift 0.001|R p0 h 0.000 v 0.00 LOCK0 off 0.048 lift 0.000
+PROBE|Player|trace_F|61|L p0 h 0.056 v 3.93 free2 off 0.000 lift 0.005|R p1 h 0.000 v 0.20 LOCK1 off 0.048 lift 0.000
+PROBE|Player|trace_F|62|L p0 h 0.053 v 3.97 free2 off 0.000 lift 0.010|R p1 h 0.000 v 0.00 LOCK1 off 0.055 lift 0.000
+PROBE|Player|trace_F|63|L p0 h 0.050 v 3.77 free2 off 0.000 lift 0.016|R p1 h 0.000 v 0.00 LOCK1 off 0.058 lift 0.000
+PROBE|Player|trace_F|64|L p0 h 0.049 v 2.62 free2 off 0.000 lift 0.017|R p1 h 0.000 v 0.00 LOCK1 off 0.060 lift 0.000
+PROBE|Player|trace_F|65|L p0 h 0.023 v 0.63 free2 off 0.000 lift 0.006|R p1 h 0.000 v 0.00 LOCK1 off 0.064 lift 0.000
+PROBE|Player|trace_F|66|L p0 h 0.008 v 0.16 LOCK0 off 0.000 lift 0.002|R p1 h 0.000 v 0.00 LOCK1 off 0.069 lift 0.000
+PROBE|Player|trace_F|67|L p0 h 0.006 v 0.00 LOCK0 off 0.003 lift 0.001|R p2 h -0.020 v 0.30 LOCK2 off 0.069 lift 0.000
+PROBE|Player|trace_F|68|L p0 h 0.000 v 0.00 LOCK0 off 0.005 lift 0.000|R p2 h -0.008 v 0.00 LOCK2 off 0.066 lift 0.000
+PROBE|Player|trace_F|69|L p0 h 0.000 v 0.00 LOCK0 off 0.006 lift 0.000|R p2 h 0.026 v 0.00 LOCK2 off 0.061 lift 0.000
+PROBE|Player|sole_F|slide mean 0.06 max 0.46 m/s (n 99)|soleMinY -0.020
+PROBE|Player|walk_F|v 1.20|slide mean 0.23 max 0.65 m/s (n 42)|footMinY walk 0.147 all 0.088|hips 0.877..0.914 end 0.04 0.91 -0.05|Loco x 0.00 z 1.00 tempo 1.00
+PROBE|Player|trace_B|30|L p2 h 0.059 v 2.47 free0 off 0.000 lift 0.001|R p0 h 0.000 v 0.00 LOCK0 off 0.020 lift 0.000
+PROBE|Player|trace_B|31|L p2 h 0.047 v 1.93 free0 off 0.000 lift 0.004|R p0 h 0.000 v 0.00 LOCK0 off 0.025 lift 0.000
+PROBE|Player|trace_B|32|L p2 h 0.033 v 1.58 free0 off 0.000 lift 0.006|R p0 h 0.000 v 0.00 LOCK0 off 0.029 lift 0.000
+PROBE|Player|trace_B|33|L p2 h 0.027 v 1.60 free0 off 0.000 lift 0.008|R p0 h 0.000 v 0.00 LOCK0 off 0.035 lift 0.000
+PROBE|Player|trace_B|34|L p1 h 0.043 v 1.35 free0 off 0.000 lift 0.005|R p0 h 0.000 v 0.00 LOCK0 off 0.041 lift 0.000
+PROBE|Player|trace_B|35|L p1 h 0.038 v 1.01 free0 off 0.000 lift 0.002|R p0 h 0.000 v 0.00 LOCK0 off 0.047 lift 0.000
+PROBE|Player|trace_B|36|L p1 h 0.031 v 0.50 free0 off 0.000 lift 0.001|R p0 h 0.000 v 0.00 LOCK0 off 0.051 lift 0.000
+PROBE|Player|trace_B|37|L p1 h 0.020 v 0.13 free0 off 0.000 lift 0.000|R p0 h 0.000 v 0.00 LOCK0 off 0.062 lift 0.000
+PROBE|Player|trace_B|38|L p1 h 0.012 v 0.16 LOCK1 off 0.000 lift 0.000|R p0 h 0.013 v 2.17 free0 off 0.039 lift 0.013
+PROBE|Player|trace_B|39|L p0 h 0.003 v 0.11 LOCK0 off 0.000 lift 0.000|R p0 h 0.030 v 2.93 free0 off 0.024 lift 0.030
+PROBE|Player|trace_B|40|L p0 h 0.000 v 0.00 LOCK0 off 0.006 lift 0.000|R p0 h 0.049 v 3.51 free0 off 0.015 lift 0.031
+PROBE|Player|trace_B|41|L p0 h 0.000 v 0.00 LOCK0 off 0.011 lift 0.000|R p1 h 0.059 v 3.61 free0 off 0.009 lift 0.022
+PROBE|Player|trace_B|42|L p0 h 0.000 v 0.00 LOCK0 off 0.007 lift 0.000|R p1 h 0.061 v 3.50 free0 off 0.006 lift 0.013
+PROBE|Player|trace_B|43|L p0 h 0.000 v 0.00 LOCK0 off 0.005 lift 0.000|R p1 h 0.068 v 3.69 free0 off 0.004 lift 0.005
+PROBE|Player|trace_B|44|L p0 h 0.000 v 0.00 LOCK0 off 0.005 lift 0.000|R p2 h 0.059 v 3.76 free0 off 0.002 lift 0.004
+PROBE|Player|trace_B|45|L p0 h 0.000 v 0.00 LOCK0 off 0.008 lift 0.000|R p2 h 0.068 v 3.65 free0 off 0.001 lift 0.002
+PROBE|Player|trace_B|46|L p0 h 0.000 v 0.00 LOCK0 off 0.012 lift 0.000|R p2 h 0.076 v 3.31 free0 off 0.001 lift 0.001
+PROBE|Player|trace_B|47|L p0 h 0.000 v 0.00 LOCK0 off 0.017 lift 0.000|R p2 h 0.078 v 2.74 free0 off 0.001 lift 0.000
+PROBE|Player|trace_B|48|L p0 h 0.000 v 0.00 LOCK0 off 0.024 lift 0.000|R p2 h 0.070 v 1.96 free0 off 0.000 lift 0.000
+PROBE|Player|trace_B|49|L p0 h 0.000 v 0.00 LOCK0 off 0.033 lift 0.000|R p2 h 0.052 v 1.07 free0 off 0.000 lift 0.000
+PROBE|Player|trace_B|50|L p0 h 0.000 v 0.00 LOCK0 off 0.046 lift 0.000|R p2 h 0.035 v 0.54 free0 off 0.000 lift 0.000
+PROBE|Player|trace_B|51|L p0 h 0.000 v 0.00 LOCK0 off 0.065 lift 0.000|R p2 h 0.023 v 0.51 free0 off 0.000 lift 0.000
+PROBE|Player|trace_B|52|L p0 h 0.000 v 0.00 LOCK0 off 0.084 lift 0.000|R p2 h 0.010 v 0.38 LOCK2 off 0.000 lift 0.000
+PROBE|Player|trace_B|53|L p0 h 0.000 v 0.00 LOCK0 off 0.095 lift 0.000|R p1 h 0.010 v 0.17 LOCK1 off 0.000 lift 0.000
+PROBE|Player|trace_B|54|L p0 h 0.008 v 0.00 LOCK0 off 0.080 lift 0.000|R p1 h 0.000 v 0.00 LOCK1 off 0.003 lift 0.000
+PROBE|Player|trace_B|55|L p0 h 0.033 v 0.72 free0 off 0.049 lift 0.017|R p1 h 0.000 v 0.00 LOCK1 off 0.006 lift 0.000
+PROBE|Player|trace_B|56|L p0 h 0.041 v 1.96 free0 off 0.031 lift 0.020|R p1 h 0.000 v 0.00 LOCK1 off 0.008 lift 0.000
+PROBE|Player|trace_B|57|L p0 h 0.051 v 2.82 free0 off 0.019 lift 0.022|R p1 h 0.000 v 0.00 LOCK1 off 0.009 lift 0.000
+PROBE|Player|trace_B|58|L p0 h 0.060 v 3.26 free0 off 0.012 lift 0.015|R p1 h 0.000 v 0.00 LOCK1 off 0.007 lift 0.000
+PROBE|Player|trace_B|59|L p0 h 0.076 v 3.36 free0 off 0.007 lift 0.007|R p1 h 0.000 v 0.00 LOCK1 off 0.004 lift 0.000
+PROBE|Player|trace_B|60|L p1 h 0.091 v 3.46 free0 off 0.005 lift 0.004|R p1 h 0.000 v 0.00 LOCK1 off 0.007 lift 0.000
+PROBE|Player|trace_B|61|L p1 h 0.097 v 3.38 free0 off 0.003 lift 0.002|R p1 h 0.000 v 0.00 LOCK1 off 0.013 lift 0.000
+PROBE|Player|trace_B|62|L p1 h 0.105 v 3.24 free0 off 0.002 lift 0.001|R p0 h 0.000 v 0.14 LOCK0 off 0.013 lift 0.000
+PROBE|Player|trace_B|63|L p2 h 0.086 v 3.14 free0 off 0.001 lift 0.001|R p0 h 0.000 v 0.00 LOCK0 off 0.018 lift 0.000
+PROBE|Player|trace_B|64|L p2 h 0.078 v 2.98 free0 off 0.001 lift 0.000|R p0 h 0.000 v 0.00 LOCK0 off 0.022 lift 0.000
+PROBE|Player|trace_B|65|L p2 h 0.067 v 2.69 free0 off 0.000 lift 0.000|R p0 h 0.000 v 0.00 LOCK0 off 0.026 lift 0.000
+PROBE|Player|trace_B|66|L p2 h 0.055 v 2.24 free0 off 0.000 lift 0.002|R p0 h 0.000 v 0.00 LOCK0 off 0.030 lift 0.000
+PROBE|Player|trace_B|67|L p2 h 0.042 v 1.76 free0 off 0.000 lift 0.005|R p0 h 0.000 v 0.00 LOCK0 off 0.034 lift 0.000
+PROBE|Player|trace_B|68|L p2 h 0.030 v 1.53 free0 off 0.000 lift 0.007|R p0 h 0.000 v 0.00 LOCK0 off 0.039 lift 0.000
+PROBE|Player|trace_B|69|L p2 h 0.028 v 1.62 free0 off 0.000 lift 0.009|R p0 h 0.000 v 0.00 LOCK0 off 0.043 lift 0.000
+PROBE|Player|sole_B|slide mean 0.04 max 0.23 m/s (n 78)|soleMinY -0.013
+PROBE|Player|walk_B|v 1.02|slide mean 0.25 max 2.01 m/s (n 47)|footMinY walk 0.142 all 0.118|hips 0.883..0.921 end 0.04 0.91 -0.05|Loco x 0.00 z -1.00 tempo 0.82
+PROBE|Player|sole_R|slide mean 0.08 max 0.52 m/s (n 65)|soleMinY -0.010
+PROBE|Player|walk_R|v 0.72|slide mean 0.22 max 0.74 m/s (n 53)|footMinY walk 0.145 all 0.119|hips 0.899..0.946 end 0.04 0.91 -0.05|Loco x 1.00 z 0.00 tempo 1.60
+PROBE|Player|sole_L|slide mean 0.08 max 0.98 m/s (n 85)|soleMinY -0.020
+PROBE|Player|walk_L|v 0.72|slide mean 0.31 max 0.84 m/s (n 46)|footMinY walk 0.148 all 0.090|hips 0.890..0.956 end 0.04 0.91 -0.05|Loco x -1.00 z 0.00 tempo 1.61
+PROBE|Player|trace_FR|30|L p0 h 0.000 v 0.00 LOCK0 off 0.033 lift 0.000|R p1 h 0.057 v 1.75 free1 off 0.011 lift 0.008
+PROBE|Player|trace_FR|31|L p1 h 0.000 v 0.29 LOCK1 off 0.033 lift 0.000|R p1 h 0.063 v 1.84 free1 off 0.007 lift 0.005
+PROBE|Player|trace_FR|32|L p1 h 0.000 v 0.00 LOCK1 off 0.043 lift 0.000|R p1 h 0.077 v 1.32 free1 off 0.004 lift 0.003
+PROBE|Player|trace_FR|33|L p1 h 0.000 v 0.00 LOCK1 off 0.053 lift 0.000|R p2 h 0.062 v 1.50 free1 off 0.003 lift 0.002
+PROBE|Player|trace_FR|34|L p1 h 0.000 v 0.00 LOCK1 off 0.061 lift 0.000|R p1 h 0.080 v 2.32 free1 off 0.002 lift 0.001
+PROBE|Player|trace_FR|35|L p1 h 0.000 v 0.00 LOCK1 off 0.064 lift 0.000|R p1 h 0.068 v 2.82 free1 off 0.001 lift 0.001
+PROBE|Player|trace_FR|36|L p0 h 0.000 v 0.50 LOCK0 off 0.064 lift 0.000|R p1 h 0.055 v 2.92 free1 off 0.001 lift 0.005
+PROBE|Player|trace_FR|37|L p0 h 0.000 v 0.00 LOCK0 off 0.081 lift 0.000|R p0 h 0.049 v 2.78 free1 off 0.000 lift 0.012
+PROBE|Player|trace_FR|38|L p0 h 0.000 v 0.00 LOCK0 off 0.110 lift 0.000|R p0 h 0.041 v 2.92 free1 off 0.000 lift 0.025
+PROBE|Player|trace_FR|39|L p1 h 0.007 v 1.29 LOCK1 off 0.110 lift 0.000|R p0 h 0.034 v 2.74 free1 off 0.000 lift 0.034
+PROBE|Player|trace_FR|40|L p1 h 0.029 v 2.91 free1 off 0.068 lift 0.023|R p0 h 0.016 v 1.33 free1 off 0.000 lift 0.016
+PROBE|Player|trace_FR|41|L p1 h 0.024 v 2.61 free1 off 0.042 lift 0.022|R p0 h 0.005 v 0.29 LOCK0 off 0.000 lift 0.005
+PROBE|Player|trace_FR|42|L p2 h 0.016 v 2.26 free1 off 0.026 lift 0.019|R p0 h 0.002 v 0.00 LOCK0 off 0.011 lift 0.002
+PROBE|Player|trace_FR|43|L p2 h 0.020 v 1.64 free1 off 0.016 lift 0.012|R p0 h 0.001 v 0.00 LOCK0 off 0.026 lift 0.001
+PROBE|Player|trace_FR|44|L p2 h 0.027 v 1.18 free1 off 0.010 lift 0.007|R p0 h 0.000 v 0.00 LOCK0 off 0.036 lift 0.000
+PROBE|Player|trace_FR|45|L p2 h 0.035 v 1.89 free1 off 0.006 lift 0.010|R p0 h 0.000 v 0.00 LOCK0 off 0.045 lift 0.000
+PROBE|Player|trace_FR|46|L p2 h 0.038 v 2.39 free1 off 0.004 lift 0.017|R p0 h 0.000 v 0.00 LOCK0 off 0.053 lift 0.000
+PROBE|Player|trace_FR|47|L p2 h 0.040 v 2.74 free1 off 0.002 lift 0.025|R p0 h 0.000 v 0.00 LOCK0 off 0.062 lift 0.000
+PROBE|Player|trace_FR|48|L p1 h 0.048 v 2.98 free1 off 0.002 lift 0.029|R p0 h 0.000 v 0.00 LOCK0 off 0.077 lift 0.000
+PROBE|Player|trace_FR|49|L p1 h 0.043 v 2.97 free1 off 0.001 lift 0.035|R p0 h 0.000 v 0.00 LOCK0 off 0.095 lift 0.000
+PROBE|Player|trace_FR|50|L p0 h 0.040 v 2.86 free1 off 0.001 lift 0.040|R p0 h 0.005 v 0.00 LOCK0 off 0.118 lift 0.000
+PROBE|Player|trace_FR|51|L p0 h 0.039 v 2.72 free1 off 0.000 lift 0.039|R p1 h 0.042 v 2.74 free0 off 0.073 lift 0.025
+PROBE|Player|trace_FR|52|L p0 h 0.024 v 1.71 free1 off 0.000 lift 0.024|R p1 h 0.045 v 2.51 free0 off 0.045 lift 0.023
+PROBE|Player|trace_FR|53|L p0 h 0.008 v 0.38 LOCK0 off 0.000 lift 0.008|R p1 h 0.046 v 2.26 free0 off 0.028 lift 0.017
+PROBE|Player|trace_FR|54|L p0 h 0.003 v 0.00 LOCK0 off 0.012 lift 0.003|R p0 h 0.042 v 2.18 free0 off 0.018 lift 0.013
+PROBE|Player|trace_FR|55|L p0 h 0.001 v 0.00 LOCK0 off 0.023 lift 0.001|R p1 h 0.056 v 1.72 free0 off 0.011 lift 0.008
+PROBE|Player|trace_FR|56|L p0 h 0.000 v 0.00 LOCK0 off 0.035 lift 0.000|R p1 h 0.062 v 1.92 free0 off 0.007 lift 0.005
+PROBE|Player|trace_FR|57|L p1 h 0.000 v 0.30 LOCK1 off 0.035 lift 0.000|R p1 h 0.077 v 1.38 free0 off 0.004 lift 0.003
+PROBE|Player|trace_FR|58|L p1 h 0.000 v 0.00 LOCK1 off 0.044 lift 0.000|R p2 h 0.062 v 1.56 free0 off 0.003 lift 0.002
+PROBE|Player|trace_FR|59|L p1 h 0.000 v 0.00 LOCK1 off 0.050 lift 0.000|R p1 h 0.079 v 2.51 free0 off 0.002 lift 0.001
+PROBE|Player|trace_FR|60|L p1 h 0.000 v 0.00 LOCK1 off 0.052 lift 0.000|R p1 h 0.064 v 3.01 free0 off 0.001 lift 0.001
+PROBE|Player|trace_FR|61|L p0 h 0.000 v 0.51 LOCK0 off 0.052 lift 0.000|R p1 h 0.055 v 3.04 free0 off 0.001 lift 0.006
+PROBE|Player|trace_FR|62|L p0 h 0.000 v 0.00 LOCK0 off 0.069 lift 0.000|R p0 h 0.046 v 2.94 free0 off 0.000 lift 0.017
+PROBE|Player|trace_FR|63|L p0 h 0.000 v 0.00 LOCK0 off 0.105 lift 0.000|R p0 h 0.038 v 3.06 free0 off 0.000 lift 0.033
+PROBE|Player|trace_FR|64|L p1 h 0.029 v 2.83 free0 off 0.065 lift 0.022|R p0 h 0.033 v 2.47 free0 off 0.000 lift 0.033
+PROBE|Player|trace_FR|65|L p1 h 0.025 v 2.50 free0 off 0.040 lift 0.021|R p0 h 0.011 v 0.30 LOCK0 off 0.000 lift 0.011
+PROBE|Player|trace_FR|66|L p1 h 0.031 v 2.42 free0 off 0.025 lift 0.018|R p0 h 0.004 v 0.00 LOCK0 off 0.011 lift 0.004
+PROBE|Player|trace_FR|67|L p2 h 0.019 v 1.91 free0 off 0.016 lift 0.015|R p0 h 0.001 v 0.00 LOCK0 off 0.027 lift 0.001
+PROBE|Player|trace_FR|68|L p2 h 0.025 v 1.23 free0 off 0.010 lift 0.008|R p0 h 0.000 v 0.00 LOCK0 off 0.039 lift 0.000
+PROBE|Player|trace_FR|69|L p2 h 0.033 v 1.73 free0 off 0.006 lift 0.009|R p0 h 0.000 v 0.00 LOCK0 off 0.049 lift 0.000
+PROBE|Player|sole_FR|slide mean 0.18 max 1.36 m/s (n 66)|soleMinY -0.003
+PROBE|Player|walk_FR|v 0.96|slide mean 0.53 max 2.67 m/s (n 43)|footMinY walk 0.146 all 0.114|hips 0.901..0.927 end 0.04 0.91 -0.05|Loco x 0.71 z 0.71 tempo 1.48
+PROBE|Player|sole_Rcircle|slide mean 0.08 max 0.55 m/s (n 66)|soleMinY -0.010
+PROBE|Player|walk_Rcircle|v 0.72|slide mean 0.27 max 0.87 m/s (n 56)|footMinY walk 0.147 all 0.122|hips 0.902..0.945 end 0.04 0.91 -0.05|Loco x 1.00 z -0.03 tempo 1.68
+PROBE|Player|rag|t0.0|minY 0.259|hips -0.07 0.98 -1.34|head -0.04 1.59 -1.33|center -0.03 0.90 -1.32|maxV 1.65
+PROBE|Player|rag|t0.2|minY 0.246|hips -1.45 0.90 -0.01|head -1.27 1.47 -0.09|center -1.29 0.84 -0.06|maxV 2.47
+PROBE|Player|rag|t0.5|minY 0.116|hips -1.96 0.22 -0.04|head -2.02 0.79 0.05|center -1.80 0.32 -0.03|maxV 4.75
+PROBE|Player|rag|t1.0|minY 0.045|hips -2.28 0.15 0.01|head -2.84 0.12 0.22|center -2.25 0.15 0.01|maxV 1.51
+PROBE|Player|rag|t2.0|minY 0.050|hips -2.28 0.14 0.01|head -2.87 0.12 0.17|center -2.27 0.12 -0.03|maxV 0.11
+PROBE|Player|rag|t3.0|minY 0.050|hips -2.28 0.14 0.01|head -2.87 0.12 0.17|center -2.27 0.12 -0.03|maxV 0.00
+PROBE|Player|rag|restored hips 0.052 1.006 -0.050
+PROBE|Foe|rest|Hips|0.009|1.057|-0.074|fw 0.02 0.05 1.00|up 0.00 1.00 -0.05
+PROBE|Foe|rest|Spine|0.009|1.178|-0.080|fw 0.07 -0.01 1.00|up -0.05 1.00 0.02
+PROBE|Foe|rest|Chest|-0.003|1.419|-0.076|fw -0.05 0.35 0.93|up 0.10 0.93 -0.35
+PROBE|Foe|rest|Neck|0.001|1.461|-0.092|fw -0.10 -0.13 0.99|up 0.10 0.98 0.14
+PROBE|Foe|rest|Head|0.009|1.531|-0.082|fw 0.00 -0.29 0.96|up 0.02 0.96 0.29
+PROBE|Foe|rest|Shoulder.L|-0.039|1.427|-0.085|fw -0.29 0.90 -0.32|up -0.94 -0.32 -0.07
+PROBE|Foe|rest|UpperArm.L|-0.145|1.391|-0.093|fw -0.53 0.35 -0.77|up -0.62 -0.78 0.08
+PROBE|Foe|rest|Forearm.L|-0.292|1.206|-0.075|fw -0.56 0.13 -0.82|up -0.52 -0.83 0.22
+PROBE|Foe|rest|Hand.L|-0.412|1.014|-0.023|fw -0.47 0.06 -0.88|up -0.43 -0.89 0.16
+PROBE|Foe|rest|Shoulder.R|0.047|1.438|-0.081|fw 0.44 0.82 -0.37|up 0.90 -0.36 0.26
+PROBE|Foe|rest|UpperArm.R|0.163|1.391|-0.048|fw 0.40 0.48 -0.78|up 0.61 -0.77 -0.17
+PROBE|Foe|rest|Forearm.R|0.302|1.217|-0.085|fw 0.53 0.14 -0.84|up 0.53 -0.83 0.19
+PROBE|Foe|rest|Hand.R|0.426|1.022|-0.040|fw 0.44 0.06 -0.90|up 0.43 -0.89 0.15
+PROBE|Foe|rest|UpperLeg.L|-0.113|0.904|-0.092|fw -0.10 -0.18 -0.98|up -0.07 -0.98 0.19
+PROBE|Foe|rest|LowerLeg.L|-0.142|0.518|-0.018|fw -0.10 0.22 -0.97|up -0.10 -0.97 -0.21
+PROBE|Foe|rest|Foot.L|-0.178|0.156|-0.095|fw -0.42 -0.59 -0.69|up -0.17 -0.70 0.70
+PROBE|Foe|rest|UpperLeg.R|0.130|0.904|-0.043|fw 0.06 -0.05 -1.00|up 0.08 -1.00 0.06
+PROBE|Foe|rest|LowerLeg.R|0.161|0.516|-0.020|fw 0.07 0.22 -0.97|up 0.09 -0.97 -0.22
+PROBE|Foe|rest|Foot.R|0.195|0.150|-0.102|fw 0.45 -0.56 -0.69|up 0.22 -0.68 0.70
+PROBE|Foe|rest|model|0.000|0.000|0.000|rot (0.00, 1.02, 0.00)
+PROBE|Foe|clip|Fallen_Enemy_Rig|Idle len 2
+PROBE|Foe|anim|Hips|-0.009|1.059|-0.074|fw 0.02 0.05 1.00|up -0.02 1.00 -0.05
+PROBE|Foe|anim|Spine|-0.012|1.180|-0.080|fw 0.06 -0.01 1.00|up -0.06 1.00 0.01
+PROBE|Foe|anim|Chest|-0.025|1.421|-0.078|fw -0.05 0.37 0.93|up 0.10 0.92 -0.37
+PROBE|Foe|anim|Neck|-0.021|1.463|-0.094|fw -0.10 -0.11 0.99|up 0.11 0.99 0.12
+PROBE|Foe|anim|Head|-0.014|1.533|-0.086|fw 0.00 -0.28 0.96|up 0.02 0.96 0.28
+PROBE|Foe|anim|Shoulder.L|-0.061|1.429|-0.087|fw -0.29 0.90 -0.34|up -0.94 -0.32 -0.06
+PROBE|Foe|anim|UpperArm.L|-0.168|1.392|-0.093|fw -0.53 0.33 -0.78|up -0.62 -0.78 0.10
+PROBE|Foe|anim|Forearm.L|-0.315|1.209|-0.071|fw -0.56 0.11 -0.82|up -0.52 -0.82 0.24
+PROBE|Foe|anim|Hand.L|-0.435|1.018|-0.014|fw -0.47 0.05 -0.88|up -0.43 -0.89 0.18
+PROBE|Foe|anim|Shoulder.R|0.025|1.440|-0.083|fw 0.44 0.81 -0.39|up 0.90 -0.36 0.26
+PROBE|Foe|anim|UpperArm.R|0.140|1.394|-0.049|fw 0.40 0.47 -0.79|up 0.61 -0.78 -0.15
+PROBE|Foe|anim|Forearm.R|0.279|1.218|-0.083|fw 0.53 0.12 -0.84|up 0.53 -0.82 0.21
+PROBE|Foe|anim|Hand.R|0.403|1.024|-0.034|fw 0.44 0.04 -0.90|up 0.43 -0.89 0.17
+PROBE|Foe|anim|UpperLeg.L|-0.128|0.904|-0.092|fw -0.10 -0.16 -0.98|up -0.05 -0.98 0.17
+PROBE|Foe|anim|LowerLeg.L|-0.149|0.516|-0.025|fw -0.11 0.19 -0.98|up -0.08 -0.98 -0.18
+PROBE|Foe|anim|Foot.L|-0.178|0.151|-0.092|fw -0.41 -0.60 -0.68|up -0.15 -0.69 0.70
+PROBE|Foe|anim|UpperLeg.R|0.115|0.908|-0.042|fw 0.06 -0.07 -1.00|up 0.10 -0.99 0.07
+PROBE|Foe|anim|LowerLeg.R|0.154|0.522|-0.013|fw 0.06 0.25 -0.97|up 0.11 -0.96 -0.24
+PROBE|Foe|anim|Foot.R|0.195|0.158|-0.105|fw 0.46 -0.55 -0.69|up 0.23 -0.68 0.69
+PROBE|Foe|anim|model|0.000|0.000|0.000|rot (0.00, 1.02, 0.00)
+PROBE|Foe|idle|Hips|-0.009|0.964|-0.074|fw -0.56 0.03 0.83|up 0.00 1.00 -0.04
+PROBE|Foe|idle|Spine|-0.009|1.085|-0.078|fw -0.59 -0.10 0.80|up -0.11 0.99 0.04
+PROBE|Foe|idle|Chest|-0.036|1.324|-0.068|fw -0.73 0.28 0.62|up 0.27 0.96 -0.12
+PROBE|Foe|idle|Neck|-0.024|1.368|-0.073|fw -0.78 -0.20 0.59|up -0.08 0.97 0.22
+PROBE|Foe|idle|Head|-0.030|1.436|-0.057|fw -0.34 -0.31 0.89|up -0.10 0.95 0.29
+PROBE|Foe|idle|Shoulder.L|-0.055|1.333|-0.100|fw -0.01 0.93 -0.38|up -0.58 -0.32 -0.75
+PROBE|Foe|idle|UpperArm.L|-0.120|1.297|-0.184|fw -0.22 -0.28 -0.94|up -0.49 -0.80 0.35
+PROBE|Foe|idle|Forearm.L|-0.236|1.109|-0.102|fw -0.26 -0.74 -0.62|up 0.22 -0.67 0.71
+PROBE|Foe|idle|Hand.L|-0.184|0.954|0.063|fw -0.30 -0.42 -0.86|up 0.53 -0.82 0.21
+PROBE|Foe|idle|Shoulder.R|0.001|1.344|-0.033|fw 0.53 0.84 0.11|up 0.44 -0.38 0.81
+PROBE|Foe|idle|UpperArm.R|0.058|1.294|0.071|fw 0.94 0.30 -0.15|up 0.32 -0.93 0.18
+PROBE|Foe|idle|Forearm.R|0.131|1.084|0.111|fw 0.51 -0.85 -0.13|up -0.75 -0.52 0.42
+PROBE|Foe|idle|Hand.R|-0.045|0.962|0.209|fw 0.53 -0.43 -0.73|up -0.65 -0.76 -0.02
+PROBE|Foe|idle|UpperLeg.L|-0.094|0.809|-0.159|fw 0.02 0.18 -0.98|up -0.57 -0.81 -0.16
+PROBE|Foe|idle|LowerLeg.L|-0.318|0.491|-0.223|fw 0.16 0.39 -0.91|up 0.16 -0.92 -0.37
+PROBE|Foe|idle|Foot.L|-0.260|0.150|-0.360|fw 0.55 -0.59 -0.59|up -0.72 -0.70 0.02
+PROBE|Foe|idle|UpperLeg.R|0.077|0.812|0.020|fw 0.12 -0.61 -0.79|up 0.08 -0.78 0.62
+PROBE|Foe|idle|LowerLeg.R|0.109|0.507|0.260|fw 0.12 -0.31 -0.94|up 0.03 -0.95 0.32
+PROBE|Foe|idle|Foot.R|0.120|0.150|0.380|fw 0.33 -0.56 -0.76|up 0.33 -0.68 0.65
+PROBE|Foe|idle|model|0.000|-0.095|0.000|rot (0.00, 1.02, 0.00)
+PROBE|Foe|rt_anim0|Hips|0.009|0.962|-0.074|fw 0.02 0.05 1.00|up 0.00 1.00 -0.05
+PROBE|Foe|rt_anim0|Spine|0.009|1.083|-0.080|fw 0.05 -0.01 1.00|up -0.05 1.00 0.02
+PROBE|Foe|rt_anim0|Chest|-0.003|1.324|-0.076|fw -0.05 0.35 0.93|up 0.09 0.93 -0.35
+PROBE|Foe|rt_anim0|Neck|0.001|1.366|-0.092|fw -0.11 -0.13 0.99|up 0.10 0.98 0.14
+PROBE|Foe|rt_anim0|Head|0.009|1.436|-0.082|fw -0.04 -0.29 0.96|up 0.01 0.96 0.29
+PROBE|Foe|rt_anim0|Shoulder.L|-0.039|1.332|-0.085|fw -0.29 0.90 -0.32|up -0.94 -0.32 -0.06
+PROBE|Foe|rt_anim0|UpperArm.L|-0.145|1.295|-0.093|fw -0.54 0.35 -0.77|up -0.62 -0.78 0.08
+PROBE|Foe|rt_anim0|Forearm.L|-0.292|1.111|-0.074|fw -0.57 0.13 -0.81|up -0.52 -0.83 0.23
+PROBE|Foe|rt_anim0|Hand.L|-0.412|0.919|-0.022|fw -0.47 0.06 -0.88|up -0.42 -0.89 0.16
+PROBE|Foe|rt_anim0|Shoulder.R|0.047|1.343|-0.081|fw 0.44 0.82 -0.37|up 0.90 -0.36 0.25
+PROBE|Foe|rt_anim0|UpperArm.R|0.163|1.296|-0.049|fw 0.40 0.48 -0.78|up 0.61 -0.77 -0.17
+PROBE|Foe|rt_anim0|Forearm.R|0.302|1.121|-0.087|fw 0.53 0.14 -0.84|up 0.53 -0.83 0.19
+PROBE|Foe|rt_anim0|Hand.R|0.426|0.927|-0.042|fw 0.44 0.06 -0.90|up 0.43 -0.89 0.15
+PROBE|Foe|rt_anim0|UpperLeg.L|-0.113|0.809|-0.092|fw -0.10 -0.18 -0.98|up -0.07 -0.98 0.19
+PROBE|Foe|rt_anim0|LowerLeg.L|-0.142|0.423|-0.018|fw -0.10 0.22 -0.97|up -0.10 -0.97 -0.21
+PROBE|Foe|rt_anim0|Foot.L|-0.178|0.060|-0.095|fw -0.42 -0.59 -0.69|up -0.17 -0.70 0.70
+PROBE|Foe|rt_anim0|UpperLeg.R|0.130|0.809|-0.043|fw 0.06 -0.05 -1.00|up 0.08 -1.00 0.06
+PROBE|Foe|rt_anim0|LowerLeg.R|0.161|0.421|-0.020|fw 0.07 0.22 -0.97|up 0.09 -0.97 -0.22
+PROBE|Foe|rt_anim0|Foot.R|0.195|0.054|-0.102|fw 0.45 -0.56 -0.69|up 0.22 -0.68 0.70
+PROBE|Foe|rt_anim0|model|0.000|-0.095|0.000|rot (0.00, 1.02, 0.00)
+PROBE|Foe|rt_anim1|Hips|0.008|0.953|-0.074|fw 0.02 0.05 1.00|up 0.00 1.00 -0.05
+PROBE|Foe|rt_anim1|Spine|0.008|1.074|-0.080|fw 0.06 -0.02 1.00|up -0.05 1.00 0.02
+PROBE|Foe|rt_anim1|Chest|-0.004|1.314|-0.074|fw -0.05 0.33 0.94|up 0.09 0.94 -0.33
+PROBE|Foe|rt_anim1|Neck|0.000|1.357|-0.089|fw -0.10 -0.15 0.98|up 0.10 0.98 0.16
+PROBE|Foe|rt_anim1|Head|0.007|1.427|-0.078|fw -0.02 -0.31 0.95|up 0.02 0.95 0.31
+PROBE|Foe|rt_anim1|Shoulder.L|-0.040|1.323|-0.083|fw -0.29 0.91 -0.30|up -0.94 -0.32 -0.07
+PROBE|Foe|rt_anim1|UpperArm.L|-0.147|1.287|-0.091|fw -0.53 0.36 -0.76|up -0.62 -0.78 0.06
+PROBE|Foe|rt_anim1|Forearm.L|-0.293|1.102|-0.077|fw -0.56 0.15 -0.81|up -0.52 -0.83 0.21
+PROBE|Foe|rt_anim1|Hand.L|-0.413|0.909|-0.029|fw -0.47 0.08 -0.88|up -0.43 -0.89 0.14
+PROBE|Foe|rt_anim1|Shoulder.R|0.046|1.334|-0.079|fw 0.44 0.83 -0.35|up 0.90 -0.37 0.25
+PROBE|Foe|rt_anim1|UpperArm.R|0.161|1.286|-0.047|fw 0.40 0.50 -0.77|up 0.61 -0.77 -0.18
+PROBE|Foe|rt_anim1|Forearm.R|0.300|1.112|-0.089|fw 0.53 0.16 -0.83|up 0.53 -0.83 0.17
+PROBE|Foe|rt_anim1|Hand.R|0.424|0.917|-0.048|fw 0.44 0.08 -0.90|up 0.43 -0.89 0.13
+PROBE|Foe|rt_anim1|UpperLeg.L|-0.114|0.799|-0.092|fw -0.10 -0.21 -0.97|up -0.07 -0.97 0.22
+PROBE|Foe|rt_anim1|LowerLeg.L|-0.142|0.416|-0.005|fw -0.10 0.24 -0.96|up -0.10 -0.97 -0.23
+PROBE|Foe|rt_anim1|Foot.L|-0.178|0.056|-0.091|fw -0.42 -0.59 -0.69|up -0.17 -0.70 0.70
+PROBE|Foe|rt_anim1|UpperLeg.R|0.129|0.800|-0.043|fw 0.06 -0.09 -0.99|up 0.08 -0.99 0.09
+PROBE|Foe|rt_anim1|LowerLeg.R|0.161|0.413|-0.006|fw 0.07 0.25 -0.97|up 0.09 -0.96 -0.25
+PROBE|Foe|rt_anim1|Foot.R|0.196|0.049|-0.099|fw 0.46 -0.56 -0.69|up 0.22 -0.68 0.70
+PROBE|Foe|rt_anim1|model|0.000|-0.095|0.000|rot (0.00, 1.02, 0.00)
+PROBE|Foe|rt_idle|Hips|0.009|0.882|-0.074|fw -0.56 0.03 0.83|up 0.02 1.00 -0.03
+PROBE|Foe|rt_idle|Spine|0.011|1.003|-0.077|fw -0.58 -0.18 0.80|up -0.15 0.98 0.11
+PROBE|Foe|rt_idle|Chest|-0.026|1.240|-0.051|fw -0.77 0.06 0.64|up 0.11 0.99 0.04
+PROBE|Foe|rt_idle|Neck|-0.021|1.285|-0.049|fw -0.73 -0.42 0.54|up -0.24 0.90 0.37
+PROBE|Foe|rt_idle|Head|-0.038|1.349|-0.023|fw -0.33 -0.36 0.87|up -0.12 0.93 0.34
+PROBE|Foe|rt_idle|Shoulder.L|-0.046|1.250|-0.081|fw -0.17 0.96 -0.23|up -0.53 -0.28 -0.80
+PROBE|Foe|rt_idle|UpperArm.L|-0.106|1.218|-0.172|fw -0.30 -0.22 -0.93|up -0.49 -0.80 0.35
+PROBE|Foe|rt_idle|Forearm.L|-0.221|1.029|-0.090|fw -0.30 -0.74 -0.60|up 0.22 -0.67 0.71
+PROBE|Foe|rt_idle|Hand.L|-0.169|0.873|0.074|fw -0.30 -0.41 -0.86|up 0.53 -0.82 0.21
+PROBE|Foe|rt_idle|Shoulder.R|0.007|1.260|-0.013|fw 0.38 0.89 0.25|up 0.51 -0.43 0.75
+PROBE|Foe|rt_idle|UpperArm.R|0.073|1.205|0.083|fw 0.94 0.35 -0.03|up 0.35 -0.92 0.17
+PROBE|Foe|rt_idle|Forearm.R|0.152|0.996|0.122|fw 0.51 -0.86 -0.08|up -0.77 -0.49 0.41
+PROBE|Foe|rt_idle|Hand.R|-0.029|0.880|0.218|fw 0.51 -0.45 -0.73|up -0.66 -0.75 0.00
+PROBE|Foe|rt_idle|UpperLeg.L|-0.078|0.729|-0.161|fw 0.17 -0.03 -0.98|up -0.74 -0.66 -0.11
+PROBE|Foe|rt_idle|LowerLeg.L|-0.371|0.469|-0.203|fw 0.68 0.50 -0.54|up 0.30 -0.86 -0.42
+PROBE|Foe|rt_idle|Foot.L|-0.260|0.150|-0.360|fw 0.55 -0.59 -0.59|up -0.72 -0.70 0.02
+PROBE|Foe|rt_idle|UpperLeg.R|0.092|0.728|0.018|fw 0.12 -0.84 -0.53|up 0.11 -0.52 0.85
+PROBE|Foe|rt_idle|LowerLeg.R|0.136|0.525|0.348|fw 0.08 -0.09 -0.99|up -0.04 -1.00 0.09
+PROBE|Foe|rt_idle|Foot.R|0.120|0.150|0.380|fw 0.33 -0.56 -0.76|up 0.33 -0.68 0.65
+PROBE|Foe|rt_idle|model|0.000|-0.095|0.000|rot (0.00, 1.02, 0.00)
+PROBE|Foe|rt_info|root False avatar null state 125937960 cull AlwaysAnimate
+PROBE|Foe|oh0.26|Hips|-0.009|0.944|0.079|fw -0.56 0.04 0.83|up 0.01 1.00 -0.04
+PROBE|Foe|oh0.26|Spine|-0.008|1.065|0.073|fw -0.73 -0.02 0.68|up -0.04 1.00 -0.02
+PROBE|Foe|oh0.26|Chest|-0.019|1.306|0.069|fw -0.88 0.42 0.21|up 0.42 0.91 -0.03
+PROBE|Foe|oh0.26|Neck|0.000|1.347|0.068|fw -0.98 -0.06 0.18|up -0.04 0.99 0.12
+PROBE|Foe|oh0.26|Head|-0.002|1.417|0.077|fw -0.55 -0.27 0.79|up -0.14 0.96 0.24
+PROBE|Foe|oh0.26|Shoulder.L|-0.020|1.313|0.032|fw 0.31 0.89 -0.33|up -0.51 -0.13 -0.85
+PROBE|Foe|oh0.26|UpperArm.L|-0.078|1.298|-0.064|fw -0.02 0.23 -0.97|up -0.98 0.21 0.07
+PROBE|Foe|oh0.26|Forearm.L|-0.309|1.347|-0.048|fw -0.91 -0.02 0.41|up 0.34 0.49 0.80
+PROBE|Foe|oh0.26|Hand.L|-0.229|1.462|0.138|fw -0.09 -0.97 0.24|up 0.10 0.23 0.97
+PROBE|Foe|oh0.26|Shoulder.R|0.001|1.325|0.116|fw 0.54 0.80 0.24|up -0.26 -0.11 0.96
+PROBE|Foe|oh0.26|UpperArm.R|-0.033|1.311|0.239|fw 0.02 0.99 0.15|up 0.73 0.09 -0.68
+PROBE|Foe|oh0.26|Forearm.R|0.132|1.331|0.085|fw 0.38 0.88 -0.27|up -0.91 0.42 0.06
+PROBE|Foe|oh0.26|Hand.R|-0.081|1.429|0.100|fw 0.45 0.24 -0.86|up -0.84 0.43 -0.33
+PROBE|Foe|oh0.26|UpperLeg.L|-0.095|0.789|-0.005|fw 0.08 0.40 -0.91|up -0.51 -0.77 -0.39
+PROBE|Foe|oh0.26|LowerLeg.L|-0.294|0.485|-0.157|fw 0.19 0.55 -0.81|up 0.09 -0.83 -0.55
+PROBE|Foe|oh0.26|Foot.L|-0.260|0.174|-0.360|fw 0.67 -0.41 -0.62|up -0.54 -0.84 -0.03
+PROBE|Foe|oh0.26|UpperLeg.R|0.076|0.793|0.174|fw 0.14 -0.69 -0.71|up 0.13 -0.70 0.70
+PROBE|Foe|oh0.26|LowerLeg.R|0.128|0.520|0.448|fw 0.09 0.18 -0.98|up -0.02 -0.98 -0.18
+PROBE|Foe|oh0.26|Foot.R|0.120|0.150|0.380|fw 0.33 -0.56 -0.76|up 0.33 -0.68 0.65
+PROBE|Foe|oh0.26|model|0.000|-0.115|0.153|rot (0.00, 1.02, 0.00)
+PROBE|Foe|oh0.36|Hips|-0.009|0.924|0.095|fw -0.50 0.04 0.87|up 0.00 1.00 -0.05
+PROBE|Foe|oh0.36|Spine|-0.009|1.045|0.089|fw -0.60 -0.03 0.80|up -0.06 1.00 -0.01
+PROBE|Foe|oh0.36|Chest|-0.023|1.286|0.086|fw -0.78 0.39 0.49|up 0.37 0.92 -0.14
+PROBE|Foe|oh0.36|Neck|-0.006|1.327|0.080|fw -0.87 -0.09 0.49|up -0.02 0.99 0.14
+PROBE|Foe|oh0.36|Head|-0.007|1.398|0.090|fw -0.42 -0.28 0.86|up -0.10 0.96 0.26
+PROBE|Foe|oh0.36|Shoulder.L|-0.036|1.293|0.052|fw 0.06 0.85 -0.52|up -0.67 -0.35 -0.66
+PROBE|Foe|oh0.36|UpperArm.L|-0.111|1.253|-0.022|fw -0.63 -0.13 -0.76|up -0.77 0.13 0.62
+PROBE|Foe|oh0.36|Forearm.L|-0.294|1.285|0.124|fw -0.46 -0.50 0.73|up 0.76 0.21 0.62
+PROBE|Foe|oh0.36|Hand.L|-0.119|1.334|0.268|fw -0.08 -0.99 -0.11|up 0.61 -0.13 0.78
+PROBE|Foe|oh0.36|Shoulder.R|0.011|1.305|0.124|fw 0.58 0.81 0.10|up 0.10 -0.19 0.98
+PROBE|Foe|oh0.36|UpperArm.R|0.023|1.280|0.250|fw -0.16 0.99 -0.02|up 0.76 0.11 -0.65
+PROBE|Foe|oh0.36|Forearm.R|0.195|1.305|0.104|fw 0.01 0.89 -0.45|up -0.90 0.21 0.39
+PROBE|Foe|oh0.36|Hand.R|-0.017|1.353|0.195|fw 0.19 0.60 -0.78|up -0.96 0.29 -0.01
+PROBE|Foe|oh0.36|UpperLeg.L|-0.101|0.769|0.017|fw 0.10 0.42 -0.90|up -0.53 -0.74 -0.41
+PROBE|Foe|oh0.36|LowerLeg.L|-0.309|0.476|-0.144|fw 0.23 0.59 -0.77|up 0.13 -0.80 -0.58
+PROBE|Foe|oh0.36|Foot.L|-0.260|0.177|-0.360|fw 0.68 -0.39 -0.62|up -0.52 -0.85 -0.03
+PROBE|Foe|oh0.36|UpperLeg.R|0.083|0.773|0.184|fw 0.15 -0.72 -0.67|up 0.13 -0.66 0.74
+PROBE|Foe|oh0.36|LowerLeg.R|0.135|0.515|0.471|fw 0.09 0.24 -0.97|up -0.04 -0.97 -0.24
+PROBE|Foe|oh0.36|Foot.R|0.120|0.150|0.380|fw 0.33 -0.56 -0.76|up 0.33 -0.68 0.65
+PROBE|Foe|oh0.36|model|0.000|-0.135|0.169|rot (0.00, 1.02, 0.00)
+PROBE|Foe|oh0.49|Hips|-0.009|0.908|0.124|fw -0.32 0.03 0.95|up -0.01 1.00 -0.04
+PROBE|Foe|oh0.49|Spine|-0.010|1.029|0.120|fw -0.32 -0.08 0.94|up -0.08 0.99 0.06
+PROBE|Foe|oh0.49|Chest|-0.030|1.269|0.133|fw -0.45 0.33 0.83|up 0.22 0.94 -0.25
+PROBE|Foe|oh0.49|Neck|-0.020|1.312|0.122|fw -0.51 -0.16 0.85|up 0.02 0.98 0.20
+PROBE|Foe|oh0.49|Head|-0.018|1.381|0.135|fw -0.20 -0.30 0.93|up -0.04 0.95 0.29
+PROBE|Foe|oh0.49|Shoulder.L|-0.059|1.277|0.110|fw -0.13 0.91 -0.39|up -0.82 -0.32 -0.47
+PROBE|Foe|oh0.49|UpperArm.L|-0.152|1.241|0.057|fw -0.41 -0.51 -0.76|up 0.12 -0.85 0.51
+PROBE|Foe|oh0.49|Forearm.L|-0.123|1.040|0.177|fw -0.05 -0.63 -0.78|up 0.86 -0.42 0.28
+PROBE|Foe|oh0.49|Hand.L|0.077|0.943|0.243|fw -0.20 -0.01 -0.98|up 0.79 -0.60 -0.15
+PROBE|Foe|oh0.49|Shoulder.R|0.017|1.288|0.150|fw 0.55 0.83 -0.13|up 0.71 -0.37 0.60
+PROBE|Foe|oh0.49|UpperArm.R|0.108|1.240|0.228|fw 0.46 0.73 -0.51|up 0.76 -0.62 -0.20
+PROBE|Foe|oh0.49|Forearm.R|0.279|1.100|0.182|fw 0.61 -0.56 -0.56|up -0.22 -0.80 0.57
+PROBE|Foe|oh0.49|Hand.R|0.229|0.913|0.315|fw 0.12 -0.16 -0.98|up -0.36 -0.93 0.10
+PROBE|Foe|oh0.49|UpperLeg.L|-0.114|0.753|0.064|fw 0.10 0.50 -0.86|up -0.47 -0.73 -0.49
+PROBE|Foe|oh0.49|LowerLeg.L|-0.300|0.464|-0.127|fw 0.20 0.63 -0.75|up 0.11 -0.77 -0.63
+PROBE|Foe|oh0.49|Foot.L|-0.260|0.176|-0.360|fw 0.68 -0.40 -0.62|up -0.53 -0.85 -0.03
+PROBE|Foe|oh0.49|UpperLeg.R|0.098|0.757|0.192|fw 0.15 -0.75 -0.65|up 0.12 -0.63 0.76
+PROBE|Foe|oh0.49|LowerLeg.R|0.146|0.509|0.490|fw 0.11 0.28 -0.95|up -0.07 -0.95 -0.29
+PROBE|Foe|oh0.49|Foot.R|0.120|0.150|0.380|fw 0.33 -0.56 -0.76|up 0.33 -0.68 0.65
+PROBE|Foe|oh0.49|model|0.000|-0.151|0.198|rot (0.00, 1.02, 0.00)
+PROBE|Foe|oh0.64|Hips|-0.009|0.905|0.121|fw -0.30 0.03 0.95|up -0.01 1.00 -0.03
+PROBE|Foe|oh0.64|Spine|-0.010|1.026|0.117|fw -0.24 -0.11 0.97|up -0.09 0.99 0.09
+PROBE|Foe|oh0.64|Chest|-0.032|1.265|0.140|fw -0.29 0.27 0.92|up 0.16 0.96 -0.23
+PROBE|Foe|oh0.64|Neck|-0.024|1.309|0.129|fw -0.34 -0.21 0.91|up 0.05 0.97 0.24
+PROBE|Foe|oh0.64|Head|-0.021|1.377|0.147|fw -0.12 -0.31 0.94|up -0.02 0.95 0.31
+PROBE|Foe|oh0.64|Shoulder.L|-0.064|1.274|0.123|fw -0.22 0.93 -0.30|up -0.89 -0.31 -0.33
+PROBE|Foe|oh0.64|UpperArm.L|-0.165|1.238|0.086|fw -0.50 -0.08 -0.86|up 0.00 -1.00 0.09
+PROBE|Foe|oh0.64|Forearm.L|-0.164|1.003|0.108|fw -0.26 -0.29 -0.92|up 0.96 -0.12 -0.23
+PROBE|Foe|oh0.64|Hand.L|0.061|0.975|0.054|fw -0.55 0.10 -0.83|up 0.78 -0.28 -0.56
+PROBE|Foe|oh0.64|Shoulder.R|0.018|1.285|0.150|fw 0.50 0.85 -0.18|up 0.81 -0.38 0.44
+PROBE|Foe|oh0.64|UpperArm.R|0.122|1.235|0.207|fw -0.03 0.95 -0.31|up 0.76 -0.18 -0.63
+PROBE|Foe|oh0.64|Forearm.R|0.293|1.194|0.064|fw 0.16 -0.01 -0.99|up -0.16 -0.99 -0.02
+PROBE|Foe|oh0.64|Hand.R|0.255|0.962|0.060|fw -0.40 0.44 -0.80|up -0.42 -0.87 -0.27
+PROBE|Foe|oh0.64|UpperLeg.L|-0.114|0.750|0.063|fw 0.11 0.50 -0.86|up -0.49 -0.73 -0.48
+PROBE|Foe|oh0.64|LowerLeg.L|-0.307|0.463|-0.127|fw 0.22 0.64 -0.74|up 0.13 -0.77 -0.63
+PROBE|Foe|oh0.64|Foot.L|-0.260|0.177|-0.360|fw 0.68 -0.39 -0.62|up -0.52 -0.86 -0.04
+PROBE|Foe|oh0.64|UpperLeg.R|0.100|0.753|0.187|fw 0.15 -0.76 -0.64|up 0.12 -0.63 0.77
+PROBE|Foe|oh0.64|LowerLeg.R|0.147|0.510|0.488|fw 0.11 0.28 -0.95|up -0.07 -0.96 -0.29
+PROBE|Foe|oh0.64|Foot.R|0.120|0.150|0.380|fw 0.33 -0.56 -0.76|up 0.33 -0.68 0.65
+PROBE|Foe|oh0.64|model|0.000|-0.154|0.195|rot (0.00, 1.02, 0.00)
+PROBE|Foe|shader|Fallen_Enemy_Body|Meshy_Fallen|BladePath/Character|supported True
+PROBE|Foe|loco|Foe_LocoF|len 1.12 loop True
+PROBE|Foe|loco|Foe_LocoF|ph 0|hips 0.005 1.079 -0.069|L -0.134 0.251 0.049|R 0.139 0.367 -0.462
+PROBE|Foe|loco|Foe_LocoF|ph 1|hips -0.005 1.092 -0.076|L -0.146 0.237 -0.096|R 0.154 0.429 -0.281
+PROBE|Foe|loco|Foe_LocoF|ph 2|hips -0.006 1.086 -0.085|L -0.145 0.231 -0.251|R 0.157 0.298 -0.033
+PROBE|Foe|loco|Foe_LocoF|ph 3|hips 0.002 1.073 -0.081|L -0.157 0.248 -0.405|R 0.171 0.231 0.164
+PROBE|Foe|loco|Foe_LocoF|ph 4|hips 0.013 1.073 -0.061|L -0.176 0.369 -0.407|R 0.165 0.225 0.046
+PROBE|Foe|loco|Foe_LocoF|ph 5|hips 0.026 1.087 -0.066|L -0.169 0.420 -0.231|R 0.157 0.234 -0.102
+PROBE|Foe|loco|Foe_LocoF|ph 6|hips 0.027 1.086 -0.074|L -0.149 0.296 0.003|R 0.139 0.239 -0.261
+PROBE|Foe|loco|Foe_LocoF|ph 7|hips 0.019 1.076 -0.079|L -0.122 0.259 0.156|R 0.130 0.273 -0.423
+PROBE|Foe|loco|Foe_LocoB|len 0.97 loop True
+PROBE|Foe|loco|Foe_LocoB|ph 0|hips -0.002 1.026 -0.089|L -0.060 0.176 -0.295|R 0.113 0.147 0.122
+PROBE|Foe|loco|Foe_LocoB|ph 1|hips -0.008 1.042 -0.074|L -0.060 0.174 -0.157|R 0.105 0.221 -0.131
+PROBE|Foe|loco|Foe_LocoB|ph 2|hips -0.003 1.034 -0.050|L -0.049 0.166 -0.013|R 0.105 0.305 -0.365
+PROBE|Foe|loco|Foe_LocoB|ph 3|hips 0.010 1.020 -0.058|L -0.038 0.169 0.134|R 0.091 0.240 -0.405
+PROBE|Foe|loco|Foe_LocoB|ph 4|hips 0.026 1.028 -0.090|L -0.067 0.211 0.151|R 0.072 0.181 -0.305
+PROBE|Foe|loco|Foe_LocoB|ph 5|hips 0.030 1.043 -0.087|L -0.101 0.290 -0.093|R 0.074 0.163 -0.174
+PROBE|Foe|loco|Foe_LocoB|ph 6|hips 0.023 1.041 -0.071|L -0.127 0.310 -0.322|R 0.080 0.146 -0.040
+PROBE|Foe|loco|Foe_LocoB|ph 7|hips 0.005 1.023 -0.072|L -0.092 0.218 -0.402|R 0.094 0.134 0.095
+PROBE|Foe|loco|Foe_LocoS1|len 1.13 loop True
+PROBE|Foe|loco|Foe_LocoS1|ph 0|hips 0.015 1.005 -0.060|L -0.326 0.165 -0.177|R 0.379 0.150 -0.159
+PROBE|Foe|loco|Foe_LocoS1|ph 1|hips -0.038 1.031 -0.070|L -0.272 0.169 -0.181|R 0.385 0.188 -0.155
+PROBE|Foe|loco|Foe_LocoS1|ph 2|hips -0.040 1.058 -0.079|L -0.202 0.176 -0.186|R 0.229 0.195 -0.182
+PROBE|Foe|loco|Foe_LocoS1|ph 3|hips -0.017 1.066 -0.077|L -0.137 0.178 -0.188|R 0.083 0.190 -0.190
+PROBE|Foe|loco|Foe_LocoS1|ph 4|hips 0.007 1.055 -0.077|L -0.093 0.194 -0.186|R 0.117 0.160 -0.187
+PROBE|Foe|loco|Foe_LocoS1|ph 5|hips 0.037 1.059 -0.082|L -0.095 0.242 -0.173|R 0.173 0.156 -0.186
+PROBE|Foe|loco|Foe_LocoS1|ph 6|hips 0.059 1.066 -0.077|L -0.217 0.249 -0.160|R 0.236 0.162 -0.183
+PROBE|Foe|loco|Foe_LocoS1|ph 7|hips 0.057 1.041 -0.068|L -0.334 0.219 -0.155|R 0.315 0.158 -0.171
+PROBE|Foe|loco|Foe_LocoS2|len 1.22 loop True
+PROBE|Foe|loco|Foe_LocoS2|ph 0|hips -0.049 1.057 -0.071|L -0.225 0.167 -0.160|R 0.335 0.200 -0.149
+PROBE|Foe|loco|Foe_LocoS2|ph 1|hips -0.019 1.026 -0.059|L -0.290 0.158 -0.153|R 0.388 0.184 -0.157
+PROBE|Foe|loco|Foe_LocoS2|ph 2|hips 0.046 1.019 -0.062|L -0.338 0.185 -0.139|R 0.344 0.153 -0.167
+PROBE|Foe|loco|Foe_LocoS2|ph 3|hips 0.072 1.049 -0.076|L -0.251 0.224 -0.132|R 0.282 0.164 -0.167
+PROBE|Foe|loco|Foe_LocoS2|ph 4|hips 0.053 1.059 -0.084|L -0.076 0.224 -0.153|R 0.214 0.162 -0.171
+PROBE|Foe|loco|Foe_LocoS2|ph 5|hips 0.022 1.053 -0.079|L -0.041 0.180 -0.156|R 0.150 0.158 -0.170
+PROBE|Foe|loco|Foe_LocoS2|ph 6|hips -0.006 1.063 -0.080|L -0.097 0.172 -0.164|R 0.113 0.179 -0.177
+PROBE|Foe|loco|Foe_LocoS2|ph 7|hips -0.036 1.069 -0.081|L -0.159 0.170 -0.164|R 0.200 0.196 -0.170
+PROBE|Foe|sole_F|slide mean 0.05 max 0.33 m/s (n 92)|soleMinY -0.014
+PROBE|Foe|walk_F|v 1.20|slide mean 0.24 max 0.82 m/s (n 43)|footMinY walk 0.150 all 0.091|hips 0.923..0.964 end -0.01 0.96 -0.07|Loco x 0.00 z 1.00 tempo 0.98
+PROBE|Foe|sole_B|slide mean 0.03 max 0.21 m/s (n 73)|soleMinY -0.015
+PROBE|Foe|walk_B|v 1.02|slide mean 0.26 max 2.77 m/s (n 44)|footMinY walk 0.147 all 0.119|hips 0.931..0.988 end -0.01 0.96 -0.07|Loco x 0.00 z -1.00 tempo 0.78
+PROBE|Foe|sole_R|slide mean 0.08 max 0.55 m/s (n 70)|soleMinY -0.010
+PROBE|Foe|walk_R|v 0.72|slide mean 0.28 max 2.32 m/s (n 57)|footMinY walk 0.155 all 0.096|hips 0.954..0.997 end -0.01 0.96 -0.07|Loco x 1.00 z 0.00 tempo 1.54
+PROBE|Foe|sole_L|slide mean 0.07 max 0.86 m/s (n 85)|soleMinY -0.020
+PROBE|Foe|walk_L|v 0.72|slide mean 0.27 max 0.55 m/s (n 42)|footMinY walk 0.148 all 0.119|hips 0.946..1.008 end -0.01 0.96 -0.07|Loco x -1.00 z 0.00 tempo 1.48
+PROBE|Foe|sole_FR|slide mean 0.12 max 0.86 m/s (n 60)|soleMinY -0.003
+PROBE|Foe|walk_FR|v 0.96|slide mean 0.35 max 2.36 m/s (n 41)|footMinY walk 0.151 all 0.113|hips 0.955..0.988 end -0.01 0.96 -0.07|Loco x 0.71 z 0.71 tempo 1.46
+PROBE|Foe|sole_Rcircle|slide mean 0.09 max 0.56 m/s (n 69)|soleMinY -0.010
+PROBE|Foe|walk_Rcircle|v 0.72|slide mean 0.30 max 2.02 m/s (n 55)|footMinY walk 0.154 all 0.099|hips 0.954..0.995 end -0.01 0.96 -0.07|Loco x 1.00 z -0.04 tempo 1.68
+PROBE|Foe|rag|t0.0|minY 0.260|hips 1.64 1.02 2.42|head 1.66 1.53 2.40|center 1.67 0.91 2.38|maxV 1.65
+PROBE|Foe|rag|t0.2|minY 0.236|hips 3.04 0.95 1.17|head 3.22 1.39 1.18|center 2.94 0.87 1.13|maxV 3.27
+PROBE|Foe|rag|t0.5|minY 0.114|hips 3.62 0.21 1.17|head 3.95 0.54 1.29|center 3.50 0.32 1.16|maxV 4.77
+PROBE|Foe|rag|t1.0|minY 0.056|hips 3.94 0.14 1.15|head 4.41 0.12 1.27|center 3.90 0.14 1.16|maxV 0.71
+PROBE|Foe|rag|t2.0|minY 0.047|hips 3.94 0.14 1.15|head 4.41 0.12 1.26|center 3.90 0.13 1.15|maxV 0.00
+PROBE|Foe|rag|t3.0|minY 0.047|hips 3.94 0.14 1.15|head 4.41 0.12 1.26|center 3.90 0.13 1.15|maxV 0.00
+PROBE|Foe|rag|restored hips 0.009 1.057 -0.074
+PROBE|shots|gfx OpenGLCore|llvmpipe (LLVM 15.0.7, 256 bits)|OpenGL 4.5 (Core Profile) Mesa 23.2.1-1ubuntu3.1~22.04.3
+PROBE|shots|stance|Ally|elbow R 121 L 131|hands from shoulders x 0.04 y -0.36 z 0.25
+PROBE|shots|stance|Enemy|elbow R 121 L 126|hands from shoulders x 0.02 y -0.41 z 0.26
+PROBE|shots|stance|Player|elbow R 121 L 119|hands from shoulders x 0.02 y -0.31 z 0.26
+PROBE|shots|stance|Foe|elbow R 121 L 125|hands from shoulders x 0.02 y -0.32 z 0.24
+PROBE|shots|35_portrait_hero|ok
+PROBE|shots|1_game|mean 48.5
+PROBE|shots|2_player|mean 59.1
+PROBE|yaw|samurai|Enemy: anim hips -1 chest -1 | после hips -36 chest -48 | model 360 base 360 | walk 0.00 leg 1.00 keyed False Idle | hY -35 cY -12 yawS 0 | move 0.00 gnd True | Idle fps 10000
+PROBE|shots|3_enemy|mean 48.1
+PROBE|shots|31_wounds|mean 47.9
+PROBE|shots|7_grip|mean 30.7
+PROBE|shots|8_grip_top|mean 60.5
+PROBE|shots|27_blade_blood|4 уровня
+PROBE|shots|9_swing_overhead|8 кадров, 1.10 с
+PROBE|shots|10_swing_slash|8 кадров, 1.08 с
+PROBE|shots|11_swing_thrust|8 кадров, 0.88 с
+PROBE|shots|24_swing_rising|8 кадров, 1.02 с
+PROBE|shots|25_swing_legs|8 кадров, 1.09 с
+PROBE|shots|26_enemy_charge|8 кадров, 1.48 с
+PROBE|shots|44_salute_bow|8 кадров, 1.85 с
+PROBE|shots|4_arena|mean 35.2
+PROBE|shots|36_shoji|mean 80.8
+PROBE|shots|37_reflect_night|mean 29.1
+PROBE|shots|47_komainu|mean 81.0
+PROBE|shots|47b_komainu_close|mean 79.1
+PROBE|shots|49_chochin|mean 110.6
+PROBE|shots|50_wall_details|mean 30.0
+PROBE|shots|51_hall_corner|mean 43.2
+PROBE|shots|52_platform_moss|mean 54.0
+PROBE|shots|53_pond_bridge|mean 20.7
+PROBE|shots|48_jizo|mean 44.2
+PROBE|shots|46_rainchain|mean 54.3
+PROBE|shots|54_charge|mean 68.0
+PROBE|shots|54b_charge_top|mean 51.8
+PROBE|charge|ChargeRageSigil|on True/True|pos (0.000, 0.000, 0.000)|scl (1.00, 1.00, 1.00)|rot (90, 0, 0)|bounds (1.00, 0.00, 1.00)|sh BladePath/GroundAdditive|tex sigil_rage_pulse 2048|tint RGBA(0.50, 0.50, 0.50, 0.00)|q 3000|mesh 4
+PROBE|charge|ChargePool|on True/True|pos (-1.000, 0.018, 0.000)|scl (4.60, 4.60, 1.00)|rot (90, 0, 0)|bounds (4.60, 0.00, 4.60)|sh BladePath/GroundAdditive|tex glow_pool 256|tint RGBA(0.38, 0.18, 0.50, 0.09)|q 3000|mesh 4
+PROBE|charge|ChargeRagePillar|on True/True|pos (0.000, 0.000, 0.000)|scl (1.00, 1.00, 1.00)|rot (0, 0, 0)|bounds (1.00, 1.00, 0.00)|sh BladePath/GroundAdditive|tex pillar_loop_rage 1024|tint RGBA(0.50, 0.50, 0.50, 0.00)|q 3000|mesh 4
+PROBE|charge|ChargePillar|on True/True|pos (-1.000, 0.000, 0.000)|scl (2.20, 2.75, 1.00)|rot (0, 355, 0)|bounds (2.19, 2.75, 0.18)|sh BladePath/GroundAdditive|tex pillar_loop_storm 1024|tint RGBA(0.50, 0.50, 0.50, 0.30)|q 3000|mesh 4
+PROBE|charge|ChargeSigil|on True/True|pos (-1.000, 0.022, 0.000)|scl (3.40, 3.40, 1.00)|rot (90, 0, 0)|bounds (3.40, 0.00, 3.40)|sh BladePath/GroundAdditive|tex sigil_storm 512|tint RGBA(0.50, 0.50, 0.50, 0.31)|q 3000|mesh 4
+PROBE|charge|ChargeSigilDraw|on True/True|pos (-1.000, 0.026, 0.000)|scl (3.94, 3.94, 1.00)|rot (90, 0, 0)|bounds (3.94, 0.00, 3.94)|sh BladePath/GroundAdditive|tex sigil_draw 1024|tint RGBA(0.42, 0.29, 0.50, 0.28)|q 3000|mesh 4
+PROBE|charge|ChargeSigilEarly|on True/True|pos (-1.000, 0.024, 0.000)|scl (2.11, 2.11, 1.00)|rot (90, 0, 0)|bounds (2.11, 0.00, 2.11)|sh BladePath/GroundAdditive|tex sigil_storm_early 512|tint RGBA(0.50, 0.50, 0.50, 0.00)|q 3000|mesh 4
+PROBE|shots|54c_charge_sigil_only|mean 49.4
+PROBE|shots|54d_charge_stage1|mean 66.8
+PROBE|shots|54e_charge_rage|mean 74.8
+PROBE|shots|54f_charge_rage_top|mean 55.3
+PROBE|shots|45_cat_sit|mean 129.0
+PROBE|shots|45b_cat_lick|mean 128.8
+PROBE|shots|45c_cat_wipe|mean 128.7
+PROBE|shots|45d_cat_walk|mean 127.0
+PROBE|shots|43_brazier|mean 61.8
+PROBE|shots|38_gate|mean 20.0
+PROBE|shots|39_garden|mean 16.8
+PROBE|shots|40_backcourt|mean 14.6
+PROBE|shots|20_snow|mean 117.5
+PROBE|shots|20b_snow_prints|mean 139.4
+PROBE|shots|20c_snow_arena|mean 113.0
+PROBE|shots|20d_snow_early|mean 92.7
+PROBE|shots|21_rain|mean 40.8
+PROBE|shots|21b_rain_arena|mean 26.5
+PROBE|shots|42_fog|mean 56.1
+PROBE|shots|42b_fog_arena|mean 49.6
+PROBE|shots|33_day|mean 85.3
+PROBE|shots|33b_day_arena|mean 82.3
+PROBE|shots|37b_reflect_day|mean 87.8
+PROBE|shots|39b_garden_day|mean 83.0
+PROBE|shots|40b_backcourt_day|mean 61.2
+PROBE|shots|41_dusk|mean 55.7
+PROBE|shots|41b_dusk_arena|mean 45.8
+PROBE|shots|41c_dusk_chochin|mean 88.9
+PROBE|shots|41d_dusk_hall_side|mean 42.8
+PROBE|shots|34_dawn|mean 82.3
+PROBE|shots|34b_dawn_arena|mean 73.6
+PROBE|shots|33c_dragonfly|mean 90.9
+PROBE|yaw|ronin|Enemy: anim hips 0 chest 0 | после hips -15 chest -15 | model 0 base 0 | walk 0.00 leg 1.00 keyed False Idle | hY -15 cY 0 yawS 0 | move 0.00 gnd True | Idle fps 10000
+PROBE|shots|22_enemy_ronin|mean 47.5
+PROBE|shots|23_ronin_duel|mean 48.2
+PROBE|shots|22c_ronin_wounds|mean 44.9
+PROBE|shots|22b_ronin_overhead|8 кадров, 1.10 с
+PROBE|shots|22d_ronin_thrust|8 кадров, 0.88 с
+PROBE|shots|12_walk_fwd|8 кадров
+PROBE|shots|13_walk_side|8 кадров
+PROBE|shots|14_deathblow|8 кадров
+PROBE|shots|16_deathblow_kesa|8 кадров
+PROBE|shots|17_deathblow_neck|8 кадров
+PROBE|shots|18_deathblow_rising|8 кадров
+PROBE|shots|30_deathblow_cross|8 кадров
+PROBE|shots|28_deathblow_plunge|8 кадров
+PROBE|shots|15_guard|ok
+PROBE|shots|29_enemy_stances|3 стойки
+PROBE|shots|32_drink|4 фазы
+PROBE|shots|19_dash_jump|ok
+PROBE|shots|5_parry|mean 80.0
+PROBE|shots|6_parry_late|mean 80.0
