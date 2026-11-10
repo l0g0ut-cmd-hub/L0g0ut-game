@@ -235,11 +235,18 @@ namespace BladePath
         // UI/fx_waterfall — 48 кадров 8×6 (96×256), собран из атласа владельца: вода непрерывно стекает вниз (две фазы сдвига
         // со скрещиванием, петля без шва, 24 к/с), контур неподвижен; fx_waterfall_fade — тот же, низ тает (ущелье).
         // UI/fx_splash — 24 кадра 6×4 (192×128), брызги у подножия, вперёд-назад 12 к/с.
+        // x, y верха, высота, ширина (пиксели широкой картины); лист: 0 — низ тает, 1 — тают верх и низ (средние ступени);
+        // прозрачность; подножие: 0 — ничего, 1 — брызги, 2 — водяная пыль ущелья. Большой каскад — три ступени по нарисованной воде.
         static readonly Vector4[][] SheetFalls =
         {
-            new[] { new Vector4(283, 72, 95, 44), new Vector4(312, 160, 130, 74), new Vector4(405, 372, 38, 24), new Vector4(556, 552, 52, 28), new Vector4(2284, 425, 190, 56) },
+            new[] { new Vector4(281, 74, 100, 36), new Vector4(298, 158, 70, 46), new Vector4(318, 205, 90, 58),
+                    new Vector4(405, 370, 44, 22), new Vector4(556, 550, 58, 26), new Vector4(2284, 425, 190, 56) },
         };
-        static readonly bool[][] SheetFoam = { new[] { true, true, true, true, false } };   // в ущелье пены нет — вода тает в тумане
+        static readonly Vector3[][] SheetFallLook =   // лист, прозрачность, подножие
+        {
+            new[] { new Vector3(0, 0.62f, 0), new Vector3(1, 0.55f, 0), new Vector3(1, 0.55f, 1),
+                    new Vector3(0, 0.6f, 1), new Vector3(0, 0.6f, 1), new Vector3(0, 0.9f, 2) },
+        };
 
         static void SheetFrame(Rect r, Texture2D tex, int cols, int rows, int frames, float age, float fps, float a, bool ping)
         {
@@ -254,24 +261,22 @@ namespace BladePath
         static void DrawSheetFalls(int region, Rect view, float u0, float uw, float t, Texture2D mist)
         {
             if (region >= SheetFalls.Length) return;
-            Texture2D wf = UiKit.Tex("UI/fx_waterfall"), wfFade = UiKit.Tex("UI/fx_waterfall_fade"), sp = UiKit.Tex("UI/fx_splash");
-            if (wf == null) return;
+            Texture2D wfFade = UiKit.Tex("UI/fx_waterfall_fade"), wfMid = UiKit.Tex("UI/fx_waterfall_mid"), sp = UiKit.Tex("UI/fx_splash");
+            if (wfFade == null) return;
             float px = view.height / MapGeom.TexH, texW = MapGeom.TexW[Mathf.Clamp(region, 0, MapGeom.TexW.Length - 1)];
-            Vector4[] fs = SheetFalls[region];
+            Vector4[] fs = SheetFalls[region]; Vector3[] look = SheetFallLook[region];
             for (int i = 0; i < fs.Length; i++)
             {
-                Vector4 f = fs[i];
+                Vector4 f = fs[i]; Vector3 lk = look[i];
                 float x = view.x + (f.x / texW - u0) / uw * view.width, y = f.y * px, h = f.z * px, w = f.w * px;
                 if (x < view.x - 200f || x > view.xMax + 200f) continue;
-                bool foam = SheetFoam[region][i];
-                float ww = w * 1.15f;
-                SheetFrame(new Rect(x - ww * 0.5f, y, ww, h), foam || wfFade == null ? wf : wfFade, 8, 6, 48, t + i * 0.37f, 24f, 0.9f, false);
-                if (foam && sp != null)
+                SheetFrame(new Rect(x - w * 0.5f, y, w, h), lk.x > 0.5f && wfMid != null ? wfMid : wfFade, 8, 6, 48, t + i * 0.37f, 24f, lk.y, false);
+                if (lk.z > 0.5f && lk.z < 1.5f && sp != null)
                 {
-                    float sw = w * 2.6f, sh = sw * 128f / 192f;
-                    SheetFrame(new Rect(x - sw * 0.5f, y + h - sh * 0.55f, sw, sh), sp, 6, 4, 24, t + i * 0.53f, 12f, 0.75f, true);
+                    float sw = w * 1.9f, sh = sw * 128f / 192f;
+                    SheetFrame(new Rect(x - sw * 0.5f, y + h - sh * 0.7f, sw, sh), sp, 6, 4, 24, t + i * 0.53f, 12f, 0.45f, true);
                 }
-                else if (!foam && mist != null)
+                else if (lk.z > 1.5f && mist != null)
                     for (int j = 0; j < 5; j++)   // водяная пыль из ущелья: клубы поднимаются и тают
                     {
                         float u = Mathf.Repeat(t * 0.18f + j / 5f, 1f), sz = w * (1.6f + 1.2f * u);
