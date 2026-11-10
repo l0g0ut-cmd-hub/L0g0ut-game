@@ -33,7 +33,7 @@ namespace BladePath
             {
                 // русло обведено по картине (каждые ~50 px, сверено наложением): прежняя ломаная срезала изгибы, блики ложились на камни и траву
                 rivers = new[] { new[] { V(155, 100), V(160, 115), V(167.5f, 142.5f), V(185, 165), V(200, 190), V(207.5f, 200), V(220, 220), V(240, 245), V(260, 260), V(277.5f, 287.5f), V(295, 312.5f), V(320, 330), V(345, 350), V(370, 365), V(400, 390), V(425, 415), V(440, 440), V(457.5f, 465), V(495, 487.5f), V(515, 512) } },
-                falls = new[] { new Vector4(148f / 768f, 30f / 512f, 70f / 512f, 26f / 768f), new Vector4(278f / 768f, 278f / 512f, 26f / 512f, 18f / 768f), new Vector4(200f / 768f, 185f / 512f, 25f / 512f, 14f / 768f) },
+                // водопады — покадровые (sheetFalls ниже), старые штрихи убраны
                 lights = new[] { L(421, 129, 6), L(560, 211, 6), L(437, 224, 6), L(510, 223, 6), L(370, 281, 6), L(478, 329, 6), L(243, 406, 6), L(253, 406, 6), L(536, 402, 5), L(544, 402, 5), L(555, 453, 5), L(561, 453, 5), L(581, 461, 5), L(586, 461, 5), L(655, 336, 5), L(659, 335, 4), L(69, 329, 5), L(77, 332, 5), L(88, 334, 5), L(111, 329, 5), L(117, 328, 5), L(69, 312, 5), L(30, 349, 5), L(37, 348, 5), L(43, 347, 5), L(54, 344, 5), L(125, 346, 5), L(135, 347, 5), L(142, 348, 5), L(148, 350, 5), L(153, 351, 5), L(161, 350, 5), L(169, 336, 5), L(58, 443, 5), L(67, 442, 5), L(72, 441, 5), L(90, 435, 5), L(93, 435, 5), L(634, 33, 5), L(647, 35, 5), L(633, 52, 5), L(645, 53, 5), L(655, 54, 5), L(685, 54, 5), L(695, 54, 5), L(632, 71, 5), L(647, 72, 5), L(665, 74, 5), L(684, 73, 5), L(702, 74, 5) },   // окна и фонари — точно по нарисованным (сверено на увеличении 9–10×)
             },
             new Region   // горы Они
@@ -104,7 +104,6 @@ namespace BladePath
                 });
                 r.steam = Join(r.steam, new[] { Q(2262, 700, 60, w), Q(2300, 810, 55, w) });   // туман в ущелье
                 // озеро сбрасывается в ущелье водопадом (на картине — белые струи у края озера), туман стекает по ущелью вниз
-                r.falls = Join(r.falls, new[] { new Vector4(2295f / w, 360f / 1024f, 120f / 1024f, 36f / w) });
                 r.flows = Join(r.flows, new[] { new[] { P(2290, 480, w), P(2300, 570, w), P(2320, 670, w), P(2330, 750, w), P(2350, 850, w), P(2370, 950, w), P(2380, 1024, w) } });
                 r.lake = Join(r.lake, new[] { P(2080, 240, w), P(2110, 300, w), P(2200, 290, w), P(2260, 320, w), P(2280, 265, w), P(2370, 315, w) });
                 // полосы тумана — на нарисованном тумане: у водопада, у замка, у руин, у бамбука, у кедра, за холмом святилища
@@ -232,6 +231,57 @@ namespace BladePath
             GUI.color = oc;
         }
 
+        // ---- водопады из листов (пока только лес теней): x, y верха, высота, ширина — пиксели широкой картины; пена у подножия
+        // UI/fx_waterfall — 48 кадров 8×6 (96×256), собран из атласа владельца: вода непрерывно стекает вниз (две фазы сдвига
+        // со скрещиванием, петля без шва, 24 к/с), контур неподвижен; fx_waterfall_fade — тот же, низ тает (ущелье).
+        // UI/fx_splash — 24 кадра 6×4 (192×128), брызги у подножия, вперёд-назад 12 к/с.
+        static readonly Vector4[][] SheetFalls =
+        {
+            new[] { new Vector4(283, 72, 95, 44), new Vector4(312, 160, 130, 74), new Vector4(405, 372, 38, 24), new Vector4(556, 552, 52, 28), new Vector4(2284, 425, 190, 56) },
+        };
+        static readonly bool[][] SheetFoam = { new[] { true, true, true, true, false } };   // в ущелье пены нет — вода тает в тумане
+
+        static void SheetFrame(Rect r, Texture2D tex, int cols, int rows, int frames, float age, float fps, float a, bool ping)
+        {
+            float f = age * fps; int span = ping ? frames * 2 - 2 : frames;
+            int i0 = (int)Mathf.Repeat(Mathf.Floor(f), span), i1 = (i0 + 1) % span; float kk = f - Mathf.Floor(f);
+            if (ping) { if (i0 >= frames) i0 = span - i0; if (i1 >= frames) i1 = span - i1; }
+            GUI.color = new Color(1f, 1f, 1f, a * (1f - kk)); GUI.DrawTextureWithTexCoords(r, tex, SheetCell(i0, cols, rows));
+            if (kk > 0.01f) { GUI.color = new Color(1f, 1f, 1f, a * kk); GUI.DrawTextureWithTexCoords(r, tex, SheetCell(i1, cols, rows)); }
+        }
+        static Rect SheetCell(int k, int cols, int rows) { int c = k % cols, rw = k / cols; return new Rect(c / (float)cols, 1f - (rw + 1) / (float)rows, 1f / cols, 1f / rows); }
+
+        static void DrawSheetFalls(int region, Rect view, float u0, float uw, float t, Texture2D mist)
+        {
+            if (region >= SheetFalls.Length) return;
+            Texture2D wf = UiKit.Tex("UI/fx_waterfall"), wfFade = UiKit.Tex("UI/fx_waterfall_fade"), sp = UiKit.Tex("UI/fx_splash");
+            if (wf == null) return;
+            float px = view.height / MapGeom.TexH, texW = MapGeom.TexW[Mathf.Clamp(region, 0, MapGeom.TexW.Length - 1)];
+            Vector4[] fs = SheetFalls[region];
+            for (int i = 0; i < fs.Length; i++)
+            {
+                Vector4 f = fs[i];
+                float x = view.x + (f.x / texW - u0) / uw * view.width, y = f.y * px, h = f.z * px, w = f.w * px;
+                if (x < view.x - 200f || x > view.xMax + 200f) continue;
+                bool foam = SheetFoam[region][i];
+                float ww = w * 1.15f;
+                SheetFrame(new Rect(x - ww * 0.5f, y, ww, h), foam || wfFade == null ? wf : wfFade, 8, 6, 48, t + i * 0.37f, 24f, 0.9f, false);
+                if (foam && sp != null)
+                {
+                    float sw = w * 2.6f, sh = sw * 128f / 192f;
+                    SheetFrame(new Rect(x - sw * 0.5f, y + h - sh * 0.55f, sw, sh), sp, 6, 4, 24, t + i * 0.53f, 12f, 0.75f, true);
+                }
+                else if (!foam && mist != null)
+                    for (int j = 0; j < 5; j++)   // водяная пыль из ущелья: клубы поднимаются и тают
+                    {
+                        float u = Mathf.Repeat(t * 0.18f + j / 5f, 1f), sz = w * (1.6f + 1.2f * u);
+                        float cx = x + Mathf.Sin(t * 0.5f + j * 1.7f) * w * 0.35f, cy = y + h * (0.95f - 0.35f * u);
+                        GUI.color = new Color(0.9f, 0.91f, 0.95f, 0.32f * Mathf.Sin(u * Mathf.PI));
+                        GUI.DrawTexture(new Rect(cx - sz * 0.5f, cy - sz * 0.3f, sz, sz * 0.6f), mist);
+                    }
+            }
+        }
+
         public static void Draw(int region, Rect view, float u0, float uw)
         {
             if (Event.current.type != EventType.Repaint || DuelManager.Gfx == 0) return;
@@ -274,6 +324,7 @@ namespace BladePath
                     }
                 }
             }
+            DrawSheetFalls(region, view, u0, uw, t, mist);
             // водопады: струи срываются вниз, у подножия — пена
             foreach (Vector4 f in r.falls)
             {

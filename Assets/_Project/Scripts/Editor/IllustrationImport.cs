@@ -19,7 +19,7 @@ namespace BladePath.EditorTools
             // картины в окнах карты (2026-11-09): враги и NPC 683×1024 уходили в 512×1024 — окно строилось по этим размерам,
             // и картина выходила сплюснутой по ширине на четверть; фоны привала, игорного дома, таверны, конца области — тоже
             if (name.StartsWith("enemy_full_") || name.StartsWith("npc_") || name.StartsWith("region_clear_") || name == "camp" || name == "dice_bg" || name == "tavern") return true;
-            if (name.StartsWith("fx_ui_") || name == "fx_campfire" || name == "fx_mist" || name == "map_daytime" || name.StartsWith("shop_") || name == "items4" || name == "items5" || name == "items6") return true;   // листы кадров — без растяжения до степени двойки (кадры не мылятся)
+            if (name.StartsWith("fx_ui_") || name == "fx_campfire" || name == "fx_mist" || name == "map_daytime" || name.StartsWith("shop_") || name == "items4" || name == "items5" || name == "items6" || name.StartsWith("fx_waterfall") || name == "fx_splash") return true;   // листы кадров — без растяжения до степени двойки (кадры не мылятся)
             if (name.StartsWith("event_"))
             {
                 int n;
