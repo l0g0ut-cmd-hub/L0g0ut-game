@@ -240,12 +240,12 @@ namespace BladePath
         static readonly Vector4[][] SheetFalls =
         {
             new[] { new Vector4(281, 74, 100, 36), new Vector4(298, 158, 70, 46), new Vector4(318, 205, 90, 58),
-                    new Vector4(405, 370, 44, 22), new Vector4(556, 550, 58, 26), new Vector4(2284, 425, 190, 56) },
+                    new Vector4(405, 370, 44, 22), new Vector4(556, 550, 58, 26), new Vector4(2280, 397, 218, 62) },
         };
-        static readonly Vector3[][] SheetFallLook =   // лист, прозрачность, подножие
+        static readonly Vector3[][] SheetFallLook =   // лист (0 fade, 1 mid, 2 lip — перелив из ручья), прозрачность, подножие
         {
             new[] { new Vector3(0, 0.62f, 0), new Vector3(1, 0.55f, 0), new Vector3(1, 0.55f, 1),
-                    new Vector3(0, 0.6f, 1), new Vector3(0, 0.6f, 1), new Vector3(0, 0.9f, 2) },
+                    new Vector3(0, 0.6f, 1), new Vector3(0, 0.6f, 1), new Vector3(2, 0.9f, 2) },
         };
 
         static void SheetFrame(Rect r, Texture2D tex, int cols, int rows, int frames, float age, float fps, float a, bool ping)
@@ -253,7 +253,8 @@ namespace BladePath
             float f = age * fps; int span = ping ? frames * 2 - 2 : frames;
             int i0 = (int)Mathf.Repeat(Mathf.Floor(f), span), i1 = (i0 + 1) % span; float kk = f - Mathf.Floor(f);
             if (ping) { if (i0 >= frames) i0 = span - i0; if (i1 >= frames) i1 = span - i1; }
-            GUI.color = new Color(1f, 1f, 1f, a * (1f - kk)); GUI.DrawTextureWithTexCoords(r, tex, SheetCell(i0, cols, rows));
+            // текущий кадр целиком, следующий проявляется поверх: прозрачность не проседает посреди перехода (не мерцает)
+            GUI.color = new Color(1f, 1f, 1f, a); GUI.DrawTextureWithTexCoords(r, tex, SheetCell(i0, cols, rows));
             if (kk > 0.01f) { GUI.color = new Color(1f, 1f, 1f, a * kk); GUI.DrawTextureWithTexCoords(r, tex, SheetCell(i1, cols, rows)); }
         }
         static Rect SheetCell(int k, int cols, int rows) { int c = k % cols, rw = k / cols; return new Rect(c / (float)cols, 1f - (rw + 1) / (float)rows, 1f / cols, 1f / rows); }
@@ -261,16 +262,25 @@ namespace BladePath
         static void DrawSheetFalls(int region, Rect view, float u0, float uw, float t, Texture2D mist)
         {
             if (region >= SheetFalls.Length) return;
-            Texture2D wfFade = UiKit.Tex("UI/fx_waterfall_fade"), wfMid = UiKit.Tex("UI/fx_waterfall_mid"), sp = UiKit.Tex("UI/fx_splash");
+            Texture2D wfFade = UiKit.Tex("UI/fx_waterfall_fade"), wfMid = UiKit.Tex("UI/fx_waterfall_mid"), wfLip = UiKit.Tex("UI/fx_waterfall_lip"), sp = UiKit.Tex("UI/fx_splash");
             if (wfFade == null) return;
             float px = view.height / MapGeom.TexH, texW = MapGeom.TexW[Mathf.Clamp(region, 0, MapGeom.TexW.Length - 1)];
+            if (region == 0)
+            {
+                // нарисованный ручей из озера бежит к кромке водопада в ущелье (блики вдоль русла, петля 36 кадров)
+                Texture2D st = UiKit.Tex("UI/fx_stream");
+                float sx = view.x + (2226f / texW - u0) / uw * view.width;
+                if (st != null && sx > view.x - 200f && sx < view.xMax + 200f)
+                    SheetFrame(new Rect(sx, 370f * px, 76f * px, 42f * px), st, 6, 6, 36, t, 24f, 1f, false);
+            }
             Vector4[] fs = SheetFalls[region]; Vector3[] look = SheetFallLook[region];
             for (int i = 0; i < fs.Length; i++)
             {
                 Vector4 f = fs[i]; Vector3 lk = look[i];
                 float x = view.x + (f.x / texW - u0) / uw * view.width, y = f.y * px, h = f.z * px, w = f.w * px;
                 if (x < view.x - 200f || x > view.xMax + 200f) continue;
-                SheetFrame(new Rect(x - w * 0.5f, y, w, h), lk.x > 0.5f && wfMid != null ? wfMid : wfFade, 8, 6, 48, t + i * 0.37f, 24f, lk.y, false);
+                Texture2D sheet = lk.x > 1.5f && wfLip != null ? wfLip : lk.x > 0.5f && wfMid != null ? wfMid : wfFade;
+                SheetFrame(new Rect(x - w * 0.5f, y, w, h), sheet, 6, 6, 36, t + i * 0.37f, 24f, lk.y, false);   // бесшовная петля 36 кадров
                 if (lk.z > 0.5f && lk.z < 1.5f && sp != null)
                 {
                     float sw = w * 1.9f, sh = sw * 128f / 192f;
