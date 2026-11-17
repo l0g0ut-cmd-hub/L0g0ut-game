@@ -85,7 +85,7 @@ def do(r):
         log("  баланс:", json.dumps(call("GET", "/v1/balance"), ensure_ascii=False)); return
     if a == "text":
         b = {"mode": "preview", "prompt": r["prompt"], "should_remesh": True}
-        opt(b, r, "art_style"); opt(b, r, "ai_model"); opt(b, r, "topology"); opt(b, r, "polycount", "target_polycount"); opt(b, r, "symmetry_mode")
+        opt(b, r, "art_style"); opt(b, r, "ai_model"); opt(b, r, "topology"); opt(b, r, "polycount", "target_polycount"); opt(b, r, "symmetry_mode"); opt(b, r, "pose_mode")
         tid = call("POST", "/v2/text-to-3d", b)["result"]; log("  черновик:", tid)
         j = wait("/v2/text-to-3d", tid); save(name, j, "preview")
         if r.get("refine", True) and j.get("status") == "SUCCEEDED":
