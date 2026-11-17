@@ -1,0 +1,3 @@
+== balance model
+  баланс: {"balance": 473, "monthly_credits": 473, "permanent_credits": 0, "monthly_resets_at": 1797218968000}
+  остаток кредитов: 473
