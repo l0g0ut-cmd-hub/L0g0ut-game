@@ -1,0 +1,42 @@
+name: Meshy — создать модель
+
+# Заявка tools/meshy/request.json → Meshy API (ключ — секрет MESHY_KEY) → модели в ветку meshy-gen (папка = имя задачи).
+# Запуск: пуш в ветку meshy-request или вручную. Ключ в журнал не выводится.
+on:
+  workflow_dispatch:
+  push:
+    branches: [meshy-request]
+
+permissions:
+  contents: write
+
+concurrency: meshy-generate
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Meshy API
+        env:
+          MESHY_KEY: ${{ secrets.MESHY_KEY }}
+        run: python3 tools/meshy_api.py tools/meshy/request.json "$RUNNER_TEMP/out"
+
+      - name: Publish to meshy-gen branch
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          D="$RUNNER_TEMP/gen"; rm -rf "$D"
+          URL="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git ls-remote --exit-code "$URL" meshy-gen >/dev/null 2>&1; then git clone -q --depth 1 -b meshy-gen "$URL" "$D"
+          else mkdir -p "$D"; cd "$D"; git init -q; git checkout -q -b meshy-gen; cd -; fi
+          mkdir -p "$RUNNER_TEMP/out"; cp -r "$RUNNER_TEMP/out/." "$D/"
+          cp tools/meshy/request.json "$D/last_request.json"
+          cd "$D"
+          git -c user.name=ci -c user.email=ci@local add -A
+          git -c user.name=ci -c user.email=ci@local commit -qm "meshy run ${GITHUB_RUN_NUMBER}" || true
+          git push -q "$URL" HEAD:meshy-gen
