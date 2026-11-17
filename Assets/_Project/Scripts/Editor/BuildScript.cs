@@ -84,6 +84,7 @@ namespace BladePath.EditorTools
             PlayerSettings.bundleVersion = "0.2.0";
             PlayerSettings.Android.bundleVersionCode = 2;
             SetIcon();
+            FixMenuPosters();
 
             PlayerSettings.SetApplicationIdentifier(NamedBuildTarget.Android, "com.bladepath.prototype");
             PlayerSettings.SetScriptingBackend(NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
@@ -133,6 +134,32 @@ namespace BladePath.EditorTools
             if (md != null) { md.intValue = 2; Debug.Log("BladePath: meshDeformation = GPU (batched)"); }   // 0 CPU, 1 GPU, 2 GPU batched
             so.ApplyModifiedProperties();
             AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>
+        /// Заставки меню (первый/последний кадр ролика) — без сжатия, без растяжения до 1024×512 и без мип-уровней:
+        /// иначе при смене заставки на видео картинка сдвигалась на ~2 px ролика и меняла цвет («дёргалась»).
+        /// </summary>
+        static void FixMenuPosters()
+        {
+            foreach (string p in new[] { "Assets/_Project/Art/menu_poster_first.jpg", "Assets/_Project/Art/menu_poster_last.jpg" })
+            {
+                try
+                {
+                    TextureImporter ti = AssetImporter.GetAtPath(p) as TextureImporter;
+                    if (ti == null) continue;
+                    if (ti.textureCompression != TextureImporterCompression.Uncompressed || ti.npotScale != TextureImporterNPOTScale.None || ti.mipmapEnabled)
+                    {
+                        ti.textureCompression = TextureImporterCompression.Uncompressed;
+                        ti.npotScale = TextureImporterNPOTScale.None;
+                        ti.mipmapEnabled = false;
+                        ti.filterMode = FilterMode.Bilinear;
+                        ti.wrapMode = TextureWrapMode.Clamp;
+                        ti.SaveAndReimport();
+                    }
+                }
+                catch (System.Exception e) { Debug.LogWarning("BladePath: заставка меню " + p + ": " + e.Message); }
+            }
         }
 
         /// <summary>Иконка приложения (tools/gen_icon.py → Assets/_Project/Art/icon.png).</summary>

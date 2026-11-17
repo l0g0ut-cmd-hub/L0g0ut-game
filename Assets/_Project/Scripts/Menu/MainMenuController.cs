@@ -23,6 +23,7 @@ namespace BladePath
         VideoPlayer player;
         RenderTexture rt;
         bool hasFrame;           // видео уже отдало хотя бы один кадр в RenderTexture
+        float frameAt = -1f;     // когда появился первый кадр — от него плавный переход заставка → видео
         bool videoFailed;        // видео не удалось воспроизвести — тогда показываем постер
         bool videoEnded;
         bool animated = true;
@@ -198,7 +199,22 @@ namespace BladePath
             if (hasFrame && !videoFailed) tex = rt;
             else if ((videoFailed || !animated) && posterLast != null) tex = posterLast;
             else tex = posterFirst != null ? (Texture)posterFirst : Texture2D.blackTexture;
-            GUI.DrawTexture(vr, tex, ScaleMode.StretchToFill, false);
+            // Смена заставки на видео — не рывком, а наплывом за 0,25 с (заставка снизу, видео проявляется поверх).
+            float fadeIn = 1f;
+            if (tex == rt && posterFirst != null)
+            {
+                if (frameAt < 0f) frameAt = Time.unscaledTime;
+                fadeIn = Mathf.Clamp01((Time.unscaledTime - frameAt) / 0.25f);
+                if (fadeIn < 1f) GUI.DrawTexture(vr, posterFirst, ScaleMode.StretchToFill, false);
+            }
+            if (fadeIn < 1f)
+            {
+                Color oldVc = GUI.color;
+                GUI.color = new Color(oldVc.r, oldVc.g, oldVc.b, oldVc.a * fadeIn);
+                GUI.DrawTexture(vr, tex, ScaleMode.StretchToFill, true);   // альфа учитывается только на время наплыва
+                GUI.color = oldVc;
+            }
+            else GUI.DrawTexture(vr, tex, ScaleMode.StretchToFill, false);
             // Add decorative artwork ONLY inside the left/right letterbox bars.
             // The original 852x480 video, painted menu and click targets remain
             // pixel-perfect, untouched and in their original positions.
