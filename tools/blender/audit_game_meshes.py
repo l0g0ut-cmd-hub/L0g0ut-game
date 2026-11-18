@@ -41,12 +41,17 @@ for ix, path in enumerate(paths):
             else:
                 bpy.ops.import_scene.obj(filepath=os.path.abspath(path))
         models = [ob for ob in bpy.context.scene.objects if ob.type == "MESH"]
-        item = dict(path=path, objects=len(models), tris=0, open_edges=0,
+        item = dict(path=path, objects=len(models), tris=0, open_edges=0, raw_open_edges=0,
                     total_edges=0, nonmanifold_edges=0, loose_edges=0, components=0,
                     loops=[], meshes=[], error=None)
         for ob in models:
             bm = bmesh.new()
             bm.from_mesh(ob.data)
+            raw_open = sum(1 for e in bm.edges if e.is_boundary)
+            # UV/hard-normal splits duplicate vertices at identical positions.
+            # They are not real missing geometry; weld on an in-memory copy ONLY.
+            tolerance = max(1e-8, max(ob.dimensions) * 1e-6)
+            bmesh.ops.remove_doubles(bm, verts=list(bm.verts), dist=tolerance)
             bm.verts.ensure_lookup_table()
             bm.edges.ensure_lookup_table()
             bm.faces.ensure_lookup_table()
@@ -110,13 +115,14 @@ for ix, path in enumerate(paths):
             loops.sort(key=lambda L: L["relative_area"])
             mesh = dict(name=ob.name, verts=len(bm.verts), tris=tris,
                         total_edges=len(bm.edges), boundary_edges=len(boundaries),
-                        nonmanifold_edges=mult, loose_edges=loose,
+                        nonmanifold_edges=mult, loose_edges=loose, raw_boundary_edges=raw_open,
                         boundary_loops=len(loops), open_chains=len(chains),
                         loops=loops[:120])
             item["meshes"].append(mesh)
             item["tris"] += tris
             item["total_edges"] += len(bm.edges)
             item["open_edges"] += len(boundaries)
+            item["raw_open_edges"] += raw_open
             item["nonmanifold_edges"] += mult
             item["loose_edges"] += loose
             item["components"] += len(loops)
@@ -124,7 +130,7 @@ for ix, path in enumerate(paths):
             bm.free()
         report.append(item)
         print("MODEL_AUDIT_RESULT", json.dumps(dict(path=path, objects=item["objects"],
-              tris=item["tris"], open_edges=item["open_edges"], loops=item["components"],
+              tris=item["tris"], raw_open_edges=item["raw_open_edges"], geometric_open_edges=item["open_edges"], loops=item["components"],
               nonmanifold=item["nonmanifold_edges"])), flush=True)
     except Exception as ex:
         report.append(dict(path=path, error=str(ex), traceback=traceback.format_exc()))
