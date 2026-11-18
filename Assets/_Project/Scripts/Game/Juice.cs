@@ -67,6 +67,10 @@ namespace BladePath
             swish = Sampled(swish, "swish", 6); whoosh = Sampled(whoosh, "swish", 6);
             hit = Sampled(hit, "hit", 4); hitHeavy = Sampled(hitHeavy, "hitheavy", 3); stab = Sampled(stab, "stab", 1);
             clang = Sampled(clang, "clang", 10);   // звон клинка о клинок (StarNinjas, CC0)
+            // тайко — запись (как в меню), а не синтез: синтезированный барабан 62 Гц на низком тоне (нокдаун, жизнь врага,
+            // ярость) гудел как пердёж (2026-11-18)
+            AudioClip taikoRec = Resources.Load<AudioClip>("Audio/ui_taiko_heavy") ?? Resources.Load<AudioClip>("Audio/ui_taiko");
+            if (taikoRec != null) { drum = taikoRec; sampled[drum] = new[] { drum }; }
             step = Sampled(step, "step", 5); stepSnow = Sampled(stepSnow, "stepsnow", 5);
             stepVoice = gameObject.AddComponent<AudioSource>(); stepVoice.spatialBlend = 0f; stepVoice.playOnAwake = false;   // шаги не отнимают голоса у ударов
             ambient = gameObject.AddComponent<AudioSource>();
@@ -473,7 +477,8 @@ namespace BladePath
         }
         void KiaiFor(int who, SwingProfile p)
         {
-            if (p == null || who < 0 || who >= kiaiAt.Length || !HeroVoice(who)) return;
+            // синтезированный киай героя звучал как женское «ах» (на добивании и нокдауне врага) — голосов нет (2026-11-18)
+            return;
             bool db = p.type.ToString().StartsWith("Deathblow");
             bool heavy = p.type == AttackType.Overhead || p.type == AttackType.JumpStrike;
             if (!(db || p.type == AttackType.Charge || (heavy && Random.value < 0.5f))) return;
@@ -489,7 +494,7 @@ namespace BladePath
             FighterController f = at.GetComponentInParent<FighterController>();
             int who = -1;
             for (int i = 0; i < tracked.Count; i++) if (tracked[i].f == f && f != null) { who = i; break; }
-            if (who < 0 || !HeroVoice(who)) return;
+            return;   // синтезированные стоны героя — убраны вместе с киай (2026-11-18)
             if (kill) { Play(who == 0 ? dieA : dieB, 0.45f, Random.Range(0.97f, 1.03f)); return; }
             if (strength < 0.5f || Random.value > 0.6f) return;
             Play(who == 0 ? gruntA : gruntB, 0.36f, Random.Range(0.94f, 1.06f));
@@ -1167,7 +1172,7 @@ namespace BladePath
             var rend = g.GetComponent<ParticleSystemRenderer>();
             rend.material = softMat; rend.renderMode = ParticleSystemRenderMode.Stretch; rend.velocityScale = 0.025f; rend.lengthScale = 1.3f;
             ps.Play();
-            Play(hitHeavy, 1f, 0.55f);
+            Play(hitHeavy, 0.8f, 0.92f);   // на тоне 0,55 запись удара гудела низко и глухо
             StartCoroutine(FountainDecals(neck, seconds, battleFxGeneration));
             StartCoroutine(StopBleed(ps, g, seconds));
         }
