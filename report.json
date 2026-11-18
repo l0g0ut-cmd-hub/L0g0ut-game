@@ -1,0 +1,104 @@
+{
+ "Akiko_Player": {
+  "tris": 3034,
+  "edges": 7657,
+  "open_edges": 6212,
+  "open_pct": 81.13
+ },
+ "Ashigaru_Enemy": {
+  "tris": 30968,
+  "edges": 72784,
+  "open_edges": 52664,
+  "open_pct": 72.36
+ },
+ "Bandit_Enemy": {
+  "tris": 30998,
+  "edges": 71087,
+  "open_edges": 49180,
+  "open_pct": 69.18
+ },
+ "Dzin_Player": {
+  "tris": 9447,
+  "edges": 17772,
+  "open_edges": 7203,
+  "open_pct": 40.53
+ },
+ "Fallen_Enemy": {
+  "tris": 9069,
+  "edges": 16958,
+  "open_edges": 6709,
+  "open_pct": 39.56
+ },
+ "Hero3_Player": {
+  "tris": 50000,
+  "edges": 75000,
+  "open_edges": 0,
+  "open_pct": 0.0
+ },
+ "Kitsune_Enemy": {
+  "tris": 31010,
+  "edges": 69829,
+  "open_edges": 46628,
+  "open_pct": 66.77
+ },
+ "Oni_Enemy": {
+  "tris": 30727,
+  "edges": 75296,
+  "open_edges": 58411,
+  "open_pct": 77.58
+ },
+ "Ren_Player": {
+  "tris": 8995,
+  "edges": 16772,
+  "open_edges": 6559,
+  "open_pct": 39.11
+ },
+ "Ronin_Player": {
+  "tris": 60000,
+  "edges": 113912,
+  "open_edges": 47824,
+  "open_pct": 41.98
+ },
+ "Samurai2_Player": {
+  "tris": 71152,
+  "edges": 128029,
+  "open_edges": 42602,
+  "open_pct": 33.28
+ },
+ "Samurai_Hero": {
+  "tris": 14504,
+  "edges": 14514,
+  "open_edges": 20,
+  "open_pct": 0.14
+ },
+ "Samurai_Shadow": {
+  "tris": 78047,
+  "edges": 79162,
+  "open_edges": 1649,
+  "open_pct": 2.08
+ },
+ "Samurai_Undead": {
+  "tris": 17320,
+  "edges": 17463,
+  "open_edges": 20,
+  "open_pct": 0.11
+ },
+ "Shadow_Enemy": {
+  "tris": 30966,
+  "edges": 71173,
+  "open_edges": 49448,
+  "open_pct": 69.48
+ },
+ "Shogun_Enemy": {
+  "tris": 10234,
+  "edges": 25059,
+  "open_edges": 19416,
+  "open_pct": 77.48
+ },
+ "Yamabushi_Enemy": {
+  "tris": 31093,
+  "edges": 65617,
+  "open_edges": 37955,
+  "open_pct": 57.84
+ }
+}
