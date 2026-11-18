@@ -12,6 +12,7 @@ import json
 import math
 import os
 import traceback
+from collections import defaultdict
 
 SRC = "Assets/_Project/Models"
 DEST = "build/model-holes/report.json"
@@ -43,8 +44,39 @@ for ix, path in enumerate(paths):
         models = [ob for ob in bpy.context.scene.objects if ob.type == "MESH"]
         item = dict(path=path, objects=len(models), tris=0, open_edges=0, raw_open_edges=0,
                     total_edges=0, nonmanifold_edges=0, loose_edges=0, components=0,
+                    skin_seam_groups=0, skin_weight_mismatch=0, severe_skin_weight_mismatch=0,
                     loops=[], meshes=[], error=None)
         for ob in models:
+            # Coincident skin vertices on UV/material seams must move together.
+            # Report weight discontinuities that can become visible cracks when
+            # the skeleton bends. This is diagnostic ONLY; never change weights.
+            geometry_seams = defaultdict(list)
+            tol = max(1e-8, max(ob.dimensions) * 1e-6)
+            for vi, vert in enumerate(ob.data.vertices):
+                key = tuple(round(p / tol) for p in vert.co)
+                geometry_seams[key].append(vi)
+            groups = [ids for ids in geometry_seams.values() if len(ids) > 1]
+            mismatched = severe = 0
+            largest_divergences = []
+            if ob.vertex_groups:
+                def get_weights(vi):
+                    return {g.group: g.weight for g in ob.data.vertices[vi].groups}
+                for ids in groups:
+                    reference = get_weights(ids[0])
+                    biggest = 0.0
+                    for vi in ids[1:]:
+                        w = get_weights(vi)
+                        div = 0.5 * sum(abs(reference.get(b, 0.0) - w.get(b, 0.0))
+                                        for b in reference.keys() | w.keys())
+                        biggest = max(biggest, div)
+                    if biggest > 0.15:
+                        mismatched += 1
+                        if biggest > 0.5: severe += 1
+                        if biggest > 0.5 and len(largest_divergences) < 8:
+                            largest_divergences.append(dict(pos=[round(v, 4) for v in ob.data.vertices[ids[0]].co], divergence=round(biggest, 3)))
+            item["skin_seam_groups"] += len(groups)
+            item["skin_weight_mismatch"] += mismatched
+            item["severe_skin_weight_mismatch"] += severe
             bm = bmesh.new()
             bm.from_mesh(ob.data)
             raw_open = sum(1 for e in bm.edges if e.is_boundary)
@@ -117,7 +149,8 @@ for ix, path in enumerate(paths):
                         total_edges=len(bm.edges), boundary_edges=len(boundaries),
                         nonmanifold_edges=mult, loose_edges=loose, raw_boundary_edges=raw_open,
                         boundary_loops=len(loops), open_chains=len(chains),
-                        loops=loops[:120])
+                        loops=loops[:120], skin_seam_groups=len(groups), skin_weight_mismatch=mismatched,
+                        severe_skin_weight_mismatch=severe, skin_seam_samples=largest_divergences)
             item["meshes"].append(mesh)
             item["tris"] += tris
             item["total_edges"] += len(bm.edges)
@@ -131,7 +164,8 @@ for ix, path in enumerate(paths):
         report.append(item)
         print("MODEL_AUDIT_RESULT", json.dumps(dict(path=path, objects=item["objects"],
               tris=item["tris"], raw_open_edges=item["raw_open_edges"], geometric_open_edges=item["open_edges"], loops=item["components"],
-              nonmanifold=item["nonmanifold_edges"])), flush=True)
+              nonmanifold=item["nonmanifold_edges"], seam_groups=item["skin_seam_groups"],
+              skin_mismatch=item["skin_weight_mismatch"], severe_skin_mismatch=item["severe_skin_weight_mismatch"])), flush=True)
     except Exception as ex:
         report.append(dict(path=path, error=str(ex), traceback=traceback.format_exc()))
         print("MODEL_AUDIT_ERROR", path, str(ex), flush=True)
