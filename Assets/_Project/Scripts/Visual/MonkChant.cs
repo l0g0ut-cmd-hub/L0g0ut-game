@@ -18,6 +18,10 @@ namespace BladePath
         const float Beat = 0.56f;   // ~107 ударов в минуту
         const int Beats = 16;
 
+        // temple_monk_chant disabled: this component is audio-only, so do not
+        // start its background synthesizer or playback. Temple visuals are untouched.
+        void Awake() { enabled = false; }
+
         void Start()
         {
             src = gameObject.AddComponent<AudioSource>();
