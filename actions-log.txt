@@ -87,6 +87,8 @@ e) Кнопки звука в паузе боя перенесены в меню
 
 7. ХРОНОЛОГИЯ (свежие сверху)
 -----------------------------
+2026-11-18 04:10  Картины врагов Леса теней от владельца (ChatGPT) вместо временных: UI/enemy_full_{bandit,yamabushi,ashigaru,kitsune}
+                  (684×1024, как у остальных картин врагов).
 2026-11-18 03:45  Противники Леса теней (разнообразие первой карты). Концепт-арты — владелец (ChatGPT, tools/meshy/in/*.png);
                   Meshy image-to-3d (ai_model latest, a-pose, 30k) + риг Meshy через API → tools/models/meshy/<имя>_rig.fbx
                   (+ albedo из GLB) → build-meshy-models.yml → Assets/_Project/Models/{Bandit,Yamabushi,Ashigaru,Kitsune}_Enemy.fbx,
