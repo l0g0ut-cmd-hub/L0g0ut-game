@@ -44,6 +44,11 @@ jobs:
           build shadow Shadow_Enemy 1.74 0.990 0.00 0.17
           build dzin   Dzin_Player  1.72 0.957 0.02 0.17 1.56
           build ren    Ren_Player   1.70 0.930 0.00 0.16 1.60
+          # противники Леса теней (по концепт-артам владельца, Meshy image-to-3d + риг Meshy)
+          build bandit    Bandit_Enemy    1.68 0.920 0.01 0.17
+          build yamabushi Yamabushi_Enemy 1.76 0.965 0.03 0.18
+          build ashigaru  Ashigaru_Enemy  1.70 0.925 0.02 0.17
+          build kitsune   Kitsune_Enemy   1.64 0.955 0.00 0.16
 
       - name: Extract textures
         run: |
@@ -60,6 +65,10 @@ jobs:
           tex shadow Shadow
           tex dzin Dzin
           tex ren Ren
+          tex bandit Bandit
+          tex yamabushi Yamabushi
+          tex ashigaru Ashigaru
+          tex kitsune Kitsune
 
       - name: Publish to meshy-models branch
         if: always()
