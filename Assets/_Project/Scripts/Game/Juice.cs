@@ -57,7 +57,7 @@ namespace BladePath
             voices = new AudioSource[6];
             for (int i = 0; i < voices.Length; i++) { voices[i] = gameObject.AddComponent<AudioSource>(); voices[i].spatialBlend = 0f; voices[i].playOnAwake = false; }
             swish = Swish(); hit = Thump(0.22f, 140f, 55f, 0.55f); hitHeavy = Thump(0.34f, 100f, 38f, 0.9f); clang = Clang(); boom = Thump(1.0f, 70f, 28f, 0.8f);
-            drum = Drum(); heart = Heart(); whoosh = Swish(); step = Step(); growl = Growl(); stepWet = StepWet(); stepSnow = StepSnow(); danger = Danger_(); stab = Stab(); squelch = Squelch();
+            drum = Drum(); whoosh = Swish(); step = Step(); growl = Growl(); stepWet = StepWet(); stepSnow = StepSnow(); stab = Stab(); squelch = Squelch();
             kiaiA = Kiai(31, 1f, 1150f); kiaiB = Kiai(32, 0.86f, 1500f);
             // боль: короткое глухое «ых» (гласная «у/о»); смерть — долгий выдох с падающим тоном
             gruntA = Kiai(41, 0.82f, 880f, 470f, 0.24f); gruntB = Kiai(42, 0.72f, 920f, 500f, 0.24f);
@@ -366,9 +366,9 @@ namespace BladePath
             if (petals != null) petals.Emit(n);
         }
         /// <summary>Стук сердца на низком здоровье.</summary>
-        public void Heartbeat() { Play(heart, 0.7f, 1f); }
+        public void Heartbeat() { }   // combat_heartbeat: intentionally muted; low-HP mechanic unchanged
         /// <summary>Опасная атака (危): низкий удар гонга с металлическим призвуком.</summary>
-        public void Danger() { Play(danger, 0.9f, 1f); }
+        public void Danger() { }   // combat_danger_gong: intentionally muted; danger cue remains visible
         /// <summary>Рывок.</summary>
         public void DashSound() { Play(whoosh, 0.45f, 0.6f); }
 
@@ -2049,8 +2049,7 @@ namespace BladePath
         /// <summary>Враг перехватил меч (смена стойки): шорох рукава и сухой щелчок цубы — тихо, но слышно, что он что-то задумал.</summary>
         public void Regrip()
         {
-            if (regrip == null) regrip = Regrip_();
-            Play(regrip, 0.35f, Random.Range(0.92f, 1.08f));
+            // combat_regrip: silent; stance changes still occur in EnemyAI and ChargeSystem.
         }
         static AudioClip Regrip_()
         {
@@ -2077,8 +2076,7 @@ namespace BladePath
         /// <summary>Тыква подействовала: тёплые искры поднимаются от тела, мягкое золотое сияние, глоток и звон.</summary>
         public void HealFx(FighterController f)
         {
-            if (gulp == null) gulp = Gulp();
-            Play(gulp, 0.7f, 1f);
+            // combat_heal_gulp: mute drinking sound only; preserve healing particles and light.
             Vector3 c = f.transform.position + Vector3.up * 1.0f;
             // зелёно-золотые огоньки и листья спиралью вокруг пьющего (цикл, ~1,5 с)
             Transform ha = new GameObject("HealFx").transform;
