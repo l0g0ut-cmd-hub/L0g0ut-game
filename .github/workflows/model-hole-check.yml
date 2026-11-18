@@ -1,0 +1,38 @@
+name: Проверка моделей на дыры
+
+# Blender: все FBX персонажей → снимки с 8 сторон (изнанка красная, фон зелёный) + счёт открытых рёбер → ветка model-check.
+on:
+  workflow_dispatch:
+  push:
+    branches: [model-check-request]
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender 4.2 LTS
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libxkbcommon0 libsm6 libice6 libegl1 >/dev/null
+          curl -sSfL https://download.blender.org/release/Blender4.2/blender-4.2.3-linux-x64.tar.xz | tar -xJ -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/blender-4.2.3-linux-x64" >> "$GITHUB_PATH"
+      - name: Render
+        run: |
+          CHECK_DIR=Assets/_Project/Models CHECK_OUT="$RUNNER_TEMP/holes" blender -b --factory-startup --python tools/blender/hole_check.py > "$RUNNER_TEMP/check.log" 2>&1 || true
+          grep -E "^HOLES|Error|Traceback" "$RUNNER_TEMP/check.log" | head -80
+          cp "$RUNNER_TEMP/check.log" "$RUNNER_TEMP/holes/" || true
+      - name: Publish
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          D="$RUNNER_TEMP/holes"; mkdir -p "$D"; cd "$D"
+          git init -q; git checkout -q -b model-check
+          git -c user.name=ci -c user.email=ci@local add -A
+          git -c user.name=ci -c user.email=ci@local commit -qm "hole check ${GITHUB_RUN_NUMBER}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" model-check

@@ -27,6 +27,9 @@ Shader "BladePath/Character"
     {
         Tags { "RenderType"="Opaque" }
         LOD 300
+        // обе стороны граней: у моделей Meshy рваные полы, рукава и подолы — тонкие одинарные поверхности; с отсечением
+        // изнанки сквозь них просвечивал фон («дырявые» модели). Изнанка освещается правильно: нормаль разворачивается в surf
+        Cull Off
 
         CGPROGRAM
         #pragma surface surf Standard fullforwardshadows vertex:vert addshadow

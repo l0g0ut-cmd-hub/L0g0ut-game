@@ -421,6 +421,7 @@ namespace BladePath
             if (InFight || D.training) return;
             D.training = true; D.trainKind = 1; D.fight = -1;
             Ladder.Index = DuelEnemy(D.region);
+            Ladder.Foe = Ladder.DojoFoe;   // в додзё — старший ученик сэнсэя (самурай), а не неупокоенный страж
             Weather.ForceNight = false;
             Save();
         }

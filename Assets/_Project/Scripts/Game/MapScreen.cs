@@ -933,6 +933,7 @@ namespace BladePath
         // ---- торговец: вкладки по ячейкам (UI/shop_tabs 4×4: обычные и выбранные), список товаров с прокруткой (UI/shop_scroll_*)
         int shopCat = -1;            // −1 — всё, 0…5 — ячейки, 6 — свитки
         float shopScroll, shopDragY, shopDragStart; bool shopDragging, shopDragged;
+        bool shopThumb;   // тянут за ползунок полосы прокрутки (ползунок идёт за пальцем), а не сам список
         static readonly string[] ShopCatNames = { "ВСЁ", "КЛИНКИ", "ЦУБЫ", "ОБЛАЧЕНИЕ", "МАСКИ", "АМУЛЕТЫ", "ТЫКВЫ", "СВИТКИ" };
         static int ShopTabCell(int cat, bool on)   // cat: −1 всё, 0..6
         {
@@ -986,14 +987,28 @@ namespace BladePath
             // прокрутка пальцем (и колесом в редакторе); протяжка не нажимает кнопки «купить»
             Event e = Event.current;
             Rect listIn = new Rect(list.x, list.y + 14f, list.width + 30f, view);
-            if (ok && e.type == EventType.MouseDown && listIn.Contains(e.mousePosition)) { shopDragging = true; shopDragged = false; shopDragY = e.mousePosition.y; shopDragStart = shopScroll; }
+            // полоса прокрутки: ползунок можно взять пальцем (зона касания шире самой полосы), нажатие по полосе — ползунок туда
+            Rect trackHit = new Rect(list.xMax - 6f, list.y + 14f - 10f, 52f, view + 20f);
+            float thumbH = Mathf.Max(44f, view * view / Mathf.Max(1f, total)), thumbRun = Mathf.Max(1f, view - thumbH);
+            if (ok && e.type == EventType.MouseDown && maxScroll > 0f && trackHit.Contains(e.mousePosition))
+            {
+                float thumbY = list.y + 14f + thumbRun * Mathf.Clamp01(shopScroll / maxScroll);
+                if (e.mousePosition.y < thumbY || e.mousePosition.y > thumbY + thumbH)   // мимо ползунка — ползунок центром под палец
+                    shopScroll = Mathf.Clamp((e.mousePosition.y - list.y - 14f - thumbH * 0.5f) / thumbRun * maxScroll, 0f, maxScroll);
+                shopDragging = true; shopThumb = true; shopDragged = true; shopDragY = e.mousePosition.y; shopDragStart = shopScroll; e.Use();
+            }
+            else if (ok && e.type == EventType.MouseDown && listIn.Contains(e.mousePosition)) { shopDragging = true; shopThumb = false; shopDragged = false; shopDragY = e.mousePosition.y; shopDragStart = shopScroll; }
             if (shopDragging && e.type == EventType.MouseDrag)
             {
                 float d = e.mousePosition.y - shopDragY;
-                if (Mathf.Abs(d) > 8f) shopDragged = true;
-                if (shopDragged) shopScroll = Mathf.Clamp(shopDragStart - d, 0f, maxScroll);
+                if (shopThumb) { shopScroll = Mathf.Clamp(shopDragStart + d / thumbRun * maxScroll, 0f, maxScroll); e.Use(); }
+                else
+                {
+                    if (Mathf.Abs(d) > 8f) shopDragged = true;
+                    if (shopDragged) shopScroll = Mathf.Clamp(shopDragStart - d, 0f, maxScroll);
+                }
             }
-            if (e.type == EventType.MouseUp) shopDragging = false;
+            if (e.type == EventType.MouseUp) { shopDragging = false; if (shopThumb) { shopThumb = false; shopDragged = false; } }
             if (e.type == EventType.ScrollWheel && listIn.Contains(e.mousePosition)) { shopScroll = Mathf.Clamp(shopScroll + e.delta.y * 20f, 0f, maxScroll); e.Use(); }
             shopScroll = Mathf.Clamp(shopScroll, 0f, maxScroll);
             bool buyOk = ok && !shopDragged;
@@ -1022,7 +1037,7 @@ namespace BladePath
                 Rect track = new Rect(list.xMax + 8f, list.y + 14f, 20f, view);
                 Texture2D tt = UiKit.Tex("UI/shop_scroll_track"), th = UiKit.Tex("UI/shop_scroll_thumb");
                 if (tt != null) GUI.DrawTexture(track, tt, ScaleMode.StretchToFill); else UiKit.Rect(track, new Color(0f, 0f, 0f, 0.5f));
-                float thH = Mathf.Max(44f, view * view / total), thY = track.y + (view - thH) * Mathf.Clamp01(first * (rowH + gap) / maxScroll);
+                float thH = thumbH, thY = track.y + thumbRun * Mathf.Clamp01((shopThumb ? shopScroll : first * (rowH + gap)) / maxScroll);
                 Rect thumb = new Rect(track.x - 2f, thY, 24f, thH);
                 if (th != null) GUI.DrawTexture(thumb, th, ScaleMode.StretchToFill); else UiKit.Rect(thumb, Gold);
             }
