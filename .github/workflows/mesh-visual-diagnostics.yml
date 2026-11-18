@@ -1,0 +1,37 @@
+name: Mesh Visual Diagnostics (8 viewpoints)
+
+on:
+  push:
+    branches: [bladepath-development]
+    paths:
+      - 'tools/blender/render_mesh_diagnostics.py'
+      - '.github/workflows/mesh-visual-diagnostics.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender and FBX Python dependency
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq blender python3-numpy
+      - name: Render character geometry from 8 angles
+        run: |
+          set -o pipefail
+          blender -b --factory-startup --python tools/blender/render_mesh_diagnostics.py 2>&1 | tee build-model-views.log
+      - name: Upload geometry views for close inspection
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: model-gap-8-angle-views
+          path: |
+            build/model-holes/views/*.png
+            build/model-holes/render-summary.txt
+            build-model-views.log
+          if-no-files-found: warn
