@@ -1495,7 +1495,7 @@ namespace BladePath
                 SoftShadow(new Vector2(p.x + s * 0.06f, p.y + s * 0.40f), s * 0.95f, s * 0.30f, 0.42f);   // медальон стоит на земле, а не висит над картой
                 // Focused marker effects use the existing cached UI disc texture:
                 // glowing boss warning, reachable nodes and the hero's current checkpoint.
-                if (known && (can || i == Campaign.At || n.Type == NodeType.Boss) && !n.done)
+                if (known && (can || i == Campaign.At) && !n.done && n.Type != NodeType.Boss)   // у владыки области красного ореола нет (владелец, 2026-11-18)
                 {
                     float wave = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * (n.Type == NodeType.Boss ? 2.3f : 3.5f) + i * 0.37f);
                     float reach = can ? 0.12f + wave * 0.08f : 0.08f + wave * 0.05f;
@@ -1717,7 +1717,7 @@ namespace BladePath
                 bool shrine = n.Type == NodeType.Shrine;
                 bool herb = n.Type == NodeType.Herbalist;
                 bool treasure = n.Type == NodeType.Treasure;
-                if (!boss && !shrine && !herb && !treasure) continue;
+                if (boss || !shrine && !herb && !treasure) continue;   // у владыки — без красного свечения
                 Vector2 point = P(n);
                 if (point.x < mapX + 24f || point.x > mapX + viewW - 24f) continue;
                 float wave = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime *
