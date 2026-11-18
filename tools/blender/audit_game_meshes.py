@@ -27,7 +27,7 @@ for ix, path in enumerate(paths):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     try:
         if path.lower().endswith(".fbx"):
-            bpy.ops.import_scene.fbx(filepath=os.path.abspath(path))
+            bpy.ops.import_scene.fbx(filepath=os.path.abspath(path), directory=os.path.dirname(os.path.abspath(path)), files=[{'name': os.path.basename(path)}])
         else:
             # Blender 3.x (apt) supports import_scene.obj; 4.x supports wm.obj_import.
             if hasattr(bpy.ops.wm, "obj_import"):
