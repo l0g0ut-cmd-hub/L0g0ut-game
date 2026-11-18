@@ -54,9 +54,9 @@ namespace BladePath
             batMat = new Material(sh) { name = "Bat", color = new Color(0.05f, 0.04f, 0.045f) }; batMat.SetFloat("_Glossiness", 0.05f);
             if (bodyMesh == null) BuildMeshes();
             src = gameObject.AddComponent<AudioSource>(); src.playOnAwake = false; src.spatialBlend = 0.5f; src.minDistance = 4f; src.maxDistance = 40f;
-            if (caw == null) caw = Caw();
+            // bird_crow disabled: do not synthesize or play crow calls.
             if (chirp == null) chirp = Chirp();
-            if (flutter == null) flutter = Flutter();
+            // bird_wings disabled: keep flight animations, silence the wing sound.
             fighters = FindObjectsByType<FighterController>(FindObjectsSortMode.None);
             crow = Make(Kind.Crow, 0.42f, dark);
             BuildCrowSprite();
@@ -282,7 +282,7 @@ namespace BladePath
                     if (b.t >= 1f)
                     {
                         b.state = State.Perch; b.timer = Random.Range(14f, 40f); b.flapRate = 4.5f; b.heading = Random.Range(0f, 360f);
-                        if (Ambience.Claim(0.4f, 3f, 7f)) Play(caw, b.pos, 0.35f);
+                        // Crow lands silently; do not reserve ambience time for a muted sound.
                     }
                     break;
                 case State.Perch:
@@ -294,15 +294,15 @@ namespace BladePath
                     b.root.rotation = Quaternion.Slerp(b.root.rotation, Quaternion.Euler(-14f + Mathf.Sin(now * 5f) * (Random.value < 0.02f ? 20f : 0f), b.heading, 0f), 1f - Mathf.Exp(-dt * 6f));
                     Pose(b, dt, 0f, true);
                     b.root.position = b.pos; b.body.localPosition = Vector3.zero;
-                    if (Random.value < dt * 0.08f && Ambience.Claim(0.4f, 4f, 9f)) Play(caw, b.pos, 0.3f, Random.Range(0.9f, 1.05f));
+                    // Crow perches silently.
                     if (b.timer <= 0f || NearestFighter(b.perch) < 2.2f || Wet || startled)
                     {
-                        if (startled) { Play(caw, b.pos, 0.4f, 1.12f); Ambience.Extend(0.6f); }   // испуганное «кар!»
+                        // Startled crow still takes off, but has no caw or sound-only ambience hold.
                         b.state = State.Takeoff; b.t = 0f; b.from = b.pos;
                         float side = Random.value < 0.5f ? -1f : 1f;
                         b.to = new Vector3(side * 18f, b.pos.y + Random.Range(6f, 10f), b.pos.z + Random.Range(6f, 14f));
                         b.dur = Vector3.Distance(b.from, b.to) / 6.5f;
-                        Play(flutter, b.pos, 0.35f); if (!startled && Random.value < 0.6f && Ambience.Claim(0.5f, 3f, 6f)) Play(caw, b.pos, 0.32f, 1.05f);
+                        // Wing and crow audio muted; retain physical takeoff.
                     }
                     break;
                 case State.Takeoff:
@@ -361,7 +361,7 @@ namespace BladePath
                             // вспорхнули от шагов
                             b.state = State.Takeoff; b.t = 0f; b.from = b.pos;
                             b.to = b.pos + new Vector3(Random.Range(-8f, 8f), Random.Range(4f, 7f), Random.Range(5f, 10f)); b.dur = Random.Range(1.2f, 1.8f);
-                            if (Random.value < 0.5f) Play(flutter, b.pos, 0.22f, 1.6f);
+                            // Sparrow still takes off silently (bird_wings disabled).
                         }
                         break;
                     case State.Takeoff:
