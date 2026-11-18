@@ -1034,7 +1034,7 @@ namespace BladePath
 
         void DrawDev(bool ok)
         {
-            Rect r = Card(520f, 532f);
+            Rect r = Card(520f, 584f);
             float x = r.x + 24f, w = r.width - 48f, y = r.y + 16f;
             VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "МЕНЮ РАЗРАБОТЧИКА", 20f); y += 36f;
             float bw = (w - 10f) * 0.5f;
@@ -1061,6 +1061,10 @@ namespace BladePath
             // звук: выключатель и что звучит (игра / музыка / оба)
             if (Btn(new Rect(x, y, bw, 44f), SoundSettings.On ? "ЗВУК: ВКЛ" : "ЗВУК: ВЫКЛ", ok)) SoundSettings.Toggle();
             if (Btn(new Rect(x + bw + 10f, y, bw, 44f), SoundSettings.ScopeShortName, ok && SoundSettings.On)) SoundSettings.NextScope();
+            y += 52f;
+            // враги Леса теней в обычных боях: как на карте (случайно) или все бои — один облик (проверить модель и повадки)
+            if (Btn(new Rect(x, y, w, 44f), "ВРАГИ ЛЕСА: " + (Ladder.DevFoe > 0 ? Ladder.Foes[Ladder.DevFoe - 1].name : Ladder.DevFoe == 0 ? "ПОВЕРЖЕННЫЙ" : "КАК НА КАРТЕ"), ok))
+                Ladder.DevFoe = Ladder.DevFoe >= Ladder.Foes.Length ? -1 : Ladder.DevFoe + 1;
             if (Btn(new Rect(r.center.x - 80f, r.yMax - 48f, 160f, 38f), "ЗАКРЫТЬ", ok)) modal = Modal.None;
         }
 

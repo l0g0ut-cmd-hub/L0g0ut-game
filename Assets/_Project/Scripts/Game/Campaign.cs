@@ -36,6 +36,7 @@ namespace BladePath
         {
             public int region;
             public int roadsVer;        // 2 — места на новых дорогах (2026-11-03); 3 — карты расширены на восток (2026-11-07)
+            public bool foesRolled;     // обитатели Леса теней уже расставлены (старые сохранения — расставить при загрузке)
             public int catBuff;         // благословение кота-хранителя: 0 нет, 1 «Кошачья удача», 2 «Девять жизней»
             public int catFights;       // сколько боёв ещё действует
             public bool catLifeUsed;    // «Девять жизней» уже спасли
@@ -197,6 +198,15 @@ namespace BladePath
             if (d.at < 0 || d.at >= d.nodes.Count) d.at = 0;
             MigrateSpots(d);
             LinkByRoads(d);   // и старые сохранения ездят по нарисованным дорогам
+            // поход, начатый до обитателей Леса теней: расставить их по ещё не пройденным обычным боям леса
+            if (!d.foesRolled)
+            {
+                d.foesRolled = true;
+                if (d.region == 0)
+                    foreach (MapNode fn in d.nodes)
+                        if (!fn.done && fn.foe == 0 && (fn.Type == NodeType.Duel || fn.Type == NodeType.Ambush) && (d.fight < 0 || d.fight >= d.nodes.Count || d.nodes[d.fight] != fn)) fn.foe = Ladder.RollForestFoe();
+                Save();
+            }
             // Old campaign_v1 saves have no travel history: start from the current position.
             if (d.travelled == null) d.travelled = new List<int>();
             if (d.travelled.Count == 0 || d.travelled[d.travelled.Count - 1] != d.at)
@@ -494,7 +504,7 @@ namespace BladePath
         static void Generate(int region)
         {
             Data dd = d;
-            dd.region = region; dd.nodes.Clear(); dd.at = 0; dd.fight = -1; dd.roadsVer = 3;
+            dd.region = region; dd.nodes.Clear(); dd.at = 0; dd.fight = -1; dd.roadsVer = 3; dd.foesRolled = true;
             if (dd.travelled == null) dd.travelled = new List<int>();
             dd.travelled.Clear(); dd.travelled.Add(0);
             if (dd.seen == null) dd.seen = new List<Vector2>();
@@ -888,6 +898,7 @@ namespace BladePath
             MapNode n = D.nodes[i];
             Ladder.Index = n.enemy;
             Ladder.Foe = n.foe;   // облик Леса теней (после Index: смена ступени сбрасывает облик)
+            if (Ladder.DevFoe >= 0 && D.region == 0 && (n.Type == NodeType.Duel || n.Type == NodeType.Ambush)) Ladder.Foe = Ladder.DevFoe;   // меню разработчика
             Weather.ForceNight = n.Type == NodeType.Ambush;
             Save();
         }

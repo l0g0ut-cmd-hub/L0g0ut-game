@@ -56,6 +56,12 @@ namespace BladePath
             set { PlayerPrefs.SetInt("ladder_foe", Mathf.Clamp(value, 0, Foes.Length)); }
         }
         public static Stage Current { get { int f = Foe; return f > 0 ? Foes[f - 1] : Stages[Index]; } }
+        /// <summary>Меню разработчика: −1 — враги как на карте, 0 — всегда Поверженный, 1…4 — всегда этот обитатель леса (обычные бои Леса теней).</summary>
+        public static int DevFoe
+        {
+            get { return Mathf.Clamp(PlayerPrefs.GetInt("dev_forest_foe", -1), -1, Foes.Length); }
+            set { PlayerPrefs.SetInt("dev_forest_foe", Mathf.Clamp(value, -1, Foes.Length)); PlayerPrefs.Save(); }
+        }
         /// <summary>Противник места карты (ступень или облик Леса теней).</summary>
         public static Stage Of(int enemy, int foe) { return foe > 0 && foe <= Foes.Length ? Foes[foe - 1] : Stages[Mathf.Clamp(enemy, 0, Stages.Length - 1)]; }
         /// <summary>Случайный противник обычного боя первой области: Поверженный (0) или один из обитателей леса (1…4).</summary>
