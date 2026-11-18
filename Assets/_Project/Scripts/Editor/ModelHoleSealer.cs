@@ -27,7 +27,25 @@ namespace BladePath.EditorTools
 
         // AssetPostprocessor dependency version: imported FBX/OBJ must be
         // reimported when the repair algorithm is updated.
-        public override uint GetVersion() { return 1; }
+        public override uint GetVersion() { return 2; }
+
+        // A fresh CI checkout may restore a Library cache that contains meshes
+        // imported before this postprocessor was introduced. Reimport once
+        // explicitly before building scenes so all imported game models are
+        // evaluated by this repair pass, regardless of cached import state.
+        public static void ForceReimportAll()
+        {
+            int count = 0;
+            foreach (string path in AssetDatabase.GetAllAssetPaths())
+            {
+                if (!path.StartsWith(Folder, StringComparison.OrdinalIgnoreCase)) continue;
+                if (!path.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase)
+                    && !path.EndsWith(".obj", StringComparison.OrdinalIgnoreCase)) continue;
+                AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
+                count++;
+            }
+            Debug.Log("ModelHoleSealer: forced reimport of " + count + " imported game FBX/OBJ models");
+        }
 
         struct VertexKey : IEquatable<VertexKey>, IComparable<VertexKey>
         {
@@ -98,22 +116,24 @@ namespace BladePath.EditorTools
             if (assetPath.Contains("/Arenas/")) return;
 
             var visited = new HashSet<Mesh>();
-            int patched = 0, scanned = 0;
+            int patched = 0, scanned = 0, unreadable = 0;
             foreach (SkinnedMeshRenderer r in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
                 if (r.sharedMesh != null && visited.Add(r.sharedMesh))
                 {
                     scanned++;
+                    if (!r.sharedMesh.isReadable) unreadable++;
                     patched += Seal(r.sharedMesh);
                 }
             foreach (MeshFilter f in root.GetComponentsInChildren<MeshFilter>(true))
                 if (f.sharedMesh != null && visited.Add(f.sharedMesh))
                 {
                     scanned++;
+                    if (!f.sharedMesh.isReadable) unreadable++;
                     patched += Seal(f.sharedMesh);
                 }
-            if (patched > 0)
-                Debug.Log("ModelHoleSealer: " + assetPath + ", meshes=" + scanned + ", tiny holes sealed=" + patched
-                          + " (no vertex, UV, material or bone changes)");
+            Debug.Log("ModelHoleSealer: " + assetPath + ", meshes=" + scanned
+                      + ", unreadable=" + unreadable + ", tiny holes sealed=" + patched
+                      + " (no vertex, UV, material or bone changes)");
         }
 
         static int Seal(Mesh mesh)
