@@ -135,15 +135,33 @@ for ix, path in enumerate(paths):
                     for a,b in zip(points, points[1:]+points[:1]):
                         area_vec += a.cross(b)
                     area = 0.5*area_vec.length
+                    plane_normal = area_vec.normalized() if area_vec.length > 1e-12 else area_vec
+                    adjacent_normal = sum((f.normal for e in edge_list for f in e.link_faces), points[0]*0.0)
+                    align = abs(plane_normal.dot(adjacent_normal.normalized())) if adjacent_normal.length > 1e-12 else 0.0
+                    flatness = max(abs((p-avg).dot(plane_normal)) for p in points)
+                    convex = True
+                    for i in range(len(points)):
+                        a = points[(i-1) % len(points)]-points[i]
+                        b = points[(i+1) % len(points)]-points[i]
+                        if a.cross(b).dot(plane_normal) > area * 1e-4:
+                            convex = False
+                            break
                     loops.append(dict(n=len(edge_list),
-                                      perimeter=round(perimeter, 7),
-                                      area=round(area, 8), span=round(span, 7)))
+                                      perimeter=round(perimeter, 7), area=round(area, 8),
+                                      span=round(span, 7), flatness=round(flatness, 8),
+                                      normal_alignment=round(align, 5), convex=convex,
+                                      centroid=[round(v,4) for v in avg]))
                 else:
                     chains.append(len(edge_list))
             bbox_max = max((max(ob.dimensions)), 0.000001)
             for L in loops:
                 L["relative_area"] = round(L["area"] / (bbox_max*bbox_max), 8)
                 L["relative_span"] = round(L["span"] / bbox_max, 7)
+                L["relative_flatness"] = round(L["flatness"] / bbox_max, 7)
+                L["candidate_small_cap"] = (3 <= L["n"] <= 32 and
+                    L["relative_span"] <= 0.09 and L["relative_area"] <= 0.0018 and
+                    L["relative_flatness"] <= 0.004 and L["normal_alignment"] >= 0.45
+                    and L["convex"])
             loops.sort(key=lambda L: L["relative_area"])
             mesh = dict(name=ob.name, verts=len(bm.verts), tris=tris,
                         total_edges=len(bm.edges), boundary_edges=len(boundaries),
@@ -159,12 +177,14 @@ for ix, path in enumerate(paths):
             item["nonmanifold_edges"] += mult
             item["loose_edges"] += loose
             item["components"] += len(loops)
+            item["candidate_small_covers"] = item.get("candidate_small_covers", 0) + sum(
+                1 for L in loops if L["candidate_small_cap"])
             item["loops"].extend([dict(mesh=ob.name, **L) for L in loops[:120]])
             bm.free()
         report.append(item)
         print("MODEL_AUDIT_RESULT", json.dumps(dict(path=path, objects=item["objects"],
               tris=item["tris"], raw_open_edges=item["raw_open_edges"], geometric_open_edges=item["open_edges"], loops=item["components"],
-              nonmanifold=item["nonmanifold_edges"], seam_groups=item["skin_seam_groups"],
+              nonmanifold=item["nonmanifold_edges"], small_cap_candidates=item.get("candidate_small_covers",0), seam_groups=item["skin_seam_groups"],
               skin_mismatch=item["skin_weight_mismatch"], severe_skin_mismatch=item["severe_skin_weight_mismatch"])), flush=True)
     except Exception as ex:
         report.append(dict(path=path, error=str(ex), traceback=traceback.format_exc()))
