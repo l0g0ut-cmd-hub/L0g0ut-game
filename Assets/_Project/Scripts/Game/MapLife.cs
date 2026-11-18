@@ -264,9 +264,12 @@ namespace BladePath
         /// Тропы ответвлений, которых нет на картине (TerrainRoads.BranchTrails): светлый пунктир с тёмной каймой; переправы — голубой.
         /// В Лесу теней тропа уходит ЗА священное древо: поверх кладётся крона и ствол с той же картины (UI/map0_tree_over).
         /// </summary>
+        public static bool ShowTrails;   // редактор карт
         public static void DrawTrails(int region, Rect view, float u0, float uw)
         {
-            if (Event.current.type != EventType.Repaint) return;
+            // тропы ответвлений на карте не рисуются (владелец: пунктир не нужен) — путь виден, когда всадник едет;
+            // линии покажет только редактор карт
+            if (!ShowTrails || Event.current.type != EventType.Repaint) return;
             Color oc = GUI.color;
             if (region < 0) return;
             float px = view.height / MapGeom.TexH, texW = MapGeom.TexW[Mathf.Clamp(region, 0, MapGeom.TexW.Length - 1)];

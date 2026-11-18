@@ -204,6 +204,11 @@ namespace BladePath
             if (d.at < 0 || d.at >= d.nodes.Count) d.at = 0;
             MigrateSpots(d);
             if (d.region == 0 && !d.nodes.Exists(m => IsGrove(m.Type))) { AddFixedPlaces(d, 0); links = null; }   // поход до ответвления у древа
+            if (d.region == 0)   // места ответвления, которые генерация по ошибке сделала боями (сборка 567), — вернуть
+                for (int g = 0; g < GroveSpots.Length; g++)
+                    foreach (MapNode gn in d.nodes)
+                        if (!gn.done && Mathf.Abs(gn.x - GroveSpots[g].x) < 0.002f && Mathf.Abs(gn.y - GroveSpots[g].y) < 0.003f && gn.type != (int)GroveSpots[g].z)
+                        { gn.type = (int)GroveSpots[g].z; gn.foe = 0; gn.lair = false; if (gn.extra != null) gn.extra.Clear(); }
             LinkByRoads(d);   // и старые сохранения ездят по нарисованным дорогам
             // поход, начатый до обитателей Леса теней: расставить их по ещё не пройденным обычным боям леса
             if (!d.foesRolled)
@@ -623,7 +628,10 @@ namespace BladePath
                 layers[l].Add(dd.nodes.Count);
                 dd.nodes.Add(new MapNode { layer = l, x = ep.x, y = ep.y });
             }
-            AddFixedPlaces(dd, region);   // постоянные места (ответвление у древа и места из редактора карт): места с постоянным назначением (не в рядах — типы не разыгрываются)
+            int fixedFrom = dd.nodes.Count;
+            AddFixedPlaces(dd, region);   // постоянные места (ответвление у древа и места из редактора карт)
+            List<KeyValuePair<int, int>> permanent = new List<KeyValuePair<int, int>>();
+            for (int pi = fixedFrom; pi < dd.nodes.Count; pi++) permanent.Add(new KeyValuePair<int, int>(pi, dd.nodes[pi].type));: места с постоянным назначением (не в рядах — типы не разыгрываются)
             // дороги — ровно нарисованные на карте (раньше — по номерам мест, и «соседи» соединялись через чужие места)
             LinkByRoads(dd);
             // что в узлах
@@ -812,6 +820,14 @@ namespace BladePath
             // Лес теней: в обычных боях и засадах — разные обитатели леса (разбойник, ямабуси, асигару, кицунэ) или Поверженный
             foreach (MapNode fn in dd.nodes)
                 fn.foe = region == 0 && (fn.Type == NodeType.Duel || fn.Type == NodeType.Ambush) ? Ladder.RollForestFoe() : 0;
+            // постоянные места — такими, как задумано: правила «у воды/на краю ущелья — бой», «нет площадки — бой», отряды и
+            // обитатели леса их не трогают (иначе хижина рыбака и остров отшельника становились дуэлями)
+            foreach (KeyValuePair<int, int> pm in permanent)
+            {
+                MapNode pn = dd.nodes[pm.Key];
+                pn.type = pm.Value; pn.lair = false; pn.foe = 0; pn.done = false;
+                if (pn.extra != null) pn.extra.Clear();
+            }
             dd.steps = 0; dd.rolls = Mathf.Max(dd.rolls, 1);
             Save();
         }
