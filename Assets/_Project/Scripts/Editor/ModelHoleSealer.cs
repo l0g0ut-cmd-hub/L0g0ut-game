@@ -29,7 +29,7 @@ namespace BladePath.EditorTools
 
         // AssetPostprocessor dependency version: imported FBX/OBJ must be
         // reimported when the repair algorithm is updated.
-        public override uint GetVersion() { return 4; }
+        public override uint GetVersion() { return 5; }
 
         // Keep a deterministic per-FBX model report so a green APK cannot
         // mask the original unreadable-mesh bug.
@@ -55,6 +55,7 @@ namespace BladePath.EditorTools
         // evaluated by this repair pass, regardless of cached import state.
         public static void ForceReimportAll()
         {
+            SkinSeamReconciler.SelfTest();
             ImportMetrics.Clear();
             int count = 0;
             var assetPaths = new List<string>(AssetDatabase.GetAllAssetPaths());
@@ -67,8 +68,8 @@ namespace BladePath.EditorTools
                 AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
                 count++;
             }
-            int meshes = 0, unreadable = 0, repaired = 0, processed = 0;
-            var report = new StringBuilder("model,meshes,unreadable,tiny_holes_sealed\n");
+            int meshes = 0, unreadable = 0, repaired = 0, adjustedSkinSeams = 0, processed = 0;
+            var report = new StringBuilder("model,meshes,unreadable,tiny_holes_sealed,skin_seam_vertices_adjusted\n");
             foreach (string path in assetPaths)
             {
                 if (!path.StartsWith(Folder, StringComparison.OrdinalIgnoreCase)
@@ -78,15 +79,16 @@ namespace BladePath.EditorTools
                 int[] data;
                 if (!ImportMetrics.TryGetValue(path, out data))
                     throw new InvalidOperationException("ModelHoleSealer: missing import metrics for " + path);
-                processed++; meshes += data[0]; unreadable += data[1]; repaired += data[2];
+                processed++; meshes += data[0]; unreadable += data[1]; repaired += data[2]; adjustedSkinSeams += data[3];
                 report.Append(path).Append(',').Append(data[0]).Append(',')
-                      .Append(data[1]).Append(',').Append(data[2]).Append('\n');
+                      .Append(data[1]).Append(',').Append(data[2]).Append(',').Append(data[3]).Append('\n');
             }
             Directory.CreateDirectory("build/model-holes");
             File.WriteAllText("build/model-holes/unity-repair.csv", report.ToString());
             Debug.Log("ModelHoleSealer: reimported=" + count + " processed=" + processed
                       + " meshes=" + meshes + " unreadable=" + unreadable
-                      + " holes_repaired=" + repaired + " report=build/model-holes/unity-repair.csv");
+                      + " holes_repaired=" + repaired + " skin_seam_vertices_adjusted=" + adjustedSkinSeams
+                      + " report=build/model-holes/unity-repair.csv");
             if (processed < 20 || unreadable != 0)
                 throw new InvalidOperationException("ModelHoleSealer: repair not verified; "
                     + processed + " processed models, " + unreadable + " unreadable meshes");
@@ -162,13 +164,14 @@ namespace BladePath.EditorTools
             if (assetPath.Contains("/Arenas/")) return;
 
             var visited = new HashSet<Mesh>();
-            int patched = 0, scanned = 0, unreadable = 0;
+            int patched = 0, scanned = 0, unreadable = 0, skinAdjusted = 0;
             foreach (SkinnedMeshRenderer r in root.GetComponentsInChildren<SkinnedMeshRenderer>(true))
                 if (r.sharedMesh != null && visited.Add(r.sharedMesh))
                 {
                     scanned++;
                     if (!r.sharedMesh.isReadable) unreadable++;
                     patched += Seal(r.sharedMesh);
+                    skinAdjusted += SkinSeamReconciler.Reconcile(r.sharedMesh);
                 }
             foreach (MeshFilter f in root.GetComponentsInChildren<MeshFilter>(true))
                 if (f.sharedMesh != null && visited.Add(f.sharedMesh))
@@ -177,13 +180,14 @@ namespace BladePath.EditorTools
                     if (!f.sharedMesh.isReadable) unreadable++;
                     patched += Seal(f.sharedMesh);
                 }
-            ImportMetrics[assetPath] = new [] { scanned, unreadable, patched };
+            ImportMetrics[assetPath] = new [] { scanned, unreadable, patched, skinAdjusted };
             if (unreadable > 0)
                 Debug.LogError("ModelHoleSealer: UNREADABLE imported mesh " + assetPath
                                + " (" + unreadable + "/" + scanned + "); repair was NOT performed");
             Debug.Log("ModelHoleSealer: " + assetPath + ", meshes=" + scanned
                       + ", unreadable=" + unreadable + ", tiny holes sealed=" + patched
-                      + " (no vertex, UV, material or bone changes)");
+                      + ", skin_seam_vertices_adjusted=" + skinAdjusted
+                      + " (geometry/UV/material/bind poses untouched)");
         }
 
         static int Seal(Mesh mesh)
