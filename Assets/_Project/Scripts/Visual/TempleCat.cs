@@ -25,7 +25,8 @@ namespace BladePath
         float z, targetZ, timer, groomT = -1f, walkPh, face = 90f, tailPh, sitK = 1f;
         bool walking;
         FighterController[] fighters;
-        AudioSource voice; static AudioClip meow, meowShort; float meowAt; int seenStartle; float rush = 1f;
+        // Both procedural cat vocalizations are disabled; keep movement and startle reactions.
+        int seenStartle; float rush = 1f;
         const float GroomLen = 7f;
 
         void Start()
@@ -34,9 +35,6 @@ namespace BladePath
             z = targetZ = Random.Range(0f, 1f);
             timer = Random.Range(6f, 14f);
             fighters = FindObjectsByType<FighterController>(FindObjectsSortMode.None);
-            voice = gameObject.AddComponent<AudioSource>(); voice.playOnAwake = false; voice.spatialBlend = 0.75f; voice.minDistance = 2f; voice.maxDistance = 25f;
-            if (meow == null) { meow = Meow(51, 0.62f, 1f); meowShort = Meow(52, 0.3f, 1.25f); }
-            meowAt = Time.time + Random.Range(30f, 70f);
             seenStartle = Birds.StartleCount;
         }
 
@@ -328,12 +326,6 @@ namespace BladePath
             {
                 seenStartle = Birds.StartleCount;
                 walking = true; rush = 3f; groomT = -1f; targetZ = z < 0.5f ? Random.Range(0.85f, 1f) : Random.Range(0f, 0.15f);
-                if (voice != null && meowShort != null) { voice.pitch = Random.Range(0.95f, 1.1f); voice.PlayOneShot(meowShort, 0.35f); Ambience.Extend(0.4f); }
-            }
-            if (!walking && groomT < 0f && t >= meowAt)
-            {
-                meowAt = t + Random.Range(50f, 120f);
-                if (voice != null && meow != null && Ambience.Claim(0.7f, 3f, 7f)) { voice.pitch = Random.Range(0.92f, 1.08f); voice.PlayOneShot(meow, 0.22f); }
             }
             if (!walking && groomT < 0f && timer <= 0f)
             {
