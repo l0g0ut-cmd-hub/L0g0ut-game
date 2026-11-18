@@ -40,7 +40,8 @@ for fbx in sorted(glob.glob(os.path.join(SRC, '*.fbx'))):
     pts = [o.matrix_world @ Vector(c) for o in meshes for c in o.bound_box]
     mn = Vector((min(p.x for p in pts), min(p.y for p in pts), min(p.z for p in pts))); mx = Vector((max(p.x for p in pts), max(p.y for p in pts), max(p.z for p in pts)))
     c = (mn + mx) * 0.5; size = max(mx - mn)
-    sc.render.engine = 'BLENDER_EEVEE_NEXT' if 'BLENDER_EEVEE_NEXT' in [e.identifier for e in bpy.types.RenderSettings.bl_rna.properties['engine'].enum_items] else 'BLENDER_EEVEE'
+    sc.render.engine = 'CYCLES'   # без видеокарты на раннере EEVEE не работает; Cycles на CPU, мало выборок — хватает
+    sc.cycles.device = 'CPU'; sc.cycles.samples = 6; sc.cycles.use_denoising = False; sc.cycles.max_bounces = 1
     sc.render.resolution_x = 360; sc.render.resolution_y = 540; sc.render.film_transparent = False
     w = bpy.data.worlds.new('W'); sc.world = w; w.use_nodes = True; w.node_tree.nodes['Background'].inputs[0].default_value = (0.0, 0.6, 0.1, 1)
     cam = bpy.data.objects.new('Cam', bpy.data.cameras.new('Cam')); sc.collection.objects.link(cam); sc.camera = cam

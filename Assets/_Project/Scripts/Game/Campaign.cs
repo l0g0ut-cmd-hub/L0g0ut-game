@@ -4,7 +4,8 @@ using UnityEngine;
 
 namespace BladePath
 {
-    public enum NodeType { Start, Duel, Elite, Boss, Shrine, Smith, Merchant, Treasure, Ambush, Event, Rest, Herbalist, Onsen, Dojo, Gamble, ClanShrine, HunterCamp }
+    public enum NodeType { Start, Duel, Elite, Boss, Shrine, Smith, Merchant, Treasure, Ambush, Event, Rest, Herbalist, Onsen, Dojo, Gamble, ClanShrine, HunterCamp,
+                           TreeShadow, KamiRoots, FisherHut, HermitIsle }   // ответвление у древа в Лесу теней (2026-11-18): места только там
 
     [Serializable]
     public class MapNode
@@ -71,7 +72,8 @@ namespace BladePath
 
         public static readonly string[] RegionNames = { "ЛЕС ТЕНЕЙ", "ГОРЫ ОНИ", "ПРОКЛЯТЫЙ СЁГУНАТ" };
         public static readonly string[] TypeNames = { "НАЧАЛО ПУТИ", "ДУЭЛЬ", "СИЛЬНЫЙ ПРОТИВНИК", "ВЛАДЫКА ОБЛАСТИ", "ХРАМ", "КУЗНЕЦ", "ТОРГОВЕЦ", "ТАЙНИК", "ЗАСАДА", "СОБЫТИЕ", "ПРИВАЛ", "ХИЖИНА ТРАВНИЦЫ",
-                                                       "ГОРЯЧИЙ ИСТОЧНИК", "ДОДЗЁ", "ИГОРНЫЙ ДОМ", "СВЯТИЛИЩЕ КЛАНА", "СТОЯНКА ОХОТНИКОВ" };
+                                                       "ГОРЯЧИЙ ИСТОЧНИК", "ДОДЗЁ", "ИГОРНЫЙ ДОМ", "СВЯТИЛИЩЕ КЛАНА", "СТОЯНКА ОХОТНИКОВ",
+                                                       "ТЕНЬ ДРЕВА", "КОРНИ ДРЕВА КАМИ", "ХИЖИНА РЫБАКА", "ОСТРОВ ОТШЕЛЬНИКА" };
         public static readonly string[] TypeHints =
         {
             "Отсюда начинается путь по области.",
@@ -91,6 +93,10 @@ namespace BladePath
             "Чо-хан по-крупному: ставки втрое выше, чем в трактире, и пять партий.",
             "Мастер святилища перекуёт знак клана на надетом снаряжении — ради бонуса комплекта.",
             "Охотники за головами дают заказ на ронина, который бродит по дорогам области.",
+            "В тени священного древа шепчутся кодама. Прислушаешься — духи покажут дорогу, а то и подарят что-нибудь.",
+            "Симэнава и бумажные ленты на корнях древа. Подношение ками — благословение на следующий бой.",
+            "Хижина на сваях. Рыбак накормит и пустит переночевать, а за пару мон отвезёт на остров.",
+            "Старый мастер меча живёт один на островке. Выстоишь против него — научит приёму.",
         };
 
         // места узлов на каждой карте (доли ширины/высоты), по слоям от начала (внизу слева) к владыке (вверху справа)
@@ -197,6 +203,7 @@ namespace BladePath
             if (d == null || d.nodes == null || d.nodes.Count == 0) { d = new Data(); Generate(0); }
             if (d.at < 0 || d.at >= d.nodes.Count) d.at = 0;
             MigrateSpots(d);
+            if (d.region == 0 && !d.nodes.Exists(m => IsGrove(m.Type))) { AddGroveBranch(d); links = null; }   // поход до ответвления у древа
             LinkByRoads(d);   // и старые сохранения ездят по нарисованным дорогам
             // поход, начатый до обитателей Леса теней: расставить их по ещё не пройденным обычным боям леса
             if (!d.foesRolled)
@@ -362,6 +369,27 @@ namespace BladePath
         }
         /// <summary>Дороги «вперёд» (для рисования и подсказок) — те же нарисованные дороги: к месту дальнего ряда,
         /// а внутри ряда — от меньшего номера к большему, чтобы каждая дорога была записана один раз.</summary>
+        /// <summary>
+        /// Лес теней: ответвление у священного древа (тропы — TerrainRoads.BranchTrails). Места стоят на крестах владельца:
+        /// тень древа, корни древа ками, хижина рыбака на сваях, остров отшельника (на остров — лодкой от хижины).
+        /// </summary>
+        static readonly Vector3[] GroveSpots =
+        {
+            new Vector3(0.6513f, 0.2441f, (int)NodeType.TreeShadow), new Vector3(0.6981f, 0.4648f, (int)NodeType.KamiRoots),
+            new Vector3(0.8966f, 0.2773f, (int)NodeType.FisherHut), new Vector3(0.8218f, 0.1982f, (int)NodeType.HermitIsle),
+        };
+        static readonly int[] GroveLayers = { 6, 6, 7, 8 };
+        static void AddGroveBranch(Data dd)
+        {
+            for (int k = 0; k < GroveSpots.Length; k++)
+            {
+                Vector3 g = GroveSpots[k];
+                if (dd.nodes.Exists(m => m.Type == (NodeType)(int)g.z)) continue;
+                dd.nodes.Add(new MapNode { layer = GroveLayers[k], x = g.x, y = g.y, type = (int)g.z });
+            }
+        }
+        public static bool IsGrove(NodeType t) { return t == NodeType.TreeShadow || t == NodeType.KamiRoots || t == NodeType.FisherHut || t == NodeType.HermitIsle; }
+
         static void LinkByRoads(Data dd)
         {
             List<int>[] l = TerrainRoads.PlaceLinks(dd.region, dd.nodes);
@@ -416,6 +444,16 @@ namespace BladePath
             Save();
         }
         /// <summary>Бой на боккэнах в додзё (вне места): победа — очко характеристик.</summary>
+        /// <summary>Поединок с отшельником на острове: сила ступени области, победа — свиток с приёмом (или очко характеристик).</summary>
+        public static void BeginHermit()
+        {
+            if (InFight || D.training) return;
+            D.training = true; D.trainKind = 3; D.fight = -1;
+            Ladder.Index = DuelEnemy(D.region);
+            Ladder.Foe = Ladder.HermitFoe;
+            Weather.ForceNight = false;
+            Save();
+        }
         public static void BeginDojo()
         {
             if (InFight || D.training) return;
@@ -540,6 +578,7 @@ namespace BladePath
                 layers[l].Add(dd.nodes.Count);
                 dd.nodes.Add(new MapNode { layer = l, x = ep.x, y = ep.y });
             }
+            if (region == 0) AddGroveBranch(dd);   // ответвление у древа: места с постоянным назначением (не в рядах — типы не разыгрываются)
             // дороги — ровно нарисованные на карте (раньше — по номерам мест, и «соседи» соединялись через чужие места)
             LinkByRoads(dd);
             // что в узлах
@@ -819,7 +858,7 @@ namespace BladePath
         {
             NodeType t = n.Type;
             return t == NodeType.Shrine || t == NodeType.Smith || t == NodeType.Merchant || t == NodeType.Rest || t == NodeType.Herbalist
-                || t == NodeType.Onsen || t == NodeType.Dojo || t == NodeType.Gamble || t == NodeType.ClanShrine || t == NodeType.HunterCamp;
+                || t == NodeType.Onsen || t == NodeType.Dojo || t == NodeType.Gamble || t == NodeType.ClanShrine || t == NodeType.HunterCamp || IsGrove(t);
         }
 
         /// <param name="passing">проезд насквозь к другой цели: услуга не тратится (не «пройдена», травница не дарит кость) — можно вернуться</param>
@@ -917,6 +956,12 @@ namespace BladePath
                     D.note = "Голова ронина — твоя. Охотники платят по листку: +" + D.huntReward + " мон.";
                     D.hunt = -1; D.huntDone = true; D.huntReward = 0;
                 }
+                else if (kind == 3)
+                {
+                    Item sc = Profile.NewScroll();
+                    if (sc != null) { Profile.Give(sc); D.note = "Отшельник убирает меч в ножны: «Рука у тебя есть. Возьми — пригодится». Получен свиток: «" + sc.name + "»."; }
+                    else { Profile.GivePoint(); D.note = "Отшельник убирает меч в ножны: «Учить тебя нечему — только смотреть». +1 очко характеристик."; }
+                }
                 else D.rolls++;   // ронин побеждён — кость пути
                 Save(); return false;
             }
@@ -950,6 +995,7 @@ namespace BladePath
                 int kind = D.trainKind; D.training = false; D.trainKind = 0;
                 if (kind == 1) D.note = "Ученик выбивает боккэн у тебя из рук. Сэнсэй: «Приходи, когда научишься падать».";
                 if (kind == 2) { MoveHunt(1f); D.note = "Ронин вытирает клинок и уходит в туман. Заказ ещё в силе — он где-то на дорогах."; }
+                if (kind == 3) D.note = "Отшельник даже не запыхался: «Приплывай, когда перестанешь махать мечом, как веслом».";
                 Save(); return;
             }
             if (!InFight) return;

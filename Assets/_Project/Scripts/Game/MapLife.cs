@@ -259,6 +259,62 @@ namespace BladePath
         }
         static Rect SheetCell(int k, int cols, int rows) { int c = k % cols, rw = k / cols; return new Rect(c / (float)cols, 1f - (rw + 1) / (float)rows, 1f / cols, 1f / rows); }
 
+        /// <summary>
+        /// Тропы ответвлений, которых нет на картине (TerrainRoads.BranchTrails): светлый пунктир с тёмной каймой; переправы — голубой.
+        /// В Лесу теней тропа уходит ЗА священное древо: поверх кладётся крона и ствол с той же картины (UI/map0_tree_over).
+        /// </summary>
+        public static void DrawTrails(int region, Rect view, float u0, float uw)
+        {
+            if (Event.current.type != EventType.Repaint) return;
+            Color oc = GUI.color;
+            if (region < 0 || region >= TerrainRoads.BranchTrails.Length) return;
+            float px = view.height / MapGeom.TexH, texW = MapGeom.TexW[Mathf.Clamp(region, 0, MapGeom.TexW.Length - 1)];
+            System.Func<Vector2, Vector2> S = p => new Vector2(view.x + (p.x - u0) / uw * view.width, p.y * view.height);
+            foreach (Vector2[] line in TerrainRoads.BranchTrails[region]) Dashes(line, S, px, new Color(0.93f, 0.87f, 0.7f, 0.92f), 3.2f, 11f, 8f);
+            foreach (Vector2[] line in TerrainRoads.BranchWater[region]) Dashes(line, S, px, new Color(0.68f, 0.84f, 0.95f, 0.85f), 2.6f, 6f, 7f);
+            if (region == 0)
+            {
+                Texture2D over = UiKit.Tex("UI/map0_tree_over");   // вырезка карты 1590…2070 × 80…500
+                if (over != null)
+                {
+                    Rect r = new Rect(view.x + (1590f / texW - u0) / uw * view.width, 80f * px, 480f * px * (view.width / uw / (texW * px)), 420f * px);
+                    GUI.color = Color.white;
+                    GUI.DrawTexture(r, over);
+                }
+            }
+            GUI.color = oc;
+        }
+        static void Dashes(Vector2[] line, System.Func<Vector2, Vector2> S, float px, Color c, float thick, float dash, float gap)
+        {
+            if (line.Length < 2) return;
+            float d0 = 0f; bool on = true; float left = dash;
+            Matrix4x4 m0 = GUI.matrix;
+            for (int i = 1; i < line.Length; i++)
+            {
+                Vector2 a = S(line[i - 1]), b = S(line[i]);
+                float len = Vector2.Distance(a, b);
+                if (len < 0.5f) continue;
+                Vector2 dir = (b - a) / len; float ang = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg;
+                float pos = 0f;
+                while (pos < len)
+                {
+                    float step = Mathf.Min(left * px, len - pos);
+                    if (on && step > 0.3f)
+                    {
+                        Vector2 mid = a + dir * (pos + step * 0.5f);
+                        GUI.matrix = m0; GUIUtility.RotateAroundPivot(ang, mid);
+                        GUI.color = new Color(0.12f, 0.08f, 0.05f, c.a * 0.7f);
+                        GUI.DrawTexture(new Rect(mid.x - step * 0.5f - px, mid.y - (thick + 2f) * px * 0.5f, step + 2f * px, (thick + 2f) * px), Texture2D.whiteTexture);
+                        GUI.color = c;
+                        GUI.DrawTexture(new Rect(mid.x - step * 0.5f, mid.y - thick * px * 0.5f, step, thick * px), Texture2D.whiteTexture);
+                    }
+                    pos += step; left -= step / px;
+                    if (left <= 0.01f) { on = !on; left = on ? dash : gap; }
+                }
+            }
+            GUI.matrix = m0;
+        }
+
         static void DrawSheetFalls(int region, Rect view, float u0, float uw, float t, Texture2D mist)
         {
             if (region >= SheetFalls.Length) return;

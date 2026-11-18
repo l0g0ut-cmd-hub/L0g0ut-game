@@ -29,7 +29,7 @@ namespace BladePath
         static readonly string[] EnemyTraits = { "обычный бой — учись отражать", "уходит в дым за спину, финтит", "бьёт по земле — перепрыгивай волну", "три фазы: залпы духа, затем дым" };
         static readonly string[] EnemyFullArt = { "UI/enemy_full_fallen", "UI/enemy_full_shadow", "UI/enemy_full_oni", "UI/enemy_full_shogun" };
 
-        enum Modal { None, Fight, Shrine, Smith, Merchant, Treasure, Rest, Event, RegionClear, Herbalist, Knocked, Camp, Tavern, Dev, Onsen, Dojo, Gamble, Clan, Hunter, Hunt, Watch }
+        enum Modal { None, Fight, Shrine, Smith, Merchant, Treasure, Rest, Event, RegionClear, Herbalist, Knocked, Camp, Tavern, Dev, Onsen, Dojo, Gamble, Clan, Hunter, Hunt, Watch, Grove }
         Modal modal;
         int sel = -1;
         readonly List<int> previewPath = new List<int>(16);
@@ -151,6 +151,7 @@ namespace BladePath
                 case NodeType.Gamble: gambleTable = false; OpenModal(Modal.Gamble); break;
                 case NodeType.ClanShrine: OpenModal(Modal.Clan); break;
                 case NodeType.HunterCamp: OpenModal(Modal.Hunter); break;
+                case NodeType.TreeShadow: case NodeType.KamiRoots: case NodeType.FisherHut: case NodeType.HermitIsle: OpenModal(Modal.Grove); break;
                 default: modal = Modal.None; break;
             }
         }
@@ -402,6 +403,7 @@ namespace BladePath
             u0 = panU;
             Texture2D mt = UiKit.Tex(Campaign.MapTexture(Campaign.Region));
             if (mt != null) GUI.DrawTextureWithTexCoords(new Rect(mapX, 0f, viewW, MapH), mt, new Rect(u0, 0f, uw, 1f));
+            MapLife.DrawTrails(Campaign.Region, new Rect(mapX, 0f, viewW, MapH), u0, uw);   // тропы ответвлений, которых нет на картине (и при низкой графике)
             MapLife.Draw(Campaign.Region, new Rect(mapX, 0f, viewW, MapH), u0, uw);   // вода бежит, огни мерцают, пар, лава, блуждающие огни
             DrawPaintedMist();
             DrawLandmarkLights();
@@ -511,7 +513,8 @@ namespace BladePath
         {
             "НАЧАЛО", "ДУЭЛЬ", "ЭЛИТА", "БОСС", "ХРАМ", "КУЗНЕЦ",
             "ТОРГОВЕЦ", "СУНДУК", "ЗАСАДА", "СОБЫТИЕ", "ПРИВАЛ", "ТРАВНИЦА",
-            "ОНСЭН", "ДОДЗЁ", "КОСТИ", "СВЯТИЛИЩЕ", "ОХОТНИКИ"
+            "ОНСЭН", "ДОДЗЁ", "КОСТИ", "СВЯТИЛИЩЕ", "ОХОТНИКИ",
+            "ТЕНЬ ДРЕВА", "ДРЕВО КАМИ", "РЫБАК", "ОТШЕЛЬНИК"
         };
         // ---- новые места (2026-11-06): свои медальоны UI/map_icons_new (3×2) и домики UI/map_buildings_new (3×2)
         // ячейки: 0 онсэн, 1 додзё, 2 игорный дом, 3 смотровая башня, 4 святилище клана, 5 охотники за головами (и ронин в розыске)
@@ -523,6 +526,17 @@ namespace BladePath
             {
                 case NodeType.Onsen: return 0; case NodeType.Dojo: return 1; case NodeType.Gamble: return 2;
                 case NodeType.ClanShrine: return 4; case NodeType.HunterCamp: return 5;
+            }
+            return -1;
+        }
+        // ---- ответвление у древа (Лес теней): медальоны UI/map_icons_branch (2×2: тень древа, корни древа ками, хижина рыбака, остров отшельника)
+        const string GroveIcons = "UI/map_icons_branch";
+        static Rect Cell2(int k) { return new Rect((k % 2) * 0.5f, k < 2 ? 0.5f : 0f, 0.5f, 0.5f); }
+        static int GrovePlace(NodeType t)
+        {
+            switch (t)
+            {
+                case NodeType.TreeShadow: return 0; case NodeType.KamiRoots: return 1; case NodeType.FisherHut: return 2; case NodeType.HermitIsle: return 3;
             }
             return -1;
         }
@@ -1516,6 +1530,8 @@ namespace BladePath
                     GUI.DrawTexture(new Rect(p.x - s * 0.47f, p.y - s * 0.47f, s * 0.94f, s * 0.94f), UiKit.Tex("UI/map_tavern"));
                 else if (NewPlace(n.Type) >= 0 && UiKit.Tex(NewIcons) != null)
                     GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.47f, p.y - s * 0.47f, s * 0.94f, s * 0.94f), UiKit.Tex(NewIcons), Cell3(NewPlace(n.Type)));
+                else if (GrovePlace(n.Type) >= 0 && UiKit.Tex(GroveIcons) != null)
+                    GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.47f, p.y - s * 0.47f, s * 0.94f, s * 0.94f), UiKit.Tex(GroveIcons), Cell2(GrovePlace(n.Type)));
                 else if (ic != null)
                     GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), ic, Cell(k));
                 else UiKit.Disc(p, s * 0.45f, can ? Gold : Dim);   // атлас значков не загрузился — простой кружок
@@ -1919,6 +1935,7 @@ namespace BladePath
                     if (herb != null) GUI.DrawTexture(new Rect(x, y, ics, ics), herb);
                     else if (n.IsTavern && UiKit.Tex("UI/map_tavern") != null) GUI.DrawTexture(new Rect(x, y, ics, ics), UiKit.Tex("UI/map_tavern"));
                     else if (NewPlace(n.Type) >= 0 && UiKit.Tex(NewIcons) != null) GUI.DrawTextureWithTexCoords(new Rect(x, y, ics, ics), UiKit.Tex(NewIcons), Cell3(NewPlace(n.Type)));
+                    else if (GrovePlace(n.Type) >= 0 && UiKit.Tex(GroveIcons) != null) GUI.DrawTextureWithTexCoords(new Rect(x, y, ics, ics), UiKit.Tex(GroveIcons), Cell2(GrovePlace(n.Type)));
                     else GUI.DrawTextureWithTexCoords(new Rect(x, y, ics, ics), ic,
                         Cell(MapBadgeCell(n, show)));
                     GUI.color = previousTint;
@@ -2048,6 +2065,7 @@ namespace BladePath
         {
             if (node.IsFight)
             {
+                if (node.foe > 0) { Ladder.Stage fs = Ladder.Of(node.enemy, node.foe); if (fs.art != null) return fs.art; }   // обитатель Леса теней
                 int idx = Mathf.Clamp(node.enemy, 0, EnemyFullArt.Length - 1);
                 return EnemyFullArt[idx];
             }
@@ -2065,6 +2083,10 @@ namespace BladePath
                 case NodeType.Gamble: return "UI/place_gamble";
                 case NodeType.ClanShrine: return "UI/place_clan";
                 case NodeType.HunterCamp: return "UI/place_bounty";
+                case NodeType.TreeShadow: return "UI/place_tree_shadow";
+                case NodeType.KamiRoots: return "UI/place_kami_roots";
+                case NodeType.FisherHut: return "UI/place_fisher";
+                case NodeType.HermitIsle: return "UI/place_hermit";
                 default: return "UI/path_panorama";
             }
         }
@@ -2389,7 +2411,7 @@ namespace BladePath
                 case Modal.Camp: DrawCamp(ok); break;
                 case Modal.Tavern: DrawTavern(ok); break;
                 case Modal.Dev: DrawDev(ok); break;
-                case Modal.Onsen: case Modal.Dojo: case Modal.Gamble: case Modal.Clan: case Modal.Hunter: case Modal.Hunt: case Modal.Watch:
+                case Modal.Onsen: case Modal.Dojo: case Modal.Gamble: case Modal.Clan: case Modal.Hunter: case Modal.Hunt: case Modal.Watch: case Modal.Grove:
                     DrawPlace(ok); break;
                 case Modal.RegionClear:
                 {
@@ -2835,9 +2857,78 @@ namespace BladePath
             MapNode fn = Campaign.Current;
             Weather.MapSky = MapClouds.SkyAt(Campaign.Region, new Vector2(fn.x, fn.y)); Weather.MapTime = DayCycle.Phase;   // бой — в то время суток, что на карте
             if (dojo) Campaign.BeginDojo(); else Campaign.BeginHunt();
+            FinishLeave();
+        }
+        void LeaveHermit()
+        {
+            MapNode fn = Campaign.Current;
+            Weather.MapSky = MapClouds.SkyAt(Campaign.Region, new Vector2(fn.x, fn.y)); Weather.MapTime = DayCycle.Phase;
+            Campaign.BeginHermit();
+            FinishLeave();
+        }
+        void FinishLeave()
+        {
             Hide();
             DuelManager dm = DuelManager.Instance;
             if (dm != null) dm.ResetMatch();
+        }
+
+        /// <summary>Ответвление у древа в Лесу теней: тень древа, корни древа ками, хижина рыбака, остров отшельника.</summary>
+        void DrawGrove(bool ok, int stage)
+        {
+            float x, w;
+            MapNode n = Campaign.Current;
+            switch (n.Type)
+            {
+                case NodeType.TreeShadow:
+                {
+                    Rect r = PlaceCard(NodePreviewArt(n), "ТЕНЬ ДРЕВА", "Под ветвями священного древа даже днём сумерки. Из-за корней выглядывают маленькие белые духи-кодама — и тут же прячутся. Если замереть, слышно, как они перешёптываются: о дорогах, о людях, о тех, кто прячется в лесу.", 2, out x, out w);
+                    if (Btn(PlaceBtn(r, x, w, 0, 2), "ПРИСЛУШАТЬСЯ К КОДАМА", ok, true))
+                    {
+                        Campaign.RevealAhead();
+                        float rv = Random.value;
+                        string gift = "";
+                        if (rv < 0.45f) { int g = 25 + 15 * Campaign.Region + Random.Range(0, 20); Profile.AddGold(g); gift = " У корней — горсть старых монет: подарок духов (+" + g + " мон)."; }
+                        else if (rv < 0.7f) { int lv = Profile.AddXp(30 * stage); gift = " Шёпот ещё долго звучит в голове: +" + (30 * stage) + " опыта" + (lv > 0 ? " и новый уровень!" : "."); }
+                        Result("Кодама шепчут, где вьются дороги и кто на них ждёт: туман впереди рассеялся." + gift);
+                    }
+                    if (Btn(PlaceBtn(r, x, w, 1, 2), "НЕ ТРЕВОЖИТЬ ДУХОВ", ok)) modal = Modal.None;
+                    break;
+                }
+                case NodeType.KamiRoots:
+                {
+                    int cost = 20 + 10 * Campaign.Region;
+                    Rect r = PlaceCard(NodePreviewArt(n), "КОРНИ ДРЕВА КАМИ", "Ствол опоясан толстой симэнавой, на ветру шуршат бумажные ленты сидэ. У каменного фонаря — чашка сакэ и рисовые колобки: здесь просят ками древа о милости.\n\nПодношение — " + cost + " мон. О чём просить?", 4, out x, out w);
+                    string[] ask = { "О СИЛЕ КЛИНКА (+20% УРОНА)", "О ДУХЕ (ПОЛНЫЙ ДУХ В НАЧАЛЕ)", "О ЖИЗНИ (+25% ЗДОРОВЬЯ)" };
+                    string[] said = { "Ветер треплет сидэ — ками принял подношение. Клинок в следующем бою будет тяжелее для врага (+20% урона).",
+                                      "Фонарь вспыхивает ярче. Следующий бой начнёшь с полным духом.",
+                                      "Корни древа тёплые, как живые. +25% здоровья в следующем бою." };
+                    for (int k = 0; k < 3; k++)
+                        if (Btn(PlaceBtn(r, x, w, k, 4), ask[k], ok && Profile.Gold >= cost, k == 0) && Profile.Spend(cost))
+                        { Campaign.SetBlessing(k + 1); Result(said[k]); }
+                    if (Btn(PlaceBtn(r, x, w, 3, 4), "ПОКЛОНИТЬСЯ И УЙТИ", ok)) modal = Modal.None;
+                    break;
+                }
+                case NodeType.FisherHut:
+                {
+                    Rect r = PlaceCard(NodePreviewArt(n), "ХИЖИНА РЫБАКА", "Хижина на сваях над тёмной водой. Старый рыбак чинит сеть и кивает на очаг: «Уха есть, лежанка есть. А на остров — вон, лодка. Только старик, что там живёт, гостей не любит. Разве что тех, кто держит меч».\n\nНа остров отшельника — отсюда, по воде.", 2, out x, out w);
+                    if (Btn(PlaceBtn(r, x, w, 0, 2), "УХА И НОЧЛЕГ: +25% ЗДОРОВЬЯ", ok, true))
+                    {
+                        bool was = Campaign.Cursed; Campaign.LiftCurse(); Campaign.SetBlessing(3);
+                        Result("Горячая уха, треск очага, плеск воды под полом. " + (was ? "К утру и проклятие отпустило. " : "") + "+25% здоровья в следующем бою.");
+                    }
+                    if (Btn(PlaceBtn(r, x, w, 1, 2), "ПОБЛАГОДАРИТЬ И УЙТИ", ok)) modal = Modal.None;
+                    break;
+                }
+                case NodeType.HermitIsle:
+                {
+                    Rect r = PlaceCard(NodePreviewArt(n), "ОСТРОВ ОТШЕЛЬНИКА", "Лодка утыкается в камни. Под кривой сосной сидит старик в соломенной шляпе, меч лежит у него на коленях. Он не открывает глаз: «Приплыл за наукой? Наука здесь одна — выстоять».\n\nПобеда — свиток с приёмом (или очко характеристик). Попытка одна.", 2, out x, out w);
+                    if (Btn(PlaceBtn(r, x, w, 0, 2), "ОБНАЖИТЬ МЕЧ", ok, true)) { Campaign.Complete(Campaign.At); modal = Modal.None; LeaveHermit(); }
+                    if (Btn(PlaceBtn(r, x, w, 1, 2), "ПОКЛОНИТЬСЯ И ОТПЛЫТЬ", ok)) modal = Modal.None;
+                    break;
+                }
+                default: modal = Modal.None; break;
+            }
         }
 
         void DrawPlace(bool ok)
@@ -2932,6 +3023,7 @@ namespace BladePath
                     }
                     break;
                 }
+                case Modal.Grove: DrawGrove(ok, stage); break;
                 case Modal.Watch:
                 {
                     Rect r = PlaceCard("UI/place_watchtower", "СМОТРОВАЯ БАШНЯ", "Дозорный поднимает фонарь и указывает копьём в долину: «Вон там дороги, а там — костры разбойников». Огонь на башне зажжён — туман вокруг неё рассеялся."

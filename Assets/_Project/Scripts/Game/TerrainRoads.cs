@@ -127,7 +127,7 @@ namespace BladePath
 
         public static void Bind(int region, List<MapNode> nodes)
         {
-            if (graphs == null) MakeGraphs();
+            if (graphs == null) { MakeGraphs(); AddBranches(); }
             int clampedRegion = Mathf.Clamp(region, 0, 2);
             bool changed = clampedRegion != activeRegion ||
                 !ReferenceEquals(nodes, activeNodes) ||
@@ -250,6 +250,53 @@ namespace BladePath
             return g;
         }
 
+        // ---- ответвления, которых нет среди нарисованных дорог (тропа рисуется игрой: BranchTrails, MapLife.DrawTrails)
+        // Лес теней (2026-11-18, по разметке владельца): от места у монастыря (0.515, 0.3) — развилка у древа; тропа уходит ЗА древо
+        // к хижине рыбака на сваях, от хижины — лодкой на остров отшельника; вниз — к корням древа ками и к месту (0.63, 0.533).
+        // Точки — доли широкой карты (x/2610, y/1024).
+        public static readonly Vector2[][][] BranchTrails =
+        {
+            new[]
+            {
+                new[] { new Vector2(0.515f, 0.3f), new Vector2(0.5594f, 0.3145f), new Vector2(0.5977f, 0.3135f), new Vector2(0.6226f, 0.3086f) },
+                new[] { new Vector2(0.6226f, 0.3086f), new Vector2(0.6379f, 0.2734f), new Vector2(0.6513f, 0.2441f) },   // к тени древа
+                new[] { new Vector2(0.6226f, 0.3086f), new Vector2(0.6418f, 0.2852f), new Vector2(0.6743f, 0.2754f), new Vector2(0.7126f, 0.2773f),
+                        new Vector2(0.7471f, 0.2891f), new Vector2(0.7701f, 0.3145f), new Vector2(0.7931f, 0.3594f), new Vector2(0.8199f, 0.3828f),
+                        new Vector2(0.8487f, 0.3711f), new Vector2(0.8774f, 0.3271f), new Vector2(0.8966f, 0.2773f) },        // за древом — к хижине рыбака
+                new[] { new Vector2(0.6226f, 0.3086f), new Vector2(0.6314f, 0.376f), new Vector2(0.6475f, 0.4297f), new Vector2(0.6724f, 0.4609f),
+                        new Vector2(0.6981f, 0.4648f) },                                                                      // к корням древа ками
+                new[] { new Vector2(0.6981f, 0.4648f), new Vector2(0.6743f, 0.5f), new Vector2(0.6475f, 0.5195f), new Vector2(0.63f, 0.533f) },
+            },
+            new Vector2[0][], new Vector2[0][],
+        };
+        /// <summary>Водные переходы (лодка): рисуются голубым пунктиром.</summary>
+        public static readonly Vector2[][][] BranchWater =
+        {
+            new[] { new[] { new Vector2(0.8966f, 0.2773f), new Vector2(0.8774f, 0.2422f), new Vector2(0.8525f, 0.2305f), new Vector2(0.8322f, 0.209f), new Vector2(0.8218f, 0.1982f) } },
+            new Vector2[0][], new Vector2[0][],
+        };
+        static void AddBranches()
+        {
+            for (int r = 0; r < graphs.Length && r < BranchTrails.Length; r++)
+                foreach (Vector2[][] set in new[] { BranchTrails[r], BranchWater[r] })
+                    foreach (Vector2[] line in set)
+                    {
+                        int prev = -1;
+                        foreach (Vector2 p in line)
+                        {
+                            int h = HubAt(graphs[r], p);
+                            if (h < 0) h = graphs[r].Add(p.x, p.y, 0);
+                            if (prev >= 0 && prev != h) graphs[r].Link(prev, h);
+                            prev = h;
+                        }
+                    }
+        }
+        static int HubAt(Graph g, Vector2 p)
+        {
+            for (int i = 0; i < g.hubs.Count; i++) if (Mathf.Abs(g.hubs[i].pos.x - p.x) < 0.0015f && Mathf.Abs(g.hubs[i].pos.y - p.y) < 0.0025f) return i;
+            return -1;
+        }
+
         // ROADS-GRAPH BEGIN (сгенерировано tools/gen_map_roads.py из tools/map_roads.json — правьте JSON)
         static void MakeGraphs()
         {
@@ -350,7 +397,7 @@ namespace BladePath
         /// </summary>
         public static List<int>[] PlaceLinks(int region, List<MapNode> nodes)
         {
-            if (graphs == null) MakeGraphs();
+            if (graphs == null) { MakeGraphs(); AddBranches(); }
             Graph g = graphs[Mathf.Clamp(region, 0, 2)];
             int n = nodes.Count;
             List<int>[] res = new List<int>[n];
@@ -389,7 +436,7 @@ namespace BladePath
         /// <summary>Место стоит прямо на мосту (узел дороги с пометкой «мост»): там не ставят домов и стоянок.</summary>
         public static bool OnBridge(int region, Vector2 pos)
         {
-            if (graphs == null) MakeGraphs();
+            if (graphs == null) { MakeGraphs(); AddBranches(); }
             Graph g = graphs[Mathf.Clamp(region, 0, 2)];
             int h = Nearest(g, pos, region);
             if (h < 0) return false;
