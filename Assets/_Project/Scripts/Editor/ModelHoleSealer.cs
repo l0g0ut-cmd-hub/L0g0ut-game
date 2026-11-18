@@ -29,7 +29,7 @@ namespace BladePath.EditorTools
 
         // AssetPostprocessor dependency version: imported FBX/OBJ must be
         // reimported when the repair algorithm is updated.
-        public override uint GetVersion() { return 5; }
+        public override uint GetVersion() { return 6; }
 
         // Keep a deterministic per-FBX model report so a green APK cannot
         // mask the original unreadable-mesh bug.
@@ -136,16 +136,17 @@ namespace BladePath.EditorTools
             public VertexKey from, to;
             public EdgeKey key;
             public int count, material;
+            public Vector3 adjacentFaceNormal;
             public VertexKey Other(VertexKey k) { return from.Equals(k) ? to : from; }
         }
 
-        static void PutEdge(Dictionary<EdgeKey, Edge> all, VertexKey a, VertexKey b, int material)
+        static void PutEdge(Dictionary<EdgeKey, Edge> all, VertexKey a, VertexKey b, int material, Vector3 faceNormal)
         {
             if (a.Equals(b)) return;
             EdgeKey k = new EdgeKey(a, b);
             Edge e;
             if (all.TryGetValue(k, out e)) { e.count++; return; }
-            all[k] = new Edge { from = a, to = b, key = k, count = 1, material = material };
+            all[k] = new Edge { from = a, to = b, key = k, count = 1, material = material, adjacentFaceNormal = faceNormal };
         }
 
         static void AddNeighbor(Dictionary<VertexKey, List<Edge>> graph, VertexKey key, Edge e)
@@ -207,7 +208,7 @@ namespace BladePath.EditorTools
                     {
                         int i = y * stride + x;
                         vertices[i] = new Vector3(x / (float)cells, y / (float)cells, 0);
-                        normals[i] = Vector3.forward;
+                        normals[i] = Vector3.right; // deliberately wrong: geometric face normals must govern caps
                     }
                 var triangles = new List<int>(cells * cells * 6);
                 for (int y = 0; y < cells; y++)
@@ -248,7 +249,6 @@ namespace BladePath.EditorTools
         static int SealReadable(Mesh mesh)
         {
             Vector3[] positions = mesh.vertices;
-            Vector3[] normals = mesh.normals;
             int n = positions.Length, subCount = mesh.subMeshCount;
             float size = Mathf.Max(mesh.bounds.size.x, Mathf.Max(mesh.bounds.size.y, mesh.bounds.size.z));
             if (size < 1e-8f) return 0;
@@ -272,9 +272,11 @@ namespace BladePath.EditorTools
                 {
                     int a = t[i], b = t[i + 1], c = t[i + 2];
                     if (a < 0 || b < 0 || c < 0 || a >= n || b >= n || c >= n) continue;
-                    PutEdge(edges, keys[a], keys[b], sub);
-                    PutEdge(edges, keys[b], keys[c], sub);
-                    PutEdge(edges, keys[c], keys[a], sub);
+                    Vector3 triangleNormal = Vector3.Cross(positions[b] - positions[a],
+                                                            positions[c] - positions[a]).normalized;
+                    PutEdge(edges, keys[a], keys[b], sub, triangleNormal);
+                    PutEdge(edges, keys[b], keys[c], sub, triangleNormal);
+                    PutEdge(edges, keys[c], keys[a], sub, triangleNormal);
                 }
             }
 
@@ -324,15 +326,19 @@ namespace BladePath.EditorTools
 
                 var vi = new int[count];
                 var p = new Vector3[count];
-                Vector3 center = Vector3.zero, averageNormal = Vector3.zero;
+                Vector3 center = Vector3.zero, adjacentNormal = Vector3.zero;
                 for (int i = 0; i < count; i++)
                 {
                     vi[i] = reps[loop[i]];
                     p[i] = positions[vi[i]];
                     center += p[i];
-                    if (normals.Length == n) averageNormal += normals[vi[i]];
                 }
                 center /= count;
+                // Imported FBX vertex normals on UV/hard-edge splits can point
+                // away from the actual neighboring face. They caused nearly
+                // every valid cap to be rejected in APK 576 (1 cap/23 models).
+                // Derive the tangent test from ACTUAL surrounding polygons.
+                foreach (Edge e in pathEdges) adjacentNormal += e.adjacentFaceNormal;
                 Vector3 polygonNormal = Vector3.zero;
                 float span = 0f, perimeter = 0f;
                 for (int i = 0; i < count; i++)
@@ -355,9 +361,15 @@ namespace BladePath.EditorTools
 
                 // A missing surface is locally tangent to its neighbors. An
                 // open cuff/tube end is normally perpendicular and stays open.
-                if (averageNormal.sqrMagnitude < 0.00001f
-                    || Mathf.Abs(Vector3.Dot(normal, averageNormal.normalized)) < 0.68f)
+                if (adjacentNormal.sqrMagnitude < 0.00001f
+                    || Mathf.Abs(Vector3.Dot(normal, adjacentNormal.normalized)) < 0.60f)
                     continue;
+                // A tube/cuff opening is surrounded by side faces pointing
+                // nearly perpendicular to its cap. Require local face support.
+                foreach (Edge e in pathEdges)
+                    if (Mathf.Abs(Vector3.Dot(normal, e.adjacentFaceNormal)) < 0.28f)
+                    { valid = false; break; }
+                if (!valid) continue;
 
                 // Only convex patches; never stretch a fan across a concave
                 // gap or across garment pieces that merely happen to meet.
@@ -393,7 +405,7 @@ namespace BladePath.EditorTools
                     Array.Reverse(p);
                     normal = -normal;
                 }
-                if (Vector3.Dot(normal, averageNormal.normalized) < 0.6f) continue;
+                if (Vector3.Dot(normal, adjacentNormal.normalized) < 0.60f) continue;
                 // Fan triangulation is safe because convexity was checked.
                 // All indices and source vertex attributes remain untouched.
                 for (int i = 1; i < count - 1; i++)
