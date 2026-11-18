@@ -27,7 +27,20 @@ namespace BladePath.EditorTools
 
         // AssetPostprocessor dependency version: imported FBX/OBJ must be
         // reimported when the repair algorithm is updated.
-        public override uint GetVersion() { return 2; }
+        public override uint GetVersion() { return 3; }
+
+        // FBX/OBJ imported with Read/Write disabled exposes no vertices during
+        // OnPostprocessModel. APK 575 silently skipped EVERY mesh (23/23).
+        // Switch it on BEFORE the FBX importer creates the mesh; a subsequent
+        // edit to this setting during OnPostprocessModel would be too late.
+        void OnPreprocessModel()
+        {
+            if (!assetPath.StartsWith(Folder, StringComparison.OrdinalIgnoreCase)
+                || assetPath.Contains("/Arenas/")) return;
+            ModelImporter importer = assetImporter as ModelImporter;
+            if (importer != null && !importer.isReadable)
+                importer.isReadable = true;
+        }
 
         // A fresh CI checkout may restore a Library cache that contains meshes
         // imported before this postprocessor was introduced. Reimport once
@@ -131,6 +144,9 @@ namespace BladePath.EditorTools
                     if (!f.sharedMesh.isReadable) unreadable++;
                     patched += Seal(f.sharedMesh);
                 }
+            if (unreadable > 0)
+                Debug.LogError("ModelHoleSealer: UNREADABLE imported mesh " + assetPath
+                               + " (" + unreadable + "/" + scanned + "); repair was NOT performed");
             Debug.Log("ModelHoleSealer: " + assetPath + ", meshes=" + scanned
                       + ", unreadable=" + unreadable + ", tiny holes sealed=" + patched
                       + " (no vertex, UV, material or bone changes)");
