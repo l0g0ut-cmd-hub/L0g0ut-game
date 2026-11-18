@@ -21,8 +21,9 @@ jobs:
       - name: Install Blender (headless)
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq blender
+          sudo apt-get install -y -qq blender python3-numpy
           blender --version | head -3
+          blender -b --factory-startup --python-expr 'import numpy; print("BLENDER_NUMPY", numpy.__version__)'
       - name: Audit every shipped FBX and OBJ without changing meshes
         run: |
           set -o pipefail
