@@ -18,6 +18,7 @@ namespace BladePath
         public List<int> next = new List<int>();
         public bool lair;           // бывшее логово старой карты (сильный противник — страж логова)
         public List<int> extra = new List<int>();   // отряд: противники, которые вступают по очереди после первого (ступени Ladder)
+        public int foe;             // облик Леса теней (Ladder.Foes, с 1); 0 — противник ступени как есть (и для старых сохранений)
         public NodeType Type { get { return (NodeType)type; } }
         public bool IsTavern { get { return Type == NodeType.Rest && ev == MapScreen.TavernEv; } }
         public bool IsFight { get { NodeType t = Type; return t == NodeType.Duel || t == NodeType.Elite || t == NodeType.Boss || t == NodeType.Ambush; } }
@@ -479,6 +480,7 @@ namespace BladePath
             MapNode n = D.nodes[i];
             n.type = (int)t;
             n.enemy = t == NodeType.Elite ? Mathf.Clamp(D.region, 0, Ladder.Count - 1) : DuelEnemy(D.region);
+            n.foe = D.region == 0 && t != NodeType.Elite ? Ladder.RollForestFoe() : 0;
             if (n.extra == null) n.extra = new List<int>();
             n.extra.Clear();
             for (int k = 0; k < squad; k++) n.extra.Add(DuelEnemy(D.region));
@@ -703,6 +705,9 @@ namespace BladePath
                 if (dl.Count > 0) dd.nodes[dl[UnityEngine.Random.Range(0, dl.Count)]].type = (int)NodeType.Merchant;
             }
             HousesOnPads(dd);
+            // Лес теней: в обычных боях и засадах — разные обитатели леса (разбойник, ямабуси, асигару, кицунэ) или Поверженный
+            foreach (MapNode fn in dd.nodes)
+                fn.foe = region == 0 && (fn.Type == NodeType.Duel || fn.Type == NodeType.Ambush) ? Ladder.RollForestFoe() : 0;
             dd.steps = 0; dd.rolls = Mathf.Max(dd.rolls, 1);
             Save();
         }
@@ -832,7 +837,7 @@ namespace BladePath
         public static void TurnToAmbush(int i)
         {
             MapNode n = D.nodes[i];
-            n.type = (int)NodeType.Ambush; n.enemy = DuelEnemy(D.region); Save();
+            n.type = (int)NodeType.Ambush; n.enemy = DuelEnemy(D.region); n.foe = D.region == 0 ? Ladder.RollForestFoe() : 0; Save();
         }
 
         /// <summary>Бой-реванш: повторный бой на пройденном месте, где стоит герой. Монеты вполовину, без добычи и костей пути.</summary>
@@ -882,6 +887,7 @@ namespace BladePath
             D.fight = i;
             MapNode n = D.nodes[i];
             Ladder.Index = n.enemy;
+            Ladder.Foe = n.foe;   // облик Леса теней (после Index: смена ступени сбрасывает облик)
             Weather.ForceNight = n.Type == NodeType.Ambush;
             Save();
         }

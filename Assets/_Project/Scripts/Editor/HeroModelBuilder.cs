@@ -30,6 +30,13 @@ namespace BladePath.EditorTools
         public const string ShogunFbxPath = "Assets/_Project/Models/Shogun_Enemy.fbx";    // враг 4-й ступени: Проклятый сёгун
         public const string FallenFbxPath = "Assets/_Project/Models/Fallen_Enemy.fbx";    // враг 1-й ступени: Поверженный (неупокоенный страж)
         public const string ShadowEnemyFbxPath = "Assets/_Project/Models/Shadow_Enemy.fbx"; // враг 2-й ступени: Тень клана
+        // обитатели Леса теней (Meshy по концептам владельца, 2026-11-18): слоты EnemySkins 6–9
+        public const string BanditFbxPath = "Assets/_Project/Models/Bandit_Enemy.fbx";
+        public const string YamabushiFbxPath = "Assets/_Project/Models/Yamabushi_Enemy.fbx";
+        public const string AshigaruFbxPath = "Assets/_Project/Models/Ashigaru_Enemy.fbx";
+        public const string KitsuneFbxPath = "Assets/_Project/Models/Kitsune_Enemy.fbx";
+        static readonly string[] ForestFbx = { BanditFbxPath, YamabushiFbxPath, AshigaruFbxPath, KitsuneFbxPath };
+        static readonly string[] ForestKey = { "Bandit", "Yamabushi", "Ashigaru", "Kitsune" };
         const float MeshyScale = 1f;
         public const string UndeadFbxPath = "Assets/_Project/Models/Samurai_Undead.fbx";
         const string ControllerPath = "Assets/_Project/Animation/Hero.controller";
@@ -61,15 +68,23 @@ namespace BladePath.EditorTools
                     fallen = Attach(fighter, bladeRoot, look, true, FallenFbxPath, "Assets/_Project/Animation/EnemyFallen.controller", "EnemyFallen_", "EnemyFallenModel");
                 if (Exists(ShadowEnemyFbxPath))
                     shade = Attach(fighter, bladeRoot, look, true, ShadowEnemyFbxPath, "Assets/_Project/Animation/EnemyShadow.controller", "EnemyShadow_", "EnemyShadowModel");
-                if (b != null || oni != null || shogun != null || fallen != null || shade != null)
+                GameObject[] forest = new GameObject[ForestFbx.Length];
+                for (int fi = 0; fi < ForestFbx.Length; fi++)
+                    if (Exists(ForestFbx[fi]))
+                        forest[fi] = Attach(fighter, bladeRoot, look, true, ForestFbx[fi], "Assets/_Project/Animation/Enemy" + ForestKey[fi] + ".controller",
+                                            "Enemy" + ForestKey[fi] + "_", "Enemy" + ForestKey[fi] + "Model");
+                if (b != null || oni != null || shogun != null || fallen != null || shade != null || System.Array.Exists(forest, g => g != null))
                 {
-                    // слоты = Ladder.Stage.model: 0 самурай в красном, 1 ронин, 2 Они, 3 сёгун, 4 Поверженный, 5 Тень клана;
+                    // слоты = Ladder.Stage.model: 0 самурай в красном, 1 ронин, 2 Они, 3 сёгун, 4 Поверженный, 5 Тень клана, 6–9 обитатели леса;
                     // нет FBX — облик соседнего слота
                     GameObject b2 = b != null ? b : a;
                     EnemySkins sk = fighter.gameObject.AddComponent<EnemySkins>();
+                    GameObject f4 = fallen != null ? fallen : a;   // нет модели обитателя леса — Поверженный
                     sk.models = new[] { a, b2, oni != null ? oni : b2, shogun != null ? shogun : a,
-                                        fallen != null ? fallen : a, shade != null ? shade : b2 };
+                                        f4, shade != null ? shade : b2,
+                                        forest[0] ?? f4, forest[1] ?? f4, forest[2] ?? f4, forest[3] ?? f4 };
                     foreach (GameObject extra in new[] { b, oni, shogun, fallen, shade }) if (extra != null) extra.SetActive(false);
+                    foreach (GameObject extra in forest) if (extra != null) extra.SetActive(false);
                 }
                 return true;
             }
@@ -155,7 +170,7 @@ namespace BladePath.EditorTools
                     model.transform.localRotation = Quaternion.Euler(0f, Vector3.SignedAngle(fwd, Vector3.forward, Vector3.up), 0f);
             }
             else Debug.LogWarning("HeroModelBuilder: не найден Hips/FrontMarker — ориентация модели не скорректирована");
-            bool meshy = fbx == DzinFbxPath || fbx == RenFbxPath || fbx == AkikoFbxPath || fbx == OniFbxPath || fbx == ShogunFbxPath || fbx == FallenFbxPath || fbx == ShadowEnemyFbxPath;
+            bool meshy = fbx == DzinFbxPath || fbx == RenFbxPath || fbx == AkikoFbxPath || fbx == OniFbxPath || fbx == ShogunFbxPath || fbx == FallenFbxPath || fbx == ShadowEnemyFbxPath || System.Array.IndexOf(ForestFbx, fbx) >= 0;
             model.transform.localScale = Vector3.one * (meshy ? MeshyScale : hero3 ? Hero3Scale : samurai ? SamuraiScale : ronin ? RoninScale : ModelScale);
 
             // Материалы: по имени из Blender → наши текстурированные

@@ -14,7 +14,9 @@ namespace BladePath
             public float kiMul, dashBias, heavyBias;   // особенности: копит дух, уходит рывками, любит тяжёлые удары
             public Color tint, aura;
             public int marks;   // метки жизни (как у боссов Sekiro): столько раз нужно добить
-            public int model;   // облик врага (EnemySkins): 0 — самурай в красном доспехе, 1 — ронин, 2 — Они, 3 — сёгун, 4 — Поверженный, 5 — Тень клана (Meshy)
+            public int model;   // облик врага (EnemySkins): 0 — самурай в красном доспехе, 1 — ронин, 2 — Они, 3 — сёгун, 4 — Поверженный, 5 — Тень клана (Meshy),
+                                //   6 — лесной разбойник, 7 — ямабуси, 8 — асигару-дезертир, 9 — маска кицунэ (Meshy по концептам владельца, 2026-11-18)
+            public string art, trait;   // у обликов Леса теней: картина врага (UI/…) и повадки — у ступеней они в MapScreen по номеру
         }
 
         public static readonly Stage[] Stages =
@@ -25,12 +27,39 @@ namespace BladePath
             new Stage { name = "ПРОКЛЯТЫЙ СЁГУН", title = "Владыка мёртвого храма", hpMul = 1.6f, dmgMul = 1.2f, speedMul = 1.15f, aggr = 0.2f, kiMul = 1.6f, dashBias = 0.15f, heavyBias = 0.2f, tint = new Color(0.94f, 0.9f, 1f), aura = new Color(1f, 0.85f, 0.3f) , marks = 3, model = 3 },
         };
 
+        /// <summary>
+        /// Обитатели Леса теней: обычные бои первой области — не только Поверженный. Сила — как у первой ступени
+        /// (ступень «Пути» не меняется), отличаются облик, имя и манера боя.
+        /// </summary>
+        public static readonly Stage[] Foes =
+        {
+            new Stage { name = "ЛЕСНОЙ РАЗБОЙНИК", title = "Нож из кустов — и кошель с тебя", hpMul = 0.85f, dmgMul = 0.85f, speedMul = 1.12f, aggr = 0.12f, kiMul = 1f, dashBias = 0.2f, heavyBias = 0f,
+                        tint = Color.white, aura = new Color(1f, 0.5f, 0.15f), marks = 1, model = 6, art = "UI/enemy_full_bandit", trait = "наскакивает без передышки, но хлипок" },
+            new Stage { name = "ЯМАБУСИ", title = "Горный отшельник, копящий дух", hpMul = 1.05f, dmgMul = 0.85f, speedMul = 0.95f, aggr = -0.05f, kiMul = 1.5f, dashBias = 0f, heavyBias = 0.15f,
+                        tint = Color.white, aura = new Color(1f, 0.8f, 0.3f), marks = 1, model = 7, art = "UI/enemy_full_yamabushi", trait = "терпелив и быстро копит дух — не давай ему отдышаться" },
+            new Stage { name = "АСИГАРУ-ДЕЗЕРТИР", title = "Бежал с поля боя — но не от драки", hpMul = 1.15f, dmgMul = 0.95f, speedMul = 0.9f, aggr = 0f, kiMul = 1f, dashBias = 0f, heavyBias = 0.45f,
+                        tint = Color.white, aura = new Color(1f, 0.3f, 0.15f), marks = 1, model = 8, art = "UI/enemy_full_ashigaru", trait = "медленный, рубит сверху — уходи вбок" },
+            new Stage { name = "МАСКА КИЦУНЭ", title = "Убийца, что смеётся из тумана", hpMul = 0.9f, dmgMul = 0.9f, speedMul = 1.15f, aggr = 0.05f, kiMul = 1f, dashBias = 0.4f, heavyBias = 0f,
+                        tint = Color.white, aura = new Color(1f, 0.35f, 0.5f), marks = 1, model = 9, art = "UI/enemy_full_kitsune", trait = "уходит рывками и заходит сбоку" },
+        };
+
         public static int Index
         {
             get { return Mathf.Clamp(PlayerPrefs.GetInt("ladder_stage", 0), 0, Stages.Length - 1); }
-            set { PlayerPrefs.SetInt("ladder_stage", Mathf.Clamp(value, 0, Stages.Length - 1)); }
+            // новая ступень — облик по умолчанию (облик Леса теней ставит только начало боя на месте карты: Campaign.BeginFight)
+            set { PlayerPrefs.SetInt("ladder_stage", Mathf.Clamp(value, 0, Stages.Length - 1)); PlayerPrefs.SetInt("ladder_foe", 0); }
         }
-        public static Stage Current { get { return Stages[Index]; } }
+        /// <summary>Облик Леса теней текущего боя: 0 — нет (ступень как есть), 1…Foes.Length — Foes[Foe − 1].</summary>
+        public static int Foe
+        {
+            get { int f = PlayerPrefs.GetInt("ladder_foe", 0); return f > 0 && f <= Foes.Length ? f : 0; }
+            set { PlayerPrefs.SetInt("ladder_foe", Mathf.Clamp(value, 0, Foes.Length)); }
+        }
+        public static Stage Current { get { int f = Foe; return f > 0 ? Foes[f - 1] : Stages[Index]; } }
+        /// <summary>Противник места карты (ступень или облик Леса теней).</summary>
+        public static Stage Of(int enemy, int foe) { return foe > 0 && foe <= Foes.Length ? Foes[foe - 1] : Stages[Mathf.Clamp(enemy, 0, Stages.Length - 1)]; }
+        /// <summary>Случайный противник обычного боя первой области: Поверженный (0) или один из обитателей леса (1…4).</summary>
+        public static int RollForestFoe() { return Random.value < 0.25f ? 0 : 1 + Random.Range(0, Foes.Length); }
         public static bool IsLast { get { return Index >= Stages.Length - 1; } }
         public static int Count { get { return Stages.Length; } }
     }

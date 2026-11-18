@@ -1915,7 +1915,7 @@ namespace BladePath
                         reusable ? "ПРОЙДЕНО · можно вернуться" : "ПРОЙДЕНО · уже пусто", 12f,
                         reusable ? VisualIdentity.Jade : Dim, TextAnchor.MiddleLeft, false);
                 }
-                else if (known && n.IsFight) UiKit.Text(new Rect(x + ics + 8f, y + (compact ? 20f : 32f), w - ics - 8f, compact ? 16f : 20f), Ladder.Stages[Mathf.Clamp(n.enemy, 0, Ladder.Count - 1)].name, 12f, new Color(1f, 0.6f, 0.45f), TextAnchor.MiddleLeft, false);
+                else if (known && n.IsFight) UiKit.Text(new Rect(x + ics + 8f, y + (compact ? 20f : 32f), w - ics - 8f, compact ? 16f : 20f), Ladder.Of(n.enemy, n.foe).name, 12f, new Color(1f, 0.6f, 0.45f), TextAnchor.MiddleLeft, false);
                 y += compact ? ics + 6f : 72f;
                 string hint = compact ? "" : known ? NodeHint(n) : "Туман скрывает, что ждёт впереди. Подойди ближе.";
                 // Text never runs under the fixed В ПУТЬ button: the route line has a reserved
@@ -2223,7 +2223,9 @@ namespace BladePath
                 {
                     Rect r = Card(640f, 350f);
                     int e = Mathf.Clamp(n.enemy, 0, Ladder.Count - 1);
-                    Texture2D art = UiKit.Tex(EnemyFullArt[e]);
+                    Ladder.Stage foeSt = Ladder.Of(n.enemy, n.foe);   // ступень или облик Леса теней
+                    string artPath = n.foe > 0 && foeSt.art != null ? foeSt.art : EnemyFullArt[e];
+                    Texture2D art = UiKit.Tex(artPath);
                     float artRight = r.x + 232f;   // правый край портрета — текст встаёт сразу за ним, без пустой полосы
                     if (art != null)
                     {
@@ -2236,7 +2238,7 @@ namespace BladePath
                         artRight = ar.xMax;
                         // Цельная картина врага с фоном (2026-11-09, владелец через ChatGPT, в стиле карточек путников).
                         // Не затемнять: Portrait рисует подложку только под картинкой, поверх ничего не класть.
-                        VisualIdentity.Portrait(ar, EnemyFullArt[e]);
+                        VisualIdentity.Portrait(ar, artPath);
                         // Reuse the existing gilded panel-frame asset so the portrait
                         // matches the card and the rest of the UI, rather than adding
                         // a plain, uneven black border or generating a new texture.
@@ -2250,8 +2252,8 @@ namespace BladePath
                     float x = artRight + 26f, w = r.xMax - 20f - x, y = r.y + 22f;   // текст сразу за портретом (отступ под рамку)
                     UiKit.Text(new Rect(x, y, w, 18f), NodeName(n), 13f, n.Type == NodeType.Boss ? new Color(1f, 0.4f, 0.3f) : Dim, TextAnchor.MiddleLeft); y += 22f;
                     // имя противника — крупно: сразу видно, с кем бой
-                    UiKit.Text(new Rect(x, y, w, 30f), Ladder.Stages[e].name.ToUpper(), 24f, n.Type == NodeType.Boss ? new Color(1f, 0.4f, 0.3f) : Gold, TextAnchor.MiddleLeft); y += 34f;
-                    UiKit.Text(new Rect(x, y, w, 20f), Ladder.Stages[e].title, 13f, new Color(0.9f, 0.85f, 0.75f), TextAnchor.MiddleLeft, false); y += 28f;
+                    UiKit.Text(new Rect(x, y, w, 30f), foeSt.name.ToUpper(), 24f, n.Type == NodeType.Boss ? new Color(1f, 0.4f, 0.3f) : Gold, TextAnchor.MiddleLeft); y += 34f;
+                    UiKit.Text(new Rect(x, y, w, 20f), foeSt.title, 13f, new Color(0.9f, 0.85f, 0.75f), TextAnchor.MiddleLeft, false); y += 28f;
                     VisualIdentity.Divider(new Rect(x, y - 6f, w, 1f)); y += 6f;
                     int sky = MapClouds.SkyAt(Campaign.Region, new Vector2(n.x, n.y));
                     Texture2D wi = UiKit.Tex("UI/weather_icons");   // 3 медальона в ряд: ясно, дождь, гроза
@@ -2274,9 +2276,9 @@ namespace BladePath
                     // повадки и сила врага — те же, что на вкладке «Путь» в снаряжении (и пустоты над кнопками нет)
                     if (y < r.yMax - 170f)
                     {
-                        Ladder.Stage st = Ladder.Stages[e];
+                        Ladder.Stage st = foeSt;
                         y += 8f;
-                        UiKit.Text(new Rect(x, y, w, 18f), "Повадки: " + EnemyTraits[Mathf.Clamp(e, 0, EnemyTraits.Length - 1)], 12.5f,
+                        UiKit.Text(new Rect(x, y, w, 18f), "Повадки: " + (n.foe > 0 && st.trait != null ? st.trait : EnemyTraits[Mathf.Clamp(e, 0, EnemyTraits.Length - 1)]), 12.5f,
                             new Color(1f, 0.65f, 0.45f), TextAnchor.MiddleLeft, false); y += 22f;
                         UiKit.Text(new Rect(x, y, w, 18f), "Жизней: " + Mathf.Max(1, st.marks) + "   ·   здоровье ×" + (st.hpMul * Profile.CycleHp).ToString("0.0")
                             + "   ·   урон ×" + (st.dmgMul * Profile.CycleDmg).ToString("0.0"), 12f, Dim, TextAnchor.MiddleLeft, false); y += 22f;

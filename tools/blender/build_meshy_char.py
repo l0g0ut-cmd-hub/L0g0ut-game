@@ -47,8 +47,8 @@ if RIG:
     MIX = {'Arm': 'UpperArm', 'ForeArm': 'LowerArm', 'UpLeg': 'UpperLeg', 'Leg': 'LowerLeg', 'ToeBase': 'Toes',
            'Toe_End': 'ToesEnd', 'HeadTop_End': 'HeadEnd'}
     def mix_name(nm):
-        if ':' not in nm: return nm
-        s = nm.split(':', 1)[1]
+        # «mixamorig:LeftArm» и такие же имена без приставки (риг Meshy через API, 2026-11: LeftArm, LeftForeArm, LeftUpLeg…)
+        s = nm.split(':', 1)[1] if ':' in nm else nm
         for side in ('Left', 'Right'):
             if s.startswith(side):
                 rest = s[len(side):]
