@@ -1,0 +1,621 @@
+{
+ "version": 1,
+ "name": "ГОРЫ ОНИ",
+ "texture": "UI/map_wide_1",
+ "width": 2610,
+ "order": 1,
+ "boss": 2,
+ "lairX": 0.4737,
+ "lairY": 0.235,
+ "places": [
+  {
+   "id": "S",
+   "x": 0.1118,
+   "y": 0.67,
+   "layer": 0,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "A1",
+   "x": 0.1601,
+   "y": 0.555,
+   "layer": 1,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "B1",
+   "x": 0.203,
+   "y": 0.805,
+   "layer": 1,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "A2",
+   "x": 0.1148,
+   "y": 0.415,
+   "layer": 2,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "B2",
+   "x": 0.2177,
+   "y": 0.445,
+   "layer": 2,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "A3",
+   "x": 0.2619,
+   "y": 0.47,
+   "layer": 3,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "B3",
+   "x": 0.3413,
+   "y": 0.535,
+   "layer": 3,
+   "type": -1,
+   "kind": 0,
+   "bridge": true
+  },
+  {
+   "id": "A4",
+   "x": 0.3884,
+   "y": 0.37,
+   "layer": 4,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "B4",
+   "x": 0.4296,
+   "y": 0.465,
+   "layer": 4,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "A5",
+   "x": 0.4473,
+   "y": 0.35,
+   "layer": 5,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "B5",
+   "x": 0.5238,
+   "y": 0.43,
+   "layer": 5,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "E",
+   "x": 0.4737,
+   "y": 0.235,
+   "layer": 6,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "D1",
+   "x": 0.613,
+   "y": 0.502,
+   "layer": 6,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "D2",
+   "x": 0.7188,
+   "y": 0.6348,
+   "layer": 7,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "D3",
+   "x": 0.764,
+   "y": 0.5039,
+   "layer": 8,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "D6",
+   "x": 0.7625,
+   "y": 0.9141,
+   "layer": 8,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "D4",
+   "x": 0.7111,
+   "y": 0.3652,
+   "layer": 9,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "D5",
+   "x": 0.8314,
+   "y": 0.4346,
+   "layer": 9,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "D7",
+   "x": 0.8153,
+   "y": 0.748,
+   "layer": 9,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "Z",
+   "x": 0.8966,
+   "y": 0.2617,
+   "layer": 10,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "X1",
+   "x": 0.1618,
+   "y": 0.69,
+   "layer": 1,
+   "type": -1,
+   "kind": 1
+  }
+ ],
+ "points": [
+  {
+   "id": "P",
+   "x": 0.1766,
+   "y": 0.442,
+   "bridge": false
+  },
+  {
+   "id": "BW",
+   "x": 0.2872,
+   "y": 0.508,
+   "bridge": true
+  },
+  {
+   "id": "BE",
+   "x": 0.4031,
+   "y": 0.478,
+   "bridge": true
+  },
+  {
+   "id": "Q",
+   "x": 0.4326,
+   "y": 0.395,
+   "bridge": false
+  },
+  {
+   "id": "LP1",
+   "x": 0.6559,
+   "y": 0.7344,
+   "bridge": true
+  },
+  {
+   "id": "LP2",
+   "x": 0.6498,
+   "y": 0.7773,
+   "bridge": true
+  },
+  {
+   "id": "LP3",
+   "x": 0.6598,
+   "y": 0.8203,
+   "bridge": true
+  },
+  {
+   "id": "LP4",
+   "x": 0.6828,
+   "y": 0.8457,
+   "bridge": true
+  },
+  {
+   "id": "LP5",
+   "x": 0.7096,
+   "y": 0.8652,
+   "bridge": true
+  },
+  {
+   "id": "LP6",
+   "x": 0.7364,
+   "y": 0.8984,
+   "bridge": true
+  }
+ ],
+ "roads": [
+  {
+   "a": "S",
+   "b": "A1",
+   "pts": [
+    0.1365,
+    0.64,
+    0.1542,
+    0.605
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "A1",
+   "b": "P",
+   "pts": [
+    0.1707,
+    0.505,
+    0.1766,
+    0.47
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "P",
+   "b": "A2",
+   "pts": [
+    0.1471,
+    0.43
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "P",
+   "b": "B2",
+   "pts": [
+    0.1971,
+    0.44
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "S",
+   "b": "B1",
+   "pts": [
+    0.1383,
+    0.675,
+    0.1618,
+    0.69,
+    0.1824,
+    0.735,
+    0.1795,
+    0.775,
+    0.1883,
+    0.8
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "B2",
+   "b": "A3",
+   "pts": [
+    0.2413,
+    0.452
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "A3",
+   "b": "BW",
+   "pts": [
+    0.2754,
+    0.488
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "BW",
+   "b": "B3",
+   "pts": [
+    0.3119,
+    0.53
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "B3",
+   "b": "BE",
+   "pts": [
+    0.3708,
+    0.515
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "BE",
+   "b": "B4",
+   "pts": [
+    0.4208,
+    0.476
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "B4",
+   "b": "Q",
+   "pts": [
+    0.4296,
+    0.42
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "Q",
+   "b": "A4",
+   "pts": [
+    0.412,
+    0.385
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "Q",
+   "b": "A5",
+   "pts": [],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "Q",
+   "b": "B5",
+   "pts": [
+    0.4649,
+    0.4,
+    0.4943,
+    0.405
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "A5",
+   "b": "E",
+   "pts": [
+    0.4649,
+    0.28,
+    0.4708,
+    0.258
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "B5",
+   "b": "A5",
+   "pts": [
+    0.4943,
+    0.38,
+    0.4708,
+    0.36
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "B5",
+   "b": "D1",
+   "pts": [
+    0.5441,
+    0.457,
+    0.567,
+    0.4707,
+    0.5923,
+    0.4922
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "D1",
+   "b": "D2",
+   "pts": [
+    0.6322,
+    0.5078,
+    0.6521,
+    0.5195,
+    0.6628,
+    0.5684,
+    0.6751,
+    0.6133,
+    0.6897,
+    0.6426
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "D2",
+   "b": "D3",
+   "pts": [
+    0.7326,
+    0.6016,
+    0.7471,
+    0.5703,
+    0.7579,
+    0.5391
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "D3",
+   "b": "D4",
+   "pts": [
+    0.7556,
+    0.4648,
+    0.7425,
+    0.4219,
+    0.728,
+    0.3887
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "D3",
+   "b": "D5",
+   "pts": [
+    0.7854,
+    0.4766,
+    0.8046,
+    0.4512
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "D5",
+   "b": "Z",
+   "pts": [
+    0.8544,
+    0.4297,
+    0.8797,
+    0.4043,
+    0.8904,
+    0.3672,
+    0.895,
+    0.3125
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "D2",
+   "b": "LP1",
+   "pts": [
+    0.6866,
+    0.6738,
+    0.6651,
+    0.7012
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "LP1",
+   "b": "LP2",
+   "pts": [],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "LP2",
+   "b": "LP3",
+   "pts": [],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "LP3",
+   "b": "LP4",
+   "pts": [],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "LP4",
+   "b": "LP5",
+   "pts": [],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "LP5",
+   "b": "LP6",
+   "pts": [],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "LP6",
+   "b": "D6",
+   "pts": [
+    0.751,
+    0.9102
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "D2",
+   "b": "D7",
+   "pts": [
+    0.728,
+    0.6836,
+    0.7571,
+    0.7109,
+    0.7862,
+    0.7305
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "D7",
+   "b": "D6",
+   "pts": [
+    0.8322,
+    0.7539,
+    0.8437,
+    0.7793,
+    0.8483,
+    0.8164,
+    0.8391,
+    0.8418,
+    0.813,
+    0.8594,
+    0.7862,
+    0.8789,
+    0.7701,
+    0.8906
+   ],
+   "water": false,
+   "trail": false
+  }
+ ],
+ "effects": []
+}

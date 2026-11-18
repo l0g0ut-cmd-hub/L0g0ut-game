@@ -127,7 +127,7 @@ namespace BladePath
 
         public static void Bind(int region, List<MapNode> nodes)
         {
-            if (graphs == null) { MakeGraphs(); AddBranches(); }
+            EnsureGraphs();
             int clampedRegion = Mathf.Clamp(region, 0, 2);
             bool changed = clampedRegion != activeRegion ||
                 !ReferenceEquals(nodes, activeNodes) ||
@@ -169,7 +169,7 @@ namespace BladePath
             Path result;
             if (cache.TryGetValue(key, out result)) return result;
             MapNode a = activeNodes[from], b = activeNodes[to];
-            result = Build(graphs[activeRegion],
+            result = Build(G(activeRegion),
                 new Vector2(a.x, a.y), new Vector2(b.x, b.y), activeRegion);
             cache[key] = result;
             return result;
@@ -275,6 +275,43 @@ namespace BladePath
             new[] { new[] { new Vector2(0.8966f, 0.2773f), new Vector2(0.8774f, 0.2422f), new Vector2(0.8525f, 0.2305f), new Vector2(0.8322f, 0.209f), new Vector2(0.8218f, 0.1982f) } },
             new Vector2[0][], new Vector2[0][],
         };
+        static void EnsureGraphs()
+        {
+            if (graphs != null) return;
+            MakeGraphs(); AddBranches();
+            for (int r = 0; r < graphs.Length; r++)
+            {
+                MapData m = MapStore.Get(r);   // файл карты (редактор карт) — дороги из него
+                if (m != null && m.roads != null && m.roads.Length > 0) graphs[r] = FromData(m);
+            }
+        }
+        static Graph G(int region) { EnsureGraphs(); return graphs[Mathf.Clamp(region, 0, graphs.Length - 1)]; }
+        /// <summary>Карты изменились (редактор): граф дорог и маршруты строятся заново.</summary>
+        public static void Reset() { graphs = null; cache.Clear(); cachedNodePositions = null; activeNodes = null; }
+        /// <summary>Граф дорог из файла карты: концы дорог (места и развилки) и изгибы — узлы, отрезки — связи.</summary>
+        static Graph FromData(MapData m)
+        {
+            Graph g = new Graph();
+            Dictionary<string, int> byId = new Dictionary<string, int>();
+            System.Func<string, int> hub = id =>
+            {
+                int h;
+                if (byId.TryGetValue(id, out h)) return h;
+                Vector2? p = m.Pos(id);
+                if (!p.HasValue) return -1;
+                h = g.Add(p.Value.x, p.Value.y, m.IsBridge(id) ? 2 : 0);
+                byId[id] = h; return h;
+            };
+            foreach (MapRoad r in m.roads)
+            {
+                int prev = hub(r.a), end = hub(r.b);
+                if (prev < 0 || end < 0) continue;
+                for (int i = 0; i + 1 < r.pts.Length; i += 2) { int h = g.Add(r.pts[i], r.pts[i + 1], 0); g.Link(prev, h); prev = h; }
+                g.Link(prev, end);
+            }
+            return g;
+        }
+
         static void AddBranches()
         {
             for (int r = 0; r < graphs.Length && r < BranchTrails.Length; r++)
@@ -397,8 +434,8 @@ namespace BladePath
         /// </summary>
         public static List<int>[] PlaceLinks(int region, List<MapNode> nodes)
         {
-            if (graphs == null) { MakeGraphs(); AddBranches(); }
-            Graph g = graphs[Mathf.Clamp(region, 0, 2)];
+            EnsureGraphs();
+            Graph g = G(region);
             int n = nodes.Count;
             List<int>[] res = new List<int>[n];
             int[] hubOf = new int[n];
@@ -436,8 +473,8 @@ namespace BladePath
         /// <summary>Место стоит прямо на мосту (узел дороги с пометкой «мост»): там не ставят домов и стоянок.</summary>
         public static bool OnBridge(int region, Vector2 pos)
         {
-            if (graphs == null) { MakeGraphs(); AddBranches(); }
-            Graph g = graphs[Mathf.Clamp(region, 0, 2)];
+            EnsureGraphs();
+            Graph g = G(region);
             int h = Nearest(g, pos, region);
             if (h < 0) return false;
             Vector2 dv = g.hubs[h].pos - pos;
@@ -449,7 +486,7 @@ namespace BladePath
         public static bool UsesBridge(int from, int to)
         {
             Path path = Route(from, to);
-            Graph graph = graphs[Mathf.Clamp(activeRegion, 0, 2)];
+            Graph graph = G(activeRegion);
             for (int i = 0; i < graph.hubs.Count; i++)
             {
                 if (graph.hubs[i].shore != 2) continue;

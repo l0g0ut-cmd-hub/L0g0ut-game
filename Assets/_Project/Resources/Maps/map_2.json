@@ -1,0 +1,574 @@
+{
+ "version": 1,
+ "name": "ПРОКЛЯТЫЙ СЁГУНАТ",
+ "texture": "UI/map_wide_2",
+ "width": 2815,
+ "order": 2,
+ "boss": 3,
+ "lairX": 0.4747,
+ "lairY": 0.19,
+ "places": [
+  {
+   "id": "S",
+   "x": 0.1828,
+   "y": 0.665,
+   "layer": 0,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "A1",
+   "x": 0.0709,
+   "y": 0.46,
+   "layer": 1,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "B1",
+   "x": 0.2046,
+   "y": 0.79,
+   "layer": 1,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "A2",
+   "x": 0.1037,
+   "y": 0.378,
+   "layer": 2,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "B2",
+   "x": 0.2537,
+   "y": 0.612,
+   "layer": 2,
+   "type": -1,
+   "kind": 0,
+   "bridge": true
+  },
+  {
+   "id": "A3",
+   "x": 0.3208,
+   "y": 0.455,
+   "layer": 3,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "B3",
+   "x": 0.3438,
+   "y": 0.58,
+   "layer": 3,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "A4",
+   "x": 0.3929,
+   "y": 0.42,
+   "layer": 4,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "B4",
+   "x": 0.4256,
+   "y": 0.6,
+   "layer": 4,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "A5",
+   "x": 0.4911,
+   "y": 0.468,
+   "layer": 5,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "B5",
+   "x": 0.4693,
+   "y": 0.585,
+   "layer": 5,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "E",
+   "x": 0.4747,
+   "y": 0.19,
+   "layer": 6,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "G1",
+   "x": 0.5844,
+   "y": 0.6465,
+   "layer": 6,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "G2",
+   "x": 0.6757,
+   "y": 0.6094,
+   "layer": 7,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "G7",
+   "x": 0.7069,
+   "y": 0.7715,
+   "layer": 7,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "G3",
+   "x": 0.7496,
+   "y": 0.5469,
+   "layer": 8,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "G6",
+   "x": 0.7833,
+   "y": 0.6953,
+   "layer": 8,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "G4",
+   "x": 0.7503,
+   "y": 0.3945,
+   "layer": 9,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "G5",
+   "x": 0.8071,
+   "y": 0.4512,
+   "layer": 9,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "G8",
+   "x": 0.859,
+   "y": 0.7207,
+   "layer": 9,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "Z",
+   "x": 0.9052,
+   "y": 0.3281,
+   "layer": 10,
+   "type": -1,
+   "kind": 0,
+   "bridge": false
+  },
+  {
+   "id": "X1",
+   "x": 0.131,
+   "y": 0.545,
+   "layer": 1,
+   "type": -1,
+   "kind": 1
+  },
+  {
+   "id": "X2",
+   "x": 0.4965,
+   "y": 0.33,
+   "layer": 5,
+   "type": -1,
+   "kind": 1
+  },
+  {
+   "id": "X3",
+   "x": 0.4365,
+   "y": 0.432,
+   "layer": 4,
+   "type": -1,
+   "kind": 1
+  }
+ ],
+ "points": [
+  {
+   "id": "BW",
+   "x": 0.2117,
+   "y": 0.628,
+   "bridge": true
+  },
+  {
+   "id": "BE",
+   "x": 0.299,
+   "y": 0.6,
+   "bridge": true
+  },
+  {
+   "id": "CB1",
+   "x": 0.8455,
+   "y": 0.4111,
+   "bridge": true
+  },
+  {
+   "id": "CB2",
+   "x": 0.8767,
+   "y": 0.3779,
+   "bridge": true
+  }
+ ],
+ "roads": [
+  {
+   "a": "A1",
+   "b": "A2",
+   "pts": [
+    0.0818,
+    0.415
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "BW",
+   "b": "B2",
+   "pts": [],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "B2",
+   "b": "BE",
+   "pts": [],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "BE",
+   "b": "B3",
+   "pts": [
+    0.3192,
+    0.592
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "B3",
+   "b": "A3",
+   "pts": [
+    0.3356,
+    0.53,
+    0.3274,
+    0.49
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "A3",
+   "b": "A4",
+   "pts": [
+    0.3438,
+    0.462,
+    0.371,
+    0.44
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "B3",
+   "b": "A4",
+   "pts": [
+    0.3629,
+    0.52,
+    0.382,
+    0.47
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "B3",
+   "b": "B4",
+   "pts": [
+    0.382,
+    0.588
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "A4",
+   "b": "A5",
+   "pts": [
+    0.4365,
+    0.432,
+    0.4693,
+    0.45
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "B4",
+   "b": "B5",
+   "pts": [
+    0.4474,
+    0.595
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "B5",
+   "b": "A5",
+   "pts": [
+    0.4856,
+    0.505
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "A5",
+   "b": "E",
+   "pts": [
+    0.4993,
+    0.4,
+    0.4965,
+    0.33,
+    0.4884,
+    0.27,
+    0.4802,
+    0.22
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "S",
+   "b": "A1",
+   "pts": [
+    0.1882,
+    0.635,
+    0.1746,
+    0.595,
+    0.1528,
+    0.575,
+    0.131,
+    0.545,
+    0.1091,
+    0.525,
+    0.0846,
+    0.5
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "S",
+   "b": "BW",
+   "pts": [
+    0.1992,
+    0.648
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "S",
+   "b": "B1",
+   "pts": [
+    0.191,
+    0.7,
+    0.1975,
+    0.75
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "A5",
+   "b": "G1",
+   "pts": [
+    0.5101,
+    0.5078,
+    0.5258,
+    0.5527,
+    0.5435,
+    0.5957,
+    0.5648,
+    0.6309
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "G1",
+   "b": "G2",
+   "pts": [
+    0.6053,
+    0.625,
+    0.6359,
+    0.6133,
+    0.6572,
+    0.6094
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "G2",
+   "b": "G3",
+   "pts": [
+    0.6927,
+    0.5859,
+    0.714,
+    0.5713,
+    0.7353,
+    0.5586
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "G3",
+   "b": "G4",
+   "pts": [
+    0.7567,
+    0.5078,
+    0.7609,
+    0.4473,
+    0.7545,
+    0.416
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "G3",
+   "b": "G5",
+   "pts": [
+    0.7709,
+    0.4883,
+    0.7893,
+    0.4648
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "G5",
+   "b": "CB1",
+   "pts": [],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "CB1",
+   "b": "CB2",
+   "pts": [],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "CB2",
+   "b": "Z",
+   "pts": [
+    0.8952,
+    0.3516
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "G1",
+   "b": "G7",
+   "pts": [
+    0.579,
+    0.6836,
+    0.5861,
+    0.7275,
+    0.6039,
+    0.7568,
+    0.6323,
+    0.7695,
+    0.6679,
+    0.7734
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "G7",
+   "b": "G6",
+   "pts": [
+    0.7353,
+    0.7764,
+    0.7638,
+    0.7695,
+    0.7815,
+    0.7344
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "G6",
+   "b": "G3",
+   "pts": [
+    0.7602,
+    0.625,
+    0.7503,
+    0.5859
+   ],
+   "water": false,
+   "trail": false
+  },
+  {
+   "a": "G6",
+   "b": "G8",
+   "pts": [
+    0.7993,
+    0.7344,
+    0.8277,
+    0.7422
+   ],
+   "water": false,
+   "trail": false
+  }
+ ],
+ "effects": []
+}

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace BladePath
@@ -267,11 +268,26 @@ namespace BladePath
         {
             if (Event.current.type != EventType.Repaint) return;
             Color oc = GUI.color;
-            if (region < 0 || region >= TerrainRoads.BranchTrails.Length) return;
+            if (region < 0) return;
             float px = view.height / MapGeom.TexH, texW = MapGeom.TexW[Mathf.Clamp(region, 0, MapGeom.TexW.Length - 1)];
+            if (region >= TerrainRoads.BranchTrails.Length && MapStore.Get(region) == null) return;
             System.Func<Vector2, Vector2> S = p => new Vector2(view.x + (p.x - u0) / uw * view.width, p.y * view.height);
-            foreach (Vector2[] line in TerrainRoads.BranchTrails[region]) Dashes(line, S, px, new Color(0.93f, 0.87f, 0.7f, 0.92f), 3.2f, 11f, 8f);
-            foreach (Vector2[] line in TerrainRoads.BranchWater[region]) Dashes(line, S, px, new Color(0.68f, 0.84f, 0.95f, 0.85f), 2.6f, 6f, 7f);
+            MapData md = MapStore.Get(region);
+            if (md != null)
+            {   // файл карты: тропы и переправы, которых нет на картине
+                foreach (MapRoad rd in md.roads)
+                {
+                    if (!rd.trail && !rd.water) continue;
+                    Vector2[] line = md.Line(rd).ToArray();
+                    if (rd.water) Dashes(line, S, px, new Color(0.68f, 0.84f, 0.95f, 0.85f), 2.6f, 6f, 7f);
+                    else Dashes(line, S, px, new Color(0.93f, 0.87f, 0.7f, 0.92f), 3.2f, 11f, 8f);
+                }
+            }
+            else
+            {
+                foreach (Vector2[] line in TerrainRoads.BranchTrails[region]) Dashes(line, S, px, new Color(0.93f, 0.87f, 0.7f, 0.92f), 3.2f, 11f, 8f);
+                foreach (Vector2[] line in TerrainRoads.BranchWater[region]) Dashes(line, S, px, new Color(0.68f, 0.84f, 0.95f, 0.85f), 2.6f, 6f, 7f);
+            }
             if (region == 0)
             {
                 Texture2D over = UiKit.Tex("UI/map0_tree_over");   // вырезка карты 1590…2070 × 80…500
@@ -315,41 +331,69 @@ namespace BladePath
             GUI.matrix = m0;
         }
 
+        static readonly List<MapEffect> codeFx = new List<MapEffect>();
+        /// <summary>Эффекты области: из файла карты (редактор карт) или — если файла нет — водопады и ручей, заданные в коде.</summary>
+        public static List<MapEffect> Effects(int region)
+        {
+            MapData md = MapStore.Get(region);
+            if (md != null) return new List<MapEffect>(md.effects ?? new MapEffect[0]);
+            codeFx.Clear();
+            if (region < SheetFalls.Length)
+            {
+                Vector4[] fs = SheetFalls[region]; Vector3[] look = SheetFallLook[region];
+                for (int i = 0; i < fs.Length; i++)
+                    codeFx.Add(new MapEffect { kind = look[i].x > 1.5f ? "fall_lip" : look[i].x > 0.5f ? "fall_mid" : "fall_fade", x = fs[i].x - fs[i].w * 0.5f, y = fs[i].y,
+                                               w = fs[i].w, h = fs[i].z, alpha = look[i].y, speed = 1f, foot = Mathf.RoundToInt(look[i].z) });
+                if (region == 0) codeFx.Add(new MapEffect { kind = "stream", x = 2226f, y = 370f, w = 76f, h = 42f, alpha = 1f, speed = 1f });
+            }
+            return codeFx;
+        }
+
         static void DrawSheetFalls(int region, Rect view, float u0, float uw, float t, Texture2D mist)
         {
-            if (region >= SheetFalls.Length) return;
-            Texture2D wfFade = UiKit.Tex("UI/fx_waterfall_fade"), wfMid = UiKit.Tex("UI/fx_waterfall_mid"), wfLip = UiKit.Tex("UI/fx_waterfall_lip"), sp = UiKit.Tex("UI/fx_splash");
-            if (wfFade == null) return;
+            List<MapEffect> fx = Effects(region);
+            if (fx.Count == 0) return;
             float px = view.height / MapGeom.TexH, texW = MapGeom.TexW[Mathf.Clamp(region, 0, MapGeom.TexW.Length - 1)];
-            if (region == 0)
+            float kx = view.width / uw / texW;   // точек экрана на пиксель картины по горизонтали
+            for (int i = 0; i < fx.Count; i++)
             {
-                // нарисованный ручей из озера бежит к кромке водопада в ущелье (блики вдоль русла, петля 36 кадров)
-                Texture2D st = UiKit.Tex("UI/fx_stream");
-                float sx = view.x + (2226f / texW - u0) / uw * view.width;
-                if (st != null && sx > view.x - 200f && sx < view.xMax + 200f)
-                    SheetFrame(new Rect(sx, 370f * px, 76f * px, 42f * px), st, 6, 6, 36, t, 24f, 1f, false);
+                MapEffect e = fx[i];
+                Rect r = new Rect(view.x + (e.x / texW - u0) / uw * view.width, e.y * px, e.w * kx, e.h * px);
+                if (r.xMax < view.x - 100f || r.x > view.xMax + 100f) continue;
+                DrawEffect(e, r, t * Mathf.Max(0.05f, e.speed) + i * 0.37f, mist);
             }
-            Vector4[] fs = SheetFalls[region]; Vector3[] look = SheetFallLook[region];
-            for (int i = 0; i < fs.Length; i++)
+        }
+
+        /// <summary>Один эффект карты в прямоугольнике r (экран). Водопады — бесшовная петля 36 кадров, у подножия брызги или пыль.</summary>
+        public static void DrawEffect(MapEffect e, Rect r, float t, Texture2D mist)
+        {
+            string k = e.kind ?? "";
+            if (k.StartsWith("fall_"))
             {
-                Vector4 f = fs[i]; Vector3 lk = look[i];
-                float x = view.x + (f.x / texW - u0) / uw * view.width, y = f.y * px, h = f.z * px, w = f.w * px;
-                if (x < view.x - 200f || x > view.xMax + 200f) continue;
-                Texture2D sheet = lk.x > 1.5f && wfLip != null ? wfLip : lk.x > 0.5f && wfMid != null ? wfMid : wfFade;
-                SheetFrame(new Rect(x - w * 0.5f, y, w, h), sheet, 6, 6, 36, t + i * 0.37f, 24f, lk.y, false);   // бесшовная петля 36 кадров
-                if (lk.z > 0.5f && lk.z < 1.5f && sp != null)
+                Texture2D sheet = UiKit.Tex(k == "fall_lip" ? "UI/fx_waterfall_lip" : k == "fall_mid" ? "UI/fx_waterfall_mid" : "UI/fx_waterfall_fade");
+                if (sheet == null) return;
+                SheetFrame(r, sheet, 6, 6, 36, t, 24f, e.alpha, false);
+                Texture2D sp = UiKit.Tex("UI/fx_splash");
+                float x = r.center.x, w = r.width;
+                if (e.foot == 1 && sp != null)
                 {
                     float sw = w * 1.9f, sh = sw * 128f / 192f;
-                    SheetFrame(new Rect(x - sw * 0.5f, y + h - sh * 0.7f, sw, sh), sp, 6, 4, 24, t + i * 0.53f, 12f, 0.45f, true);
+                    SheetFrame(new Rect(x - sw * 0.5f, r.yMax - sh * 0.7f, sw, sh), sp, 6, 4, 24, t * 0.9f, 12f, 0.45f, true);
                 }
-                else if (lk.z > 1.5f && mist != null)
+                else if (e.foot == 2 && mist != null)
                     for (int j = 0; j < 5; j++)   // водяная пыль из ущелья: клубы поднимаются и тают
                     {
                         float u = Mathf.Repeat(t * 0.18f + j / 5f, 1f), sz = w * (1.6f + 1.2f * u);
-                        float cx = x + Mathf.Sin(t * 0.5f + j * 1.7f) * w * 0.35f, cy = y + h * (0.95f - 0.35f * u);
-                        GUI.color = new Color(0.9f, 0.91f, 0.95f, 0.32f * Mathf.Sin(u * Mathf.PI));
+                        float cx = x + Mathf.Sin(t * 0.5f + j * 1.7f) * w * 0.35f, cy = r.y + r.height * (0.95f - 0.35f * u);
+                        GUI.color = new Color(0.9f, 0.91f, 0.95f, 0.32f * e.alpha * Mathf.Sin(u * Mathf.PI));
                         GUI.DrawTexture(new Rect(cx - sz * 0.5f, cy - sz * 0.3f, sz, sz * 0.6f), mist);
                     }
+                return;
+            }
+            if (k == "stream")
+            {
+                Texture2D st = UiKit.Tex("UI/fx_stream");
+                if (st != null) SheetFrame(r, st, 6, 6, 36, t, 24f, e.alpha, false);
             }
         }
 

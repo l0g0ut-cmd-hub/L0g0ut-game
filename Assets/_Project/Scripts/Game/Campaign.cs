@@ -203,7 +203,7 @@ namespace BladePath
             if (d == null || d.nodes == null || d.nodes.Count == 0) { d = new Data(); Generate(0); }
             if (d.at < 0 || d.at >= d.nodes.Count) d.at = 0;
             MigrateSpots(d);
-            if (d.region == 0 && !d.nodes.Exists(m => IsGrove(m.Type))) { AddGroveBranch(d); links = null; }   // поход до ответвления у древа
+            if (d.region == 0 && !d.nodes.Exists(m => IsGrove(m.Type))) { AddFixedPlaces(d, 0); links = null; }   // поход до ответвления у древа
             LinkByRoads(d);   // и старые сохранения ездят по нарисованным дорогам
             // поход, начатый до обитателей Леса теней: расставить их по ещё не пройденным обычным боям леса
             if (!d.foesRolled)
@@ -379,14 +379,46 @@ namespace BladePath
             new Vector3(0.8966f, 0.2773f, (int)NodeType.FisherHut), new Vector3(0.8218f, 0.1982f, (int)NodeType.HermitIsle),
         };
         static readonly int[] GroveLayers = { 6, 6, 7, 8 };
-        static void AddGroveBranch(Data dd)
+        static void AddFixedPlaces(Data dd, int region)
         {
+            MapData md = MapStore.Get(region);
+            if (md != null)
+            {   // постоянные места из файла карты (тип задан, в рядах не участвуют)
+                foreach (MapPlace mp in md.places)
+                {
+                    if (mp.kind != 2 || mp.type < 0) continue;
+                    if (dd.nodes.Exists(m => Mathf.Abs(m.x - mp.x) < 0.002f && Mathf.Abs(m.y - mp.y) < 0.003f)) continue;
+                    MapNode fn = new MapNode { layer = Mathf.Max(1, mp.layer), x = mp.x, y = mp.y, type = mp.type };
+                    if (fn.IsFight) fn.enemy = fn.Type == NodeType.Elite ? Mathf.Clamp(region, 0, Ladder.Count - 1) : DuelEnemy(region);
+                    if (fn.Type == NodeType.Event) fn.ev = MapScreen.RandomEvent();
+                    dd.nodes.Add(fn);
+                }
+                return;
+            }
+            if (region != 0) return;
             for (int k = 0; k < GroveSpots.Length; k++)
             {
                 Vector3 g = GroveSpots[k];
                 if (dd.nodes.Exists(m => m.Type == (NodeType)(int)g.z)) continue;
                 dd.nodes.Add(new MapNode { layer = GroveLayers[k], x = g.x, y = g.y, type = (int)g.z });
             }
+        }
+        /// <summary>Места рядов из файла карты (kind 0), по рядам в порядке файла.</summary>
+        static Vector2[][] DataSpots(MapData md)
+        {
+            int L = md.Layers;
+            List<Vector2>[] l = new List<Vector2>[L];
+            for (int i = 0; i < L; i++) l[i] = new List<Vector2>();
+            foreach (MapPlace mp in md.places) if (mp.kind == 0) l[Mathf.Clamp(mp.layer, 0, L - 1)].Add(new Vector2(mp.x, mp.y));
+            List<Vector2[]> res = new List<Vector2[]>();
+            foreach (List<Vector2> x in l) if (x.Count > 0) res.Add(x.ToArray());
+            return res.ToArray();
+        }
+        static int DataType(MapData md, int kind, int layer, Vector2 p)
+        {
+            foreach (MapPlace mp in md.places)
+                if (mp.kind == kind && Mathf.Abs(mp.x - p.x) < 0.0005f && Mathf.Abs(mp.y - p.y) < 0.0005f) return mp.type;
+            return -1;
         }
         public static bool IsGrove(NodeType t) { return t == NodeType.TreeShadow || t == NodeType.KamiRoots || t == NodeType.FisherHut || t == NodeType.HermitIsle; }
 
@@ -550,8 +582,10 @@ namespace BladePath
             dd.tower = -1; dd.towerLit = false; dd.towerTold = false;
             dd.hunt = -1; dd.huntDone = false; dd.huntReward = 0;
             dd.seen.Clear();   // новая область — снова в тумане (первая точка — начало пути, см. Seen)
-            Vector2[][] spots = Spots[Mathf.Clamp(region, 0, Spots.Length - 1)];
+            MapData md = MapStore.Get(region);   // файл карты (редактор карт); нет файла — места из кода
+            Vector2[][] spots = md != null ? DataSpots(md) : Spots[Mathf.Clamp(region, 0, Spots.Length - 1)];
             int L = spots.Length;
+            List<KeyValuePair<int, int>> fixedTypes = new List<KeyValuePair<int, int>>();   // узел → постоянный тип из файла карты
             List<int>[] layers = new List<int>[L];
             for (int l = 0; l < L; l++)
             {
@@ -565,20 +599,31 @@ namespace BladePath
                     // Места стоят точно на нарисованных дорогах (tools/map_roads.json): без случайного сдвига,
                     // иначе последний отрезок пути съезжает с тропы.
                     Vector2 p = c[i];
+                    int ft = md != null ? DataType(md, 0, l, p) : -1;
+                    if (ft >= 0) fixedTypes.Add(new KeyValuePair<int, int>(dd.nodes.Count, ft));
                     layers[l].Add(dd.nodes.Count);
                     dd.nodes.Add(new MapNode { layer = l, x = p.x, y = p.y });
                 }
             }
             // дополнительные места на длинных отрезках дорог (развилки-середины нарисованных дорог, ≥ 58 точек от других мест,
             // чтобы домики не налезали друг на друга); ряд — по ближайшим местам
-            foreach (Vector3 e in ExtraSpots[Mathf.Clamp(region, 0, ExtraSpots.Length - 1)])
+            if (md != null)
+                foreach (MapPlace mp in md.places)
+                {
+                    if (mp.kind != 1) continue;
+                    int l = Mathf.Clamp(mp.layer, 1, L - 2);
+                    if (mp.type >= 0) fixedTypes.Add(new KeyValuePair<int, int>(dd.nodes.Count, mp.type));
+                    layers[l].Add(dd.nodes.Count);
+                    dd.nodes.Add(new MapNode { layer = l, x = mp.x, y = mp.y });
+                }
+            else foreach (Vector3 e in ExtraSpots[Mathf.Clamp(region, 0, ExtraSpots.Length - 1)])
             {
                 int l = Mathf.Clamp((int)e.z, 1, L - 2);
                 Vector2 ep = MapGeom.FromOld(region, new Vector2(e.x, e.y));   // доп. места сняты со старых картин
                 layers[l].Add(dd.nodes.Count);
                 dd.nodes.Add(new MapNode { layer = l, x = ep.x, y = ep.y });
             }
-            if (region == 0) AddGroveBranch(dd);   // ответвление у древа: места с постоянным назначением (не в рядах — типы не разыгрываются)
+            AddFixedPlaces(dd, region);   // постоянные места (ответвление у древа и места из редактора карт): места с постоянным назначением (не в рядах — типы не разыгрываются)
             // дороги — ровно нарисованные на карте (раньше — по номерам мест, и «соседи» соединялись через чужие места)
             LinkByRoads(dd);
             // что в узлах
@@ -607,7 +652,7 @@ namespace BladePath
             // бывшее логово старой карты — сильный противник (страж логова) на пути к новому владыке
             for (int li = 0; li < dd.nodes.Count; li++)
             {
-                MapNode ln = dd.nodes[li]; Vector2 lp = LairSpots[Mathf.Clamp(region, 0, LairSpots.Length - 1)];
+                MapNode ln = dd.nodes[li]; Vector2 lp = md != null ? new Vector2(md.lairX, md.lairY) : LairSpots[Mathf.Clamp(region, 0, LairSpots.Length - 1)];
                 if (Mathf.Abs(ln.x - lp.x) < 0.004f && Mathf.Abs(ln.y - lp.y) < 0.006f && ln.Type != NodeType.Boss)
                 { ln.type = (int)NodeType.Elite; ln.enemy = Mathf.Clamp(region, 0, Ladder.Count - 1); ln.lair = true; }
             }
@@ -755,6 +800,15 @@ namespace BladePath
                 if (dl.Count > 0) dd.nodes[dl[UnityEngine.Random.Range(0, dl.Count)]].type = (int)NodeType.Merchant;
             }
             HousesOnPads(dd);
+            // типы, заданные в файле карты (редактор карт: «не случайно»), — поверх всех розыгрышей
+            foreach (KeyValuePair<int, int> ft in fixedTypes)
+            {
+                MapNode fn = dd.nodes[ft.Key];
+                if (fn.Type == NodeType.Start || fn.Type == NodeType.Boss) continue;
+                fn.type = ft.Value;
+                if (fn.IsFight) fn.enemy = fn.Type == NodeType.Elite ? Mathf.Clamp(region, 0, Ladder.Count - 1) : DuelEnemy(region);
+                if (fn.Type == NodeType.Event && fn.ev < 0) fn.ev = MapScreen.RandomEvent();
+            }
             // Лес теней: в обычных боях и засадах — разные обитатели леса (разбойник, ямабуси, асигару, кицунэ) или Поверженный
             foreach (MapNode fn in dd.nodes)
                 fn.foe = region == 0 && (fn.Type == NodeType.Duel || fn.Type == NodeType.Ambush) ? Ladder.RollForestFoe() : 0;
