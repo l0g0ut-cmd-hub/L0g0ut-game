@@ -1,16 +1,58 @@
 [
  {
-  "action": "text",
-  "name": "forest_bandit_v2",
-  "prompt": "Full body game character, realistic dark feudal Japan, 1600s, gritty weathered materials, high detail. Standing in A-pose, arms straight down and slightly away from the body, hands empty closed fists, no weapon, no scabbard, legs clearly separated, fitted clothing, no cape, no flowing cloth between legs. Forest bandit (yamazoku): torn faded indigo kimono with rolled sleeves, ragged straw kasa hat with a broken rim, faded red cloth mask over mouth and nose, visible fierce eyes, leather bracers, rope belt, tight leggings with straw sandals, scars, lean wiry build.",
-  "art_style": "realistic",
+  "action": "image",
+  "name": "forest_bandit",
+  "image": "tools/meshy/in/bandit.png",
+  "ai_model": "latest",
   "polycount": 30000,
   "topology": "triangle",
-  "symmetry_mode": "auto",
-  "pose_mode": "a-pose",
-  "refine": true,
+  "texture": true,
   "enable_pbr": false,
-  "texture_prompt": "realistic detailed feudal Japanese bandit, faded indigo cotton, tan straw, brown leather, natural skin tones, dirt and wear, readable colors",
-  "ai_model": "latest"
+  "pose_mode": "a-pose",
+  "symmetry_mode": "auto",
+  "rig": true,
+  "height": 1.7
+ },
+ {
+  "action": "image",
+  "name": "forest_yamabushi",
+  "image": "tools/meshy/in/yamabushi.png",
+  "ai_model": "latest",
+  "polycount": 30000,
+  "topology": "triangle",
+  "texture": true,
+  "enable_pbr": false,
+  "pose_mode": "a-pose",
+  "symmetry_mode": "auto",
+  "rig": true,
+  "height": 1.78
+ },
+ {
+  "action": "image",
+  "name": "forest_ashigaru",
+  "image": "tools/meshy/in/ashigaru.png",
+  "ai_model": "latest",
+  "polycount": 30000,
+  "topology": "triangle",
+  "texture": true,
+  "enable_pbr": false,
+  "pose_mode": "a-pose",
+  "symmetry_mode": "auto",
+  "rig": true,
+  "height": 1.72
+ },
+ {
+  "action": "image",
+  "name": "forest_kitsune",
+  "image": "tools/meshy/in/kitsune.png",
+  "ai_model": "latest",
+  "polycount": 30000,
+  "topology": "triangle",
+  "texture": true,
+  "enable_pbr": false,
+  "pose_mode": "a-pose",
+  "symmetry_mode": "auto",
+  "rig": true,
+  "height": 1.66
  }
 ]

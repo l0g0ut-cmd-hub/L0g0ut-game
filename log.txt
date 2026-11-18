@@ -1,21 +1,98 @@
-== text forest_bandit_v2
-  черновик: 01a1ebf9-067c-725f-8f10-9ec639afb72e
-  /v2/text-to-3d 01a1ebf9-067c-725f-8f10-9ec639afb72e: IN_PROGRESS 1%
-  /v2/text-to-3d 01a1ebf9-067c-725f-8f10-9ec639afb72e: IN_PROGRESS 7%
-  /v2/text-to-3d 01a1ebf9-067c-725f-8f10-9ec639afb72e: IN_PROGRESS 20%
-  /v2/text-to-3d 01a1ebf9-067c-725f-8f10-9ec639afb72e: IN_PROGRESS 35%
-  /v2/text-to-3d 01a1ebf9-067c-725f-8f10-9ec639afb72e: IN_PROGRESS 99%
-  /v2/text-to-3d 01a1ebf9-067c-725f-8f10-9ec639afb72e: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/forest_bandit_v2/forest_bandit_v2_preview.glb 1512304 байт
-  скачано /home/runner/work/_temp/out/forest_bandit_v2/forest_bandit_v2_preview.fbx 1256940 байт
-  скачано /home/runner/work/_temp/out/forest_bandit_v2/forest_bandit_v2_preview_thumb.png 93286 байт
-  текстура: 01a1ebfa-aea8-73d3-950c-a92df4496d31
-  /v2/text-to-3d 01a1ebfa-aea8-73d3-950c-a92df4496d31: IN_PROGRESS 0%
-  /v2/text-to-3d 01a1ebfa-aea8-73d3-950c-a92df4496d31: IN_PROGRESS 34%
-  /v2/text-to-3d 01a1ebfa-aea8-73d3-950c-a92df4496d31: IN_PROGRESS 99%
-  /v2/text-to-3d 01a1ebfa-aea8-73d3-950c-a92df4496d31: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/forest_bandit_v2/forest_bandit_v2_refine.glb 5388012 байт
-  скачано /home/runner/work/_temp/out/forest_bandit_v2/forest_bandit_v2_refine.fbx 4952860 байт
-  скачано /home/runner/work/_temp/out/forest_bandit_v2/forest_bandit_v2_refine_thumb.png 94602 байт
-  скачано /home/runner/work/_temp/out/forest_bandit_v2/forest_bandit_v2_refine_base_color.png 6472296 байт
-  остаток кредитов: 323
+== image forest_bandit
+  задача: 01a1ec09-9d31-75fc-9e0c-f1a7db1d006d
+  /v1/image-to-3d 01a1ec09-9d31-75fc-9e0c-f1a7db1d006d: IN_PROGRESS 1%
+  /v1/image-to-3d 01a1ec09-9d31-75fc-9e0c-f1a7db1d006d: IN_PROGRESS 9%
+  /v1/image-to-3d 01a1ec09-9d31-75fc-9e0c-f1a7db1d006d: IN_PROGRESS 45%
+  /v1/image-to-3d 01a1ec09-9d31-75fc-9e0c-f1a7db1d006d: IN_PROGRESS 74%
+  /v1/image-to-3d 01a1ec09-9d31-75fc-9e0c-f1a7db1d006d: IN_PROGRESS 99%
+  /v1/image-to-3d 01a1ec09-9d31-75fc-9e0c-f1a7db1d006d: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/forest_bandit/forest_bandit_image.glb 5654208 байт
+  скачано /home/runner/work/_temp/out/forest_bandit/forest_bandit_image.fbx 4988828 байт
+  скачано /home/runner/work/_temp/out/forest_bandit/forest_bandit_image_thumb.png 100446 байт
+  скачано /home/runner/work/_temp/out/forest_bandit/forest_bandit_image_base_color.png 6503302 байт
+  риг: 01a1ec0a-ec97-7668-b491-713cc8b40db3
+  /v1/rigging 01a1ec0a-ec97-7668-b491-713cc8b40db3: IN_PROGRESS 0%
+  /v1/rigging 01a1ec0a-ec97-7668-b491-713cc8b40db3: IN_PROGRESS 31%
+  /v1/rigging 01a1ec0a-ec97-7668-b491-713cc8b40db3: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/forest_bandit/forest_bandit_rigged_character_fbx_url.fbx 5824524 байт
+  скачано /home/runner/work/_temp/out/forest_bandit/forest_bandit_rigged_character_glb_url.glb 7388996 байт
+  скачано /home/runner/work/_temp/out/forest_bandit/forest_bandit_walking_glb_url.glb 7369192 байт
+  скачано /home/runner/work/_temp/out/forest_bandit/forest_bandit_walking_fbx_url.fbx 5860620 байт
+  скачано /home/runner/work/_temp/out/forest_bandit/forest_bandit_walking_armature_glb_url.glb 90176 байт
+  скачано /home/runner/work/_temp/out/forest_bandit/forest_bandit_running_glb_url.glb 7358568 байт
+  скачано /home/runner/work/_temp/out/forest_bandit/forest_bandit_running_fbx_url.fbx 5843644 байт
+  скачано /home/runner/work/_temp/out/forest_bandit/forest_bandit_running_armature_glb_url.glb 79540 байт
+== image forest_yamabushi
+  задача: 01a1ec0b-53ed-770a-947d-35cc535e8f9e
+  /v1/image-to-3d 01a1ec0b-53ed-770a-947d-35cc535e8f9e: IN_PROGRESS 1%
+  /v1/image-to-3d 01a1ec0b-53ed-770a-947d-35cc535e8f9e: IN_PROGRESS 9%
+  /v1/image-to-3d 01a1ec0b-53ed-770a-947d-35cc535e8f9e: IN_PROGRESS 45%
+  /v1/image-to-3d 01a1ec0b-53ed-770a-947d-35cc535e8f9e: IN_PROGRESS 52%
+  /v1/image-to-3d 01a1ec0b-53ed-770a-947d-35cc535e8f9e: IN_PROGRESS 84%
+  /v1/image-to-3d 01a1ec0b-53ed-770a-947d-35cc535e8f9e: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/forest_yamabushi/forest_yamabushi_image.glb 5836100 байт
+  скачано /home/runner/work/_temp/out/forest_yamabushi/forest_yamabushi_image.fbx 5415756 байт
+  скачано /home/runner/work/_temp/out/forest_yamabushi/forest_yamabushi_image_thumb.png 107326 байт
+  скачано /home/runner/work/_temp/out/forest_yamabushi/forest_yamabushi_image_base_color.png 7265130 байт
+  риг: 01a1ec0c-a1ac-71b3-9ee0-5bccd193032f
+  /v1/rigging 01a1ec0c-a1ac-71b3-9ee0-5bccd193032f: IN_PROGRESS 0%
+  /v1/rigging 01a1ec0c-a1ac-71b3-9ee0-5bccd193032f: IN_PROGRESS 31%
+  /v1/rigging 01a1ec0c-a1ac-71b3-9ee0-5bccd193032f: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/forest_yamabushi/forest_yamabushi_rigged_character_fbx_url.fbx 6171868 байт
+  скачано /home/runner/work/_temp/out/forest_yamabushi/forest_yamabushi_rigged_character_glb_url.glb 7213608 байт
+  скачано /home/runner/work/_temp/out/forest_yamabushi/forest_yamabushi_walking_glb_url.glb 7193676 байт
+  скачано /home/runner/work/_temp/out/forest_yamabushi/forest_yamabushi_walking_fbx_url.fbx 6207964 байт
+  скачано /home/runner/work/_temp/out/forest_yamabushi/forest_yamabushi_walking_armature_glb_url.glb 90372 байт
+  скачано /home/runner/work/_temp/out/forest_yamabushi/forest_yamabushi_running_glb_url.glb 7183044 байт
+  скачано /home/runner/work/_temp/out/forest_yamabushi/forest_yamabushi_running_fbx_url.fbx 6190972 байт
+  скачано /home/runner/work/_temp/out/forest_yamabushi/forest_yamabushi_running_armature_glb_url.glb 79728 байт
+== image forest_ashigaru
+  задача: 01a1ec0d-06dc-7092-957f-65b3e576f172
+  /v1/image-to-3d 01a1ec0d-06dc-7092-957f-65b3e576f172: IN_PROGRESS 1%
+  /v1/image-to-3d 01a1ec0d-06dc-7092-957f-65b3e576f172: IN_PROGRESS 6%
+  /v1/image-to-3d 01a1ec0d-06dc-7092-957f-65b3e576f172: IN_PROGRESS 21%
+  /v1/image-to-3d 01a1ec0d-06dc-7092-957f-65b3e576f172: IN_PROGRESS 45%
+  /v1/image-to-3d 01a1ec0d-06dc-7092-957f-65b3e576f172: IN_PROGRESS 67%
+  /v1/image-to-3d 01a1ec0d-06dc-7092-957f-65b3e576f172: IN_PROGRESS 84%
+  /v1/image-to-3d 01a1ec0d-06dc-7092-957f-65b3e576f172: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/forest_ashigaru/forest_ashigaru_image.glb 5599168 байт
+  скачано /home/runner/work/_temp/out/forest_ashigaru/forest_ashigaru_image.fbx 4850332 байт
+  скачано /home/runner/work/_temp/out/forest_ashigaru/forest_ashigaru_image_thumb.png 104875 байт
+  скачано /home/runner/work/_temp/out/forest_ashigaru/forest_ashigaru_image_base_color.png 6360859 байт
+  риг: 01a1ec0e-7b66-7728-996c-9bc0f78af220
+  /v1/rigging 01a1ec0e-7b66-7728-996c-9bc0f78af220: IN_PROGRESS 0%
+  /v1/rigging 01a1ec0e-7b66-7728-996c-9bc0f78af220: IN_PROGRESS 31%
+  /v1/rigging 01a1ec0e-7b66-7728-996c-9bc0f78af220: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/forest_ashigaru/forest_ashigaru_rigged_character_fbx_url.fbx 5775900 байт
+  скачано /home/runner/work/_temp/out/forest_ashigaru/forest_ashigaru_rigged_character_glb_url.glb 7446764 байт
+  скачано /home/runner/work/_temp/out/forest_ashigaru/forest_ashigaru_walking_glb_url.glb 7427792 байт
+  скачано /home/runner/work/_temp/out/forest_ashigaru/forest_ashigaru_walking_fbx_url.fbx 5811996 байт
+  скачано /home/runner/work/_temp/out/forest_ashigaru/forest_ashigaru_walking_armature_glb_url.glb 89408 байт
+  скачано /home/runner/work/_temp/out/forest_ashigaru/forest_ashigaru_running_glb_url.glb 7417172 байт
+  скачано /home/runner/work/_temp/out/forest_ashigaru/forest_ashigaru_running_fbx_url.fbx 5795020 байт
+  скачано /home/runner/work/_temp/out/forest_ashigaru/forest_ashigaru_running_armature_glb_url.glb 78776 байт
+== image forest_kitsune
+  задача: 01a1ec0e-e14b-70b6-9576-ac5ca8c0bcf4
+  /v1/image-to-3d 01a1ec0e-e14b-70b6-9576-ac5ca8c0bcf4: IN_PROGRESS 1%
+  /v1/image-to-3d 01a1ec0e-e14b-70b6-9576-ac5ca8c0bcf4: IN_PROGRESS 9%
+  /v1/image-to-3d 01a1ec0e-e14b-70b6-9576-ac5ca8c0bcf4: IN_PROGRESS 45%
+  /v1/image-to-3d 01a1ec0e-e14b-70b6-9576-ac5ca8c0bcf4: IN_PROGRESS 74%
+  /v1/image-to-3d 01a1ec0e-e14b-70b6-9576-ac5ca8c0bcf4: IN_PROGRESS 99%
+  /v1/image-to-3d 01a1ec0e-e14b-70b6-9576-ac5ca8c0bcf4: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/forest_kitsune/forest_kitsune_image.glb 4954272 байт
+  скачано /home/runner/work/_temp/out/forest_kitsune/forest_kitsune_image.fbx 4345372 байт
+  скачано /home/runner/work/_temp/out/forest_kitsune/forest_kitsune_image_thumb.png 81829 байт
+  скачано /home/runner/work/_temp/out/forest_kitsune/forest_kitsune_image_base_color.png 5888520 байт
+  риг: 01a1ec10-082d-7406-9dbe-706e85b12531
+  /v1/rigging 01a1ec10-082d-7406-9dbe-706e85b12531: IN_PROGRESS 0%
+  /v1/rigging 01a1ec10-082d-7406-9dbe-706e85b12531: IN_PROGRESS 31%
+  /v1/rigging 01a1ec10-082d-7406-9dbe-706e85b12531: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/forest_kitsune/forest_kitsune_rigged_character_fbx_url.fbx 5254268 байт
+  скачано /home/runner/work/_temp/out/forest_kitsune/forest_kitsune_rigged_character_glb_url.glb 6601100 байт
+  скачано /home/runner/work/_temp/out/forest_kitsune/forest_kitsune_walking_glb_url.glb 6581356 байт
+  скачано /home/runner/work/_temp/out/forest_kitsune/forest_kitsune_walking_fbx_url.fbx 5290364 байт
+  скачано /home/runner/work/_temp/out/forest_kitsune/forest_kitsune_walking_armature_glb_url.glb 89788 байт
+  скачано /home/runner/work/_temp/out/forest_kitsune/forest_kitsune_running_glb_url.glb 6570748 байт
+  скачано /home/runner/work/_temp/out/forest_kitsune/forest_kitsune_running_fbx_url.fbx 5273388 байт
+  скачано /home/runner/work/_temp/out/forest_kitsune/forest_kitsune_running_armature_glb_url.glb 79168 байт
+  остаток кредитов: 183
