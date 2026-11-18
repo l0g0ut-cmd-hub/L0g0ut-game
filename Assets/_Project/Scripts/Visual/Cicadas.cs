@@ -33,9 +33,9 @@ namespace BladePath
             if (higurashi == null) higurashi = Higurashi();
             if (tobi == null) tobi = Tobi();
             if (owl == null) owl = Owl();
-            if (broom == null) broom = Broom();
-            sweep = Src(); sweep.panStereo = -0.55f;
-            sweepAt = Time.time + Random.Range(6f, 15f);
+            // garden_broom disabled: skip generating the sweeping audio.
+            // No sweeping audio source; cicada and owl audio sources stay enabled.
+            // Sweep scheduling disabled with the broom sound.
             farAt = Time.time + Random.Range(10f, 22f);
         }
 
@@ -55,7 +55,7 @@ namespace BladePath
         void Update()
         {
             Far();
-            Sweep();
+            // Sweep() muted (garden_broom); keep all other nature ambience.
             Weather w = Weather.Instance;
             bool on = w != null && w.Daytime && !w.Raining && !w.Snowing;
             if (on && !wasOn) nextAt = Time.time + Random.Range(1.5f, 4f);   // наступил день — первая запоёт почти сразу
