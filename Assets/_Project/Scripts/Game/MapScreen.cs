@@ -1539,8 +1539,8 @@ namespace BladePath
                 if (known && !n.done && n.extra != null && n.extra.Count > 0 && UiKit.Tex("UI/map_squad") != null)
                 {
                     Color pc = GUI.color; GUI.color = Color.white;
-                    GUI.DrawTexture(new Rect(p.x - s * 0.62f, p.y - s * 0.62f, s * 0.5f, s * 0.5f), UiKit.Tex("UI/map_squad"));
-                    UiKit.Text(new Rect(p.x - s * 0.62f, p.y - s * 0.2f, s * 0.5f, 14f), "×" + (n.extra.Count + 1), 11f, new Color(1f, 0.6f, 0.5f));
+                    GUI.DrawTexture(new Rect(p.x - s * 0.7f, p.y - s * 0.7f, s * 0.62f, s * 0.62f), UiKit.Tex("UI/map_squad"));   // чуть крупнее (было 0,5)
+                    UiKit.Text(new Rect(p.x - s * 0.7f, p.y - s * 0.16f, s * 0.62f, 16f), "×" + (n.extra.Count + 1), 13f, new Color(1f, 0.62f, 0.52f));
                     GUI.color = pc;
                 }
                 GUI.color = oc;
@@ -1795,26 +1795,30 @@ namespace BladePath
         }
 
         static readonly string[] JourneyLegendNames =
-            { "ПРОЙДЕНО", "В ПРЕДЕЛАХ ХОДА", "НЕДОСТУПНО" };
+            { "ПРОЙДЕНО", "В ПРЕДЕЛАХ ХОДА", "НЕДОСТУПНО", "ОТРЯД: ВРАГИ ПОДРЯД" };
         static readonly Color[] JourneyLegendColors =
             { new Color(0.72f, 0.42f, 0.22f),
               new Color(0.70f, 0.95f, 0.62f),
-              new Color(1f, 0.39f, 0.31f) };
-        static readonly float[] JourneyLegendWidths = { 114f, 172f, 126f };   // под шрифт 10,5 (был 9,2 — мельче всего на карте)
+              new Color(1f, 0.39f, 0.31f),
+              Color.white };
+        static readonly float[] JourneyLegendWidths = { 114f, 172f, 126f, 196f };   // последний — значок отряда (×N — врагов в бою, по очереди)   // под шрифт 10,5 (был 9,2 — мельче всего на карте)
 
         // Low-profile route legend: never obscures the map or interactive cards.
         void DrawJourneyLegend()
         {
             if (Event.current.type != EventType.Repaint || viewW < 350f) return;
             const float h = 31f;
-            float w = Mathf.Min(viewW - 20f, 422f);
+            float w = Mathf.Min(viewW - 20f, 618f);
             // под названием области (внизу закрывала подписи узлов — «СУНДУК» у нижнего края)
             Rect bar = new Rect(mapX + 14f, Profile.Cycle > 0 ? 62f : 46f, w, h);
             VisualIdentity.RowPanel(bar, 0.95f);
             float px = bar.x + 10f;
             for (int i = 0; i < JourneyLegendNames.Length; i++)
             {
-                UiKit.Disc(new Vector2(px + 6f, bar.y + 15f), 6f, JourneyLegendColors[i]);
+                if (px + JourneyLegendWidths[i] > bar.xMax + 2f) break;   // узкое окно — пояснение отряда не влезает
+                Texture2D sq = i == 3 ? UiKit.Tex("UI/map_squad") : null;
+                if (sq != null) GUI.DrawTexture(new Rect(px - 3f, bar.y + 3f, 25f, 25f), sq);
+                else UiKit.Disc(new Vector2(px + 6f, bar.y + 15f), 6f, JourneyLegendColors[i]);
                 // светлее и крупнее: серо-бежевый 9,2 на тёмной плашке читался с трудом
                 UiKit.Text(new Rect(px + 17f, bar.y + 5f, JourneyLegendWidths[i] - 16f, 21f),
                     JourneyLegendNames[i], 10.5f, new Color(0.9f, 0.85f, 0.76f), TextAnchor.MiddleLeft, false);
