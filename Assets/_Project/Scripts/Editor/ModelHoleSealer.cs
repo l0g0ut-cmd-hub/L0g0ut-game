@@ -55,6 +55,7 @@ namespace BladePath.EditorTools
         // evaluated by this repair pass, regardless of cached import state.
         public static void ForceReimportAll()
         {
+            GeometrySelfTest();
             SkinSeamReconciler.SelfTest();
             ImportMetrics.Clear();
             int count = 0;
@@ -188,6 +189,48 @@ namespace BladePath.EditorTools
                       + ", unreadable=" + unreadable + ", tiny holes sealed=" + patched
                       + ", skin_seam_vertices_adjusted=" + skinAdjusted
                       + " (geometry/UV/material/bind poses untouched)");
+        }
+
+        // Regression: an enclosed missing square must be capped, while the
+        // intentionally open outer perimeter of the same sheet stays open.
+        static void GeometrySelfTest()
+        {
+            Mesh mesh = new Mesh();
+            try
+            {
+                const int cells = 40;
+                int stride = cells + 1;
+                var vertices = new Vector3[stride * stride];
+                var normals = new Vector3[vertices.Length];
+                for (int y = 0; y <= cells; y++)
+                    for (int x = 0; x <= cells; x++)
+                    {
+                        int i = y * stride + x;
+                        vertices[i] = new Vector3(x / (float)cells, y / (float)cells, 0);
+                        normals[i] = Vector3.forward;
+                    }
+                var triangles = new List<int>(cells * cells * 6);
+                for (int y = 0; y < cells; y++)
+                    for (int x = 0; x < cells; x++)
+                    {
+                        if (x == 20 && y == 20) continue;
+                        int a = y * stride + x, b = a + 1;
+                        int c = a + stride, d = c + 1;
+                        triangles.Add(a); triangles.Add(b); triangles.Add(d);
+                        triangles.Add(a); triangles.Add(d); triangles.Add(c);
+                    }
+                mesh.vertices = vertices;
+                mesh.normals = normals;
+                mesh.SetTriangles(triangles, 0);
+                int original = mesh.GetTriangles(0).Length;
+                int closed = SealReadable(mesh);
+                if (closed != 1 || mesh.GetTriangles(0).Length != original + 6
+                    || mesh.vertexCount != vertices.Length)
+                    throw new InvalidOperationException("ModelHoleSealer: synthetic missing-face regression failed; caps="
+                                                        + closed);
+                Debug.Log("ModelHoleSealer: synthetic pinhole + intentionally open perimeter tests PASS");
+            }
+            finally { UnityEngine.Object.DestroyImmediate(mesh); }
         }
 
         static int Seal(Mesh mesh)
