@@ -1,6 +1,8 @@
 #if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
 using UnityEditor;
 using UnityEngine;
 
@@ -20,14 +22,19 @@ namespace BladePath.EditorTools
     public sealed class ModelHoleSealer : AssetPostprocessor
     {
         const string Folder = "Assets/_Project/Models/";
-        const int MaxLoopEdges = 12;
+        const int MaxLoopEdges = 24;
         const int MaxPatchesPerMesh = 512;
-        const float MaxSpanOfMesh = 0.045f;
-        const float MaxAreaOfMesh = 0.00040f;
+        const float MaxSpanOfMesh = 0.07f;
+        const float MaxAreaOfMesh = 0.00065f;
 
         // AssetPostprocessor dependency version: imported FBX/OBJ must be
         // reimported when the repair algorithm is updated.
-        public override uint GetVersion() { return 3; }
+        public override uint GetVersion() { return 4; }
+
+        // Keep a deterministic per-FBX model report so a green APK cannot
+        // mask the original unreadable-mesh bug.
+        static readonly Dictionary<string, int[]> ImportMetrics =
+            new Dictionary<string, int[]>(StringComparer.OrdinalIgnoreCase);
 
         // FBX/OBJ imported with Read/Write disabled exposes no vertices during
         // OnPostprocessModel. APK 575 silently skipped EVERY mesh (23/23).
@@ -48,8 +55,11 @@ namespace BladePath.EditorTools
         // evaluated by this repair pass, regardless of cached import state.
         public static void ForceReimportAll()
         {
+            ImportMetrics.Clear();
             int count = 0;
-            foreach (string path in AssetDatabase.GetAllAssetPaths())
+            var assetPaths = new List<string>(AssetDatabase.GetAllAssetPaths());
+            assetPaths.Sort(StringComparer.Ordinal);
+            foreach (string path in assetPaths)
             {
                 if (!path.StartsWith(Folder, StringComparison.OrdinalIgnoreCase)) continue;
                 if (!path.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase)
@@ -57,7 +67,30 @@ namespace BladePath.EditorTools
                 AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate | ImportAssetOptions.ForceSynchronousImport);
                 count++;
             }
-            Debug.Log("ModelHoleSealer: forced reimport of " + count + " imported game FBX/OBJ models");
+            int meshes = 0, unreadable = 0, repaired = 0, processed = 0;
+            var report = new StringBuilder("model,meshes,unreadable,tiny_holes_sealed\n");
+            foreach (string path in assetPaths)
+            {
+                if (!path.StartsWith(Folder, StringComparison.OrdinalIgnoreCase)
+                    || (!path.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase)
+                        && !path.EndsWith(".obj", StringComparison.OrdinalIgnoreCase))
+                    || path.Contains("/Arenas/")) continue;
+                int[] data;
+                if (!ImportMetrics.TryGetValue(path, out data))
+                    throw new InvalidOperationException("ModelHoleSealer: missing import metrics for " + path);
+                processed++; meshes += data[0]; unreadable += data[1]; repaired += data[2];
+                report.Append(path).Append(',').Append(data[0]).Append(',')
+                      .Append(data[1]).Append(',').Append(data[2]).Append('\n');
+            }
+            Directory.CreateDirectory("build/model-holes");
+            File.WriteAllText("build/model-holes/unity-repair.csv", report.ToString());
+            Debug.Log("ModelHoleSealer: reimported=" + count + " processed=" + processed
+                      + " meshes=" + meshes + " unreadable=" + unreadable
+                      + " holes_repaired=" + repaired + " report=build/model-holes/unity-repair.csv");
+            if (processed < 20 || unreadable != 0)
+                throw new InvalidOperationException("ModelHoleSealer: repair not verified; "
+                    + processed + " processed models, " + unreadable + " unreadable meshes");
+
         }
 
         struct VertexKey : IEquatable<VertexKey>, IComparable<VertexKey>
@@ -144,6 +177,7 @@ namespace BladePath.EditorTools
                     if (!f.sharedMesh.isReadable) unreadable++;
                     patched += Seal(f.sharedMesh);
                 }
+            ImportMetrics[assetPath] = new [] { scanned, unreadable, patched };
             if (unreadable > 0)
                 Debug.LogError("ModelHoleSealer: UNREADABLE imported mesh " + assetPath
                                + " (" + unreadable + "/" + scanned + "); repair was NOT performed");
