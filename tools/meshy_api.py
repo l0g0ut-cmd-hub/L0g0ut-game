@@ -6,7 +6,7 @@
   {"action": "text",  "name": "lantern", "prompt": "...",       — текст → модель (черновик, затем текстура)
    "refine": true, "texture_prompt": "...", "art_style": "realistic", "polycount": 20000, "topology": "triangle",
    "enable_pbr": false, "ai_model": "", "symmetry_mode": "auto"}
-  {"action": "image", "name": "oni_mask", "image": "tools/meshy/in/oni.png",   — картинка → модель
+  {"action": "image", "name": "oni_mask", "image": "tools/meshy/in/oni.png", "rig": true, "height": 1.7,  — картинка → модель (+скелет Meshy)
    "polycount": 20000, "topology": "triangle", "texture": true, "enable_pbr": false, "pose_mode": "", "texture_prompt": ""}
   {"action": "rig",   "name": "ronin", "task_id": "..." | "model_url": "...", "height": 1.7}   — скелет + базовые анимации
   {"action": "status", "kind": "text-to-3d|image-to-3d|rigging", "task_id": "..."}             — докачать готовую задачу
@@ -104,7 +104,11 @@ def do(r):
         opt(b, r, "ai_model"); opt(b, r, "topology"); opt(b, r, "polycount", "target_polycount"); opt(b, r, "enable_pbr")
         opt(b, r, "pose_mode"); opt(b, r, "texture_prompt"); opt(b, r, "symmetry_mode")
         tid = call("POST", "/v1/image-to-3d", b)["result"]; log("  задача:", tid)
-        save(name, wait("/v1/image-to-3d", tid), "image"); return
+        j = wait("/v1/image-to-3d", tid, 2400); save(name, j, "image")
+        if r.get("rig") and j.get("status") == "SUCCEEDED":   # сразу скелет Meshy (дальше наш скелет ставит build_meshy_char.py)
+            rid = call("POST", "/v1/rigging", {"input_task_id": tid, "height_meters": r.get("height", 1.7)})["result"]; log("  риг:", rid)
+            save(name, wait("/v1/rigging", rid), "rig")
+        return
     if a == "rig":
         b = {"height_meters": r.get("height", 1.7)}
         opt(b, r, "task_id", "input_task_id"); opt(b, r, "model_url")
