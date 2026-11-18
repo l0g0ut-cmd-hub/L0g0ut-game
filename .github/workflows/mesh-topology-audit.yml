@@ -1,0 +1,56 @@
+name: Mesh Topology Audit (FBX + OBJ)
+
+on:
+  push:
+    branches: [bladepath-development]
+    paths:
+      - 'Assets/_Project/Models/**'
+      - 'tools/blender/audit_game_meshes.py'
+      - '.github/workflows/mesh-topology-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mesh-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender (headless)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq blender
+          blender --version | head -3
+      - name: Audit every shipped FBX and OBJ without changing meshes
+        run: |
+          set -o pipefail
+          blender -b --factory-startup --python tools/blender/audit_game_meshes.py 2>&1 | tee mesh-audit.log
+      - name: Summarize geometry findings
+        run: |
+          python3 - <<'PY'
+          import json
+          d=json.load(open('build/model-holes/report.json'))
+          bad=[r for r in d['results'] if r.get('error')]
+          with open('build/model-holes/summary.md','w') as f:
+              f.write('# Game model topology audit\n\n')
+              f.write('All FBX/OBJ assets in Assets/_Project/Models, including nested folders.\n\n')
+              f.write('| File | Triangles | Boundary edges | Closed boundary loops | Nonmanifold edges |\n')
+              f.write('|---|---:|---:|---:|---:|\n')
+              for r in d['results']:
+                  f.write('| '+r['path']+' | '+str(r.get('tris','ERROR'))+' | '+str(r.get('open_edges','-'))+' | '+str(r.get('components','-'))+' | '+str(r.get('nonmanifold_edges','-'))+' |\n')
+          print(open('build/model-holes/summary.md').read())
+          if bad:
+              for r in bad: print('IMPORT FAILED:',r['path'],r['error'])
+              raise SystemExit(1)
+          PY
+      - name: Upload topology JSON and summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mesh-topology-audit
+          path: |
+            build/model-holes/
+            mesh-audit.log
+          if-no-files-found: warn
