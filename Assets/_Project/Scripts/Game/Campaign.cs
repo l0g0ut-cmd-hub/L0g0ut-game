@@ -631,7 +631,7 @@ namespace BladePath
             int fixedFrom = dd.nodes.Count;
             AddFixedPlaces(dd, region);   // постоянные места (ответвление у древа и места из редактора карт)
             List<KeyValuePair<int, int>> permanent = new List<KeyValuePair<int, int>>();
-            for (int pi = fixedFrom; pi < dd.nodes.Count; pi++) permanent.Add(new KeyValuePair<int, int>(pi, dd.nodes[pi].type));: места с постоянным назначением (не в рядах — типы не разыгрываются)
+            for (int pi = fixedFrom; pi < dd.nodes.Count; pi++) permanent.Add(new KeyValuePair<int, int>(pi, dd.nodes[pi].type));   // места с постоянным назначением (не в рядах — типы не разыгрываются)
             // дороги — ровно нарисованные на карте (раньше — по номерам мест, и «соседи» соединялись через чужие места)
             LinkByRoads(dd);
             // что в узлах
