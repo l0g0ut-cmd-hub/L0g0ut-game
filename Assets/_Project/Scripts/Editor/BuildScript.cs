@@ -31,6 +31,11 @@ namespace BladePath.EditorTools
 
                 Debug.Log("BladePath: сборка APK → " + path);
 
+                // Force the hole-repair importer over ALL shipped FBX/OBJ models.
+                // A Unity Library cache can otherwise retain geometry imported
+                // before the postprocessor existed, silently skipping repairs.
+                ModelHoleSealer.ForceReimportAll();
+
                 // Сцены создаются из кода, в репозитории их нет. Порядок: меню (индекс 0), потом бой.
                 MainMenuBuilder.Build();
                 PrototypeSceneBuilder.Build();
