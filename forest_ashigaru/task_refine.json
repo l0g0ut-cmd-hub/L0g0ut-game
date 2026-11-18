@@ -1,0 +1,32 @@
+{
+ "id": "01a1ebf6-1174-71ae-ba21-f85f01f23be8",
+ "type": "text-to-3d-refine",
+ "mode": "refine",
+ "name": "",
+ "model_type": "standard",
+ "seed": 434273920,
+ "prompt": "Full body game character, realistic dark feudal Japan, 1600s, gritty weathered materials, high detail. Standing in A-pose, arms straight down and slightly away from the body, hands empty closed fists, no weapon, no scabbard, legs clearly separated, fitted clothing, no cape, no flowing cloth between legs. Deserter ashigaru foot soldier: dented black iron jingasa conical hat, battered lacquered lamellar chest armor with broken laces, simple dark red cloth under armor, tight hakama tucked into shin guards, muddy straw sandals, exhausted gaunt face with stubble.",
+ "texture_prompt": "realistic weathered dark feudal Japanese warrior textures, muted colors, dirt and wear",
+ "texture_image_url": "",
+ "status": "SUCCEEDED",
+ "created_at": 1794960135407,
+ "progress": 100,
+ "started_at": 1794960135419,
+ "finished_at": 1794960159227,
+ "task_error": null,
+ "model_urls": {
+  "glb": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a1ebf6-1174-71ae-ba21-f85f01f23be8/output/model.glb?Expires=4948560000&Signature=Amgw8lFtAQ9vv07trBccTTZQJshmkD3-JfQghMb65zg4p7D1LM408OmHyjO2YnMu4PtWaMpMxO0AkfG9O43Ts-iqrH4StIKVDnH3CzJQpai6xKp3W4CzkPaFVIXs8uayHYcoOTVNY0E9-Ia4J4YwewLlTUyr2eWko4wFfl84RAZUXh1dUJdj8M2SXn3pxUSztv1nMkDNfuIz-xLG5h3jYTv86f3oeV2ukIFEaKnuZR2dSyQ7cu03qLzN~snmZdzl8FpvawWb2DEhmeFIbjaSyzLJBWsdABIU6I9QjE4ACD-BrzLJCTVemeDRzmR1P9N8~jpa-6KtrAVKjmm48qserA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "fbx": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a1ebf6-1174-71ae-ba21-f85f01f23be8/output/model.fbx?Expires=4948560000&Signature=hLIgSkuOPSAGLTPMR~hJRMJsz048Kqr8tJRYwcO4QpOJeJT~ZEBnOrXIpyYfdBQn0FoK3eHyUmJa7wCVhLBaeIA5Qw8vD0ia3RRxNwpAR75G3xNWzs1b-Z6Ux1LpNtgDr-gcPJJy32Raj04-EFIeWdxKYUGrlrc1CYyWqX6JHmNIe2dTEAzwI0BE1dDuA04H3I5-J2qih8avuuMkixYuhuKF799JcIu-HAUxodRime6F36sbZyraFtBeIuODR2IUFVG5uyk3M1whB7xDjiftEYB--06KLSf~7rExynTtqo5j79gpaiJ-1XiykaSaklgvyI0VqTHxX1uC58F-~QNxJg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "usdz": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a1ebf6-1174-71ae-ba21-f85f01f23be8/output/model.usdz?Expires=4948560000&Signature=JOIevG7EQkyP3rCxbr45xbAsLKoCg6w0Z31kSYMswIh5j4E1rIY18iQ1AZyDUVm6660iKvv0mKVIrMecMYN0lsTPD53JwS~oswALnw1p6ZytRUuwz8DVqJA2IxcCfd5RWmInfBBd0iSYjLOZNd92-7smqhdjhkKFSr-iN2jUcuIM2BQ~0kU19SpGdv-rxqpVMffz3ugBuVUNt8Yz4MX9TqvjWwW0t2pAWgUVHwGxbGKQpzKb9qhBORw~QtBbxPBMT5vU6gyS5XA9-FBVXXdZHllYDXTJMH6xVJzzk4YyD26cLMHMuiXOgqUtT5kbAbxwJpmnAKRnxKMec0kH6BJqTA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "obj": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a1ebf6-1174-71ae-ba21-f85f01f23be8/output/model.obj?Expires=4948560000&Signature=CdnsDQg3u4m9yS2cjL0gzFHvBrG8Fl1PrT~sNYVeyXzlriE5rn1wEFY1YQhLp3arOIc-~~1Lt8m41zJw40aHauIw7koc99MLYsaZlOeJzVne5UPvoc6eJVOFpxzt5LgqBoZ4Rdkq~Kc~ZKfMjor93hheyOYmNpYCUtdI4uzoCFOvTu-6ok5rORKLU4yIaAVVlZgfg5kMoMWePX1zBNQKHrAD-~g3dXk~WjKJZgt9SCtVGniVnW2gIa8Yi73lWnyupQe-FBhz3m2WtuSd2OouUDqAPaVDrg17tIosVu9SUKjYwKpaaNN8UvHwN6iafZK9CnZDcHV0-RN-~d~O3JCpfQ__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "mtl": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a1ebf6-1174-71ae-ba21-f85f01f23be8/output/model.mtl?Expires=4948560000&Signature=cPvLl1pN4KI-xw3peUmTkJKCpVHlIwwTOm-Qrc2yvLDe9lIvZ1RKXigwNM2GLHEnu4JXJOviM3EzSixVA8siMejbcJEzZgwU93nr9zgwZUK2gGXoIAeuH-b8gVPNC6LXu3SQzfhLTv9iLd7PdMNqFfRizjF-iE5u~QVVbga67wK2B3lgy-LOiJ7oqMYM9XBBFtSm7KsG-I0F-Uhbn2Oly~k2bZ4~fh8LAK3nGJC1j~11f1DyYbA1-BbpVBigvZYxaFf63HaBaz7tdBhWuJv5SLDD571RfSfEzhd641ES1PhhJ4pYqqtrD3hTjUyuLYvGmZQz9Y~PHn9jmG4m44FTwA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "stl": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a1ebf6-1174-71ae-ba21-f85f01f23be8/output/model.stl?Expires=4948560000&Signature=UDBnrT5TmGmzTsFRTISORP2gnIe6iNTgznwriPHg--PUECmNn3~aJw0qRc6tsX2nfVsGCwvnITNOmhPbUURdnfypKLThn7SUyB95NSSQmxvoSvCO9InMfNG2o~mXuzDU7Dr2a7O8zlSSVgFuNxZTccBCJxazxNW1qAcsar901H8NAS1Hdit8QiD2Nt-IFnZDq90qH1BzcoUOd53siJCsBSjzpEyjS70el-sNiuQBmLONX0RVuEBIaWz~mfoUswYDboJBglH2yyF0BCrFlgB04-iF-B7Fi30nrm9hlgcH9MS08DQ-NzhACpr3QIxJJqU589bZLJutC2XH0wLp2MUznA__&Key-Pair-Id=K1VGYTHIYLM9UM"
+ },
+ "thumbnail_url": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a1ebf6-1174-71ae-ba21-f85f01f23be8/output/preview.png?Expires=4948560000&Signature=pKEykOv12ocqqrrVtLZdCwdvgHqJ3Ow1E2uffBc1dHynQO8QIA4T~jg1N0j8Xl3lfxNrs3YeYCH6D5unOL1lU6tPPv6gcxuykGVQAhAvpCtys5Q5UaK1v-VnspPwFYISDNbuEBAqkAk0d8Bzv0l48DsLXucbfb8kzawSN9nOWf6NJPq8uYvL8h9Y2xvyPWERS2DNmb0DupQ7YAGtos1TPq2Jmo42OhjFCg4nrZIDA2KspTPzAW8pkr3go9YW5pYbuy5~NJ4IUkUu7Zp5NZabXS8lXjCvE7aKGO4D02KvqS6~7UjQbOgLIxRhTnebZiWDCJRT318sX0lw7r8h~5lfeA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+ "texture_urls": [
+  {
+   "base_color": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a1ebf6-1174-71ae-ba21-f85f01f23be8/output/texture_0.png?Expires=4948560000&Signature=lL4EduOh3InJ9WGhZ7ofT6VMdU-0Um11qL-NQuHsYg0uw5yZq4JyVztWHmBCLkDaFt9uDIavPD-7dKExDbpolXipPRqBwUnX8YupNPwPp0Z2PYMSGtZXkh8R4-SC7EM14jD2RHOVo-Vz2PIW0DiwnhW4WJt7clcNBOZ43R8DMiP1wvmQ~wQSkzRuvuc~oW8i9vSXKrI5BpwDUZSBWD~eIgIgiqkMvgt~mi8La39fqkXsv5sIuiLMc3zPtrA6ABdAIpmjuGteYHCNLE~PjKu8MhpK~X7NG7oC4Iy0Xv56H7sLfXYSzo23Lc2AH8qfX1aVN~mtor2TKRAFsD0xwhMxZQ__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  }
+ ],
+ "consumed_credits": 10
+}

@@ -1,0 +1,27 @@
+{
+ "id": "01a1ebf3-23d2-75c1-947c-c5e5af599985",
+ "type": "text-to-3d-preview",
+ "mode": "preview",
+ "name": "",
+ "model_type": "standard",
+ "seed": 2041304909,
+ "prompt": "Full body game character, realistic dark feudal Japan, 1600s, gritty weathered materials, high detail. Standing in A-pose, arms straight down and slightly away from the body, hands empty closed fists, no weapon, no scabbard, legs clearly separated, fitted clothing, no cape, no flowing cloth between legs. Yamabushi mountain warrior monk: small black tokin cap on forehead, white and ochre layered robes with yuigesa sash with six fluffy pom-poms, juzu prayer beads, tight leggings with kyahan shin wraps, straw waraji sandals, stern bearded face, strong build.",
+ "texture_prompt": "",
+ "texture_image_url": "",
+ "status": "SUCCEEDED",
+ "created_at": 1794959945315,
+ "progress": 100,
+ "started_at": 1794959945324,
+ "finished_at": 1794959999377,
+ "task_error": null,
+ "model_urls": {
+  "glb": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a1ebf3-23d2-75c1-947c-c5e5af599985/output/model.glb?Expires=4948560000&Signature=XKvO91JpEEMIVtnBFb4-FEn1cGvMYq~K0IqMkAEZUCntmjPNrIBfk-zouzqEqQoUZRCy5stQ~TWB813Yz6nQT3rgZkz2TcweMR2m08zHlHjv2iN-PSKDVPFBlL6EFKzxJRdFIFhUuHZPJ0wyxDrfXxPI7I1qvhss9b9oIIWB5KcKJ~kSGiJIkz4b0Ztp7CnnOabhStI2y9BcIwcORpMD-Oydzf4kAli3zcGR9C9HmUO-aAM1-bZCzrbhO9i2BH2~yqdvNltjUK4ivY1fkGMvpqJCIpnGudnGKmpOkKrxRC~n2uWiPJLcCpoaD1J8J6AD0jSPWPj~xyzIn0JmdTlB1Q__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "fbx": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a1ebf3-23d2-75c1-947c-c5e5af599985/output/model.fbx?Expires=4948560000&Signature=h~b5xY1vHPXTBhcXRWEOf2WcPx1lTWJJIrnvnTomFI9WqhGtVz6sRuv0TlHQNiPN0SEzYuw-hD~o042fo24Ncl9j1NfVqpXp2XLIFaeDAIR52RQsWdQJxYR9vKtkgZ6bQRW3Gz4p-fqWId5RjeEhdJJ9AHWHFWeY3t3dilj-FjfmcVkON8U-pX6Wqn0R1JQzuKLrXnjKSHk00YD0wntRTTuH~0P0eBset-qVbktyYHn8jkDjv552Lv5P3StGTT2SUWFJNYn9prpVLZP4-1CWk876Tlm99vl3NlXZ0EZmVeMsJU84~Ft2BhAvR7~sjuHuA9-a-1l4-mAI93Lv-7ioXA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "usdz": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a1ebf3-23d2-75c1-947c-c5e5af599985/output/model.usdz?Expires=4948560000&Signature=nG1cDtyzrjdSvwnkZkiWi4fshPDVxIM~0KxsAs-hCHz-OXvm-~lO0IHTeNaREFBief6s-85l-kX3wx2uJet14vRUFx3dJhgGYP3NzJH-Yro-~JId-emOLIdpKefFV7ffCm~IgrA~6Yklb6-dK-3ne97yn8PeYMAQdBw3GrXcprsOQTJbTqNgUUjofpmR~6lDQ5w~Gc6e1PAk124sxNAjonmHbnnQsLVo3qPx1ckrMlsspjR3lxU-pqphet4U6AqfBQaSgJCdLDFSv5Y2SnGjDyiR27ceRRMoywaVdFELTxdGAHZAQUBHJpza2OpJb8XCfVB1hZ9DhTxHKcFzBTcdlw__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "obj": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a1ebf3-23d2-75c1-947c-c5e5af599985/output/model.obj?Expires=4948560000&Signature=WPf3ELZ6umQPlwnal2aH5gY4s7yJzKy3~Wf6969Sku5JZdp78fxzQXoy0v5Wzb07MI6EDF3JDhnV8MpNdaXu2id~G8eIsym05l~HGIRQ5g4Xe9piCvoiGUk7eoZxM~6ek-ELejTDGOxG3Dknmani~pqy89P2eMa-gDE3U8uU6cREK9R62zy-u3ThXkLxYo1MpjRZ-pN3cCLXoutps63z~cFHCQl4GF4eP6jbLboWCnvsDRcu3B4WZdvZmq6qIlZF1prtV~A3ka1gwYQJW~Jk3f3CyPJY0KdvNfKR2fTnazXYchQNEwuNGchwpe2UGA0INXvDNoc6QvPDNa0ywO7l4w__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "stl": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a1ebf3-23d2-75c1-947c-c5e5af599985/output/model.stl?Expires=4948560000&Signature=SQ5bYHPpDKfaOB7YU3j6cLi9s1udOIHDxmJL0VC5w6vfzg47IuwxJ~-cXosSbGWweF7gWOm3Lka27muGYGbzpdOy4l81-biAXrxZRJfOPkolHW-96ZmOHPWUqDo07b3bB4X5e9W27ww6fJtkucTdCl8ag1r0p8v-1yieRNCCvF8JiqFN~KQaGfFkBNejWOnPqGuVedMwEFI-magntXg~5kj8KwJosfsIq6KBngY6OhwYHjsYxjBriN4OVPJgzkTnl9JGB0bFPGTQyIl4wpXX092NSem-OPGP4EwGoN~sIMG-Ns0Yz1ZqTfsVf9LmPnxE-mFCMOYcL-vutJA09KY7Kg__&Key-Pair-Id=K1VGYTHIYLM9UM"
+ },
+ "thumbnail_url": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a1ebf3-23d2-75c1-947c-c5e5af599985/output/preview.png?Expires=4948560000&Signature=XYBQaSh0vMVMYN442HuoUVgPpDCQSFsshRzEvzRyj7nnF5x8J4y8hilSWtxn~doLpRKiwmaoQA-QnxoA3O~lL8BO4h6yBGmIUEk7K20w5Zfci5Ja5-cpbgO7ZTY8qHAj5CZFXNUS2RiHqpSfgCZ8F9Glpl42pEXEjP8NYhF~Ih17FtK~9Tjq~LuMFH4s7Ip-lO4y9npCnoAuy~Zt9XEOmQdHiiimTVovO-7WTi-u0N1Jv6QKYZgzldvFdTkS5g-vjaJ28bCn2IF639-zILG7g1WapZrcPqHeKfYKqt5YOw7RXJpL7Feh3pCuEzhkTR2j9jN8DYSrho5-rwOsKaaQKg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+ "texture_urls": [],
+ "consumed_credits": 20
+}

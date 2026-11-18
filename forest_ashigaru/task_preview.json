@@ -1,0 +1,27 @@
+{
+ "id": "01a1ebf4-f01e-76af-8e61-c01630a57202",
+ "type": "text-to-3d-preview",
+ "mode": "preview",
+ "name": "",
+ "model_type": "standard",
+ "seed": 4245934616,
+ "prompt": "Full body game character, realistic dark feudal Japan, 1600s, gritty weathered materials, high detail. Standing in A-pose, arms straight down and slightly away from the body, hands empty closed fists, no weapon, no scabbard, legs clearly separated, fitted clothing, no cape, no flowing cloth between legs. Deserter ashigaru foot soldier: dented black iron jingasa conical hat, battered lacquered lamellar chest armor with broken laces, simple dark red cloth under armor, tight hakama tucked into shin guards, muddy straw sandals, exhausted gaunt face with stubble.",
+ "texture_prompt": "",
+ "texture_image_url": "",
+ "status": "SUCCEEDED",
+ "created_at": 1794960062797,
+ "progress": 100,
+ "started_at": 1794960062806,
+ "finished_at": 1794960125873,
+ "task_error": null,
+ "model_urls": {
+  "glb": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a1ebf4-f01e-76af-8e61-c01630a57202/output/model.glb?Expires=4948560000&Signature=YEDpRbasTInU3Y7sgZOZNZAazq0ldrEDlFgnL146mWdcmP6kOkwoRckezvMbKpjhFT40fCgiA-jN8TEfGUUSa6x5fAs8hbmUk0dEvdGCs9LvaqUc24UzmvSt3u25-O8TU0JtRibYy~EhQH4BsGfs4AcjSjrQuYgEFHkgq-eqIjZ~j~nV31hjYfJlQ11gOnB4APPEY9fWRiCp6VGuTPJX08qFqtCLGTEH10CNb7DRmHYKxyaQ5Cx7C2pSb~AeevBOGbiwHp6t-V2aEov4sUbGHQxBk1XvCo4yYIroZud2vpijvRDlhU73puAaFjRCmlQ-nKq9Qrb5RSZh9oXlmtbCdg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "fbx": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a1ebf4-f01e-76af-8e61-c01630a57202/output/model.fbx?Expires=4948560000&Signature=Rt4DWk2-iFIKQ65Zr4YqOrMRGSSYpGze0tTqU7c5w0Tn73wHdFPuO98twlTLg957wuWW9xrUxbWVtGeZMY2yMsniqtOdG6~2RCoPY57-~X3XKYc1Kv7uLNEk7-o83OBs10z-cYo8oAUJgUqnsW~55bihNPm9mTCESEnKpxB0-engH3sCltH1YrZBplk4juXSoop2aaI~rIrGGmAeBO7rIF0w2CAQGd3R55xENo6tP4~4KYtLDjAi0YSx3Eeo~SIWN7olGWoPP01qCvpBz8JMyQ~8shTHZremvRgKXd69XTlzfy9C4rXSCuHsBK6tTGqywgy6PD5H4b0IN0os3-PoSg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "usdz": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a1ebf4-f01e-76af-8e61-c01630a57202/output/model.usdz?Expires=4948560000&Signature=mpNS47pA7lL6odSixvA44mth0SvhVuIGlXi1PK~YUwGk60Qn5QyFG3MccxVrMiX12OXe54shGxi472Nl-DYnZaIsdZ2kgVmP5Dfc-uujnciKgib~F32tTKaC7aVTYSOOf5-gK0rIIg-4U3u5fk87gIucgcSi~BOVflWJiHixUg~71xl6yxDhB9Lrq3TurKGtLvW4o0ym7~IhjkIsTwo-DqihoS8MYuhl2RC9AxwfjsvLUN66U2-8uvN-Cz6CO5yMn3HUWjSH9XshUrW-zSD73G9LKDjVhgIlr2~ArZVzvKo9nRN56X2pNGbFXaMYZbaHTX5tKSWwDjej9WHmeuiZ3g__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "obj": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a1ebf4-f01e-76af-8e61-c01630a57202/output/model.obj?Expires=4948560000&Signature=Hb~x8PO8~TLZrzWF-x6emcr3bMM3cDdbipAhdhwyczvf1c~DEkxIgyW0bg-bLbWNf4yjBevdgUlQIbX69lcT2k1UPRsng8QYPRRdd8TGLNZEluhisL77tcVR~0eGstYkkUqmZIhJYD2rsF5dfXO2pVpfLz4YA96ROMEbDgsSCRtfdqlGq1-zFuwdoUhlvfTaUJM8HQ24l4566t9MVPUo2lISfHXJ2Xm3XUScNIEv96a7ZZnndHAskE6WGZ~2fDecU2-Zw3CZ~MyaNQsJlTqQObNRXzR9hIwgF9rSJgLsbVysdy~~VZjlMt0dNy5kVEREUq6EeEAViEp16iDEKQf3Yw__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "stl": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a1ebf4-f01e-76af-8e61-c01630a57202/output/model.stl?Expires=4948560000&Signature=IuJ6FnNyrAZyNkVMr-kYGKcxmtAoBIde8VG19i5gh-30PSRCuNdXAZz4KthJOAuforZ3r1d98z2BhKzksJOH1qXjgzpRwsgoTRurv0tIwmzpM8H84fknDbgFYPpOEAX785mDyVyoAC9MrL8Q9sE3L8xjHBN5UaVgd~H5EOxr-LTXNvYtFvepDiSPBDLFzYFlwJq-GBvDu2XGcKTu2TbIJyRr2d4oDiRLRNV7TWGJm0cpQ6En~oNzpynZEPFC3BJpHKsYu6gyP~CfkXxGsaiwdkQVxDPpXcmGG2e38lH2dR93ogobd5ib-kvUQ793iQAynSUu-Yc24GHBovqK~geRvw__&Key-Pair-Id=K1VGYTHIYLM9UM"
+ },
+ "thumbnail_url": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a1ebf4-f01e-76af-8e61-c01630a57202/output/preview.png?Expires=4948560000&Signature=C7XF8If6UB8exZWIZJaudK95tRhkyfYIomjyJtYm8jCdriod43oTU4TJL~hnYteqpcPB-8rTk13KTAKs6Ex1Elccbkxt6MsgIVoQfcUXcUuzqhJniYKnOTdC3Q7LGt5Z6crpK-vpirJlFMptFnMUH8StJQqPhoWC6HOVRfQVBRng97vTvYTmGrHhyD2v2dcHAS9DL2z5XOxwygPABuRhd84Ak5EEmz~x8dsWQLlCCILz2D0myVVylkaVoehDVXt8IUBwwOLB-dugisSTm5tTg2bMfLkCH8CQT-XiWiI1nCj8M8jnCjfhQGjHykJzZsUhJS0YlgBlYey6fAItwYiVhg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+ "texture_urls": [],
+ "consumed_credits": 20
+}
