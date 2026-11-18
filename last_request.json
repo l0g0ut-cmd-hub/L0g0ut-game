@@ -1,8 +1,8 @@
 [
  {
   "action": "text",
-  "name": "forest_bandit",
-  "prompt": "Full body game character, realistic dark feudal Japan, 1600s, gritty weathered materials, high detail. Standing in A-pose, arms straight down and slightly away from the body, hands empty closed fists, no weapon, no scabbard, legs clearly separated, fitted clothing, no cape, no flowing cloth between legs. Forest bandit (yamazoku): torn faded indigo kimono with rolled sleeves, ragged straw kasa hat with a broken rim, dirty cloth mask over mouth and nose, leather bracers, rope belt, tight leggings with straw sandals, scars, lean wiry build.",
+  "name": "forest_bandit_v2",
+  "prompt": "Full body game character, realistic dark feudal Japan, 1600s, gritty weathered materials, high detail. Standing in A-pose, arms straight down and slightly away from the body, hands empty closed fists, no weapon, no scabbard, legs clearly separated, fitted clothing, no cape, no flowing cloth between legs. Forest bandit (yamazoku): torn faded indigo kimono with rolled sleeves, ragged straw kasa hat with a broken rim, faded red cloth mask over mouth and nose, visible fierce eyes, leather bracers, rope belt, tight leggings with straw sandals, scars, lean wiry build.",
   "art_style": "realistic",
   "polycount": 30000,
   "topology": "triangle",
@@ -10,45 +10,7 @@
   "pose_mode": "a-pose",
   "refine": true,
   "enable_pbr": false,
-  "texture_prompt": "realistic weathered dark feudal Japanese warrior textures, muted colors, dirt and wear"
- },
- {
-  "action": "text",
-  "name": "forest_yamabushi",
-  "prompt": "Full body game character, realistic dark feudal Japan, 1600s, gritty weathered materials, high detail. Standing in A-pose, arms straight down and slightly away from the body, hands empty closed fists, no weapon, no scabbard, legs clearly separated, fitted clothing, no cape, no flowing cloth between legs. Yamabushi mountain warrior monk: small black tokin cap on forehead, white and ochre layered robes with yuigesa sash with six fluffy pom-poms, juzu prayer beads, tight leggings with kyahan shin wraps, straw waraji sandals, stern bearded face, strong build.",
-  "art_style": "realistic",
-  "polycount": 30000,
-  "topology": "triangle",
-  "symmetry_mode": "auto",
-  "pose_mode": "a-pose",
-  "refine": true,
-  "enable_pbr": false,
-  "texture_prompt": "realistic weathered dark feudal Japanese warrior textures, muted colors, dirt and wear"
- },
- {
-  "action": "text",
-  "name": "forest_ashigaru",
-  "prompt": "Full body game character, realistic dark feudal Japan, 1600s, gritty weathered materials, high detail. Standing in A-pose, arms straight down and slightly away from the body, hands empty closed fists, no weapon, no scabbard, legs clearly separated, fitted clothing, no cape, no flowing cloth between legs. Deserter ashigaru foot soldier: dented black iron jingasa conical hat, battered lacquered lamellar chest armor with broken laces, simple dark red cloth under armor, tight hakama tucked into shin guards, muddy straw sandals, exhausted gaunt face with stubble.",
-  "art_style": "realistic",
-  "polycount": 30000,
-  "topology": "triangle",
-  "symmetry_mode": "auto",
-  "pose_mode": "a-pose",
-  "refine": true,
-  "enable_pbr": false,
-  "texture_prompt": "realistic weathered dark feudal Japanese warrior textures, muted colors, dirt and wear"
- },
- {
-  "action": "text",
-  "name": "forest_kitsune",
-  "prompt": "Full body game character, realistic dark feudal Japan, 1600s, gritty weathered materials, high detail. Standing in A-pose, arms straight down and slightly away from the body, hands empty closed fists, no weapon, no scabbard, legs clearly separated, fitted clothing, no cape, no flowing cloth between legs. Female forest assassin in a white kitsune fox mask with red markings, dark grey and crimson fitted shinobi clothing, long black hair tied high, leather armguards and shin wraps, red cord accents, slim athletic build.",
-  "art_style": "realistic",
-  "polycount": 30000,
-  "topology": "triangle",
-  "symmetry_mode": "auto",
-  "pose_mode": "a-pose",
-  "refine": true,
-  "enable_pbr": false,
-  "texture_prompt": "realistic weathered dark feudal Japanese warrior textures, muted colors, dirt and wear"
+  "texture_prompt": "realistic detailed feudal Japanese bandit, faded indigo cotton, tan straw, brown leather, natural skin tones, dirt and wear, readable colors",
+  "ai_model": "latest"
  }
 ]

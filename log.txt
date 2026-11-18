@@ -1,83 +1,21 @@
-== text forest_bandit
-  черновик: 01a1ebf0-b153-77bb-85ba-725369686780
-  /v2/text-to-3d 01a1ebf0-b153-77bb-85ba-725369686780: IN_PROGRESS 1%
-  /v2/text-to-3d 01a1ebf0-b153-77bb-85ba-725369686780: IN_PROGRESS 7%
-  /v2/text-to-3d 01a1ebf0-b153-77bb-85ba-725369686780: IN_PROGRESS 20%
-  /v2/text-to-3d 01a1ebf0-b153-77bb-85ba-725369686780: IN_PROGRESS 46%
-  /v2/text-to-3d 01a1ebf0-b153-77bb-85ba-725369686780: IN_PROGRESS 99%
-  /v2/text-to-3d 01a1ebf0-b153-77bb-85ba-725369686780: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/forest_bandit/forest_bandit_preview.glb 1209136 байт
-  скачано /home/runner/work/_temp/out/forest_bandit/forest_bandit_preview.fbx 1201020 байт
-  скачано /home/runner/work/_temp/out/forest_bandit/forest_bandit_preview_thumb.png 81748 байт
-  текстура: 01a1ebf2-4d04-715e-b547-738b76284d06
-  /v2/text-to-3d 01a1ebf2-4d04-715e-b547-738b76284d06: IN_PROGRESS 0%
-  /v2/text-to-3d 01a1ebf2-4d04-715e-b547-738b76284d06: IN_PROGRESS 34%
-  /v2/text-to-3d 01a1ebf2-4d04-715e-b547-738b76284d06: IN_PROGRESS 69%
-  /v2/text-to-3d 01a1ebf2-4d04-715e-b547-738b76284d06: IN_PROGRESS 99%
-  /v2/text-to-3d 01a1ebf2-4d04-715e-b547-738b76284d06: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/forest_bandit/forest_bandit_refine.glb 4392364 байт
-  скачано /home/runner/work/_temp/out/forest_bandit/forest_bandit_refine.fbx 4204700 байт
-  скачано /home/runner/work/_temp/out/forest_bandit/forest_bandit_refine_thumb.png 80908 байт
-  скачано /home/runner/work/_temp/out/forest_bandit/forest_bandit_refine_base_color.png 5914874 байт
-== text forest_yamabushi
-  черновик: 01a1ebf3-23d2-75c1-947c-c5e5af599985
-  /v2/text-to-3d 01a1ebf3-23d2-75c1-947c-c5e5af599985: IN_PROGRESS 1%
-  /v2/text-to-3d 01a1ebf3-23d2-75c1-947c-c5e5af599985: IN_PROGRESS 7%
-  /v2/text-to-3d 01a1ebf3-23d2-75c1-947c-c5e5af599985: IN_PROGRESS 20%
-  /v2/text-to-3d 01a1ebf3-23d2-75c1-947c-c5e5af599985: IN_PROGRESS 46%
-  /v2/text-to-3d 01a1ebf3-23d2-75c1-947c-c5e5af599985: IN_PROGRESS 99%
-  /v2/text-to-3d 01a1ebf3-23d2-75c1-947c-c5e5af599985: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/forest_yamabushi/forest_yamabushi_preview.glb 1697064 байт
-  скачано /home/runner/work/_temp/out/forest_yamabushi/forest_yamabushi_preview.fbx 1281100 байт
-  скачано /home/runner/work/_temp/out/forest_yamabushi/forest_yamabushi_preview_thumb.png 97478 байт
-  текстура: 01a1ebf4-20b6-7005-bf42-6740db0e74b8
-  /v2/text-to-3d 01a1ebf4-20b6-7005-bf42-6740db0e74b8: IN_PROGRESS 0%
-  /v2/text-to-3d 01a1ebf4-20b6-7005-bf42-6740db0e74b8: IN_PROGRESS 19%
-  /v2/text-to-3d 01a1ebf4-20b6-7005-bf42-6740db0e74b8: IN_PROGRESS 49%
-  /v2/text-to-3d 01a1ebf4-20b6-7005-bf42-6740db0e74b8: IN_PROGRESS 69%
-  /v2/text-to-3d 01a1ebf4-20b6-7005-bf42-6740db0e74b8: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/forest_yamabushi/forest_yamabushi_refine.glb 5119400 байт
-  скачано /home/runner/work/_temp/out/forest_yamabushi/forest_yamabushi_refine.fbx 4524460 байт
-  скачано /home/runner/work/_temp/out/forest_yamabushi/forest_yamabushi_refine_thumb.png 96236 байт
-  скачано /home/runner/work/_temp/out/forest_yamabushi/forest_yamabushi_refine_base_color.png 5896034 байт
-== text forest_ashigaru
-  черновик: 01a1ebf4-f01e-76af-8e61-c01630a57202
-  /v2/text-to-3d 01a1ebf4-f01e-76af-8e61-c01630a57202: IN_PROGRESS 1%
-  /v2/text-to-3d 01a1ebf4-f01e-76af-8e61-c01630a57202: IN_PROGRESS 7%
-  /v2/text-to-3d 01a1ebf4-f01e-76af-8e61-c01630a57202: IN_PROGRESS 20%
-  /v2/text-to-3d 01a1ebf4-f01e-76af-8e61-c01630a57202: IN_PROGRESS 41%
-  /v2/text-to-3d 01a1ebf4-f01e-76af-8e61-c01630a57202: IN_PROGRESS 99%
-  /v2/text-to-3d 01a1ebf4-f01e-76af-8e61-c01630a57202: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/forest_ashigaru/forest_ashigaru_preview.glb 1618008 байт
-  скачано /home/runner/work/_temp/out/forest_ashigaru/forest_ashigaru_preview.fbx 1229196 байт
-  скачано /home/runner/work/_temp/out/forest_ashigaru/forest_ashigaru_preview_thumb.png 88966 байт
-  текстура: 01a1ebf6-1174-71ae-ba21-f85f01f23be8
-  /v2/text-to-3d 01a1ebf6-1174-71ae-ba21-f85f01f23be8: IN_PROGRESS 0%
-  /v2/text-to-3d 01a1ebf6-1174-71ae-ba21-f85f01f23be8: IN_PROGRESS 34%
-  /v2/text-to-3d 01a1ebf6-1174-71ae-ba21-f85f01f23be8: IN_PROGRESS 99%
-  /v2/text-to-3d 01a1ebf6-1174-71ae-ba21-f85f01f23be8: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/forest_ashigaru/forest_ashigaru_refine.glb 5227964 байт
-  скачано /home/runner/work/_temp/out/forest_ashigaru/forest_ashigaru_refine.fbx 4660796 байт
-  скачано /home/runner/work/_temp/out/forest_ashigaru/forest_ashigaru_refine_thumb.png 91814 байт
-  скачано /home/runner/work/_temp/out/forest_ashigaru/forest_ashigaru_refine_base_color.png 6521650 байт
-== text forest_kitsune
-  черновик: 01a1ebf6-90db-751a-8f39-8d72a2854697
-  /v2/text-to-3d 01a1ebf6-90db-751a-8f39-8d72a2854697: IN_PROGRESS 1%
-  /v2/text-to-3d 01a1ebf6-90db-751a-8f39-8d72a2854697: IN_PROGRESS 7%
-  /v2/text-to-3d 01a1ebf6-90db-751a-8f39-8d72a2854697: IN_PROGRESS 20%
-  /v2/text-to-3d 01a1ebf6-90db-751a-8f39-8d72a2854697: IN_PROGRESS 41%
-  /v2/text-to-3d 01a1ebf6-90db-751a-8f39-8d72a2854697: IN_PROGRESS 99%
-  /v2/text-to-3d 01a1ebf6-90db-751a-8f39-8d72a2854697: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/forest_kitsune/forest_kitsune_preview.glb 1719336 байт
-  скачано /home/runner/work/_temp/out/forest_kitsune/forest_kitsune_preview.fbx 1277852 байт
-  скачано /home/runner/work/_temp/out/forest_kitsune/forest_kitsune_preview_thumb.png 81140 байт
-  текстура: 01a1ebf7-8cbf-72b6-9bdf-02e844091e4a
-  /v2/text-to-3d 01a1ebf7-8cbf-72b6-9bdf-02e844091e4a: IN_PROGRESS 0%
-  /v2/text-to-3d 01a1ebf7-8cbf-72b6-9bdf-02e844091e4a: IN_PROGRESS 34%
-  /v2/text-to-3d 01a1ebf7-8cbf-72b6-9bdf-02e844091e4a: IN_PROGRESS 99%
-  /v2/text-to-3d 01a1ebf7-8cbf-72b6-9bdf-02e844091e4a: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/forest_kitsune/forest_kitsune_refine.glb 4731656 байт
-  скачано /home/runner/work/_temp/out/forest_kitsune/forest_kitsune_refine.fbx 4112076 байт
-  скачано /home/runner/work/_temp/out/forest_kitsune/forest_kitsune_refine_thumb.png 80885 байт
-  скачано /home/runner/work/_temp/out/forest_kitsune/forest_kitsune_refine_base_color.png 5195531 байт
-  остаток кредитов: 353
+== text forest_bandit_v2
+  черновик: 01a1ebf9-067c-725f-8f10-9ec639afb72e
+  /v2/text-to-3d 01a1ebf9-067c-725f-8f10-9ec639afb72e: IN_PROGRESS 1%
+  /v2/text-to-3d 01a1ebf9-067c-725f-8f10-9ec639afb72e: IN_PROGRESS 7%
+  /v2/text-to-3d 01a1ebf9-067c-725f-8f10-9ec639afb72e: IN_PROGRESS 20%
+  /v2/text-to-3d 01a1ebf9-067c-725f-8f10-9ec639afb72e: IN_PROGRESS 35%
+  /v2/text-to-3d 01a1ebf9-067c-725f-8f10-9ec639afb72e: IN_PROGRESS 99%
+  /v2/text-to-3d 01a1ebf9-067c-725f-8f10-9ec639afb72e: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/forest_bandit_v2/forest_bandit_v2_preview.glb 1512304 байт
+  скачано /home/runner/work/_temp/out/forest_bandit_v2/forest_bandit_v2_preview.fbx 1256940 байт
+  скачано /home/runner/work/_temp/out/forest_bandit_v2/forest_bandit_v2_preview_thumb.png 93286 байт
+  текстура: 01a1ebfa-aea8-73d3-950c-a92df4496d31
+  /v2/text-to-3d 01a1ebfa-aea8-73d3-950c-a92df4496d31: IN_PROGRESS 0%
+  /v2/text-to-3d 01a1ebfa-aea8-73d3-950c-a92df4496d31: IN_PROGRESS 34%
+  /v2/text-to-3d 01a1ebfa-aea8-73d3-950c-a92df4496d31: IN_PROGRESS 99%
+  /v2/text-to-3d 01a1ebfa-aea8-73d3-950c-a92df4496d31: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/forest_bandit_v2/forest_bandit_v2_refine.glb 5388012 байт
+  скачано /home/runner/work/_temp/out/forest_bandit_v2/forest_bandit_v2_refine.fbx 4952860 байт
+  скачано /home/runner/work/_temp/out/forest_bandit_v2/forest_bandit_v2_refine_thumb.png 94602 байт
+  скачано /home/runner/work/_temp/out/forest_bandit_v2/forest_bandit_v2_refine_base_color.png 6472296 байт
+  остаток кредитов: 323
