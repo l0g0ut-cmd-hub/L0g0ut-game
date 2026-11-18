@@ -112,6 +112,16 @@ jobs:
             --versioning-strategy None \
             --build-method BladePath.EditorTools.BuildScript.BuildAndroid 2>&1 | tee -a "$RUNNER_TEMP/ci.log"
 
+      # Repair counts per imported FBX/OBJ are the authoritative result.
+      # A missing file/unreadable mesh aborts BuildAndroid before the APK.
+      - name: Upload per-model geometry repair report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: BladePath-MeshRepair-Report
+          path: build/model-holes/unity-repair.csv
+          if-no-files-found: warn
+
       - name: Upload APK
         if: always()
         uses: actions/upload-artifact@v4
