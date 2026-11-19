@@ -80,6 +80,7 @@ namespace BladePath
                 s.name = "АЛЫЙ САМУРАЙ"; s.title = "Полумесяц на шлеме, кровь на доспехе"; s.model = 0; s.marks = 2;
                 s.hpMul *= 1.15f; s.dmgMul *= 1.05f; s.aura = new Color(1f, 0.35f, 0.2f); s.dashBias = 0.05f; s.heavyBias = 0.3f; s.aggr = 0.05f;
                 s.trait = "бьёт тяжело и терпеливо ждёт ошибки — не лезь под удар сверху";
+                s.art = "UI/enemy_full_red_samurai";
             }
             return s;
         }
