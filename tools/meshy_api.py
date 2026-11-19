@@ -15,7 +15,11 @@
 import base64, json, mimetypes, os, sys, time, urllib.request, urllib.error
 
 API = "https://api.meshy.ai/openapi"
-KEY = os.environ.get("MESHY_KEY", "").strip()
+KEYS = {"1": os.environ.get("MESHY_KEY", "").strip()}
+for _i in range(1, 9):   # второй аккаунт: первый заданный из запасных секретов
+    _v = os.environ.get("MESHY_KEY_ALT%d" % _i, "").strip()
+    if _v and "2" not in KEYS: KEYS["2"] = _v; KEYS["2name"] = "ALT%d" % _i
+KEY = KEYS["1"]
 OUT = sys.argv[2] if len(sys.argv) > 2 else "out"
 LOG = []
 
@@ -79,6 +83,10 @@ def opt(body, r, key, field=None):
 
 
 def do(r):
+    global KEY
+    acc = str(r.get("account", "1"))
+    KEY = KEYS.get(acc, "")
+    if not KEY: raise RuntimeError("нет ключа для аккаунта " + acc)
     a = r.get("action"); name = r.get("name", "model")
     log(f"== {a} {name}")
     if a == "balance":
@@ -122,14 +130,17 @@ def do(r):
 
 def main():
     os.makedirs(OUT, exist_ok=True); ok = True
-    if not KEY: log("нет ключа MESHY_KEY"); ok = False
+    if not KEYS.get("1") and not KEYS.get("2"): log("нет ключей Meshy"); ok = False
     else:
         req = json.load(open(sys.argv[1] if len(sys.argv) > 1 else "tools/meshy/request.json"))
         for r in (req if isinstance(req, list) else [req]):
             try: do(r)
             except Exception as e: ok = False; log("  ОШИБКА:", str(e).replace(KEY, "***"))
-    try: log("  остаток кредитов:", call("GET", "/v1/balance").get("balance"))
-    except Exception as e: log("  баланс не получен:", str(e).replace(KEY, "***") if KEY else e)
+    for acc in ("1", "2"):
+        KEY = KEYS.get(acc, "")
+        if not KEY: log("  аккаунт", acc, ": ключа нет"); continue
+        try: log("  аккаунт", acc, (KEYS.get(acc + "name", "") if acc == "2" else "MESHY_KEY"), "— остаток кредитов:", call("GET", "/v1/balance").get("balance"))
+        except Exception as e: log("  аккаунт", acc, ": баланс не получен:", str(e).replace(KEY, "***"))
     with open(os.path.join(OUT, "log.txt"), "w") as f: f.write("\n".join(LOG) + "\n")
     sys.exit(0 if ok else 1)
 

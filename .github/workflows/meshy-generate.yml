@@ -22,6 +22,15 @@ jobs:
       - name: Meshy API
         env:
           MESHY_KEY: ${{ secrets.MESHY_KEY }}
+          # второй аккаунт Meshy (владелец, 2026-11-20): имя секрета неизвестно — берётся первый заданный
+          MESHY_KEY_ALT1: ${{ secrets.MESHY_KEY2 }}
+          MESHY_KEY_ALT2: ${{ secrets.MESHY_KEY_2 }}
+          MESHY_KEY_ALT3: ${{ secrets.MESHY2 }}
+          MESHY_KEY_ALT4: ${{ secrets.MESHY_API_KEY }}
+          MESHY_KEY_ALT5: ${{ secrets.MESHY_KEY_SECOND }}
+          MESHY_KEY_ALT6: ${{ secrets.MESHY_KEY2_API }}
+          MESHY_KEY_ALT7: ${{ secrets.MESHY_SECOND_KEY }}
+          MESHY_KEY_ALT8: ${{ secrets.MESHY_2 }}
         run: python3 tools/meshy_api.py tools/meshy/request.json "$RUNNER_TEMP/out"
 
       - name: Publish to meshy-gen branch
