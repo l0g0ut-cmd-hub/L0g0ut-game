@@ -734,9 +734,13 @@ namespace BladePath
                 if (Btn(new Rect(x, y, w, 34f), "ОТМЕНА")) CancelRoad();
                 return;
             }
+            // выбранное могли удалить (отмена, ластик) — выбор сбрасывается
+            if (sel.kind == HPlace && sel.i >= data.places.Length || sel.kind == HPoint && sel.i >= data.points.Length ||
+                (sel.kind == HRoad || sel.kind == HBend) && sel.i >= data.roads.Length || (sel.kind == HEffect || sel.kind == HCorner) && sel.i >= data.effects.Length)
+                sel = new Hit();
             switch (sel.kind)
             {
-                case HPlace when sel.i < data.places.Length:
+                case HPlace:
                 {
                     MapPlace q = data.places[sel.i];
                     UiKit.Text(new Rect(x, y, w, 24f), "МЕСТО " + q.id, 18f, Gold, TextAnchor.MiddleLeft); y += 30f;
@@ -761,7 +765,7 @@ namespace BladePath
                     if (Btn(new Rect(x, r.yMax - 34f, w, 34f), "УДАЛИТЬ МЕСТО")) { Push(); Erase(sel); sel = new Hit(); }
                     return;
                 }
-                case HPoint when sel.i < data.points.Length:
+                case HPoint:
                 {
                     MapPoint q = data.points[sel.i];
                     UiKit.Text(new Rect(x, y, w, 24f), "РАЗВИЛКА " + q.id, 18f, Gold, TextAnchor.MiddleLeft); y += 30f;
