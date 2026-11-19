@@ -397,7 +397,86 @@ namespace BladePath
             {
                 Texture2D st = UiKit.Tex("UI/fx_stream");
                 if (st != null) SheetFrame(r, st, 6, 6, 36, t, 24f, e.alpha, false);
+                return;
             }
+            if (k == "splash")
+            {   // брызги сами по себе (у подножия нарисованного водопада)
+                Texture2D sp = UiKit.Tex("UI/fx_splash");
+                if (sp != null) SheetFrame(r, sp, 6, 4, 24, t, 12f, e.alpha, true);
+                return;
+            }
+            if (k == "spray")
+            {   // водяная пыль: клубы поднимаются и тают внутри рамки
+                if (mist == null) return;
+                for (int j = 0; j < 6; j++)
+                {
+                    float u = Mathf.Repeat(t * 0.18f + j / 6f, 1f), sz = r.width * (0.8f + 0.7f * u);
+                    float cx = r.center.x + Mathf.Sin(t * 0.5f + j * 1.7f) * r.width * 0.2f, cy = r.yMax - r.height * (0.2f + 0.6f * u);
+                    GUI.color = new Color(0.9f, 0.91f, 0.95f, 0.35f * e.alpha * Mathf.Sin(u * Mathf.PI));
+                    GUI.DrawTexture(new Rect(cx - sz * 0.5f, cy - sz * 0.3f, sz, sz * 0.6f), mist);
+                }
+                GUI.color = Color.white;
+                return;
+            }
+            if (k == "smoke" || k == "smoke_dark" || k == "wisp")
+            {   // дым: столб из низа рамки по центру вверх, сносит вправо (как дым печей карты; лист fx_smoke_wisp 8×8)
+                Texture2D wisp = UiKit.Tex("UI/fx_smoke_wisp");
+                if (wisp == null) return;
+                int n = k == "wisp" ? 7 : 16;
+                Color c = k == "smoke_dark" ? new Color(0.42f, 0.4f, 0.42f) : new Color(0.9f, 0.88f, 0.92f);
+                Vector2 src = new Vector2(r.center.x - r.width * 0.2f, r.yMax);
+                float size = r.height, side = r.width * 0.45f;
+                for (int p = 0; p < n; p++)
+                {
+                    float run = t / 4.6f + p / (float)n;
+                    float u = run - Mathf.Floor(run);
+                    int seed = Mathf.FloorToInt(run) * 7 + p * 13;
+                    float rise = size * (1f - (1f - u) * (1f - u * 0.4f));
+                    float drift = side * Mathf.Pow(u, 1.8f) + Mathf.Sin(u * 3f + seed) * 0.04f * size;
+                    float sz = (k == "wisp" ? r.width * 0.9f : size * 0.7f) * Mathf.Lerp(0.22f, 1f, Mathf.Sqrt(u));
+                    float al = Mathf.Clamp01(u / 0.12f) * (1f - Mathf.Pow(u, 2.5f)) * 0.78f * e.alpha;
+                    GUI.color = new Color(c.r, c.g, c.b, al);
+                    int fr = Mathf.Min(63, (int)(u * 64f));
+                    float fu = (fr % 8) * 0.125f, fv = 1f - (fr / 8 + 1) * 0.125f;
+                    GUI.DrawTextureWithTexCoords(new Rect(src.x + drift - sz * 0.5f, src.y - rise - sz * 0.5f, sz, sz), wisp,
+                        (seed & 1) == 0 ? new Rect(fu, fv, 0.125f, 0.125f) : new Rect(fu + 0.125f, fv, -0.125f, 0.125f));
+                }
+                GUI.color = Color.white;
+                return;
+            }
+            if (k == "campfire")
+            {   // костёр: лист UI/fx_campfire 16×13, вся петля 208 кадров при 25 к/с
+                Texture2D fire = UiKit.Tex("UI/fx_campfire");
+                if (fire != null) SheetFrame(r, fire, 16, 13, 208, t, 25f, e.alpha, false);
+                return;
+            }
+            if (k == "mist")
+            {   // стелющийся туман: лист UI/fx_mist 6×5 туда-обратно, полоса медленно плывёт
+                Texture2D fs = UiKit.Tex("UI/fx_mist");
+                if (fs != null) SheetFrame(new Rect(r.x + Mathf.Sin(t * 0.05f) * r.width * 0.05f, r.y, r.width, r.height), fs, 6, 5, 30, t, 2f, e.alpha, true);
+            }
+        }
+
+        /// <summary>Библиотека эффектов редактора карт: вид, название, размер по умолчанию (пиксели картины), прозрачность, подножие.</summary>
+        public static readonly string[] FxKinds = { "fall_fade", "fall_fade", "fall_lip", "fall_mid", "splash", "spray", "stream", "smoke", "smoke_dark", "wisp", "campfire", "mist" };
+        public static readonly string[] FxNames = { "Водопад узкий", "Водопад широкий", "Перелив из озера", "Каскад (средняя ступень)", "Брызги у подножия", "Водяная пыль",
+                                                    "Блики ручья", "Дым из трубы", "Дым костра", "Струйка дыма", "Костёр", "Туман стелется" };
+        public static readonly Vector4[] FxDefaults =   // ширина, высота, прозрачность, подножие
+        {
+            new Vector4(30, 90, 0.6f, 1), new Vector4(70, 160, 0.7f, 1), new Vector4(60, 200, 0.9f, 2), new Vector4(45, 70, 0.55f, 0), new Vector4(80, 55, 0.6f, 0),
+            new Vector4(60, 80, 0.8f, 0), new Vector4(76, 42, 1f, 0), new Vector4(70, 110, 0.8f, 0), new Vector4(90, 150, 0.8f, 0), new Vector4(30, 70, 0.7f, 0),
+            new Vector4(26, 34, 0.95f, 0), new Vector4(240, 120, 0.2f, 0),
+        };
+        public static string FxName(MapEffect e)
+        {
+            switch (e.kind)
+            {
+                case "fall_fade": return e.w > 50f ? FxNames[1] : FxNames[0];
+                case "fall_lip": return FxNames[2]; case "fall_mid": return FxNames[3]; case "splash": return FxNames[4]; case "spray": return FxNames[5];
+                case "stream": return FxNames[6]; case "smoke": return FxNames[7]; case "smoke_dark": return FxNames[8]; case "wisp": return FxNames[9];
+                case "campfire": return FxNames[10]; case "mist": return FxNames[11];
+            }
+            return e.kind;
         }
 
         public static void Draw(int region, Rect view, float u0, float uw)

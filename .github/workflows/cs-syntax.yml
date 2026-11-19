@@ -1,0 +1,21 @@
+name: Проверка синтаксиса C#
+
+# Быстрая проверка перед сборкой APK (~1 мин): mcs --parse по всем скриптам проекта (только синтаксис, без типов Unity).
+on:
+  workflow_dispatch:
+  push:
+    branches: [cs-check]
+
+jobs:
+  parse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install mcs
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq mono-mcs >/dev/null
+      - name: Parse
+        run: |
+          find Assets -name "*.cs" -not -path "*/Plugins/*" > cs.txt
+          wc -l cs.txt
+          mcs --parse @cs.txt

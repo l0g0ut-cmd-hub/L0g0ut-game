@@ -999,6 +999,8 @@ namespace BladePath
         }
         public static void DebugSteps(int n) { D.steps = n; D.lastRoll = n; Save(); }
         public static void DebugNextRegion() { Generate((D.region + 1) % RegionNames.Length); }
+        /// <summary>Редактор карт, «ПРОЙТИ КАРТУ»: новый поход по этой области с запасом костей пути.</summary>
+        public static void DebugRegion(int region) { Generate(Mathf.Clamp(region, 0, RegionNames.Length - 1)); AddRoll(30); }
         public static void DebugSkipSquad() { MapNode n = FightNode; if (n != null && n.extra != null) { D.foe = n.extra.Count; Save(); } }
 
         public static void BeginFight(int i, bool rematch = false)

@@ -229,7 +229,7 @@ namespace BladePath
         void Update()
         {
             UpdateAmbience();
-            if (!Open) return;
+            if (!Open || MapEditor.Open) return;
             HandleMapPan();
             if (moveTo >= 0)
             {
@@ -382,6 +382,13 @@ namespace BladePath
             GUI.depth = -15;   // над боем и его кнопками, под экраном снаряжения
             Matrix4x4 old = UiKit.Begin();
             W = UiKit.Width;
+            if (MapEditor.Open)
+            {   // редактор карт (меню разработчика) — на весь экран вместо карты похода
+                MapEditor.Draw(W);
+                if (!MapEditor.Open) { sel = -1; previewPath.Clear(); panU = -1f; TerrainRoads.Bind(Campaign.Region, Campaign.Nodes); }
+                GUI.matrix = old;
+                return;
+            }
             bool interactive = !InventoryScreen.Open;
             // сообщение (утро, награда, подсказка) — касание в любом месте убирает его сразу, а не ждать, пока растает
             if (interactive && Event.current.type == EventType.MouseDown && toastLines.Count > 0 && Time.unscaledTime - toastAt > 0.15f && Time.unscaledTime - toastAt < ToastTime)
@@ -1063,38 +1070,39 @@ namespace BladePath
 
         void DrawDev(bool ok)
         {
-            Rect r = Card(520f, 584f);
+            Rect r = Card(540f, 536f);
             float x = r.x + 24f, w = r.width - 48f, y = r.y + 16f;
             VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), "МЕНЮ РАЗРАБОТЧИКА", 20f); y += 36f;
             float bw = (w - 10f) * 0.5f;
-            if (Btn(new Rect(x, y, bw, 44f), "ТЕЛЕПОРТ", ok, true)) { modal = Modal.None; devTeleport = true; return; }
-            if (Btn(new Rect(x + bw + 10f, y, bw, 44f), "ЛАГЕРЬ", ok)) { OpenCamp(); return; }
-            y += 52f;
-            if (Btn(new Rect(x, y, bw, 44f), "ТРАКТИР", ok && UiKit.Tex("UI/tavern") != null)) { OpenTavern(); return; }
-            if (Btn(new Rect(x + bw + 10f, y, bw, 44f), "СЛЕД. ОБЛАСТЬ", ok)) { Campaign.DebugNextRegion(); modal = Modal.None; sel = -1; previewPath.Clear(); panU = -1f; TerrainRoads.Bind(Campaign.Region, Campaign.Nodes); return; }
-            y += 52f;
-            if (Btn(new Rect(x, y, bw, 44f), "+3 КОСТИ ПУТИ", ok)) { Campaign.AddRoll(3); }
-            if (Btn(new Rect(x + bw + 10f, y, bw, 44f), "+500 МОН", ok)) { Profile.AddGold(500); }
-            y += 52f;
-            if (Btn(new Rect(x, y, bw, 44f), "+1 ОЧКО", ok)) { Profile.GivePoint(); }
-            if (Btn(new Rect(x + bw + 10f, y, bw, 44f), JourneyChoice.FogEnabled ? "ТУМАН: ВКЛ" : "ТУМАН: ВЫКЛ", ok)) { JourneyChoice.FogEnabled = !JourneyChoice.FogEnabled; }
-            y += 52f;
-            if (Btn(new Rect(x, y, w, 44f), "ВЫБРОСИТЬ КОСТЬ: 3 ХОДА", ok)) { Campaign.DebugSteps(3); }
-            y += 52f;
-            if (Btn(new Rect(x, y, w, 44f), SideDuel.Enabled ? "СОРАТНИКИ: ВКЛ" : "СОРАТНИКИ: ВЫКЛ", ok)) { SideDuel.Enabled = !SideDuel.Enabled; }
-            y += 52f;
+            if (Btn(new Rect(x, y, bw, 38f), "ТЕЛЕПОРТ", ok, true)) { modal = Modal.None; devTeleport = true; return; }
+            if (Btn(new Rect(x + bw + 10f, y, bw, 38f), "ЛАГЕРЬ", ok)) { OpenCamp(); return; }
+            y += 44f;
+            if (Btn(new Rect(x, y, bw, 38f), "ТРАКТИР", ok && UiKit.Tex("UI/tavern") != null)) { OpenTavern(); return; }
+            if (Btn(new Rect(x + bw + 10f, y, bw, 38f), "СЛЕД. ОБЛАСТЬ", ok)) { Campaign.DebugNextRegion(); modal = Modal.None; sel = -1; previewPath.Clear(); panU = -1f; TerrainRoads.Bind(Campaign.Region, Campaign.Nodes); return; }
+            y += 44f;
+            if (Btn(new Rect(x, y, bw, 38f), "+3 КОСТИ ПУТИ", ok)) { Campaign.AddRoll(3); }
+            if (Btn(new Rect(x + bw + 10f, y, bw, 38f), "+500 МОН", ok)) { Profile.AddGold(500); }
+            y += 44f;
+            if (Btn(new Rect(x, y, bw, 38f), "+1 ОЧКО", ok)) { Profile.GivePoint(); }
+            if (Btn(new Rect(x + bw + 10f, y, bw, 38f), JourneyChoice.FogEnabled ? "ТУМАН: ВКЛ" : "ТУМАН: ВЫКЛ", ok)) { JourneyChoice.FogEnabled = !JourneyChoice.FogEnabled; }
+            y += 44f;
+            if (Btn(new Rect(x, y, bw, 38f), "КОСТЬ: 3 ХОДА", ok)) { Campaign.DebugSteps(3); }
+            if (Btn(new Rect(x + bw + 10f, y, bw, 38f), "РЕДАКТОР КАРТ", ok, true)) { modal = Modal.None; MapEditor.Show(Campaign.Region); return; }
+            y += 44f;
+            if (Btn(new Rect(x, y, w, 38f), SideDuel.Enabled ? "СОРАТНИКИ: ВКЛ" : "СОРАТНИКИ: ВЫКЛ", ok)) { SideDuel.Enabled = !SideDuel.Enabled; }
+            y += 44f;
             // время суток (по пути / утро / день / вечер / ночь / выкл — всегда день) и дождь с грозой — на карте и в боях
-            if (Btn(new Rect(x, y, bw, 44f), "ВРЕМЯ: " + DayCycle.ModeName(false), ok)) DayCycle.NextMode();
-            if (Btn(new Rect(x + bw + 10f, y, bw, 44f), Weather.NoRain ? "ДОЖДЬ/ГРОЗА: ВЫКЛ" : "ДОЖДЬ/ГРОЗА: ВКЛ", ok)) Weather.NoRain = !Weather.NoRain;
-            y += 52f;
+            if (Btn(new Rect(x, y, bw, 38f), "ВРЕМЯ: " + DayCycle.ModeName(false), ok)) DayCycle.NextMode();
+            if (Btn(new Rect(x + bw + 10f, y, bw, 38f), Weather.NoRain ? "ДОЖДЬ/ГРОЗА: ВЫКЛ" : "ДОЖДЬ/ГРОЗА: ВКЛ", ok)) Weather.NoRain = !Weather.NoRain;
+            y += 44f;
             // звук: выключатель и что звучит (игра / музыка / оба)
-            if (Btn(new Rect(x, y, bw, 44f), SoundSettings.On ? "ЗВУК: ВКЛ" : "ЗВУК: ВЫКЛ", ok)) SoundSettings.Toggle();
-            if (Btn(new Rect(x + bw + 10f, y, bw, 44f), SoundSettings.ScopeShortName, ok && SoundSettings.On)) SoundSettings.NextScope();
-            y += 52f;
+            if (Btn(new Rect(x, y, bw, 38f), SoundSettings.On ? "ЗВУК: ВКЛ" : "ЗВУК: ВЫКЛ", ok)) SoundSettings.Toggle();
+            if (Btn(new Rect(x + bw + 10f, y, bw, 38f), SoundSettings.ScopeShortName, ok && SoundSettings.On)) SoundSettings.NextScope();
+            y += 44f;
             // враги Леса теней в обычных боях: как на карте (случайно) или все бои — один облик (проверить модель и повадки)
-            if (Btn(new Rect(x, y, w, 44f), "ВРАГИ ЛЕСА: " + (Ladder.DevFoe > 0 ? Ladder.Foes[Ladder.DevFoe - 1].name : Ladder.DevFoe == 0 ? "ПОВЕРЖЕННЫЙ" : "КАК НА КАРТЕ"), ok))
+            if (Btn(new Rect(x, y, w, 38f), "ВРАГИ ЛЕСА: " + (Ladder.DevFoe > 0 ? Ladder.Foes[Ladder.DevFoe - 1].name : Ladder.DevFoe == 0 ? "ПОВЕРЖЕННЫЙ" : "КАК НА КАРТЕ"), ok))
                 Ladder.DevFoe = Ladder.DevFoe >= Ladder.Foes.Length ? -1 : Ladder.DevFoe + 1;
-            if (Btn(new Rect(r.center.x - 80f, r.yMax - 48f, 160f, 38f), "ЗАКРЫТЬ", ok)) modal = Modal.None;
+            if (Btn(new Rect(r.center.x - 80f, r.yMax - 42f, 160f, 34f), "ЗАКРЫТЬ", ok)) modal = Modal.None;
         }
 
         bool Known(MapNode n)
