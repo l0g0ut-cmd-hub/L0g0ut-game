@@ -1,0 +1,38 @@
+name: Реф модели (рендер)
+
+# Blender: снимки модели для генерации картинок (весь рост и по грудь) → ветка model-render. Список — tools/blender/render_list.txt
+on:
+  workflow_dispatch:
+  push:
+    branches: [model-render-request]
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender 4.2 LTS
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libxkbcommon0 libsm6 libice6 libegl1 >/dev/null
+          curl -sSfL https://download.blender.org/release/Blender4.2/blender-4.2.3-linux-x64.tar.xz | tar -xJ -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/blender-4.2.3-linux-x64" >> "$GITHUB_PATH"
+      - name: Render
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          while read -r name fbx alb; do
+            [ -z "$name" ] && continue
+            FBX="$fbx" ALBEDO="$alb" OUT="$RUNNER_TEMP/out" NAME="$name" blender -b --factory-startup --python tools/blender/render_ref.py 2>&1 | grep -E "BBOX|Error|Traceback|Saved" | head -20
+          done < tools/blender/render_list.txt
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd "$RUNNER_TEMP/out"; git init -q; git checkout -q -b model-render
+          git -c user.name=ci -c user.email=ci@local add -A
+          git -c user.name=ci -c user.email=ci@local commit -qm "render ${GITHUB_RUN_NUMBER}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" model-render

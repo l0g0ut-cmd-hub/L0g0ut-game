@@ -1,0 +1,1 @@
+red_samurai Assets/_Project/Models/Samurai2_Player.fbx Assets/_Project/Art/Samurai2/samurai2_albedo.jpg
