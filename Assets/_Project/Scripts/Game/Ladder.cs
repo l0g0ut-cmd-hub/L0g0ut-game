@@ -52,31 +52,43 @@ namespace BladePath
         /// <summary>Облик Леса теней текущего боя: 0 — нет (ступень как есть), 1…Foes.Length — Foes[Foe − 1].</summary>
         public static int Foe
         {
-            get { int f = PlayerPrefs.GetInt("ladder_foe", 0); return f == DojoFoe || f == HermitFoe || f > 0 && f <= Foes.Length ? f : 0; }
-            set { PlayerPrefs.SetInt("ladder_foe", value == DojoFoe || value == HermitFoe ? value : Mathf.Clamp(value, 0, Foes.Length)); }
+            get { int f = PlayerPrefs.GetInt("ladder_foe", 0); return IsSpecial(f) || f > 0 && f <= Foes.Length ? f : 0; }
+            set { PlayerPrefs.SetInt("ladder_foe", IsSpecial(value) ? value : Mathf.Clamp(value, 0, Foes.Length)); }
         }
         /// <summary>Облик «ученик додзё»: сила ступени области, облик — самурай в красном доспехе (не Поверженный — это живой ученик сэнсэя).</summary>
         public const int DojoFoe = 50;
         public const int HermitFoe = 51;   // отшельник с острова в Лесу теней (облик — ронин)
+        public const int RedFoe = 52;      // алый самурай (самурай в красном доспехе) — сильный противник Леса теней
+        static bool IsSpecial(int f) { return f == DojoFoe || f == HermitFoe || f == RedFoe; }
+        /// <summary>Особые противники: сила ступени idx, свой облик и имя.</summary>
+        static Stage Special(int f, int idx)
+        {
+            Stage s = Stages[Mathf.Clamp(idx, 0, Stages.Length - 1)];
+            s.tint = Color.white; s.art = null; s.trait = null;
+            if (f == DojoFoe)
+            {   // старший ученик — облик ронина (как отшельник), владелец 2026-11-20
+                s.name = "СТАРШИЙ УЧЕНИК"; s.title = "Лучший клинок додзё"; s.model = 1;
+                s.aura = new Color(1f, 0.7f, 0.3f); s.dashBias = 0.1f; s.heavyBias = 0.15f;
+            }
+            else if (f == HermitFoe)
+            {
+                s.name = "ОТШЕЛЬНИК"; s.title = "Старый мастер меча с острова"; s.model = 1; s.marks = 1;
+                s.hpMul *= 1.1f; s.aura = new Color(0.75f, 0.85f, 1f); s.dashBias = 0.05f; s.heavyBias = 0.2f; s.aggr = -0.1f;
+            }
+            else if (f == RedFoe)
+            {
+                s.name = "АЛЫЙ САМУРАЙ"; s.title = "Полумесяц на шлеме, кровь на доспехе"; s.model = 0; s.marks = 2;
+                s.hpMul *= 1.15f; s.dmgMul *= 1.05f; s.aura = new Color(1f, 0.35f, 0.2f); s.dashBias = 0.05f; s.heavyBias = 0.3f; s.aggr = 0.05f;
+                s.trait = "бьёт тяжело и терпеливо ждёт ошибки — не лезь под удар сверху";
+            }
+            return s;
+        }
         public static Stage Current
         {
             get
             {
                 int f = Foe;
-                if (f == DojoFoe)
-                {
-                    Stage s = Stages[Index];
-                    s.name = "СТАРШИЙ УЧЕНИК"; s.title = "Лучший клинок додзё"; s.model = 0;
-                    s.tint = Color.white; s.aura = new Color(1f, 0.7f, 0.3f); s.dashBias = 0.1f; s.heavyBias = 0.15f;
-                    return s;
-                }
-                if (f == HermitFoe)
-                {
-                    Stage s = Stages[Index];
-                    s.name = "ОТШЕЛЬНИК"; s.title = "Старый мастер меча с острова"; s.model = 1; s.marks = 1;
-                    s.hpMul *= 1.1f; s.tint = Color.white; s.aura = new Color(0.75f, 0.85f, 1f); s.dashBias = 0.05f; s.heavyBias = 0.2f; s.aggr = -0.1f;
-                    return s;
-                }
+                if (IsSpecial(f)) return Special(f, Index);
                 return f > 0 ? Foes[f - 1] : Stages[Index];
             }
         }
@@ -87,7 +99,7 @@ namespace BladePath
             set { PlayerPrefs.SetInt("dev_forest_foe", Mathf.Clamp(value, -1, Foes.Length)); PlayerPrefs.Save(); }
         }
         /// <summary>Противник места карты (ступень или облик Леса теней).</summary>
-        public static Stage Of(int enemy, int foe) { return foe > 0 && foe <= Foes.Length ? Foes[foe - 1] : Stages[Mathf.Clamp(enemy, 0, Stages.Length - 1)]; }
+        public static Stage Of(int enemy, int foe) { return IsSpecial(foe) ? Special(foe, enemy) : foe > 0 && foe <= Foes.Length ? Foes[foe - 1] : Stages[Mathf.Clamp(enemy, 0, Stages.Length - 1)]; }
         /// <summary>Случайный противник обычного боя первой области: Поверженный (0) или один из обитателей леса (1…4).</summary>
         public static int RollForestFoe() { return Random.value < 0.25f ? 0 : 1 + Random.Range(0, Foes.Length); }
         public static bool IsLast { get { return Index >= Stages.Length - 1; } }

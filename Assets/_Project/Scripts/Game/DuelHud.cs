@@ -1181,8 +1181,11 @@ namespace BladePath
             else
             {
                 // у каждого врага «Пути» свой портрет (Поверженный, Тень клана, Кровавый они, Проклятый сёгун); нет — по облику модели
+                // портрет — по облику модели на арене (Ladder.Stage.model), а не по ступени: у ямабуси — ямабуси и т. д.
+                int mi = Ladder.Current.model;
                 int li = Mathf.Clamp(Ladder.Index, 0, EnemyPortraits.Length - 1);
-                if (UiKit.Tex(EnemyPortraits[li]) != null) pp = EnemyPortraits[li];
+                if (mi >= 0 && mi < ModelPortraits.Length && UiKit.Tex(ModelPortraits[mi]) != null) pp = ModelPortraits[mi];
+                else if (UiKit.Tex(EnemyPortraits[li]) != null) pp = EnemyPortraits[li];
                 else { EnemySkins sk = f.GetComponent<EnemySkins>(); pp = sk != null && sk.Active == 1 ? "UI/portrait_ronin" : "UI/portrait_undead"; }
             }
             Texture2D pt = UiKit.Tex(pp);
@@ -1225,6 +1228,10 @@ namespace BladePath
 
         static readonly string[] EnemyFullArt = { "UI/enemy_full_fallen", "UI/enemy_full_shadow", "UI/enemy_full_oni", "UI/enemy_full_shogun" };
         static readonly string[] EnemyPortraits = { "UI/portrait_fallen", "UI/portrait_shadow", "UI/portrait_oni", "UI/portrait_shogun" };
+        // по облику (EnemySkins): 0 алый самурай, 1 ронин (ученик додзё, отшельник), 2 Они, 3 сёгун, 4 Поверженный, 5 Тень клана,
+        // 6 разбойник, 7 ямабуси, 8 асигару, 9 кицунэ; нет файла — портрет по ступени
+        static readonly string[] ModelPortraits = { "UI/portrait_red_samurai", "UI/portrait_ronin", "UI/portrait_oni", "UI/portrait_shogun", "UI/portrait_fallen",
+                                                    "UI/portrait_shadow", "UI/portrait_bandit", "UI/portrait_yamabushi", "UI/portrait_ashigaru", "UI/portrait_kitsune" };
 
         /// <summary>Кольцо поверх круглого портрета (радиус лица 32): дыра в текстуре — ~0,33 (герой) и ~0,30 (враг) ширины.</summary>
         static void DrawPortraitRing(Vector2 pc, bool enemy)

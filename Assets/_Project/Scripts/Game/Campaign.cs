@@ -210,6 +210,9 @@ namespace BladePath
                         if (!gn.done && Mathf.Abs(gn.x - GroveSpots[g].x) < 0.002f && Mathf.Abs(gn.y - GroveSpots[g].y) < 0.003f && gn.type != (int)GroveSpots[g].z)
                         { gn.type = (int)GroveSpots[g].z; gn.foe = 0; gn.lair = false; if (gn.extra != null) gn.extra.Clear(); }
             LinkByRoads(d);   // и старые сохранения ездят по нарисованным дорогам
+            if (d.region == 0)   // сильные противники Леса теней — алый самурай (2026-11-20)
+                foreach (MapNode en in d.nodes)
+                    if (!en.done && en.Type == NodeType.Elite && en.foe == 0 && (d.fight < 0 || d.fight >= d.nodes.Count || d.nodes[d.fight] != en)) en.foe = Ladder.RedFoe;
             // поход, начатый до обитателей Леса теней: расставить их по ещё не пройденным обычным боям леса
             if (!d.foesRolled)
             {
@@ -566,7 +569,7 @@ namespace BladePath
             MapNode n = D.nodes[i];
             n.type = (int)t;
             n.enemy = t == NodeType.Elite ? Mathf.Clamp(D.region, 0, Ladder.Count - 1) : DuelEnemy(D.region);
-            n.foe = D.region == 0 && t != NodeType.Elite ? Ladder.RollForestFoe() : 0;
+            n.foe = D.region == 0 ? (t != NodeType.Elite ? Ladder.RollForestFoe() : Ladder.RedFoe) : 0;
             if (n.extra == null) n.extra = new List<int>();
             n.extra.Clear();
             for (int k = 0; k < squad; k++) n.extra.Add(DuelEnemy(D.region));
@@ -819,7 +822,8 @@ namespace BladePath
             }
             // Лес теней: в обычных боях и засадах — разные обитатели леса (разбойник, ямабуси, асигару, кицунэ) или Поверженный
             foreach (MapNode fn in dd.nodes)
-                fn.foe = region == 0 && (fn.Type == NodeType.Duel || fn.Type == NodeType.Ambush) ? Ladder.RollForestFoe() : 0;
+                fn.foe = region == 0 && (fn.Type == NodeType.Duel || fn.Type == NodeType.Ambush) ? Ladder.RollForestFoe()
+                       : region == 0 && fn.Type == NodeType.Elite ? Ladder.RedFoe : 0;   // сильный противник леса — алый самурай
             // постоянные места — такими, как задумано: правила «у воды/на краю ущелья — бой», «нет площадки — бой», отряды и
             // обитатели леса их не трогают (иначе хижина рыбака и остров отшельника становились дуэлями)
             foreach (KeyValuePair<int, int> pm in permanent)
