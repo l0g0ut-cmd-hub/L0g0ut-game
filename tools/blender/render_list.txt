@@ -1,1 +1,2 @@
-red_samurai Assets/_Project/Models/Samurai2_Player.fbx Assets/_Project/Art/Samurai2/samurai2_albedo.jpg
+ren Assets/_Project/Models/Ren_Player.fbx Assets/_Project/Art/Ren/ren_albedo.jpg
+akiko Assets/_Project/Models/Akiko_Player.fbx Assets/_Project/Art/Akiko/akiko_albedo.jpg
