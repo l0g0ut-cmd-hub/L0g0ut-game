@@ -20,6 +20,8 @@ for _i in range(1, 9):   # второй аккаунт: первый задан�
     _v = os.environ.get("MESHY_KEY_ALT%d" % _i, "").strip()
     if _v and "2" not in KEYS: KEYS["2"] = _v; KEYS["2name"] = "ALT%d" % _i
 KEY = KEYS["1"]
+import hashlib as _h
+if KEYS.get("1") and KEYS.get("2"): print("ключи аккаунтов", "ОДИНАКОВЫЕ" if KEYS["1"] == KEYS["2"] else "разные", flush=True)
 OUT = sys.argv[2] if len(sys.argv) > 2 else "out"
 LOG = []
 
