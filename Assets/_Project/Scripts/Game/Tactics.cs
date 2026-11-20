@@ -24,12 +24,13 @@ namespace BladePath
             // способности («Герои 3»): двойной удар, бесконечные ответы, разгон (+5% урона за клетку пути), стрелок без штрафа вплотную,
             // удар по всем соседним врагам, пробой доспеха (доля защиты цели не в счёт)
             public bool dbl, unlimRet, joust, noMeleePen, sweep; public float pierce;
+            public bool wide;               // большое существо — две клетки («Герои 3»): голова и круп/хвост позади
             public string Ability
             {
                 get
                 {
                     string a = "";
-                    if (dbl) a += " · двойной удар"; if (unlimRet) a += " · отвечает всем"; if (joust) a += " · разгон";
+                    if (wide) a += " · две клетки"; if (dbl) a += " · двойной удар"; if (unlimRet) a += " · отвечает всем"; if (joust) a += " · разгон";
                     if (noMeleePen) a += " · вплотную без штрафа"; if (sweep) a += " · бьёт всех рядом"; if (pierce > 0f) a += " · пробивает доспех";
                     if (noRetal) a += " · по нему не отвечают"; if (magic) a += " · бьёт чарами";
                     return a.Length > 0 ? a.Substring(3) : "";
@@ -50,7 +51,7 @@ namespace BladePath
             new UnitType("Лучники", 6, 3, 2, 3, 10, 4, 12, -2) { cell = 1, live = "unit_archer" },
             new UnitType("Тэппо", 8, 3, 3, 5, 12, 3, 8, 6) { cell = 2, live = "unit_teppo", pierce = 0.4f },
             new UnitType("Самураи", 8, 8, 4, 6, 25, 5, 0, 0) { cell = 3, live = "unit_samurai", unlimRet = true },
-            new UnitType("Конные самураи", 11, 9, 7, 11, 45, 8, 0, 3) { cell = 4, live = "unit_cavalry", liveH = 2.6f, joust = true },
+            new UnitType("Конные самураи", 11, 9, 7, 11, 45, 8, 0, 3) { cell = 4, live = "unit_cavalry", liveH = 2.6f, joust = true, wide = true },
             new UnitType("Сохэи", 7, 7, 3, 6, 20, 5, 0, 7) { cell = 5, live = "unit_sohei" },
             new UnitType("Синоби", 9, 4, 3, 5, 15, 8, 0, 5) { cell = 6, noRetal = true, live = "unit_shinobi", liveH = 1.68f },
             new UnitType("Ронины", 7, 6, 3, 5, 18, 6, 0, 1) { cell = 7, live = "unit_ronin" },
@@ -67,7 +68,7 @@ namespace BladePath
             new UnitType("Маски кицунэ", 8, 6, 3, 5, 18, 7, 6, 9) { portrait = "UI/portrait_kitsune", magic = true, live = "unit_kitsune", liveH = 1.64f, noMeleePen = true },
             new UnitType("Поверженные", 7, 7, 3, 6, 25, 4, 0, 4) { portrait = "UI/portrait_fallen", live = "unit_fallen", liveH = 1.75f },
             new UnitType("Клан теней", 9, 5, 3, 6, 15, 8, 0, 5) { portrait = "UI/portrait_shadow", noRetal = true, live = "unit_shadow" },
-            new UnitType("Они", 14, 12, 12, 20, 100, 5, 0, 2) { portrait = "UI/portrait_oni", live = "unit_oni", liveH = 2.3f, sweep = true },
+            new UnitType("Они", 14, 12, 12, 20, 100, 5, 0, 2) { portrait = "UI/portrait_oni", live = "unit_oni", liveH = 2.3f, sweep = true, wide = true },
             new UnitType("Сёгун", 16, 16, 20, 30, 180, 6, 0, 3) { portrait = "UI/portrait_shogun", live = "unit_shogun", liveH = 1.85f, dbl = true, unlimRet = true },
             new UnitType("Ронины", 7, 6, 3, 5, 18, 6, 0, 1) { portrait = "UI/portrait_ronin", live = "unit_ronin" },
             new UnitType("Алый самурай", 11, 10, 7, 12, 45, 6, 0, 0) { portrait = "UI/portrait_red_samurai", live = "unit_crimson", liveH = 1.78f, dbl = true },
@@ -157,7 +158,32 @@ namespace BladePath
             int dx = x1 - x2, dz = z1 - z2, dy = -dx - dz;
             return Mathf.Max(Mathf.Abs(dx), Mathf.Max(Mathf.Abs(dy), Mathf.Abs(dz)));
         }
-        static Stack At(int c, int r) { foreach (Stack s in stacks) if (s.Alive && s.c == c && s.r == r) return s; return null; }
+        static Stack At(int c, int r) { foreach (Stack s in stacks) if (s.Alive && (s.c == c && s.r == r || s.t.wide && s.c + Back(s) == c && s.r == r)) return s; return null; }
+        // двухклеточные: вторая клетка — позади головы (наши смотрят вправо — сзади слева, враги — наоборот); (c±1, r) всегда соседняя
+        static int Back(Stack s) { return s.enemy ? 1 : -1; }
+        static Vector2Int TailOf(Stack s) { return new Vector2Int(s.c + Back(s), s.r); }
+        static IEnumerable<Vector2Int> Cells(Stack s) { yield return new Vector2Int(s.c, s.r); if (s.t.wide) yield return TailOf(s); }
+        /// <summary>Соседние клетки отряда (у двухклеточного — вокруг обеих клеток, без своих).</summary>
+        static IEnumerable<Vector2Int> Around(Stack s)
+        {
+            HashSet<Vector2Int> seen = new HashSet<Vector2Int>(Cells(s));
+            foreach (Vector2Int c in Cells(s)) foreach (Vector2Int n in Nb(c.x, c.y)) if (seen.Add(n)) yield return n;
+        }
+        /// <summary>Может ли отряд s стоять головой в клетке (c, r): у двухклеточного свободна и клетка позади.</summary>
+        static bool Fits(Stack s, int c, int r)
+        {
+            if (!s.t.wide) return true;
+            int tc = c + Back(s);
+            if (!In(tc, r) || Rock(tc, r) || WallBlocks(s, tc, r)) return false;
+            Stack o = At(tc, r); return o == null || o == s;
+        }
+        /// <summary>Где рисуется отряд, стоящий головой в клетке: у двухклеточного — между головой и хвостом.</summary>
+        static Vector2 Home(Stack s, int c, int r)
+        {
+            Vector2 p = Center(c, r);
+            if (!s.t.wide) return p;
+            return (p + Center(c + Back(s), r)) * 0.5f;
+        }
 
         // препятствия (как в «Героях»): на клетку не встать; картинки — UI/Battle/obstacles (4×3), нет — камни-заглушки
         static readonly List<Vector3Int> rocks = new List<Vector3Int>();   // x, y — клетка, z — ячейка атласа
@@ -210,7 +236,9 @@ namespace BladePath
                 if (d >= s.Spd) continue;
                 foreach (Vector2Int b in Nb(a.x, a.y))
                 {
-                    if (reach.ContainsKey(b) || At(b.x, b.y) != null || Rock(b.x, b.y) || WallBlocks(s, b.x, b.y)) continue;
+                    if (reach.ContainsKey(b) || Rock(b.x, b.y) || WallBlocks(s, b.x, b.y)) continue;
+                    Stack ob = At(b.x, b.y); if (ob != null && ob != s) continue;
+                    if (!Fits(s, b.x, b.y)) continue;
                     reach[b] = d + 1; from[b] = a; q.Enqueue(b);
                 }
             }
@@ -225,7 +253,7 @@ namespace BladePath
         }
         static bool Blocked(Stack s)   // стрелок, которому мешает враг рядом
         {
-            foreach (Vector2Int n in Nb(s.c, s.r)) { Stack o = At(n.x, n.y); if (o != null && o.enemy != s.enemy) return true; }
+            foreach (Vector2Int n in Around(s)) { Stack o = At(n.x, n.y); if (o != null && o.enemy != s.enemy) return true; }
             return false;
         }
         static bool CanShoot(Stack s) { return s.t.shots > 0 && s.shots > 0 && !Blocked(s); }
@@ -331,6 +359,7 @@ namespace BladePath
 
         static void Add(UnitType t, int n, bool enemy, int c, int r)
         {
+            if (t.wide) c = enemy ? Mathf.Min(c, Cols - 2) : Mathf.Max(c, 1);   // двухклеточному — место под круп у края
             stacks.Add(new Stack { t = t, enemy = enemy, count = n, start = n, topHp = t.hp, shots = t.shots, c = c, r = r, born = Time.unscaledTime });
         }
 
@@ -374,7 +403,7 @@ namespace BladePath
             rocks.RemoveAll(o => o.x >= WallC - 1);
             int i = 0;
             int[,] spot = { { 13, 1 }, { 13, 3 }, { 13, 5 }, { 13, 7 }, { 13, 9 }, { 14, 2 }, { 14, 8 }, { 12, 4 }, { 12, 6 } };
-            foreach (Stack st in stacks) if (st.enemy && i < 9) { st.c = spot[i, 0]; st.r = spot[i, 1]; st.pos = Vector2.zero; i++; }
+            foreach (Stack st in stacks) if (st.enemy && i < 9) { st.c = Mathf.Min(spot[i, 0], st.t.wide ? Cols - 2 : Cols - 1); st.r = spot[i, 1]; st.pos = Vector2.zero; i++; }
             Log("Осада! Ломайте стену и ворота — защитники за стеной получают от стрел вполовину.");
         }
         static void SiegeRound()
@@ -536,7 +565,7 @@ namespace BladePath
 
         static IEnumerator MoveAlong(Stack s, List<Vector2Int> path)
         {
-            foreach (Vector2Int p in path) s.path.Add(Center(p.x, p.y));
+            foreach (Vector2Int p in path) s.path.Add(Home(s, p.x, p.y));
             if (path.Count > 0) { s.c = path[path.Count - 1].x; s.r = path[path.Count - 1].y; }
             while (s.path.Count > 0) yield return null;
         }
@@ -747,7 +776,7 @@ namespace BladePath
             // ударить, кого можно, — того, кому больнее
             Stack target = null; Vector2Int stand = new Vector2Int(-1, -1); float tv = -1f;
             foreach (Stack o in foes)
-                foreach (Vector2Int n in Nb(o.c, o.r))
+                foreach (Vector2Int n in Around(o))
                 {
                     if (!reach.ContainsKey(n)) continue;
                     float v = Mathf.Min(Damage(s, o, false, true), o.Total) * 2f + o.Atk * o.count * 0.3f - reach[n] * 0.1f;
@@ -1176,7 +1205,7 @@ namespace BladePath
             float dt = Mathf.Min(0.05f, Time.unscaledDeltaTime);
             foreach (Stack s in stacks)
             {
-                Vector2 home = Center(s.c, s.r);
+                Vector2 home = Home(s, s.c, s.r);
                 if (s.pos == Vector2.zero) s.pos = home;
                 if (s.path.Count > 0)
                 {
@@ -1231,15 +1260,17 @@ namespace BladePath
                     if (ourTurn && reach.ContainsKey(new Vector2Int(c, r))) HexFill(p, 0.93f, new Color(0.95f, 0.8f, 0.4f, 0.16f));
                     Hex(p, 0.98f, new Color(0.08f, 0.05f, 0.02f, 0.35f));
                 }
-            if (cur != null && !finished) HexSprite("UI/Battle/hex_gold", Center(cur.c, cur.r));
+            if (cur != null && !finished) foreach (Vector2Int cc in Cells(cur)) HexSprite("UI/Battle/hex_gold", Center(cc.x, cc.y));
             if (ourTurn)
             {
                 Vector2Int h = Pick(hover);
                 Stack o = h.x >= 0 ? At(h.x, h.y) : null;
-                if (o != null && o.enemy && (CanShoot(cur) || CanMeleeAny(o))) HexSprite("UI/Battle/hex_red", Center(o.c, o.r));
+                if (o != null && o.enemy && (CanShoot(cur) || CanMeleeAny(o))) foreach (Vector2Int cc in Cells(o)) HexSprite("UI/Battle/hex_red", Center(cc.x, cc.y));
             }
         }
-        static bool CanMeleeAny(Stack o) { foreach (Vector2Int n in Nb(o.c, o.r)) if (reach.ContainsKey(n)) return true; return false; }
+        static bool CanMeleeAny(Stack o) { foreach (Vector2Int n in Around(o)) if (StandFor(cur, n)) return true; return false; }
+        /// <summary>Может ли отряд встать головой в клетку n, чтобы ударить (досягаемо; у двухклеточного — сосед головой).</summary>
+        static bool StandFor(Stack a, Vector2Int n) { return a != null && reach.ContainsKey(n); }
 
         static void DrawRocks()
         {
@@ -1609,7 +1640,7 @@ namespace BladePath
             if (CanShoot(cur)) { Run(DoShoot(cur, o)); return; }
             // встать рядом — на клетку со стороны касания
             Vector2Int best = new Vector2Int(-1, -1); float bd = float.MaxValue;
-            foreach (Vector2Int n in Nb(o.c, o.r))
+            foreach (Vector2Int n in Around(o))
             {
                 if (!reach.ContainsKey(n)) continue;
                 Vector2 d = Center(n.x, n.y) - e.mousePosition; d.y /= Sq;
