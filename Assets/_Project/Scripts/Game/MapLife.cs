@@ -256,7 +256,7 @@ namespace BladePath
         /// <summary>Night lighting follows fire/lantern/window anchors in the authored map.</summary>
         public static void DrawLights(int region, Rect view, float u0, float uw, float light)
         {
-            if (Event.current.type != EventType.Repaint || DuelManager.Gfx == 0 || light <= 0.01f) return;
+            if (Event.current.type != EventType.Repaint || light <= 0.01f) return;
             Region r = regions[Mathf.Clamp(region, 0, regions.Length - 1)];
             Texture2D glow = UiKit.Tex("FX/glow_pool");
             if (glow == null) return;
@@ -481,54 +481,51 @@ namespace BladePath
 
         static void SmallWisps(MapEffect e, Rect r, float t, float alpha)
         {
-            Texture2D glow = UiKit.Tex("FX/glow_pool");
-            if (glow == null || alpha <= 0f) return;
+            if (alpha <= 0f) return;
+            Texture2D glow = SoftSprites.Disc; // always available, even without imported atlases
             Color prev = GUI.color;
-            float size = Mathf.Clamp(Mathf.Min(r.width, r.height) * 0.023f, 2.6f, 4.8f);
-            for (int i = 0; i < 18; i++)
+            int count = DuelManager.Gfx == 0 ? 10 : 20;
+            for (int i = 0; i < count; i++)
             {
                 float seed = i * 17.13f + e.x * 0.013f + e.y * 0.017f;
-                float x = r.x + r.width * (0.12f + H(seed) * 0.76f)
-                    + Mathf.Sin(t * 0.51f + seed) * r.width * 0.022f;
-                float y = r.y + r.height * (0.15f + H(seed + 1f) * 0.69f)
-                    + Mathf.Sin(t * 0.68f + seed) * r.height * 0.026f;
-                float pulse = 0.35f + 0.65f * Mathf.Pow(0.5f + 0.5f * Mathf.Sin(t * 1.15f + seed * 3f), 2f);
-                float radius = size * (0.7f + 0.32f * H(seed + 2f));
-                float a = alpha * pulse;
-                GUI.color = new Color(0.22f, 0.82f, 0.34f, a * 0.35f);
-                GUI.DrawTexture(new Rect(x - radius * 2.2f, y - radius * 2.2f,
-                    radius * 4.4f, radius * 4.4f), glow);
-                GUI.color = new Color(0.73f, 1f, 0.69f, a * 0.95f);
-                GUI.DrawTexture(new Rect(x - radius * 0.62f, y - radius * 0.62f,
-                    radius * 1.24f, radius * 1.24f), glow);
+                float x = r.x + r.width * (0.12f + H(seed) * 0.76f) +
+                    Mathf.Sin(t * 0.51f + seed) * r.width * 0.025f;
+                float y = r.y + r.height * (0.14f + H(seed + 1f) * 0.72f) +
+                    Mathf.Sin(t * 0.73f + seed) * r.height * 0.03f;
+                float pulse = 0.55f + 0.45f * Mathf.Sin(t * 1.15f + seed * 3f);
+                float radius = 2.5f + 1.5f * H(seed + 2f);
+                GUI.color = new Color(0.20f, 0.83f, 0.34f, alpha * pulse * 0.58f);
+                GUI.DrawTexture(new Rect(x - radius * 2f, y - radius * 2f,
+                    radius * 4f, radius * 4f), glow);
+                GUI.color = new Color(0.76f, 1f, 0.72f, alpha * pulse);
+                GUI.DrawTexture(new Rect(x - radius * 0.7f, y - radius * 0.7f,
+                    radius * 1.4f, radius * 1.4f), glow);
             }
             GUI.color = prev;
         }
 
         static void SmallPetals(MapEffect e, Rect r, float t)
         {
-            Texture2D pet = UiKit.Tex("FX/petals8");
-            if (pet == null || e.alpha <= 0f) return;
+            if (e.alpha <= 0f) return;
+            Texture2D pet = SoftSprites.Petal; // transparent procedural asset
             Color prev = GUI.color;
-            float scale = r.width / Mathf.Max(1f, e.w);
-            int count = Mathf.Clamp(Mathf.RoundToInt(e.w / 7f), 16, 24);
+            int count = DuelManager.Gfx == 0 ? 14 : 27;
             for (int i = 0; i < count; i++)
             {
                 float seed = i * 13.37f + e.x * 0.013f + e.y * 0.011f;
-                float life = 6.5f + 4.5f * H(seed);
+                float life = 5.2f + 3.8f * H(seed);
                 float run = t / life + H(seed + 2f);
                 float phase = Mathf.Repeat(run, 1f);
                 int cycle = Mathf.FloorToInt(run);
-                float x = r.center.x + r.width * (H(seed + cycle * 2.1f) - 0.5f) * 0.68f
-                    + Mathf.Sin(t * 1.12f + seed) * 3f + phase * Mathf.Max(3f, r.width * 0.04f);
-                float y = r.y + r.height * (0.12f + 0.84f * phase);
-                float size = Mathf.Clamp((1.65f + 1.15f * H(seed + cycle * 3.7f)) * scale, 1.4f, 2.7f);
-                float a = Mathf.Clamp01(phase / 0.12f) * Mathf.Clamp01((1f - phase) / 0.18f);
-                int cell = Mathf.Min(7, (int)(H(seed + cycle * 0.37f + 4f) * 8f));
-                Rect uv = new Rect((cell % 4) * 0.25f, cell < 4 ? 0.5f : 0f, 0.25f, 0.5f);
-                if (Mathf.Sin(t * 1.85f + seed) < 0f) uv = new Rect(uv.x + 0.25f, uv.y, -0.25f, uv.height);
-                GUI.color = new Color(1f, 0.89f, 0.95f, a * e.alpha);
-                GUI.DrawTextureWithTexCoords(new Rect(x - size, y - size * 0.6f, size * 2f, size * 1.2f), pet, uv);
+                float x = r.center.x + r.width * (H(seed + cycle * 2.1f) - 0.5f) * 0.70f +
+                    Mathf.Sin(t * 1.13f + seed) * 3f + phase * 5f;
+                float y = r.y + r.height * (0.08f + 0.86f * phase);
+                float w = 3.3f + 1.6f * H(seed + cycle * 3.7f);
+                float h = w * (0.5f + 0.17f * Mathf.Sin(t * 2.4f + seed));
+                float fade = Mathf.Clamp01(phase / 0.12f) *
+                    Mathf.Clamp01((1f - phase) / 0.18f);
+                GUI.color = new Color(1f, 0.79f + 0.12f * H(seed), 0.9f, e.alpha * fade);
+                GUI.DrawTexture(new Rect(x - w * 0.5f, y - h * 0.5f, w, h), pet);
             }
             GUI.color = prev;
         }
@@ -727,7 +724,13 @@ namespace BladePath
 
         public static void Draw(int region, Rect view, float u0, float uw)
         {
-            if (Event.current.type != EventType.Repaint || DuelManager.Gfx == 0) return;
+            if (Event.current.type != EventType.Repaint) return;
+            // Low graphics must not hide every animated landmark on the map.
+            if (DuelManager.Gfx == 0)
+            {
+                DrawSheetFalls(region, view, u0, uw, Time.unscaledTime, SoftSprites.Fog);
+                return;
+            }
             Region r = regions[Mathf.Clamp(region, 0, regions.Length - 1)];
             float t = Time.unscaledTime;
             Texture2D glow = UiKit.Tex("FX/glow_pool"), mist = SoftSprites.Fog;
