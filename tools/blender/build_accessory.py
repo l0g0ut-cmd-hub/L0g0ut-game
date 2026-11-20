@@ -68,16 +68,17 @@ if nt > TRIS:
     m = acc.modifiers.new('dec', 'DECIMATE'); m.ratio = TRIS / nt
     bpy.ops.object.modifier_apply(modifier='dec')
     log('треугольников', nt, '→', sum(len(p.vertices) - 2 for p in acc.data.polygons))
-if ROT:
-    acc.rotation_euler = (0, 0, math.radians(ROT)); bpy.ops.object.transform_apply(rotation=True)
+def rot_z(P, a):   # поворот вершин вокруг вертикали (против часовой, если смотреть сверху)
+    c, sn = math.cos(a), math.sin(a)
+    return np.stack([P[:, 0] * c - P[:, 1] * sn, P[:, 0] * sn + P[:, 1] * c, P[:, 2]], 1)
 P = np.array([v.co[:] for v in acc.data.vertices])
+if ROT: P = rot_z(P, math.radians(ROT))
 if KIND == 'band' and not ROT:
     # узел и хвосты повязки — назад: куда свисает нижняя десятая часть вершин, туда и затылок (+Y)
     c0 = P.mean(0); low = P[P[:, 2] < np.percentile(P[:, 2], 10)]
     dv = low.mean(0) - c0; ang = math.atan2(dv[0], dv[1])   # угол от +Y к направлению хвостов
     if np.hypot(dv[0], dv[1]) > 1e-4:
-        acc.rotation_euler = (0, 0, ang); bpy.ops.object.transform_apply(rotation=True)
-        P = np.array([v.co[:] for v in acc.data.vertices])
+        P = rot_z(P, ang)
         log('повязка: хвосты повёрнуты назад на %.0f°' % math.degrees(ang))
 amin, amax = P.min(0), P.max(0); asz = amax - amin
 log('вещь: размер %.3f × %.3f × %.3f' % tuple(asz))
