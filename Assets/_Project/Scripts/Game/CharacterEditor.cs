@@ -96,6 +96,7 @@ namespace BladePath
             {
                 if (ver != composedVer && Time.unscaledTime - composeAt > 0.15f) Recompose();
                 if (camWanted) TryStartCam();
+                WatchCam();
             }
             UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0.05f, 0.04f, 0.03f, 1f));
             if (faceOpen) DrawFace(); else DrawMain();
@@ -411,7 +412,7 @@ namespace BladePath
             UiKit.Text(new Rect(x, y, w, 34f), "Своё фото: глаза — в метки рамки,\nи лицо сразу ляжет на модель", 11f, Dim, TextAnchor.UpperLeft); y += 40f;
             if (Btn(new Rect(x, y, w, 38f), "ФОТО ИЗ ГАЛЕРЕИ", true, true)) PickImage(1024, (t) => { f.photo = CharacterLook.Keep(t, "face"); FitPhoto(t); Changed(); faceOpen = true; });
             y += 44f;
-            if (Btn(new Rect(x, y, w, 38f), "СНЯТЬ КАМЕРОЙ ПО РАМКЕ")) { faceOpen = true; camWanted = true; }
+            if (Btn(new Rect(x, y, w, 38f), "СНЯТЬ КАМЕРОЙ ПО РАМКЕ")) { faceOpen = true; camAsked = false; camWanted = true; }
             y += 44f;
             bool has = CharacterLook.Image(f.photo) != null;
             if (Btn(new Rect(x, y, w, 38f), "ПОДОГНАТЬ ПО РАМКЕ", has)) faceOpen = true;
@@ -479,7 +480,7 @@ namespace BladePath
                 GUI.DrawTexture(new Rect(c.x - pw * 0.5f, c.y - ph * 0.5f, pw, ph), photo);
                 GUI.matrix = m;
             }
-            else UiKit.Text(frameR, camWanted ? "Ждём камеру…" : "Нет фото", 18f, Dim);
+            else UiKit.Text(frameR, camWanted || live ? "Включаю камеру…" : "Нет фото", 18f, Dim);
 
             // шторки вокруг рамки (фото за краем не видно)
             Color sh = new Color(0.05f, 0.04f, 0.03f, 1f);
@@ -513,7 +514,7 @@ namespace BladePath
                 y += 52f;
                 if (WebCamTexture.devices.Length > 1 && Btn(new Rect(x, y, w, 36f), "ДРУГАЯ КАМЕРА")) { camIndex++; StopCam(); camWanted = true; }
                 y += 42f;
-                if (Btn(new Rect(x, y, w, 36f), "БЕЗ КАМЕРЫ")) { StopCam(); }
+                if (Btn(new Rect(x, y, w, 36f), "СИСТЕМНАЯ КАМЕРА")) SystemCamera();
             }
             else
             {
@@ -525,7 +526,9 @@ namespace BladePath
                 if (Btn(new Rect(x + hw + 8f, y, hw, 34f), "КРУПНЕЕ", photo != null)) { f.scale *= 1.03f; Changed(); }
                 y += 40f;
                 if (Btn(new Rect(x, y, hw, 34f), "ГАЛЕРЕЯ")) PickImage(1024, (t) => { f.photo = CharacterLook.Keep(t, "face"); FitPhoto(t); Changed(); });
-                if (Btn(new Rect(x + hw + 8f, y, hw, 34f), "КАМЕРА")) camWanted = true;
+                if (Btn(new Rect(x + hw + 8f, y, hw, 34f), "КАМЕРА")) { camAsked = false; camWanted = true; }
+                y += 40f;
+                if (Btn(new Rect(x, y, w, 34f), "СИСТЕМНАЯ КАМЕРА")) SystemCamera();
             }
             if (Btn(new Rect(x, sp.yMax - 48f, w, 38f), "ГОТОВО", true, !live)) { StopCam(); faceOpen = false; }
         }
@@ -607,19 +610,52 @@ namespace BladePath
 #if UNITY_ANDROID && !UNITY_EDITOR
             if (!UnityEngine.Android.Permission.HasUserAuthorizedPermission(UnityEngine.Android.Permission.Camera))
             {
-                if (!camAsked) { camAsked = true; UnityEngine.Android.Permission.RequestUserPermission(UnityEngine.Android.Permission.Camera); }
+                if (!camAsked)
+                {   // спросить доступ; отказ — не ждать вечно, а сказать, что делать
+                    camAsked = true;
+                    var cb = new UnityEngine.Android.PermissionCallbacks();
+                    cb.PermissionDenied += (p) => { camWanted = false; camAsked = false; Note("Нет доступа к камере — разреши его или нажми «СИСТЕМНАЯ КАМЕРА»"); };
+                    cb.PermissionDeniedAndDontAskAgain += (p) => { camWanted = false; camAsked = false; Note("Доступ к камере запрещён в настройках телефона — «СИСТЕМНАЯ КАМЕРА» работает и так"); };
+                    UnityEngine.Android.Permission.RequestUserPermission(UnityEngine.Android.Permission.Camera, cb);
+                }
                 return;
             }
 #endif
             camWanted = false;
             WebCamDevice[] ds = WebCamTexture.devices;
-            if (ds.Length == 0) { Note("Камера не найдена"); return; }
+            if (ds.Length == 0) { Note("Камера не найдена — нажми «СИСТЕМНАЯ КАМЕРА»"); return; }
             // сначала фронтальная (селфи)
             int start = 0;
             for (int i = 0; i < ds.Length; i++) if (ds[i].isFrontFacing) { start = i; break; }
             int idx = (start + camIndex) % ds.Length;
-            webcam = new WebCamTexture(ds[idx].name, 1280, 960, 30);
-            webcam.Play();
+            try
+            {
+                webcam = new WebCamTexture(ds[idx].name, 1280, 960, 30);
+                webcam.Play();
+                camStartAt = Time.unscaledTime;
+            }
+            catch (System.Exception e) { webcam = null; Note("Камера не включилась: " + e.Message); }
+        }
+        static float camStartAt;
+        /// <summary>Камера включена, а кадров нет дольше 4 с — выключить и сказать.</summary>
+        static void WatchCam()
+        {
+            if (webcam != null && webcam.isPlaying && webcam.width <= 16 && Time.unscaledTime - camStartAt > 4f)
+            { StopCam(); Note("Камера не даёт картинку — нажми «СИСТЕМНАЯ КАМЕРА»"); }
+        }
+
+        /// <summary>Снимок системной камерой телефона (NativeCamera): фото ложится под рамку, дальше — пальцами.</summary>
+        static void SystemCamera()
+        {
+            StopCam();
+            NativeCamera.TakePicture((path) =>
+            {
+                if (string.IsNullOrEmpty(path)) return;
+                Texture2D t = NativeCamera.LoadImageAtPath(path, 1024, false, false);
+                if (t == null) { Note("Снимок не открылся"); return; }
+                data.face.photo = CharacterLook.Keep(t, "face"); FitPhoto(t); Changed(); faceOpen = true;
+                Note("Глаза — в кружки: подвинь фото пальцами");
+            }, 1024, true, NativeCamera.PreferredCamera.Front);
         }
 #pragma warning disable 0414
         static bool camAsked;
