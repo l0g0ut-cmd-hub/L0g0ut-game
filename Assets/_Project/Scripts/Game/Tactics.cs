@@ -80,6 +80,7 @@ namespace BladePath
             public float lunge; public Vector2 lungeDir; public float flash, die = -1f, born;
             public GameObject go; public Animation an; public string playing; public float actUntil, hitUntil;
             public string clipIdle, clipWalk, clipAct, clipHit, clipDie, clipWin;
+            public float idleYaw;               // насколько стойка разворачивает грудь от носков (боевая стойка — боком); поправка, чтобы грудь смотрела на врага
             public int Total { get { return count <= 0 ? 0 : (count - 1) * t.hp + topHp; } }
             public bool Alive { get { return count > 0; } }
             public int Atk { get { return t.atk + atkB + (curseRounds > 0 ? -4 : 0) + (enemy ? 0 : HeroBonus + forge); } }
@@ -692,6 +693,28 @@ namespace BladePath
             if (s.an == null || c == null || s.an[c] == null) return def;
             return Mathf.Clamp(s.an[c].length, 0.3f, 2.2f);
         }
+        /// <summary>Угол, на который клип стойки поворачивает плечи относительно позы покоя (вокруг вертикали).</summary>
+        static float ChestYaw(Stack s)
+        {
+            if (s.an == null || s.clipIdle == null) return 0f;
+            Transform l = null, r = null;
+            foreach (Transform t in s.go.GetComponentsInChildren<Transform>(true))
+            {
+                if (l == null && t.name.EndsWith("LeftArm")) l = t;
+                if (r == null && t.name.EndsWith("RightArm")) r = t;
+            }
+            if (l == null || r == null) return 0f;
+            Transform root = s.go.transform;
+            Vector3 rest = root.InverseTransformVector(r.position - l.position);
+            AnimationState st = s.an[s.clipIdle];
+            st.enabled = true; st.weight = 1f; st.time = st.length * 0.3f; s.an.Sample();
+            Vector3 pose = root.InverseTransformVector(r.position - l.position);
+            st.enabled = false;
+            rest.y = 0f; pose.y = 0f;
+            if (rest.sqrMagnitude < 1e-6f || pose.sqrMagnitude < 1e-6f) return 0f;
+            return Mathf.Clamp(Vector3.SignedAngle(rest, pose, Vector3.up), -70f, 70f);
+        }
+
         static void Play(Stack s, string clip, bool restart)
         {
             if (s.an == null || clip == null || s.an[clip] == null) return;
@@ -759,6 +782,7 @@ namespace BladePath
                     if (s.clipIdle == null && names.Count > 0) s.clipIdle = names[0];
                     foreach (AnimationState st in s.an)
                         st.wrapMode = st.name == s.clipIdle || st.name == s.clipWalk ? WrapMode.Loop : st.name == s.clipDie ? WrapMode.ClampForever : WrapMode.Once;
+                    s.idleYaw = ChestYaw(s);
                     Play(s, s.clipIdle, true);
                 }
             }
@@ -815,6 +839,7 @@ namespace BladePath
                 {
                     Vector3 wd = new Vector3(dir.x, 0f, -dir.y / 0.559f);
                     Quaternion want = Quaternion.LookRotation(wd.normalized, Vector3.up);
+                    if (s.path.Count == 0 && s.actUntil <= now && s.playing == s.clipIdle) want *= Quaternion.Euler(0f, -s.idleYaw * 0.85f, 0f);   // в стойке грудью к врагу
                     s.go.transform.rotation = Quaternion.Slerp(s.go.transform.rotation, want, Mathf.Min(1f, Time.unscaledDeltaTime * 10f));
                 }
                 // вспышка попадания — цвет материала (у снимков — цвет картинки)

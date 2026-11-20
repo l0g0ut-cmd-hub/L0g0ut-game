@@ -29,7 +29,7 @@ jobs:
             U=Assets/_Project/Resources/Units/unit_$name
             [ -f "$U.fbx" ] || { echo "нет $U.fbx"; continue; }
             FBX="$U.fbx" ALBEDO="${U}_albedo.jpg" OUT="$RUNNER_TEMP/out" NAME="${name}_${side}" SIDE="$side" \
-              blender -b --factory-startup --python tools/blender/render_battle.py 2>&1 | grep -E "ACTIONS|BBOX|Error|Traceback|Saved" | head -20
+              blender -b --factory-startup --python tools/blender/render_battle.py 2>&1 | grep -E "STANCE_YAW|BBOX|Error|Traceback|Saved" | head -20
           done < tools/blender/battle_list.txt
       - name: Publish
         env:

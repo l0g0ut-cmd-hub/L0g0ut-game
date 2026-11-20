@@ -27,6 +27,25 @@ for o in sc.objects:
     if o.parent is None and o is not root: o.parent = root
 root.rotation_euler = (0, 0, want - front)
 bpy.context.view_layer.update()
+# боевая стойка разворачивает плечи — поправка, как в Tactics.ChestYaw: грудь к врагу (85%)
+def shoulder_ang():
+    for a in arms:
+        pb = a.pose.bones
+        l = next((b for b in pb if b.name.endswith('LeftArm')), None); r = next((b for b in pb if b.name.endswith('RightArm')), None)
+        if l and r:
+            v = a.matrix_world @ r.head - a.matrix_world @ l.head
+            return math.atan2(v.y, v.x)
+    return None
+pose_a = shoulder_ang()
+for a in arms: a.data.pose_position = 'REST'
+bpy.context.view_layer.update(); rest_a = shoulder_ang()
+for a in arms: a.data.pose_position = 'POSE'
+bpy.context.view_layer.update()
+if pose_a is not None and rest_a is not None:
+    d = (pose_a - rest_a + math.pi) % (2 * math.pi) - math.pi
+    d = max(-1.22, min(1.22, d)); print('STANCE_YAW', math.degrees(d))
+    root.rotation_euler = (0, 0, want - front - 0.85 * d)
+    bpy.context.view_layer.update()
 if ALB and os.path.exists(ALB):
     m = bpy.data.materials.new('Alb'); m.use_nodes = True; nt = m.node_tree
     bsdf = nt.nodes['Principled BSDF']; img = nt.nodes.new('ShaderNodeTexImage'); img.image = bpy.data.images.load(ALB)
