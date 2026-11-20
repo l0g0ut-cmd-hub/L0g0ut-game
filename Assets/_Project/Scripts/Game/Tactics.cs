@@ -35,14 +35,14 @@ namespace BladePath
             new UnitType("Асигару", 4, 5, 1, 3, 10, 4, 0, 8) { cell = 0, live = "unit_ashigaru" },
             new UnitType("Лучники", 6, 3, 2, 3, 10, 4, 12, -2) { cell = 1, live = "unit_archer" },
             new UnitType("Тэппо", 8, 3, 3, 5, 12, 3, 8, 6) { cell = 2, live = "unit_teppo" },
-            new UnitType("Самураи", 8, 8, 4, 6, 25, 5, 0, 0) { cell = 3 },
+            new UnitType("Самураи", 8, 8, 4, 6, 25, 5, 0, 0) { cell = 3, live = "unit_samurai" },
             new UnitType("Конные самураи", 11, 9, 7, 11, 45, 8, 0, 3) { cell = 4, live = "unit_cavalry", liveH = 2.6f },
             new UnitType("Сохэи", 7, 7, 3, 6, 20, 5, 0, 7) { cell = 5, live = "unit_sohei" },
-            new UnitType("Синоби", 9, 4, 3, 5, 15, 8, 0, 5) { cell = 6, noRetal = true, live = "unit_shadow" },
-            new UnitType("Ронины", 7, 6, 3, 5, 18, 6, 0, 1) { cell = 7 },
+            new UnitType("Синоби", 9, 4, 3, 5, 15, 8, 0, 5) { cell = 6, noRetal = true, live = "unit_shinobi", liveH = 1.68f },
+            new UnitType("Ронины", 7, 6, 3, 5, 18, 6, 0, 1) { cell = 7, live = "unit_ronin" },
             new UnitType("Онмёдзи", 9, 6, 4, 7, 20, 5, 10, -3) { cell = 8, magic = true, live = "unit_onmyoji" },
             new UnitType("Знаменосцы", 3, 6, 1, 2, 15, 5, 0, -1) { cell = 9, live = "unit_banner" },
-            new UnitType("Хатамото", 13, 14, 10, 18, 80, 5, 0, 3) { cell = 10 },
+            new UnitType("Хатамото", 13, 14, 10, 18, 80, 5, 0, 3) { cell = 10, live = "unit_hatamoto", liveH = 1.85f },
             new UnitType("Боевые псы", 6, 3, 2, 4, 12, 9, 0, -99) { cell = 11, live = "unit_dog", liveH = 0.9f },
         };
         public static readonly UnitType[] Foes =
@@ -55,8 +55,8 @@ namespace BladePath
             new UnitType("Клан теней", 9, 5, 3, 6, 15, 8, 0, 5) { portrait = "UI/portrait_shadow", noRetal = true, live = "unit_shadow" },
             new UnitType("Они", 14, 12, 12, 20, 100, 5, 0, 2) { portrait = "UI/portrait_oni", live = "unit_oni", liveH = 2.3f },
             new UnitType("Сёгун", 16, 16, 20, 30, 180, 6, 0, 3) { portrait = "UI/portrait_shogun", live = "unit_shogun", liveH = 1.85f },
-            new UnitType("Ронины", 7, 6, 3, 5, 18, 6, 0, 1) { portrait = "UI/portrait_ronin" },
-            new UnitType("Алый самурай", 11, 10, 7, 12, 45, 6, 0, 0) { portrait = "UI/portrait_red_samurai" },
+            new UnitType("Ронины", 7, 6, 3, 5, 18, 6, 0, 1) { portrait = "UI/portrait_ronin", live = "unit_ronin" },
+            new UnitType("Алый самурай", 11, 10, 7, 12, 45, 6, 0, 0) { portrait = "UI/portrait_red_samurai", live = "unit_crimson", liveH = 1.78f },
         };
 
         public static string UnitName(int u) { return Ours[Mathf.Clamp(u, 0, Ours.Length - 1)].name; }
