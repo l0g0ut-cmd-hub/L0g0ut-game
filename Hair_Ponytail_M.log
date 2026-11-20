@@ -1,0 +1,154 @@
+FBX version: 7400
+ACC Hair_Ponytail M голова: верх 1.871 подбородок 1.600 ширина 0.183 центр (0.026, 0.024) лицо y -0.080
+01:18:44 | INFO: Data are loaded, start creating Blender stuff
+01:18:44 | INFO: Blender create Mesh node 0
+01:18:44 | INFO: glTF import finished in 0.04s
+ACC Hair_Ponytail M треугольников 18335 → 9000
+ACC Hair_Ponytail M вещь: размер 0.956 × 1.311 × 1.900
+ACC Hair_Ponytail M масштаб 0.233, низ 1.440, верх 1.883
+
+FBX export starting... 'out/Accessories/Hair_Ponytail_M.fbx'
+export finished in 0.0472 sec.
+ACC Hair_Ponytail M ЭКСПОРТ out/Accessories/Hair_Ponytail_M.fbx 798 КБ
+Blender 4.2.3 LTS (hash 0e22e4fcea03 built 2024-10-14 23:31:34)
+Fra:1 Mem:42.18M (Peak 42.18M) | Time:00:00.00 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | BaseMale_Player_Body
+Fra:1 Mem:42.18M (Peak 42.18M) | Time:00:00.00 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Hair_Ponytail
+Fra:1 Mem:52.65M (Peak 53.36M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Initializing
+Fra:1 Mem:49.60M (Peak 53.36M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Updating Images | Loading Image_0
+Fra:1 Mem:65.25M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Waiting for render to start
+Fra:1 Mem:65.25M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Loading render kernels (may take a few minutes the first time)
+Fra:1 Mem:65.25M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Scene
+Fra:1 Mem:65.25M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Shaders
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Procedurals
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Background
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Camera
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Meshes Flags
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Objects
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Objects | Copying Transformations to device
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Objects | Applying Static Transformations
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Particle Systems
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Particle Systems | Copying Particles to device
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Meshes
+Fra:1 Mem:65.95M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Mesh | Computing attributes
+Fra:1 Mem:68.92M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Mesh | Copying Attributes to device
+Fra:1 Mem:68.92M (Peak 81.60M) | Time:00:00.03 | Mem:18.97M, Peak:18.97M | Scene, ViewLayer | Updating Scene BVH | Building
+Fra:1 Mem:68.92M (Peak 81.60M) | Time:00:00.03 | Mem:18.97M, Peak:18.97M | Scene, ViewLayer | Updating Scene BVH | Building BVH
+Fra:1 Mem:68.92M (Peak 81.60M) | Time:00:00.03 | Mem:20.20M, Peak:20.20M | Scene, ViewLayer | Updating Scene BVH | Building BVH 0%
+Fra:1 Mem:68.92M (Peak 81.60M) | Time:00:00.04 | Mem:21.66M, Peak:22.88M | Scene, ViewLayer | Updating Scene BVH | Copying BVH to device
+Fra:1 Mem:68.92M (Peak 81.60M) | Time:00:00.04 | Mem:21.66M, Peak:22.88M | Scene, ViewLayer | Updating Mesh | Computing normals
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.04 | Mem:21.66M, Peak:22.88M | Scene, ViewLayer | Updating Mesh | Copying Mesh to device
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.04 | Mem:24.10M, Peak:24.10M | Scene, ViewLayer | Updating Objects Flags
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.04 | Mem:24.10M, Peak:24.10M | Scene, ViewLayer | Updating Primitive Offsets
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.04 | Mem:24.10M, Peak:24.10M | Scene, ViewLayer | Updating Images
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.04 | Mem:24.10M, Peak:24.10M | Scene, ViewLayer | Updating Images | Loading Material_0_baseColor.jpg
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.04 | Mem:24.10M, Peak:24.10M | Scene, ViewLayer | Updating Camera Volume
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.04 | Mem:24.10M, Peak:24.10M | Scene, ViewLayer | Updating Lookup Tables
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.04 | Mem:24.18M, Peak:24.18M | Scene, ViewLayer | Updating Lights
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.04 | Mem:24.18M, Peak:24.18M | Scene, ViewLayer | Updating Lights | Computing tree
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.04 | Mem:24.18M, Peak:24.18M | Scene, ViewLayer | Updating Integrator
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.04 | Mem:24.18M, Peak:24.18M | Scene, ViewLayer | Updating Film
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.04 | Mem:24.10M, Peak:24.18M | Scene, ViewLayer | Updating Lookup Tables
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.04 | Mem:24.19M, Peak:24.19M | Scene, ViewLayer | Updating Baking
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.04 | Mem:24.19M, Peak:24.19M | Scene, ViewLayer | Updating Device | Writing constant memory
+Fra:1 Mem:71.37M (Peak 81.60M) | Time:00:00.04 | Mem:24.19M, Peak:24.19M | Scene, ViewLayer | Sample 0/10
+Fra:1 Mem:76.57M (Peak 81.60M) | Time:00:00.14 | Remaining:00:00.91 | Mem:29.39M, Peak:29.39M | Scene, ViewLayer | Sample 1/10
+Fra:1 Mem:78.88M (Peak 83.49M) | Time:00:00.84 | Mem:29.39M, Peak:29.39M | Scene, ViewLayer | Sample 10/10
+Fra:1 Mem:78.88M (Peak 83.49M) | Time:00:00.84 | Mem:29.39M, Peak:29.39M | Scene, ViewLayer | Finished
+Saved: 'out/Accessories/Hair_Ponytail_M_front.png'
+Time: 00:00.86 (Saving: 00:00.02)
+
+Fra:1 Mem:44.70M (Peak 45.02M) | Time:00:00.00 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | BaseMale_Player_Body
+Fra:1 Mem:44.76M (Peak 45.02M) | Time:00:00.00 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Hair_Ponytail
+Fra:1 Mem:52.65M (Peak 53.36M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Initializing
+Fra:1 Mem:49.60M (Peak 53.36M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Updating Images | Loading Image_0
+Fra:1 Mem:65.25M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Waiting for render to start
+Fra:1 Mem:65.25M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Loading render kernels (may take a few minutes the first time)
+Fra:1 Mem:65.25M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Scene
+Fra:1 Mem:65.25M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Shaders
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Procedurals
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Background
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Camera
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Meshes Flags
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Objects
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Objects | Copying Transformations to device
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Objects | Applying Static Transformations
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Particle Systems
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Particle Systems | Copying Particles to device
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Meshes
+Fra:1 Mem:65.95M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Mesh | Computing attributes
+Fra:1 Mem:68.92M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Mesh | Copying Attributes to device
+Fra:1 Mem:68.92M (Peak 81.60M) | Time:00:00.03 | Mem:18.97M, Peak:18.97M | Scene, ViewLayer | Updating Scene BVH | Building
+Fra:1 Mem:68.92M (Peak 81.60M) | Time:00:00.03 | Mem:18.97M, Peak:18.97M | Scene, ViewLayer | Updating Scene BVH | Building BVH
+Fra:1 Mem:68.92M (Peak 81.60M) | Time:00:00.03 | Mem:20.20M, Peak:20.20M | Scene, ViewLayer | Updating Scene BVH | Building BVH 0%
+Fra:1 Mem:68.92M (Peak 81.60M) | Time:00:00.03 | Mem:21.66M, Peak:22.88M | Scene, ViewLayer | Updating Scene BVH | Copying BVH to device
+Fra:1 Mem:68.92M (Peak 81.60M) | Time:00:00.03 | Mem:21.66M, Peak:22.88M | Scene, ViewLayer | Updating Mesh | Computing normals
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:21.66M, Peak:22.88M | Scene, ViewLayer | Updating Mesh | Copying Mesh to device
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.10M, Peak:24.10M | Scene, ViewLayer | Updating Objects Flags
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.10M, Peak:24.10M | Scene, ViewLayer | Updating Primitive Offsets
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.10M, Peak:24.10M | Scene, ViewLayer | Updating Images
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.10M, Peak:24.10M | Scene, ViewLayer | Updating Images | Loading Material_0_baseColor.jpg
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.10M, Peak:24.10M | Scene, ViewLayer | Updating Camera Volume
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.10M, Peak:24.10M | Scene, ViewLayer | Updating Lookup Tables
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.18M, Peak:24.18M | Scene, ViewLayer | Updating Lights
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.18M, Peak:24.18M | Scene, ViewLayer | Updating Lights | Computing tree
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.18M, Peak:24.18M | Scene, ViewLayer | Updating Integrator
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.18M, Peak:24.18M | Scene, ViewLayer | Updating Film
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.10M, Peak:24.18M | Scene, ViewLayer | Updating Lookup Tables
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.19M, Peak:24.19M | Scene, ViewLayer | Updating Baking
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.19M, Peak:24.19M | Scene, ViewLayer | Updating Device | Writing constant memory
+Fra:1 Mem:71.37M (Peak 81.60M) | Time:00:00.03 | Mem:24.19M, Peak:24.19M | Scene, ViewLayer | Sample 0/10
+Fra:1 Mem:76.57M (Peak 81.60M) | Time:00:00.10 | Remaining:00:00.57 | Mem:29.39M, Peak:29.39M | Scene, ViewLayer | Sample 1/10
+Fra:1 Mem:78.88M (Peak 83.49M) | Time:00:00.65 | Mem:29.39M, Peak:29.39M | Scene, ViewLayer | Sample 10/10
+Fra:1 Mem:78.88M (Peak 83.49M) | Time:00:00.65 | Mem:29.39M, Peak:29.39M | Scene, ViewLayer | Finished
+Saved: 'out/Accessories/Hair_Ponytail_M_side.png'
+Time: 00:00.67 (Saving: 00:00.02)
+
+Fra:1 Mem:44.70M (Peak 45.02M) | Time:00:00.00 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | BaseMale_Player_Body
+Fra:1 Mem:44.70M (Peak 45.02M) | Time:00:00.00 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Hair_Ponytail
+Fra:1 Mem:52.65M (Peak 53.36M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Initializing
+Fra:1 Mem:49.60M (Peak 53.36M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Updating Images | Loading Image_0
+Fra:1 Mem:65.25M (Peak 81.60M) | Time:00:00.02 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Waiting for render to start
+Fra:1 Mem:65.25M (Peak 81.60M) | Time:00:00.02 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Loading render kernels (may take a few minutes the first time)
+Fra:1 Mem:65.25M (Peak 81.60M) | Time:00:00.02 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Scene
+Fra:1 Mem:65.25M (Peak 81.60M) | Time:00:00.02 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Shaders
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Procedurals
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Background
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Camera
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Meshes Flags
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Objects
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Objects | Copying Transformations to device
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Objects | Applying Static Transformations
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Particle Systems
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Particle Systems | Copying Particles to device
+Fra:1 Mem:65.34M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Meshes
+Fra:1 Mem:65.95M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Mesh | Computing attributes
+Fra:1 Mem:68.92M (Peak 81.60M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Mesh | Copying Attributes to device
+Fra:1 Mem:68.92M (Peak 81.60M) | Time:00:00.03 | Mem:18.97M, Peak:18.97M | Scene, ViewLayer | Updating Scene BVH | Building
+Fra:1 Mem:68.92M (Peak 81.60M) | Time:00:00.03 | Mem:18.97M, Peak:18.97M | Scene, ViewLayer | Updating Scene BVH | Building BVH
+Fra:1 Mem:68.92M (Peak 81.60M) | Time:00:00.03 | Mem:20.20M, Peak:20.20M | Scene, ViewLayer | Updating Scene BVH | Building BVH 0%
+Fra:1 Mem:68.92M (Peak 81.60M) | Time:00:00.03 | Mem:21.66M, Peak:22.88M | Scene, ViewLayer | Updating Scene BVH | Copying BVH to device
+Fra:1 Mem:68.92M (Peak 81.60M) | Time:00:00.03 | Mem:21.66M, Peak:22.88M | Scene, ViewLayer | Updating Mesh | Computing normals
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:21.66M, Peak:22.88M | Scene, ViewLayer | Updating Mesh | Copying Mesh to device
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.10M, Peak:24.10M | Scene, ViewLayer | Updating Objects Flags
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.10M, Peak:24.10M | Scene, ViewLayer | Updating Primitive Offsets
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.10M, Peak:24.10M | Scene, ViewLayer | Updating Images
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.10M, Peak:24.10M | Scene, ViewLayer | Updating Images | Loading Material_0_baseColor.jpg
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.10M, Peak:24.10M | Scene, ViewLayer | Updating Camera Volume
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.10M, Peak:24.10M | Scene, ViewLayer | Updating Lookup Tables
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.18M, Peak:24.18M | Scene, ViewLayer | Updating Lights
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.18M, Peak:24.18M | Scene, ViewLayer | Updating Lights | Computing tree
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.18M, Peak:24.18M | Scene, ViewLayer | Updating Integrator
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.18M, Peak:24.18M | Scene, ViewLayer | Updating Film
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.10M, Peak:24.18M | Scene, ViewLayer | Updating Lookup Tables
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.19M, Peak:24.19M | Scene, ViewLayer | Updating Baking
+Fra:1 Mem:71.36M (Peak 81.60M) | Time:00:00.03 | Mem:24.19M, Peak:24.19M | Scene, ViewLayer | Updating Device | Writing constant memory
+Fra:1 Mem:71.37M (Peak 81.60M) | Time:00:00.03 | Mem:24.19M, Peak:24.19M | Scene, ViewLayer | Sample 0/10
+Fra:1 Mem:76.57M (Peak 81.60M) | Time:00:00.11 | Remaining:00:00.72 | Mem:29.39M, Peak:29.39M | Scene, ViewLayer | Sample 1/10
+Fra:1 Mem:78.88M (Peak 83.49M) | Time:00:00.82 | Mem:29.39M, Peak:29.39M | Scene, ViewLayer | Sample 10/10
+Fra:1 Mem:78.88M (Peak 83.49M) | Time:00:00.82 | Mem:29.39M, Peak:29.39M | Scene, ViewLayer | Finished
+Saved: 'out/Accessories/Hair_Ponytail_M_q.png'
+Time: 00:00.84 (Saving: 00:00.02)
+
+ACC Hair_Ponytail M ГОТОВО
+
+Blender quit
