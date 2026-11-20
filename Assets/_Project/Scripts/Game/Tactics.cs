@@ -32,13 +32,13 @@ namespace BladePath
         // наши отряды (портреты 1…12 атласа) и облики, на которых они пока стоят
         public static readonly UnitType[] Ours =
         {
-            new UnitType("Асигару", 4, 5, 1, 3, 10, 4, 0, 8) { cell = 0 },
+            new UnitType("Асигару", 4, 5, 1, 3, 10, 4, 0, 8) { cell = 0, live = "unit_ashigaru" },
             new UnitType("Лучники", 6, 3, 2, 3, 10, 4, 12, -2) { cell = 1, live = "unit_archer" },
             new UnitType("Тэппо", 8, 3, 3, 5, 12, 3, 8, 6) { cell = 2, live = "unit_teppo" },
             new UnitType("Самураи", 8, 8, 4, 6, 25, 5, 0, 0) { cell = 3 },
             new UnitType("Конные самураи", 11, 9, 7, 11, 45, 8, 0, 3) { cell = 4, live = "unit_cavalry", liveH = 2.6f },
             new UnitType("Сохэи", 7, 7, 3, 6, 20, 5, 0, 7) { cell = 5, live = "unit_sohei" },
-            new UnitType("Синоби", 9, 4, 3, 5, 15, 8, 0, 5) { cell = 6, noRetal = true },
+            new UnitType("Синоби", 9, 4, 3, 5, 15, 8, 0, 5) { cell = 6, noRetal = true, live = "unit_shadow" },
             new UnitType("Ронины", 7, 6, 3, 5, 18, 6, 0, 1) { cell = 7 },
             new UnitType("Онмёдзи", 9, 6, 4, 7, 20, 5, 10, -3) { cell = 8, magic = true, live = "unit_onmyoji" },
             new UnitType("Знаменосцы", 3, 6, 1, 2, 15, 5, 0, -1) { cell = 9, live = "unit_banner" },
@@ -47,14 +47,14 @@ namespace BladePath
         };
         public static readonly UnitType[] Foes =
         {
-            new UnitType("Разбойники", 5, 3, 2, 3, 10, 5, 0, 6) { portrait = "UI/portrait_bandit" },
-            new UnitType("Ямабуси", 6, 5, 2, 4, 15, 5, 0, 7) { portrait = "UI/portrait_yamabushi" },
-            new UnitType("Дезертиры", 4, 5, 1, 3, 10, 4, 0, 8) { portrait = "UI/portrait_ashigaru" },
-            new UnitType("Маски кицунэ", 8, 6, 3, 5, 18, 7, 6, 9) { portrait = "UI/portrait_kitsune", magic = true },
-            new UnitType("Поверженные", 7, 7, 3, 6, 25, 4, 0, 4) { portrait = "UI/portrait_fallen" },
-            new UnitType("Клан теней", 9, 5, 3, 6, 15, 8, 0, 5) { portrait = "UI/portrait_shadow", noRetal = true },
-            new UnitType("Они", 14, 12, 12, 20, 100, 5, 0, 2) { portrait = "UI/portrait_oni" },
-            new UnitType("Сёгун", 16, 16, 20, 30, 180, 6, 0, 3) { portrait = "UI/portrait_shogun" },
+            new UnitType("Разбойники", 5, 3, 2, 3, 10, 5, 0, 6) { portrait = "UI/portrait_bandit", live = "unit_bandit", liveH = 1.68f },
+            new UnitType("Ямабуси", 6, 5, 2, 4, 15, 5, 0, 7) { portrait = "UI/portrait_yamabushi", live = "unit_yamabushi", liveH = 1.76f },
+            new UnitType("Дезертиры", 4, 5, 1, 3, 10, 4, 0, 8) { portrait = "UI/portrait_ashigaru", live = "unit_ashigaru" },
+            new UnitType("Маски кицунэ", 8, 6, 3, 5, 18, 7, 6, 9) { portrait = "UI/portrait_kitsune", magic = true, live = "unit_kitsune", liveH = 1.64f },
+            new UnitType("Поверженные", 7, 7, 3, 6, 25, 4, 0, 4) { portrait = "UI/portrait_fallen", live = "unit_fallen", liveH = 1.75f },
+            new UnitType("Клан теней", 9, 5, 3, 6, 15, 8, 0, 5) { portrait = "UI/portrait_shadow", noRetal = true, live = "unit_shadow" },
+            new UnitType("Они", 14, 12, 12, 20, 100, 5, 0, 2) { portrait = "UI/portrait_oni", live = "unit_oni", liveH = 2.3f },
+            new UnitType("Сёгун", 16, 16, 20, 30, 180, 6, 0, 3) { portrait = "UI/portrait_shogun", live = "unit_shogun", liveH = 1.85f },
             new UnitType("Ронины", 7, 6, 3, 5, 18, 6, 0, 1) { portrait = "UI/portrait_ronin" },
             new UnitType("Алый самурай", 11, 10, 7, 12, 45, 6, 0, 0) { portrait = "UI/portrait_red_samurai" },
         };
