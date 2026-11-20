@@ -40,6 +40,12 @@ namespace BladePath
         public bool female;
         public List<ZoneLook> zones = new List<ZoneLook>();
         public FaceLook face = new FaceLook();
+        public List<WearLook> wear = new List<WearLook>();   // надетые вещи (CharacterWear): причёска, голова, лицо
+        public WearLook Wear(int slot)
+        {
+            foreach (WearLook w in wear) if (w.slot == slot) return w;
+            WearLook n = new WearLook { slot = slot }; wear.Add(n); return n;
+        }
         public ZoneLook Zone(string id)
         {
             foreach (ZoneLook z in zones) if (z.id == id) return z;
@@ -351,7 +357,11 @@ namespace BladePath
             skins.Apply(idx);
             if (tex != null)
                 foreach (Renderer r in skins.models[idx].GetComponentsInChildren<Renderer>(true))
+                {
+                    if (r.name.StartsWith(CharacterWear.Prefix)) continue;   // у надетых вещей своя текстура
                     foreach (Material m in r.materials) if (m.HasProperty("_MainTex")) m.mainTexture = tex;
+                }
+            CharacterWear.Dress(skins.models[idx], d);
             return true;
         }
         /// <summary>После сохранения: облик в игре пересобрать из файла.</summary>

@@ -203,7 +203,8 @@ namespace BladePath
             // зоны слева
             Rect zl = new Rect(0f, 52f, 170f, 540f - 52f);
             Box(zl);
-            float zy = zl.y + 8f, zh = Mathf.Min(38f, (zl.height - 16f) / b.zones.Length - 4f);
+            int rows = b.zones.Length + CharacterWear.SlotNames.Length;
+            float zy = zl.y + 8f, zh = Mathf.Min(38f, (zl.height - 16f) / rows - 4f);
             for (int i = 0; i < b.zones.Length; i++)
             {
                 ZoneInfo zi = b.zones[i];
@@ -218,6 +219,20 @@ namespace BladePath
                 if (z.tint && zi.id != "face") UiKit.Rect(new Rect(r.xMax - 12f, r.y + 6f, 6f, r.height - 12f), z.color);
                 zy += zh + 4f;
             }
+            // надеваемые вещи: причёска, голова, лицо
+            string[] wicon = { "hair", "hat", "mask" };
+            for (int k = 0; k < CharacterWear.SlotNames.Length; k++)
+            {
+                int i = b.zones.Length + k;
+                WearLook wl = data.Wear(k);
+                Rect r = new Rect(zl.x + 8f, zy, zl.width - 16f, zh);
+                if (Btn(r, "", true, false, i == zone)) zone = i;
+                float ic = r.height - 4f;
+                ZoneIcon(new Rect(r.x + 3f, r.y + 2f, ic, ic), wicon[k]);
+                string n = CharacterWear.SlotNames[k] + (string.IsNullOrEmpty(wl.id) ? "" : " •");
+                UiKit.Text(new Rect(r.x + ic + 8f, r.y, r.width - ic - 12f, r.height), n, 12f, i == zone ? Gold : new Color(0.95f, 0.8f, 0.55f), TextAnchor.MiddleLeft);
+                zy += zh + 4f;
+            }
 
             // превью
             Rect pv = new Rect(176f, 52f, W - 176f - 276f, 540f - 52f);
@@ -228,6 +243,7 @@ namespace BladePath
             // настройки зоны справа
             Rect sp = new Rect(W - 270f, 52f, 270f, 540f - 52f);
             Box(sp);
+            if (zone >= b.zones.Length) { DrawWearSettings(sp, zone - b.zones.Length); return; }
             ZoneInfo cur = b.zones[Mathf.Clamp(zone, 0, b.zones.Length - 1)];
             if (cur.id == "face") DrawFaceSettings(sp); else DrawZoneSettings(sp, cur);
         }
@@ -237,7 +253,8 @@ namespace BladePath
             float s = Mathf.Min(pv.width, pv.height) - 16f;
             Rect ar = new Rect(pv.center.x - s * 0.5f, pv.center.y - s * 0.5f, s, s);
             if (preview != null) GUI.DrawTexture(ar, preview);
-            ZoneInfo zi = b.zones[Mathf.Clamp(zone, 0, b.zones.Length - 1)];
+            if (zone >= b.zones.Length) return;
+            ZoneInfo zi = b.zones[zone];
             // rect зоны в долях атласа, y снизу
             Rect zr = new Rect(ar.x + zi.rect[0] * s, ar.y + (1f - zi.rect[1] - zi.rect[3]) * s, zi.rect[2] * s, zi.rect[3] * s);
             Frame(zr, Gold, 2f);
@@ -288,7 +305,7 @@ namespace BladePath
                 }
                 else { cam.clearFlags = CameraClearFlags.SolidColor; cam.cullingMask = ~0; }
                 Transform root = skins.transform, head = Head();
-                bool faceZone = b.zones[Mathf.Clamp(zone, 0, b.zones.Length - 1)].id == "face" || b.zones[Mathf.Clamp(zone, 0, b.zones.Length - 1)].id == "hair";
+                bool faceZone = zone >= b.zones.Length || b.zones[Mathf.Clamp(zone, 0, b.zones.Length - 1)].id == "face" || b.zones[Mathf.Clamp(zone, 0, b.zones.Length - 1)].id == "hair";
                 Vector3 target = faceZone && head != null ? head.position + Vector3.up * 0.04f : root.position + Vector3.up * 0.95f;
                 float dist = faceZone ? 0.85f : 3.4f;
                 cam.fieldOfView = faceZone ? 28f : 32f;
@@ -339,6 +356,51 @@ namespace BladePath
             if (!string.IsNullOrEmpty(z.image) && Btn(new Rect(x, y, w, 34f), "УБРАТЬ КАРТИНКУ")) { z.image = null; Changed(); }
             y += 40f;
             if (Btn(new Rect(x, sp.yMax - 46f, w, 36f), "СБРОСИТЬ ЗОНУ")) { z.tint = false; z.bright = 1f; z.wear = 0f; z.image = null; Changed(); }
+        }
+
+        static void DrawWearSettings(Rect sp, int slot)
+        {
+            WearLook w = data.Wear(slot);
+            float x = sp.x + 12f, w2 = sp.width - 24f, y = sp.y + 10f;
+            UiKit.Text(new Rect(x, y, w2, 24f), CharacterWear.SlotNames[slot], 18f, Gold, TextAnchor.MiddleLeft); y += 28f;
+            // выбор вещи: «нет» и вещи этого места (ещё не собранные — серые)
+            float bw = (w2 - 6f) * 0.5f; int col = 0;
+            if (Btn(new Rect(x, y, bw, 30f), "НЕТ", true, false, string.IsNullOrEmpty(w.id))) { w.id = null; Changed(); }
+            col = 1;
+            foreach (CharacterWear.Item it in CharacterWear.Catalog)
+            {
+                if (it.slot != slot) continue;
+                bool has = CharacterWear.Has(it.id, data.female);
+                Rect r = new Rect(x + col * (bw + 6f), y, bw, 30f);
+                if (Btn(r, it.name.ToUpper(), has, false, w.id == it.id)) { w.id = it.id; Changed(); }
+                col++; if (col == 2) { col = 0; y += 34f; }
+            }
+            if (col != 0) y += 34f;
+            if (!CharacterWear.Has("Hair_Short", data.female) && !CharacterWear.Has("Kabuto", data.female))
+            { UiKit.Text(new Rect(x, y, w2, 30f), "Модели вещей ещё собираются — будут в следующей сборке", 10f, Dim, TextAnchor.UpperLeft); y += 30f; }
+            y += 4f;
+            UiKit.Text(new Rect(x, y, w2, 16f), "ЦВЕТ", 12f, Dim, TextAnchor.MiddleLeft); y += 18f;
+            float cs = (w2 - 6f * 6f) / 7f;
+            for (int i = 0; i <= Palette.Length; i++)
+            {
+                Rect c = new Rect(x + (i % 7) * (cs + 6f), y + (i / 7) * (cs + 6f), cs, cs);
+                if (i == Palette.Length)
+                {
+                    UiKit.Rect(c, new Color(0.2f, 0.17f, 0.13f)); UiKit.Text(c, "—", 16f, Ink);
+                    if (!w.tint) Frame(c, Gold, 2f);
+                    if (GUI.Button(c, GUIContent.none, GUIStyle.none)) { w.tint = false; Changed(); }
+                    continue;
+                }
+                UiKit.Rect(c, Palette[i]);
+                bool on = w.tint && Mathf.Abs(w.color.r - Palette[i].r) + Mathf.Abs(w.color.g - Palette[i].g) + Mathf.Abs(w.color.b - Palette[i].b) < 0.02f;
+                Frame(c, on ? Gold : new Color(0f, 0f, 0f, 0.6f), on ? 2.5f : 1f);
+                if (GUI.Button(c, GUIContent.none, GUIStyle.none)) { w.tint = true; w.color = Palette[i]; Changed(); }
+            }
+            y += 2f * (cs + 6f) + 6f;
+            w.size = Slider(10 + slot * 3, new Rect(x, y, w2, 44f), "РАЗМЕР", w.size, 0.85f, 1.2f); y += 46f;
+            w.up = Slider(11 + slot * 3, new Rect(x, y, w2, 44f), "ВЫШЕ / НИЖЕ", w.up, -0.05f, 0.05f); y += 46f;
+            w.back = Slider(12 + slot * 3, new Rect(x, y, w2, 44f), "ВПЕРЁД / НАЗАД", w.back, -0.05f, 0.05f); y += 46f;
+            if (Btn(new Rect(x, sp.yMax - 46f, w2, 36f), "ПОДГОНКА КАК БЫЛА")) { w.size = 1f; w.up = 0f; w.back = 0f; Changed(); }
         }
 
         static void DrawFaceSettings(Rect sp)

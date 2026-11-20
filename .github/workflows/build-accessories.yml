@@ -1,0 +1,83 @@
+name: Build accessories
+
+# Надеваемые вещи редактора персонажей: Meshy GLB (ветка meshy-gen) → подогнаны к голове мужской и женской основы
+# (tools/blender/build_accessory.py, список tools/blender/acc_list.txt). Результат — ветка acc-models (Accessories/, preview/).
+on:
+  workflow_dispatch:
+  push:
+    branches: [acc-build]
+
+permissions:
+  contents: write
+
+jobs:
+  blender:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Blender 4.2 LTS
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libxkbcommon0 libsm6 libice6 libegl1 >/dev/null
+          curl -sSfL https://download.blender.org/release/Blender4.2/blender-4.2.3-linux-x64.tar.xz | tar -xJ -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/blender-4.2.3-linux-x64" >> "$GITHUB_PATH"
+
+      - name: Fetch Meshy results
+        run: |
+          git fetch -q --depth 1 origin meshy-gen
+          mkdir -p "$RUNNER_TEMP/gen" && git --work-tree="$RUNNER_TEMP/gen" checkout FETCH_HEAD -- . && git reset -q
+          ls "$RUNNER_TEMP/gen" | grep acc_ || true
+
+      - name: Build accessories
+        run: |
+          mkdir -p out/Accessories out/preview
+          ONLY=""; [ -f tools/blender/acc_only.txt ] && ONLY=" $(tr '\n' ' ' < tools/blender/acc_only.txt) "
+          grep -v '^#' tools/blender/acc_list.txt | while read -r name dir kind wf dz dy rot tris; do
+            [ -z "$name" ] && continue
+            if [ -n "$ONLY" ] && ! echo "$ONLY" | grep -q " $name "; then continue; fi
+            glb=$(ls "$RUNNER_TEMP/gen/$dir/"*_image.glb 2>/dev/null | head -1)
+            [ -z "$glb" ] && { echo "нет модели $dir"; continue; }
+            for b in M F; do
+              base=Assets/_Project/Models/BaseMale_Player.fbx; [ $b = F ] && base=Assets/_Project/Models/BaseFemale_Player.fbx
+              ACC_GLB="$glb" ACC_NAME="$name" ACC_KIND="$kind" BASE_FBX="$base" BASE_TAG=$b ACC_W="$wf" ACC_DZ="$dz" ACC_DY="$dy" ACC_ROT="$rot" ACC_TRIS="$tris" ACC_OUT=out/Accessories \
+                blender -b --factory-startup --python tools/blender/build_accessory.py > "out/${name}_$b.log" 2>&1 || true
+              grep -E "^ACC|Error|Traceback" "out/${name}_$b.log" | head -20
+              mv out/Accessories/${name}_${b}_*.png out/preview/ 2>/dev/null || true
+            done
+          done
+          python3 -m pip install -q pillow
+          python3 - <<'PY'
+          import glob, os
+          from PIL import Image
+          fs = sorted(glob.glob('out/preview/*_q.png'))
+          if fs:
+              ims = [Image.open(f) for f in fs]; w, h = ims[0].size; cols = 6
+              sheet = Image.new('RGB', (w * cols, h * ((len(ims) + cols - 1) // cols)), (40, 40, 44))
+              for i, im in enumerate(ims): sheet.paste(im.convert('RGB'), ((i % cols) * w, (i // cols) * h))
+              sheet.save('out/preview/_sheet_q.jpg', quality=85)
+          for v in ('front', 'side'):
+              fs = sorted(glob.glob('out/preview/*_%s.png' % v))
+              if not fs: continue
+              ims = [Image.open(f) for f in fs]; w, h = ims[0].size; cols = 6
+              sheet = Image.new('RGB', (w * cols, h * ((len(ims) + cols - 1) // cols)), (40, 40, 44))
+              for i, im in enumerate(ims): sheet.paste(im.convert('RGB'), ((i % cols) * w, (i // cols) * h))
+              sheet.save('out/preview/_sheet_%s.jpg' % v, quality=85)
+          PY
+
+      - name: Publish to acc-models branch
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          D="$RUNNER_TEMP/acc"; rm -rf "$D"
+          URL="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git ls-remote --exit-code "$URL" acc-models >/dev/null 2>&1; then git clone -q --depth 1 -b acc-models "$URL" "$D"; else mkdir -p "$D"; (cd "$D"; git init -q; git checkout -q -b acc-models); fi
+          cp -r out/. "$D/"
+          cd "$D"
+          echo "run ${GITHUB_RUN_NUMBER} sha ${GITHUB_SHA}" > info.txt
+          git -c user.name=ci -c user.email=ci@local add -A
+          git -c user.name=ci -c user.email=ci@local commit -qm "accessories run ${GITHUB_RUN_NUMBER}"
+          git push -q -f "$URL" acc-models
