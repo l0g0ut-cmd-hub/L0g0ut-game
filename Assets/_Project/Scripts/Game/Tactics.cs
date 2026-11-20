@@ -21,6 +21,20 @@ namespace BladePath
             public string name; public int atk, def, dmin, dmax, hp, spd, shots;
             public bool noRetal;            // по нему не отвечают (синоби, клан теней)
             public bool magic;              // дальний удар без штрафа за расстояние
+            // способности («Герои 3»): двойной удар, бесконечные ответы, разгон (+5% урона за клетку пути), стрелок без штрафа вплотную,
+            // удар по всем соседним врагам, пробой доспеха (доля защиты цели не в счёт)
+            public bool dbl, unlimRet, joust, noMeleePen, sweep; public float pierce;
+            public string Ability
+            {
+                get
+                {
+                    string a = "";
+                    if (dbl) a += " · двойной удар"; if (unlimRet) a += " · отвечает всем"; if (joust) a += " · разгон";
+                    if (noMeleePen) a += " · вплотную без штрафа"; if (sweep) a += " · бьёт всех рядом"; if (pierce > 0f) a += " · пробивает доспех";
+                    if (noRetal) a += " · по нему не отвечают"; if (magic) a += " · бьёт чарами";
+                    return a.Length > 0 ? a.Substring(3) : "";
+                }
+            }
             public string portrait;         // путь к портрету (свой — по ячейке атласа отрядов)
             public string live;             // живая 3D-модель с клипами Meshy: Resources/Units/<live> (+ <live>_albedo); нет — снимок
             public float liveH = 1.7f;      // рост на поле, м
@@ -34,36 +48,36 @@ namespace BladePath
         {
             new UnitType("Асигару", 4, 5, 1, 3, 10, 4, 0, 8) { cell = 0, live = "unit_ashigaru" },
             new UnitType("Лучники", 6, 3, 2, 3, 10, 4, 12, -2) { cell = 1, live = "unit_archer" },
-            new UnitType("Тэппо", 8, 3, 3, 5, 12, 3, 8, 6) { cell = 2, live = "unit_teppo" },
-            new UnitType("Самураи", 8, 8, 4, 6, 25, 5, 0, 0) { cell = 3, live = "unit_samurai" },
-            new UnitType("Конные самураи", 11, 9, 7, 11, 45, 8, 0, 3) { cell = 4, live = "unit_cavalry", liveH = 2.6f },
+            new UnitType("Тэппо", 8, 3, 3, 5, 12, 3, 8, 6) { cell = 2, live = "unit_teppo", pierce = 0.4f },
+            new UnitType("Самураи", 8, 8, 4, 6, 25, 5, 0, 0) { cell = 3, live = "unit_samurai", unlimRet = true },
+            new UnitType("Конные самураи", 11, 9, 7, 11, 45, 8, 0, 3) { cell = 4, live = "unit_cavalry", liveH = 2.6f, joust = true },
             new UnitType("Сохэи", 7, 7, 3, 6, 20, 5, 0, 7) { cell = 5, live = "unit_sohei" },
             new UnitType("Синоби", 9, 4, 3, 5, 15, 8, 0, 5) { cell = 6, noRetal = true, live = "unit_shinobi", liveH = 1.68f },
             new UnitType("Ронины", 7, 6, 3, 5, 18, 6, 0, 1) { cell = 7, live = "unit_ronin" },
-            new UnitType("Онмёдзи", 9, 6, 4, 7, 20, 5, 10, -3) { cell = 8, magic = true, live = "unit_onmyoji" },
+            new UnitType("Онмёдзи", 9, 6, 4, 7, 20, 5, 10, -3) { cell = 8, magic = true, live = "unit_onmyoji", noMeleePen = true },
             new UnitType("Знаменосцы", 3, 6, 1, 2, 15, 5, 0, -1) { cell = 9, live = "unit_banner" },
-            new UnitType("Хатамото", 13, 14, 10, 18, 80, 5, 0, 3) { cell = 10, live = "unit_hatamoto", liveH = 1.85f },
-            new UnitType("Боевые псы", 6, 3, 2, 4, 12, 9, 0, -99) { cell = 11, live = "unit_dog", liveH = 0.9f },
+            new UnitType("Хатамото", 13, 14, 10, 18, 80, 5, 0, 3) { cell = 10, live = "unit_hatamoto", liveH = 1.85f, dbl = true },
+            new UnitType("Боевые псы", 6, 3, 2, 4, 12, 9, 0, -99) { cell = 11, live = "unit_dog", liveH = 0.9f, dbl = true },
         };
         public static readonly UnitType[] Foes =
         {
             new UnitType("Разбойники", 5, 3, 2, 3, 10, 5, 0, 6) { portrait = "UI/portrait_bandit", live = "unit_bandit", liveH = 1.68f },
             new UnitType("Ямабуси", 6, 5, 2, 4, 15, 5, 0, 7) { portrait = "UI/portrait_yamabushi", live = "unit_yamabushi", liveH = 1.76f },
             new UnitType("Дезертиры", 4, 5, 1, 3, 10, 4, 0, 8) { portrait = "UI/portrait_ashigaru", live = "unit_ashigaru" },
-            new UnitType("Маски кицунэ", 8, 6, 3, 5, 18, 7, 6, 9) { portrait = "UI/portrait_kitsune", magic = true, live = "unit_kitsune", liveH = 1.64f },
+            new UnitType("Маски кицунэ", 8, 6, 3, 5, 18, 7, 6, 9) { portrait = "UI/portrait_kitsune", magic = true, live = "unit_kitsune", liveH = 1.64f, noMeleePen = true },
             new UnitType("Поверженные", 7, 7, 3, 6, 25, 4, 0, 4) { portrait = "UI/portrait_fallen", live = "unit_fallen", liveH = 1.75f },
             new UnitType("Клан теней", 9, 5, 3, 6, 15, 8, 0, 5) { portrait = "UI/portrait_shadow", noRetal = true, live = "unit_shadow" },
-            new UnitType("Они", 14, 12, 12, 20, 100, 5, 0, 2) { portrait = "UI/portrait_oni", live = "unit_oni", liveH = 2.3f },
-            new UnitType("Сёгун", 16, 16, 20, 30, 180, 6, 0, 3) { portrait = "UI/portrait_shogun", live = "unit_shogun", liveH = 1.85f },
+            new UnitType("Они", 14, 12, 12, 20, 100, 5, 0, 2) { portrait = "UI/portrait_oni", live = "unit_oni", liveH = 2.3f, sweep = true },
+            new UnitType("Сёгун", 16, 16, 20, 30, 180, 6, 0, 3) { portrait = "UI/portrait_shogun", live = "unit_shogun", liveH = 1.85f, dbl = true, unlimRet = true },
             new UnitType("Ронины", 7, 6, 3, 5, 18, 6, 0, 1) { portrait = "UI/portrait_ronin", live = "unit_ronin" },
-            new UnitType("Алый самурай", 11, 10, 7, 12, 45, 6, 0, 0) { portrait = "UI/portrait_red_samurai", live = "unit_crimson", liveH = 1.78f },
+            new UnitType("Алый самурай", 11, 10, 7, 12, 45, 6, 0, 0) { portrait = "UI/portrait_red_samurai", live = "unit_crimson", liveH = 1.78f, dbl = true },
         };
 
         public static string UnitName(int u) { return Ours[Mathf.Clamp(u, 0, Ours.Length - 1)].name; }
         public static string[] UnitStats(int u)
         {
             UnitType t = Ours[Mathf.Clamp(u, 0, Ours.Length - 1)];
-            return new[] { "Атака " + t.atk + "   урон " + t.dmin + "–" + t.dmax, "Защита " + t.def, "Здоровье " + t.hp, "Скорость " + t.spd + (t.shots > 0 ? "   выстрелов " + t.shots : "") };
+            return new[] { "Атака " + t.atk + "   урон " + t.dmin + "–" + t.dmax, "Защита " + t.def, "Здоровье " + t.hp, "Скорость " + t.spd + (t.shots > 0 ? "   выстрелов " + t.shots : ""), t.Ability };
         }
         public static void DrawUnitPortrait(Rect r, int u) { DrawPortrait(r, Ours[Mathf.Clamp(u, 0, Ours.Length - 1)]); }
 
@@ -80,12 +94,13 @@ namespace BladePath
             public float lunge; public Vector2 lungeDir; public float flash, die = -1f, born;
             public GameObject go; public Animation an; public string playing; public float actUntil, hitUntil;
             public string clipIdle, clipWalk, clipAct, clipHit, clipDie, clipWin;
+            public int run;                     // сколько клеток пробежал перед ударом (разгон конницы)
             public float idleYaw;               // насколько стойка разворачивает грудь от носков (боевая стойка — боком); поправка, чтобы грудь смотрела на врага
             public int Total { get { return count <= 0 ? 0 : (count - 1) * t.hp + topHp; } }
             public bool Alive { get { return count > 0; } }
-            public int Atk { get { return t.atk + atkB + (curseRounds > 0 ? -4 : 0) + (enemy ? 0 : HeroBonus + forge); } }
-            public int Def { get { int d = t.def + defB + (enemy ? 0 : HeroBonus + forge); return defending ? Mathf.CeilToInt(d * 1.3f) : d; } }
-            public int Spd { get { return Mathf.Max(1, t.spd + spdB + (enemy ? -windRounds : tower)); } }
+            public int Atk { get { return t.atk + atkB + (curseRounds > 0 ? -4 : 0) + (enemy ? 0 : gAtk + forge); } }
+            public int Def { get { int d = t.def + defB + (enemy ? 0 : gDef + forge); return defending ? Mathf.CeilToInt(d * 1.3f) : d; } }
+            public int Spd { get { return Mathf.Max(1, t.spd + spdB + (enemy ? -windRounds : tower + gSpd)); } }
         }
 
         static readonly List<Stack> stacks = new List<Stack>();
@@ -98,7 +113,7 @@ namespace BladePath
         // герой
         static int spirit, spiritMax, heroLv;
         static bool castThisRound;
-        static int HeroBonus { get { return heroLv / 3; } }
+        static int gAtk, gDef, gSpd;   // полководец (General): атака, защита, «Тактика» — снимаются в начале боя
         static int forge, tower;          // кузня и башня поместья
         static bool fromEstate;           // бой армией поместья: выжившие вернутся в армию
         static int fogRounds, windRounds;
@@ -268,7 +283,9 @@ namespace BladePath
             region = Mathf.Clamp(reg, 0, 2);
             stacks.Clear(); queue.Clear(); log.Clear(); texts.Clear(); shots.Clear();
             heroLv = Mathf.Max(1, Profile.Level);
-            spiritMax = 5 + heroLv / 3; spirit = spiritMax;
+            General.Sync();
+            gAtk = General.Atk; gDef = General.Def; gSpd = General.Val(7);
+            spiritMax = 4 + General.Know + General.Val(5); spirit = spiritMax;
             fogRounds = 0; windRounds = 0; castThisRound = false; spellSel = -1; bookOpen = false; info = null;
             autoOurs = false; finished = false; won = false; round = 0;
             int k = 1 + Profile.Cycle;
@@ -343,7 +360,14 @@ namespace BladePath
             foreach (Stack s in stacks) if (s.Alive) { if (s.enemy) theirs = true; else ours = true; }
             if (ours && theirs) return false;
             finished = true; won = ours; cur = null;
-            int lost = 0, killed = 0, gold = 0;
+            int lost = 0, killed = 0, gold = 0, raised = 0;
+            if (won && General.Val(6) > 0)   // «Знахарство»: часть павших поднимается после победы
+                foreach (Stack s in stacks)
+                {
+                    if (s.enemy) continue;
+                    int up = Mathf.FloorToInt((s.start - Mathf.Max(0, s.count)) * General.Pct(6));
+                    if (up > 0) { if (s.count <= 0) { s.count = 0; s.topHp = s.t.hp; } s.count += up; raised += up; }
+                }
             foreach (Stack s in stacks)
             {
                 if (s.enemy) { killed += s.start - Mathf.Max(0, s.count); gold += (s.start - Mathf.Max(0, s.count)) * s.t.hp / 3; }
@@ -355,7 +379,7 @@ namespace BladePath
                 foreach (Stack s in stacks) if (!s.enemy && s.unit >= 0) sv.Add(new KeyValuePair<int, int>(s.unit, Mathf.Max(0, s.count)));
                 Estate.AfterBattle(sv, ours);
             }
-            if (won) { Profile.AddGold(gold); resultText = "Враг разбит. Сражено врагов: " + killed + ", наших потерь: " + lost + ".\nДобыча: " + gold + " мон."; }
+            if (won) { Profile.AddGold(gold); resultText = "Враг разбит. Сражено врагов: " + killed + ", наших потерь: " + lost + "." + (raised > 0 ? " Знахари подняли: " + raised + "." : "") + "\nДобыча: " + gold + " мон."; }
             else resultText = "Армия разбита. Наших потерь: " + lost + ".";
             return true;
         }
@@ -402,14 +426,17 @@ namespace BladePath
 
         static IEnumerator DoMelee(Stack a, Stack d, Vector2Int stand)
         {
-            if (stand.x != a.c || stand.y != a.r) yield return MoveAlong(a, PathTo(stand));
+            a.run = 0;
+            if (stand.x != a.c || stand.y != a.r) { List<Vector2Int> pth = PathTo(stand); a.run = pth.Count; yield return MoveAlong(a, pth); }
             yield return Strike(a, d, false);
-            if (d.Alive && !d.retaliated && !a.t.noRetal && !finished)
+            a.run = 0;
+            if (d.Alive && a.Alive && (!d.retaliated || d.t.unlimRet) && !a.t.noRetal && !finished)
             {
                 d.retaliated = true;
                 yield return 0.15f;
                 yield return Strike(d, a, false);
             }
+            if (a.t.dbl && a.Alive && d.Alive && !finished) { yield return 0.15f; Log(a.t.name + ": второй удар."); yield return Strike(a, d, false); }
             EndTurn();
         }
 
@@ -440,6 +467,15 @@ namespace BladePath
             Hurt(d, dmg);
             d.flash = 1f; d.hitUntil = Time.unscaledTime + 0.55f;
             if (!ranged) Burst("fx_slash_hit", d.pos + new Vector2(0f, -R * 1.1f), R * 3f, 36f);
+            if (!ranged && a.t.sweep)
+                foreach (Vector2Int n in Nb(a.c, a.r))
+                {
+                    Stack o = At(n.x, n.y);
+                    if (o == null || o == d || o.enemy == a.enemy || !o.Alive) continue;
+                    int od = Damage(a, o, false, false); Hurt(o, od); o.flash = 1f; o.hitUntil = Time.unscaledTime + 0.55f;
+                    Burst("fx_slash_hit", o.pos + new Vector2(0f, -R * 1.1f), R * 2.6f, 36f);
+                    texts.Add(new Float { p = o.pos + new Vector2(0f, -R * 2f), s = "−" + od, t0 = Time.unscaledTime, col = o.enemy ? new Color(1f, 0.85f, 0.4f) : new Color(1f, 0.45f, 0.35f) });
+                }
             else if (!a.t.magic) Burst("fx_arrow_hit", d.pos + new Vector2(0f, -R * 1.0f), R * 2.6f, 40f);
             int dead = before - Mathf.Max(0, d.count);
             texts.Add(new Float { p = d.pos + new Vector2(0f, -R * 2f), s = "−" + dmg + (dead > 0 ? "  (" + dead + " пало)" : ""), t0 = Time.unscaledTime, col = d.enemy ? new Color(1f, 0.85f, 0.4f) : new Color(1f, 0.45f, 0.35f) });
@@ -455,11 +491,14 @@ namespace BladePath
             else if (a.curseRounds > 0) b = a.t.dmin * a.count;
             else if (a.count <= 10) for (int i = 0; i < a.count; i++) b += Random.Range(a.t.dmin, a.t.dmax + 1);
             else b = Random.Range(a.t.dmin, a.t.dmax + 1) * 0.2f * a.count + (a.t.dmin + a.t.dmax) * 0.5f * a.count * 0.8f;
-            int A = a.Atk, D = d.Def;
+            int A = a.Atk, D = Mathf.RoundToInt(d.Def * (1f - a.t.pierce));
             float m = A >= D ? Mathf.Min(4f, 1f + 0.05f * (A - D)) : Mathf.Max(0.3f, 1f - 0.025f * (D - A));
             if (ranged && !a.t.magic && Dist(a.c, a.r, d.c, d.r) > 10) m *= 0.5f;
-            if (!ranged && a.t.shots > 0) m *= 0.5f;   // стрелок вплотную — вполсилы
+            if (!ranged && a.t.shots > 0 && !a.t.noMeleePen) m *= 0.5f;   // стрелок вплотную — вполсилы
+            if (!ranged && a.t.joust) m *= 1f + 0.05f * a.run;          // разгон: +5% за клетку
             if (ranged && a.enemy && fogRounds > 0) m *= 0.5f;
+            if (!a.enemy) m *= 1f + General.Pct(ranged ? 0 : 1);   // «Стрельба» / «Нападение»
+            if (!d.enemy) m *= 1f - General.Pct(2);               // «Доспехи»
             return Mathf.Max(1, Mathf.RoundToInt(b * m));
         }
 
@@ -486,9 +525,9 @@ namespace BladePath
             NextTurn();
         }
         /// <summary>Боевой дух наших: живые знаменосцы (+1 за отряд, до 3).</summary>
-        static int Morale { get { int m = 0; foreach (Stack s in stacks) if (s.Alive && !s.enemy && s.t == Ours[9]) m++; return Mathf.Min(3, m); } }
+        static int Morale { get { int m = 0; foreach (Stack s in stacks) if (s.Alive && !s.enemy && s.t == Ours[9]) m++; return Mathf.Min(3, m + General.Val(3)); } }
         /// <summary>Удача наших: храм поместья и святилище (пока — храм).</summary>
-        static int Luck { get { return fromEstate ? Estate.D.level[4] : 0; } }
+        static int Luck { get { return (fromEstate ? Estate.D.level[4] : 0) + General.Val(4); } }
 
         static void Wait()
         {
@@ -513,7 +552,7 @@ namespace BladePath
         {
             if (castThisRound || spirit < sp.cost) return;
             spirit -= sp.cost; castThisRound = true; spellSel = -1; bookOpen = false;
-            int lv = heroLv;
+            int lv = General.Power;   // сила умений — «Сила духа» полководца
             Vector2 at = target != null ? target.pos : Center(cell.x, cell.y);
             bool sheet = false;
             if (sp.icon == 3) sheet = Burst(SpellFx[3], at + new Vector2(0f, -R * 0.6f), R * 6f, 26f);
@@ -1185,7 +1224,7 @@ namespace BladePath
             Rect hp = new Rect(10f, 540f - 76f, 64f, 64f);
             DrawPortrait(hp, Ours[3]);
             UiKit.Ring(hp.center, 33f, Gold);
-            UiKit.Text(new Rect(80f, 540f - 76f, 220f, 20f), "ГЕРОЙ · УР. " + heroLv, 13f, Gold, TextAnchor.MiddleLeft);
+            UiKit.Text(new Rect(80f, 540f - 76f, 340f, 20f), "ГЕРОЙ · УР. " + heroLv + "   А" + gAtk + " З" + gDef + " С" + General.Power + " Зн" + General.Know, 13f, Gold, TextAnchor.MiddleLeft);
             UiKit.Text(new Rect(80f, 540f - 58f, 220f, 18f), "Дух " + spirit + "/" + spiritMax + (castThisRound ? " · умение уже было" : ""), 12f, new Color(0.6f, 0.8f, 1f), TextAnchor.MiddleLeft);
             Texture2D sk = UiKit.Tex("UI/Battle/skill_icons");
             for (int i = 0; i < QuickSpells.Length; i++)
@@ -1283,7 +1322,7 @@ namespace BladePath
             string[] vals = { "Атака " + s.Atk + "   урон " + s.t.dmin + "–" + s.t.dmax, "Защита " + s.Def, "Здоровье " + s.t.hp + "   у первого " + s.topHp, "Скорость " + s.Spd + (s.t.shots > 0 ? "   выстрелов " + s.shots : "") };
             for (int i = 0; i < 4; i++)
                 UiKit.Text(new Rect(r.x + r.width * 0.56f, r.y + r.height * (0.15f + 0.122f * i), r.width * 0.37f, r.height * 0.09f), vals[i], 11.5f, Ink, TextAnchor.MiddleLeft);
-            string extra = "Бойцов: " + s.count + " из " + s.start + (s.t.noRetal ? " · по нему не отвечают" : "") + (s.t.magic ? " · бьёт чарами" : "");
+            string extra = "Бойцов: " + s.count + " из " + s.start + (s.t.Ability.Length > 0 ? " · " + s.t.Ability : "");
             UiKit.Text(new Rect(r.x + r.width * 0.45f, r.y + r.height * 0.64f, r.width * 0.5f, 18f), extra, 10.5f, Dim);
             if (VisualIdentity.KitButton(new Rect(r.x + r.width * 0.7f, r.y + r.height * 0.77f, r.width * 0.22f, r.height * 0.12f), "ЗАКРЫТЬ", true, false)) info = null;
         }

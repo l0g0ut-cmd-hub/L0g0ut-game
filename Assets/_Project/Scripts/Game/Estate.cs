@@ -162,6 +162,7 @@ namespace BladePath
             Texture2D bg = UiKit.Tex("UI/Battle/estate_bg");
             if (bg != null) GUI.DrawTexture(new Rect(offX, offY, 1672f * sc, 941f * sc), bg);
             else UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0.1f, 0.08f, 0.06f));
+            if (General.Open) { General.Draw(W); return; }   // экран полководца поверх поместья
             Texture2D bt = UiKit.Tex("UI/Battle/estate_buildings");
             bool modal = hireUnit >= 0;
             // главный дом (уже стоит на картине): касание — знаменосцы и ронины
@@ -200,6 +201,8 @@ namespace BladePath
                 if (VisualIdentity.KitButton(new Rect(W - 150f, 40f, 140f, 34f), "ВЫЙТИ", true, false)) { Open = false; return; }
                 if (VisualIdentity.KitButton(new Rect(W - 150f, 80f, 140f, 34f), "НЕДЕЛЯ " + D.week + " ▸", true, false)) { NewWeek(); Note("Неделя " + D.week + ": новые бойцы для найма, доход поместья."); }
                 if (VisualIdentity.KitButton(new Rect(W - 150f, 120f, 140f, 34f), "В БОЙ", D.army.Count > 0, true)) { Open = false; Tactics.ShowArmy(Campaign.Region); return; }
+                General.Sync();
+                if (VisualIdentity.KitButton(new Rect(W - 150f, 160f, 140f, 34f), General.D.pending > 0 ? "ПОЛКОВОДЕЦ ★" : "ПОЛКОВОДЕЦ", true, General.D.pending > 0)) { General.Show(); return; }
             }
             if (note != null && Time.unscaledTime - noteAt < 3f)
             {
@@ -305,6 +308,7 @@ namespace BladePath
             string[] st = Tactics.UnitStats(u);
             for (int i = 0; i < 4; i++)
                 UiKit.Text(new Rect(r.x + r.width * 0.56f, r.y + r.height * (0.15f + 0.122f * i), r.width * 0.37f, r.height * 0.09f), st[i], 12f, Ink, TextAnchor.MiddleLeft);
+            if (st.Length > 4 && st[4].Length > 0) UiKit.Text(new Rect(pf.x - 6f, pf.y + pf.width * 0.9f + 58f, pf.width + 12f, 16f), st[4], 9.5f, Dim);
             int max = MaxHire(u);
             // ползунок картины: от 0,445 до 0,93 ширины, на высоте 0,67
             Rect track = new Rect(r.x + r.width * 0.47f, r.y + r.height * 0.645f, r.width * 0.45f, r.height * 0.05f);
