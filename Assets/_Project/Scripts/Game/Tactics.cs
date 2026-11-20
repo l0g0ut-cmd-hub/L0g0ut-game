@@ -136,7 +136,26 @@ namespace BladePath
             new Spell { icon = 8, cost = 3, name = "ГРОМ", hint = "Удар молнии по отряду врага", target = 0 },
             new Spell { icon = 9, cost = 2, name = "ПРОКЛЯТИЕ", hint = "−4 к атаке врага, бьёт слабейшим ударом", target = 0 },
             new Spell { icon = 10, cost = 1, name = "РЫВОК", hint = "+3 к скорости отряда на раунд", target = 1 },
+            // вторая страница книги (иконки UI/Battle/skill_icons2, 4×3)
+            new Spell { icon = 11, cost = 3, name = "ЛЕДЯНОЙ КЛИНОК", hint = "Урон и −3 к скорости врага, 2 раунда", target = 0 },
+            new Spell { icon = 12, cost = 4, name = "ЗЕМЛЕТРЯСЕНИЕ", hint = "Урон всем врагам; в осаде рушит стену", target = 3 },
+            new Spell { icon = 13, cost = 2, name = "КРОВАВОЕ БЕЗУМИЕ", hint = "+6 к атаке отряда, −3 к защите, 2 раунда", target = 1 },
+            new Spell { icon = 14, cost = 3, name = "ЩИТ ДУХА", hint = "+4 к защите всех наших, 2 раунда", target = 3 },
+            new Spell { icon = 15, cost = 3, name = "ДУХИ ЛИС", hint = "Три удара по случайным врагам", target = 3 },
+            new Spell { icon = 16, cost = 2, name = "ТУМАН СТРАХА", hint = "Враг не отвечает на удары и −3 к атаке, 2 раунда", target = 0 },
+            new Spell { icon = 17, cost = 4, name = "ЦЕПНАЯ МОЛНИЯ", hint = "Удар по врагу и вполсилы — по двум ближним", target = 0 },
+            new Spell { icon = 18, cost = 4, name = "ЦЕЛЕБНЫЙ ДОЖДЬ", hint = "Лечит первых бойцов всех наших отрядов", target = 3 },
+            new Spell { icon = 19, cost = 2, name = "ВРАТА ТЕНЕЙ", hint = "+5 к скорости отряда на раунд", target = 1 },
+            new Spell { icon = 20, cost = 4, name = "ОСТАНОВКА ВРЕМЕНИ", hint = "Все враги на 3 медленнее, 2 раунда", target = 3 },
+            new Spell { icon = 21, cost = 2, name = "БЕРСЕРК", hint = "+10 к атаке отряда, защита −50%, 1 раунд", target = 1 },
+            new Spell { icon = 22, cost = 5, name = "ПОДНЯТЬ ПАВШИХ", hint = "Поднимает много павших в отряде", target = 1 },
         };
+        static void SpellIcon(Rect r, int icon)
+        {
+            Texture2D sk = UiKit.Tex(icon < 11 ? "UI/Battle/skill_icons" : "UI/Battle/skill_icons2");
+            int k = icon < 11 ? icon : icon - 11;
+            if (sk != null) GUI.DrawTextureWithTexCoords(r, sk, new Rect((k % 4) * 0.25f, 1f - (k / 4 + 1) / 3f, 0.25f, 1f / 3f));
+        }
 
         // ---------------------------------------------------------------- поле
 
@@ -711,7 +730,7 @@ namespace BladePath
             bool sheet = false;
             if (sp.icon == 3) sheet = Burst(SpellFx[3], at + new Vector2(0f, -R * 0.6f), R * 6f, 26f);
             else if (sp.icon < SpellFx.Length && sp.target != 3) sheet = Burst(SpellFx[sp.icon], at + new Vector2(0f, -R * 0.9f), R * (sp.icon == 8 ? 5.5f : 4.2f));
-            else if (sp.icon < SpellFx.Length) foreach (Stack o in stacks) if (o.Alive && o.enemy == (sp.icon == 5)) sheet |= Burst(SpellFx[sp.icon], o.pos + new Vector2(0f, -R * 0.9f), R * 3.5f);
+            else if (sp.icon < SpellFx.Length) foreach (Stack o in stacks) if (o.Alive && o.enemy == (sp.icon == 5 || sp.icon == 12 || sp.icon == 15 || sp.icon == 20)) sheet |= Burst(SpellFx[sp.icon], o.pos + new Vector2(0f, -R * 0.9f), R * 3.5f);
             if (!sheet) casts.Add(new Float { p = at, s = "", t0 = Time.unscaledTime, icon = sp.icon });
             switch (sp.icon)
             {
@@ -742,6 +761,42 @@ namespace BladePath
                 case 8: HurtSpell(target, 70 + 20 * lv); break;
                 case 9: target.curseRounds = 2; Log("Проклятие на " + target.t.name + "."); break;
                 case 10: target.spdB = 3; target.buffRounds = 1; Log("Рывок: " + target.t.name + " быстрее."); break;
+                case 11: HurtSpell(target, 35 + 12 * lv); target.spdB = -3; target.buffRounds = 2; break;
+                case 12:
+                    foreach (Stack o in new List<Stack>(stacks)) if (o.Alive && o.enemy) HurtSpell(o, 15 + 6 * lv);
+                    if (siege) for (int r = 0; r < Rows; r++) if (wallHp[r] > 0 && Random.value < 0.35f) { wallHp[r]--; Log("Землетрясение: стена дрогнула."); }
+                    break;
+                case 13: target.atkB = 6; target.defB = -3; target.buffRounds = 2; Log("Кровавое безумие: " + target.t.name + "."); break;
+                case 14: foreach (Stack o in stacks) if (o.Alive && !o.enemy) { o.defB = 4; o.buffRounds = 2; } Log("Щит духа: +4 к защите наших."); break;
+                case 15:
+                    for (int q = 0; q < 3; q++)
+                    {
+                        List<Stack> fs = stacks.FindAll(o => o.Alive && o.enemy); if (fs.Count == 0) break;
+                        HurtSpell(fs[Random.Range(0, fs.Count)], 18 + 7 * lv);
+                    }
+                    break;
+                case 16: target.retaliated = true; target.atkB = -3; target.buffRounds = 2; Log("Туман страха: " + target.t.name + " не ответит."); break;
+                case 17:
+                {
+                    HurtSpell(target, 45 + 14 * lv);
+                    List<Stack> near = stacks.FindAll(o => o.Alive && o.enemy && o != target);
+                    near.Sort((a, b) => Dist(a.c, a.r, target.c, target.r).CompareTo(Dist(b.c, b.r, target.c, target.r)));
+                    for (int q = 0; q < 2 && q < near.Count; q++) { HurtSpell(near[q], (45 + 14 * lv) / 2); Burst("fx_thunder", near[q].pos + new Vector2(0f, -R * 0.9f), R * 4f); }
+                    break;
+                }
+                case 18: foreach (Stack o in stacks) if (o.Alive && !o.enemy) { int h = Mathf.Min(o.t.hp - o.topHp, 25 + 8 * lv); o.topHp += h; if (h > 0) texts.Add(new Float { p = o.pos + new Vector2(0f, -R * 2f), s = "+" + h, t0 = Time.unscaledTime, col = new Color(0.5f, 1f, 0.6f) }); } Log("Целебный дождь."); break;
+                case 19: target.spdB = 5; target.buffRounds = 1; Log("Врата теней: " + target.t.name + " быстрее."); break;
+                case 20: windRounds = Mathf.Max(windRounds, 2); foreach (Stack o in stacks) if (o.Alive && o.enemy) { o.spdB = -1; o.buffRounds = 2; } Log("Время замедлилось для врагов."); break;
+                case 21: target.atkB = 10; target.defB = -Mathf.CeilToInt(target.t.def * 0.5f); target.buffRounds = 1; Log("Берсерк: " + target.t.name + "."); break;
+                case 22:
+                {
+                    int heal = 120 + 30 * lv, max = target.start * target.t.hp;
+                    int total = Mathf.Min(max, target.Total + heal);
+                    target.count = Mathf.CeilToInt(total / (float)target.t.hp); target.topHp = total - (target.count - 1) * target.t.hp;
+                    texts.Add(new Float { p = target.pos + new Vector2(0f, -R * 2f), s = "+" + heal, t0 = Time.unscaledTime, col = new Color(0.5f, 1f, 0.6f) });
+                    Log("Павшие встают: " + target.t.name + " — теперь " + target.count + ".");
+                    break;
+                }
             }
             UiFx.Play("ui_taiko_heavy", 0.6f);
             if (cur != null && cur.Alive) Flood(cur);
@@ -1117,7 +1172,8 @@ namespace BladePath
         // кадр рисуется целиком, следующий — поверх с долей (без мигания), как у водопадов карты
         class Fx { public string sheet; public Vector2 p; public float t0, size, fps = 30f; public bool loop; }
         static readonly List<Fx> fxs = new List<Fx>();
-        static readonly string[] SpellFx = { "fx_cross", "fx_warcry", "fx_shield", "fx_arrows", "fx_fire", "fx_wind", "fx_heal", "fx_fog", "fx_thunder", "fx_curse", "fx_dash" };
+        static readonly string[] SpellFx = { "fx_cross", "fx_warcry", "fx_shield", "fx_arrows", "fx_fire", "fx_wind", "fx_heal", "fx_fog", "fx_thunder", "fx_curse", "fx_dash",
+            "fx_wind", "fx_arrow_hit", "fx_warcry", "fx_shield", "fx_fire", "fx_curse", "fx_thunder", "fx_heal", "fx_dash", "fx_wind", "fx_warcry", "fx_heal" };
         /// <summary>Эффект в точке поля; false — листа нет (тогда рисуется простой эффект).</summary>
         static bool Burst(string sheet, Vector2 p, float size, float fps = 30f)
         {
@@ -1384,14 +1440,13 @@ namespace BladePath
                 UiKit.Text(new Rect(r.x + 1.5f, r.y + 1.5f, r.width, r.height), f.s, 16f, new Color(0f, 0f, 0f, c.a));
                 UiKit.Text(r, f.s, 16f, c);
             }
-            Texture2D sk = UiKit.Tex("UI/Battle/skill_icons");
             for (int i = casts.Count - 1; i >= 0; i--)
             {
                 Float f = casts[i]; float k = (now - f.t0) / 0.9f;
                 if (k >= 1f) { casts.RemoveAt(i); continue; }
                 float s = R * (1.2f + k * 1.6f);
                 Color oc = GUI.color; GUI.color = new Color(1f, 1f, 1f, 1f - k);
-                if (sk != null) GUI.DrawTextureWithTexCoords(new Rect(f.p.x - s * 0.5f, f.p.y - R - s * 0.5f, s, s), sk, new Rect((f.icon % 4) * 0.25f, 1f - (f.icon / 4 + 1) / 3f, 0.25f, 1f / 3f));
+                SpellIcon(new Rect(f.p.x - s * 0.5f, f.p.y - R - s * 0.5f, s, s), f.icon);
                 GUI.color = oc;
                 UiKit.Ring(f.p, R * (0.6f + k * 2.2f), new Color(1f, 0.85f, 0.5f, 0.8f * (1f - k)));
             }
@@ -1434,14 +1489,13 @@ namespace BladePath
             UiKit.Ring(hp.center, 33f, Gold);
             UiKit.Text(new Rect(80f, 540f - 76f, 340f, 20f), "ГЕРОЙ · УР. " + heroLv + "   А" + gAtk + " З" + gDef + " С" + General.Power + " Зн" + General.Know, 13f, Gold, TextAnchor.MiddleLeft);
             UiKit.Text(new Rect(80f, 540f - 58f, 220f, 18f), "Дух " + spirit + "/" + spiritMax + (castThisRound ? " · умение уже было" : ""), 12f, new Color(0.6f, 0.8f, 1f), TextAnchor.MiddleLeft);
-            Texture2D sk = UiKit.Tex("UI/Battle/skill_icons");
             for (int i = 0; i < QuickSpells.Length; i++)
             {
                 Spell sp = Spells[QuickSpells[i]];
                 Rect r = new Rect(80f + i * 38f, 540f - 38f, 34f, 34f);
                 bool can = CanCast(sp);
                 Color oc = GUI.color; GUI.color = can ? Color.white : new Color(1f, 1f, 1f, 0.35f);
-                if (sk != null) GUI.DrawTextureWithTexCoords(r, sk, new Rect((sp.icon % 4) * 0.25f, 1f - (sp.icon / 4 + 1) / 3f, 0.25f, 1f / 3f));
+                SpellIcon(r, sp.icon);
                 GUI.color = oc;
                 if (spellSel == QuickSpells[i]) UiKit.Ring(r.center, 19f, Gold, true);
                 if (GUI.Button(r, GUIContent.none, GUIStyle.none) && can) Select(QuickSpells[i]);
@@ -1494,28 +1548,67 @@ namespace BladePath
             spellSel = spellSel == i ? -1 : i;
         }
 
+        static int bookPage, bookFocus = -1;
+        static readonly Vector2[] BookSock =
+        {   // гнёзда книги UI/Battle/spell_book (1586×992): левая страница, затем правая; по рядам
+            new Vector2(313, 320), new Vector2(548, 320), new Vector2(313, 518), new Vector2(548, 518), new Vector2(313, 717), new Vector2(548, 717),
+            new Vector2(1003, 320), new Vector2(1231, 320), new Vector2(1003, 518), new Vector2(1231, 518), new Vector2(1003, 717), new Vector2(1231, 717)
+        };
         static void DrawBook()
         {
-            Rect r = new Rect(W * 0.5f - 300f, 80f, 600f, 380f);
-            Texture2D pt = UiKit.Tex("UI/editor_panel");
+            UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, 0.5f));
+            Texture2D bk = UiKit.Tex("UI/Battle/spell_book");
+            if (bk == null) { DrawBookPlain(); return; }
+            float k = Mathf.Min((W - 40f) / 1586f, 500f / 992f);
+            Rect r = new Rect((W - 1586f * k) * 0.5f, (540f - 992f * k) * 0.5f, 1586f * k, 992f * k);
+            GUI.DrawTexture(r, bk);
+            int pages = (Spells.Length + 11) / 12;
+            bookPage = Mathf.Clamp(bookPage, 0, pages - 1);
+            string[] tabs = { "I", "II", "III", "IV" };
+            for (int t = 0; t < 4; t++)
+            {
+                Rect tr = new Rect(r.x + 1430f * k, r.y + (222f + t * 150f) * k, 140f * k, 80f * k);
+                if (t >= pages) continue;
+                UiKit.Text(new Rect(tr.x, tr.y, tr.width * 0.7f, tr.height), tabs[t], 14f, t == bookPage ? Gold : Dim);
+                if (GUI.Button(tr, GUIContent.none, GUIStyle.none)) { bookPage = t; bookFocus = -1; }
+            }
+            Spell fs = bookFocus >= 0 && bookFocus < Spells.Length ? Spells[bookFocus] : null;
+            UiKit.Text(new Rect(r.x + 280f * k, r.y + 135f * k, 340f * k, 62f * k), fs != null ? fs.name : "УМЕНИЯ ГЕРОЯ", 12f, Gold);
+            UiKit.Text(new Rect(r.x + 925f * k, r.y + 135f * k, 345f * k, 62f * k), fs != null ? fs.hint + " · дух " + fs.cost : "Дух " + spirit + "/" + spiritMax + (castThisRound ? " · уже было" : ""), 9.5f, Ink);
+            for (int q = 0; q < 12; q++)
+            {
+                int i = bookPage * 12 + q;
+                if (i >= Spells.Length) break;
+                Spell sp = Spells[i];
+                float rad = 82f * k; Vector2 c = new Vector2(r.x + BookSock[q].x * k, r.y + BookSock[q].y * k);
+                Rect ic = new Rect(c.x - rad, c.y - rad, rad * 2f, rad * 2f);
+                bool can = CanCast(sp);
+                Color oc = GUI.color; GUI.color = can ? Color.white : new Color(1f, 1f, 1f, 0.38f);
+                SpellIcon(ic, sp.icon);
+                GUI.color = oc;
+                if (i == bookFocus) UiKit.Ring(c, rad + 3f, Gold, true);
+                Rect cr = new Rect(c.x + rad * 0.45f, c.y + rad * 0.5f, rad * 0.6f, rad * 0.45f);
+                UiKit.Rect(cr, new Color(0.08f, 0.03f, 0.02f, 0.85f)); UiKit.Text(cr, sp.cost.ToString(), 10f, can ? Gold : Dim);
+                // первое касание — описание, второе — применить
+                if (GUI.Button(ic, GUIContent.none, GUIStyle.none)) { if (bookFocus == i && can) { bookFocus = -1; Select(i); return; } bookFocus = i; }
+            }
+            if (VisualIdentity.KitButton(new Rect(r.center.x - 60f, r.yMax - 4f - 30f, 120f, 30f), "ЗАКРЫТЬ", true, false)) { bookOpen = false; bookFocus = -1; }
+        }
+        static void DrawBookPlain()
+        {
+            Rect r = new Rect(W * 0.5f - 300f, 60f, 600f, 420f);
             UiKit.Rect(r, new Color(0.06f, 0.03f, 0.02f, 0.97f));
-            if (pt != null) UiKit.Slice(r, pt, 0.42f, 0.15f, 0f, 0.075f, 0f, Color.white);
             UiKit.Text(new Rect(r.x, r.y + 12f, r.width, 26f), "УМЕНИЯ ГЕРОЯ · дух " + spirit + "/" + spiritMax, 17f, Gold);
-            Texture2D sk = UiKit.Tex("UI/Battle/skill_icons");
             for (int i = 0; i < Spells.Length; i++)
             {
                 Spell sp = Spells[i];
-                float x = r.x + 30f + (i % 2) * 280f, y = r.y + 48f + (i / 2) * 52f;
-                Rect ic = new Rect(x, y, 44f, 44f);
-                bool can = CanCast(sp);
-                Color oc = GUI.color; GUI.color = can ? Color.white : new Color(1f, 1f, 1f, 0.4f);
-                if (sk != null) GUI.DrawTextureWithTexCoords(ic, sk, new Rect((sp.icon % 4) * 0.25f, 1f - (sp.icon / 4 + 1) / 3f, 0.25f, 1f / 3f));
-                GUI.color = oc;
-                UiKit.Text(new Rect(x + 50f, y + 2f, 210f, 18f), sp.name + " · " + sp.cost, 12f, can ? Gold : Dim, TextAnchor.MiddleLeft);
-                UiKit.Text(new Rect(x + 50f, y + 20f, 210f, 22f), sp.hint, 10f, Ink, TextAnchor.UpperLeft);
-                if (GUI.Button(new Rect(x, y, 260f, 46f), GUIContent.none, GUIStyle.none) && can) Select(i);
+                float x = r.x + 20f + (i % 3) * 190f, y = r.y + 44f + (i / 3) * 42f;
+                Rect ic = new Rect(x, y, 36f, 36f); bool can = CanCast(sp);
+                Color oc = GUI.color; GUI.color = can ? Color.white : new Color(1f, 1f, 1f, 0.4f); SpellIcon(ic, sp.icon); GUI.color = oc;
+                UiKit.Text(new Rect(x + 40f, y, 140f, 36f), sp.name + " · " + sp.cost, 9.5f, can ? Gold : Dim, TextAnchor.MiddleLeft);
+                if (GUI.Button(new Rect(x, y, 180f, 38f), GUIContent.none, GUIStyle.none) && can) Select(i);
             }
-            if (VisualIdentity.KitButton(new Rect(r.center.x - 70f, r.yMax - 46f, 140f, 34f), "ЗАКРЫТЬ", true, false)) bookOpen = false;
+            if (VisualIdentity.KitButton(new Rect(r.center.x - 70f, r.yMax - 40f, 140f, 32f), "ЗАКРЫТЬ", true, false)) bookOpen = false;
         }
 
         static void DrawInfo()

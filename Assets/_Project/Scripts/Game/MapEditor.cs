@@ -644,6 +644,7 @@ namespace BladePath
                 MapEffect fx = data.effects[i];
                 Rect r = EffRect(fx);
                 if (r.xMax < mapR.x - 60f || r.x > mapR.xMax + 60f || r.yMax < mapR.y - 60f || r.y > mapR.yMax + 60f) continue;
+                MapLife.HiFx = data != null && data.height > 1024;
                 MapLife.DrawEffect(fx, r, t * Mathf.Max(0.05f, fx.speed) + i * 0.37f, fog);
                 GUI.color = Color.white;
                 bool s = sel.kind == HEffect && sel.i == i;

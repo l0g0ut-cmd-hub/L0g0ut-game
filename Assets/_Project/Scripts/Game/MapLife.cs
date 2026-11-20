@@ -385,6 +385,7 @@ namespace BladePath
         {
             List<MapEffect> fx = Effects(region);
             if (fx.Count == 0) return;
+            HiFx = region == 0 && MapGeom.TexHt[0] > 1024;   // большая карта Леса теней — новые листы владельца (map_*)
             float px = view.height / MapGeom.TexHeight(region), texW = MapGeom.TexWidth(region);
             float kx = view.width / uw / texW;   // точек экрана на пиксель картины по горизонтали
             for (int i = 0; i < fx.Count; i++)
@@ -397,9 +398,36 @@ namespace BladePath
         }
 
         /// <summary>Один эффект карты в прямоугольнике r (экран). Водопады — бесшовная петля 36 кадров, у подножия брызги или пыль.</summary>
+        /// <summary>Новые листы анимаций карты (UI/Battle/map_*, 8×6, петли 48 кадров) — на большой карте Леса теней и в редакторе.</summary>
+        public static bool HiFx;
+        static bool Hi(string name, Rect r, float t, float fps, float a)
+        {
+            Texture2D tx = UiKit.Tex("UI/Battle/" + name);
+            if (tx == null) return false;
+            SheetFrame(r, tx, 8, 6, 48, t, fps, a, false);
+            GUI.color = Color.white;
+            return true;
+        }
         public static void DrawEffect(MapEffect e, Rect r, float t, Texture2D mist)
         {
             string k = e.kind ?? "";
+            // новые виды — только по листам владельца
+            if (k == "lantern") { Hi("map_lantern", r, t, 18f, e.alpha); return; }
+            if (k == "wisps") { Hi("map_wisps", r, t, 14f, e.alpha); return; }
+            if (k == "petals") { Hi("map_petals", r, t, 14f, e.alpha); return; }
+            if (HiFx)
+            {
+                if (k.StartsWith("fall_") && Hi("map_fall", r, t, 24f, e.alpha))
+                {
+                    if (e.foot >= 1) { float fw = r.width * 2.2f, fh = fw * 170f / 192f; Hi("map_foam", new Rect(r.center.x - fw * 0.5f, r.yMax - fh * 0.62f, fw, fh), t * 0.9f + 0.3f, 20f, 0.7f * e.alpha); }
+                    return;
+                }
+                if (k == "stream" && Hi("map_ripples", r, t, 16f, e.alpha)) return;
+                if (k == "splash" && Hi("map_foam", r, t, 20f, e.alpha)) return;
+                if ((k == "smoke" || k == "smoke_dark" || k == "wisp") && Hi("map_smoke", r, t, 14f, e.alpha)) return;
+                if (k == "campfire" && Hi("map_fire", r, t, 22f, e.alpha)) return;
+                if (k == "mist" && Hi("map_mist", r, t, 10f, e.alpha)) return;
+            }
             if (k.StartsWith("fall_"))
             {
                 Texture2D sheet = UiKit.Tex(k == "fall_lip" ? "UI/fx_waterfall_lip" : k == "fall_mid" ? "UI/fx_waterfall_mid" : "UI/fx_waterfall_fade");
@@ -487,14 +515,15 @@ namespace BladePath
         }
 
         /// <summary>Библиотека эффектов редактора карт: вид, название, размер по умолчанию (пиксели картины), прозрачность, подножие.</summary>
-        public static readonly string[] FxKinds = { "fall_fade", "fall_fade", "fall_lip", "fall_mid", "splash", "spray", "stream", "smoke", "smoke_dark", "wisp", "campfire", "mist" };
+        public static readonly string[] FxKinds = { "fall_fade", "fall_fade", "fall_lip", "fall_mid", "splash", "spray", "stream", "smoke", "smoke_dark", "wisp", "campfire", "mist", "lantern", "wisps", "petals" };
         public static readonly string[] FxNames = { "Водопад узкий", "Водопад широкий", "Перелив из озера", "Каскад (средняя ступень)", "Брызги у подножия", "Водяная пыль",
-                                                    "Блики ручья", "Дым из трубы", "Дым костра", "Струйка дыма", "Костёр", "Туман стелется" };
+                                                    "Блики ручья", "Дым из трубы", "Дым костра", "Струйка дыма", "Костёр", "Туман стелется", "Огонь фонаря", "Блуждающие огни", "Лепестки сакуры" };
         public static readonly Vector4[] FxDefaults =   // ширина, высота, прозрачность, подножие
         {
             new Vector4(30, 90, 0.6f, 1), new Vector4(70, 160, 0.7f, 1), new Vector4(60, 200, 0.9f, 2), new Vector4(45, 70, 0.55f, 0), new Vector4(80, 55, 0.6f, 0),
             new Vector4(60, 80, 0.8f, 0), new Vector4(76, 42, 1f, 0), new Vector4(70, 110, 0.8f, 0), new Vector4(90, 150, 0.8f, 0), new Vector4(30, 70, 0.7f, 0),
             new Vector4(26, 34, 0.95f, 0), new Vector4(240, 120, 0.2f, 0),
+            new Vector4(40, 36, 0.9f, 0), new Vector4(160, 140, 0.8f, 0), new Vector4(220, 190, 0.85f, 0),
         };
         public static string FxName(MapEffect e)
         {
