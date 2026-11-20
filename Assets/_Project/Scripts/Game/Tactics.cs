@@ -750,7 +750,7 @@ namespace BladePath
                     s.clipDie = Find(names, "dying", "dead", "death", "fall", "knock");
                     List<string> left = new List<string>(names); left.Remove(s.clipDie);
                     s.clipHit = Find(left, "reaction", "hit"); left.Remove(s.clipHit);
-                    s.clipWin = Find(left, "victory", "cheer", "howl"); left.Remove(s.clipWin);
+                    s.clipWin = Find(left, "victory", "cheer", "howl", "idle1"); left.Remove(s.clipWin);   // «wolf_idle1» — вой пса
                     s.clipIdle = Find(left, "idle", "stance"); left.Remove(s.clipIdle);
                     s.clipWalk = Find(left, "walk", "canter", "run"); left.Remove(s.clipWalk);
                     s.clipAct = Find(left, "shot", "shoot", "slash", "thrust", "spell", "cast", "attack", "combo", "jump");
