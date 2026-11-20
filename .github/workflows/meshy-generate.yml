@@ -31,6 +31,9 @@ jobs:
           MESHY_KEY_ALT6: ${{ secrets.MESHY_KEY2_API }}
           MESHY_KEY_ALT7: ${{ secrets.MESHY_SECOND_KEY }}
           MESHY_KEY_ALT8: ${{ secrets.MESHY_2 }}
+          MESHY_KEY3: ${{ secrets.MESHY_KEY3 }}
+          MESHY_KEY4: ${{ secrets.MESHY_KEY4 }}
+          MESHY_KEY5: ${{ secrets.MESHY_KEY5 }}
         run: python3 tools/meshy_api.py tools/meshy/request.json "$RUNNER_TEMP/out"
 
       - name: Publish to meshy-gen branch

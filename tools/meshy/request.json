@@ -1,79 +1,9 @@
 [
  {
-  "action": "image",
-  "account": "2",
-  "name": "unit_samurai",
-  "image": "tools/meshy/in/units/samurai.png",
-  "rig": true,
-  "height": 1.72,
-  "action_ids": [
-   89,
-   560,
-   240,
-   178,
-   189,
-   412
-  ],
-  "fps": 30
- },
- {
-  "action": "image",
-  "account": "2",
-  "name": "unit_shinobi",
-  "image": "tools/meshy/in/units/shinobi.png",
-  "rig": true,
-  "height": 1.68,
-  "action_ids": [
-   89,
-   21,
-   97,
-   178,
-   183,
-   59
-  ],
-  "fps": 30
- },
- {
-  "action": "image",
-  "account": "2",
-  "name": "unit_ronin",
-  "image": "tools/meshy/in/units/ronin.png",
-  "rig": true,
-  "height": 1.72,
-  "action_ids": [
-   89,
-   30,
-   219,
-   178,
-   188,
-   412
-  ],
-  "fps": 30
- },
- {
-  "action": "image",
-  "account": "2",
-  "name": "unit_hatamoto",
-  "image": "tools/meshy/in/units/hatamoto.png",
-  "rig": true,
-  "height": 1.82,
-  "action_ids": [
-   89,
-   21,
-   92,
-   178,
-   189,
-   412
-  ],
-  "fps": 30
- },
- {
-  "action": "image",
-  "account": "2",
+  "action": "animate",
+  "account": "3",
   "name": "unit_crimson",
-  "image": "tools/meshy/in/units/crimson.png",
-  "rig": true,
-  "height": 1.78,
+  "rig_task_id": "01a1f97d-491e-77ea-ab9d-192b4e15b2a6",
   "action_ids": [
    89,
    21,

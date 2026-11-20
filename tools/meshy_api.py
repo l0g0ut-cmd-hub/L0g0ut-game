@@ -22,6 +22,9 @@ KEYS = {"1": os.environ.get("MESHY_KEY", "").strip()}
 for _i in range(1, 9):   # второй аккаунт: первый заданный из запасных секретов
     _v = os.environ.get("MESHY_KEY_ALT%d" % _i, "").strip()
     if _v and "2" not in KEYS: KEYS["2"] = _v; KEYS["2name"] = "ALT%d" % _i
+for _n in ("3", "4", "5"):   # следующие аккаунты: секреты MESHY_KEY3, MESHY_KEY4, MESHY_KEY5
+    _v = os.environ.get("MESHY_KEY" + _n, "").strip()
+    if _v: KEYS[_n] = _v
 KEY = KEYS["1"]
 import hashlib as _h
 if KEYS.get("1") and KEYS.get("2"): print("ключи аккаунтов", "ОДИНАКОВЫЕ" if KEYS["1"] == KEYS["2"] else "разные", flush=True)
