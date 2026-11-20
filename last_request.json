@@ -1,28 +1,14 @@
 [
  {
-  "action": "animate",
+  "action": "rig",
   "account": "2",
-  "name": "anim_ashigaru",
-  "rig_task_id": "01a1ec0e-7b66-7728-996c-9bc0f78af220",
-  "action_ids": [
-   0,
-   560,
-   240,
-   178,
-   189,
-   412
-  ],
-  "fps": 30
- },
- {
-  "action": "animate",
-  "account": "2",
-  "name": "anim_bandit",
-  "rig_task_id": "01a1ec0a-ec97-7668-b491-713cc8b40db3",
+  "name": "anim_oni",
+  "model_url": "https://raw.githubusercontent.com/l0g0ut-cmd-hub/L0g0ut-game/bladepath-development/tools/models/meshy/oni.glb",
+  "height": 2.2,
   "action_ids": [
    89,
    21,
-   219,
+   92,
    178,
    187,
    403
@@ -30,14 +16,15 @@
   "fps": 30
  },
  {
-  "action": "animate",
+  "action": "rig",
   "account": "2",
-  "name": "anim_kitsune",
-  "rig_task_id": "01a1ec10-082d-7406-9dbe-706e85b12531",
+  "name": "anim_fallen",
+  "model_url": "https://raw.githubusercontent.com/l0g0ut-cmd-hub/L0g0ut-game/bladepath-development/tools/models/meshy/fallen.glb",
+  "height": 1.75,
   "action_ids": [
-   0,
+   89,
    30,
-   130,
+   219,
    178,
    188,
    412
@@ -45,10 +32,27 @@
   "fps": 30
  },
  {
-  "action": "animate",
+  "action": "rig",
   "account": "2",
-  "name": "anim_yamabushi",
-  "rig_task_id": "01a1ec0c-a1ac-71b3-9ee0-5bccd193032f",
+  "name": "anim_shadow",
+  "model_url": "https://raw.githubusercontent.com/l0g0ut-cmd-hub/L0g0ut-game/bladepath-development/tools/models/meshy/shadow.glb",
+  "height": 1.72,
+  "action_ids": [
+   89,
+   21,
+   97,
+   178,
+   189,
+   59
+  ],
+  "fps": 30
+ },
+ {
+  "action": "rig",
+  "account": "2",
+  "name": "anim_shogun",
+  "model_url": "https://raw.githubusercontent.com/l0g0ut-cmd-hub/L0g0ut-game/bladepath-development/tools/models/meshy/shogun.glb",
+  "height": 1.8,
   "action_ids": [
    89,
    30,
