@@ -1,0 +1,53 @@
+name: Meshy — найти ключи
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [meshy-probe]
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Balance per secret name
+        env:
+          K_MESHY_KEY: ${{ secrets.MESHY_KEY }}
+          K_MESHY_KEY2: ${{ secrets.MESHY_KEY2 }}
+          K_MESHY: ${{ secrets.MESHY }}
+          K_MESHY_TOKEN: ${{ secrets.MESHY_TOKEN }}
+          K_MESHY_API: ${{ secrets.MESHY_API }}
+          K_MESHY_API_KEY: ${{ secrets.MESHY_API_KEY }}
+          K_MESHY_API_KEY2: ${{ secrets.MESHY_API_KEY2 }}
+          K_MESHY_API_TOKEN: ${{ secrets.MESHY_API_TOKEN }}
+          K_MESHY_KEY_NEW: ${{ secrets.MESHY_KEY_NEW }}
+          K_MESHY_NEW: ${{ secrets.MESHY_NEW }}
+          K_MESHY_KEY3: ${{ secrets.MESHY_KEY3 }}
+          K_MESHY_KEY_2: ${{ secrets.MESHY_KEY_2 }}
+          K_MESHY2: ${{ secrets.MESHY2 }}
+          K_MESHY_2: ${{ secrets.MESHY_2 }}
+          K_MESHY2_KEY: ${{ secrets.MESHY2_KEY }}
+          K_MESHY_ACCOUNT2: ${{ secrets.MESHY_ACCOUNT2 }}
+          K_MESHY_SECOND: ${{ secrets.MESHY_SECOND }}
+          K_MESHY_KEY_SECOND: ${{ secrets.MESHY_KEY_SECOND }}
+          K_MESHY_SECOND_KEY: ${{ secrets.MESHY_SECOND_KEY }}
+          K_SECOND_MESHY_KEY: ${{ secrets.SECOND_MESHY_KEY }}
+          K_MESHY_PRO: ${{ secrets.MESHY_PRO }}
+          K_MESHY_KEY_PRO: ${{ secrets.MESHY_KEY_PRO }}
+          K_MESHYAI_KEY: ${{ secrets.MESHYAI_KEY }}
+          K_MESHY_AI_KEY: ${{ secrets.MESHY_AI_KEY }}
+          K_MESHY_AI: ${{ secrets.MESHY_AI }}
+          K_MESHY_KEY1: ${{ secrets.MESHY_KEY1 }}
+          K_MESHY_KEY_1: ${{ secrets.MESHY_KEY_1 }}
+          K_NEW_MESHY_KEY: ${{ secrets.NEW_MESHY_KEY }}
+          K_MESHY_KEY_2ND: ${{ secrets.MESHY_KEY_2ND }}
+          K_MESHY_SECRET: ${{ secrets.MESHY_SECRET }}
+        run: |
+          python3 - <<'PY'
+          import os, json, urllib.request, hashlib
+          for k, v in sorted(os.environ.items()):
+              if not k.startswith("K_") or not v.strip(): continue
+              req = urllib.request.Request("https://api.meshy.ai/openapi/v1/balance", headers={"Authorization": "Bearer " + v.strip()})
+              try: b = json.loads(urllib.request.urlopen(req, timeout=30).read()).get("balance")
+              except Exception as e: b = "ошибка " + str(e)[:60]
+              print("СЕКРЕТ", k[2:], "баланс", b, "отпечаток", hashlib.sha256(v.strip().encode()).hexdigest()[:6])
+          PY
