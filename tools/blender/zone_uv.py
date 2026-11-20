@@ -8,10 +8,11 @@
 import json as _json
 ZONE_OUT = os.environ.get('ZONE_OUT', 'out/Zones'); os.makedirs(ZONE_OUT, exist_ok=True)
 ALB = os.environ.get('ALBEDO', '')
-ZONES = ['face', 'hair', 'hands', 'feet', 'jacket', 'sleeves', 'belt', 'pants', 'wraps']
-RECT = {   # u0, v0, ширина, высота (v вверх)
-    'face': (0.0, 0.75, 0.25, 0.25), 'hair': (0.25, 0.75, 0.25, 0.25), 'hands': (0.5, 0.75, 0.25, 0.25), 'feet': (0.75, 0.75, 0.25, 0.25),
-    'jacket': (0.0, 0.25, 0.5, 0.5), 'sleeves': (0.5, 0.25, 0.5, 0.5),
+ZONES = ['face', 'hair', 'hands', 'feet', 'jacket', 'sleeves', 'belt', 'pants', 'wraps', 'skin']
+RECT = {   # u0, v0, ширина, высота (v вверх); лицо — самая большая зона (под фото), прямая проекция спереди
+    'face': (0.0, 0.625, 0.375, 0.375), 'skin': (0.375, 0.625, 0.25, 0.375), 'hair': (0.625, 0.625, 0.2, 0.375),
+    'hands': (0.825, 0.625, 0.175, 0.1875), 'feet': (0.825, 0.8125, 0.175, 0.1875),
+    'jacket': (0.0, 0.25, 0.5, 0.375), 'sleeves': (0.5, 0.25, 0.5, 0.375),
     'pants': (0.0, 0.0, 0.5, 0.25), 'wraps': (0.5, 0.0, 0.25, 0.25), 'belt': (0.75, 0.0, 0.25, 0.25),
 }
 me = body.data
@@ -48,6 +49,13 @@ else:
         else: zn = 'face' if warm and z > 1.35 else ('belt' if lum <= 0.33 and 0.95 < z < 1.12 else 'jacket')
         zone.append(zn)
     zone = np.array(zone)
+    # лицо — только спереди (±70° от направления взгляда) и выше подбородка; уши, шея, затылок — зона кожи
+    _hb = rig.data.bones['Head']; _hz = (rig.matrix_world @ _hb.head_local)[2]
+    _hm = V[dom == names.index('Head')]; _hx, _hy = float(np.median(_hm[:, 0])), float(np.median(_hm[:, 1]))
+    for f in np.where(zone == 'face')[0]:
+        q = V[LV[LS[f]:LS[f] + LT[f]]].mean(0)
+        a_ = math.degrees(math.atan2(q[0] - _hx, -(q[1] - _hy)))
+        if abs(a_) > 70 or q[2] < _hz - 0.03 * k: zone[f] = 'skin'
     log('ЗОНЫ: граней по зонам', {zn: int((zone == zn).sum()) for zn in ZONES})
     # новая развёртка: каждая зона — «труба» вокруг своей оси (тело, рука, нога, голова), перёд — в середине по горизонтали.
     # Так зона раскладывается одним куском, как выкройка: нарисованное на ней ложится на тело без мешанины кусочков.
@@ -59,7 +67,7 @@ else:
     FACE_SIDE = np.array([np.sign(V[LV[LS[f]:LS[f] + LT[f]], 0].mean() - cx) for f in range(npoly)])   # +1 — левая (+X)
     def axis_for(zn, sd):
         S = '.L' if sd > 0 else '.R'
-        if zn in ('face', 'hair'): return J('Head', True), J('Neck')
+        if zn in ('face', 'hair', 'skin'): return J('Head', True), J('Neck')
         if zn in ('jacket', 'belt'):
             top = J('Neck'); bot = J('Hips'); bot = np.array([top[0], top[1], bot[2] - 0.3 * k]); return top, bot
         if zn == 'sleeves': return J('UpperArm' + S), J('Hand' + S)
@@ -84,6 +92,8 @@ else:
             t = p @ d; r = p - np.outer(t, d)
             ang = np.arctan2(r @ side, r @ f_)
             u = 0.5 + ang / (2 * np.pi); vv = -t
+            if zn == 'face':   # прямо спереди, как фото: x — вбок, z — вверх
+                u = (r @ side); vv = -t
             # шов на спине: у граней, перешагнувших шов, малые u переносятся за 1
             pos = 0
             for arr in fl_list:
@@ -93,13 +103,15 @@ else:
             rad = float(np.median(np.linalg.norm(r, axis=1)))
             circ = 2 * np.pi * max(rad, 1e-3); height = max(float(vv.max() - vv.min()), 1e-3)
             uspan = max(float(u.max() - u.min()), 1e-6)
-            ux = (u - u.min()) / uspan * circ * uspan; vy = (vv - vv.min())   # в метрах: ширина по окружности, высота по оси
+            ux = (u - u.min()) * (1.0 if zn == 'face' else circ); vy = (vv - vv.min())
+            if zn == 'face': FACE_MAP = {'xmin': float(u.min()), 'zmin': float(vv.min())}   # в метрах: ширина по окружности, высота по оси
             u0, v0, w, h = RECT[zn]
             if zn in SPLIT: w = w * 0.5; u0 = u0 + (0.0 if sd > 0 else w)
             pad = 0.01
             sc_ = min((w - 2 * pad) / max(ux.max(), 1e-6), (h - 2 * pad) / max(vy.max(), 1e-6))
             ox = u0 + (w - ux.max() * sc_) * 0.5; oy = v0 + (h - vy.max() * sc_) * 0.5
             NUV[fl] = np.stack([ox + ux * sc_, oy + vy * sc_], 1)
+            if zn == 'face': FACE_MAP.update({'ox': float(ox), 'oy': float(oy), 'scale': float(sc_), 'hx': _hx, 'hz': float(_hz)})
     zl.data.foreach_set('uv', NUV.ravel())
     # запекание исходной текстуры в новую развёртку
     out_img = bpy.data.images.new(NAME + '_Zones', 2048, 2048, alpha=False)
@@ -125,5 +137,5 @@ else:
         l0 = LS[f]
         for t in range(1, LT[f] - 1):
             tris.append([ZONES.index(zone[f])] + [round(float(x), 5) for l in (l0, l0 + t, l0 + t + 1) for x in NUV[l]])
-    _json.dump({'zones': ZONES, 'rects': RECT, 'tris': tris}, open(os.path.join(ZONE_OUT, NAME + '_uv.json'), 'w'))
+    _json.dump({'zones': ZONES, 'rects': RECT, 'tris': tris, 'face_map': FACE_MAP if 'FACE_MAP' in dir() else None}, open(os.path.join(ZONE_OUT, NAME + '_uv.json'), 'w'))
     log('ЗОНЫ: готово —', os.path.join(ZONE_OUT, NAME + '_albedo.png'), 'треугольников', len(tris))
