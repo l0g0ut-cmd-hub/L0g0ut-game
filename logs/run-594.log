@@ -1,0 +1,1267 @@
+== uname
+Linux runnervm0hi8g 7.0.0-1020-azure #21-Ubuntu SMP PREEMPT Tue Oct 27 22:34:38 UTC 2026 x86_64 GNU/Linux
+== docker
+Client: Docker Engine - Community
+ Version:           29.4.2
+ API version:       1.54
+ Go version:        go1.26.2
+ Git commit:        055a478
+ Built:             Fri May  1 10:24:04 2026
+ OS/Arch:           linux/amd64
+ Context:           default
+
+Server: Docker Engine - Community
+ Engine:
+  Version:          29.4.2
+  API version:      1.54 (minimum version 1.40)
+  Go version:       go1.26.2
+  Git commit:       d329809
+  Built:            Fri May  1 10:24:04 2026
+  OS/Arch:          linux/amd64
+  Experimental:     false
+ containerd:
+  Version:          v2.4.2
+== df
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root       145G   60G   85G  42% /
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root       145G   38G  108G  26% /
+Downloading game-ci CLI v0.1.72 from https://github.com/game-ci/cli/releases/download/v0.1.72/game-ci-linux-x64.tar.gz
+Checksum verified (SHA256) for game-ci-linux-x64.tar.gz
+/home/runner/work/_temp/game-ci/bin/game-ci
+[INFO] Versioning strategy: None
+[INFO] Version of this build: none
+[INFO] Versioning strategy is set to none, so android version code should not be applied.
+[INFO] linux Android 6000.0.36f1
+::group::Unity build
+[WARN] running docker process for linux (linux)
+Unable to find image 'unityci/editor:ubuntu-6000.0.36f1-android-3' locally
+ubuntu-6000.0.36f1-android-3: Pulling from unityci/editor
+96c832531c38: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+46805e80f2d7: Pulling fs layer
+9a4d47d5aa13: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+bef3b93c3984: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+dc7a969c82d9: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+a1ff4bc3f481: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+e1e0763b8b7f: Pulling fs layer
+d3a5feebe29b: Pulling fs layer
+8d5d2a3e6b0f: Pulling fs layer
+a636358af2c8: Pulling fs layer
+8e578c7fd715: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+7bcf62982864: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+39cd9db1617e: Pulling fs layer
+d3a5feebe29b: Download complete
+8e578c7fd715: Download complete
+e1e0763b8b7f: Download complete
+7bcf62982864: Download complete
+39cd9db1617e: Download complete
+4f4fb700ef54: Download complete
+9a4d47d5aa13: Download complete
+bef3b93c3984: Download complete
+54e8aef068c6: Download complete
+a636358af2c8: Download complete
+a1ff4bc3f481: Download complete
+dc7a969c82d9: Download complete
+96c832531c38: Download complete
+46805e80f2d7: Download complete
+9a4d47d5aa13: Pull complete
+96c832531c38: Pull complete
+46805e80f2d7: Pull complete
+a1ff4bc3f481: Pull complete
+dc7a969c82d9: Pull complete
+d3a5feebe29b: Pull complete
+bef3b93c3984: Pull complete
+a636358af2c8: Pull complete
+8d5d2a3e6b0f: Download complete
+8e578c7fd715: Pull complete
+e1e0763b8b7f: Pull complete
+7bcf62982864: Pull complete
+4f4fb700ef54: Pull complete
+8d5d2a3e6b0f: Pull complete
+39cd9db1617e: Pull complete
+Digest: sha256:3c18892b45bbe8448d64330521b029a8bf7b733f2038ddf45b47440273c1f22a
+Status: Downloaded newer image for unityci/editor:ubuntu-6000.0.36f1-android-3
+Updating Android SDK with auto detected target API version
+grep: /github/workspace/./ProjectSettings/ProjectSettings.asset: No such file or directory
+Loading package information...                                                  
+Loading local repository...                                                     
+[                                       ] 3% Loading local repository...        
+[                                       ] 3% Fetch remote repository...         
+[=                                      ] 3% Fetch remote repository...         
+[=                                      ] 4% Fetch remote repository...         
+[=                                      ] 5% Fetch remote repository...         
+[==                                     ] 5% Fetch remote repository...         
+[==                                     ] 6% Fetch remote repository...         
+[==                                     ] 7% Fetch remote repository...         
+[==                                     ] 7% Computing updates...               
+[===                                    ] 8% Computing updates...               
+[===                                    ] 10% Computing updates...              
+Warning: Failed to find package 'platforms;android-'
+                                                                                
+[===                                    ] 10% Computing updates...              
+Updated Android SDK.
+Running as root
+GIT_CONFIG_EXTENSIONS unset skipping
+---------- git config --list -------------
+filter.lfs.clean=git-lfs clean -- %f
+filter.lfs.smudge=git-lfs smudge -- %f
+filter.lfs.process=git-lfs filter-process
+filter.lfs.required=true
+---------- git config --list --show-origin -------------
+file:/etc/gitconfig	filter.lfs.clean=git-lfs clean -- %f
+file:/etc/gitconfig	filter.lfs.smudge=git-lfs smudge -- %f
+file:/etc/gitconfig	filter.lfs.process=git-lfs filter-process
+file:/etc/gitconfig	filter.lfs.required=true
+GIT_PRIVATE_TOKEN unset skipping
+---------- git config --list -------------
+filter.lfs.clean=git-lfs clean -- %f
+filter.lfs.smudge=git-lfs smudge -- %f
+filter.lfs.process=git-lfs filter-process
+filter.lfs.required=true
+---------- git config --list --show-origin -------------
+file:/etc/gitconfig	filter.lfs.clean=git-lfs clean -- %f
+file:/etc/gitconfig	filter.lfs.smudge=git-lfs smudge -- %f
+file:/etc/gitconfig	filter.lfs.process=git-lfs filter-process
+file:/etc/gitconfig	filter.lfs.required=true
+Changing to "/github/workspace/_activate-license~" directory.
+/github/workspace/_activate-license~ /github/workspace
+Licensing method: personal
+Requesting activation (personal license via Unity account)
+Trying to activate all seats ...
+Activation processed successfully.
+
+Seat ID: 5774143681452-UnityPersonal
+Status: [200] ASSIGN_SEAT
+
+
+Trying to update entitlement license file ...
+Successfully updated UnityEntitlementLicense.xml!
+Activation complete.
+/github/workspace
+Using project path "/github/workspace/.".
+Using build name "BladePath".
+Using build target "Android".
+Doing a default "Android" platform build.
+Using build path "build/Android" to save file "BladePath.apk".
+Using build method "BladePath.EditorTools.BuildScript.BuildAndroid".
+
+###########################
+#    Custom parameters    #
+###########################
+
+
+
+###########################
+#    Current build dir    #
+###########################
+
+Creating "/github/workspace/build/Android" if it does not exist.
+total 8.0K
+drwxr-xr-x 2 root root 4.0K Nov 20 20:07 .
+drwxr-xr-x 3 1001 1001 4.0K Nov 20 20:07 ..
+
+###########################
+#    Project directory    #
+###########################
+
+total 192K
+drwxr-xr-x 13 1001 1001 4.0K Nov 20 20:07 .
+drwxr-xr-x  3 root root 4.0K Nov 20 20:07 ..
+drwxr-xr-x  3 1001 1001 4.0K Nov 20 20:03 .claude
+drwxr-xr-x  7 1001 1001 4.0K Nov 20 20:03 .git
+drwxr-xr-x  3 1001 1001 4.0K Nov 20 20:03 .github
+-rw-r--r--  1 1001 1001  305 Nov 20 20:03 .gitignore
+drwxr-xr-x  5 1001 1001 4.0K Nov 20 20:03 Assets
+drwxr-xr-x 14 1001 1001 4.0K Nov 20 19:22 Library
+drwxr-xr-x  2 1001 1001 4.0K Nov 20 20:03 Packages
+drwxr-xr-x  2 1001 1001 4.0K Nov 20 20:03 ProjectSettings
+-rw-r--r--  1 1001 1001  15K Nov 20 20:03 README.md
+-rw-r--r--  1 1001 1001 3.7K Nov 20 20:03 THIRD_PARTY_SOUNDS.md
+drwxr-xr-x  2 root root 4.0K Nov 20 20:07 _activate-license~
+-rw-r--r--  1 1001 1001 105K Nov 20 20:03 actions-log.txt
+drwxr-xr-x  3 1001 1001 4.0K Nov 20 20:07 build
+-rw-r--r--  1 1001 1001 4.6K Nov 20 20:03 codemagic.yaml
+drwxr-xr-x  2 1001 1001 4.0K Nov 20 20:03 docs
+drwxr-xr-x 12 1001 1001 4.0K Nov 20 20:03 tools
+
+###########################
+#    Building project     #
+###########################
+
+[UnityConnectServicesConfig] Local config successfully read: "/usr/share/unity3d/config/services-config.json"
+[UnityConnectServicesConfig] "clientConnectTimeoutSec" was overridden with "5"
+[UnityConnectServicesConfig] "clientHandshakeTimeoutSec" was overridden with "10"
+[UnityConnectServicesConfig] Service configuration:
+    "servicesConfigBaseUrl": "",
+    "disableServicesWindow": false,
+    "disableUserLogin": false,
+    "entitlementCacheTimeoutInSeconds": 60,
+    "clientConnectTimeoutSec": 5,
+    "clientHandshakeTimeoutSec": 10,
+    "clientResolveEntitlementsTimeoutSec": 30,
+    "clientUpdateLicenseTimeoutSec": 30,
+    "licensingServiceBaseUrl": "",
+    "enableProxyAutoconfig": "false"
+
+Unity Editor version:    6000.0.36f1 (9fe3b5f71dbb)
+Branch:                  6000.0/staging
+Build type:              Release
+Batch mode:              YES
+System name:             Linux
+Distro version:          #21-Ubuntu SMP PREEMPT Tue Oct 27 22:34:38 UTC 2026
+Kernel version:          7.0.0-1020-azure
+Architecture:            x86_64
+Available memory:        15983 MB
+[Licensing::Module] Trying to connect to existing licensing client channel...
+[Licensing::IpcConnector] Connection attempt to the License Client on channel: "LicenseClient-root" failed because channel doesn't exist; code: "0x80000002"
+[Licensing::Module] Successfully launched the LicensingClient (PId: 166)
+[Licensing::IpcConnector] Successfully connected to the License Client on channel: "LicenseClient-root" at "2026-11-20T20:07:37.018899Z"
+[SignatureVerifier] Application signature verification not supported on this platform.
+[Licensing::Client] Handshaking with LicensingClient:
+  Version:                 1.16.2+bdef8f5
+  Session Id:              8e6ab9e2e2624780a0fbe8aadcc7e71e
+  Correlation Id:          1c41ff6c355ef46067f067dd63c84cb6
+  External correlation Id: 2918074794221439294
+  Machine Id:              D7nTUnjNAmtsUMcnoyrqkgIbYdM=
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-root" (connect: 0.57s, validation: 0.06s, handshake: 0.00s)
+[Licensing::IpcConnector] Successfully connected to the License Notification on channel: "LicenseClient-root-notifications" at "2026-11-20T20:07:37.084048Z"
+[Licensing::Module] Connected to LicensingClient (PId: 166, launch time: 0.00, total connection time: 0.63s)
+[Licensing::Module] Error: Access token is unavailable; failed to update
+[Licensing::Client] Error: Code 500 while processing request (status: Unable to update licenses. Errors: No ULF license found.,Token not found in cache)
+[Licensing::Client] Error: Code 500 while updating license in client (status: Unable to update licenses. Errors: No ULF license found.,Token not found in cache)
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] Serial number assigned to: "5774143681452-UnityPersXXXX"
+Pro License: NO
+The selected window backend is (null) 
+Desktop is 1280 x 1024 @ 60 Hz
+Initialize udev device monitor.
+CreateDirectory '/root/.cache/unity3d' failed:  (current dir: /github/workspace)
+[Licensing::Client] Successfully resolved entitlement details
+
+COMMAND LINE ARGUMENTS:
+/opt/unity/Editor/Unity
+-batchmode
+-logfile
+/dev/stdout
+-quit
+-customBuildName
+BladePath
+-projectPath
+/github/workspace/.
+-buildTarget
+Android
+-customBuildTarget
+Android
+-customBuildPath
+/github/workspace/build/Android/BladePath.apk
+-customBuildProfile
+
+-executeMethod
+BladePath.EditorTools.BuildScript.BuildAndroid
+-buildVersion
+none
+-androidVersionCode
+0
+-androidKeystoreName
+
+-androidKeystorePass
+
+-androidKeyaliasName
+
+-androidKeyaliasPass
+
+-androidTargetSdkVersion
+
+-androidExportType
+androidPackage
+-androidSymbolType
+none
+Successfully changed project path to: /github/workspace/.
+
+(Unity:160): Gtk-CRITICAL **: 20:07:37.426: gtk_label_set_text: assertion 'GTK_IS_LABEL (label)' failed
+
+(Unity:160): Gtk-CRITICAL **: 20:07:37.427: gtk_label_set_text: assertion 'GTK_IS_LABEL (label)' failed
+/github/workspace
+[UnityMemory] Configuration Parameters - Can be set up in boot.config
+    "memorysetup-bucket-allocator-granularity=16"
+    "memorysetup-bucket-allocator-bucket-count=8"
+    "memorysetup-bucket-allocator-block-size=33554432"
+    "memorysetup-bucket-allocator-block-count=8"
+    "memorysetup-main-allocator-block-size=16777216"
+    "memorysetup-thread-allocator-block-size=16777216"
+    "memorysetup-gfx-main-allocator-block-size=16777216"
+    "memorysetup-gfx-thread-allocator-block-size=16777216"
+    "memorysetup-cache-allocator-block-size=4194304"
+    "memorysetup-typetree-allocator-block-size=2097152"
+    "memorysetup-profiler-bucket-allocator-granularity=16"
+    "memorysetup-profiler-bucket-allocator-bucket-count=8"
+    "memorysetup-profiler-bucket-allocator-block-size=33554432"
+    "memorysetup-profiler-bucket-allocator-block-count=8"
+    "memorysetup-profiler-allocator-block-size=16777216"
+    "memorysetup-profiler-editor-allocator-block-size=1048576"
+    "memorysetup-temp-allocator-size-main=16777216"
+    "memorysetup-job-temp-allocator-block-size=2097152"
+    "memorysetup-job-temp-allocator-block-size-background=1048576"
+    "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+    "memorysetup-allocator-temp-initial-block-size-main=262144"
+    "memorysetup-allocator-temp-initial-block-size-worker=262144"
+    "memorysetup-temp-allocator-size-background-worker=32768"
+    "memorysetup-temp-allocator-size-job-worker=262144"
+    "memorysetup-temp-allocator-size-preload-manager=33554432"
+    "memorysetup-temp-allocator-size-nav-mesh-worker=65536"
+    "memorysetup-temp-allocator-size-audio-worker=65536"
+    "memorysetup-temp-allocator-size-cloud-worker=32768"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gfx=262144"
+Player connection [139991118579008]  Target information:
+
+Player connection [139991118579008]  * "[IP] 172.17.0.2 [Port] 55504 [Flags] 2 [Guid] 4173022358 [EditorId] 4173022358 [Version] 1048832 [Id] LinuxEditor(16,172.17.0.2) [Debug] 1 [PackageName] LinuxEditor [ProjectName] Editor" 
+
+Player connection [139991118579008] Host joined multi-casting on [225.0.0.222:54997]...
+Player connection [139991118579008] Host joined alternative multi-casting on [225.0.0.222:34997]...
+Input System module state changed to: Initialized.
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+[Package Manager] Connected to IPC stream "Upm-160" after 0.2 seconds.
+Library Redirect Path: Library/
+[Package Manager] Restoring resolved packages state from cache
+[Licensing::Client] Successfully resolved entitlement details
+[Package Manager] Registered 38 packages:
+  Packages from [https://registry.npmjs.org]:
+    com.kyrylokuzyk.primetween@1.5.0 (location: /github/workspace/Library/PackageCache/com.kyrylokuzyk.primetween@425c7ceaa7d5)
+  Built-in packages:
+    com.unity.modules.accessibility@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.accessibility)
+    com.unity.modules.ai@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.ai)
+    com.unity.modules.androidjni@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.androidjni)
+    com.unity.modules.animation@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.animation)
+    com.unity.modules.assetbundle@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.assetbundle)
+    com.unity.modules.audio@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.audio)
+    com.unity.modules.cloth@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.cloth)
+    com.unity.modules.director@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.director)
+    com.unity.modules.hierarchycore@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.hierarchycore)
+    com.unity.modules.imageconversion@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.imageconversion)
+    com.unity.modules.imgui@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.imgui)
+    com.unity.modules.jsonserialize@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.jsonserialize)
+    com.unity.modules.particlesystem@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.particlesystem)
+    com.unity.modules.physics@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.physics)
+    com.unity.modules.physics2d@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.physics2d)
+    com.unity.modules.screencapture@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.screencapture)
+    com.unity.modules.subsystems@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.subsystems)
+    com.unity.modules.terrain@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.terrain)
+    com.unity.modules.terrainphysics@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.terrainphysics)
+    com.unity.modules.tilemap@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.tilemap)
+    com.unity.modules.ui@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.ui)
+    com.unity.modules.uielements@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.uielements)
+    com.unity.modules.umbra@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.umbra)
+    com.unity.modules.unityanalytics@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unityanalytics)
+    com.unity.modules.unitywebrequest@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequest)
+    com.unity.modules.unitywebrequestassetbundle@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequestassetbundle)
+    com.unity.modules.unitywebrequestaudio@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequestaudio)
+    com.unity.modules.unitywebrequesttexture@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequesttexture)
+    com.unity.modules.unitywebrequestwww@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequestwww)
+    com.unity.modules.vehicles@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.vehicles)
+    com.unity.modules.video@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.video)
+    com.unity.modules.vr@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.vr)
+    com.unity.modules.wind@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.wind)
+    com.unity.modules.xr@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.xr)
+  Git packages:
+    com.yasirkula.nativegallery@https://github.com/yasirkula/UnityNativeGallery.git (location: /github/workspace/Library/PackageCache/com.yasirkula.nativegallery@6fdfae306298)
+    com.yasirkula.nativeshare@https://github.com/yasirkula/UnityNativeShare.git (location: /github/workspace/Library/PackageCache/com.yasirkula.nativeshare@5f3680e2938f)
+    com.yasirkula.nativecamera@https://github.com/yasirkula/UnityNativeCamera.git (location: /github/workspace/Library/PackageCache/com.yasirkula.nativecamera@95f3f3a00777)
+[Physics::Module] Selected backend.
+[Physics::Module] Name: PhysX
+[Physics::Module] Id: 0xf2b8ea05
+[Physics::Module] SDK Version: 4.1.2
+[Physics::Module] Integration Version: 1.0.0
+[Physics::Module] Threading Mode: Multi-Threaded
+Unable to load player prefs
+[Subsystems] No new subsystems found in resolved package list.
+Package Manager log level set to [2]
+[Package Manager] Done registering packages in 0.06 seconds
+[Package Manager] Done resolving packages in 1.48 seconds
+[Package Manager] Lock file was created
+[Package Manager] Registered 38 packages:
+  Packages from [https://registry.npmjs.org]:
+    com.kyrylokuzyk.primetween@1.5.0 (location: /github/workspace/Library/PackageCache/com.kyrylokuzyk.primetween@425c7ceaa7d5)
+  Built-in packages:
+    com.unity.modules.accessibility@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.accessibility)
+    com.unity.modules.ai@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.ai)
+    com.unity.modules.androidjni@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.androidjni)
+    com.unity.modules.animation@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.animation)
+    com.unity.modules.assetbundle@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.assetbundle)
+    com.unity.modules.audio@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.audio)
+    com.unity.modules.cloth@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.cloth)
+    com.unity.modules.director@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.director)
+    com.unity.modules.hierarchycore@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.hierarchycore)
+    com.unity.modules.imageconversion@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.imageconversion)
+    com.unity.modules.imgui@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.imgui)
+    com.unity.modules.jsonserialize@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.jsonserialize)
+    com.unity.modules.particlesystem@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.particlesystem)
+    com.unity.modules.physics@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.physics)
+    com.unity.modules.physics2d@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.physics2d)
+    com.unity.modules.screencapture@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.screencapture)
+    com.unity.modules.subsystems@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.subsystems)
+    com.unity.modules.terrain@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.terrain)
+    com.unity.modules.terrainphysics@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.terrainphysics)
+    com.unity.modules.tilemap@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.tilemap)
+    com.unity.modules.ui@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.ui)
+    com.unity.modules.uielements@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.uielements)
+    com.unity.modules.umbra@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.umbra)
+    com.unity.modules.unityanalytics@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unityanalytics)
+    com.unity.modules.unitywebrequest@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequest)
+    com.unity.modules.unitywebrequestassetbundle@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequestassetbundle)
+    com.unity.modules.unitywebrequestaudio@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequestaudio)
+    com.unity.modules.unitywebrequesttexture@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequesttexture)
+    com.unity.modules.unitywebrequestwww@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequestwww)
+    com.unity.modules.vehicles@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.vehicles)
+    com.unity.modules.video@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.video)
+    com.unity.modules.vr@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.vr)
+    com.unity.modules.wind@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.wind)
+    com.unity.modules.xr@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.xr)
+  Git packages:
+    com.yasirkula.nativegallery@https://github.com/yasirkula/UnityNativeGallery.git (location: /github/workspace/Library/PackageCache/com.yasirkula.nativegallery@6fdfae306298)
+    com.yasirkula.nativeshare@https://github.com/yasirkula/UnityNativeShare.git (location: /github/workspace/Library/PackageCache/com.yasirkula.nativeshare@5f3680e2938f)
+    com.yasirkula.nativecamera@https://github.com/yasirkula/UnityNativeCamera.git (location: /github/workspace/Library/PackageCache/com.yasirkula.nativecamera@95f3f3a00777)
+[Subsystems] No new subsystems found in resolved package list.
+[Package Manager] Done registering packages in 0.00 seconds
+Artifact Garbage Collection - Removed 90 unused hashed content files[Licensing::Client] Successfully resolved entitlement details
+Targeting platform: Android
+Refreshing native plugins compatible for Editor in 1.13 ms, found 0 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Initialize engine version: 6000.0.36f1 (9fe3b5f71dbb)
+[Subsystems] Discovering subsystems at path /opt/unity/Editor/Data/Resources/UnitySubsystems
+[Subsystems] Discovering subsystems at path /github/workspace/Assets
+kGfxThreadingModeNonThreaded is not supported on OpenGL Core. Reverting to kGfxThreadingModeDirect instead.
+GfxDevice: creating device client; kGfxThreadingModeDirect
+GLX Extensions: GLX_ARB_context_flush_control GLX_ARB_create_context GLX_ARB_create_context_no_error GLX_ARB_create_context_profile GLX_ARB_fbconfig_float GLX_ARB_framebuffer_sRGB GLX_ARB_get_proc_address GLX_ARB_multisample GLX_EXT_create_context_es2_profile GLX_EXT_create_context_es_profile GLX_EXT_fbconfig_packed_float GLX_EXT_framebuffer_sRGB GLX_EXT_no_config_context GLX_EXT_texture_from_pixmap GLX_EXT_visual_info GLX_EXT_visual_rating GLX_MESA_copy_sub_buffer GLX_MESA_query_renderer GLX_OML_swap_method GLX_SGIS_multisample GLX_SGIX_fbconfig GLX_SGIX_pbuffer GLX_SGIX_visual_select_group GLX_SGI_make_current_read 
+Renderer: llvmpipe (LLVM 15.0.7, 256 bits)
+Vendor:   Mesa
+Version:  4.5 (Core Profile) Mesa 23.2.1-1ubuntu3.1~22.04.3
+GLES:     0
+ GL_3DFX_texture_compression_FXT1 GL_AMD_conservative_depth GL_AMD_draw_buffers_blend GL_AMD_gpu_shader_int64 GL_AMD_multi_draw_indirect GL_AMD_pinned_memory GL_AMD_query_buffer_object GL_AMD_seamless_cubemap_per_texture GL_AMD_shader_stencil_export GL_AMD_shader_trinary_minmax GL_AMD_texture_texture4 GL_AMD_vertex_shader_layer GL_AMD_vertex_shader_viewport_index GL_ANGLE_texture_compression_dxt3 GL_ANGLE_texture_compression_dxt5 GL_ARB_ES2_compatibility GL_ARB_ES3_1_compatibility GL_ARB_ES3_2_compatibility GL_ARB_ES3_compatibility GL_ARB_arrays_of_arrays GL_ARB_base_instance GL_ARB_blend_func_extended GL_ARB_buffer_storage GL_ARB_clear_buffer_object GL_ARB_clear_texture GL_ARB_clip_control GL_ARB_compressed_texture_pixel_storage GL_ARB_compute_shader GL_ARB_conditional_render_inverted GL_ARB_conservative_depth GL_ARB_copy_buffer GL_ARB_copy_image GL_ARB_cull_distance GL_ARB_debug_output GL_ARB_depth_buffer_float GL_ARB_depth_clamp GL_ARB_derivative_control GL_ARB_direct_state_access GL_ARB_draw_buffers GL_A
+RB_draw_buffers_blend GL_ARB_draw_elements_base_vertex GL_ARB_draw_indirect GL_ARB_draw_instanced GL_ARB_enhanced_layouts GL_ARB_explicit_attrib_location GL_ARB_explicit_uniform_location GL_ARB_fragment_coord_conventions GL_ARB_fragment_layer_viewport GL_ARB_fragment_shader GL_ARB_framebuffer_no_attachments GL_ARB_framebuffer_object GL_ARB_framebuffer_sRGB GL_ARB_get_program_binary GL_ARB_get_texture_sub_image GL_ARB_gl_spirv GL_ARB_gpu_shader5 GL_ARB_gpu_shader_fp64 GL_ARB_gpu_shader_int64 GL_ARB_half_float_pixel GL_ARB_half_float_vertex GL_ARB_indirect_parameters GL_ARB_instanced_arrays GL_ARB_internalformat_query GL_ARB_internalformat_query2 GL_ARB_invalidate_subdata GL_ARB_map_buffer_alignment GL_ARB_map_buffer_range GL_ARB_multi_bind GL_ARB_multi_draw_indirect GL_ARB_occlusion_query2 GL_ARB_parallel_shader_compile GL_ARB_pipeline_statistics_query GL_ARB_pixel_buffer_object GL_ARB_point_sprite GL_ARB_polygon_offset_clamp GL_ARB_post_depth_coverage GL_ARB_program_interface_query GL_ARB_provoking_vertex GL
+_ARB_query_buffer_object GL_ARB_robust_buffer_access_behavior GL_ARB_robustness GL_ARB_sample_shading GL_ARB_sampler_objects GL_ARB_seamless_cube_map GL_ARB_seamless_cubemap_per_texture GL_ARB_separate_shader_objects GL_ARB_shader_atomic_counter_ops GL_ARB_shader_atomic_counters GL_ARB_shader_ballot GL_ARB_shader_bit_encoding GL_ARB_shader_clock GL_ARB_shader_draw_parameters GL_ARB_shader_group_vote GL_ARB_shader_image_load_store GL_ARB_shader_image_size GL_ARB_shader_objects GL_ARB_shader_precision GL_ARB_shader_stencil_export GL_ARB_shader_storage_buffer_object GL_ARB_shader_subroutine GL_ARB_shader_texture_image_samples GL_ARB_shader_texture_lod GL_ARB_shader_viewport_layer_array GL_ARB_shading_language_420pack GL_ARB_shading_language_include GL_ARB_shading_language_packing GL_ARB_spirv_extensions GL_ARB_stencil_texturing GL_ARB_sync GL_ARB_tessellation_shader GL_ARB_texture_barrier GL_ARB_texture_buffer_object GL_ARB_texture_buffer_object_rgb32 GL_ARB_texture_buffer_range GL_ARB_texture_compression_bptc 
+GL_ARB_texture_compression_rgtc GL_ARB_texture_cube_map_array GL_ARB_texture_filter_anisotropic GL_ARB_texture_filter_minmax GL_ARB_texture_float GL_ARB_texture_gather GL_ARB_texture_mirror_clamp_to_edge GL_ARB_texture_multisample GL_ARB_texture_non_power_of_two GL_ARB_texture_query_levels GL_ARB_texture_query_lod GL_ARB_texture_rectangle GL_ARB_texture_rg GL_ARB_texture_rgb10_a2ui GL_ARB_texture_stencil8 GL_ARB_texture_storage GL_ARB_texture_storage_multisample GL_ARB_texture_swizzle GL_ARB_texture_view GL_ARB_timer_query GL_ARB_transform_feedback2 GL_ARB_transform_feedback3 GL_ARB_transform_feedback_instanced GL_ARB_transform_feedback_overflow_query GL_ARB_uniform_buffer_object GL_ARB_vertex_array_bgra GL_ARB_vertex_array_object GL_ARB_vertex_attrib_64bit GL_ARB_vertex_attrib_binding GL_ARB_vertex_buffer_object GL_ARB_vertex_shader GL_ARB_vertex_type_10f_11f_11f_rev GL_ARB_vertex_type_2_10_10_10_rev GL_ARB_viewport_array GL_ARM_shader_framebuffer_fetch_depth_stencil GL_ATI_blend_equation_separate GL_ATI_me
+minfo GL_ATI_texture_float GL_ATI_texture_mirror_once GL_EXT_EGL_image_storage GL_EXT_EGL_sync GL_EXT_abgr GL_EXT_blend_equation_separate GL_EXT_debug_label GL_EXT_draw_buffers2 GL_EXT_draw_instanced GL_EXT_framebuffer_blit GL_EXT_framebuffer_multisample GL_EXT_framebuffer_multisample_blit_scaled GL_EXT_framebuffer_object GL_EXT_framebuffer_sRGB GL_EXT_memory_object GL_EXT_memory_object_fd GL_EXT_packed_depth_stencil GL_EXT_packed_float GL_EXT_pixel_buffer_object GL_EXT_polygon_offset_clamp GL_EXT_provoking_vertex GL_EXT_shader_framebuffer_fetch GL_EXT_shader_framebuffer_fetch_non_coherent GL_EXT_shader_integer_mix GL_EXT_texture_array GL_EXT_texture_compression_dxt1 GL_EXT_texture_compression_rgtc GL_EXT_texture_compression_s3tc GL_EXT_texture_filter_anisotropic GL_EXT_texture_filter_minmax GL_EXT_texture_integer GL_EXT_texture_mirror_clamp GL_EXT_texture_sRGB GL_EXT_texture_sRGB_R8 GL_EXT_texture_sRGB_RG8 GL_EXT_texture_sRGB_decode GL_EXT_texture_shadow_lod GL_EXT_texture_shared_exponent GL_EXT_texture_sno
+rm GL_EXT_texture_swizzle GL_EXT_timer_query GL_EXT_transform_feedback GL_EXT_vertex_array_bgra GL_EXT_vertex_attrib_64bit GL_IBM_multimode_draw_arrays GL_INTEL_shader_atomic_float_minmax GL_KHR_blend_equation_advanced GL_KHR_blend_equation_advanced_coherent GL_KHR_context_flush_control GL_KHR_debug GL_KHR_no_error GL_KHR_parallel_shader_compile GL_KHR_robust_buffer_access_behavior GL_KHR_robustness GL_KHR_texture_compression_astc_ldr GL_KHR_texture_compression_astc_sliced_3d GL_MESA_framebuffer_flip_y GL_MESA_pack_invert GL_MESA_shader_integer_functions GL_MESA_texture_signed_rgba GL_MESA_ycbcr_texture GL_NVX_gpu_memory_info GL_NV_conditional_render GL_NV_copy_image GL_NV_depth_clamp GL_NV_packed_depth_stencil GL_NV_shader_atomic_float GL_NV_texture_barrier GL_OES_EGL_image GL_S3_s3tc
+OPENGL LOG: Creating OpenGL 4.5 graphics device ; Context level  <OpenGL 4.5> ; Context handle -1350928896
+[Licensing::Client] Successfully resolved entitlement details
+Initialize mono
+Mono path[0] = '/opt/unity/Editor/Data/Managed'
+Mono path[1] = '/opt/unity/Editor/Data/MonoBleedingEdge/lib/mono/unityjit-linux'
+Mono config path = '/opt/unity/Editor/Data/MonoBleedingEdge/etc'
+Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56160
+Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
+Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
+ImportWorker Server TCP listen port: 0
+AcceleratorClientConnectionCallback - disconnected - :0
+Begin MonoManager ReloadAssembly
+Registering precompiled unity dll's ...
+Register platform support module: /opt/unity/Editor/Data/PlaybackEngines/AndroidPlayer/UnityEditor.Android.Extensions.dll
+Register platform support module: /opt/unity/Editor/Data/PlaybackEngines/LinuxStandaloneSupport/UnityEditor.LinuxStandalone.Extensions.dll
+Registered in 0.005518 seconds.
+- Loaded All Assemblies, in  0.546 seconds
+Native extension for LinuxStandalone target not found
+Native extension for Android target not found
+Android Extension - Scanning For ADB Devices 102 ms
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  0.714 seconds
+Domain Reload Profiling: 1260ms
+	BeginReloadAssembly (214ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (0ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (1ms)
+	RebuildCommonClasses (51ms)
+	RebuildNativeTypeToScriptingClass (10ms)
+	initialDomainReloadingComplete (74ms)
+	LoadAllAssembliesAndSetupDomain (197ms)
+		LoadAssemblies (213ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (191ms)
+			TypeCache.Refresh (189ms)
+				TypeCache.ScanAssembly (172ms)
+			BuildScriptInfoCaches (0ms)
+			ResolveRequiredComponents (1ms)
+	FinalizeReload (715ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (665ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (271ms)
+			SetLoadedEditorAssemblies (5ms)
+			BeforeProcessingInitializeOnLoad (79ms)
+			ProcessInitializeOnLoadAttributes (234ms)
+			ProcessInitializeOnLoadMethodAttributes (75ms)
+			AfterProcessingInitializeOnLoad (0ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (0ms)
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Client] Successfully resolved entitlement details
+Application.AssetDatabase Initial Refresh Start
+[ScriptCompilation] Requested script compilation because: Assetdatabase observed changes in script compilation related files
+[40m[32minfo[39m[22m[49m: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://unix:/tmp/ilpp.sock-f07a9074cf124f978827f2e08a2ba3a4
+[40m[32minfo[39m[22m[49m: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+[40m[32minfo[39m[22m[49m: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+[40m[32minfo[39m[22m[49m: Microsoft.Hosting.Lifetime[0]
+      Content root path: /github/workspace/
+[40m[32minfo[39m[22m[49m: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/Ping application/grpc -
+[40m[32minfo[39m[22m[49m: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'gRPC - /UnityILPP.PostProcessing/Ping'
+[40m[32minfo[39m[22m[49m: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'gRPC - /UnityILPP.PostProcessing/Ping'
+[40m[32minfo[39m[22m[49m: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/Ping application/grpc - - 200 - application/grpc 67.1461ms
+Starting: /opt/unity/Editor/Data/bee_backend --dont-print-to-structured-log --ipc --defer-dag-verification --dagfile="Library/Bee/1300b0aE.dag" --continue-on-failure --profile="Library/Bee/backend1.traceevents" ScriptAssemblies
+WorkingDir: /github/workspace
+DisplayProgressbar: Compiling Scripts
+ExitCode: 0 Duration: 6s281ms
+[198/204    5s] Csc Library/Bee/artifacts/1300b0aE.dag/Assembly-CSharp.dll (+2 others)
+Assets/_Project/Scripts/Game/Juice.cs(482,13): warning CS0162: Unreachable code detected
+Assets/_Project/Scripts/Game/Juice.cs(498,13): warning CS0162: Unreachable code detected
+Assets/_Project/Scripts/Game/Juice.cs(512,44): warning CS0219: The variable 'low' is assigned but its value is never used
+Assets/_Project/Scripts/Game/MapLife.cs(350,19): warning CS0219: The variable 'd0' is assigned but its value is never used
+Assets/_Project/Scripts/Game/Juice.cs(2059,28): warning CS0219: The variable 'bp' is assigned but its value is never used
+Assets/_Project/Scripts/Game/Juice.cs(2059,37): warning CS0219: The variable 'lo' is assigned but its value is never used
+Assets/_Project/Scripts/Game/Weather.cs(56,25): warning CS0414: The field 'Weather.ambBaseK' is assigned but its value is never used
+[199/204    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp.pdb
+[200/204    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp.dll
+[201/204    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Assembly-CSharp-Editor.dll (+2 others)
+[202/204    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp-Editor.pdb
+[203/204    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp-Editor.dll
+*** Tundra build success (6.25 seconds), 6 items updated, 204 evaluated
+Total cache size 0
+Total cache size after purge 0, took 00:00:00.0059489
+Assets/_Project/Scripts/Game/Juice.cs(482,13): warning CS0162: Unreachable code detected
+Assets/_Project/Scripts/Game/Juice.cs(498,13): warning CS0162: Unreachable code detected
+Assets/_Project/Scripts/Game/Juice.cs(512,44): warning CS0219: The variable 'low' is assigned but its value is never used
+Assets/_Project/Scripts/Game/MapLife.cs(350,19): warning CS0219: The variable 'd0' is assigned but its value is never used
+Assets/_Project/Scripts/Game/Juice.cs(2059,28): warning CS0219: The variable 'bp' is assigned but its value is never used
+Assets/_Project/Scripts/Game/Juice.cs(2059,37): warning CS0219: The variable 'lo' is assigned but its value is never used
+Assets/_Project/Scripts/Game/Weather.cs(56,25): warning CS0414: The field 'Weather.ambBaseK' is assigned but its value is never used
+AssetDatabase: script compilation time: 7.092229s
+Begin MonoManager ReloadAssembly
+- Loaded All Assemblies, in  0.387 seconds
+Start importing ProjectSettings/ProjectSettings.asset using Guid(00000000000000004000000000000000) (LibraryAssetImporter) -> (artifact id: '67383b6fe915b1707eee96f6794aef6b') in 0.027046175 seconds
+Start importing ProjectSettings/DynamicsManager.asset using Guid(00000000000000008000000000000000) (LibraryAssetImporter) -> (artifact id: '1fe601a3892f0714bfc608f554405352') in 0.001327159 seconds
+Start importing ProjectSettings/QualitySettings.asset using Guid(00000000000000009000000000000000) (LibraryAssetImporter) -> (artifact id: 'd061689c56213398e4149c0e09cfc3a0') in 0.001400285 seconds
+Start importing ProjectSettings/EditorBuildSettings.asset using Guid(0000000000000000b000000000000000) (LibraryAssetImporter) -> (artifact id: '1923232d45cb936aef47cec131f33975') in 0.00109197 seconds
+Start importing Assets/_Project using Guid(36033d9b5af6032a5b020e8b2ccb976d) (DefaultImporter) -> (artifact id: '820450e51d0681e4816375d386cfacd2') in 0.009136234 seconds
+Start importing Assets/StreamingAssets using Guid(2991ca1fbbb2457b1a7655edbbc4937f) (DefaultImporter) -> (artifact id: 'eb14d61ca596262c651c96c3201e3123') in 0.001350151 seconds
+Start importing Assets/Resources using Guid(9e97f577bd8f0682abcb439c9ecc62e9) (DefaultImporter) -> (artifact id: '479744a62a5035686aed01e917d95eba') in 0.001203758 seconds
+Start importing Assets/Resources/UI using Guid(235a98b071e57927681315ef458c891b) (DefaultImporter) -> (artifact id: '897c1511bc8411ac4aef1c35f2027fca') in 0.00124171 seconds
+Start importing Assets/_Project/Scripts using Guid(64ed906f56ac567d4bbbf3e6dd58bb57) (DefaultImporter) -> (artifact id: '766075cc21a603da6b47a95c83d5de5f') in 0.001253311 seconds
+Start importing Assets/_Project/Shaders using Guid(c4009bdb7d4061abb9358a959d9f6513) (DefaultImporter) -> (artifact id: 'd9fdbc445376c732c143b50fc9f7eaa7') in 0.001165828 seconds
+Start importing Assets/_Project/Resources using Guid(595e2bf608f941d1eb30036c20557325) (DefaultImporter) -> (artifact id: 'ac16a12ab12f3f2db00584fc632b8254') in 0.001154607 seconds
+Start importing Assets/_Project/Art using Guid(c94fcd4606c4ad804bffc8671924a412) (DefaultImporter) -> (artifact id: '518714d1d0684960b2e9e43c6db6766a') in 0.001266395 seconds
+Start importing Assets/_Project/Models using Guid(7d91c7f66ae3ae6e68f4838b32ec4859) (DefaultImporter) -> (artifact id: 'eb84deec4bba49555f9e3b50db5e59e0') in 0.001167712 seconds
+Start importing Assets/Resources/FX using Guid(5fe7a32194af3bd39a04e01556f87e9f) (DefaultImporter) -> (artifact id: '04f74046ea01dc76dc3c4c140cfc0b95') in 0.001297343 seconds
+Start importing Assets/_Project/Resources/UI using Guid(001106b32fe58ce4f8d64dfee74f9f78) (DefaultImporter) -> (artifact id: '4d96b78d1865a2c178ca59da0c34ba24') in 0.001371792 seconds
+Start importing Assets/_Project/Models/Props using Guid(00dcdf93b4d869b42b48e1b2a7fd25dd) (DefaultImporter) -> (artifact id: '20ef0aa14b6e69247dd44fef00af78f4') in 0.001500152 seconds
+Start importing Assets/_Project/Art/Samurai2 using Guid(c06219a6afbeba9fc9fe2071b8b2bf8b) (DefaultImporter) -> (artifact id: 'f7a03669a720ab4084e6ab7194d36236') in 0.001543793 seconds
+Start importing Assets/_Project/Art/BaseMale using Guid(d007d96a15318eff191c24b216af5b7a) (DefaultImporter) -> (artifact id: '3d7686e407bd4a5b104bf27ffbba9bf5') in 0.001504269 seconds
+Start importing Assets/_Project/Art/Dzin using Guid(d0bebcf9f0d5eb925bc8eb197931e738) (DefaultImporter) -> (artifact id: '57095035af53c336830a8aae1fe509b2') in 0.00153104 seconds
+Start importing Assets/_Project/Resources/Shaders using Guid(f0c622e190e0e64588398f496bf25f77) (DefaultImporter) -> (artifact id: 'e8261581e77c91e5f1aa049c121577e4') in 0.001500152 seconds
+Start importing Assets/_Project/Art/Akiko using Guid(71968e4827cc156048e8535c9998a654) (DefaultImporter) -> (artifact id: '1c648a16e806c19a8a52d5fcbb2a8fe2') in 0.001452322 seconds
+Start importing Assets/_Project/Resources/Audio using Guid(9152202ee9696cee287d7ab5eb783f5b) (DefaultImporter) -> (artifact id: '523045c36cf13907f175875574490296') in 0.001572086 seconds
+Start importing Assets/_Project/Resources/Maps using Guid(a38079bb41e27a78b9f0fb1d48f2cbf8) (DefaultImporter) -> (artifact id: '0e4e1d0bb0075b88f377e44791cdebb0') in 0.001357295 seconds
+Start importing Assets/_Project/Art/Shadow using Guid(c3454356805a87d41a222e19ceeee983) (DefaultImporter) -> (artifact id: '4f09f6a405bf396f941108643068189f') in 0.001512905 seconds
+Start importing Assets/_Project/Scripts/Core using Guid(243aeb2173bcf892ba871844037f7b92) (DefaultImporter) -> (artifact id: 'e1177073a5ce5bd6a348ae24b85c74ee') in 0.001421174 seconds
+Start importing Assets/_Project/Art/Shogun using Guid(b463551a87f568575ad678fafb7a0998) (DefaultImporter) -> (artifact id: '8f8dd60a6e1627f1836a1ec77159760b') in 0.001507255 seconds
+Start importing Assets/_Project/Resources/Fonts using Guid(e4641e790a5555642a3c95e6c02fc67c) (DefaultImporter) -> (artifact id: 'c0f0ab46f73237b9b3395493307a333a') in 0.001401327 seconds
+Start importing Assets/_Project/Art/Yamabushi using Guid(75cf54ebef462c14092d4573a3f79ad4) (DefaultImporter) -> (artifact id: 'fc1b05720eb0b16299e0a0e1eb4f5dc3') in 0.001401408 seconds
+Start importing Assets/Resources/UI/pack02 using Guid(06b4e77fe74d1df33890d7840f2b0df3) (DefaultImporter) -> (artifact id: '885e1696390bc767e3d103134c94ee66') in 0.001346655 seconds
+Start importing Assets/_Project/Models/Shogun using Guid(264b4239c7905e0969a4e69f44be0fd3) (DefaultImporter) -> (artifact id: '86356880a5777d81fe32fc926e08e1e4') in 0.00139782 seconds
+Start importing Assets/_Project/Scripts/Fighter using Guid(17bd0dc0210b1dde3bc3658762b52478) (DefaultImporter) -> (artifact id: '06d8fe20425dfa3d0f214a42303269c7') in 0.001437245 seconds
+Start importing Assets/_Project/Art/BaseFemale using Guid(27309f75257eccd4ba7f533bff8135b7) (DefaultImporter) -> (artifact id: '368d2cb29f1ac878549ad4f9d86a1a26') in 0.001383975 seconds
+Start importing Assets/_Project/Resources/Units using Guid(27feedcf42627e203ab4c4c0948c4af3) (DefaultImporter) -> (artifact id: '786594284ea165c6e4bb15aeaf9eb449') in 0.001396237 seconds
+Start importing Assets/_Project/Models/Arenas using Guid(b8d91abb081db0fef923f19fc4cc3272) (DefaultImporter) -> (artifact id: '0c92d80865eb6feead6eac15d6e152a1') in 0.001302743 seconds
+Start importing Assets/_Project/Resources/Accessories using Guid(89f4f4ae6d883080098afb3ff3a15388) (DefaultImporter) -> (artifact id: '267f0ee392abeab819b430f6232dbdf0') in 0.001325275 seconds
+Start importing Assets/_Project/Resources/FX using Guid(c9c815aa9cee00314a43d655ec4ea1db) (DefaultImporter) -> (artifact id: '2d1bd104f9134b9d1493bc5a44a2b721') in 0.001191125 seconds
+Start importing Assets/_Project/Scripts/Menu using Guid(e982ba5dd9bebea4291746eabf0b08c9) (DefaultImporter) -> (artifact id: '6a4462c118bb1c30635737f8a4a3dada') in 0.001331707 seconds
+Start importing Assets/_Project/Art/Fallen using Guid(7a2d615ac978c6e3d8bfe571b8900b7c) (DefaultImporter) -> (artifact id: 'cbe14363c8dfa5ad14fdf257c8844457') in 0.00137095 seconds
+Start importing Assets/_Project/Art/Bandit using Guid(7bf1521cf4c8759bdaced97ae0eaf39a) (DefaultImporter) -> (artifact id: '0f6b279d7853a1ab86c761867defb919') in 0.001499932 seconds
+Start importing Assets/_Project/Models/OniWarrior using Guid(7baf1589ce8e7b2689097a039ee99fa3) (DefaultImporter) -> (artifact id: '3ac1305463c2acdaf9af0d880dca7e1e') in 0.001394715 seconds
+Start importing Assets/_Project/Art/Textures using Guid(fbd1dd05f52e7211b840868a37abe7f3) (DefaultImporter) -> (artifact id: 'eefe4bfc5d868f65e86db6ff4a6f6d40') in 0.001450169 seconds
+Start importing Assets/_Project/Scripts/Combat using Guid(2ce98fdcaf35734339aa047ab464c7e0) (DefaultImporter) -> (artifact id: '72984e4b5e87c0105a635c39a848349d') in 0.001452353 seconds
+Start importing Assets/_Project/Resources/Characters using Guid(2d6ddaed7f48565b4b3d4a86999e09fc) (DefaultImporter) -> (artifact id: '2690730522db21e4cef9a38bd13e817e') in 0.001411947 seconds
+Start importing Assets/_Project/Scripts/Input using Guid(4d11321782f01bb77a1390c808933753) (DefaultImporter) -> (artifact id: 'a5f3c0fd3a128a71d9a3c3e7fffc0879') in 0.001292303 seconds
+Start importing Assets/_Project/Art/Hero3 using Guid(5d7f9a981e9338ce6b95e818ce4067d2) (DefaultImporter) -> (artifact id: '8bc2ed8c166359a3ce94cacf0b4eb58a') in 0.001305999 seconds
+Start importing Assets/_Project/Scripts/Game using Guid(9d1879c3ad90c0e44ab00307c369d389) (DefaultImporter) -> (artifact id: '7fe728a744fb64d6b50dbe4e8d412245') in 0.001588066 seconds
+Start importing Assets/_Project/Models/ShadowAssassin using Guid(bd442705e38978161b23b31eab278663) (DefaultImporter) -> (artifact id: 'b47d223c4ebc8a8defb758026a035aa8') in 0.001579871 seconds
+Start importing Assets/_Project/Art/Ren using Guid(ed8af5b078d91b9e5b592e3b2766bbdd) (DefaultImporter) -> (artifact id: '2a1ec67a52e8bfdb2067117efbfe2410') in 0.001338159 seconds
+Start importing Assets/_Project/Art/Kitsune using Guid(be5c88f6c8f8f6ad997e75482b48f725) (DefaultImporter) -> (artifact id: '025f7ada5099f0bfbc1d63012dc7ec44') in 0.001268139 seconds
+Start importing Assets/_Project/Scripts/Weapon using Guid(ee276932958fda9e6988cdaec5f31d9d) (DefaultImporter) -> (artifact id: '0471da787ee05d8c4ac19c438fdca33b') in 0.001391519 seconds
+Start importing Assets/_Project/Art/Oni using Guid(1fde1cefb4f5d922dbe655e29fddcb8b) (DefaultImporter) -> (artifact id: '3d0e5430448d6277f0e9e12ff975912e') in 0.001408942 seconds
+Start importing Assets/_Project/Scripts/Visual using Guid(2f671d4a65067edcab8984cc7cb341e1) (DefaultImporter) -> (artifact id: '1d49a5b463a1ab96f57eee663959fe07') in 0.001522203 seconds
+Start importing Assets/_Project/Scripts/Debug using Guid(6f3c459208949da1dbc26fd3ecae80f4) (DefaultImporter) -> (artifact id: 'b653ae7eb74abedbe2da24dbcf7ed5e1') in 0.001486205 seconds
+Start importing Assets/_Project/Art/Ashigaru using Guid(bf05eb799d97ec412bc7099bde56b797) (DefaultImporter) -> (artifact id: '77caef2726a4c745483bb09ac3361556') in 0.001469033 seconds
+Start importing Assets/_Project/Scripts/Editor using Guid(df92b5e687525f9d282e6d1362837488) (DefaultImporter) -> (artifact id: 'e6d7d86b41fdf579922068aa3e491e72') in 0.001452553 seconds
+Start importing Assets/_Project/Resources/UI/selection using Guid(414500a4dfc1baf9b80d45d2c194730a) (DefaultImporter) -> (artifact id: '91e1e5dd87042365817d45e54b3c90db') in 0.001471067 seconds
+Start importing Assets/_Project/Resources/UI/H3 using Guid(42a8733fe7d6386a6bc6df100af5eba6) (DefaultImporter) -> (artifact id: '1c7c5191cb9114971d4727d4b919d7c5') in 0.002150246 seconds
+Start importing Assets/_Project/Resources/UI/Kit using Guid(72463828bf59785038ae6b01db4e38a0) (DefaultImporter) -> (artifact id: '31255fd1cb733a3c0661619f18873576') in 0.002105272 seconds
+Start importing Assets/_Project/Resources/UI/Battle using Guid(f380cea91a68d7e70837547a689f7769) (DefaultImporter) -> (artifact id: 'e9ea7e5e580a65ebd24e242c47f14775') in 0.002517342 seconds
+Start importing Assets/_Project/Models/Arenas/Detail using Guid(54596c848b26f45d381ce33d57ddd5c4) (DefaultImporter) -> (artifact id: '30d1122585a4b623b9b77cdd7b922cdf') in 0.001678745 seconds
+Start importing Assets/_Project/Resources/UI/MapObjects using Guid(744a7c559c857c4b49f372da76f8cdad) (DefaultImporter) -> (artifact id: '4bd152511e02dac631d4378019f284fc') in 0.002187195 seconds
+Refreshing native plugins compatible for Editor in 0.57 ms, found 0 plugins.
+Native extension for LinuxStandalone target not found
+Native extension for Android target not found
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  0.740 seconds
+Domain Reload Profiling: 1127ms
+	BeginReloadAssembly (215ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (13ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (63ms)
+	RebuildCommonClasses (62ms)
+	RebuildNativeTypeToScriptingClass (16ms)
+	initialDomainReloadingComplete (40ms)
+	LoadAllAssembliesAndSetupDomain (54ms)
+		LoadAssemblies (111ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (39ms)
+			TypeCache.Refresh (29ms)
+				TypeCache.ScanAssembly (20ms)
+			BuildScriptInfoCaches (4ms)
+			ResolveRequiredComponents (2ms)
+	FinalizeReload (741ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (443ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (49ms)
+			SetLoadedEditorAssemblies (4ms)
+			BeforeProcessingInitializeOnLoad (145ms)
+			ProcessInitializeOnLoadAttributes (186ms)
+			ProcessInitializeOnLoadMethodAttributes (47ms)
+			AfterProcessingInitializeOnLoad (10ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (14ms)
+Start importing Assets/StreamingAssets/camp_loop.mp4 using Guid(a1a580dd3b4b1c8c1abbdb411ae3e5d3) (DefaultImporter) -> (artifact id: '5d652565cb2000d246d9e342dfd7ebc5') in 0.013140834 seconds
+Start importing Assets/StreamingAssets/menu_bg.mp4 using Guid(74bb8c666dd47d0728648c504de89a83) (DefaultImporter) -> (artifact id: '36702328b4066e5f3fdef5df987d5daf') in 0.001910268 seconds
+Start importing Assets/StreamingAssets/tavern_loop.mp4 using Guid(cc502f3d826e9c3e695aa47559827d9e) (DefaultImporter) -> (artifact id: 'c9c0c8817df5d52f48966a8fa9f5d626') in 0.001661954 seconds
+Start importing Assets/_Project/Resources/UI/npc_3.jpg using Guid(00921ec25ad8cbc298ed6e9378bccbb6) (TextureImporter) -> (artifact id: '0279a456182fcc1486687f006c5c7230') in 0.149625816 seconds
+Start importing Assets/_Project/Resources/UI/btn_pause.png using Guid(00c20bd6f146f8ed5a69ce04537b6131) (TextureImporter) -> (artifact id: '29fe2388f63c676d44c11dd4b9a56a60') in 0.12484686 seconds
+Start importing Assets/_Project/Resources/FX/pillar_loop_rage.png using Guid(0086063d92bdaf3168c0123da6a16347) (TextureImporter) -> (artifact id: 'f9ced068f7f5aec5a307b9f4f1e48b79') in 2.153057833 seconds
+Start importing Assets/_Project/Resources/FX/sigil_sun.png using Guid(10078a2d820dcfeed834c7c4fe9d69f0) (TextureImporter) -> (artifact id: 'cec8e12d890fe59a9612e85fd991a522') in 0.533636249 seconds
+Start importing Assets/Resources/FX/slash_red.png using Guid(104777896754147749a396507068c767) (TextureImporter) -> (artifact id: 'abae0106d191a2c86e9625a9a30cec19') in 0.089255964 seconds
+Start importing Assets/_Project/Resources/UI/Battle/skill_icons2.png using Guid(10e808b5579589199a58dd27615957bc) (TextureImporter) -> (artifact id: '37055640a9298d0599d7a6c42fc53c9b') in 0.063594035 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_divider.png using Guid(100907fb6f7f19aba86f5b63e89a89e0) (TextureImporter) -> (artifact id: 'd8570551d037fe3e3d7fd4d3c302cee3') in 0.069373239 seconds
+Start importing Assets/_Project/Resources/UI/selection/difficulty_0.jpg using Guid(203585d328d2c5ec7a3284e44fa9e736) (TextureImporter) -> (artifact id: '17abb532d0e29b19142443c8934598e8') in 0.095925015 seconds
+Start importing Assets/_Project/Resources/UI/Battle/fx_arrow_hit.png using Guid(20cae9e4ecda95808b50dbafd8c19e1b) (TextureImporter) -> (artifact id: 'c0a3b2e94c0cf9223e459808692c8702') in 1.989870638 seconds
+Start importing Assets/_Project/Resources/FX/pillar_sun.png using Guid(204da6f350844097980fca586a2954d9) (TextureImporter) -> (artifact id: '4790313df8d4d761f40159830a10c00e') in 0.117471631 seconds
+Start importing Assets/_Project/Resources/UI/sakura_branch.png using Guid(20bf904a887460f79aadb458015c9083) (TextureImporter) -> (artifact id: '8fce328d645da6ef58a90adc397bb8a7') in 0.398542356 seconds
+Start importing Assets/_Project/Resources/UI/enemy_full_bandit.png using Guid(20ef90ab925630f17bc924a5a4668bab) (TextureImporter) -> (artifact id: '76292e5a7c081fe0191451f41048d745') in 0.025835877 seconds
+Start importing Assets/_Project/Models/Shogun/Shogun_roughness.png using Guid(30392321813ba5f6aa6497f429f1e3c1) (TextureImporter) -> (artifact id: '55f25002803c7a5518b03c165f4e6293') in 1.910084919 seconds
+Start importing Assets/Resources/UI/pack02/herbalist.png using Guid(304b3df042616145ea1267ed415c37a2) (TextureImporter) -> (artifact id: 'd738deb1004a0bf0fdbe972e8e363319') in 0.011985924 seconds
+Start importing Assets/_Project/Resources/FX/dragonfly.png using Guid(4091b1d541cb055adb8b0af57460c9b5) (TextureImporter) -> (artifact id: '47ecea87a56f80b50927a1f0abce0691') in 0.100627352 seconds
+Start importing Assets/_Project/Art/Textures/koi.png using Guid(40eae1c9942ccf3c4b084877ea822eca) (TextureImporter) -> (artifact id: 'e51b560a68fdbd8179a067424b43a790') in 0.188687804 seconds
+Start importing Assets/_Project/Resources/UI/speed_lines.png using Guid(50d38b17ed857d52a82247b680492b51) (TextureImporter) -> (artifact id: 'b88da2eec5e07c95d5b24c7b392966f3') in 1.516470452 seconds
+Start importing Assets/_Project/Resources/UI/bar_ki.png using Guid(50a43d855823c672e98221184d24badf) (TextureImporter) -> (artifact id: '14ce1da5a894e8c22b274822b14aba71') in 0.03972252 seconds
+Start importing Assets/_Project/Models/Arenas/Detail/bamboo.jpg using Guid(6050d40351bf9be98930eabbde7dab91) (TextureImporter) -> (artifact id: '3b0dc443bfd1d17de3a07081b8729ae3') in 0.514622292 seconds
+Start importing Assets/_Project/Resources/UI/MapObjects/objects_dark_5.png using Guid(60d5c51c2470bfd98b0f9f7dda7294f3) (TextureImporter) -> (artifact id: '58efd3ab0f13dfd02e89f1eceab53703') in 0.057828752 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_btn_red_pressed.png using Guid(60a6a05382954d6b4b121fcb4f2870f2) (TextureImporter) -> (artifact id: 'c08cc94fea56ad522da8583712fe8db6') in 0.163912456 seconds
+Start importing Assets/_Project/Resources/UI/Battle/fx_arrows.png using Guid(6039d0c3fceb185afba7e8d938e33c00) (TextureImporter) -> (artifact id: '664ed91e2272b45b41618d260b578b18') in 1.864932197 seconds
+Start importing Assets/_Project/Resources/UI/Battle/unit_portraits2.png using Guid(606924d740e5ad865b91fe28c9ab848d) (TextureImporter) -> (artifact id: 'ff138bb6d8f1f06656147999ce522d8b') in 0.054393402 seconds
+Start importing Assets/_Project/Resources/UI/mountains.png using Guid(60b97726774c7f564a5089a30e0f87a7) (TextureImporter) -> (artifact id: '17f2015126e76ad7d5e69f34d3870465') in 0.364198487 seconds
+Start importing Assets/_Project/Resources/UI/zan.png using Guid(605a75d768f79a8b688816817dffe415) (TextureImporter) -> (artifact id: 'f91dd5244da0bacb1dc9456919614711') in 0.10898546 seconds
+Start importing Assets/_Project/Resources/UI/enemy_full_oni.png using Guid(605a5d57d4b87b111bd123c618ce13a8) (TextureImporter) -> (artifact id: '296b0a095c956f3e3db18f8e0ee8257a') in 0.02409897 seconds
+Start importing Assets/_Project/Resources/UI/btn_base.png using Guid(60cbaef34695459788ad0196c588a0ec) (TextureImporter) -> (artifact id: '89206d32378948dbcb7de8e466005479') in 0.08614287 seconds
+Start importing Assets/_Project/Resources/UI/map_bird_white.png using Guid(70582275e9a0565daba4a61c8e389754) (TextureImporter) -> (artifact id: 'b3b488c80e9ad3bd19cc9f4299d02b13') in 0.68942596 seconds
+Start importing Assets/_Project/Resources/UI/fx_ui_flash_white.png using Guid(704d8e5089c6d6c97b671e9a286c69bc) (TextureImporter) -> (artifact id: 'eeb1a7fee19bb2e385aa9385ee146b3d') in 0.613983138 seconds
+Start importing Assets/_Project/Resources/FX/pillar_flame.png using Guid(80537ad2b8d32b95684235e44dbe418b) (TextureImporter) -> (artifact id: 'e78aa46dd113182351edce700d79a4d5') in 0.131172083 seconds
+Start importing Assets/_Project/Art/Textures/wood_normal.png using Guid(804b54582248567f39ec5b9c177148f6) (TextureImporter) -> (artifact id: '406cfa113cdb8bb2a1a88f9216433d7b') in 0.138531824 seconds
+Start importing Assets/_Project/Resources/UI/tech_1.png using Guid(9040f9bd0468c6ecdbdb3515a9f50fdc) (TextureImporter) -> (artifact id: 'e856df5620ece4b2db2bcaa6911f38c0') in 0.091542456 seconds
+Start importing Assets/_Project/Resources/UI/Kit/hud_hp_r.png using Guid(90c0a6b47ea104aafab4984d9f533222) (TextureImporter) -> (artifact id: 'ef127301015b09ff2c0af1a7e9f6c50c') in 0.093691567 seconds
+Start importing Assets/_Project/Resources/FX/rock_burst.png using Guid(905510de10c791feba65ff93a18c720f) (TextureImporter) -> (artifact id: '5d5ecb165fbcb9f8de2f48b5113a8d37') in 0.752770028 seconds
+Start importing Assets/_Project/Resources/FX/geta_print.png using Guid(907eaced8d05a5efebc7364abc8f67f1) (TextureImporter) -> (artifact id: '9a20e8e35005ac7a1744fc7303db96dc') in 0.068681948 seconds
+Start importing Assets/_Project/Resources/UI/dice_rogue_0.png using Guid(a074edaee2690d649b2354743608e0ed) (TextureImporter) -> (artifact id: '02e69149eec1d244a3a3a5c59de0132d') in 0.35127995 seconds
+Start importing Assets/_Project/Resources/FX/smoke_teleport.png using Guid(a026967129de4b3318ba930f4cac09e3) (TextureImporter) -> (artifact id: 'f4bf4353d4652816a3e8ae9ea05fbcf2') in 0.789957276 seconds
+Start importing Assets/Resources/UI/pack02/shrine.png using Guid(b06efd16338b36a6094996b911920bd0) (TextureImporter) -> (artifact id: 'a61838438e65d7faaffde14b1e40d98b') in 0.015836175 seconds
+Start importing Assets/_Project/Resources/UI/map_camps_2.png using Guid(c060c6c4459d564af939bd92149bf760) (TextureImporter) -> (artifact id: 'f244b4176261d59ff7947d4155d07ca0') in 2.715003207 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_btn_red.png using Guid(c006ad827e05ad1578971e10fc9ab2ec) (TextureImporter) -> (artifact id: '9b51aaecc65511ffb30c0b343a2fc6f7') in 0.192957188 seconds
+Start importing Assets/_Project/Resources/UI/deathblow_mark.png using Guid(c0ab29236af07dd788c5bd7038403d44) (TextureImporter) -> (artifact id: '10661c43feb60dafea8992b609b167a0') in 0.09600523 seconds
+Start importing Assets/_Project/Art/Textures/wall_stains.png using Guid(c06ef9df03b3b39a5a7301e64cfd6dc5) (TextureImporter) -> (artifact id: '18ecda97428c587704cfe0263539ac54') in 0.134798044 seconds
+Start importing Assets/_Project/Resources/UI/Kit/hud_ki_caps.png using Guid(d00642fccb115d85590380e8c759ed3d) (TextureImporter) -> (artifact id: 'cdf105a2d487ee24f4fe0fa159f6f4ef') in 0.059714397 seconds
+Start importing Assets/_Project/Resources/FX/sigil_draw.png using Guid(d058063725467cad5bc184c3560b09ef) (TextureImporter) -> (artifact id: 'c71a072dbcc9e1d03d1f9cbd18dee403') in 1.51142517 seconds
+Start importing Assets/_Project/Art/Textures/rope_normal.png using Guid(d01a09eba2e086233a0fd6f0f8c9e520) (TextureImporter) -> (artifact id: 'aae800338f91dd07764c165319d98d9f') in 0.13961412 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_panel_frame.png using Guid(e071fbb92ede9234189a4f3b62297b13) (TextureImporter) -> (artifact id: '83a6d3bc59aa3612ef2eab108851877b') in 0.184410285 seconds
+Start importing Assets/_Project/Resources/UI/map_icon_herbalist.png using Guid(e0826c4c0f749f6da85d14175b1b4ead) (TextureImporter) -> (artifact id: '3e97156619989ca47620b66a14d318d0') in 0.1025429 seconds
+Start importing Assets/_Project/Models/Arenas/Detail/wood.jpg using Guid(e0d2e8250cf61a0fa8f08b64cc1006df) (TextureImporter) -> (artifact id: '3e0a61051fa4d35e871a38bcf153df09') in 0.536943847 seconds
+Start importing Assets/_Project/Resources/FX/pillar_loop_flame.png using Guid(e0f38f0865016946da0f9291d2e37955) (TextureImporter) -> (artifact id: '2585cd05812ec51ed1cb0f689dc2de53') in 0.921575375 seconds
+Start importing Assets/_Project/Resources/UI/Battle/fx_dash.png using Guid(e084caa0843ae5fce9be8dddc198c242) (TextureImporter) -> (artifact id: '4599451c4ddfece20dac6b0f82fba7f5') in 1.721494134 seconds
+Start importing Assets/_Project/Resources/UI/MapObjects/objects_dark_2.png using Guid(f0f4c574d35c12b6f9136899c70125e4) (TextureImporter) -> (artifact id: '08077c357037f794d54619c52e646c30') in 0.059301381 seconds
+Start importing Assets/_Project/Resources/FX/lightning_burst.png using Guid(f025b61d2f525adc786167dca5fe88b0) (TextureImporter) -> (artifact id: 'c921fb545c1dc22397112318cd5aa8b9') in 0.370695644 seconds
+Start importing Assets/_Project/Resources/UI/Battle/map_foam.png using Guid(f00a32aaef136c6bea0758ee61965b89) (TextureImporter) -> (artifact id: '6396bd71c306b70b89a17b8fac752be8') in 1.605339252 seconds
+Start importing Assets/_Project/Resources/UI/buff_icons.png using Guid(f09c13749571da6169fbd22c0b4274b4) (TextureImporter) -> (artifact id: '2f0a37606c396ea06a3e210d66ace26e') in 0.681846183 seconds
+Start importing Assets/_Project/Resources/FX/fx_aura_red.png using Guid(f00f1e5b3e9c0f24eb66e03619016228) (TextureImporter) -> (artifact id: '86e72b4e7d312739a0274f17b4e47988') in 0.443135266 seconds
+Start importing Assets/_Project/Resources/FX/seal_circle.png using Guid(0150c0c3d9f6e3e5bae2e5ab8d4a834e) (TextureImporter) -> (artifact id: 'e7c8b6c3a79f5e8e3ddca05088df5f46') in 0.141506216 seconds
+Start importing Assets/_Project/Resources/UI/rank_c_ru.png using Guid(01237c98a62bfbc369edd78004a8fb0e) (TextureImporter) -> (artifact id: 'bfe585ba1ec434ca543964e8d515daaf') in 0.123609372 seconds
+Start importing Assets/_Project/Art/Textures/ronin_albedo.jpg using Guid(01d64a9e9805d9627b92e9e62adbcebf) (TextureImporter) -> (artifact id: 'c4bfe98cca4d4106621bafcc3cd27e24') in 1.994612576 seconds
+Start importing Assets/_Project/Resources/UI/H3/market.png using Guid(11f15fea02c06eb1ebec27382895bee1) (TextureImporter) -> (artifact id: '18c11d82cc2c7264e04990761af9e1b5') in 0.058957335 seconds
+Start importing Assets/_Project/Art/Textures/stoneblock_normal.png using Guid(1142c614e6ca0fc61b6501d12f953d49) (TextureImporter) -> (artifact id: 'ff0bd103e4ed8033284f0d4084b618f5') in 0.141552369 seconds
+Start importing Assets/_Project/Art/Textures/grass_tuft.png using Guid(115226f18723ea605b026c7505f74ceb) (TextureImporter) -> (artifact id: '9da0cdcdd1d9ea10ae9f738324cfc3d7') in 0.116513634 seconds
+Start importing Assets/_Project/Resources/UI/H3/flags.png using Guid(111829374eb96acf68ab32b27e598acb) (TextureImporter) -> (artifact id: 'dcf473e794e79c33eda0330a148c6df8') in 0.044822035 seconds
+Start importing Assets/_Project/Resources/UI/set_items.png using Guid(11ceccc9c5d849e3e817e77ccfc74214) (TextureImporter) -> (artifact id: '36f0aa230046b2fc4a868f5dbe27f397') in 1.670007526 seconds
+Start importing Assets/_Project/Resources/UI/hero_face_sq_2.jpg using Guid(2112a1ac36b7c0972b3c102cd3efc5ed) (TextureImporter) -> (artifact id: '48c369f4013b671475aef03ea4307a34') in 0.037863168 seconds
+Start importing Assets/_Project/Art/Textures/blood_splat.png using Guid(2172aa5c72dd7e7198366d056dee9485) (TextureImporter) -> (artifact id: '10f9e6bad5b445f7cafb82d82fd2a44d') in 0.122053158 seconds
+Start importing Assets/Resources/UI/pack02/wounded_ronin.png using Guid(21971c39979e414efbe2c033ee1787fb) (TextureImporter) -> (artifact id: '7f2b07244e3813a1d17edd11fdbf8334') in 0.012836515 seconds
+Start importing Assets/_Project/Art/Textures/blossom_albedo.png using Guid(21cb1b744daa7bd578d807cb877d884c) (TextureImporter) -> (artifact id: '37b2b030599c9f069412c2d7c99330bd') in 0.143203268 seconds
+Start importing Assets/_Project/Resources/UI/brush_slash.png using Guid(31d05bcacb0beb1adbb703dcf2b71657) (TextureImporter) -> (artifact id: '1feabcd61b1512b9a39874d2dd2edf90') in 1.454546816 seconds
+Start importing Assets/_Project/Resources/UI/editor_tools.png using Guid(3193df09d08791bad862ce4fb1aaa2a9) (TextureImporter) -> (artifact id: 'e3ebd4b4c2319cf2ca0ffacb798726d4') in 0.660058499 seconds
+Start importing Assets/_Project/Resources/FX/spark_burst.png using Guid(318c9066b41c80de882260ff81c4f4c9) (TextureImporter) -> (artifact id: '0827debc8e6802f45e077217476c1422') in 0.112583707 seconds
+Start importing Assets/_Project/Resources/UI/Battle/recruit_window.png using Guid(41b3002dc942dbb7e8ec973a78c5a721) (TextureImporter) -> (artifact id: 'ab1cab98fc5eadd5b866f915fba44e80') in 0.05487071 seconds
+Start importing Assets/_Project/Resources/UI/selection/approved_difficulty_0.png using Guid(5161487db4ca276aabdb1d181e008344) (TextureImporter) -> (artifact id: '36a8b8d2c8c6e874dad14c788be3ef7a') in 0.142620931 seconds
+Start importing Assets/_Project/Resources/UI/map_2.jpg using Guid(61f0f70851e1d8e7ba412903de1e2f97) (TextureImporter) -> (artifact id: '405ecfe1311d69af01aaa89a52153753') in 1.056774899 seconds
+Start importing Assets/_Project/Resources/Units/unit_teppo_albedo.jpg using Guid(61544eb6f1ba281c5adaaa16016136a8) (TextureImporter) -> (artifact id: 'a0a7c70f01de0c333b3279fa9c7e9b3f') in 0.543968566 seconds
+Start importing Assets/_Project/Resources/UI/Kit/hud_ring_enemy.png using Guid(61ab3ce853ddd72059a646c85898e832) (TextureImporter) -> (artifact id: 'ec0313544d2779eb9ecb51d2eee51ac6') in 0.081926415 seconds
+Start importing Assets/_Project/Resources/UI/btn_block.png using Guid(7171a64a785ee2f70b2b300948081da0) (TextureImporter) -> (artifact id: 'e0316d1247dfa7d1dcaf575274bda9b8') in 0.092925254 seconds
+Start importing Assets/_Project/Art/Textures/roof_normal.png using Guid(7119b519686d283a49332151598145f5) (TextureImporter) -> (artifact id: '71bc0d7cf4edc10f09afdc0b87b5dbe9') in 0.137108249 seconds
+Start importing Assets/_Project/Resources/UI/general_window.png using Guid(717dec244283024549c6bbc72bb8577c) (TextureImporter) -> (artifact id: 'a6caae4bdecf73ca054bf3f697567ebd') in 0.057398103 seconds
+Start importing Assets/_Project/Resources/UI/Battle/fx_curse.png using Guid(71ad76f67cc921a5bacb3af3a467ec33) (TextureImporter) -> (artifact id: 'd46af1570d12217621c3ce56af89a07a') in 1.72866867 seconds
+Start importing Assets/_Project/Resources/UI/fx_ui_flash_red.png using Guid(81c9a00868498bd52902fbcc97876d1d) (TextureImporter) -> (artifact id: '58eca78380c63ab0bf1534332879f793') in 0.651690407 seconds
+Start importing Assets/_Project/Resources/FX/fx_guard_break.png using Guid(916013e7b18431902901d5afac34bb90) (TextureImporter) -> (artifact id: '4709dd3865fb2aa2a4518a9c324be32e') in 0.417543789 seconds
+Start importing Assets/_Project/Art/Textures/katana_blade_ms.png using Guid(91a1eefb7cc0472509cb3339a2c41422) (TextureImporter) -> (artifact id: '953b9d446d4a9fb2b106dcd3a0d5dc53') in 0.772029533 seconds
+Start importing Assets/_Project/Resources/UI/event_0.jpg using Guid(910de112578fb8445a247b5d581ed188) (TextureImporter) -> (artifact id: '85b413c31bc28fa13f065d06d38dd0fa') in 0.131528087 seconds
+Start importing Assets/_Project/Resources/UI/Kit/hud_banner_oni.png using Guid(a16d6e1728610f27fa37f3f03f7d560a) (TextureImporter) -> (artifact id: 'ec1ab2ef32553ab122afdc27f0ac8aae') in 1.081114768 seconds
+Start importing Assets/_Project/Art/Textures/stone_albedo.png using Guid(a1cf0ae4c41a1bda483a636f03ace1d1) (TextureImporter) -> (artifact id: '785bf4f46457a76d55890a138e10c565') in 0.142067144 seconds
+Start importing Assets/_Project/Resources/UI/portrait_bandit.png using Guid(b17118e0ac27288d888cd5c19739437e) (TextureImporter) -> (artifact id: '1fd80cd127b84c732cae9d99de71d22b') in 0.09410114 seconds
+Start importing Assets/_Project/Resources/UI/ru_deathblow.png using Guid(b16717dd6eb163712b8df077a7b63575) (TextureImporter) -> (artifact id: 'fff421da7b7f0c7a497ccc1f3a5ee005') in 0.215900681 seconds
+Start importing Assets/_Project/Resources/UI/fx_ui_ring.png using Guid(b1b7d988c3fc36f79ac539ddf833c40a) (TextureImporter) -> (artifact id: 'a9712f4a8e646e7c6c2108efdf8b8e02') in 0.527657196 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_board_tile.jpg using Guid(c1223cbdd4e1fcedc9eee688feaf4cc3) (TextureImporter) -> (artifact id: '4496b69fe53f1570c9aa8721a8d54091') in 0.129787638 seconds
+Start importing Assets/_Project/Resources/UI/btn_super.png using Guid(c1c93144e6e8f02168265fbcb21bd5c9) (TextureImporter) -> (artifact id: 'ea5caf843dda0eae52ebeb2783ac138c') in 0.112836687 seconds
+Start importing Assets/_Project/Resources/UI/items5.png using Guid(c1dcde2f3dfc9bd7a869da78c0ac52c5) (TextureImporter) -> (artifact id: 'c97dcc436d82d97d53b3a6da07d0f59d') in 2.299280455 seconds
+Start importing Assets/_Project/Resources/UI/levelup.png using Guid(c1ae2a129c0849966a1c1f6e0d55470b) (TextureImporter) -> (artifact id: '8e8a954be2feee24277c00f1571d5695') in 0.037456157 seconds
+Start importing Assets/_Project/Resources/UI/portrait_ronin.png using Guid(d151faec1410af1cb9547f3ba5ac3a99) (TextureImporter) -> (artifact id: 'dc0257b2baab4cc7bb5007309311f68d') in 0.030383046 seconds
+Start importing Assets/_Project/Art/Samurai2/samurai2_normal.jpg using Guid(d1e435dfce53514f3993a51e67f20b7e) (TextureImporter) -> (artifact id: 'ee2847e2af765c4811674c084f82e971') in 1.883003837 seconds
+Start importing Assets/_Project/Art/Textures/lacquer_albedo.png using Guid(d1c88b7b8b36a4ed88125963330c2b10) (TextureImporter) -> (artifact id: '9ab0a45df3751faae0dc86b2e71db2d2') in 0.135359232 seconds
+Start importing Assets/_Project/Resources/UI/ru_cut.png using Guid(e150bf8c9504e62cd931e22e6df558d2) (TextureImporter) -> (artifact id: 'c25ff86e9b2ae325c8ad1ba330e4082b') in 0.196984162 seconds
+Start importing Assets/_Project/Resources/UI/event_8.jpg using Guid(e1e31793fd5f344fcb5d8cb377917574) (TextureImporter) -> (artifact id: '81f227e05c16749c11cf080435f9e228') in 0.144739559 seconds
+Start importing Assets/_Project/Resources/FX/sigil_storm_early.png using Guid(e1f462f7ea2ad71d69c10c2a7528bbf9) (TextureImporter) -> (artifact id: 'f74f28783fb5b6a42c348fcdee65ad89') in 0.384373161 seconds
+Start importing Assets/_Project/Resources/UI/map_clouds.png using Guid(e17a2e943681a0a36b372b008fe3d8db) (TextureImporter) -> (artifact id: 'f2650d700ede2a97996ef7e0bfd27809') in 1.322952097 seconds
+Start importing Assets/_Project/Resources/Accessories/hair_ponytail_albedo.jpg using Guid(e19cf736abb66d80d9dcf36556e4a739) (TextureImporter) -> (artifact id: '6d73b0b4fe3a0404e9d0cca109b7b07a') in 0.598862107 seconds
+Start importing Assets/_Project/Art/menu_poster_last.jpg using Guid(f1a345134ef223fdb81eb212bb72bc0c) (TextureImporter) -> (artifact id: '0a1ab17d3202051a5fb7dc6175b9cee2') in 0.247154077 seconds
+Start importing Assets/_Project/Resources/Units/unit_shogun_albedo.jpg using Guid(f16d11f302e31acf5b6d7fd9ed89ee08) (TextureImporter) -> (artifact id: '6bd51e6462dce098c46123d07e452dec') in 0.50870663 seconds
+Start importing Assets/_Project/Resources/UI/companion_snake.png using Guid(f15e94fc8ee278020a920e0e6153de73) (TextureImporter) -> (artifact id: 'df781f0831ab914c46104f551f50b292') in 0.085792843 seconds
+Start importing Assets/_Project/Resources/UI/map_wide_1.jpg using Guid(02d4ea574de48b0c182fc234badd552c) (TextureImporter) -> (artifact id: 'ded54ff0231c63f38ab19a6d58c9c3d4') in 0.068170746 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_slider_track.png using Guid(02b78b5fc70586da8b28523cabfe945a) (TextureImporter) -> (artifact id: '32203b6ac25274642e09754c44ed65fd') in 0.021274485 seconds
+Start importing Assets/_Project/Resources/FX/fx_aura_blue.png using Guid(020b09369910ae7abb0acd4cdfb56135) (TextureImporter) -> (artifact id: 'e6d6918f85b3bfaccdbd87293cae3810') in 0.439727872 seconds
+Start importing Assets/_Project/Resources/UI/map_1.jpg using Guid(027bbb9d105042edbbc843aee0aa9748) (TextureImporter) -> (artifact id: 'd9bf62495b5677675799c6db3ddc329f') in 1.047271141 seconds
+Start importing Assets/Resources/UI/pack02/bandits.png using Guid(12bd0fa352a833b8199b0ab2729cd519) (TextureImporter) -> (artifact id: 'e7874fe8058467df7864f3cc60d595ab') in 0.013168829 seconds
+Start importing Assets/_Project/Resources/UI/Battle/fx_arrow_fly.png using Guid(2296440a6993d4f228fac679bf1c01dc) (TextureImporter) -> (artifact id: 'cda297a20a962d6e76f6fcd0548cf0a7') in 1.596318664 seconds
+Start importing Assets/_Project/Art/Textures/ronin_metal_smooth.png using Guid(2238ae13e848f3dff89d3726e497cecf) (TextureImporter) -> (artifact id: '91d527866bff58caacd668ebc9fd027c') in 1.806935412 seconds
+Start importing Assets/_Project/Resources/UI/npc_keeper.jpg using Guid(22cbf8b3d457f77a9b63b86040688f00) (TextureImporter) -> (artifact id: '840888247c8aa34221dc2e28e0031e2b') in 0.016765102 seconds
+Start importing Assets/_Project/Resources/Units/unit_ronin_albedo.jpg using Guid(226c68c8736f2b776a2ba8f86a35b0af) (TextureImporter) -> (artifact id: '3e3ce919c25f8671b38391ee5f344ffa') in 0.495822893 seconds
+Start importing Assets/Resources/UI/pack02/fox.png using Guid(3224f3700ed3172df9f269b3a3ed002f) (TextureImporter) -> (artifact id: 'ada1b2e5a49c5bbc97e6aa8ea5f5aa68') in 0.012472648 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_btn.png using Guid(32b80f586d19f4aadafd862134bcea9a) (TextureImporter) -> (artifact id: '830b6feb38e1d65f38f9071f97e3f2d1') in 0.168073854 seconds
+Start importing Assets/_Project/Resources/FX/rage_embers.png using Guid(4266928ef465aae8dafc330dbefb1874) (TextureImporter) -> (artifact id: '2ce572228e15c21b71a738ae057afa49') in 0.146068682 seconds
+Start importing Assets/_Project/Resources/UI/ru_high.png using Guid(52e04c100dcca86abb85b4fa39eff836) (TextureImporter) -> (artifact id: '400fd1bf62469e2921121be2c2cd3055') in 0.213983945 seconds
+Start importing Assets/_Project/Resources/Units/unit_fallen_albedo.jpg using Guid(523d10ca125439d39b51fde5fd13c66f) (TextureImporter) -> (artifact id: 'b8b2a51c5d0107ddedeccba8e291876b') in 0.50847242 seconds
+Start importing Assets/_Project/Resources/FX/brazier_fire.png using Guid(6284f91c48d70b4dbab8370e2c1adc84) (TextureImporter) -> (artifact id: 'e8fe3045d19f82bf793ea74f52a33bbf') in 0.886280723 seconds
+Start importing Assets/_Project/Resources/UI/place_bounty.jpg using Guid(72778a162f356a66dbaedb371c99a12a) (TextureImporter) -> (artifact id: '060e552ac53122b9e4f8ad7767d1073e') in 0.010985367 seconds
+Start importing Assets/_Project/Resources/Units/unit_ashigaru_albedo.jpg using Guid(72a72927582e301aeb3259b3547a3cd1) (TextureImporter) -> (artifact id: 'c97dfdaa0cc793cbb4757708f4e4f7d4') in 0.494719517 seconds
+Start importing Assets/_Project/Resources/UI/npc_1.jpg using Guid(82d07528544b54aaaa28107e93bdf936) (TextureImporter) -> (artifact id: '1ebc7e6a2085f742f141a4159c26699c') in 0.087747507 seconds
+Start importing Assets/_Project/Art/Textures/gate_door_albedo.png using Guid(827500eb8cb400d95b6d1e5ec97c7a6c) (TextureImporter) -> (artifact id: '614ee8c870bbf45a9d675adf6fb11364') in 0.148881098 seconds
+Start importing Assets/_Project/Resources/UI/ink_r1.png using Guid(82299c1bdca9a1292a82766436200ef8) (TextureImporter) -> (artifact id: 'c4767f815abcb6e32deb28de3d34adeb') in 0.099778208 seconds
+Start importing Assets/_Project/Resources/UI/map_icons.png using Guid(92133323a53e91112bfe7790fe5db646) (TextureImporter) -> (artifact id: 'e0557282b44c98abde3f968a2410ae9b') in 0.37794442 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_tab_off.png using Guid(9227f6d13fcbb94bf92cf49254f409ea) (TextureImporter) -> (artifact id: 'af5e50355a7c7a7689e7bb0513bd3dc0') in 0.050031121 seconds
+Start importing Assets/_Project/Resources/UI/kaisei.png using Guid(a23038882bb496d12ab44f4d6c895ee9) (TextureImporter) -> (artifact id: '3921e90761f892cb24e4e037c39197d5') in 0.703253713 seconds
+Start importing Assets/_Project/Resources/FX/fx_heal.png using Guid(a2d8c4ff8415c8c6b85074e7adcb13da) (TextureImporter) -> (artifact id: '25122da93cf970de505c6cef43799042') in 0.850991139 seconds
+Start importing Assets/_Project/Resources/UI/paper_ui.png using Guid(b2d19bb5db55ce95ba258b78878de93f) (TextureImporter) -> (artifact id: 'da187e807c797cc9851d0bd3b248ddaf') in 0.131329125 seconds
+Start importing Assets/_Project/Models/ShadowAssassin/ShadowAssassin_metallic.png using Guid(b2992ed8ac62a5ce7a0eb9717763981f) (TextureImporter) -> (artifact id: '467c1a10b3166f01ee55d0cc885ad00e') in 1.690971565 seconds
+Start importing Assets/_Project/Resources/UI/fx_ui_aura_red.png using Guid(b26c72f6478a92e0a8d2a394f79dbfc6) (TextureImporter) -> (artifact id: '348e5ef370bbfb3c10af95149a63accf') in 2.241150219 seconds
+Start importing Assets/_Project/Resources/UI/Kit/hud_pip_full.png using Guid(b26cde6f21e739d4daf0af5def0662f7) (TextureImporter) -> (artifact id: '1a60d37a9012830328d262f52194971c') in 0.100900066 seconds
+Start importing Assets/_Project/Models/ShadowAssassin/ShadowAssassin_albedo.png using Guid(b2df7e5ea2720e06789d0fd734836375) (TextureImporter) -> (artifact id: 'cc4b1d46023c8c81b37b866ef97046e5') in 1.913629889 seconds
+Start importing Assets/_Project/Resources/UI/place_watchtower.jpg using Guid(c21c89fce25aa5543badb1d82c63ea8b) (TextureImporter) -> (artifact id: 'a8ffb2afdc82ca5393d503ec09565dca') in 0.01401724 seconds
+Start importing Assets/_Project/Resources/FX/fx_dash_streak.png using Guid(d2d72f6e0d493fbef8c9f5f0a490f5b0) (TextureImporter) -> (artifact id: '21e85b712bf69f69a49c7d02d592be9c') in 0.377079716 seconds
+Start importing Assets/_Project/Resources/UI/npc_4.jpg using Guid(d2ddf575db44e170ea9d499277d83f61) (TextureImporter) -> (artifact id: '99590ddd99cf0430cd927a0e55e6a5d7') in 0.103315613 seconds
+Start importing Assets/Resources/UI/pack02/node_elite.png using Guid(e23441916067ac0ffa003626ca63290a) (TextureImporter) -> (artifact id: 'bfd8e4b889d91d91cb77a77662f1352e') in 0.012651014 seconds
+Start importing Assets/_Project/Resources/UI/brush_digits.png using Guid(e2685b2679f29f6faa5f3abc070cdd37) (TextureImporter) -> (artifact id: '57ff5f30bac1cf12f340e467a6216796') in 1.388875804 seconds
+Start importing Assets/_Project/Resources/UI/brush_digits_white.png using Guid(e28ae7117dfe0a94bb3313d43ffb68db) (TextureImporter) -> (artifact id: '4c165a1bbabf6076e0a77afbf33fb9b9') in 0.392955958 seconds
+Start importing Assets/_Project/Resources/Accessories/hair_long_albedo.jpg using Guid(e27b69812d9c7cc02bf163209e912f22) (TextureImporter) -> (artifact id: 'a6226ce7add856760e66d39a5c17db29') in 0.58128839 seconds
+Start importing Assets/_Project/Resources/UI/seal_owari.png using Guid(f2b20c6034369a59bb4bed32192d2829) (TextureImporter) -> (artifact id: '52192404a9dbc46e50e3a65bc3a7c854') in 0.128055608 seconds
+Start importing Assets/_Project/Resources/UI/npc_2.jpg using Guid(f24ab9955c4dbfed2a9040538ea5fd8a) (TextureImporter) -> (artifact id: 'bc80790fc5ba555b3ca96a0c4b4e505c') in 0.118731394 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_currency.png using Guid(031162a1d8cf002009e385d4e1cb5f59) (TextureImporter) -> (artifact id: '941f182298201e5acc794306aa61c0b1') in 0.1221372 seconds
+Start importing Assets/_Project/Art/menu_poster_first.jpg using Guid(03a21b2aa4bc2d87bbae2b966d37f9a1) (TextureImporter) -> (artifact id: '5cad8acfb511c372ae7eaca1602e6601') in 0.262316689 seconds
+Start importing Assets/_Project/Art/Fallen/fallen_albedo.jpg using Guid(0387024df455a2e84915c4e6701f7f92) (TextureImporter) -> (artifact id: '187a6670a8120e226ae7a8bf61b31aa5') in 1.881958938 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_slider_knob.png using Guid(136799de65d02e84d8c83427997b6b3d) (TextureImporter) -> (artifact id: '81214cb0331e65131cf92740e007e228') in 0.0916157 seconds
+Start importing Assets/_Project/Resources/UI/region_clear_0.jpg using Guid(13c8cefbddc022a4e95f4f5c26046ef4) (TextureImporter) -> (artifact id: '0557826f7b4ed6fd407b83ec04b925d5') in 0.025170324 seconds
+Start importing Assets/_Project/Art/Textures/katana_blood_mask.png using Guid(132e140c99ba0bdde9ed9dd3c3f3e328) (TextureImporter) -> (artifact id: '4ecd7c1d608c36c37efdfcc250377b87') in 0.12566197 seconds
+Start importing Assets/_Project/Resources/UI/npc_0.jpg using Guid(23a1a7fc4b337a11d824d17ac2f33ed9) (TextureImporter) -> (artifact id: '185bd3462b519b7c336a038b92865444') in 0.104258541 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_toggle_off.png using Guid(234508c53d85cfb049315d4f8c036e5b) (TextureImporter) -> (artifact id: '80097be733eca54826132e1e2e5c0ad6') in 0.050148654 seconds
+Start importing Assets/_Project/Resources/FX/crow_flap.png using Guid(23cc427402b0493e7a3dac14fceb4792) (TextureImporter) -> (artifact id: 'f129f15edb80f5afaaa42c7733ec5d50') in 0.368883671 seconds
+Start importing Assets/_Project/Resources/UI/kamon_tomoe.png using Guid(23fcfdf5bec80e3009d7edca50a7073c) (TextureImporter) -> (artifact id: 'ccba90c6545dde79e14d66d26abefb14') in 0.093209098 seconds
+Start importing Assets/_Project/Art/Textures/flagstone_ms.png using Guid(3360e3055c2b068338d2c936881194c4) (TextureImporter) -> (artifact id: '8d2d0de4b2869c4cc2a212b2ecaf51e7') in 0.526302321 seconds
+Start importing Assets/_Project/Resources/UI/rank_s.png using Guid(330cc151b8c105c53a67f44d18f36bae) (TextureImporter) -> (artifact id: 'bfaa0493d2bbb2aae3b5753dec6e1945') in 0.105193053 seconds
+Start importing Assets/_Project/Resources/Accessories/kasa_straw_albedo.jpg using Guid(33ed663bdf56f79aeae49e6afca5c58b) (TextureImporter) -> (artifact id: 'f9ffafa06e624329fa6eff40e4cd123a') in 0.638284043 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_check_off.png using Guid(43c0a6eeddb03c72ab0b960a691943d2) (TextureImporter) -> (artifact id: 'af0f777a98436972b1e6be1066573ef1') in 0.086812677 seconds
+Start importing Assets/_Project/Art/Textures/cedar_bark_normal.png using Guid(4326efea9435667eea0dd042a19a8f0b) (TextureImporter) -> (artifact id: 'fd2aa371aaac8a815c80b55c63f2fe6b') in 0.140630189 seconds
+Start importing Assets/_Project/Resources/UI/brush_stroke.png using Guid(43f8080bea65ac7caa70d61a8a2decc3) (TextureImporter) -> (artifact id: 'd86fb6f4827c52622fd90878bfdf43b2') in 0.342243874 seconds
+Start importing Assets/_Project/Resources/UI/Battle/battle_field_1.jpg using Guid(437a2c23d5facff18a99f1307727435a) (TextureImporter) -> (artifact id: 'ae07df640052be7cee9251ff06abc109') in 0.037302961 seconds
+Start importing Assets/_Project/Art/Textures/shoji_walker.png using Guid(433de57cbd1ca46bba04a9caa04ccb0c) (TextureImporter) -> (artifact id: 'a9185aed2dc4275616b5018e6a1bc162') in 0.850672063 seconds
+Start importing Assets/_Project/Resources/UI/Battle/war_machines.png using Guid(535f3d1b577b34b09952b91fcedfa9c6) (TextureImporter) -> (artifact id: 'bd8ee6d636bae81ba7e00d6b43e4016c') in 0.080154175 seconds
+Start importing Assets/_Project/Resources/Accessories/mask_cloth_albedo.jpg using Guid(63f34f5b85a420cd9aa74b14d9fbe98a) (TextureImporter) -> (artifact id: 'bbea48967c7746e10989e16ea0518371') in 0.622141589 seconds
+Start importing Assets/_Project/Resources/UI/shop_scroll_track.png using Guid(73a7735e42a159773bb3af7f6ba66659) (TextureImporter) -> (artifact id: '5bcc3a24c96ed48a40c259a64b18c186') in 0.014535278 seconds
+Start importing Assets/_Project/Resources/Units/unit_samurai_albedo.jpg using Guid(73bd90ba400542023af037d5ddf41d73) (TextureImporter) -> (artifact id: '4c2e8f7441fbe9e3ea24e1e2c5f53bc9') in 0.530722913 seconds
+Start importing Assets/_Project/Resources/UI/chest_closed.png using Guid(83c08dfc281f9d429bc319936bd0471f) (TextureImporter) -> (artifact id: '32890c90b6130b309a5eb29f620b6280') in 0.108307367 seconds
+Start importing Assets/_Project/Art/Bandit/bandit_albedo.jpg using Guid(934ce00438d0e354d8d7a8d0cede1995) (TextureImporter) -> (artifact id: '01cf6e9879586a319c0fe241f4e86698') in 1.966566355 seconds
+Start importing Assets/_Project/Resources/FX/blade_fire.png using Guid(933f510ea8e3b0c0c9fa9aa20cc3f566) (TextureImporter) -> (artifact id: '17bf56cbc8a60a1c72f6245320ce4ab5') in 3.212314836 seconds
+Start importing Assets/_Project/Resources/FX/sigil_rage.png using Guid(b3b5f0166f04187d58d5cf1e94c58929) (TextureImporter) -> (artifact id: '39b05c6bbef202dfef02585455a04cd2') in 0.470905206 seconds
+Start importing Assets/_Project/Resources/UI/corner.png using Guid(b3dce8cf65d232b8a83632e78b923c8d) (TextureImporter) -> (artifact id: 'ccea1203ba1658273c3ea61426638bfd') in 0.096047595 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_arrow_r.png using Guid(b39d78c9043cdafc0846f9dc7f1daa2d) (TextureImporter) -> (artifact id: 'c2c518f70afd709f6d71f71886a93514') in 0.08319166 seconds
+Start importing Assets/_Project/Resources/UI/selection/fog_toggle_inner_off.png using Guid(d37472af69366c9d3a5b4d640eafc091) (TextureImporter) -> (artifact id: '21c598313477f38933de0b00d66d5d6f') in 0.049684705 seconds
+Start importing Assets/_Project/Resources/UI/Battle/fx_cross.png using Guid(e3806005733b9d8f1977e661934604f0) (TextureImporter) -> (artifact id: 'd88b41e15aafade8e8e573104b294ace') in 1.800037202 seconds
+Start importing Assets/_Project/Resources/UI/enemy_full_yamabushi.png using Guid(e383be0905089a8089b3752b1fea85ce) (TextureImporter) -> (artifact id: 'bfcebc6c3c47c62b33c5f16260ba8202') in 0.025123724 seconds
+Start importing Assets/_Project/Resources/UI/waki.png using Guid(e324f9f7f3bd080b5bd0456327cefbfe) (TextureImporter) -> (artifact id: 'b7966eaa652289283e3794ba83728d04') in 0.738474689 seconds
+Start importing Assets/_Project/Resources/UI/map_daytime.png using Guid(e31ca63c04ce112afbc9625ef1b17342) (TextureImporter) -> (artifact id: '4521b82e108d1971bbc5b5f2a81ac235') in 0.536689736 seconds
+Start importing Assets/_Project/Resources/UI/map_dice_3d.png using Guid(e31d3ad2d0ed7d669a6631b1711771f1) (TextureImporter) -> (artifact id: '6f99dcc50198e76f33377d0c7bfaa8e7') in 0.096581286 seconds
+Start importing Assets/_Project/Resources/UI/rank_a.png using Guid(f336e40daef6e22238b0adee0f321e19) (TextureImporter) -> (artifact id: '14706216cb708daf6fd7fc843aaa734e') in 0.099822089 seconds
+Start importing Assets/_Project/Art/Hero3/hero3_metal_smooth.png using Guid(0444851ae4c42ee40aef2d7c5901392b) (TextureImporter) -> (artifact id: '7f887b8d6c068ac4b1f2c146df14edf7') in 1.697384478 seconds
+Start importing Assets/_Project/Resources/UI/Battle/estate_buildings.png using Guid(04c7ba43c20eb82f2b999584f6b40478) (TextureImporter) -> (artifact id: 'fb80ba38b4a0623ad7a0ad37e47ee4d7') in 2.122150235 seconds
+Start importing Assets/_Project/Resources/Units/unit_oni_albedo.jpg using Guid(044e912322a08e20ca5cdd7bf45d141a) (TextureImporter) -> (artifact id: '0588d0d31e75c87d51ba126f17efa64d') in 0.482217203 seconds
+Start importing Assets/_Project/Resources/FX/fx_shock_ring.png using Guid(142e873235a7fc32486fc56d94b413d3) (TextureImporter) -> (artifact id: 'e9b1de1ab17fdcfa7731166c0eace28f') in 0.44265841 seconds
+Start importing Assets/_Project/Art/Textures/shoji_albedo.png using Guid(149eac2187b3947a69233432bd61c2cd) (TextureImporter) -> (artifact id: 'f5cdeb042c32e38575edb94826d7565f') in 0.137836023 seconds
+Start importing Assets/_Project/Art/Textures/raked_gravel.png using Guid(2418deb2a227eba64a37c2db617734af) (TextureImporter) -> (artifact id: '9e78bf4ac03e74325706ff603b3fb1d9') in 0.141239565 seconds
+Start importing Assets/_Project/Art/Ren/ren_albedo.jpg using Guid(34c345b2b01cc6e4e88b689eabbd80fe) (TextureImporter) -> (artifact id: '903d81ba936351627691aee545a27576') in 1.878408404 seconds
+Start importing Assets/_Project/Resources/UI/Battle/result_window.png using Guid(34cdb5765d5328687a61c8955e58996f) (TextureImporter) -> (artifact id: '2ae8ce021b7b1a94d435907c74ad1bb0') in 0.056777564 seconds
+Start importing Assets/_Project/Resources/UI/artifacts.png using Guid(446abed900a5353efaa645ca4c679f6d) (TextureImporter) -> (artifact id: 'baa85727a6dc8424aba8b4b8e467fed0') in 0.057979599 seconds
+Start importing Assets/_Project/Resources/UI/map_cloud_puffs.png using Guid(6413ef1630877763c928f222961f462c) (TextureImporter) -> (artifact id: '90acbcc82f7738f02bab6f72c8b138b0') in 1.390169615 seconds
+Start importing Assets/_Project/Resources/UI/Battle/fx_fire.png using Guid(645a8226069f21cadaa427e8f810e4ec) (TextureImporter) -> (artifact id: '3de961ec69687a930c32846bf100ae05') in 1.734677486 seconds
+Start importing Assets/_Project/Resources/UI/loading.jpg using Guid(7420149986444cd988e03e5ffc15a2e4) (TextureImporter) -> (artifact id: '54dae14c4cb3a090826b8da8c845c697') in 1.014198813 seconds
+Start importing Assets/_Project/Resources/UI/rank_c.png using Guid(7470ea850cbdbd7949653229ffc60ad3) (TextureImporter) -> (artifact id: '54b4e95780b6818388e78905e198ff59') in 0.097819101 seconds
+Start importing Assets/_Project/Resources/UI/Battle/obstacles.png using Guid(747113d61408c8ab7993411180e1d37b) (TextureImporter) -> (artifact id: 'df366262509a5f703be5f934a1e79946') in 0.051871361 seconds
+Start importing Assets/_Project/Resources/UI/Battle/resource_icons.png using Guid(74d1171c1385a735ea3e81e3e0e164ef) (TextureImporter) -> (artifact id: '2e9d6eaf603cc578532d424b6f965a07') in 0.533103547 seconds
+Start importing Assets/_Project/Resources/UI/Battle/btn_0.png using Guid(74395e74d7136fd9ebebc70fbaa50b09) (TextureImporter) -> (artifact id: '6d3d24bc113044aabc770245bd9e1ee7') in 0.004598599 seconds
+Start importing Assets/_Project/Art/Textures/bamboo_fence.png using Guid(748da3474ab3f2b90aaa3271b0478f94) (TextureImporter) -> (artifact id: '54e642deb4ecdb06586b982102db0e45') in 0.485903728 seconds
+Start importing Assets/_Project/Resources/UI/seal_owari_ru.png using Guid(74af8c24c240d4ff9877a75ae866645f) (TextureImporter) -> (artifact id: '95767bb58bdff6477db41ff65068b109') in 0.13417446 seconds
+Start importing Assets/_Project/Resources/Accessories/kabuto_albedo.jpg using Guid(8446287162702ee8b8601c2ba4ba223f) (TextureImporter) -> (artifact id: 'ca72fb52d708e64da46ce7a18ce5bd01') in 0.620265791 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_btn_square.png using Guid(8478b394e5a823d5d8afdf864c5cefb7) (TextureImporter) -> (artifact id: '492391cc88d90ed120b63ae27acc4ae6') in 0.086750915 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_slot.png using Guid(841ee1397e8aa1c7e91d1c393e8cf197) (TextureImporter) -> (artifact id: '1ebd0f3666388cda3c835053af93d0c5') in 0.088813004 seconds
+Start importing Assets/_Project/Art/Textures/sakura_ground.png using Guid(9423ad0a4b30381ecb589c40d4d9dac8) (TextureImporter) -> (artifact id: 'a731d081013e5bee75e23aa0eef18ced') in 0.383872143 seconds
+Start importing Assets/_Project/Art/Textures/moss_patches.png using Guid(94d920c6bd5e636fd8d554fccd41a48d) (TextureImporter) -> (artifact id: '0bebfeff570972e5b212b1f6f8b92846') in 0.363931693 seconds
+Start importing Assets/_Project/Resources/FX/smoke_wisp.png using Guid(a400ef36298515627a8172f9ffa45f89) (TextureImporter) -> (artifact id: '97ff4f6fc1d04f2ef990059c2986f9df') in 0.107336083 seconds
+Start importing Assets/_Project/Resources/UI/Battle/map_wisps.png using Guid(a45168da0add5df4082e1c0d11aaaeaf) (TextureImporter) -> (artifact id: '10c08b1a1c7551951b150dafabffda2b') in 1.687313644 seconds
+Start importing Assets/_Project/Resources/FX/cat_fur_white.png using Guid(a435f5af8f999015f8d3620aae84eb64) (TextureImporter) -> (artifact id: '0ccc2d570600fd2b0ed3bd41004a1920') in 0.152517684 seconds
+Start importing Assets/_Project/Resources/UI/Battle/unit_portraits.png using Guid(b4165531ce2aea358a6e33e244842db5) (TextureImporter) -> (artifact id: '015c03610450d1ad24697fcfbb4c6e85') in 0.635732556 seconds
+Start importing Assets/_Project/Resources/UI/portrait_kitsune.png using Guid(b497b01e28354da2893cb38dd7c27db9) (TextureImporter) -> (artifact id: '37ba562d0f501a28e46a97af7855d45d') in 0.09190499 seconds
+Start importing Assets/_Project/Resources/Units/unit_shinobi_albedo.jpg using Guid(c421ad9a9a9f73dfb892861c14ae8547) (TextureImporter) -> (artifact id: '1b6180cf06b3c09c277af0d58b56987a') in 0.50874639 seconds
+Start importing Assets/_Project/Resources/FX/ink_slash.png using Guid(c499280bded6b50a88086f1b24058f2e) (TextureImporter) -> (artifact id: '2ee1dd9db06ae043a8ffe7f89613c4dc') in 0.365916236 seconds
+Start importing Assets/_Project/Resources/Units/unit_archer_albedo.jpg using Guid(c43d0ac10947e6d2e95b358a776742fc) (TextureImporter) -> (artifact id: '926cae7e5c04de9f46c1bd22ff59c64d') in 0.540085348 seconds
+Start importing Assets/_Project/Resources/UI/btn_wave.png using Guid(c44ebeb6966b06d1c9041b65ee430fe1) (TextureImporter) -> (artifact id: '0561de843386187d173fd74a6dc9fe0b') in 0.099256572 seconds
+Start importing Assets/_Project/Resources/UI/map0_tree_over.png using Guid(d440bc887173e677395be502a4ab8384) (TextureImporter) -> (artifact id: '26dc8376e1a14bfe763d3f38c5a96c77') in 0.010928061 seconds
+Start importing Assets/_Project/Resources/UI/Battle/hex_gold.png using Guid(d4f8900f8096c98f091e6d11548434ac) (TextureImporter) -> (artifact id: '94bef718d3f321735e4090dcf2cf45ea') in 0.009204642 seconds
+Start importing Assets/_Project/Resources/UI/Battle/estate_bg.jpg using Guid(d4eb303012d64fbafbcc6cfda05b6eee) (TextureImporter) -> (artifact id: 'bca9f7f2c3d34b86786b1c05d4a53dd2') in 0.039790838 seconds
+Start importing Assets/_Project/Art/Textures/iron_old_albedo.png using Guid(e4859ff9a7c593369b377edbc7274568) (TextureImporter) -> (artifact id: '53b09bbf5e372dc6ff7c05ae16f8f93f') in 0.141361716 seconds
+Start importing Assets/_Project/Resources/Units/unit_crimson_albedo.jpg using Guid(e4cc4ccd31ec17450aff7a6c79b5a833) (TextureImporter) -> (artifact id: '369ddd1bcfb80583a7c25f9b40da76ed') in 0.521235959 seconds
+Start importing Assets/_Project/Resources/FX/super_crescent.png using Guid(e46fc962f14115103af6c6ea2da9d520) (TextureImporter) -> (artifact id: 'baf81892dbacfa1280c08fc9899f48d2') in 0.405124984 seconds
+Start importing Assets/_Project/Resources/FX/blood_burst.png using Guid(f4818e65c83d64572888a3ea4f67630b) (TextureImporter) -> (artifact id: '51da0371188c519695b50d8cd6ac0d97') in 0.353575687 seconds
+Start importing Assets/_Project/Resources/UI/stick_base.png using Guid(f4e31ee084acb4ea58146a5ac5d106e9) (TextureImporter) -> (artifact id: '652581379120c487bb6854974ab50ab4') in 0.093035707 seconds
+Start importing Assets/_Project/Art/Textures/rock_albedo.png using Guid(f4763f8bd9245c90e882103946c96ed1) (TextureImporter) -> (artifact id: '6c141eaeec5a86ab8f47372cdda3ade6') in 0.143110947 seconds
+Start importing Assets/_Project/Resources/FX/burst_blue.png using Guid(05f5a283e5753f42fa057df1845def47) (TextureImporter) -> (artifact id: '586555afbf59b7217827f9dc49f6702c') in 0.799774396 seconds
+Start importing Assets/_Project/Resources/FX/super_strike.png using Guid(15232b3c4d73aca499e501783afc5796) (TextureImporter) -> (artifact id: '0793ccdd5ff3f0c01882eceb3e55bb7d') in 1.517245679 seconds
+Start importing Assets/_Project/Resources/UI/map_tavern.png using Guid(15d311c10a08f6115abde354ec578e5e) (TextureImporter) -> (artifact id: 'b3aca59e624aa20bf858aa30052dce12') in 0.106683965 seconds
+Start importing Assets/_Project/Resources/UI/Battle/btn_1.png using Guid(15c94abf18725f7df88fb62cb278c10d) (TextureImporter) -> (artifact id: '1a46144347ffe3f0cb16aa2e20aee4c4') in 0.005680798 seconds
+Start importing Assets/_Project/Resources/Units/unit_onmyoji_albedo.jpg using Guid(259a61e21a99e0f96ba1f2940737811e) (TextureImporter) -> (artifact id: '9ba167cfd89e51cfb0874d76411d1992') in 0.493549412 seconds
+Start importing Assets/_Project/Resources/FX/fx_aura_violet.png using Guid(259edf83f70868cf7823daceb551dbe5) (TextureImporter) -> (artifact id: 'b4744a63f62029783d10c635bc51bc86') in 0.441008737 seconds
+Start importing Assets/_Project/Resources/UI/selection/fog_toggle_inner_on.png using Guid(35842d9dc2a52e33e9c8c70dbc7b9dea) (TextureImporter) -> (artifact id: '6385e7ed5efde2b50449b5f400458691') in 0.050508385 seconds
+Start importing Assets/_Project/Resources/UI/Kit/hud_pip_empty.png using Guid(35a739c978b59117489afb56fab7ba1f) (TextureImporter) -> (artifact id: '3bf408b1ef21595936ce14f2d300f2d4') in 0.084961955 seconds
+Start importing Assets/_Project/Art/Textures/sky_day.png using Guid(35f92c436c61f040faf1b2bd1a4f8c8d) (TextureImporter) -> (artifact id: 'd3ea819154279e44de25920d2e50468c') in 1.141240371 seconds
+Start importing Assets/_Project/Resources/Units/unit_sohei_albedo.jpg using Guid(45521900ad7a7fb2888a02b600e6b520) (TextureImporter) -> (artifact id: '356215926086765716d2899285865833') in 0.485619779 seconds
+Start importing Assets/_Project/Art/Textures/armor_normal.png using Guid(45e28afb360dd3c7b9afbe76628c79a8) (TextureImporter) -> (artifact id: '2d8e94a19bc4868f1e0e2a1c314d3936') in 0.126803007 seconds
+Start importing Assets/_Project/Resources/UI/H3/tavern.png using Guid(45c6ad060668ea413bd26c3ed9405750) (TextureImporter) -> (artifact id: '64ead3e4adcbee83f43ffd3422e745ac') in 0.058746832 seconds
+Start importing Assets/_Project/Resources/UI/enemy_full_shadow.png using Guid(455941258b1945ff6b6c5730d3775260) (TextureImporter) -> (artifact id: 'd6932f8d2985121472431f53b6588890') in 0.025880637 seconds
+Start importing Assets/_Project/Art/Textures/sky_dusk.png using Guid(455f998b3e651ea9daf072a408d25133) (TextureImporter) -> (artifact id: '474298c372e45ebe00097ccf27710b25') in 1.154476729 seconds
+Start importing Assets/_Project/Art/Textures/tsuka_albedo.png using Guid(55415d9420b97a8e9aaa9e029bdaa55e) (TextureImporter) -> (artifact id: '078546abf6bbb93790149240c08fe4f5') in 0.038343683 seconds
+Start importing Assets/_Project/Art/Textures/stoneblock_albedo.png using Guid(55c120323692afcf7ae506377ae7fb27) (TextureImporter) -> (artifact id: '02e42e28522f77dded5a8d6e9322d7be') in 0.143256863 seconds
+Start importing Assets/_Project/Resources/UI/selection/card_glow.png using Guid(5564555cffae89fddaabc431f2308da2) (TextureImporter) -> (artifact id: 'c71fdf61eac1de25dab60147e9a175e2') in 0.173427473 seconds
+Start importing Assets/_Project/Resources/UI/MapObjects/objects_dark_1.png using Guid(5515f0baa0389406aacf2b5626128069) (TextureImporter) -> (artifact id: '6ed89842b5324622838222d51df447c1') in 0.057185217 seconds
+Start importing Assets/_Project/Resources/UI/fx_ui_aura_violet.png using Guid(55c5cbd3e99359e7bbb1d56eee61fd45) (TextureImporter) -> (artifact id: '6483c5abd1ae624943b1bb9eda855e37') in 1.762942429 seconds
+Start importing Assets/_Project/Resources/UI/shi.png using Guid(55772271bd712aa93bc41849a5cc3e5c) (TextureImporter) -> (artifact id: 'a9103051c020db351337dc63c30bfb4e') in 0.109341914 seconds
+Start importing Assets/_Project/Resources/UI/frame_1.png using Guid(65a3604bf4edf633b82c52266954f047) (TextureImporter) -> (artifact id: '1ae7e0f0a2b76f2573a0684c0945aacf') in 0.099855377 seconds
+Start importing Assets/_Project/Resources/UI/splash_studio.jpg using Guid(657a201b24c96cb81955eb5024821385) (TextureImporter) -> (artifact id: 'b27922134f92dfbaecb4ed74f0b4becd') in 0.882525881 seconds
+Start importing Assets/_Project/Resources/FX/blood_spray.png using Guid(7526cac72b3eb134babd790acd9833ff) (TextureImporter) -> (artifact id: '1f9575e6c1df74c641a1e7131e0fb711') in 1.506366594 seconds
+Start importing Assets/_Project/Resources/UI/Battle/fx_wind.png using Guid(75eb76f57b132e8db993d09051d82b76) (TextureImporter) -> (artifact id: '7d991db1e573e7be935a34ff4685cefe') in 1.74687113 seconds
+Start importing Assets/_Project/Resources/UI/selection/approved_difficulty_2.png using Guid(85717d767bb5cc420963769d0fa49197) (TextureImporter) -> (artifact id: '11eeb504107e8d6c87e95107287d3216') in 0.14277377 seconds
+Start importing Assets/_Project/Resources/Accessories/jingasa_albedo.jpg using Guid(8594d4d77819e1805b660d305f7467a4) (TextureImporter) -> (artifact id: '84b92e1afa73790133b8033d04d488fe') in 0.611611044 seconds
+Start importing Assets/_Project/Resources/FX/charge_flecks.png using Guid(854d44e196933b0a8b556450dc490978) (TextureImporter) -> (artifact id: 'd346d3c40a7121c9bdb805a4285f5e93') in 0.110547017 seconds
+Start importing Assets/_Project/Resources/UI/H3/week_window.png using Guid(9500abce12f18112d80eff6eef9d3496) (TextureImporter) -> (artifact id: '200cd394d48bcd7ddd6d3b71ec3bdeb1') in 1.253766054 seconds
+Start importing Assets/_Project/Art/Textures/banner.png using Guid(95cf95f8df59036589a062775d8b1558) (TextureImporter) -> (artifact id: '9af797e2f6babbdad7ce2cff9c0d0ba6') in 0.089306893 seconds
+Start importing Assets/_Project/Resources/UI/plank_red.png using Guid(a5d6ed237150d860eaa83aaf3a2dc445) (TextureImporter) -> (artifact id: '3e2f27556f2ec189d514dc376393b627') in 0.191610713 seconds
+Start importing Assets/_Project/Resources/UI/Kit/hud_timer.png using Guid(a5887106ad4c39f8483c61006cf10137) (TextureImporter) -> (artifact id: '1868d06019fbc1222c099677948f679b') in 0.089616869 seconds
+Start importing Assets/_Project/Models/Arenas/Detail/lacquer.jpg using Guid(c5209d96eba0734c7bfea396dc52e6e5) (TextureImporter) -> (artifact id: '9ea0b86959e669ca972f9b1970178e12') in 0.577737337 seconds
+Start importing Assets/_Project/Resources/UI/MapObjects/objects_dark_4.png using Guid(c5323eb86d905b4f9a4eb651ffd67335) (TextureImporter) -> (artifact id: '59dbd92914439c06dffe98f51a240e45') in 0.069072535 seconds
+Start importing Assets/_Project/Art/Textures/jizo.png using Guid(c5c5bfe3ac40f50b1818c1883f0d221c) (TextureImporter) -> (artifact id: 'e2166f6b0a2c6e932cba99d6029faffb') in 0.623008844 seconds
+Start importing Assets/_Project/Resources/UI/selection/approved_hero_0.png using Guid(c5ffba6add91cf0e4a46bc00740e633b) (TextureImporter) -> (artifact id: 'b122248508638e478a4b0790f3fe16ed') in 0.167084506 seconds
+Start importing Assets/_Project/Resources/UI/place_onsen.jpg using Guid(e58956eb4c516eab88ebf753fa50dad5) (TextureImporter) -> (artifact id: '0880400b7952983324fed211b8b21423') in 0.01466512 seconds
+Start importing Assets/_Project/Art/Textures/gravel_normal.png using Guid(f535597c66f9d3bba8fcb0aff95a270b) (TextureImporter) -> (artifact id: '4b32cf3f4e12bfab5f16afdbc2be2346') in 0.175759325 seconds
+Start importing Assets/_Project/Resources/UI/hasso.png using Guid(0653ac734b6e5e0e882d6c0b85518991) (TextureImporter) -> (artifact id: '763128b1db0330ca773776d542bb9be8') in 0.879259895 seconds
+Start importing Assets/_Project/Resources/UI/tech_2.png using Guid(165bc6eea607894419198e889530ba7c) (TextureImporter) -> (artifact id: '35499add7e6db99bbb81b6a194a26c01') in 0.102728237 seconds
+Start importing Assets/_Project/Art/Textures/chochin_emis.png using Guid(165f54b826bde9489966bf5b7a374de2) (TextureImporter) -> (artifact id: '56c6cb24633e5e77c3c733342d0697cb') in 0.246915857 seconds
+Start importing Assets/_Project/Art/Textures/ronin_normal.png using Guid(2660a79973af0689593f7246650de9bf) (TextureImporter) -> (artifact id: '623c1e5462553cea010563ef262bec88') in 0.454279022 seconds
+Start importing Assets/_Project/Resources/UI/dice_rogue_2.png using Guid(26c6ea583cf3bce11a1d9da3f41ff388) (TextureImporter) -> (artifact id: '7be55ae9fdd4fcabdb21bf1a29837f10') in 0.325379104 seconds
+Start importing Assets/_Project/Resources/FX/fx_spirit.png using Guid(26e6de9124e8d11adb31cff6eb04ce50) (TextureImporter) -> (artifact id: '4e901bd2deb2595dab317d8133ef9d7a') in 1.46137195 seconds
+Start importing Assets/_Project/Resources/UI/map_unknown.png using Guid(26c908251514abfd8930fd183b545d46) (TextureImporter) -> (artifact id: 'd4f49ba8f92f6faeb26d019a3f3c566b') in 0.090904614 seconds
+Start importing Assets/_Project/Resources/UI/selection/approved_hero_1.png using Guid(268be9a4d127caa48a7df1114d93f251) (TextureImporter) -> (artifact id: 'ea9d4c927ae96bf11272f96c22581374') in 0.077673672 seconds
+Start importing Assets/_Project/Resources/FX/trail_moon.png using Guid(3657d44f57ea78328b5e0385746ab8ec) (TextureImporter) -> (artifact id: '465b7b1d4e1a7655bfa84a5cc0ac3d63') in 0.038346104 seconds
+Start importing Assets/Resources/UI/pack02/node_duel.png using Guid(36caaa77b095ff313ab426086893ffb3) (TextureImporter) -> (artifact id: 'd1c51bb358ee628cd58de82076ba2fd9') in 0.013606533 seconds
+Start importing Assets/_Project/Resources/FX/sigil_sun_early.png using Guid(4688f2e99167a5694bb209838a4d0718) (TextureImporter) -> (artifact id: '9ef68b28442ac94c22d9a58b0c960d13') in 0.396438404 seconds
+Start importing Assets/_Project/Resources/UI/btn_heal.png using Guid(46a909415a9ff6479b335114af104012) (TextureImporter) -> (artifact id: '279f629a7f1a51f9634029d942f4ea06') in 0.095677159 seconds
+Start importing Assets/_Project/Resources/UI/Battle/estate_buildings2.png using Guid(56f020b5e72351627b2b80dfe0a267be) (TextureImporter) -> (artifact id: '992f7985da2be2fc628836341294ff0a') in 1.969190949 seconds
+Start importing Assets/_Project/Art/Textures/plaster_albedo.png using Guid(567101dde05618a8b8c925e234a992b0) (TextureImporter) -> (artifact id: 'e6219fcb174b31b3f1a34fdb8a5e11ca') in 0.138395947 seconds
+Start importing Assets/_Project/Resources/UI/ink_r2.png using Guid(56995427219afc43193b49b4ad358e4c) (TextureImporter) -> (artifact id: 'b504ec2984317182fc2fb0996a4d8451') in 0.099128574 seconds
+Start importing Assets/_Project/Resources/UI/event_10.jpg using Guid(569e414cedf9d444286075142e63d94c) (TextureImporter) -> (artifact id: 'c484f9a691571e161a6f64d4a8bd755d') in 0.143269547 seconds
+Start importing Assets/_Project/Resources/UI/event_16.jpg using Guid(665200409cac9e368874e69731a2a3d3) (TextureImporter) -> (artifact id: 'adaa812f21be515b9208be9374dbad4b') in 0.013484325 seconds
+Start importing Assets/_Project/Resources/UI/chest_anim.png using Guid(668570b354cb860278ac98522811642e) (TextureImporter) -> (artifact id: 'ab5230ac700e70557090e10d564a5dbf') in 0.403308999 seconds
+Start importing Assets/_Project/Resources/UI/map_squad.png using Guid(665e7f28ebd3e9cf4bcf0e35cd030f12) (TextureImporter) -> (artifact id: 'cc409bc37e24c59512beaf58b2c3f495') in 0.112343929 seconds
+Start importing Assets/_Project/Resources/Accessories/mempo_albedo.jpg using Guid(661f1df17a122379bb5d35fb778fa9cb) (TextureImporter) -> (artifact id: 'a393d75621db32cfd9c2fe64e05e27c7') in 0.599646868 seconds
+Start importing Assets/_Project/Resources/UI/btn_dash.png using Guid(66cf7fef2ec3df6ffb686eb77ecf5bdf) (TextureImporter) -> (artifact id: '30e265e5228913eb6babb501fc638963') in 0.096179203 seconds
+Start importing Assets/_Project/Resources/UI/tech_4.png using Guid(765506fee4dc79ef4a2b06052cf16821) (TextureImporter) -> (artifact id: '73f297446da157d037b79cc98eae56a7') in 0.085763804 seconds
+Start importing Assets/_Project/Resources/UI/stat_str.png using Guid(86b01892739bc4119be57a35e20599f3) (TextureImporter) -> (artifact id: 'bec5779dc42dc5bd82b30504b5ebfaf3') in 0.108704138 seconds
+Start importing Assets/_Project/Resources/FX/map_lightning.png using Guid(86ba92981e3914b51a8bb894c6cb845a) (TextureImporter) -> (artifact id: '67d0eb0a8ae9c56fd6273d6b4cbe8c4d') in 0.756974935 seconds
+Start importing Assets/_Project/Art/Textures/roof_albedo.png using Guid(86deb44840e9b1ee5bf7bdd668510aa4) (TextureImporter) -> (artifact id: '2de301495d9dfc71cf8cf58932186ff4') in 0.142348997 seconds
+Start importing Assets/_Project/Resources/UI/rank_b.png using Guid(86df5123ff595136d8a0bad5b2c5dc5c) (TextureImporter) -> (artifact id: '9d28f22b9fb8bc9070dad4891a12ecd1') in 0.096759831 seconds
+Start importing Assets/_Project/Resources/FX/fx_burst_red.png using Guid(96970b510abe405d181d5b16f761d0d6) (TextureImporter) -> (artifact id: '02acedaae75461e800cebdb69fc35210') in 0.455537013 seconds
+Start importing Assets/_Project/Resources/UI/H3/mage_hall.png using Guid(a6115db5f48d4639fa5b7a5a19b085d5) (TextureImporter) -> (artifact id: 'a03e44ab163b33259320a81b55945e65') in 0.059707196 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_new.png using Guid(a6da539f4c3d64cbaafa8c58eee499f8) (TextureImporter) -> (artifact id: 'ed45196070920dfa1453acfa03067e63') in 0.089152521 seconds
+Start importing Assets/_Project/Resources/UI/Battle/queue_bar.png using Guid(b67af5b09d9dadf7c9912d84214a2942) (TextureImporter) -> (artifact id: '191102637cf8be796191c8c34cb78b9e') in 0.01336928 seconds
+Start importing Assets/_Project/Resources/FX/cloud.png using Guid(b6ed112f29058ae1389bf50993d61825) (TextureImporter) -> (artifact id: '21850e7aeff4a440eddf0dc840b1e077') in 0.200049956 seconds
+Start importing Assets/_Project/Resources/UI/npc_altar.jpg using Guid(c69063cb9664ae1dbb9cedf10508259d) (TextureImporter) -> (artifact id: '4550af707b6e761ab2b11a417edb168d') in 0.017910501 seconds
+Start importing Assets/_Project/Resources/UI/event_18.jpg using Guid(c6a1b4a62f485ae41a15a6baa3ec2249) (TextureImporter) -> (artifact id: 'c75f3879e6ed4cf7e1479277d425ecfa') in 0.01938807 seconds
+Start importing Assets/_Project/Resources/FX/trail_fire.png using Guid(c692d63dde52672ee9b020286700a450) (TextureImporter) -> (artifact id: 'e356b97378b2b2a528e0b36291de28d3') in 0.039216449 seconds
+Start importing Assets/_Project/Resources/UI/map_icons_branch.png using Guid(c66310894fc71de9092b4fb4e0bb396c) (TextureImporter) -> (artifact id: '586166dbf3cece805c9c8d0cc6606708') in 0.267391551 seconds
+Start importing Assets/_Project/Resources/UI/chest_open.png using Guid(c6662cef7ddcc7515bf48b5a98ff0f4f) (TextureImporter) -> (artifact id: 'a2aff48ca616ee8682fb61c4865621a5') in 0.106020628 seconds
+Start importing Assets/_Project/Resources/UI/sho.png using Guid(c639f71c75859eb4d836195d9f4ebce0) (TextureImporter) -> (artifact id: '7ff7315c9d98c59ce5ffa474f164f8d3') in 0.111758483 seconds
+Start importing Assets/_Project/Resources/UI/event_2.jpg using Guid(c6fd0a0b511c2ffc1b7ae61b6842cbe1) (TextureImporter) -> (artifact id: '82349bdd8fd836a7c496759fcf32ead9') in 0.133954105 seconds
+Start importing Assets/_Project/Resources/UI/selection/hero_0.jpg using Guid(d6a4b4f15fac3cfcc832048a26c00c4e) (TextureImporter) -> (artifact id: '8ac640681634d6aadbc887af897b649c') in 0.076577395 seconds
+Start importing Assets/_Project/Resources/UI/Battle/btn_2.png using Guid(d6fc58f033822317a9b020cee2ce318d) (TextureImporter) -> (artifact id: 'b22112b9df4cec0cc7ca575667ec6959') in 0.004103274 seconds
+Start importing Assets/_Project/Resources/UI/portrait_red_samurai.png using Guid(d6fdca12990dc69afa7eb4fafb28ddd8) (TextureImporter) -> (artifact id: '30fcfdf983de4f2153c0215a03196109') in 0.098020654 seconds
+Start importing Assets/_Project/Resources/FX/petals8.png using Guid(f6d0bd2b79612bd9b856acf34c0df66c) (TextureImporter) -> (artifact id: '8541f713638b732a7e8a37e3b55387cc') in 0.705122236 seconds
+Start importing Assets/_Project/Resources/UI/map_rider_16.png using Guid(f646e4245a6a2c6edabe9cfc1f3240c0) (TextureImporter) -> (artifact id: 'fc8ed3a5a24dc77464d852ec965060fb') in 1.382466116 seconds
+Start importing Assets/_Project/Resources/FX/leaves8.png using Guid(f65a0cf18eb0917e09a3e03d8de2a28a) (TextureImporter) -> (artifact id: 'd604690cc7b05a81c4356780142db235') in 0.757690792 seconds
+Start importing Assets/_Project/Resources/UI/btn_heavy.png using Guid(f63ebf30be1804884b2f009a4833b4ed) (TextureImporter) -> (artifact id: '7579decdd32e0b767e86739961b62c5e') in 0.092044677 seconds
+Start importing Assets/_Project/Resources/UI/char_zone_icons.png using Guid(07c32036dad5b808a9a97902b84e4dc4) (TextureImporter) -> (artifact id: '26eaf36d6c3debd606773e0daedc878f') in 1.30202743 seconds
+Start importing Assets/_Project/Resources/UI/companion_raven.png using Guid(07e31eb5deb9efb1cb44082c07a590d9) (TextureImporter) -> (artifact id: '6babb7e2579366a2a709938dbf6cf45b') in 0.086826451 seconds
+Start importing Assets/_Project/Resources/UI/tech_3.png using Guid(07167ec46a35b7bc18135d709eb4bf89) (TextureImporter) -> (artifact id: '47d4c9d8ca47c63752cf9c9db2cc658a') in 0.09533315 seconds
+Start importing Assets/_Project/Resources/FX/charge_inhale.png using Guid(078f584d3a7e231e998828f05d6afc2b) (TextureImporter) -> (artifact id: 'a840fdde72c9046be98e87ccbf3b1ff3') in 0.806160843 seconds
+Start importing Assets/_Project/Resources/UI/event_6.jpg using Guid(17ebcc7a57292ac5cb4a25a8ea052c8e) (TextureImporter) -> (artifact id: '321298149cb4e225df62d1cf79a56d44') in 0.144703725 seconds
+Start importing Assets/_Project/Resources/FX/crack_glow.png using Guid(3767e4fb2886f068ea603d1b56ad6e2b) (TextureImporter) -> (artifact id: '56d852602b2f60cd08b8c3719342b60e') in 0.351220874 seconds
+Start importing Assets/_Project/Art/Samurai2/samurai2_metal_smooth.png using Guid(375e1a9007ba41ca5b0ed5af866afdbf) (TextureImporter) -> (artifact id: '0b2fe7e2fbdcd7d9d8814124a354e5b3') in 1.784036487 seconds
+Start importing Assets/_Project/Resources/Units/unit_general_albedo.jpg using Guid(47a1800ff43153b8ebcf6743622df975) (TextureImporter) -> (artifact id: 'aff1c84610aabaa98c6ffba54fe9ac69') in 0.536975576 seconds
+Start importing Assets/_Project/Art/BaseFemale/basefemale_albedo.jpg using Guid(4766e24e4dbf2fece83c062dd9da7113) (TextureImporter) -> (artifact id: 'f03fcd2db77ad7ab9ca026ec0cb9b03a') in 1.76992443 seconds
+Start importing Assets/_Project/Resources/FX/dust_puff.png using Guid(4768b764a1110ab54a799fac94f64be7) (TextureImporter) -> (artifact id: 'c8dd509cf74f8ff48e6e376f99d101a7') in 0.122631628 seconds
+Start importing Assets/_Project/Art/Textures/flame_sheet.png using Guid(47fe4e2fcf6be19dbb19dfbc4b43a8a8) (TextureImporter) -> (artifact id: '543a8e1eba4f2f2cac5fad627078f921') in 0.378479268 seconds
+Start importing Assets/_Project/Resources/UI/portrait_shogun.png using Guid(57bdac61d7d657b5da8e8304d09d352e) (TextureImporter) -> (artifact id: '35fb28655ba7eadf8780480783b34aee') in 0.093253479 seconds
+Start importing Assets/_Project/Art/Dzin/dzin_albedo.jpg using Guid(6731d23493860a89cb08a1df3a6db8e8) (TextureImporter) -> (artifact id: 'c37e61baa4679be315366c461463ac41') in 1.926379613 seconds
+Start importing Assets/_Project/Resources/UI/fog_puffs.png using Guid(678965835f9a2a4f894cc25ef9921282) (TextureImporter) -> (artifact id: '3be3a25912ceffc0ec407c84dc027580') in 1.657299881 seconds
+Start importing Assets/_Project/Art/Textures/bronze_patina_albedo.png using Guid(77a5a61735d3fcce281e31d92b7c6a5f) (TextureImporter) -> (artifact id: 'e0c2da3f6009979c8d79b902a85d7401') in 0.13953954 seconds
+Start importing Assets/_Project/Art/Textures/gate_door_normal.png using Guid(77172aa70eb2365e78b1ade0726a9b6f) (TextureImporter) -> (artifact id: '4fe838e27ae259f6b59c5b615390f27b') in 0.13958045 seconds
+Start importing Assets/_Project/Art/Shadow/shadow_albedo.jpg using Guid(778cccff36264177a87b567f44ec3483) (TextureImporter) -> (artifact id: 'a6b137978fe109c4c65b64747b4b793d') in 1.856196736 seconds
+Start importing Assets/_Project/Art/Textures/maple_cluster.png using Guid(875f9ef8a6a89b132af037bbf81a5893) (TextureImporter) -> (artifact id: 'c39550a85ddf63c3c8c67154f241b47c') in 0.407788382 seconds
+Start importing Assets/_Project/Resources/FX/bwave_fly.png using Guid(9702d4cb697ea36448ca72547115eb1d) (TextureImporter) -> (artifact id: '744b522da0a3667875d8e0456efc3315') in 0.88981491 seconds
+Start importing Assets/_Project/Resources/UI/H3/dwellings.png using Guid(97e9795282fe2c89a9cb4b2737eaf6ae) (TextureImporter) -> (artifact id: '37670d541487eea250301deeface16ec') in 0.056823891 seconds
+Start importing Assets/_Project/Resources/UI/map_buildings_day.png using Guid(976b9a9ec10db90b1bcba085dfc23b83) (TextureImporter) -> (artifact id: 'caf2b546073a4171495d2f0544dcf4f5') in 0.727767638 seconds
+Start importing Assets/_Project/Resources/UI/enemy_full_fallen.png using Guid(975e4d767de90f0e6ac5f178fe16ae5b) (TextureImporter) -> (artifact id: '76b3fa152a2a5f64cb299783a40e75be') in 0.024057181 seconds
+Start importing Assets/_Project/Resources/FX/rage_lightning.png using Guid(979ea34ef93cef83a8d2ef6795abacc3) (TextureImporter) -> (artifact id: '3fa2a1b367918946de36309ff7099ce6') in 0.460351238 seconds
+Start importing Assets/_Project/Art/Oni/oni_albedo.jpg using Guid(a7103e94a086c41889cdbe4092a96ea5) (TextureImporter) -> (artifact id: 'e48c40a9831df8db933700c09bf4e67a') in 1.938953802 seconds
+Start importing Assets/_Project/Resources/UI/Battle/fx_musket.png using Guid(a7d1a1584030927a0ab19ebc26de2a02) (TextureImporter) -> (artifact id: '9dca65e792637c833df003a4c3c6c6ed') in 1.548184247 seconds
+Start importing Assets/_Project/Resources/UI/map_hero.png using Guid(a765d8108ed96e713b0e577b9f286695) (TextureImporter) -> (artifact id: 'fc31f197c228834ecc05b63a964b0584') in 1.459746769 seconds
+Start importing Assets/Resources/FX/flame_red.png using Guid(a7b8be83c9f582a98bb4409ba176d5c7) (TextureImporter) -> (artifact id: '4d4a977e11b6c916e57ff53e21d95ae6') in 0.051925252 seconds
+Start importing Assets/_Project/Art/Textures/fire_sprite.png using Guid(a70cf4cc1323865eebbc5460efaad611) (TextureImporter) -> (artifact id: '430314389953e78bb40f5f83e660eb0f') in 0.013161972 seconds
+Start importing Assets/_Project/Resources/UI/btn_rising.png using Guid(b794a2ffd15602a528f8b5e73603258d) (TextureImporter) -> (artifact id: '33385fef32ae7e409e79f7263e1a3be1') in 0.100683428 seconds
+Start importing Assets/_Project/Resources/FX/vortex.png using Guid(b7a6663c6a8619a4ab3f1ed0fa1c7d88) (TextureImporter) -> (artifact id: 'a3e272068a37a1e55662eefcfc1923ba') in 0.482143541 seconds
+Start importing Assets/_Project/Art/Textures/plaster_normal.png using Guid(c7f0fd65cb9b7f7dd87ddfd63b3a14a2) (TextureImporter) -> (artifact id: 'b43d599bc2b78f84ecc687ab2c5c3699') in 0.137237394 seconds
+Start importing Assets/_Project/Resources/FX/x_slash.png using Guid(c7752187084d709b9be9b7bb00ae79d8) (TextureImporter) -> (artifact id: 'b5df3620a9671d47f972e0282352b38a') in 0.110319906 seconds
+Start importing Assets/_Project/Art/Textures/steel_albedo.png using Guid(c7c7912742683cff5b367c0660483e7f) (TextureImporter) -> (artifact id: '784c2049e6f2e89b27f15ebd54b1af48') in 0.037199117 seconds
+Start importing Assets/_Project/Resources/FX/sigil_storm.png using Guid(c7bdec7234f0f86ddb28bdfa594626e2) (TextureImporter) -> (artifact id: 'e1156521a3511a359a13a19b1074ab70') in 0.415296659 seconds
+Start importing Assets/_Project/Resources/UI/coins.png using Guid(d761ce912e27d0ae1b94bad8af3e4def) (TextureImporter) -> (artifact id: 'b7b408a35380a5005b2dca79c6383d8a') in 0.032547535 seconds
+Start importing Assets/_Project/Resources/FX/ripple.png using Guid(d7b8ee9f61f327a1082ea054b63013be) (TextureImporter) -> (artifact id: 'a640cfe058ba1c3a2464dc275c2b5720') in 0.103000211 seconds
+Start importing Assets/_Project/Resources/UI/map_buildings.png using Guid(e7617ebef6d14c957986a1270ccba8ef) (TextureImporter) -> (artifact id: '9e7dbe28ac48335a4dd11c9bff0fda69') in 0.811181029 seconds
+Start importing Assets/_Project/Resources/FX/trail_lightning.png using Guid(e7139a72740ef182eb37550dc95810a9) (TextureImporter) -> (artifact id: '038d1840f69bf6279521b27feed8833c') in 0.042251829 seconds
+Start importing Assets/Resources/UI/pack02/node_camp_node.png using Guid(e784d6fa75273af79865cb17dec2142b) (TextureImporter) -> (artifact id: '23a8eabc7c6568ea623deee4489540a0') in 0.01169318 seconds
+Start importing Assets/_Project/Resources/UI/selection/difficulty_select_frame.png using Guid(f75570f9c0cd1b4bca37e8fd844a76e6) (TextureImporter) -> (artifact id: '792b200ff76e63d0e31ef2c4d0e40f7c') in 0.73850365 seconds
+Start importing Assets/_Project/Models/OniWarrior/OniWarrior_roughness.png using Guid(f706cbf69fad31fa5a2bfadf4b8714cd) (TextureImporter) -> (artifact id: 'a87361b682198e34a4b1c28163f4f959') in 1.838874501 seconds
+Start importing Assets/Resources/UI/pack02/ruins.png using Guid(f718a0f86e5d81dc5b27862bd49850ab) (TextureImporter) -> (artifact id: '1e3237195b103b87c6c328db7907e288') in 0.012592981 seconds
+Start importing Assets/_Project/Resources/UI/npc_bounty.jpg using Guid(f7f8325dcb24976599ac30fb96d8e12f) (TextureImporter) -> (artifact id: 'c4be6a05070f0c3c8341856ad1d6003c') in 0.01759365 seconds
+Start importing Assets/_Project/Resources/UI/Battle/fx_warcry.png using Guid(083118b305078e49a9d4b5177121f1e5) (TextureImporter) -> (artifact id: '632b58873cb02f980bad52a369485f0f') in 1.814817748 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_board.jpg using Guid(0872c5adc37477267a952e2e5b444e0a) (TextureImporter) -> (artifact id: 'e2b41381e68ffd280dcab41c08af99ff') in 0.039008006 seconds
+Start importing Assets/_Project/Resources/UI/deathblow.png using Guid(08d4705be56b21f1b9e4f1ca98ad40d8) (TextureImporter) -> (artifact id: '6e6f2468d0785807ddaec4c30da861ab') in 0.739281452 seconds
+Start importing Assets/_Project/Resources/FX/sigil_ice_early.png using Guid(088cc40c6a0553b559219b1b81b00618) (TextureImporter) -> (artifact id: '4fff621e83f56e7e3e68e93778943637') in 0.405714609 seconds
+Start importing Assets/_Project/Resources/FX/maple_leaf.png using Guid(18a164f0b0dc5bbd3af9245ba019dc40) (TextureImporter) -> (artifact id: '20d388951fef6cb37d59d27652a911ca') in 0.031402243 seconds
+Start importing Assets/_Project/Resources/UI/enemy_full_red_samurai.png using Guid(18a51136668f9376ebd3bedc8e986265) (TextureImporter) -> (artifact id: '8af322738a282af91c5a046da02ab2f4') in 0.024153502 seconds
+Start importing Assets/_Project/Resources/UI/shine_frame.png using Guid(2871e6d4cc488627ba6e89f6bb2fa29a) (TextureImporter) -> (artifact id: 'f1899b2a521fce210483cad612638164') in 0.407405434 seconds
+Start importing Assets/_Project/Resources/UI/seal_hai_ru.png using Guid(2883d78fcfe2f44cd896521718160635) (TextureImporter) -> (artifact id: 'f5ae15c67a36e6d34aa9916e82f557ce') in 0.125730699 seconds
+Start importing Assets/_Project/Resources/UI/map_buildings_new.png using Guid(2824b385e518639de974a146b690bb1d) (TextureImporter) -> (artifact id: 'bde951dc476cef59801758f3ee396505') in 0.712217666 seconds
+Start importing Assets/_Project/Resources/UI/weather_icons.png using Guid(28ca63fb6afe27e6b90881624a006511) (TextureImporter) -> (artifact id: '8d57ab8af2a56fadeb4d48e867a1fb0e') in 0.334371667 seconds
+Start importing Assets/_Project/Resources/UI/event_3.jpg using Guid(283c158a4f542f1f49123653aaba40ac) (TextureImporter) -> (artifact id: 'df007a6ca7f2cbc350b002e007098164') in 0.143869857 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_toggle_on.png using Guid(283c99be2e42a420c88d95e5f33cdbad) (TextureImporter) -> (artifact id: 'af0533896e7be8fa57b5fe08644661e8') in 0.058259522 seconds
+Start importing Assets/_Project/Resources/UI/stat_vit.png using Guid(289cc1ef42c277e0792abd96a4ee5c29) (TextureImporter) -> (artifact id: '56121d97c4b48ce30f0bd1d8ba14d35a') in 0.101408001 seconds
+Start importing Assets/_Project/Art/BaseMale/basemale_albedo.jpg using Guid(28be5eae41f182559a0195861b987306) (TextureImporter) -> (artifact id: 'bdfce474e85f414c0fa16b72bc84fa53') in 1.758418811 seconds
+Start importing Assets/_Project/Resources/UI/event_12.jpg using Guid(3859734c1157a60f6a85d266e12610f0) (TextureImporter) -> (artifact id: 'f00e3969b0644c3062cd5560d70e49b7') in 0.010122977 seconds
+Start importing Assets/_Project/Resources/UI/portrait_fallen.png using Guid(386ad069a08fdfab7a1e0c50431f8dda) (TextureImporter) -> (artifact id: 'a7ceb28ac957037bf6e5ca25e8b5086f') in 0.093397567 seconds
+Start importing Assets/_Project/Resources/UI/btn_slash.png using Guid(38bde9570a05fcc24adea4e86a502d7c) (TextureImporter) -> (artifact id: '6b2228f34f5375e5df380ffc672f35cf') in 0.095958813 seconds
+Start importing Assets/_Project/Resources/FX/sakura_cluster.png using Guid(4830f1e251aef627ab4d39f145a92264) (TextureImporter) -> (artifact id: '5fa5e6ac6738e03b6db6396e4029f434') in 0.391230256 seconds
+Start importing Assets/_Project/Resources/FX/rage_cracks.png using Guid(48c56c4a6a8f02168bf8cbabf073d9e7) (TextureImporter) -> (artifact id: 'a5389be16aca1f4779ca87f15a5789e7') in 0.437965333 seconds
+Start importing Assets/_Project/Resources/FX/embers_loop.png using Guid(48e827946f77b0f3e84f4d42fc702ebe) (TextureImporter) -> (artifact id: 'b3ef662eac0e023da477ef298459c1d7') in 0.404759823 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_tab_on.png using Guid(48e9808c25fdd11a49ca716f4ff31dad) (TextureImporter) -> (artifact id: '1bd4e59fc161f0dc53281bd9585eec63') in 0.055064957 seconds
+Start importing Assets/_Project/Resources/UI/place_dojo.jpg using Guid(483bee0fe8ee1950094302be2ffc5316) (TextureImporter) -> (artifact id: '4478500bb0e948fa8c093c9d080da818') in 0.011137663 seconds
+Start importing Assets/_Project/Resources/FX/candle_flame.png using Guid(58e0823793103242588f17858b1879d7) (TextureImporter) -> (artifact id: 'e6f109575d13301b5710751d3153c4d0') in 0.374322256 seconds
+Start importing Assets/_Project/Resources/FX/fx_dash_dust.png using Guid(58e18d91ad9224c1cbdb5a9ce70670f3) (TextureImporter) -> (artifact id: '668bfb6c456ba3ecf9635ea363cc6498') in 0.394708653 seconds
+Start importing Assets/_Project/Resources/FX/pillar_storm.png using Guid(583248c795b72f5df8b9888b9db4fa26) (TextureImporter) -> (artifact id: '8b30aba9a375f397df42cef428726b74') in 0.12217508 seconds
+Start importing Assets/_Project/Resources/FX/pillar_loop_sun.png using Guid(58af7c1b50f981906b138c8f4e6f039e) (TextureImporter) -> (artifact id: 'f6e7ec881294bb8359f13436d5e3e663') in 0.882765155 seconds
+Start importing Assets/_Project/Art/Textures/wound_mask.png using Guid(680529e000d20965bb388641ee6504ba) (TextureImporter) -> (artifact id: '21522a169ebba14d35e3a2ecb1ceed4c') in 0.039690777 seconds
+Start importing Assets/_Project/Resources/FX/fx_burst_white.png using Guid(68150ebf1bcfb49008b1bb6c6435003c) (TextureImporter) -> (artifact id: '47f0f330cc7c171c5d2deaa8ab8de648') in 0.48252457 seconds
+Start importing Assets/_Project/Resources/UI/brush_digits_glow.png using Guid(68e5a96951b6edba8908798bc62a4555) (TextureImporter) -> (artifact id: 'e632076a5b551284c75c72353eda5137') in 0.430723164 seconds
+Start importing Assets/_Project/Resources/FX/blood_streak.png using Guid(6866cbb6d9e09e41cb0103622d86c550) (TextureImporter) -> (artifact id: 'ea9c2cd2daf1ec3eb1a05a37ea17332a') in 0.098691069 seconds
+Start importing Assets/Resources/FX/spirit_wolf.png using Guid(68c6732e9c5d9c738ab631718b0a3825) (TextureImporter) -> (artifact id: 'f24d91127dd1c927654ddde636a5cef7') in 0.064471815 seconds
+Start importing Assets/_Project/Resources/FX/orb_red.png using Guid(688c49d1b54b3c96f9c12178faf0cc69) (TextureImporter) -> (artifact id: '3a0837380fd57861edee82d5773a37d1') in 0.856456903 seconds
+Start importing Assets/_Project/Resources/UI/event_1.jpg using Guid(786745f584567044785aacb22387cbc4) (TextureImporter) -> (artifact id: '85eb07202c02b4ec4feb226480b1ec6a') in 0.141676357 seconds
+Start importing Assets/_Project/Resources/Accessories/hood_albedo.jpg using Guid(783a3b8f7858f809f91ec2da0579ede3) (TextureImporter) -> (artifact id: 'ada559495f533de5d6cc93d292e7f909') in 0.613468456 seconds
+Start importing Assets/_Project/Resources/UI/Battle/battle_field_0.jpg using Guid(786b02c6c2d7afef08acda27a56bf3b5) (TextureImporter) -> (artifact id: 'b1b331874d0dc9cba47dd163f1619b94') in 0.042005645 seconds
+Start importing Assets/_Project/Art/Textures/rock_normal.png using Guid(8894c0e3e753efd179b21278b228d0ea) (TextureImporter) -> (artifact id: '9177c194c422843731555ddf85d55965') in 0.142166436 seconds
+Start importing Assets/_Project/Resources/FX/cat_fur_ginger.png using Guid(88c9f9fd1d0abf676a04ddb1e3fe709d) (TextureImporter) -> (artifact id: '3f5106bb6988ef2c84ea21b53895c9b4') in 0.140920659 seconds
+Start importing Assets/_Project/Resources/UI/map_buildings_0.png using Guid(9811d0d222e5b545eacd2a5f6e2156e5) (TextureImporter) -> (artifact id: 'b65b4c487754bee43848fe1e8e6f68bb') in 0.750763032 seconds
+Start importing Assets/_Project/Resources/UI/npc_ronin.jpg using Guid(98f22054a422da395b9da2421f646343) (TextureImporter) -> (artifact id: '117ac768b3d978c6350db8c0f9c6a065') in 0.01705307 seconds
+Start importing Assets/_Project/Resources/UI/place_tree_shadow.jpg using Guid(983900101c38efa1cb6e6b45d3400017) (TextureImporter) -> (artifact id: 'f999c5fd3ef02ec7b644293817f217d3') in 0.011358574 seconds
+Start importing Assets/_Project/Art/Textures/bamboo_leaves.png using Guid(a8b77a6cd1eb6b065b71bc5032f102ae) (TextureImporter) -> (artifact id: '4df9e3c67a2a8246ce3f78b6c216bd2d') in 0.439084043 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_panel.png using Guid(a8cf39bdfccc1c152ae86b1940c4d14d) (TextureImporter) -> (artifact id: '22d29f6f549d4a39a0ed556b4ea7080b') in 0.16503712 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_bar_frame.png using Guid(b854e57251788a17aad75af59c8d40ff) (TextureImporter) -> (artifact id: 'af75294697c59d7361cb2bf1b65bec67') in 0.030173117 seconds
+Start importing Assets/_Project/Resources/FX/fx_perfect_parry.png using Guid(b815f8633004788358378ae76e7cf5e5) (TextureImporter) -> (artifact id: '20d083e77af6b524398cfbb36c22dc15') in 0.403533945 seconds
+Start importing Assets/_Project/Resources/UI/fx_campfire.png using Guid(b8874ddc457b0b9a58ce887a10ba1f13) (TextureImporter) -> (artifact id: '88cbf1077cf7c39c66145868bdb3365d') in 1.43046407 seconds
+Start importing Assets/_Project/Art/Kitsune/kitsune_albedo.jpg using Guid(b84b1fb7697444dd88e1216ec2c46e84) (TextureImporter) -> (artifact id: '71360c112a4b4d51bccdf96027c3d1a9') in 1.939151671 seconds
+Start importing Assets/_Project/Resources/UI/Battle/fx_shield.png using Guid(c874cc8a202b65a1ea90b1d3c1adbb1f) (TextureImporter) -> (artifact id: 'ae5f0d013412577bc975464c95cbe4d1') in 1.727537039 seconds
+Start importing Assets/_Project/Art/Textures/puddle_mask.png using Guid(c8d4f39cdbad52a778dc081c2718ffec) (TextureImporter) -> (artifact id: '60fd7c921968672315a62911665a2b68') in 0.098657509 seconds
+Start importing Assets/_Project/Resources/UI/map_wide_2.jpg using Guid(c8f4595c4077957c49f27c3e28e031f8) (TextureImporter) -> (artifact id: 'c3bf1056f244bf367272439c173f9f43') in 0.068409149 seconds
+Start importing Assets/_Project/Resources/UI/map_icons_new.png using Guid(c8e661351c9274e30abb3d8808b0a218) (TextureImporter) -> (artifact id: 'ff18aea5e53c35bbabf3c112cfadd3ae') in 0.682523682 seconds
+Start importing Assets/_Project/Art/Textures/rope_albedo.png using Guid(d8e13edb93405542480e83af293c22b1) (TextureImporter) -> (artifact id: '6d31ac518c2e998d628524463a5e86de') in 0.144776261 seconds
+Start importing Assets/_Project/Art/Textures/forest_floor_normal.png using Guid(d8f398e988b478262b6bfccf6cfdfff0) (TextureImporter) -> (artifact id: 'd3ddc46a0f9482106024c6c7e2d9120b') in 0.146693311 seconds
+Start importing Assets/_Project/Resources/UI/ru_danger.png using Guid(d8c764d34ff9a9d81a1ccbf1f2650c81) (TextureImporter) -> (artifact id: '024bd59e5e5a484e5a53d4729d70c179') in 0.214891826 seconds
+Start importing Assets/_Project/Resources/Units/unit_dog_albedo.jpg using Guid(d8dd7c0c7f261d2388658d0dabdcb266) (TextureImporter) -> (artifact id: 'dee2a66edac52093574ae4f9a4e6685c') in 0.535554999 seconds
+Start importing Assets/_Project/Resources/UI/MapObjects/objects_dark_3.png using Guid(e8a03dbe4e23ebe85a4e8162aa1c718f) (TextureImporter) -> (artifact id: '2051e929e84843a6e213ccb6024b9d67') in 0.057519319 seconds
+Start importing Assets/_Project/Resources/UI/portrait_undead.png using Guid(e83221f242fd3fe3cb8972738957150b) (TextureImporter) -> (artifact id: '4d0d738f0e626d57676c231d1290a0e0') in 0.028541418 seconds
+Start importing Assets/_Project/Resources/UI/enemy_full_ashigaru.png using Guid(e8a3363694b65fe008ef4f2eedb14c0c) (TextureImporter) -> (artifact id: 'bfcca30614b97ca005e2bd0595854229') in 0.024193607 seconds
+Start importing Assets/_Project/Resources/UI/Battle/map_petals.png using Guid(e85bbc3dcd00660c081a36e34b8a9a05) (TextureImporter) -> (artifact id: '59c291d1351d24598bc4b00128b99526') in 1.675242048 seconds
+Start importing Assets/_Project/Resources/UI/enso.png using Guid(e80cea2501e1570c7a80d25a31b72646) (TextureImporter) -> (artifact id: '5d29641d343ffbd99908b126e63aecf1') in 0.484492382 seconds
+Start importing Assets/_Project/Art/Textures/ofuda.png using Guid(f885395e13fa0d638b6cd25d1ec2716b) (TextureImporter) -> (artifact id: '8223a911fcefd59dced2c87a66e73f60') in 0.115405154 seconds
+Start importing Assets/_Project/Resources/FX/crow_perch.png using Guid(f82a0584ead6edb0992dc9c134592909) (TextureImporter) -> (artifact id: '5f6855fd8a80cb425d8b4b11caad5666') in 0.113582146 seconds
+Start importing Assets/_Project/Resources/UI/btn_overhead.png using Guid(f87a2245069c7cd8fbce8995dc8efec2) (TextureImporter) -> (artifact id: '68ad5bd842dd7cb2e28a34c3d6383432') in 0.113477055 seconds
+Start importing Assets/_Project/Resources/UI/Kit/hud_hp_caps.png using Guid(f8bfcf472675296f294e6065463071ea) (TextureImporter) -> (artifact id: '4f2437d114891aadf29f914bb9919770') in 0.108317657 seconds
+Start importing Assets/_Project/Resources/FX/ki_ring_fire.png using Guid(098024e117c2496f9ad3c3200fd03f27) (TextureImporter) -> (artifact id: 'c36950d5090d24e2eb6d2f004a5c892e') in 5.911337383 seconds
+Start importing Assets/_Project/Resources/UI/bar_hp.png using Guid(09d1a2cb92bf910b0b64becf79709f4b) (TextureImporter) -> (artifact id: '2bae69602cee92883dfea75b72efb29b') in 0.061525271 seconds
+Start importing Assets/_Project/Resources/UI/rank_b_ru.png using Guid(09cad362e1cada8d6bd2b9de6ef45524) (TextureImporter) -> (artifact id: 'b8630013e0406aa91190cea31b02d099') in 0.120764975 seconds
+Start importing Assets/_Project/Art/Textures/bamboo_normal.png using Guid(39562abe85192b904ac4ec30a383c198) (TextureImporter) -> (artifact id: '9364a8311d215cd2a73a9474ef89d8b5') in 0.037815058 seconds
+Start importing Assets/_Project/Resources/UI/kamon_feather.png using Guid(3976722e9036b7787a8505d2d9b3d168) (TextureImporter) -> (artifact id: '248cad1a70465f0823f75ee1232916ac') in 0.09816324 seconds
+Start importing Assets/_Project/Resources/UI/ink_r3.png using Guid(394783a9ff9d6f3dba2f21d309002ebb) (TextureImporter) -> (artifact id: '9661155c13bbc16e9f1d0de6dafa1a56') in 0.10082346 seconds
+Start importing Assets/_Project/Art/Textures/bronze_patina_normal.png using Guid(3928c36d2a81c8340acf39147383bc28) (TextureImporter) -> (artifact id: '9765e46b33f8171f1a07ba2c8bb6434c') in 0.147987471 seconds
+Start importing Assets/_Project/Art/Textures/ivy.png using Guid(49d1f450f4d2f9928ac88112ff270702) (TextureImporter) -> (artifact id: '2853dad6cea0b3b4ab2a24bd68ec5104') in 0.203134103 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_toast.png using Guid(49661a65d54c90914acb532594708410) (TextureImporter) -> (artifact id: 'cf62939b179f8a9c2fc9b9e363b9fd64') in 0.094093199 seconds
+Start importing Assets/_Project/Resources/UI/Kit/hud_banner.png using Guid(493749dff732e027aa98df19ba800bf2) (TextureImporter) -> (artifact id: 'c5e3069b45bbbbe2f391a7d6380bd14c') in 0.321438638 seconds
+Start importing Assets/_Project/Resources/UI/fx_mist.png using Guid(49d9f8f562b89a3729da5a394c5b0bf2) (TextureImporter) -> (artifact id: '87994b103702251ba61f8df656643e2d') in 1.034975877 seconds
+Start importing Assets/_Project/Resources/FX/shock_dust.png using Guid(59a2da762d1708aa5b2ae7318a1f79d7) (TextureImporter) -> (artifact id: '935dc58aeed32ce38079876513cb157b') in 0.425339117 seconds
+Start importing Assets/_Project/Resources/UI/npc_questboard.jpg using Guid(59440d64f14895a13914e3546d722318) (TextureImporter) -> (artifact id: 'b3f948158dc30a997fb8e20e2eef8e70') in 0.022719313 seconds
+Start importing Assets/_Project/Resources/UI/Battle/fx_fog.png using Guid(59f8b69e122b982dfb9a6becf5b8a407) (TextureImporter) -> (artifact id: '3f303903b47356bef3e8767546f8ad2b') in 1.595503587 seconds
+Start importing Assets/_Project/Resources/UI/Kit/hud_hp_l.png using Guid(69b18b3975c69aaa3bb6eed0f30cd581) (TextureImporter) -> (artifact id: 'fe107b8a9c8d502161c7281fc1f9d2e9') in 0.095305708 seconds
+Start importing Assets/_Project/Resources/UI/brush_stroke_red.png using Guid(69bce41f9dde4b0d29a372cc5bbab1b7) (TextureImporter) -> (artifact id: 'bc19faa9bc844576a88f187e279f44af') in 0.36605917 seconds
+Start importing Assets/_Project/Resources/UI/Kit/hud_combo2.png using Guid(797d1e1eaf6b35bb7bbb7faef0414a89) (TextureImporter) -> (artifact id: '67c684bab93f909e1f33e3399eaeaa28') in 0.300389134 seconds
+Start importing Assets/_Project/Resources/FX/trail_violet.png using Guid(89432f155dcc81f4badfad09968c0f30) (TextureImporter) -> (artifact id: '0fb928a5b47ed3005d8f0735326460e6') in 0.036927797 seconds
+Start importing Assets/_Project/Resources/UI/levelup_anim.png using Guid(89747b1c043a3222ba9d62b2e4d1e963) (TextureImporter) -> (artifact id: '2d439ffc36c57bd2a4c8b0750d25d548') in 0.409920874 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_bar_fill.png using Guid(8948640731ef051dd9f39d7e83f68736) (TextureImporter) -> (artifact id: 'a578509ebb514950d0623402b14def70') in 0.033489519 seconds
+Start importing Assets/_Project/Resources/UI/tech_5.png using Guid(89bb0afff94ed1fba8099bae05af3e8c) (TextureImporter) -> (artifact id: '3dca437a9f8f37e2b6cc2378d4be67c5') in 0.097008504 seconds
+Start importing Assets/_Project/Resources/FX/rage_ring.png using Guid(89de88f0dc534a1ce82c1b643f0a0cf2) (TextureImporter) -> (artifact id: '2a3ccd5bdea5756eb261ac208a2d7726') in 0.484271597 seconds
+Start importing Assets/_Project/Resources/UI/enemy_full_shogun.png using Guid(89cfd60fc7a6feba18d4606032e47bb2) (TextureImporter) -> (artifact id: 'db56c76638bf39417481fd6d529f544b') in 0.026768075 seconds
+Start importing Assets/_Project/Resources/UI/stick_knob.png using Guid(99b5479957bdd996aa712aeff9f76b06) (TextureImporter) -> (artifact id: '1f29399659b27146d9af0554ba1a5de9') in 0.099769521 seconds
+Start importing Assets/_Project/Resources/FX/eruption.png using Guid(992b9363f67c9e258b93a11dba08d3a2) (TextureImporter) -> (artifact id: 'ff5c6418580864e3cc77b5d080f3b786') in 1.514628559 seconds
+Start importing Assets/_Project/Resources/UI/Battle/fx_thunder.png using Guid(a90b87d6a86d6b13d95c2174b4c3337f) (TextureImporter) -> (artifact id: 'a0e361293400aa43a5f6d2d49da7b6d5') in 1.721650582 seconds
+Start importing Assets/_Project/Resources/FX/aura_flame.png using Guid(a97e35cf1c2c3d283b48e3fc99c062b5) (TextureImporter) -> (artifact id: '606841d7d41b63c5663860e31a5a07b9') in 0.427936312 seconds
+Start importing Assets/_Project/Resources/UI/Battle/hero_portraits.png using Guid(b9d6b2a61982bc2d3bc48a5387f58bf5) (TextureImporter) -> (artifact id: 'a02ba65009ebac3c12187eae2650df7f') in 0.05421632 seconds
+Start importing Assets/_Project/Resources/UI/fx_puff.png using Guid(b9ee0fc0894af3330925c4d8828c8f72) (TextureImporter) -> (artifact id: '2aa24e76a5eeb2e21fabdb174dce08d2') in 0.085568184 seconds
+Start importing Assets/_Project/Art/Yamabushi/yamabushi_albedo.jpg using Guid(c959f9cd56ff82e82ae7b7f18528d291) (TextureImporter) -> (artifact id: '8d1775b8e3f167c0c28264a153be1bc5') in 2.072933096 seconds
+Start importing Assets/_Project/Resources/UI/Battle/count_plaque.png using Guid(c9ea90b308c8b3472926657ce3388057) (TextureImporter) -> (artifact id: '04a755d862a36528f04d803f99854bdf') in 0.004839248 seconds
+Start importing Assets/_Project/Models/Arenas/ForestShrine_albedo.jpg using Guid(d9508924603ab0b128ba2681e2c13c5e) (TextureImporter) -> (artifact id: 'cf1202851d0107cffae2cb3d91ada0e5') in 2.468425676 seconds
+Start importing Assets/_Project/Resources/Units/unit_banner_albedo.jpg using Guid(d9e96e0abad8e6da4a9f110d8a4505b9) (TextureImporter) -> (artifact id: '259025814debbf83db6bc2857b1eaa46') in 0.512227924 seconds
+Start importing Assets/_Project/Resources/UI/Battle/map_smoke.png using Guid(d96a2fec63cd05467a584abba538b16f) (TextureImporter) -> (artifact id: '0a56b321b4b3907c58998395d7866a4b') in 1.557609648 seconds
+Start importing Assets/_Project/Resources/FX/blood_splat.png using Guid(d9aa90b93996b6f8e80ab93b76e1dc9d) (TextureImporter) -> (artifact id: '701b4042356d88c873618a69cd8800c0') in 0.103556243 seconds
+Start importing Assets/_Project/Resources/UI/ink_hajime.png using Guid(1ad6ce0423e710825a126a5e1a46b629) (TextureImporter) -> (artifact id: '9dcf6ad1a8b9790f002d36dae1b4e049') in 0.09859165 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_ribbon.png using Guid(1ad8e209fdc86dfc99ac23ae776c174d) (TextureImporter) -> (artifact id: 'd672ebfcff245b6d9a181fdce79f11e3') in 0.096305278 seconds
+Start importing Assets/_Project/Resources/UI/Battle/map_fall.png using Guid(1a6aece69448ac5e79180729e3f4eaf0) (TextureImporter) -> (artifact id: '569bf47e2dac4fd871baf1c63d592f0d') in 1.716472715 seconds
+Start importing Assets/_Project/Resources/FX/sigil_rage_pulse.png using Guid(2ab15598e8c7e045fb11f17510575370) (TextureImporter) -> (artifact id: 'e163e34d0b79553915f80f2e0134c7e0') in 1.86314907 seconds
+Start importing Assets/_Project/Resources/UI/event_4.jpg using Guid(2a0247bc9c249c13d9c70769244b0431) (TextureImporter) -> (artifact id: '56d0b8ec561904df644c252fd22eb86b') in 0.140811275 seconds
+Start importing Assets/Resources/UI/pack02/node_treasure_node.png using Guid(3ac142b17832df8bf8c27e2c92541f3f) (TextureImporter) -> (artifact id: 'b359c11234fe902e9d41a0dd02a6a0c0') in 0.012267703 seconds
+Start importing Assets/_Project/Resources/UI/enso_gold.png using Guid(3ad52f78dd5b9e600b49ed1d2467c488) (TextureImporter) -> (artifact id: '20cde4ac536747be5c44492c01c87775') in 0.120689433 seconds
+Start importing Assets/_Project/Resources/UI/camp.jpg using Guid(3ad8b6de01177dbf593df372c00b65ae) (TextureImporter) -> (artifact id: 'd59d77448299d084dfaf9c56b7515c20') in 0.039010741 seconds
+Start importing Assets/_Project/Resources/UI/seal_sho_ru.png using Guid(3a0a950f0e6b2a762a14011185724a7d) (TextureImporter) -> (artifact id: 'aa331f0cf370f28c2b9117b28b46d2b6') in 0.132343748 seconds
+Start importing Assets/_Project/Resources/UI/selection/screen_difficulty_redesign.jpg using Guid(3a5bbaf9126bececd825158166cae518) (TextureImporter) -> (artifact id: '6bcb0f1359ae6b3f20c81fe5676cf869') in 1.010278002 seconds
+Start importing Assets/_Project/Resources/UI/Battle/skill_icons.png using Guid(4afb497b7b2cea63f96565fc5579e210) (TextureImporter) -> (artifact id: '3ca89ad508714c63325a8ede7d3e02fa') in 0.715128325 seconds
+Start importing Assets/_Project/Resources/FX/glow_pool.png using Guid(4afd7de7483e16380b568aaa237b91e2) (TextureImporter) -> (artifact id: 'e9c840eb8d0e0aa21e95a66cb0cb49e5') in 0.096430634 seconds
+Start importing Assets/_Project/Resources/UI/hero_face_0.png using Guid(5a87e38e916008279b61cdedf4890330) (TextureImporter) -> (artifact id: '21033dda7f4984204eeaff32916f566e') in 0.094557516 seconds
+Start importing Assets/_Project/Resources/UI/fx_splash.png using Guid(5a09b474fb255f296808614277184505) (TextureImporter) -> (artifact id: 'c2818807002c9aefb71d787ef42c6281') in 0.593483937 seconds
+Start importing Assets/_Project/Art/Textures/stone_normal.png using Guid(5a5a7145aa5dc847cb473e73a77774cd) (TextureImporter) -> (artifact id: '789fbdfefd5de3849d4e348ad282e55d') in 0.141673846 seconds
+Start importing Assets/_Project/Resources/FX/rage_ignite.png using Guid(6aa00367fbc6bde4e90f9eedfaf419dd) (TextureImporter) -> (artifact id: '0a49023d30ea33c09356a840b889f3ae') in 1.763123087 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_arrow_l.png using Guid(6ac199fab98ad3ebbb6518802c69c9bf) (TextureImporter) -> (artifact id: 'a4a98d7a625ec2891c2ebe7d11c17646') in 0.086571985 seconds
+Start importing Assets/_Project/Resources/UI/items.png using Guid(6a06a72c1f899b48bbe7d1463f3ccc03) (TextureImporter) -> (artifact id: '94dd4412dfe480e1f32597da3d0cb1f6') in 0.371008554 seconds
+Start importing Assets/_Project/Resources/UI/fx_waterfall_lip.png using Guid(6a5846840442f2ac78240303875acaa5) (TextureImporter) -> (artifact id: '31208c0916980ee2b7a54cc2e4352edd') in 0.815473445 seconds
+Start importing Assets/_Project/Art/Textures/nobori_hachiman.png using Guid(6a1e505e85440b074b8fdf32919bc8a1) (TextureImporter) -> (artifact id: 'fc9c6884850e805fff757673f6e62909') in 0.266060013 seconds
+Start importing Assets/_Project/Resources/Accessories/hair_topknot_albedo.jpg using Guid(7ae5f8a54f8a34634bd3777c64d1caa0) (TextureImporter) -> (artifact id: 'e5bed7ea6412885d1ab216584b23607b') in 0.609664705 seconds
+Start importing Assets/_Project/Resources/UI/Battle/hex_red.png using Guid(7a5cc867756334d6e808f3bcc48feeb1) (TextureImporter) -> (artifact id: 'a4aa9f02545b0c8115616b2512aa73b5') in 0.008868574 seconds
+Start importing Assets/_Project/Resources/FX/fx_burst_gold.png using Guid(7a0ddd98b9c309144a50e24c777cf827) (TextureImporter) -> (artifact id: '02ddcfc78d1892ebb2a9d13d87f568cd') in 0.443334742 seconds
+Start importing Assets/_Project/Resources/FX/sigil_flame.png using Guid(8ad26c7c38fcc5caca4a41e86f622367) (TextureImporter) -> (artifact id: '81de96d0603007d8d2fdbaad73b9a623') in 0.438097536 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_check_on.png using Guid(8a3318396ef532ca8b6c2214b275318c) (TextureImporter) -> (artifact id: '0a6aa697c281c87974162073eac9ce78') in 0.098933459 seconds
+Start importing Assets/_Project/Resources/UI/event_19.jpg using Guid(8ae3886af9cb864caac107d30a651afb) (TextureImporter) -> (artifact id: '9969e92acb6825759a1ec98ddf13bf18') in 0.018152003 seconds
+Start importing Assets/_Project/Art/Shogun/shogun_albedo.jpg using Guid(8af3f71806dc546c88879325fa0889e5) (TextureImporter) -> (artifact id: 'f4c12ec37de6891cdc3d9f7e2955b016') in 1.94216975 seconds
+Start importing Assets/_Project/Resources/FX/lightning.png using Guid(8adf4164284cb5d31a1fca8367cc6f81) (TextureImporter) -> (artifact id: 'd52db4db48d1dba5ec554ea31e86b132') in 0.200737495 seconds
+Start importing Assets/_Project/Art/Textures/cloth_normal.png using Guid(8adfe420f13a46b14b1b2421b65bb0e3) (TextureImporter) -> (artifact id: '759ea259f0722d7477d3b7fcd90a6139') in 0.039287438 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_row_panel.png using Guid(9ace5def848be485397aba7ab4223acb) (TextureImporter) -> (artifact id: 'c59379d1d2da95c7209e0faf726bf946') in 0.167407693 seconds
+Start importing Assets/_Project/Resources/FX/fireflies_loop.png using Guid(9a4f8fe468e1ee27e877e85a688b5d46) (TextureImporter) -> (artifact id: '427e8e17e3714dbc213e19082ead187f') in 0.365214616 seconds
+Start importing Assets/_Project/Resources/FX/orb_blue.png using Guid(aa763fee334c20266aaac6b8e1c3f286) (TextureImporter) -> (artifact id: '65c4f622795219016c44ecb3e08c55c8') in 0.799141407 seconds
+Start importing Assets/_Project/Art/icon.png using Guid(aa2b1dc70cbc44098adb00ab72584a3d) (TextureImporter) -> (artifact id: 'aa7ff7a3388d92e36d1119ed5fe27542') in 0.54806677 seconds
+Start importing Assets/_Project/Resources/UI/stat_spi.png using Guid(aa3d5e47d2a24a91ba41a02153ef3a37) (TextureImporter) -> (artifact id: '3f731e23ed1362dbdc2539966ae54687') in 0.104610736 seconds
+Start importing Assets/_Project/Art/Textures/bark_normal.png using Guid(aa9e36962329d867fa275ba4c3d29e13) (TextureImporter) -> (artifact id: '607bb5991c4ed157e1259c2436bbc5b3') in 0.143190315 seconds
+Start importing Assets/_Project/Resources/FX/sigil_ice.png using Guid(ba43a19fd4a00bb1abffd950c560bd8e) (TextureImporter) -> (artifact id: '87ac137d45ca0e9610b6ca557f698295') in 0.459461104 seconds
+Start importing Assets/_Project/Resources/UI/H3/week_emblems.png using Guid(ba07e76b28d7386d49b78f40af6c409a) (TextureImporter) -> (artifact id: '612aebba69a0db31e16f6f77fa536fc9') in 0.051690102 seconds
+Start importing Assets/_Project/Resources/FX/pillar_ice.png using Guid(ba68f0ca4c8a9946585cb33bd72de6ca) (TextureImporter) -> (artifact id: '9f363d24b0bf72bd78ded8af073743f9') in 0.11968791 seconds
+Start importing Assets/_Project/Resources/UI/region_clear_1.jpg using Guid(ba0c0b494027eaeca86349caae69c01d) (TextureImporter) -> (artifact id: 'db024e476fe04dc1f6f4103241d80276') in 0.022766902 seconds
+Start importing Assets/_Project/Art/Textures/moon.png using Guid(ba3d49f097d7c62de95c67c2547e3511) (TextureImporter) -> (artifact id: '23bff1e895326f4d4f814b92057b1f0a') in 0.30141825 seconds
+Start importing Assets/_Project/Art/Textures/flagstone_normal.png using Guid(ca986ecef68fd21dcb32b535ecdba975) (TextureImporter) -> (artifact id: 'af584e1cd2bd32424946635882d16e37') in 0.141877482 seconds
+Start importing Assets/_Project/Resources/UI/path_panorama.png using Guid(ca3b351787e0c26ecb00eb02806c7ad9) (TextureImporter) -> (artifact id: '71cceaff8444459dcd4ccaaa2cce1c6a') in 0.14973034 seconds
+Start importing Assets/_Project/Models/ShadowAssassin/ShadowAssassin_roughness.png using Guid(ca2cb386715da65558b9e3d9bdc3cb52) (TextureImporter) -> (artifact id: '8c6d7f2befda9e9a8ba74a39b1821331') in 1.856797174 seconds
+Start importing Assets/_Project/Resources/Units/unit_yamabushi_albedo.jpg using Guid(da821a698d881d2749ddc2a333aa8b11) (TextureImporter) -> (artifact id: 'd158ea8c31818a7b3ea907dd7dec76fb') in 0.512123213 seconds
+Start importing Assets/_Project/Resources/UI/frame_0.png using Guid(dad364d95843a46d8a14413fea7c1081) (TextureImporter) -> (artifact id: '873851067d5002bb7d7534117d6534bb') in 0.102167449 seconds
+Start importing Assets/_Project/Resources/UI/map_camps_0.png using Guid(da15be8c7d42b58df84054d436b865a8) (TextureImporter) -> (artifact id: '4c915ab72892d737897c37f0acc8023d') in 0.73531252 seconds
+Start importing Assets/_Project/Resources/FX/companion_raven.png using Guid(ead127afe8d4038ef81f7b6ce913665f) (TextureImporter) -> (artifact id: '59b853f09b5b8f575d7d78dfbf41adbb') in 1.742551532 seconds
+Start importing Assets/_Project/Resources/Units/unit_shadow_albedo.jpg using Guid(ea97d5d52be7c7c91907610e6a76511b) (TextureImporter) -> (artifact id: '16f9e8ef1cbd170680b6453cfeccc385') in 0.475808937 seconds
+Start importing Assets/_Project/Art/Textures/cloth_albedo.png using Guid(ead83b47395ff96e9b6fa9ed4b3c87ae) (TextureImporter) -> (artifact id: '0420f673ee2bbe4a8ddb9bebee909957') in 0.037154785 seconds
+Start importing Assets/_Project/Resources/UI/H3/puzzle_map.jpg using Guid(ea2db913bf54903fc8b75c86f54a8079) (TextureImporter) -> (artifact id: '3412dd09940e144f8e318a0bf92daab3') in 0.039781981 seconds
+Start importing Assets/_Project/Resources/UI/selection/screen_traveller.jpg using Guid(ea2eaa009bbae1769b98f4c3d058b70d) (TextureImporter) -> (artifact id: '3200d7bf7b68d95afa74707255cc973c') in 1.023191598 seconds
+Start importing Assets/_Project/Resources/UI/ru_death.png using Guid(ea3ec6618abb05f4aa8ca16b8a1817ca) (TextureImporter) -> (artifact id: 'e1b3ac3e3449313d6b2e248f9461d016') in 0.207252678 seconds
+Start importing Assets/_Project/Resources/UI/Kit/hud_posture.png using Guid(fad2267efbcb7d13f8857543befea387) (TextureImporter) -> (artifact id: '051162ab8c5db5edf0f9328424946612') in 0.08094557 seconds
+Start importing Assets/_Project/Resources/UI/Battle/fx_death.png using Guid(fa958ac4197f6d67e806e4c62f06a6c2) (TextureImporter) -> (artifact id: 'af46846668827e2c4bc5d0718500a903') in 1.611872264 seconds
+Start importing Assets/_Project/Resources/FX/fx_slash_hit.png using Guid(fa6c01216bb15901ab67c9d28d4ec5d8) (TextureImporter) -> (artifact id: 'e97d1a10eaeaaeefd62da09dc6045977') in 0.392511076 seconds
+Start importing Assets/_Project/Resources/UI/char_editor_bg.jpg using Guid(0b67293bab7d7dd5d8306a09655e5034) (TextureImporter) -> (artifact id: '3b4e65c786bdd42b7e6298623cdd9d4b') in 0.035244797 seconds
+Start importing Assets/Resources/FX/sigil_red.png using Guid(0b38988128be580c1a3254b542af7bcc) (TextureImporter) -> (artifact id: 'bc77811614017e6b039d9f8ed0c656ba') in 0.074960175 seconds
+Start importing Assets/_Project/Art/Textures/water_normal.png using Guid(1b9654202a2eca5b387cda2ff99c4a7b) (TextureImporter) -> (artifact id: '87d28e92f418f076e4cc533dfce96d0d') in 0.131528357 seconds
+Start importing Assets/_Project/Resources/UI/map_rider_16_hero2.png using Guid(1b9c9e72693af7f7d9b44ebf3fd2c633) (TextureImporter) -> (artifact id: '7f2ca869b7259de20695bf09c51204af') in 1.403584365 seconds
+Start importing Assets/_Project/Art/Ashigaru/ashigaru_albedo.jpg using Guid(1bbd72c1d59604b7babfb014a2aadf3e) (TextureImporter) -> (artifact id: '94e66dbe8f27d970e61a558a281e7ef3') in 1.969720905 seconds
+Start importing Assets/_Project/Resources/UI/fx_ui_aura_blue.png using Guid(1b4e6cf17b4bac43ba8851beb014ce74) (TextureImporter) -> (artifact id: '8eb91991faae6dd835d9fb869473381b') in 2.605348258 seconds
+Start importing Assets/_Project/Resources/UI/Battle/siege_parts.png using Guid(1b6e99f4a0e5228d7805021eba75cabd) (TextureImporter) -> (artifact id: '8c50aa0d0555ad1ffe381165d15b341b') in 0.060228172 seconds
+Start importing Assets/_Project/Resources/FX/bwave_hit.png using Guid(1bde52404fcb2b59a876f8de5c5aa9ec) (TextureImporter) -> (artifact id: 'be2121f32c0c1a7be92f5c060a5ec523') in 1.075328812 seconds
+Start importing Assets/_Project/Resources/UI/H3/resource_icons2.png using Guid(2ba19e879cea671c0b6be228670d6d05) (TextureImporter) -> (artifact id: '780303bf53620afb63217b240308b765') in 0.057144054 seconds
+Start importing Assets/_Project/Resources/UI/portrait_oni.png using Guid(2b36a1653dcf273038aefb101dae48b6) (TextureImporter) -> (artifact id: 'e34bcc237561d5f099e0c308445b7304') in 0.09287392 seconds
+Start importing Assets/_Project/Resources/FX/sigil_blood.png using Guid(2b1fd752cf3b6bc759c5dbab1c080b62) (TextureImporter) -> (artifact id: 'cb548447eed74d202c5634650bf9478a') in 0.479073615 seconds
+Start importing Assets/_Project/Art/Textures/forest_floor_albedo.png using Guid(3b33d6f714d98183d8f4aacc8957f688) (TextureImporter) -> (artifact id: 'c15b6e5572caa931deed6e814af40b3a') in 0.150048224 seconds
+Start importing Assets/_Project/Art/Textures/lotus.png using Guid(3b07b2ee9c3903e1cbc0f214130c919d) (TextureImporter) -> (artifact id: '1330f1bc4a7ab92630866280831ecd06') in 0.312186648 seconds
+Start importing Assets/_Project/Resources/UI/place_kami_roots.jpg using Guid(4b81bfcad9d19035280768d7c2b1a457) (TextureImporter) -> (artifact id: '64fdf017c98c6d8b037eb86353b14858') in 0.011516951 seconds
+Start importing Assets/_Project/Resources/UI/path_lantern.png using Guid(4b782ea45a3757c378e76a5f5ce42df2) (TextureImporter) -> (artifact id: 'e7f25e9c4abcea882213f3b3aded3a64') in 0.059879505 seconds
+Start importing Assets/_Project/Resources/UI/ru_revive.png using Guid(4b2b692c1edd45e479bd30fe413cfba6) (TextureImporter) -> (artifact id: '7c47c6e6261fa68b76d16499004f87c2') in 0.205676908 seconds
+Start importing Assets/_Project/Resources/UI/selection/fog_toggle_off.jpg using Guid(4bbc6c5fb8812afe49cb6ea4c227718d) (TextureImporter) -> (artifact id: '4b2faab85325b37b07dd148d9ca00f6b') in 0.026772777 seconds
+Start importing Assets/Resources/FX/sparks_gold.png using Guid(5b328855786bf982a9298646e6c66b6f) (TextureImporter) -> (artifact id: 'dacb04c1368922d8034771222e8e5cad') in 0.054682942 seconds
+Start importing Assets/_Project/Resources/UI/selection/hero_1.jpg using Guid(5ba2d91a118c8d0758fdb29de5b7c6d3) (TextureImporter) -> (artifact id: '4b0d044b9bac5bd0a37741edb172b6eb') in 0.07880816 seconds
+Start importing Assets/_Project/Resources/UI/dice_bg.jpg using Guid(6b459bc1116e29b35b0931d9ad8b41c3) (TextureImporter) -> (artifact id: '30051b9cc130ec96a6e7484c22bb4cc1') in 0.038921885 seconds
+Start importing Assets/_Project/Resources/UI/ru_begin.png using Guid(7b3edb7fb9b134212ab3bb9faf4e340d) (TextureImporter) -> (artifact id: '77295829b586f0a8c66a753d33e98de8') in 0.175942971 seconds
+Start importing Assets/_Project/Resources/FX/charge_slash.png using Guid(7b2f290e46b980c7d8f5e52637740410) (TextureImporter) -> (artifact id: '6164d1a6688be51f3584de773cebb37b') in 1.46487213 seconds
+Start importing Assets/_Project/Resources/Accessories/hair_short_albedo.jpg using Guid(8b96ab455780dfb98afbded808ac62a3) (TextureImporter) -> (artifact id: '11941a1e4831ca30f5f89f6a1301e74e') in 0.571705999 seconds
+Start importing Assets/_Project/Art/Textures/nobori_buun.png using Guid(8bdd5e5c7c1ae20e69c1cf3bfd5f6ee0) (TextureImporter) -> (artifact id: 'f541c513eb9ab28a84bd0df808b13222') in 0.263197287 seconds
+Start importing Assets/_Project/Resources/UI/event_5.jpg using Guid(8b7fb59705d2ff2068b28771fcf6c810) (TextureImporter) -> (artifact id: '102854408aaea76cd5db12d6c954dbae') in 0.146113267 seconds
+Start importing Assets/_Project/Resources/UI/btn_jump.png using Guid(9b3577205c5c4be85b11d802331ddd7a) (TextureImporter) -> (artifact id: '5b27d7fb66ba0868d833599224acfccf') in 0.091569709 seconds
+Start importing Assets/_Project/Resources/UI/items6.png using Guid(9b96c30ca31e8437f903ab89eacfdbae) (TextureImporter) -> (artifact id: '9f4f98e6e45ba2de4a6c0eae0af88eca') in 2.27337424 seconds
+Start importing Assets/_Project/Art/Textures/komainu.png using Guid(9b1e5e9d1fc657ae099cb098c6b53fdd) (TextureImporter) -> (artifact id: '725c3a3fc1c62ef30d183c655c024c20') in 0.492014522 seconds
+Start importing Assets/_Project/Art/Textures/maple_leaf.png using Guid(9b4f393a043aec70cb08eff2765e8b35) (TextureImporter) -> (artifact id: '98fe0569afa525f91a0ecddd516eb6c3') in 0.012364343 seconds
+Start importing Assets/_Project/Resources/UI/hero_face_2.png using Guid(abd61ea4130cb72b89054e9f54d50ed9) (TextureImporter) -> (artifact id: '33d0ff61c1932bb0d7ffad47d7e2850e') in 0.0827105 seconds
+Start importing Assets/_Project/Resources/UI/map_0.jpg using Guid(bbc2f6ce72901df8886f293abe0442c4) (TextureImporter) -> (artifact id: '3bb8293ad65cfe3c125df89d355dfd4e') in 1.05945697 seconds
+Start importing Assets/_Project/Resources/UI/selection/approved_hero_2.png using Guid(bbecdcaa56d78d381ae539c6e3b2e100) (TextureImporter) -> (artifact id: 'e39f82625a7078e671d75c41129ed2ae') in 0.149078784 seconds
+Start importing Assets/_Project/Resources/UI/seal_sho.png using Guid(dba0c159620d17b4f9ac8dd9f659a491) (TextureImporter) -> (artifact id: 'b21270efef138586f8da3819a6709291') in 0.127727781 seconds
+Start importing Assets/_Project/Models/Arenas/Detail/stone.jpg using Guid(db64a6dca55172a9f89a1ebb4b5ce4dc) (TextureImporter) -> (artifact id: 'f371451109f8de8498ceeae3a1204cf3') in 0.510115356 seconds
+Start importing Assets/_Project/Resources/UI/seal_hai.png using Guid(db66eef76028ae7c98c47ac8e5f771a0) (TextureImporter) -> (artifact id: '541db7b7e35c17fe87e85626b2577020') in 0.122425496 seconds
+Start importing Assets/_Project/Resources/UI/map_camps_1.png using Guid(db5c2a812e72ed91aad3edc71ccade24) (TextureImporter) -> (artifact id: 'b32ba51256a5f371929d86756dec4c3c') in 0.779871903 seconds
+Start importing Assets/_Project/Models/Arenas/Detail/moss.jpg using Guid(eb7040ffa108a13899083ed35aa8c821) (TextureImporter) -> (artifact id: '107fba42f2209a9aaf1febde7efc3024') in 0.552773855 seconds
+Start importing Assets/_Project/Resources/UI/map_buildings_2_day.png using Guid(eb91da8a04019e11dbbe42fcf0a39092) (TextureImporter) -> (artifact id: '3d355451041cc0d7af0e7f00124876f7') in 0.761928133 seconds
+Start importing Assets/_Project/Resources/FX/rage_star.png using Guid(ebc6c6763c736878f843fef49b2c2056) (TextureImporter) -> (artifact id: '3b71d8a07df0bbc2710462ccb87f8da1') in 0.118729733 seconds
+Start importing Assets/_Project/Resources/UI/place_hermit.jpg using Guid(ebc85522ba5402df8b6009eae3055422) (TextureImporter) -> (artifact id: 'a4cdaae3dae8ce6d4ca66e95616f93fa') in 0.010837862 seconds
+Start importing Assets/_Project/Resources/UI/Battle/btn_5.png using Guid(eb1db9345207cfcaba66fe8c3dd8286a) (TextureImporter) -> (artifact id: '3a33e9666933e16199d3da6f8031d8b0') in 0.004634586 seconds
+Start importing Assets/_Project/Resources/UI/dice_rogue_1.png using Guid(fba60f6c9a5f35400abd9ea66434e40c) (TextureImporter) -> (artifact id: '6995168181ecb4a1f67808ebd5df4add') in 0.338550838 seconds
+Start importing Assets/_Project/Resources/UI/map_rider_16_hero1.png using Guid(fb4779f2a707d433c9819dc4be16f43b) (TextureImporter) -> (artifact id: '5e5a78587b75dc830604175dc9a4f6f2') in 1.443730336 seconds
+Start importing Assets/_Project/Resources/Characters/basemale_zonemask.png using Guid(fb987465533bae71c9f7cc4a65479eb6) (TextureImporter) -> (artifact id: 'bf313cf51eb5f3552f5a9cc7276a39de') in 0.015221069 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_bg_armory.png using Guid(fb8a3aa21d2160f16b47a3b688b2122b) (TextureImporter) -> (artifact id: 'fc4be26f94cfd6fe2668db5779c31f46') in 0.604728463 seconds
+Start importing Assets/_Project/Art/Textures/flesh_albedo.png using Guid(fbcaddb40828f95769055527a1316911) (TextureImporter) -> (artifact id: 'ad0e7884f24112de69654e4a9501a882') in 0.039000902 seconds
+Start importing Assets/_Project/Resources/UI/btn_thrust.png using Guid(0cd26744ed7a46a268317ea4897224b3) (TextureImporter) -> (artifact id: '7c4fa31fd7d3eaa2eba2df28b3b936d7') in 0.094755095 seconds
+Start importing Assets/_Project/Resources/UI/medal_3.png using Guid(0c7ae3c3154934a6cb0f99606b03b238) (TextureImporter) -> (artifact id: '4ea636e1ba6ea95e4ac5d07d7f45fadb') in 0.10005835 seconds
+Start importing Assets/_Project/Resources/FX/fx_shield.png using Guid(1c6459a365b9d6c608ee01277a91b43b) (TextureImporter) -> (artifact id: '3d434a243eb455ec904e06009c7f3aa8') in 0.443879421 seconds
+Start importing Assets/_Project/Resources/UI/Battle/fx_slash_hit.png using Guid(1c5d6057649c8da96a7fd691450c39e2) (TextureImporter) -> (artifact id: '2e8c9749d2df3f9bcc745d5775b05d80') in 1.699785056 seconds
+Start importing Assets/_Project/Resources/FX/aura_body.png using Guid(2cd433f2877ad08f2abe32853a3a5c9c) (TextureImporter) -> (artifact id: '5f28823c5f954236b8f75154304744ad') in 1.568528471 seconds
+Start importing Assets/_Project/Resources/FX/bwave_launch.png using Guid(2c199f5e594cca5ed9c598374ab66286) (TextureImporter) -> (artifact id: 'c02adb0f2d91ce8dbc7f7cdd848857ae') in 0.897993197 seconds
+Start importing Assets/_Project/Resources/UI/place_gamble.jpg using Guid(3c222c4eb454dae6aba71c48fcf744b4) (TextureImporter) -> (artifact id: '94e44ceb897ca17cfc0d50a2acd086f1') in 0.010926918 seconds
+Start importing Assets/_Project/Art/Hero3/hero3_normal.jpg using Guid(3c83a81d08e965d84b2552ddd76e817f) (TextureImporter) -> (artifact id: '5dc3abfb0f695971e49cbf9067409283') in 1.845770876 seconds
+Start importing Assets/_Project/Resources/UI/tech_0.png using Guid(3c8c58175475c57f2b217372a9703048) (TextureImporter) -> (artifact id: '328b3eec3659a0acc8a39a6b6499cd52') in 0.095300193 seconds
+Start importing Assets/_Project/Art/Textures/flesh_normal.png using Guid(3cdf887b032ea8e3796d186eed70e274) (TextureImporter) -> (artifact id: '6ed3080e1d02744c320d1dbf377ff7b2') in 0.040974753 seconds
+Start importing Assets/_Project/Resources/FX/sigil_blood_early.png using Guid(4c51a8ceaf27a6526bfd765735fe377d) (TextureImporter) -> (artifact id: 'e8c2f141c9ab8f23d4164f13c687f7cd') in 0.432240057 seconds
+Start importing Assets/_Project/Resources/UI/Battle/map_fire.png using Guid(4cb1e4418cd3715a48c6d73ba2217dec) (TextureImporter) -> (artifact id: '8caf1408d8cf5e74eb814b01ffa37ccd') in 1.644591414 seconds
+Start importing Assets/_Project/Resources/UI/selection/hero_2.jpg using Guid(4c63ce57820e2c3c2acd69445e9ee7a1) (TextureImporter) -> (artifact id: '56d366c1066c62886d4f1e598ac65b41') in 0.07635302 seconds
+Start importing Assets/_Project/Resources/UI/coin_burst.png using Guid(4c1a383e563ac668d9a9cdde52c44cf3) (TextureImporter) -> (artifact id: 'ddddd537811dc376161ff63085cc8c8f') in 0.389395948 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_lock.png using Guid(4c0c3553fdfa8400abc04d997121bc25) (TextureImporter) -> (artifact id: '7937483d969ee9df5e19f2d7311b6eee') in 0.085461037 seconds
+Start importing Assets/_Project/Resources/UI/items3.png using Guid(4ced1cbcc6098c4208c00cae7a98da5a) (TextureImporter) -> (artifact id: '23ee1641c0ed9c0b574d6cefe33093ca') in 1.433171052 seconds
+Start importing Assets/_Project/Art/Textures/flagstone_albedo.png using Guid(6c256a719704532c5b7981f923a5b257) (TextureImporter) -> (artifact id: '43fa80f19688717351bfddab02d741c2') in 0.134808714 seconds
+Start importing Assets/_Project/Art/Textures/armor_albedo.png using Guid(6c866f78d775de9a7905b414fa7dc2b8) (TextureImporter) -> (artifact id: 'b74254dd5a1d7e63361d82993e190814') in 0.132387762 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_btn_close.png using Guid(6c4e608a131111e79ae32da236c19f5f) (TextureImporter) -> (artifact id: '712acb44a90932f0e346ce10849ca442') in 0.09541783 seconds
+Start importing Assets/_Project/Resources/UI/event_17.jpg using Guid(7c314183e89268511be7fde1bc5a952f) (TextureImporter) -> (artifact id: '801637f356ce978d3f46098b0af1c3dc') in 0.011200058 seconds
+Start importing Assets/_Project/Resources/Units/unit_bandit_albedo.jpg using Guid(7ce6391211720602aba30514b08543be) (TextureImporter) -> (artifact id: '7a67874a75b181b7b49b028e414a9e03') in 0.49367215 seconds
+Start importing Assets/_Project/Resources/UI/map_watchtower.png using Guid(7c6a0e23309dd5f33b8d1e641c5f7d88) (TextureImporter) -> (artifact id: 'a5ad5a0479a4a05a6d27480ee4483925') in 0.359573437 seconds
+Start importing Assets/_Project/Art/Hero3/hero3_albedo.jpg using Guid(8c947abec692e1e10b28caded8aa0607) (TextureImporter) -> (artifact id: '497b401725e882f79f3ec6f6dc71a1c3') in 2.026305756 seconds
+Start importing Assets/_Project/Resources/Characters/basefemale_zonemask.png using Guid(8cf75f241053312a18a26c6b98e5d2d4) (TextureImporter) -> (artifact id: 'd81de36983807c5f7b23b1e1e05d15b9') in 0.015067194 seconds
+Start importing Assets/_Project/Resources/FX/ring_glow.png using Guid(8cf86e4f135b9ffafb6353d4d9d445cf) (TextureImporter) -> (artifact id: '75f6dddb94127e5a23919b9b46a5135d') in 0.121028577 seconds
+Start importing Assets/_Project/Resources/UI/plank.png using Guid(8cbb0b68f11ffeb45b5fb732f5ef3b13) (TextureImporter) -> (artifact id: '95d55899ea37bb34f10e79a239b0c4d5') in 0.163058527 seconds
+Start importing Assets/_Project/Models/OniWarrior/OniWarrior_metallic.png using Guid(9c3571319a09ae49dabf13dde7aec96c) (TextureImporter) -> (artifact id: '1fa556f7462a58cb4a4bc63c4bf6cbf6') in 1.728165894 seconds
+Start importing Assets/_Project/Resources/FX/shock_ring.png using Guid(ac91048b8dbcfa510b49fce55d5e0ff7) (TextureImporter) -> (artifact id: '10c107419c901dcd3a9f4761dc09c4d6') in 0.387437763 seconds
+Start importing Assets/_Project/Resources/UI/event_9.jpg using Guid(ace2e21f7863c8da5944dbbf3d9ae88b) (TextureImporter) -> (artifact id: 'ba16eef34d2f12031845c50f0544cb3f') in 0.144143773 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_title_plaque_flat.png using Guid(ac8d8236d796759b7890754e179d32ab) (TextureImporter) -> (artifact id: 'b2ffed3d537f55c9be6e836250bbb1c3') in 0.120169833 seconds
+Start importing Assets/_Project/Resources/UI/frame_2.png using Guid(bc51e51f9003e8cb98e81f0f4b64cdef) (TextureImporter) -> (artifact id: '81da7ee51dda289bfcc72364be66da3e') in 0.101685146 seconds
+Start importing Assets/_Project/Resources/UI/Kit/hud_banner_red.png using Guid(bc08a6c2a4ea7cf2ba7d52d716545f50) (TextureImporter) -> (artifact id: '0061253a3fb7d0490876112170ef27c0') in 0.361748545 seconds
+Start importing Assets/_Project/Resources/UI/Kit/hud_combo.png using Guid(cc1f1ed74c5b64f688fad8c35bb3cf39) (TextureImporter) -> (artifact id: '11eed07b2c22b6696124471dc430c2e2') in 0.313291919 seconds
+Start importing Assets/_Project/Resources/UI/selection/difficulty_2.jpg using Guid(ccef74fbaab850cf59cb60250d67a7f9) (TextureImporter) -> (artifact id: '8f3cdc027586d80ffe9b0f1d6ed4a5d9') in 0.076755607 seconds
+Start importing Assets/_Project/Resources/FX/ground_crack.png using Guid(dce0664ea9bf51fbbad1559bf63e6446) (TextureImporter) -> (artifact id: 'c4dea62e74dd2f50f68712749bbec65f') in 0.365943757 seconds
+Start importing Assets/_Project/Art/Textures/cobweb.png using Guid(dc01c514ebc3915efb3d21e97aba434a) (TextureImporter) -> (artifact id: 'd1da1d1321b59a44aff614658e565951') in 0.394057152 seconds
+Start importing Assets/_Project/Resources/UI/selection/approved_difficulty_1.png using Guid(dc28bf3bd0078d081873eec857115580) (TextureImporter) -> (artifact id: 'f03a3c540ce066500ecc098adaecbd42') in 0.079415636 seconds
+Start importing Assets/_Project/Resources/UI/stat_agi.png using Guid(dc1d93590cbd2fbfaa8c2ed1f38d90f2) (TextureImporter) -> (artifact id: 'b849d6d98b692a1791cf978a1010da16') in 0.108826817 seconds
+Start importing Assets/_Project/Resources/UI/fx_waterfall_fade.png using Guid(ecb78d356ae4b49e39e7db6ef276e964) (TextureImporter) -> (artifact id: '3c3399abbe1b8cb1b0d60ae440dee4bc') in 0.829674667 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_btn_disabled.png using Guid(ec6f64a6e2af82c94b8b4b725e2a39a1) (TextureImporter) -> (artifact id: 'a0fafa0d94d1fa37661cce1e342a5edb') in 0.15253943 seconds
+Start importing Assets/_Project/Resources/UI/selection/screen_difficulty.jpg using Guid(fcf80d5489a570d578c1eeb2ea3a5c1c) (TextureImporter) -> (artifact id: 'ef37d4a8c4ec5f6c4340ded7aafe6ec3') in 1.00699818 seconds
+Start importing Assets/_Project/Art/Textures/iron_old_normal.png using Guid(0d17a33d14d394a7a85f3bcf2bfb159d) (TextureImporter) -> (artifact id: 'bdce954593926b1404766d9e7d6533b6') in 0.137389917 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_title_plaque.png using Guid(2d1224deac843e0cabafc8a3a56389f9) (TextureImporter) -> (artifact id: 'd2b6e0e4939fa15256b29f5c38272f77') in 0.18927756 seconds
+Start importing Assets/_Project/Resources/FX/splash_crown.png using Guid(2d64e24b58bc78f1f9ab951d06300973) (TextureImporter) -> (artifact id: 'eccdb182addc1a0d500f5335bfc7a5e3') in 0.104269822 seconds
+Start importing Assets/_Project/Resources/Units/unit_kitsune_albedo.jpg using Guid(3d51be16363e2ca4291b180ae63f8908) (TextureImporter) -> (artifact id: '55eb21be7c24fe9ecc1bfedf92620d41') in 0.503935719 seconds
+Start importing Assets/_Project/Resources/UI/ink_splash.png using Guid(3dcb79db169bd228ba603f6554290bbc) (TextureImporter) -> (artifact id: '9e8349dd95256c02e35a76e9ac921795') in 0.436025222 seconds
+Start importing Assets/_Project/Resources/FX/fx_heal_hd.png using Guid(4d85b6d469f8201c19a1b9a6f8a0abd5) (TextureImporter) -> (artifact id: '1f0f4c73e79b654d4c248187ec199e94') in 0.348497283 seconds
+Start importing Assets/_Project/Resources/UI/fx_ui_flash_gold.png using Guid(4d6be5b88e730dc5a897852590d7c9ef) (TextureImporter) -> (artifact id: 'e1c8dfbeadba7052c7302bf1f8c6d0ed') in 0.616216829 seconds
+Start importing Assets/_Project/Art/Textures/wildflowers.png using Guid(4ddfb7e509fa9ee27be1da1c931df6b2) (TextureImporter) -> (artifact id: '745c440d3528d180c2b4bb331e81428c') in 0.406623826 seconds
+Start importing Assets/_Project/Art/Textures/wood_albedo.png using Guid(5dbafb4b0f2f5cd57a28ff2c34f4decc) (TextureImporter) -> (artifact id: '87779a64a7f94595f4c4aa871e9aac6c') in 0.146533292 seconds
+Start importing Assets/_Project/Resources/UI/event_11.jpg using Guid(5d0b1a7a0987a3f83a814a6737a13ab5) (TextureImporter) -> (artifact id: '06c0f6c8183dbfef86e01da4c605bdce') in 0.15634625 seconds
+Start importing Assets/_Project/Resources/UI/medal_1.png using Guid(6d95f2a76492c107081eeaf857015bd5) (TextureImporter) -> (artifact id: '010ec946271816ffef26878056193b17') in 0.097804839 seconds
+Start importing Assets/_Project/Art/Textures/katana_blade_albedo.png using Guid(6d3749bc55ed583c5a41729fdf9cc87d) (TextureImporter) -> (artifact id: 'c3309fdb90092c38c62fe0a46cbc502f') in 0.231909132 seconds
+Start importing Assets/_Project/Resources/UI/H3/neutrals.png using Guid(6ddf7cc77a9fd9d21af7ea8eb68b1f27) (TextureImporter) -> (artifact id: 'bdb789a0a712e3b71accb7200e6042a8') in 0.058350843 seconds
+Start importing Assets/_Project/Art/Textures/fallen_leaves.png using Guid(7d2656ad141b08a4ebad7a4436b0013c) (TextureImporter) -> (artifact id: 'b61ee20f205fe2c374160aeabb3cafc8') in 0.360637143 seconds
+Start importing Assets/_Project/Resources/UI/Battle/map_lantern.png using Guid(7d1812f2c0c0fe8afb91a2d65d034ee5) (TextureImporter)
