@@ -1,0 +1,41 @@
+name: Бойцы на поле (рендер)
+
+# Blender: каждый боец Resources/Units так, как стоит в пошаговом бою (камера 34°, стойка, лицом к врагу) → ветка battle-render.
+# Список — tools/blender/battle_list.txt: «имя сторона» (ours / enemy).
+on:
+  workflow_dispatch:
+  push:
+    branches: [battle-render-request]
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Blender 4.2 LTS
+        run: |
+          for i in 1 2 3; do timeout 300 sudo apt-get update -qq && timeout 300 sudo apt-get install -y -qq libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libxkbcommon0 libsm6 libice6 libegl1 >/dev/null && break; sleep 10; done
+          curl -sSfL https://download.blender.org/release/Blender4.2/blender-4.2.3-linux-x64.tar.xz | tar -xJ -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/blender-4.2.3-linux-x64" >> "$GITHUB_PATH"
+      - name: Render
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          while read -r name side; do
+            [ -z "$name" ] && continue
+            U=Assets/_Project/Resources/Units/unit_$name
+            [ -f "$U.fbx" ] || { echo "нет $U.fbx"; continue; }
+            FBX="$U.fbx" ALBEDO="${U}_albedo.jpg" OUT="$RUNNER_TEMP/out" NAME="${name}_${side}" SIDE="$side" \
+              blender -b --factory-startup --python tools/blender/render_battle.py 2>&1 | grep -E "ACTIONS|BBOX|Error|Traceback|Saved" | head -20
+          done < tools/blender/battle_list.txt
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd "$RUNNER_TEMP/out"; git init -q; git checkout -q -b battle-render
+          git -c user.name=ci -c user.email=ci@local add -A
+          git -c user.name=ci -c user.email=ci@local commit -qm "battle render ${GITHUB_RUN_NUMBER}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" battle-render

@@ -1,0 +1,15 @@
+archer ours
+teppo ours
+cavalry ours
+sohei ours
+onmyoji ours
+banner ours
+dog ours
+ashigaru ours
+bandit enemy
+yamabushi enemy
+kitsune enemy
+oni enemy
+fallen enemy
+shadow enemy
+shogun enemy
