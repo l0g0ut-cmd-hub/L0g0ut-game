@@ -21,7 +21,7 @@ for a in arms:
 sc.frame_set(12)
 # поворот к врагу: перед модели (−Y) → (±1, −0.215) в плоскости XY
 sx = 1.0 if SIDE == 'ours' else -1.0
-want = math.atan2(-0.215, sx); front = math.atan2(-1.0, 0.0)
+want = math.atan2(0.0, sx); front = math.atan2(-1.0, 0.0)
 root = bpy.data.objects.new('Root', None); sc.collection.objects.link(root)
 for o in sc.objects:
     if o.parent is None and o is not root: o.parent = root

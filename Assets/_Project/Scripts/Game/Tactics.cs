@@ -833,7 +833,7 @@ namespace BladePath
                 Vector2 p = s.pos + s.lungeDir * Mathf.Sin(s.lunge * Mathf.PI) * R * 0.35f;
                 s.go.transform.position = Ground(new Vector2(p.x - W * 0.5f + W * 0.5f, p.y));
                 // направление: на ходу — по пути, иначе — к врагам
-                Vector2 dir = s.path.Count > 0 ? s.path[0] - s.pos : new Vector2(s.enemy ? -1f : 1f, 0.12f);   // к врагу, совсем чуть к зрителю (владелец: армии — друг к другу)
+                Vector2 dir = s.path.Count > 0 ? s.path[0] - s.pos : new Vector2(s.enemy ? -1f : 1f, 0f);   // армии смотрят строго друг на друга (владелец)
                 if (s.actUntil > now && s.lungeDir.sqrMagnitude > 0.01f) dir = s.lungeDir;
                 if (dir.sqrMagnitude > 0.01f)
                 {
