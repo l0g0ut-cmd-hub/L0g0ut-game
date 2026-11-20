@@ -222,6 +222,43 @@ namespace BladePath
             for (int i = 0; i + 1 < r.pts.Length; i += 2) l.Add(new Vector2(r.pts[i], r.pts[i + 1]));
             return l;
         }
+        /// <summary>Дорога рядом с точкой экрана (−1 — нет).</summary>
+        static int RoadNear(Vector2 s, float maxD)
+        {
+            int best = -1; float bd = maxD;
+            for (int r = 0; r < data.roads.Length; r++)
+            {
+                List<Vector2> l = ScreenLine(data.roads[r]);
+                for (int k = 0; k + 1 < l.Count; k++) { float d = DistSeg(s, l[k], l[k + 1]); if (d < bd) { bd = d; best = r; } }
+            }
+            return best;
+        }
+        /// <summary>Вставить точку изгиба в дорогу ri в отрезок, ближайший к f (доли карты); вернуть её номер.</summary>
+        static int InsertBend(int ri, Vector2 f)
+        {
+            MapRoad r = data.roads[ri];
+            List<Vector2> line = data.Line(r), b = Bends(r);
+            Vector2 px = new Vector2(f.x * TW, f.y * TH);
+            int seg = 0; float bd = float.MaxValue;
+            for (int k = 0; k + 1 < line.Count; k++)
+            {
+                float d = DistSeg(px, new Vector2(line[k].x * TW, line[k].y * TH), new Vector2(line[k + 1].x * TW, line[k + 1].y * TH));
+                if (d < bd) { bd = d; seg = k; }
+            }
+            int at = Mathf.Clamp(seg, 0, b.Count);
+            b.Insert(at, f); SetBends(r, b); ver++;
+            return at;
+        }
+        /// <summary>Новая точка изгиба рядом с выбранной (посередине до следующей точки дороги).</summary>
+        static int BendBeside(int ri, int k)
+        {
+            MapRoad r = data.roads[ri];
+            List<Vector2> line = data.Line(r), b = Bends(r);
+            Vector2 a = line[k + 1], c = line[Mathf.Min(k + 2, line.Count - 1)];
+            b.Insert(k + 1, (a + c) * 0.5f); SetBends(r, b); ver++;
+            return k + 1;
+        }
+
         static void SetBends(MapRoad r, List<Vector2> l)
         {
             float[] a = new float[l.Count * 2];
@@ -505,6 +542,12 @@ namespace BladePath
                     Push(); AddEffect(TexAt(p)); return;
             }
             if (longPress && h.kind == HBend) { Push(); Erase(h); sel = new Hit(); Note("Точка изгиба удалена"); return; }
+            if (longPress && h.kind == HNone)
+            {   // долгое нажатие на дорогу — новая точка изгиба прямо там
+                int ri = RoadNear(p, 18f);
+                if (ri >= 0) { Push(); int k = InsertBend(ri, FracAt(p)); sel = new Hit { kind = HBend, i = ri, k = k }; Note("Точка добавлена — тяни её пальцем"); return; }
+            }
+            if (longPress && h.kind == HRoad) { Push(); int k = InsertBend(h.i, FracAt(p)); sel = new Hit { kind = HBend, i = h.i, k = k }; Note("Точка добавлена — тяни её пальцем"); return; }
             sel = h;
         }
 
@@ -847,8 +890,15 @@ namespace BladePath
                         y += 38f;
                         if (Btn(new Rect(x, y, w, 32f), "УДАЛИТЬ ТОЧКУ")) { Push(); Erase(sel); sel = new Hit { kind = HRoad, i = sel.i }; }
                         y += 38f;
+                        if (Btn(new Rect(x, y, w, 32f), "+ ТОЧКА РЯДОМ")) { Push(); sel = new Hit { kind = HBend, i = sel.i, k = BendBeside(sel.i, sel.k) }; }
+                        y += 38f;
                     }
-                    Hint(ref y, x, w, "Точки тянутся пальцем, кружок между точками — потянуть, будет новая точка; долгое нажатие на точку — удалить.");
+                    if (sel.kind == HRoad)
+                    {
+                        if (Btn(new Rect(x, y, w, 32f), "+ ТОЧКА НА ДОРОГЕ")) { Push(); MapRoad r0 = data.roads[sel.i]; List<Vector2> ln = data.Line(r0); sel = new Hit { kind = HBend, i = sel.i, k = InsertBend(sel.i, (ln[ln.Count / 2 - (ln.Count % 2 == 0 ? 1 : 0)] + ln[ln.Count / 2]) * 0.5f) }; }
+                        y += 38f;
+                    }
+                    Hint(ref y, x, w, "Долгое нажатие на дорогу — новая точка изгиба; точки тянутся пальцем; долгое нажатие на точку — удалить.");
                     if (Btn(new Rect(x, r.yMax - 34f, w, 34f), "УДАЛИТЬ ДОРОГУ")) { Push(); data.roads = RemoveAt(data.roads, sel.i); sel = new Hit(); ver++; }
                     return;
                 }
