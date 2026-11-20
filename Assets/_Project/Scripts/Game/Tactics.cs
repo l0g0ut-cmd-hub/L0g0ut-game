@@ -40,6 +40,7 @@ namespace BladePath
             public string live;             // живая 3D-модель с клипами Meshy: Resources/Units/<live> (+ <live>_albedo); нет — снимок
             public float liveH = 1.7f;      // рост на поле, м
             public int cell = -1;           // ячейка UI/Battle/unit_portraits (4×3)
+            public bool up;                 // улучшенный отряд («Герои 3»): портрет из UI/Battle/unit_portraits2
             public int model;               // ≥0 — облик врага (EnemySkins), −1…−3 — облик странника (PlayerSkins 0…2), −99 — нет модели
             public UnitType(string n, int a, int d, int mn, int mx, int h, int s, int sh, int mdl) { name = n; atk = a; def = d; dmin = mn; dmax = mx; hp = h; spd = s; shots = sh; model = mdl; }
         }
@@ -59,7 +60,23 @@ namespace BladePath
             new UnitType("Знаменосцы", 3, 6, 1, 2, 15, 5, 0, -1) { cell = 9, live = "unit_banner" },
             new UnitType("Хатамото", 13, 14, 10, 18, 80, 5, 0, 3) { cell = 10, live = "unit_hatamoto", liveH = 1.85f, dbl = true },
             new UnitType("Боевые псы", 6, 3, 2, 4, 12, 9, 0, -99) { cell = 11, live = "unit_dog", liveH = 0.9f, dbl = true },
+            // улучшенные (12…23 — по порядку базовых; улучшаются в армии поместья, когда постройка отряда улучшена)
+            new UnitType("Асигару-ветераны", 6, 7, 2, 4, 14, 5, 0, 8) { cell = 0, up = true, live = "unit_ashigaru2" },
+            new UnitType("Мастера лука", 8, 4, 3, 5, 12, 5, 16, -2) { cell = 1, up = true, live = "unit_archer2", noMeleePen = true },
+            new UnitType("Тэппо-гвардия", 10, 5, 4, 7, 16, 4, 10, 6) { cell = 2, up = true, live = "unit_teppo2", pierce = 0.6f },
+            new UnitType("Самураи-ветераны", 11, 10, 6, 8, 32, 6, 0, 0) { cell = 3, up = true, live = "unit_samurai2", unlimRet = true },
+            new UnitType("Тяжёлая конница", 14, 12, 9, 14, 60, 9, 0, 3) { cell = 4, up = true, live = "unit_cavalry2", liveH = 2.7f, joust = true, wide = true },
+            new UnitType("Сохэи-мастера", 9, 9, 4, 8, 26, 6, 0, 7) { cell = 5, up = true, live = "unit_sohei2", sweep = true },
+            new UnitType("Мастера синоби", 12, 6, 4, 7, 18, 10, 0, 5) { cell = 6, up = true, live = "unit_shinobi2", noRetal = true, dbl = true },
+            new UnitType("Ронины-мечники", 9, 8, 4, 7, 24, 7, 0, 1) { cell = 7, up = true, live = "unit_ronin2", unlimRet = true },
+            new UnitType("Онмёдзи-архимаги", 12, 8, 6, 9, 26, 6, 14, -3) { cell = 8, up = true, magic = true, live = "unit_onmyoji2", noMeleePen = true },
+            new UnitType("Знамя клана", 5, 8, 2, 3, 20, 6, 0, -1) { cell = 9, up = true, live = "unit_banner2" },
+            new UnitType("Гвардия сёгуна", 16, 18, 12, 22, 100, 6, 0, 3) { cell = 10, up = true, live = "unit_hatamoto2", liveH = 1.9f, dbl = true },
+            new UnitType("Псы Они", 9, 5, 3, 6, 18, 10, 0, -99) { cell = 11, up = true, live = "unit_dog2", liveH = 1.0f, dbl = true },
         };
+        public const int BaseUnits = 12;
+        /// <summary>Улучшенная версия отряда (−1 — уже улучшен).</summary>
+        public static int UpgradeOf(int u) { return u >= 0 && u < BaseUnits ? u + BaseUnits : -1; }
         public static readonly UnitType[] Foes =
         {
             new UnitType("Разбойники", 5, 3, 2, 3, 10, 5, 0, 6) { portrait = "UI/portrait_bandit", live = "unit_bandit", liveH = 1.68f },
@@ -615,7 +632,7 @@ namespace BladePath
         {
             if (!(mCart && !a.enemy)) a.shots--;   // повозка с боеприпасами: стрелы не кончаются
             if (a.an != null) yield return Act(a, 0.55f);   // натянул лук / вскинул ружьё / сложил печать
-            if (a.t == Ours[2]) Burst("fx_musket", a.pos + new Vector2(R * (a.enemy ? -0.9f : 0.9f), -R * 1.3f), R * 3.2f, 36f);
+            if (a.t == Ours[2] || a.t == Ours[14]) Burst("fx_musket", a.pos + new Vector2(R * (a.enemy ? -0.9f : 0.9f), -R * 1.3f), R * 3.2f, 36f);
             Vector2 from = a.pos + new Vector2(0f, -R * 1.1f), to = d.pos + new Vector2(0f, -R * 0.8f);
             shots.Add(new Shot { a = from, b = to, t0 = Time.unscaledTime, dur = 0.35f, magic = a.t.magic });
             yield return 0.35f;
@@ -697,7 +714,7 @@ namespace BladePath
             NextTurn();
         }
         /// <summary>Боевой дух наших: живые знаменосцы (+1 за отряд, до 3).</summary>
-        static int Morale { get { int m = 0; foreach (Stack s in stacks) if (s.Alive && !s.enemy && s.t == Ours[9]) m++; return Mathf.Min(3, m + General.Val(3) + General.ArtMorale); } }
+        static int Morale { get { int m = 0; foreach (Stack s in stacks) if (s.Alive && !s.enemy && (s.t == Ours[9] || s.t == Ours[21])) m += s.t == Ours[21] ? 2 : 1; return Mathf.Min(3, m + General.Val(3) + General.ArtMorale); } }
         /// <summary>Удача наших: храм поместья и святилище (пока — храм).</summary>
         static int Luck { get { return (fromEstate ? Estate.D.level[4] : 0) + General.Val(4) + General.ArtLuck; } }
 
@@ -1398,7 +1415,7 @@ namespace BladePath
 
         static Texture2D Portrait(UnitType t)
         {
-            if (t.cell >= 0) return UiKit.Tex("UI/Battle/unit_portraits");
+            if (t.cell >= 0) return UiKit.Tex(t.up ? "UI/Battle/unit_portraits2" : "UI/Battle/unit_portraits");
             return string.IsNullOrEmpty(t.portrait) ? null : UiKit.Tex(t.portrait);
         }
         static void DrawPortrait(Rect r, UnitType t)
@@ -1485,7 +1502,7 @@ namespace BladePath
         {
             // герой
             Rect hp = new Rect(10f, 540f - 76f, 64f, 64f);
-            DrawPortrait(hp, Ours[3]);
+            General.DrawFace(hp);
             UiKit.Ring(hp.center, 33f, Gold);
             UiKit.Text(new Rect(80f, 540f - 76f, 340f, 20f), "ГЕРОЙ · УР. " + heroLv + "   А" + gAtk + " З" + gDef + " С" + General.Power + " Зн" + General.Know, 13f, Gold, TextAnchor.MiddleLeft);
             UiKit.Text(new Rect(80f, 540f - 58f, 220f, 18f), "Дух " + spirit + "/" + spiritMax + (castThisRound ? " · умение уже было" : ""), 12f, new Color(0.6f, 0.8f, 1f), TextAnchor.MiddleLeft);

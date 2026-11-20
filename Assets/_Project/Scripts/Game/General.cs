@@ -19,6 +19,7 @@ namespace BladePath
             public int pending;                         // сколько выборов навыка ждёт
             public int offerA = -1, offerB = -1;
             public int lastPrimary = -1;
+            public int face;                            // портрет полководца: UI/Battle/hero_portraits (4×2)
             public int[] equip = { -1, -1, -1, -1, -1, -1, -1, -1, -1 };   // артефакт в слоте (−1 — пусто)
             public System.Collections.Generic.List<int> bag = new System.Collections.Generic.List<int>();
         }
@@ -189,6 +190,9 @@ namespace BladePath
             if (win != null) GUI.DrawTexture(r, win); else UiKit.Rect(r, new Color(0.08f, 0.04f, 0.02f, 0.97f));
             Texture2D art = UiKit.Tex("UI/artifacts");
             UiKit.Text(Px(612, 74, 440, 54), "ПОЛКОВОДЕЦ · УР. " + Profile.Level, 15f, Gold);
+            Rect fr = Px(120, 95, 130, 130);
+            DrawFace(fr);
+            if (GUI.Button(fr, GUIContent.none, GUIStyle.none)) { D.face = (D.face + 1) % 8; Save(); }
             // основные параметры
             for (int i = 0; i < 4; i++)
             {
@@ -255,6 +259,14 @@ namespace BladePath
             }
             if (VisualIdentity.KitButton(new Rect(r.xMax - 150f, r.y + 6f, 120f, 30f), "ЗАКРЫТЬ", true, false)) Open = false;
             if (VisualIdentity.KitButton(new Rect(r.x + 20f, r.y + 6f, 150f, 30f), "+ АРТЕФАКТ (разраб)", D.bag.Count < BagSize, false)) { int id = RandomArt(); Give(id); tip = "Получен: " + ArtText(id); tipAt = Time.unscaledTime; }
+        }
+        /// <summary>Портрет полководца (касание в окне — следующий).</summary>
+        public static void DrawFace(Rect r)
+        {
+            Texture2D t = UiKit.Tex("UI/Battle/hero_portraits");
+            if (t == null) { Tactics.DrawUnitPortrait(r, 10); return; }
+            int f = Mathf.Clamp(D.face, 0, 7);
+            GUI.DrawTextureWithTexCoords(r, t, new Rect((f % 4) * 0.25f, f < 4 ? 0.5f : 0f, 0.25f, 0.5f));
         }
         static Rect Cell(int id) { return new Rect((id % 4) * 0.25f, 1f - (id / 4 + 1) * 0.25f, 0.25f, 0.25f); }
     }

@@ -18,7 +18,7 @@ namespace BladePath
         public class Data
         {
             public int[] level = new int[9];        // 0 — пусто, 1 — построено, 2 — улучшено
-            public int[] pool = new int[12];        // сколько бойцов каждого отряда можно нанять сейчас
+            public int[] pool = new int[24];        // сколько бойцов каждого отряда можно нанять сейчас
             public int rice = 20, steel = 10, wood = 20, honor;
             public int week = 1;
             public bool builtThisWeek;
@@ -39,7 +39,7 @@ namespace BladePath
                 d.army.Add(new ArmySlot { unit = 1, count = 8 });
             }
             if (d.level == null || d.level.Length != 9) d.level = new int[9];
-            if (d.pool == null || d.pool.Length != 12) d.pool = new int[12];
+            if (d.pool == null || d.pool.Length != 24) { int[] np = new int[24]; if (d.pool != null) System.Array.Copy(d.pool, np, Mathf.Min(24, d.pool.Length)); d.pool = np; }
             if (d.army == null) d.army = new List<ArmySlot>();
             if (d.machines == null || d.machines.Length != 3) d.machines = new bool[3];
         }
@@ -74,8 +74,8 @@ namespace BladePath
             new Rect(300, 560, 271, 130), new Rect(724, 563, 272, 127), new Rect(1130, 560, 275, 130),
         };
         static readonly int[] PlotArt = { 0, 1, 2, 4, 3, 8, 5, 6, 7 };   // ячейка атласа построек
-        public static readonly int[] Growth = { 14, 9, 6, 6, 3, 5, 4, 5, 3, 4, 1, 8 };            // в неделю
-        public static readonly int[] Price = { 30, 60, 90, 150, 400, 130, 200, 120, 350, 80, 1500, 50 };   // мон за бойца
+        public static readonly int[] Growth = { 14, 9, 6, 6, 3, 5, 4, 5, 3, 4, 1, 8, 14, 9, 6, 6, 3, 5, 4, 5, 3, 4, 1, 8 };            // в неделю
+        public static readonly int[] Price = { 30, 60, 90, 150, 400, 130, 200, 120, 350, 80, 1500, 50, 50, 95, 140, 230, 600, 200, 300, 180, 520, 130, 2300, 85 };   // мон за бойца
 
         public static int Level(int plot) { return D.level[plot]; }
         /// <summary>Бонусы построек в бою.</summary>
@@ -236,8 +236,36 @@ namespace BladePath
             Res(3, 10f + step * 3f, D.wood.ToString()); Res(4, 10f + step * 4f, D.honor.ToString()); Res(5, 10f + step * 5f, soldiers.ToString());
         }
 
+        static int armySel = -1;
+        /// <summary>Постройка улучшена (★★) для этого отряда — можно улучшать бойцов («Герои 3»: улучшение в замке за разницу цены).</summary>
+        static bool CanUpgradeHere(int u)
+        {
+            if (u == 7 || u == 9) return D.level[6] >= 1 || D.level[4] >= 1;   // ронины, знаменосцы — главный дом: при додзё или храме
+            for (int p = 0; p < 9; p++) if ((Plots[p].unit == u || Plots[p].unit2 == u) && D.level[p] >= 2) return true;
+            return false;
+        }
+        static int UpgradeCost(ArmySlot a) { int up = Tactics.UpgradeOf(a.unit); return up < 0 ? 0 : (Price[up] - Price[a.unit]) * a.count; }
         static void DrawArmy()
         {
+            if (armySel >= 0 && armySel < D.army.Count)
+            {   // выбран отряд армии: улучшить
+                ArmySlot a = D.army[armySel]; int up = Tactics.UpgradeOf(a.unit);
+                Rect ur = new Rect(8f, 540f - 70f - 64f, 7f * 58f + 12f, 40f);
+                UiKit.Rect(ur, new Color(0.08f, 0.04f, 0.02f, 0.92f));
+                if (up < 0) UiKit.Text(new Rect(ur.x + 8f, ur.y, ur.width - 16f, ur.height), Tactics.UnitName(a.unit) + " — уже лучшие", 12f, Ink, TextAnchor.MiddleLeft);
+                else
+                {
+                    int cost = UpgradeCost(a); bool ok = CanUpgradeHere(a.unit) && Profile.Gold >= cost;
+                    UiKit.Text(new Rect(ur.x + 8f, ur.y, ur.width - 170f, ur.height), Tactics.UnitName(a.unit) + " → " + Tactics.UnitName(up) + (CanUpgradeHere(a.unit) ? " · " + cost + " мон" : " · нужна улучшенная постройка"), 10.5f, Ink, TextAnchor.MiddleLeft);
+                    if (VisualIdentity.KitButton(new Rect(ur.xMax - 156f, ur.y + 4f, 150f, 32f), "УЛУЧШИТЬ", ok, true))
+                    {
+                        Profile.AddGold(-cost);
+                        ArmySlot same = D.army.Find(o => o.unit == up);
+                        if (same != null) { same.count += a.count; D.army.Remove(a); } else a.unit = up;
+                        armySel = -1; Save(); UiFx.Play("coins", 0.8f); Note("Отряд улучшен: " + Tactics.UnitName(up) + ".");
+                    }
+                }
+            }
             Rect r = new Rect(8f, 540f - 70f, 7f * 58f + 12f, 62f);
             UiKit.Rect(r, new Color(0.08f, 0.04f, 0.02f, 0.85f));
             UiKit.Text(new Rect(r.x + 6f, r.y - 18f, 200f, 16f), "АРМИЯ", 12f, Gold, TextAnchor.MiddleLeft);
@@ -247,6 +275,8 @@ namespace BladePath
                 UiKit.Ring(s.center, 25f, new Color(0.6f, 0.45f, 0.25f));
                 if (i >= D.army.Count) continue;
                 Tactics.DrawUnitPortrait(s, D.army[i].unit);
+                if (i == armySel) UiKit.Ring(s.center, 27f, Gold, true);
+                if (GUI.Button(s, GUIContent.none, GUIStyle.none)) armySel = armySel == i ? -1 : i;
                 UiKit.Rect(new Rect(s.x + 14f, s.yMax - 14f, 38f, 14f), new Color(0.1f, 0.03f, 0.02f, 0.9f));
                 UiKit.Text(new Rect(s.x + 14f, s.yMax - 14f, 38f, 14f), D.army[i].count.ToString(), 11f, new Color(1f, 0.9f, 0.62f));
             }
