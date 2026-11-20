@@ -1,77 +1,30 @@
 [
  {
-  "action": "animate",
+  "action": "image",
   "account": "2",
-  "name": "anim_archer",
-  "rig_task_id": "01a1f92f-d0e9-7340-97ad-4eb5c8c9143f",
-  "action_ids": [
-   0,
-   228,
-   224,
-   150,
-   189,
-   412
-  ],
-  "fps": 30
+  "name": "unit_cavalry",
+  "image": "tools/meshy/in/units/cavalry.png",
+  "ai_model": "latest",
+  "polycount": 25000,
+  "topology": "triangle",
+  "texture": true,
+  "enable_pbr": false,
+  "symmetry_mode": "off",
+  "rig": true,
+  "quadruped": true
  },
  {
-  "action": "animate",
+  "action": "image",
   "account": "2",
-  "name": "anim_teppo",
-  "rig_task_id": "01a1f931-55e1-70bc-a012-51b1a45bcfe9",
-  "action_ids": [
-   0,
-   30,
-   104,
-   177,
-   183,
-   412
-  ],
-  "fps": 30
- },
- {
-  "action": "animate",
-  "account": "2",
-  "name": "anim_sohei",
-  "rig_task_id": "01a1f933-234e-7563-9006-8c0a058fa070",
-  "action_ids": [
-   89,
-   560,
-   240,
-   178,
-   189,
-   412
-  ],
-  "fps": 30
- },
- {
-  "action": "animate",
-  "account": "2",
-  "name": "anim_onmyoji",
-  "rig_task_id": "01a1f934-a034-756a-a39e-2da8ccd9dad5",
-  "action_ids": [
-   0,
-   30,
-   125,
-   178,
-   188,
-   412
-  ],
-  "fps": 30
- },
- {
-  "action": "animate",
-  "account": "2",
-  "name": "anim_banner",
-  "rig_task_id": "01a1f936-480d-71e0-9ece-fd467e1dd042",
-  "action_ids": [
-   0,
-   30,
-   97,
-   178,
-   187,
-   59
-  ],
-  "fps": 30
+  "name": "unit_dog",
+  "image": "tools/meshy/in/units/dog.png",
+  "ai_model": "latest",
+  "polycount": 25000,
+  "topology": "triangle",
+  "texture": true,
+  "enable_pbr": false,
+  "symmetry_mode": "off",
+  "rig": true,
+  "quadruped": true
  }
 ]
