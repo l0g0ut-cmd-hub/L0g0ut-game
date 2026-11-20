@@ -8,7 +8,7 @@
    "enable_pbr": false, "ai_model": "", "symmetry_mode": "auto"}
   {"action": "image", "name": "oni_mask", "image": "tools/meshy/in/oni.png", "rig": true, "height": 1.7,  — картинка → модель (+скелет Meshy)
    "polycount": 20000, "topology": "triangle", "texture": true, "enable_pbr": false, "pose_mode": "", "texture_prompt": ""}
-  {"action": "rig",   "name": "ronin", "task_id": "..." | "model_url": "...", "height": 1.7}   — скелет + базовые анимации
+  {"action": "rig",   "name": "ronin", "task_id": "..." | "model_url": "...", "height": 1.7, ["action_ids": [...], "fps": 30]}   — скелет (+ клипы библиотеки)
   {"action": "status", "kind": "text-to-3d|image-to-3d|rigging|animations", "task_id": "..."}  — докачать готовую задачу
   {"action": "library"}                                                                         — список готовых анимаций (бесплатно)
   {"action": "animate", "name": "unit_archer", "rig_task_id": "...", "action_ids": [1, 2, 3], "fps": 30}
@@ -129,7 +129,13 @@ def do(r):
         b = {"height_meters": r.get("height", 1.7)}
         opt(b, r, "task_id", "input_task_id"); opt(b, r, "model_url")
         tid = call("POST", "/v1/rigging", b)["result"]; log("  риг:", tid)
-        save(name, wait("/v1/rigging", tid), "rig"); return
+        j = wait("/v1/rigging", tid); save(name, j, "rig")
+        if r.get("action_ids") and j.get("status") == "SUCCEEDED":   # сразу клипы библиотеки на свежий скелет
+            ab = {"rig_task_id": tid, "action_ids": r["action_ids"]}
+            if r.get("fps"): ab["post_process"] = {"operation_type": "change_fps", "fps": r["fps"]}
+            aid = call("POST", "/v1/animations", ab)["result"]; log("  анимация:", aid)
+            save(name, wait("/v1/animations", aid), "anim")
+        return
     if a == "library":
         j = call("GET", "/v1/animations/library")
         d = os.path.join(OUT, "_library"); os.makedirs(d, exist_ok=True)
