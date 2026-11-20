@@ -13,7 +13,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install mcs
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq mono-mcs >/dev/null
+        # зеркала apt иногда зависают: каждая попытка не дольше 2 минут, три попытки
+        run: |
+          for i in 1 2 3; do
+            timeout 120 sudo apt-get -o Acquire::Retries=2 update -qq && timeout 180 sudo apt-get install -y -qq mono-mcs >/dev/null && break
+            echo "попытка $i не удалась"; sleep 5
+          done
+          which mcs
       - name: Parse
         run: |
           find Assets -name "*.cs" -not -path "*/Plugins/*" > cs.txt
