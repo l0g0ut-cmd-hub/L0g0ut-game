@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace BladePath
@@ -240,6 +241,11 @@ namespace BladePath
             Box(pv);
             if (showAtlas || skins == null) DrawAtlas(pv, b);
             else DrawPreview(pv, b);
+            // имя персонажа и «случайный облик» — поверх превью
+            if (nameStyle == null) { nameStyle = new GUIStyle(GUI.skin.textField); nameStyle.fontSize = 16; nameStyle.normal.textColor = Ink; nameStyle.focused.textColor = Ink; nameStyle.alignment = TextAnchor.MiddleLeft; }
+            string nn = GUI.TextField(new Rect(pv.x + 10f, pv.y + 10f, Mathf.Min(300f, pv.width - 150f), 32f), data.name ?? "", 24, nameStyle);
+            if (nn != data.name) { data.name = nn; dirty = true; }
+            if (Btn(new Rect(pv.xMax - 136f, pv.y + 8f, 128f, 36f), "СЛУЧАЙНО")) RandomLook(b);
 
             // настройки зоны справа
             Rect sp = new Rect(W - 270f, 52f, 270f, 540f - 52f);
@@ -356,6 +362,7 @@ namespace BladePath
             y += 44f;
             if (!string.IsNullOrEmpty(z.image) && Btn(new Rect(x, y, w, 34f), "УБРАТЬ КАРТИНКУ")) { z.image = null; Changed(); }
             y += 40f;
+            if (Btn(new Rect(x, sp.yMax - 88f, w, 36f), "ШАБЛОН ЗОНЫ")) ShareTemplate(zi);
             if (Btn(new Rect(x, sp.yMax - 46f, w, 36f), "СБРОСИТЬ ЗОНУ")) { z.tint = false; z.bright = 1f; z.wear = 0f; z.image = null; Changed(); }
         }
 
@@ -716,6 +723,49 @@ namespace BladePath
                 if (t == null) { Note("Картинка не открылась"); return; }
                 done(t);
             }, "Выбери картинку");
+        }
+
+        static GUIStyle nameStyle;
+
+        /// <summary>Случайный облик: одежда — цвета палитры, износ, причёска (лицо и свои картинки не трогает).</summary>
+        static void RandomLook(BaseInfo b)
+        {
+            string[] cloth = { "jacket", "sleeves", "belt", "pants", "wraps", "feet" };
+            Color main = Palette[Random.Range(1, Palette.Length)], second = Palette[Random.Range(0, Palette.Length)];
+            foreach (string id in cloth)
+            {
+                ZoneLook z = data.Zone(id);
+                if (!string.IsNullOrEmpty(z.image)) continue;
+                z.tint = Random.value < 0.85f;
+                z.color = id == "belt" || id == "wraps" ? second : id == "sleeves" && Random.value < 0.3f ? second : main;
+                z.bright = Random.Range(0.85f, 1.1f);
+                z.wear = Random.value < 0.5f ? Random.Range(0.1f, 0.6f) : 0f;
+            }
+            WearLook hw = data.Wear(0);
+            List<string> hairs = new List<string>();
+            foreach (CharacterWear.Item it in CharacterWear.Catalog) if (it.slot == 0 && CharacterWear.Has(it.id, data.female)) hairs.Add(it.id);
+            hw.id = hairs.Count > 0 && Random.value < 0.8f ? hairs[Random.Range(0, hairs.Count)] : null;
+            Changed();
+            Note("Случайный облик — что не нравится, поправь по зонам");
+        }
+
+        /// <summary>Шаблон зоны: кусок текстуры основы (как он лежит на модели) — поделиться, разрисовать и вернуть как «СВОЯ КАРТИНКА».</summary>
+        static void ShareTemplate(ZoneInfo zi)
+        {
+            try
+            {
+                Texture2D bt = CharacterLook.BaseTex(data.female);
+                if (bt == null) { Note("Нет текстуры основы"); return; }
+                int x0 = Mathf.FloorToInt(zi.rect[0] * bt.width), y0 = Mathf.FloorToInt(zi.rect[1] * bt.height);
+                int w = Mathf.Max(1, Mathf.FloorToInt(zi.rect[2] * bt.width)), h = Mathf.Max(1, Mathf.FloorToInt(zi.rect[3] * bt.height));
+                Texture2D t = new Texture2D(w, h, TextureFormat.RGB24, false);
+                t.SetPixels(bt.GetPixels(x0, y0, w, h)); t.Apply();
+                string p = System.IO.Path.Combine(Application.temporaryCachePath, "BladePath_" + zi.id + (data.female ? "_f" : "_m") + "_template.png");
+                System.IO.File.WriteAllBytes(p, t.EncodeToPNG());
+                Object.Destroy(t);
+                new NativeShare().AddFile(p).SetSubject("Шаблон зоны «" + zi.name + "»").SetText("Разрисуй поверх (форма кусков — как они лежат на модели) и загрузи обратно: «СВОЯ КАРТИНКА» → «ИЗ ГАЛЕРЕИ».").Share();
+            }
+            catch (System.Exception e) { Note("Не получилось: " + e.Message); }
         }
 
         static void SaveNow()
