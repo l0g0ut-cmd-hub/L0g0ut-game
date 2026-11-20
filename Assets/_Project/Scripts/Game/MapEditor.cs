@@ -328,6 +328,7 @@ namespace BladePath
         public static void Draw(float w)
         {
             W = w;
+            if (customEdit != null) { DrawCustomEdit(); return; }   // своё место — на весь экран
             mapR = new Rect(112f, 52f, W - 112f - 236f, 540f - 52f - 30f);
             if (zoom < 0f) { zoom = MinZoom * 1.6f; vx = TW * 0.5f - mapR.width / zoom * 0.5f; vy = TH * 0.3f; }
             ClampView();
@@ -794,7 +795,15 @@ namespace BladePath
                     Label(ref y, x, w, "Тип");
                     if (Btn(new Rect(x, y, 34f, 32f), "<")) { Push(); q.type = StepType(q.type, -1); }
                     UiKit.Text(new Rect(x + 36f, y, w - 72f, 32f), TypeName(q.type), 12f, Ink);
-                    if (Btn(new Rect(x + w - 34f, y, 34f, 32f), ">")) { Push(); q.type = StepType(q.type, 1); }
+                    if (Btn(new Rect(x + w - 34f, y, 34f, 32f), ">")) { Push(); q.type = StepType(q.type, 1); q.custom = null; }
+                    y += 38f;
+                    MapCustom qc = data.Custom(q.custom);
+                    if (qc != null)
+                    {
+                        if (Btn(new Rect(x, y, w - 40f, 32f), "СВОЁ: " + (qc.name ?? "").ToUpper(), true, true)) customEdit = qc;
+                        if (Btn(new Rect(x + w - 34f, y, 34f, 32f), "×")) { Push(); q.custom = null; q.type = -1; }
+                    }
+                    else if (Btn(new Rect(x, y, w, 32f), "СДЕЛАТЬ СВОИМ МЕСТОМ")) { Push(); customEdit = MakeCustom(q); }
                     y += 38f;
                     Label(ref y, x, w, "Ряд (этап пути: 0 — начало, последний — владыка)");
                     if (Btn(new Rect(x, y, 34f, 32f), "<", q.layer > 0)) { Push(); q.layer--; }
@@ -890,6 +899,165 @@ namespace BladePath
             UiKit.Text(new Rect(x, r.yMax - 54f, w, 50f), "Кольцо места: золотое — место ряда, белое — доп., зелёное — постоянное. Красное — замечание проверки.", 10f, Dim, TextAnchor.LowerLeft);
         }
 
+        // ---------------------------------------------------------------- своё место (строение, событие)
+
+        static MapCustom customEdit;
+        static int foeIdx(int code) { int i = System.Array.IndexOf(MapCustom.FoeCodes, code); return i < 0 ? 0 : i; }
+
+        static MapCustom MakeCustom(MapPlace q)
+        {
+            string id = "c_" + q.id; int k = 2;
+            while (data.Custom(id) != null) id = "c_" + q.id + "_" + k++;
+            MapCustom c = new MapCustom
+            {
+                id = id, name = "Своё место", text = "Опиши, что здесь происходит.",
+                choices = new[] { new MapChoice { label = "ВЗЯТЬ НАГРАДУ", outcome = 1, amount = 50, result = "" }, new MapChoice { label = "ПРОЙТИ МИМО", outcome = 0 } },
+            };
+            List<MapCustom> l = new List<MapCustom>(data.customs ?? new MapCustom[0]); l.Add(c); data.customs = l.ToArray();
+            q.custom = id; q.type = (int)NodeType.Custom; q.kind = 2;   // своё место всегда есть и всегда своё
+            dirty = true; ver++;
+            return c;
+        }
+
+        static GUIStyle area;
+        static string TextField(Rect r, string v, int max, bool multi = false)
+        {
+            if (field == null) { field = new GUIStyle(GUI.skin.textField); field.fontSize = 15; field.normal.textColor = Ink; field.focused.textColor = Ink; field.alignment = TextAnchor.MiddleLeft; }
+            if (area == null) { area = new GUIStyle(GUI.skin.textArea); area.fontSize = 14; area.wordWrap = true; area.normal.textColor = Ink; area.focused.textColor = Ink; }
+            string nv = multi ? GUI.TextArea(r, v ?? "", max, area) : GUI.TextField(r, v ?? "", max, field);
+            if (nv != v) { dirty = true; }
+            return nv;
+        }
+
+        static void DrawCustomEdit()
+        {
+            MapCustom c = customEdit;
+            UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0.05f, 0.04f, 0.03f, 1f));
+            Box(new Rect(0f, 0f, W, 48f));
+            UiKit.Text(new Rect(12f, 6f, 400f, 36f), "СВОЁ МЕСТО — КАРТОЧКА", 17f, Gold, TextAnchor.MiddleLeft);
+            if (Btn(new Rect(W - 150f, 6f, 140f, 36f), "ГОТОВО", true, true)) { customEdit = null; ver++; return; }
+            if (Btn(new Rect(W - 330f, 6f, 170f, 36f), "УДАЛИТЬ МЕСТО") && Confirm("delcust", "Убрать своё место (на карте останется обычное)? Нажми ещё раз"))
+            {
+                Push();
+                foreach (MapPlace q in data.places) if (q.custom == c.id) { q.custom = null; q.type = -1; }
+                List<MapCustom> l = new List<MapCustom>(data.customs); l.Remove(c); data.customs = l.ToArray();
+                customEdit = null; ver++; return;
+            }
+
+            // слева — значок и картина
+            Rect lp = new Rect(0f, 52f, 250f, 488f);
+            Box(lp);
+            float x = lp.x + 14f, w = lp.width - 28f, y = lp.y + 12f;
+            UiKit.Text(new Rect(x, y, w, 16f), "ЗНАЧОК НА КАРТЕ", 12f, Dim, TextAnchor.MiddleLeft); y += 20f;
+            Rect ir = new Rect(x + w * 0.5f - 46f, y, 92f, 92f);
+            Texture2D it = string.IsNullOrEmpty(c.icon) ? null : UiKit.Tex(c.icon);
+            if (it != null) GUI.DrawTexture(ir, it); else { UiKit.Disc(ir.center, 44f, new Color(0.15f, 0.12f, 0.09f)); UiKit.Text(ir, "нет", 13f, Dim); }
+            y += 98f;
+            if (Btn(new Rect(x, y, w, 32f), "ЗНАЧОК ИЗ ГАЛЕРЕИ")) PickObjImage(c, true);
+            y += 44f;
+            UiKit.Text(new Rect(x, y, w, 16f), "КАРТИНА КАРТОЧКИ", 12f, Dim, TextAnchor.MiddleLeft); y += 20f;
+            Rect ar = new Rect(x, y, w, 170f);
+            Texture2D at = string.IsNullOrEmpty(c.art) ? null : UiKit.Tex(c.art);
+            if (at != null) GUI.DrawTexture(ar, at, ScaleMode.ScaleAndCrop); else { UiKit.Rect(ar, new Color(0.15f, 0.12f, 0.09f)); UiKit.Text(ar, "нет", 13f, Dim); }
+            Frame(ar, Edge, 1f);
+            y += 176f;
+            if (Btn(new Rect(x, y, w, 32f), "КАРТИНА ИЗ ГАЛЕРЕИ")) PickObjImage(c, false);
+
+            // посередине — название и текст
+            Rect mp = new Rect(256f, 52f, W - 256f - 6f, 488f);
+            Box(mp);
+            x = mp.x + 14f; w = mp.width - 28f; y = mp.y + 12f;
+            Label(ref y, x, w, "Название");
+            c.name = TextField(new Rect(x, y, Mathf.Min(w, 420f), 32f), c.name, 32); y += 40f;
+            Label(ref y, x, w, "Текст карточки");
+            c.text = TextField(new Rect(x, y, w, 96f), c.text, 600, true); y += 104f;
+            // бой
+            Label(ref y, x, w, "Если выбор — «БОЙ»: противник и сила");
+            float bw = Mathf.Min(260f, (w - 8f) * 0.5f);
+            if (Btn(new Rect(x, y, bw, 32f), MapCustom.FoeNames[foeIdx(c.foe)])) { c.foe = MapCustom.FoeCodes[(foeIdx(c.foe) + 1) % MapCustom.FoeCodes.Length]; dirty = true; }
+            if (Btn(new Rect(x + bw + 8f, y, bw, 32f), c.strong ? "СИЛЬНЫЙ: ДА" : "СИЛЬНЫЙ: НЕТ")) { c.strong = !c.strong; dirty = true; }
+            y += 42f;
+            // выборы
+            Label(ref y, x, w, "Кнопки (до трёх): надпись · что даёт · сколько · что написать после");
+            List<MapChoice> ch = new List<MapChoice>(c.choices ?? new MapChoice[0]);
+            int remove = -1;
+            for (int i = 0; i < ch.Count; i++)
+            {
+                MapChoice o = ch[i];
+                float cx = x;
+                o.label = TextField(new Rect(cx, y, 170f, 30f), o.label, 24); cx += 176f;
+                if (Btn(new Rect(cx, y, 130f, 30f), MapCustom.Outcomes[Mathf.Clamp(o.outcome, 0, MapCustom.Outcomes.Length - 1)]))
+                { o.outcome = (o.outcome + 1) % MapCustom.Outcomes.Length; o.amount = MapCustom.OutcomeDefault[o.outcome]; dirty = true; }
+                cx += 136f;
+                bool amt = o.outcome >= 1 && o.outcome <= 4;
+                if (amt)
+                {
+                    int step = o.outcome == 4 ? 1 : o.outcome == 3 ? 20 : 10, max = o.outcome == 4 ? 3 : 2000, min = o.outcome == 4 ? 1 : 0;
+                    if (Btn(new Rect(cx, y, 28f, 30f), "−")) { o.amount = Mathf.Max(min, o.amount - step); dirty = true; }
+                    UiKit.Text(new Rect(cx + 28f, y, 52f, 30f), o.outcome == 4 ? new[] { "", "ОБЫЧН.", "РЕДК.", "ЛЕГЕНД." }[Mathf.Clamp(o.amount, 1, 3)] : o.amount.ToString(), 13f, Ink);
+                    if (Btn(new Rect(cx + 80f, y, 28f, 30f), "+")) { o.amount = Mathf.Min(max, o.amount + step); dirty = true; }
+                }
+                cx += 114f;
+                o.result = TextField(new Rect(cx, y, Mathf.Max(80f, x + w - cx - 40f), 30f), o.result, 200);
+                if (Btn(new Rect(x + w - 34f, y, 34f, 30f), "×")) remove = i;
+                y += 38f;
+            }
+            if (remove >= 0) { ch.RemoveAt(remove); dirty = true; }
+            if (ch.Count < 3 && Btn(new Rect(x, y, 200f, 32f), "+ КНОПКА")) { ch.Add(new MapChoice { label = "ДАЛЬШЕ" }); dirty = true; }
+            c.choices = ch.ToArray();
+            if (note != null && Time.unscaledTime - noteAt < 3f)
+            {
+                Rect nr = new Rect(W * 0.5f - 300f, 54f, 600f, 30f);
+                UiKit.Rect(nr, new Color(0f, 0f, 0f, 0.8f)); UiKit.Text(nr, note, 15f, Gold);
+            }
+            UiKit.Text(new Rect(x, mp.yMax - 40f, w, 32f), "«ПЛАТА» нельзя нажать, если мон не хватает. «БОЙ» превращает место в бой с выбранным противником. Пустое «после» — игра напишет сама.", 11f, Dim, TextAnchor.UpperLeft);
+        }
+
+        /// <summary>Картинка своего места из галереи: значок — круг 256 с золотым кольцом (png), картина — до 1024 (jpg).</summary>
+        static void PickObjImage(MapCustom c, bool icon)
+        {
+            NativeGallery.GetImageFromGallery((path) =>
+            {
+                if (string.IsNullOrEmpty(path)) return;
+                Texture2D src = NativeGallery.LoadImageAtPath(path, icon ? 1024 : 2048, false, false);
+                if (src == null) { Note("Картинка не открылась"); return; }
+                string dir = Path.Combine(Application.persistentDataPath, "maps", "obj");
+                Directory.CreateDirectory(dir);
+                string stamp = c.id + "_" + System.DateTime.Now.ToString("yyyyMMddHHmmss");
+                string rel;
+                if (icon)
+                {
+                    int S = 256, side = Mathf.Min(src.width, src.height);
+                    Texture2D t = new Texture2D(S, S, TextureFormat.RGBA32, false);
+                    Color32[] px = new Color32[S * S];
+                    float ox = (src.width - side) * 0.5f / src.width, oy = (src.height - side) * 0.5f / src.height;
+                    for (int y = 0; y < S; y++)
+                        for (int x = 0; x < S; x++)
+                        {
+                            float dx = x + 0.5f - S * 0.5f, dy = y + 0.5f - S * 0.5f, d = Mathf.Sqrt(dx * dx + dy * dy);
+                            Color col = src.GetPixelBilinear(ox + (x + 0.5f) / S * side / src.width, oy + (y + 0.5f) / S * side / src.height);
+                            float ring = Mathf.Clamp01(1f - Mathf.Abs(d - 118f) / 7f);                // золотое кольцо
+                            col = Color.Lerp(col, new Color(0.86f, 0.66f, 0.34f), ring);
+                            col = Color.Lerp(col, new Color(0.25f, 0.15f, 0.06f), Mathf.Clamp01(1f - Mathf.Abs(d - 126f) / 2.5f));   // тёмный край
+                            col.a = Mathf.Clamp01(127.5f - d);
+                            px[y * S + x] = col;
+                        }
+                    t.SetPixels32(px); t.Apply();
+                    rel = "maps/obj/" + stamp + "_icon.png";
+                    File.WriteAllBytes(Path.Combine(Application.persistentDataPath, rel), t.EncodeToPNG());
+                    Object.Destroy(t);
+                }
+                else
+                {
+                    rel = "maps/obj/" + stamp + "_art.jpg";
+                    File.WriteAllBytes(Path.Combine(Application.persistentDataPath, rel), src.EncodeToJPG(88));
+                }
+                Object.Destroy(src);
+                if (icon) c.icon = "file:" + rel; else c.art = "file:" + rel;
+                dirty = true; ver++;
+            }, icon ? "Значок места" : "Картина места");
+        }
+
         // ---------------------------------------------------------------- своя область
 
         static GUIStyle field;
@@ -913,6 +1081,11 @@ namespace BladePath
                 y += 36f;
                 if (Btn(new Rect(x, y, w, 30f), "УДАЛИТЬ ОБЛАСТЬ", true, true) && Confirm("delcustom", "Удалить свою область «" + data.name + "» насовсем? Нажми ещё раз"))
                 { MapStore.DeleteCustom(custom); Load(0); Note("Своя область удалена"); }
+                y += 36f;
+            }
+            else
+            {
+                if (Btn(new Rect(x, y, w, 30f), "ПОДЕЛИТЬСЯ ФАЙЛОМ")) ExportCustom();
                 y += 36f;
             }
             if (y < bottom - 34f)
@@ -978,8 +1151,24 @@ namespace BladePath
             if (dirty) SaveNow();
             try
             {
-                string img = Path.Combine(Application.persistentDataPath, MapStore.CustomImage(custom));
-                CustomExport ex = new CustomExport { map = JsonUtility.ToJson(data), image = File.Exists(img) ? System.Convert.ToBase64String(File.ReadAllBytes(img)) : "" };
+                // карта и все картинки с телефона (картина области, значки и картины своих мест) — одним файлом
+                CustomExport ex = new CustomExport { region = custom >= 0 ? -1 : region, map = JsonUtility.ToJson(data) };
+                List<string> ps = new List<string>();
+                if (!string.IsNullOrEmpty(data.texture) && data.texture.StartsWith("file:")) ps.Add(data.texture.Substring(5));
+                if (data.customs != null)
+                    foreach (MapCustom c in data.customs)
+                    {
+                        if (!string.IsNullOrEmpty(c.icon) && c.icon.StartsWith("file:")) ps.Add(c.icon.Substring(5));
+                        if (!string.IsNullOrEmpty(c.art) && c.art.StartsWith("file:")) ps.Add(c.art.Substring(5));
+                    }
+                List<string> names = new List<string>(), blobs = new List<string>();
+                foreach (string rp in ps)
+                {
+                    string fp = Path.Combine(Application.persistentDataPath, rp);
+                    if (!File.Exists(fp) || names.Contains(rp)) continue;
+                    names.Add(rp); blobs.Add(System.Convert.ToBase64String(File.ReadAllBytes(fp)));
+                }
+                ex.files = names.ToArray(); ex.data = blobs.ToArray();
                 string safe = System.Text.RegularExpressions.Regex.Replace(data.name ?? "oblast", @"[^\w\-]+", "_");
                 string outp = Path.Combine(Application.temporaryCachePath, "BladePath_" + safe + ".blademap.json");
                 File.WriteAllText(outp, JsonUtility.ToJson(ex));
@@ -987,7 +1176,7 @@ namespace BladePath
             }
             catch (System.Exception e) { Note("Не получилось: " + e.Message); }
         }
-        [System.Serializable] class CustomExport { public int version = 1; public string map; public string image; }
+        [System.Serializable] class CustomExport { public int version = 2; public int region = -1; public string map; public string[] files; public string[] data; }
 
         static int StepType(int t, int d)
         {
@@ -997,7 +1186,7 @@ namespace BladePath
                 t += d;
                 if (t < -1) t = n - 1;
                 if (t >= n) t = -1;
-                if (t != (int)NodeType.Start && t != (int)NodeType.Boss) return t;
+                if (t != (int)NodeType.Start && t != (int)NodeType.Boss && t != (int)NodeType.Custom) return t;
             }
             return -1;
         }

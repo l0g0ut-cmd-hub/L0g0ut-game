@@ -5,7 +5,8 @@ using UnityEngine;
 namespace BladePath
 {
     public enum NodeType { Start, Duel, Elite, Boss, Shrine, Smith, Merchant, Treasure, Ambush, Event, Rest, Herbalist, Onsen, Dojo, Gamble, ClanShrine, HunterCamp,
-                           TreeShadow, KamiRoots, FisherHut, HermitIsle }   // ответвление у древа в Лесу теней (2026-11-18): места только там
+                           TreeShadow, KamiRoots, FisherHut, HermitIsle,
+                           Custom }   // своё место из редактора карт (MapNode.cust → MapData.customs)   // ответвление у древа в Лесу теней (2026-11-18): места только там
 
     [Serializable]
     public class MapNode
@@ -19,6 +20,7 @@ namespace BladePath
         public List<int> next = new List<int>();
         public bool lair;           // бывшее логово старой карты (сильный противник — страж логова)
         public List<int> extra = new List<int>();   // отряд: противники, которые вступают по очереди после первого (ступени Ladder)
+        public string cust;         // своё место (NodeType.Custom): id в MapData.customs
         public int foe;             // облик Леса теней (Ladder.Foes, с 1); 0 — противник ступени как есть (и для старых сохранений)
         public NodeType Type { get { return (NodeType)type; } }
         public bool IsTavern { get { return Type == NodeType.Rest && ev == MapScreen.TavernEv; } }
@@ -74,7 +76,7 @@ namespace BladePath
         public static readonly string[] RegionNames = { "ЛЕС ТЕНЕЙ", "ГОРЫ ОНИ", "ПРОКЛЯТЫЙ СЁГУНАТ" };
         public static readonly string[] TypeNames = { "НАЧАЛО ПУТИ", "ДУЭЛЬ", "СИЛЬНЫЙ ПРОТИВНИК", "ВЛАДЫКА ОБЛАСТИ", "ХРАМ", "КУЗНЕЦ", "ТОРГОВЕЦ", "ТАЙНИК", "ЗАСАДА", "СОБЫТИЕ", "ПРИВАЛ", "ХИЖИНА ТРАВНИЦЫ",
                                                        "ГОРЯЧИЙ ИСТОЧНИК", "ДОДЗЁ", "ИГОРНЫЙ ДОМ", "СВЯТИЛИЩЕ КЛАНА", "СТОЯНКА ОХОТНИКОВ",
-                                                       "ТЕНЬ ДРЕВА", "КОРНИ ДРЕВА КАМИ", "ХИЖИНА РЫБАКА", "ОСТРОВ ОТШЕЛЬНИКА" };
+                                                       "ТЕНЬ ДРЕВА", "КОРНИ ДРЕВА КАМИ", "ХИЖИНА РЫБАКА", "ОСТРОВ ОТШЕЛЬНИКА", "СВОЁ МЕСТО" };
         public static readonly string[] TypeHints =
         {
             "Отсюда начинается путь по области.",
@@ -98,6 +100,7 @@ namespace BladePath
             "Симэнава и бумажные ленты на корнях древа. Подношение ками — благословение на следующий бой.",
             "Хижина на сваях. Рыбак накормит и пустит переночевать, а за пару мон отвезёт на остров.",
             "Старый мастер меча живёт один на островке. Выстоишь против него — научит приёму.",
+            "Место, придуманное в редакторе карт.",
         };
 
         // места узлов на каждой карте (доли ширины/высоты), по слоям от начала (внизу слева) к владыке (вверху справа)
@@ -837,7 +840,38 @@ namespace BladePath
                 pn.type = pm.Value; pn.lair = false; pn.foe = 0; pn.done = false;
                 if (pn.extra != null) pn.extra.Clear();
             }
+            ApplyCustomPlaces(dd, md);
             dd.steps = 0; dd.rolls = Mathf.Max(dd.rolls, 1);
+            Save();
+        }
+
+        /// <summary>Свои места из редактора карт: место файла с «custom» — узел «СВОЁ МЕСТО» (картинка, текст, выборы — из файла).</summary>
+        static void ApplyCustomPlaces(Data dd, MapData md)
+        {
+            if (md == null || md.customs == null || md.customs.Length == 0) return;
+            foreach (MapNode n in dd.nodes)
+                foreach (MapPlace mp in md.places)
+                    if (!string.IsNullOrEmpty(mp.custom) && md.Custom(mp.custom) != null && Mathf.Abs(mp.x - n.x) < 0.0005f && Mathf.Abs(mp.y - n.y) < 0.0005f)
+                    {
+                        n.type = (int)NodeType.Custom; n.cust = mp.custom; n.foe = 0; n.lair = false; n.done = false;
+                        if (n.extra != null) n.extra.Clear();
+                        break;
+                    }
+        }
+        /// <summary>Своё место узла (null — не своё или файла карты больше нет).</summary>
+        public static MapCustom CustomOf(MapNode n)
+        {
+            if (n == null || n.Type != NodeType.Custom) return null;
+            MapData md = MapStore.Get(D.region);
+            return md != null ? md.Custom(n.cust) : null;
+        }
+        /// <summary>Бой из своего места: противник и сила — как задано в редакторе.</summary>
+        public static void TurnToCustomFight(int i, int foe, bool strong)
+        {
+            TurnToAmbush(i);
+            MapNode n = D.nodes[i];
+            if (strong) { n.type = (int)NodeType.Elite; n.enemy = Mathf.Clamp(D.region, 0, Ladder.Count - 1); }
+            if (foe != 0) n.foe = foe;
             Save();
         }
 

@@ -29,7 +29,7 @@ namespace BladePath
         static readonly string[] EnemyTraits = { "обычный бой — учись отражать", "уходит в дым за спину, финтит", "бьёт по земле — перепрыгивай волну", "три фазы: залпы духа, затем дым" };
         static readonly string[] EnemyFullArt = { "UI/enemy_full_fallen", "UI/enemy_full_shadow", "UI/enemy_full_oni", "UI/enemy_full_shogun" };
 
-        enum Modal { None, Fight, Shrine, Smith, Merchant, Treasure, Rest, Event, RegionClear, Herbalist, Knocked, Camp, Tavern, Dev, Onsen, Dojo, Gamble, Clan, Hunter, Hunt, Watch, Grove }
+        enum Modal { None, Fight, Shrine, Smith, Merchant, Treasure, Rest, Event, RegionClear, Herbalist, Knocked, Camp, Tavern, Dev, Onsen, Dojo, Gamble, Clan, Hunter, Hunt, Watch, Grove, Custom }
         Modal modal;
         int sel = -1;
         readonly List<int> previewPath = new List<int>(16);
@@ -152,6 +152,7 @@ namespace BladePath
                 case NodeType.ClanShrine: OpenModal(Modal.Clan); break;
                 case NodeType.HunterCamp: OpenModal(Modal.Hunter); break;
                 case NodeType.TreeShadow: case NodeType.KamiRoots: case NodeType.FisherHut: case NodeType.HermitIsle: OpenModal(Modal.Grove); break;
+                case NodeType.Custom: OpenModal(Modal.Custom); break;
                 default: modal = Modal.None; break;
             }
         }
@@ -506,6 +507,7 @@ namespace BladePath
                 case NodeType.Duel: return 0; case NodeType.Elite: return 1; case NodeType.Boss: return 2; case NodeType.Shrine: return 3;
                 case NodeType.Smith: return 4; case NodeType.Merchant: return 5; case NodeType.Treasure: return 6; case NodeType.Ambush: return 7;
                 case NodeType.Event: return 8; case NodeType.Rest: return 9; case NodeType.Start: return 13; case NodeType.Herbalist: return 13;
+                case NodeType.Custom: return 8;   // своё место без своего значка — медальон события
             }
             return 11;
         }
@@ -527,7 +529,7 @@ namespace BladePath
             "НАЧАЛО", "ДУЭЛЬ", "ЭЛИТА", "БОСС", "ХРАМ", "КУЗНЕЦ",
             "ТОРГОВЕЦ", "СУНДУК", "ЗАСАДА", "СОБЫТИЕ", "ПРИВАЛ", "ТРАВНИЦА",
             "ОНСЭН", "ДОДЗЁ", "КОСТИ", "СВЯТИЛИЩЕ", "ОХОТНИКИ",
-            "ТЕНЬ ДРЕВА", "ДРЕВО КАМИ", "РЫБАК", "ОТШЕЛЬНИК"
+            "ТЕНЬ ДРЕВА", "ДРЕВО КАМИ", "РЫБАК", "ОТШЕЛЬНИК", "СВОЁ"
         };
         // ---- новые места (2026-11-06): свои медальоны UI/map_icons_new (3×2) и домики UI/map_buildings_new (3×2)
         // ячейки: 0 онсэн, 1 додзё, 2 игорный дом, 3 смотровая башня, 4 святилище клана, 5 охотники за головами (и ронин в розыске)
@@ -1547,6 +1549,8 @@ namespace BladePath
                     GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.47f, p.y - s * 0.47f, s * 0.94f, s * 0.94f), UiKit.Tex(NewIcons), Cell3(NewPlace(n.Type)));
                 else if (GrovePlace(n.Type) >= 0 && UiKit.Tex(GroveIcons) != null)
                     GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.47f, p.y - s * 0.47f, s * 0.94f, s * 0.94f), UiKit.Tex(GroveIcons), Cell2(GrovePlace(n.Type)));
+                else if (CustomIcon(n) != null)   // своё место: круглый значок с телефона (редактор карт)
+                    GUI.DrawTexture(new Rect(p.x - s * 0.47f, p.y - s * 0.47f, s * 0.94f, s * 0.94f), CustomIcon(n));
                 else if (ic != null)
                     GUI.DrawTextureWithTexCoords(new Rect(p.x - s * 0.5f, p.y - s * 0.5f, s, s), ic, Cell(k));
                 else UiKit.Disc(p, s * 0.45f, can ? Gold : Dim);   // атлас значков не загрузился — простой кружок
@@ -1567,7 +1571,7 @@ namespace BladePath
                     float tw = 90f;
                     // подписи рисуются после всадника (DrawNodeLabels), иначе он закрывает «ТРАВНИЦА», «СУНДУК»
                     nodeLabels.Add(new KeyValuePair<Rect, string>(new Rect(p.x - tw * 0.5f, p.y + s * 0.45f + 3f, tw, 18f),
-                        n.IsTavern ? "ТРАКТИР" : ShortTypeNames[(int)n.Type]));
+                        n.IsTavern ? "ТРАКТИР" : n.Type == NodeType.Custom ? NodeName(n) : ShortTypeNames[(int)n.Type]));
                 }
                 int routeIndex = previewPath.IndexOf(i);
                 if (routeIndex > 0)
@@ -2088,6 +2092,7 @@ namespace BladePath
             switch (node.Type)
             {
                 case NodeType.Event: return "UI/event_" + Mathf.Clamp(node.ev, 0, EventCount - 1);
+                case NodeType.Custom: { MapCustom c = Campaign.CustomOf(node); return c != null && !string.IsNullOrEmpty(c.art) ? c.art : c != null && !string.IsNullOrEmpty(c.icon) ? c.icon : "UI/path_panorama"; }
                 case NodeType.Shrine: return "UI/npc_2";
                 case NodeType.Smith: return "UI/npc_1";
                 case NodeType.Merchant: return "UI/npc_0";
@@ -2403,6 +2408,7 @@ namespace BladePath
                     break;
                 }
                 case Modal.Event: DrawEvent(n, at, ok); break;
+                case Modal.Custom: DrawCustomPlace(n, at, ok); break;
                 case Modal.Herbalist:
                 case Modal.Knocked:
                 {
@@ -3054,10 +3060,22 @@ namespace BladePath
 
         /// <summary>Привал с ev = TavernEv — придорожный трактир (свой значок, вход в трактир).</summary>
         public const int TavernEv = 99;
-        static string NodeName(MapNode n) { return n.IsTavern ? "ТРАКТИР" : n.lair && n.Type == NodeType.Elite ? "СТРАЖ ЛОГОВА" : Campaign.TypeNames[n.type]; }
+        static Texture2D CustomIcon(MapNode n)
+        {
+            if (n.Type != NodeType.Custom) return null;
+            MapCustom c = Campaign.CustomOf(n);
+            return c != null && !string.IsNullOrEmpty(c.icon) ? UiKit.Tex(c.icon) : null;
+        }
+        static string NodeName(MapNode n)
+        {
+            if (n.Type == NodeType.Custom) { MapCustom c = Campaign.CustomOf(n); return c != null && !string.IsNullOrEmpty(c.name) ? c.name.ToUpper() : "СВОЁ МЕСТО"; }
+            return n.IsTavern ? "ТРАКТИР" : n.lair && n.Type == NodeType.Elite ? "СТРАЖ ЛОГОВА" : Campaign.TypeNames[n.type];
+        }
         static string NodeHint(MapNode n)
         {
-            string h = n.IsTavern ? "Мрачный трактир у дороги: сакэ, кости, заказы на головы и пьяные слухи." : Campaign.TypeHints[n.type];
+            MapCustom hc = Campaign.CustomOf(n);
+            string h = n.IsTavern ? "Мрачный трактир у дороги: сакэ, кости, заказы на головы и пьяные слухи."
+                     : hc != null ? (hc.text != null && hc.text.Length > 90 ? hc.text.Substring(0, 88) + "…" : hc.text) : Campaign.TypeHints[n.type];
             if (Campaign.HuntAt >= 0 && Campaign.Nodes[Campaign.HuntAt] == n) h = "Здесь сейчас ронин в розыске! " + h;
             return h;
         }
@@ -3098,6 +3116,61 @@ namespace BladePath
             "Тот самый ронин, которого ты перевязал у фонаря, — здоров и гордо прям. Он опускается на колено и протягивает меч обеими руками: «Я говорил, что не останусь в долгу».",
             "Ночью на тропе — знакомое лицо: ронин, которого ты перевязал. За ним — разбойники с факелами. «Прости, путник. Твой кошель мне нужнее твоей благодарности».",
         };
+
+         /// <summary>Своё место из редактора карт: картина, название, текст и до трёх выборов (моны, опыт, вещь, бой…).</summary>
+         void DrawCustomPlace(MapNode n, int at, bool ok)
+        {
+            MapCustom c = Campaign.CustomOf(n);
+            if (c == null) { Result("Место пустует."); return; }
+            MapChoice[] ch = c.choices != null && c.choices.Length > 0 ? c.choices : new[] { new MapChoice { label = "ДАЛЬШЕ" } };
+            int nb = Mathf.Min(3, ch.Length);
+            string text = string.IsNullOrEmpty(c.text) ? "…" : c.text;
+            float pw = 300f, tx = 318f;
+            Rect r = Card(720f, Mathf.Clamp(22f + 36f + LinesH(720f - tx - 18f, text, 38, 13f) + 16f + nb * 54f + 12f, 340f, 520f));
+            Picture(new Rect(r.x, r.y, pw, r.height), !string.IsNullOrEmpty(c.art) ? c.art : !string.IsNullOrEmpty(c.icon) ? c.icon : "UI/path_panorama");
+            float x = r.x + tx, w = r.width - tx - 18f, y = r.y + 22f;
+            VisualIdentity.TitlePlaque(new Rect(x, y, w, 26f), string.IsNullOrEmpty(c.name) ? "СВОЁ МЕСТО" : c.name.ToUpper(), 19f, TextAnchor.MiddleLeft); y += 36f;
+            Lines(x, y, w, text, 38, 13f, Ink);
+            int stage = Campaign.Region + 1;
+            for (int i = 0; i < nb; i++)
+            {
+                MapChoice o = ch[i];
+                Rect b = new Rect(x, r.yMax - 18f - (nb - i) * 54f + 8f, w, 46f);
+                bool can = ok && (o.outcome != 2 || Profile.Gold >= Mathf.Max(0, o.amount));
+                string label = string.IsNullOrEmpty(o.label) ? MapCustom.Outcomes[Mathf.Clamp(o.outcome, 0, MapCustom.Outcomes.Length - 1)] : o.label.ToUpper();
+                if (!Btn(b, label, can, i == 0)) continue;
+                string res = o.result;
+                switch (o.outcome)
+                {
+                    case 1: Profile.AddGold(Mathf.Max(0, o.amount)); if (string.IsNullOrEmpty(res)) res = "+" + o.amount + " мон."; break;
+                    case 2: if (!Profile.Spend(Mathf.Max(0, o.amount))) continue; if (string.IsNullOrEmpty(res)) res = "−" + o.amount + " мон."; break;
+                    case 3: { int lv = Profile.AddXp(Mathf.Max(0, o.amount)); if (string.IsNullOrEmpty(res)) res = "+" + o.amount + " опыта" + (lv > 0 ? ", новый уровень!" : "."); break; }
+                    case 4:
+                    {
+                        Item it = Profile.Make(Random.Range(0, Profile.SlotCount), Mathf.Clamp(o.amount, 1, 3), 1f + 0.22f * stage + 0.4f * Profile.Cycle);
+                        Profile.Give(it);
+                        res = (string.IsNullOrEmpty(res) ? "Находка" : res) + ": «" + it.name + "».";
+                        break;
+                    }
+                    case 5:
+                    {
+                        Item sc = Profile.NewScroll();
+                        if (sc != null) { Profile.Give(sc); res = (string.IsNullOrEmpty(res) ? "Свиток" : res) + ": " + sc.name + "."; }
+                        else { Profile.AddXp(120); res = (string.IsNullOrEmpty(res) ? "" : res + " ") + "Всё в свитке тебе уже знакомо: +120 опыта."; }
+                        break;
+                    }
+                    case 6: Campaign.SetBlessing(2); if (string.IsNullOrEmpty(res)) res = "Благословение: следующий бой — с полным духом."; break;
+                    case 7: Campaign.Curse(); if (string.IsNullOrEmpty(res)) res = "Проклятие: −25% здоровья в следующем бою."; break;
+                    case 8:
+                        Campaign.TurnToCustomFight(at, c.foe, c.strong);
+                        if (!string.IsNullOrEmpty(res)) SetToast(res);
+                        OpenModal(Modal.Fight);
+                        return;
+                }
+                Result(string.IsNullOrEmpty(res) ? "Ты идёшь дальше." : res);
+                return;
+            }
+        }
 
          void DrawEvent(MapNode n, int at, bool ok)
         {

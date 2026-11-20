@@ -18,6 +18,36 @@ namespace BladePath
         public int type = -1;   // NodeType; −1 — случайный (разыгрывается в каждом походе)
         public int kind;        // 0 — место ряда (иногда выпадает: дорога сходится в точку), 1 — доп. место, 2 — постоянное место
         public bool bridge;     // место на мосту (там только бой)
+        public string custom;   // своё место (редактор карт): id из MapData.customs — тогда тип места «СВОЁ МЕСТО»
+    }
+
+    /// <summary>Выбор в карточке своего места: надпись на кнопке и что будет.</summary>
+    [System.Serializable]
+    public class MapChoice
+    {
+        public string label = "ДАЛЬШЕ";
+        public int outcome;          // MapCustom.Outcomes: 0 ничего, 1 моны +, 2 плата −, 3 опыт, 4 вещь, 5 свиток, 6 благословение, 7 проклятие, 8 бой
+        public int amount;
+        public string result = "";   // что написать после выбора
+    }
+
+    /// <summary>Своё место (строение, событие) из редактора карт: значок и картина с телефона, текст, выборы.</summary>
+    [System.Serializable]
+    public class MapCustom
+    {
+        public string id;
+        public string name = "СВОЁ МЕСТО";
+        public string icon;          // «file:maps/obj/…» — круглый значок на карте; пусто — медальон события
+        public string art;           // «file:maps/obj/…» — картина карточки
+        public string text = "";
+        public int foe;              // противник для выбора «БОЙ»: 0 — по области, 1…4 — обитатели леса, 52 — алый самурай
+        public bool strong;          // бой как с сильным противником
+        public MapChoice[] choices = new MapChoice[0];
+
+        public static readonly string[] Outcomes = { "НИЧЕГО", "МОНЫ +", "ПЛАТА −", "ОПЫТ +", "ВЕЩЬ", "СВИТОК", "БЛАГОСЛОВЕНИЕ", "ПРОКЛЯТИЕ", "БОЙ" };
+        public static readonly int[] OutcomeDefault = { 0, 50, 30, 100, 1, 0, 0, 0, 0 };
+        public static readonly int[] FoeCodes = { 0, 1, 2, 3, 4, 52 };
+        public static readonly string[] FoeNames = { "ПО ОБЛАСТИ", "ЛЕСНОЙ РАЗБОЙНИК", "ЯМАБУСИ", "АСИГАРУ-ДЕЗЕРТИР", "МАСКА КИЦУНЭ", "АЛЫЙ САМУРАЙ" };
     }
 
     [System.Serializable]
@@ -61,6 +91,14 @@ namespace BladePath
         public MapPoint[] points = new MapPoint[0];
         public MapRoad[] roads = new MapRoad[0];
         public MapEffect[] effects = new MapEffect[0];
+        public MapCustom[] customs = new MapCustom[0];   // свои места (редактор карт)
+
+        public MapCustom Custom(string id)
+        {
+            if (string.IsNullOrEmpty(id) || customs == null) return null;
+            foreach (MapCustom c in customs) if (c.id == id) return c;
+            return null;
+        }
 
         public int Layers { get { int l = 0; foreach (MapPlace p in places) l = Mathf.Max(l, p.layer + 1); return l; } }
 
