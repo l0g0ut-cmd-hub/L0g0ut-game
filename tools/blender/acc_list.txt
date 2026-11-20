@@ -9,4 +9,4 @@ Kabuto         acc_kabuto         helmet 0     0     0     0   7000
 Hood           acc_hood           hood   0     0     0     0   6000
 Mempo          acc_mempo          mask   0     0     0     0   6000
 Mask_Cloth     acc_mask_cloth     mask   1.2   0     0     0   4000
-Headband_Red   acc_headband_red   band   0     0     0     0   3000
+Headband_Red   acc_headband_red   band   0     0     0     180 3000

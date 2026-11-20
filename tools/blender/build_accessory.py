@@ -76,7 +76,7 @@ log('вещь: размер %.3f × %.3f × %.3f' % tuple(asz))
 
 # ------------------------------------------------------------------ 3. подгонка к голове (по виду вещи)
 DEF = {   # ширина в ширинах головы; куда ставится
-    'hair':   1.22, 'hat': 3.0, 'helmet': 1.75, 'hood': 1.6, 'mask': 1.12, 'band': 1.12,
+    'hair':   1.42, 'hat': 3.0, 'helmet': 1.75, 'hood': 1.6, 'mask': 1.12, 'band': 1.22,
 }
 wf = WF or DEF.get(KIND, 1.2)
 s = wf * hwid / max(1e-6, asz[0])
@@ -84,20 +84,32 @@ P = (P - np.array([(amin[0] + amax[0]) * 0.5, (amin[1] + amax[1]) * 0.5, amin[2]
 h = asz[2] * s; d = asz[1] * s
 if KIND == 'hair':      # макушка чуть выше головы, центр чуть назад
     off = (cx, cy + 0.08 * hwid, top + 0.012 - h)
-elif KIND == 'hat':     # широкая шляпа: тулья сидит на темени (внутри конуса — 45 % высоты под полями)
-    off = (cx, cy, top - 0.42 * h)
+elif KIND == 'hat':     # конусная шляпа: опирается на темя там, где конус шире головы (r(z) — внешний радиус на высоте z)
+    rr = np.sqrt(P[:, 0] ** 2 + P[:, 1] ** 2); zs = P[:, 2]
+    need = 0.62 * hwid; zstar = 0.0
+    for zb in np.linspace(0, h, 60):
+        sel = (zs >= zb) & (zs < zb + h / 60 + 1e-6)
+        if sel.any() and rr[sel].max() >= need: zstar = zb
+    off = (cx, cy, top - 0.015 - zstar)
+    log('шляпа: опора на высоте %.3f из %.3f' % (zstar, h))
 elif KIND == 'helmet':  # шлем: купол над макушкой, назатыльник ниже затылка
     off = (cx, cy + 0.06 * hwid, top + 0.03 - h * 0.70)
 elif KIND == 'hood':    # капюшон: верх над макушкой, полы на плечи
     off = (cx, cy + 0.1 * hwid, top + 0.035 - h)
 elif KIND == 'mask':    # маска на нижнюю половину лица: верх — у переносицы, передом к лицу
     off = (cx, front + d * 0.5 - 0.012, eye - 0.01 - h)
-else:                   # повязка: кольцо на лбу
-    off = (cx, cy, brow - h * 0.5)
+else:                   # повязка: верх кольца — у линии волос (хвосты узла свисают ниже)
+    off = (cx, cy, top - 0.035 - h)
 off = np.array(off) + np.array([0.0, DY, DZ])
 P = P + off
 for i, v in enumerate(acc.data.vertices): v.co = Vector(P[i])
 acc.data.update()
+# всё, что ушло внутрь головы (пряди, кольцо повязки, края капюшона и маски), выталкивается наружу на 5 мм
+if KIND != 'hat':
+    sw = acc.modifiers.new('wrap', 'SHRINKWRAP'); sw.target = body; sw.wrap_method = 'NEAREST_SURFACEPOINT'
+    sw.wrap_mode = 'OUTSIDE'; sw.offset = 0.005
+    bpy.context.view_layer.objects.active = acc; bpy.ops.object.modifier_apply(modifier='wrap')
+    P = np.array([v.co[:] for v in acc.data.vertices])
 log('масштаб %.3f, низ %.3f, верх %.3f' % (s, P[:, 2].min(), P[:, 2].max()))
 
 # ------------------------------------------------------------------ 4. текстура
