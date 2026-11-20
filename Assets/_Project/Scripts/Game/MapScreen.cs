@@ -230,7 +230,7 @@ namespace BladePath
         void Update()
         {
             UpdateAmbience();
-            if (!Open || MapEditor.Open || CharacterEditor.Open || Tactics.Open) return;
+            if (!Open || MapEditor.Open || CharacterEditor.Open || Tactics.Open || Estate.Open) return;
             HandleMapPan();
             if (moveTo >= 0)
             {
@@ -399,6 +399,12 @@ namespace BladePath
             if (Tactics.Open)
             {   // пошаговый бой (меню разработчика) — на весь экран
                 Tactics.Draw(W);
+                GUI.matrix = old;
+                return;
+            }
+            if (Estate.Open)
+            {   // поместье (меню разработчика) — на весь экран
+                Estate.Draw(W);
                 GUI.matrix = old;
                 return;
             }
@@ -1097,7 +1103,8 @@ namespace BladePath
             if (Btn(new Rect(x, y, bw, 38f), "+3 КОСТИ ПУТИ", ok)) { Campaign.AddRoll(3); }
             if (Btn(new Rect(x + bw + 10f, y, bw, 38f), "+500 МОН", ok)) { Profile.AddGold(500); }
             y += 44f;
-            if (Btn(new Rect(x, y, bw, 38f), "+1 ОЧКО", ok)) { Profile.GivePoint(); }
+            if (Btn(new Rect(x, y, (bw - 6f) * 0.5f, 38f), "+1 ОЧКО", ok)) { Profile.GivePoint(); }
+            if (Btn(new Rect(x + (bw + 6f) * 0.5f, y, (bw - 6f) * 0.5f, 38f), "ПОМЕСТЬЕ", ok, true)) { modal = Modal.None; Estate.Show(); return; }
             if (Btn(new Rect(x + bw + 10f, y, bw, 38f), JourneyChoice.FogEnabled ? "ТУМАН: ВКЛ" : "ТУМАН: ВЫКЛ", ok)) { JourneyChoice.FogEnabled = !JourneyChoice.FogEnabled; }
             y += 44f;
             if (Btn(new Rect(x, y, bw, 38f), "КОСТЬ: 3 ХОДА", ok)) { Campaign.DebugSteps(3); }

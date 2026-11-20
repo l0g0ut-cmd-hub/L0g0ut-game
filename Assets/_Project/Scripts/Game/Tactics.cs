@@ -57,8 +57,17 @@ namespace BladePath
             new UnitType("Алый самурай", 11, 10, 7, 12, 45, 6, 0, 0) { portrait = "UI/portrait_red_samurai" },
         };
 
+        public static string UnitName(int u) { return Ours[Mathf.Clamp(u, 0, Ours.Length - 1)].name; }
+        public static string[] UnitStats(int u)
+        {
+            UnitType t = Ours[Mathf.Clamp(u, 0, Ours.Length - 1)];
+            return new[] { "Атака " + t.atk + "   урон " + t.dmin + "–" + t.dmax, "Защита " + t.def, "Здоровье " + t.hp, "Скорость " + t.spd + (t.shots > 0 ? "   выстрелов " + t.shots : "") };
+        }
+        public static void DrawUnitPortrait(Rect r, int u) { DrawPortrait(r, Ours[Mathf.Clamp(u, 0, Ours.Length - 1)]); }
+
         class Stack
         {
+            public int unit = -1;               // номер нашего отряда (Ours) — для армии поместья
             public UnitType t; public bool enemy;
             public int count, start, topHp, shots;
             public int c, r;
@@ -69,9 +78,9 @@ namespace BladePath
             public float lunge; public Vector2 lungeDir; public float flash, die = -1f, born;
             public int Total { get { return count <= 0 ? 0 : (count - 1) * t.hp + topHp; } }
             public bool Alive { get { return count > 0; } }
-            public int Atk { get { return t.atk + atkB + (curseRounds > 0 ? -4 : 0) + (enemy ? 0 : HeroBonus); } }
-            public int Def { get { int d = t.def + defB + (enemy ? 0 : HeroBonus); return defending ? Mathf.CeilToInt(d * 1.3f) : d; } }
-            public int Spd { get { return Mathf.Max(1, t.spd + spdB + (enemy ? -windRounds : 0)); } }
+            public int Atk { get { return t.atk + atkB + (curseRounds > 0 ? -4 : 0) + (enemy ? 0 : HeroBonus + forge); } }
+            public int Def { get { int d = t.def + defB + (enemy ? 0 : HeroBonus + forge); return defending ? Mathf.CeilToInt(d * 1.3f) : d; } }
+            public int Spd { get { return Mathf.Max(1, t.spd + spdB + (enemy ? -windRounds : tower)); } }
         }
 
         static readonly List<Stack> stacks = new List<Stack>();
@@ -85,6 +94,8 @@ namespace BladePath
         static int spirit, spiritMax, heroLv;
         static bool castThisRound;
         static int HeroBonus { get { return heroLv / 3; } }
+        static int forge, tower;          // кузня и башня поместья
+        static bool fromEstate;           // бой армией поместья: выжившие вернутся в армию
         static int fogRounds, windRounds;
         static int spellSel = -1;       // выбранное умение (ждёт цель)
         static bool bookOpen;
@@ -176,9 +187,30 @@ namespace BladePath
 
         // ---------------------------------------------------------------- начало боя
 
+        /// <summary>Бой армией поместья (Estate.D.army) против отрядов области.</summary>
+        public static void ShowArmy(int reg)
+        {
+            ShowDev(reg);
+            stacks.RemoveAll(s => !s.enemy);
+            int[] rows = { 5, 3, 7, 1, 9, 0, 10 };
+            for (int i = 0; i < Estate.D.army.Count && i < 7; i++)
+            {
+                Estate.ArmySlot a = Estate.D.army[i];
+                Add(Ours[Mathf.Clamp(a.unit, 0, Ours.Length - 1)], a.count, false, 0, rows[i]);
+                stacks[stacks.Count - 1].unit = a.unit;
+            }
+            fromEstate = true;
+            forge = Estate.ForgeBonus; tower = Estate.SpeedBonus;
+            spiritMax += Estate.SpiritBonus; spirit = spiritMax;
+            round = 0; queue.Clear(); log.Clear();
+            NewRound();
+            Log("Армия поместья вступает в бой. Раунд 1.");
+        }
+
         /// <summary>Пробный бой (меню разработчика): армия героя против отрядов области.</summary>
         public static void ShowDev(int reg)
         {
+            fromEstate = false; forge = 0; tower = 0;
             region = Mathf.Clamp(reg, 0, 2);
             stacks.Clear(); queue.Clear(); log.Clear(); texts.Clear(); shots.Clear();
             heroLv = Mathf.Max(1, Profile.Level);
@@ -205,6 +237,13 @@ namespace BladePath
             NewRound();
             running = null; busyUntil = Time.unscaledTime + 0.6f;
             Log("Бой начался. Раунд 1.");
+        }
+
+        static List<KeyValuePair<int, int>> Survivors()
+        {
+            List<KeyValuePair<int, int>> sv = new List<KeyValuePair<int, int>>();
+            foreach (Stack s in stacks) if (!s.enemy && s.unit >= 0) sv.Add(new KeyValuePair<int, int>(s.unit, Mathf.Max(0, s.count)));
+            return sv;
         }
 
         static void Add(UnitType t, int n, bool enemy, int c, int r)
@@ -255,6 +294,12 @@ namespace BladePath
             {
                 if (s.enemy) { killed += s.start - Mathf.Max(0, s.count); gold += (s.start - Mathf.Max(0, s.count)) * s.t.hp / 3; }
                 else lost += s.start - Mathf.Max(0, s.count);
+            }
+            if (fromEstate)
+            {
+                List<KeyValuePair<int, int>> sv = new List<KeyValuePair<int, int>>();
+                foreach (Stack s in stacks) if (!s.enemy && s.unit >= 0) sv.Add(new KeyValuePair<int, int>(s.unit, Mathf.Max(0, s.count)));
+                Estate.AfterBattle(sv, ours);
             }
             if (won) { Profile.AddGold(gold); resultText = "Враг разбит. Сражено врагов: " + killed + ", наших потерь: " + lost + ".\nДобыча: " + gold + " мон."; }
             else resultText = "Армия разбита. Наших потерь: " + lost + ".";
@@ -813,7 +858,9 @@ namespace BladePath
                     case 0: Wait(); break;
                     case 1: Defend(); break;
                     case 2: autoOurs = !autoOurs; break;
-                    case 3: case 4: finished = true; won = false; resultText = i == 3 ? "Ты отступил. Армия рассеялась." : "Ты сдался. Враг забрал половину мон."; if (i == 4) Profile.AddGold(-Profile.Gold / 2); break;
+                    case 3: case 4:
+                        if (fromEstate) Estate.AfterBattle(i == 4 ? Survivors() : new List<KeyValuePair<int, int>>(), false);   // сдался — армия цела, бежал — рассеялась
+                        finished = true; won = false; resultText = i == 3 ? "Ты отступил. Армия рассеялась." : "Ты сдался: армия цела, но враг забрал половину мон."; if (i == 4) Profile.AddGold(-Profile.Gold / 2); break;
                     case 5: bookOpen = !bookOpen; break;
                 }
             }
@@ -889,7 +936,11 @@ namespace BladePath
             if (pt != null) UiKit.Slice(r, pt, 0.42f, 0.15f, 0f, 0.075f, 0f, Color.white);
             UiKit.Text(new Rect(r.x, r.y + 16f, r.width, 30f), won ? "ПОБЕДА" : "ПОРАЖЕНИЕ", 24f, won ? Gold : new Color(1f, 0.5f, 0.4f));
             UiKit.Text(new Rect(r.x + 24f, r.y + 54f, r.width - 48f, 70f), resultText, 13f, Ink);
-            if (VisualIdentity.KitButton(new Rect(r.x + 30f, r.yMax - 54f, 180f, 38f), "ЕЩЁ БОЙ", true, true)) ShowDev((region + 1) % 3);
+            if (fromEstate)
+            {
+                if (VisualIdentity.KitButton(new Rect(r.x + 30f, r.yMax - 54f, 180f, 38f), "В ПОМЕСТЬЕ", true, true)) { Open = false; Estate.Show(); }
+            }
+            else if (VisualIdentity.KitButton(new Rect(r.x + 30f, r.yMax - 54f, 180f, 38f), "ЕЩЁ БОЙ", true, true)) ShowDev((region + 1) % 3);
             if (VisualIdentity.KitButton(new Rect(r.xMax - 210f, r.yMax - 54f, 180f, 38f), "ВЫЙТИ", true, false)) Open = false;
         }
 
