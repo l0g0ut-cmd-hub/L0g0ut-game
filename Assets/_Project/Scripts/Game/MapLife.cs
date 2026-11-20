@@ -455,75 +455,82 @@ namespace BladePath
             return true;
         }
 
-        // Fog from continuously drifting Gaussian wisps: no hard rectangular edge and no flipbook flash.
-        static void SoftFog(Rect r, float t, float alpha, Texture2D mist, int seed)
+        // Feathery white ground mist. Do not use the opaque rain-cloud atlas.
+        static void SoftFog(Rect r, float t, float alpha, Texture2D unused, int seed)
         {
-            if (mist == null || alpha <= 0f) return;
-            for (int i = 0; i < 7; i++)
+            if (alpha <= 0f || r.width < 1f || r.height < 1f) return;
+            Texture2D tex = JourneyMistArt.Texture;
+            if (tex == null) return;
+            Color prev = GUI.color;
+            for (int i = 0; i < 4; i++)
             {
-                float n = seed * 13.31f + i * 7.71f;
-                float x = r.x + r.width * (0.13f + 0.74f * H(n + 2f)) +
-                          Mathf.Sin(t * 0.23f + n) * r.width * 0.065f;
-                float y = r.y + r.height * (0.31f + 0.35f * H(n + 4f)) +
-                          Mathf.Sin(t * 0.15f + n) * r.height * 0.085f;
-                float w = r.width * (0.36f + 0.23f * H(n + 3f));
-                float h = r.height * (0.68f + 0.2f * H(n + 5f));
-                float breath = 0.82f + 0.18f * Mathf.PerlinNoise(n + 0.5f, t * 0.11f);
-                GUI.color = new Color(0.9f, 0.92f, 0.96f, alpha * 0.16f * breath);
-                GUI.DrawTexture(new Rect(x - w * 0.5f, y - h * 0.5f, w, h), mist);
+                float n = seed * 1.81f + i * 7.31f;
+                float cx = r.x + r.width * (0.2f + H(n + 1f) * 0.6f)
+                    + Mathf.Sin(t * 0.12f + n) * r.width * 0.04f;
+                float cy = r.y + r.height * (0.32f + H(n + 4f) * 0.30f)
+                    + Mathf.Sin(t * 0.09f + n) * r.height * 0.04f;
+                float w = r.width * (0.70f + H(n + 2f) * 0.22f);
+                float h = r.height * (0.60f + H(n + 3f) * 0.28f);
+                float pulse = 0.88f + 0.12f * Mathf.Sin(t * 0.16f + n);
+                GUI.color = new Color(0.95f, 0.96f, 0.99f, alpha * 0.40f * pulse);
+                GUI.DrawTexture(new Rect(cx - w * 0.5f, cy - h * 0.5f, w, h),
+                    tex, ScaleMode.StretchToFill, true);
             }
-            GUI.color = Color.white;
+            GUI.color = prev;
         }
 
         static void SmallWisps(MapEffect e, Rect r, float t, float alpha)
         {
             Texture2D glow = UiKit.Tex("FX/glow_pool");
-            if (glow == null) return;
-            float size = Mathf.Clamp(Mathf.Min(r.width, r.height) * 0.011f, 1f, 3.3f);
-            for (int i = 0; i < 13; i++)
+            if (glow == null || alpha <= 0f) return;
+            Color prev = GUI.color;
+            float size = Mathf.Clamp(Mathf.Min(r.width, r.height) * 0.023f, 2.6f, 4.8f);
+            for (int i = 0; i < 18; i++)
             {
-                float seed = i * 17.13f + e.x * 0.013f + e.y * 0.017f;   // stable as camera pans
-                float x = r.x + r.width * (0.12f + H(seed) * 0.76f) +
-                    Mathf.Sin(t * 0.51f + seed) * r.width * 0.035f;
-                float y = r.y + r.height * (0.14f + H(seed + 1f) * 0.72f) +
-                    Mathf.Sin(t * 0.73f + seed) * r.height * 0.04f;
-                float pulse = Mathf.Pow(0.5f + 0.5f * Mathf.Sin(t * 1.15f + seed * 3f), 2f);
-                float a = alpha * (0.25f + 0.65f * pulse);
-                float radius = size * (0.66f + 0.48f * H(seed + 2f));
-                GUI.color = new Color(0.24f, 0.85f, 0.42f, a * 0.28f);
-                GUI.DrawTexture(new Rect(x - radius * 2f, y - radius * 2f, radius * 4f, radius * 4f), glow);
-                GUI.color = new Color(0.71f, 1f, 0.72f, a * 0.88f);
-                GUI.DrawTexture(new Rect(x - radius * 0.52f, y - radius * 0.52f, radius * 1.04f, radius * 1.04f), glow);
+                float seed = i * 17.13f + e.x * 0.013f + e.y * 0.017f;
+                float x = r.x + r.width * (0.12f + H(seed) * 0.76f)
+                    + Mathf.Sin(t * 0.51f + seed) * r.width * 0.022f;
+                float y = r.y + r.height * (0.15f + H(seed + 1f) * 0.69f)
+                    + Mathf.Sin(t * 0.68f + seed) * r.height * 0.026f;
+                float pulse = 0.35f + 0.65f * Mathf.Pow(0.5f + 0.5f * Mathf.Sin(t * 1.15f + seed * 3f), 2f);
+                float radius = size * (0.7f + 0.32f * H(seed + 2f));
+                float a = alpha * pulse;
+                GUI.color = new Color(0.22f, 0.82f, 0.34f, a * 0.35f);
+                GUI.DrawTexture(new Rect(x - radius * 2.2f, y - radius * 2.2f,
+                    radius * 4.4f, radius * 4.4f), glow);
+                GUI.color = new Color(0.73f, 1f, 0.69f, a * 0.95f);
+                GUI.DrawTexture(new Rect(x - radius * 0.62f, y - radius * 0.62f,
+                    radius * 1.24f, radius * 1.24f), glow);
             }
-            GUI.color = Color.white;
+            GUI.color = prev;
         }
 
         static void SmallPetals(MapEffect e, Rect r, float t)
         {
             Texture2D pet = UiKit.Tex("FX/petals8");
-            if (pet == null) return;
+            if (pet == null || e.alpha <= 0f) return;
+            Color prev = GUI.color;
             float scale = r.width / Mathf.Max(1f, e.w);
-            int count = Mathf.Clamp(Mathf.RoundToInt(e.w / 25f), 7, 13);
+            int count = Mathf.Clamp(Mathf.RoundToInt(e.w / 7f), 16, 24);
             for (int i = 0; i < count; i++)
             {
-                float seed = i * 13.37f + e.x * 0.013f;
-                float life = 7f + 5f * H(seed);
-                float run = t * Mathf.Max(0.1f, e.speed) / life + H(seed + 2f);
+                float seed = i * 13.37f + e.x * 0.013f + e.y * 0.011f;
+                float life = 6.5f + 4.5f * H(seed);
+                float run = t / life + H(seed + 2f);
                 float phase = Mathf.Repeat(run, 1f);
                 int cycle = Mathf.FloorToInt(run);
-                // Emit from the painted crown; fall below it rather than scattering across the whole rectangle.
-                float x = r.center.x + r.width * (H(seed + cycle * 2.1f) - 0.5f) * 0.50f +
-                    Mathf.Sin(t * 1.12f + seed) * 5f * scale + phase * 6f * scale;
-                float y = r.y + r.height * (0.28f + 0.68f * phase);
-                float size = (1.6f + 1.6f * H(seed + cycle * 3.7f)) * scale;
-                float a = Mathf.Clamp01(phase / 0.12f) * Mathf.Clamp01((1f - phase) / 0.15f);
+                float x = r.center.x + r.width * (H(seed + cycle * 2.1f) - 0.5f) * 0.68f
+                    + Mathf.Sin(t * 1.12f + seed) * 3f + phase * Mathf.Max(3f, r.width * 0.04f);
+                float y = r.y + r.height * (0.12f + 0.84f * phase);
+                float size = Mathf.Clamp((1.65f + 1.15f * H(seed + cycle * 3.7f)) * scale, 1.4f, 2.7f);
+                float a = Mathf.Clamp01(phase / 0.12f) * Mathf.Clamp01((1f - phase) / 0.18f);
                 int cell = Mathf.Min(7, (int)(H(seed + cycle * 0.37f + 4f) * 8f));
                 Rect uv = new Rect((cell % 4) * 0.25f, cell < 4 ? 0.5f : 0f, 0.25f, 0.5f);
                 if (Mathf.Sin(t * 1.85f + seed) < 0f) uv = new Rect(uv.x + 0.25f, uv.y, -0.25f, uv.height);
-                GUI.color = new Color(1f, 0.93f, 0.97f, a * e.alpha * 0.9f);
-                GUI.DrawTextureWithTexCoords(new Rect(x - size, y - size * 0.56f, size * 2f, size * 1.12f), pet, uv);
+                GUI.color = new Color(1f, 0.89f, 0.95f, a * e.alpha);
+                GUI.DrawTextureWithTexCoords(new Rect(x - size, y - size * 0.6f, size * 2f, size * 1.2f), pet, uv);
             }
-            GUI.color = Color.white;
+            GUI.color = prev;
         }
 
         // River flow is sampled from the painted route itself (not from a stationary, rotated rectangle).
@@ -567,7 +574,7 @@ namespace BladePath
                 }
             }
             // A marker outside the real water is skipped; never draw ripples on grass or rocks.
-            float tolerance = 45f * MapGeom.H / 1024f;
+            float tolerance = 100f * MapGeom.H / 1024f;
             if (bestLine == null || bestDistance > tolerance * tolerance) return;
             float mapScale = MapGeom.H / 1024f;
             float halfU = Mathf.Min((e.w * 0.60f * mapScale) / totalLength, 0.055f);
@@ -615,8 +622,8 @@ namespace BladePath
                 Texture2D sheet = UiKit.Tex(k == "fall_lip" ? "UI/fx_waterfall_lip" :
                     k == "fall_mid" ? "UI/fx_waterfall_mid" : "UI/fx_waterfall_fade");
                 if (sheet == null) return;
-                Rect fall = new Rect(r.center.x - r.width * 0.42f, r.y, r.width * 0.84f, r.height);
-                SheetFrame(fall, sheet, 6, 6, 36, t, 20f, e.alpha * 0.85f, false);
+                Rect fall = new Rect(r.center.x - r.width * 0.36f, r.y, r.width * 0.72f, r.height);
+                SheetFrame(fall, sheet, 6, 6, 36, t, 19f, e.alpha * 0.65f, false);
                 if (e.foot == 1)
                 {
                     Texture2D splash = UiKit.Tex("UI/fx_splash");
@@ -624,7 +631,7 @@ namespace BladePath
                     {
                         float w = fall.width * 1.28f, h = w * 128f / 192f;
                         SheetFrame(new Rect(fall.center.x - w * 0.5f, fall.yMax - h * 0.6f, w, h),
-                            splash, 6, 4, 24, t * 0.9f, 12f, e.alpha * 0.37f, true);
+                            splash, 6, 4, 24, t * 0.9f, 12f, e.alpha * 0.20f, true);
                     }
                 }
                 else if (e.foot == 2)
