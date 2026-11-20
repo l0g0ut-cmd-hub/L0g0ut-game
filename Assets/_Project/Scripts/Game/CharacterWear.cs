@@ -87,9 +87,13 @@ namespace BladePath
             if (d == null || d.wear == null) return;
             Matrix4x4 bind = body.sharedMesh.bindposes[hi];
             if (baseMat == null) { Renderer br = body; baseMat = br.sharedMaterial; }
+            // под кабуто и капюшоном пучок и высокий хвост не помещаются (проткнули бы шлем) — их не надеваем
+            bool closed = false;
+            foreach (WearLook w in d.wear) if (w.slot == 1 && (w.id == "Kabuto" || w.id == "Hood")) closed = true;
             foreach (WearLook w in d.wear)
             {
                 if (string.IsNullOrEmpty(w.id)) continue;
+                if (closed && (w.id == "Hair_Topknot" || w.id == "Hair_Ponytail")) continue;
                 Mesh mesh = GetMesh(w.id, d.female);
                 if (mesh == null) continue;
                 // вершины вещи — в пространстве тела основы: bindpose переводит их в пространство кости головы.
