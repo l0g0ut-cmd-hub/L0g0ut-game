@@ -1,100 +1,16 @@
-== rig anim_oni
-  риг: 01a1f960-0cba-7679-b55b-0488f440ccba
-  /v1/rigging 01a1f960-0cba-7679-b55b-0488f440ccba: IN_PROGRESS 0%
-  /v1/rigging 01a1f960-0cba-7679-b55b-0488f440ccba: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/anim_oni/anim_oni_rigged_character_fbx_url.fbx 5208572 байт
-  скачано /home/runner/work/_temp/out/anim_oni/anim_oni_rigged_character_glb_url.glb 5340656 байт
-  скачано /home/runner/work/_temp/out/anim_oni/anim_oni_walking_glb_url.glb 5320536 байт
-  скачано /home/runner/work/_temp/out/anim_oni/anim_oni_walking_fbx_url.fbx 5244684 байт
-  скачано /home/runner/work/_temp/out/anim_oni/anim_oni_walking_armature_glb_url.glb 90592 байт
-  скачано /home/runner/work/_temp/out/anim_oni/anim_oni_running_glb_url.glb 5309932 байт
-  скачано /home/runner/work/_temp/out/anim_oni/anim_oni_running_fbx_url.fbx 5227692 байт
-  скачано /home/runner/work/_temp/out/anim_oni/anim_oni_running_armature_glb_url.glb 79976 байт
-  анимация: 01a1f960-541d-76b4-90e4-a7eaaacd14e8
-  /v1/animations 01a1f960-541d-76b4-90e4-a7eaaacd14e8: IN_PROGRESS 1%
-  /v1/animations 01a1f960-541d-76b4-90e4-a7eaaacd14e8: IN_PROGRESS 80%
-  /v1/animations 01a1f960-541d-76b4-90e4-a7eaaacd14e8: IN_PROGRESS 82%
-  /v1/animations 01a1f960-541d-76b4-90e4-a7eaaacd14e8: IN_PROGRESS 85%
-  /v1/animations 01a1f960-541d-76b4-90e4-a7eaaacd14e8: IN_PROGRESS 88%
-  /v1/animations 01a1f960-541d-76b4-90e4-a7eaaacd14e8: IN_PROGRESS 89%
-  /v1/animations 01a1f960-541d-76b4-90e4-a7eaaacd14e8: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/anim_oni/anim_oni_animation_glb_url.glb 5369468 байт
-  скачано /home/runner/work/_temp/out/anim_oni/anim_oni_animation_fbx_url.fbx 6167868 байт
-  скачано /home/runner/work/_temp/out/anim_oni/anim_oni_processed_animation_fps_fbx_url.fbx 6167900 байт
-== rig anim_fallen
-  риг: 01a1f961-7066-7402-bfc5-e8c06df0f075
-  /v1/rigging 01a1f961-7066-7402-bfc5-e8c06df0f075: IN_PROGRESS 0%
-  /v1/rigging 01a1f961-7066-7402-bfc5-e8c06df0f075: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/anim_fallen/anim_fallen_rigged_character_fbx_url.fbx 5224540 байт
-  скачано /home/runner/work/_temp/out/anim_fallen/anim_fallen_rigged_character_glb_url.glb 5343512 байт
-  скачано /home/runner/work/_temp/out/anim_fallen/anim_fallen_walking_glb_url.glb 5324560 байт
-  скачано /home/runner/work/_temp/out/anim_fallen/anim_fallen_walking_fbx_url.fbx 5260636 байт
-  скачано /home/runner/work/_temp/out/anim_fallen/anim_fallen_walking_armature_glb_url.glb 89280 байт
-  скачано /home/runner/work/_temp/out/anim_fallen/anim_fallen_running_glb_url.glb 5313924 байт
-  скачано /home/runner/work/_temp/out/anim_fallen/anim_fallen_running_fbx_url.fbx 5243660 байт
-  скачано /home/runner/work/_temp/out/anim_fallen/anim_fallen_running_armature_glb_url.glb 78632 байт
-  анимация: 01a1f961-afa8-77da-86ee-171b2ef7f532
-  /v1/animations 01a1f961-afa8-77da-86ee-171b2ef7f532: IN_PROGRESS 1%
-  /v1/animations 01a1f961-afa8-77da-86ee-171b2ef7f532: IN_PROGRESS 80%
-  /v1/animations 01a1f961-afa8-77da-86ee-171b2ef7f532: IN_PROGRESS 82%
-  /v1/animations 01a1f961-afa8-77da-86ee-171b2ef7f532: IN_PROGRESS 85%
-  /v1/animations 01a1f961-afa8-77da-86ee-171b2ef7f532: IN_PROGRESS 87%
-  /v1/animations 01a1f961-afa8-77da-86ee-171b2ef7f532: IN_PROGRESS 90%
-  /v1/animations 01a1f961-afa8-77da-86ee-171b2ef7f532: IN_PROGRESS 92%
-  /v1/animations 01a1f961-afa8-77da-86ee-171b2ef7f532: IN_PROGRESS 95%
-  /v1/animations 01a1f961-afa8-77da-86ee-171b2ef7f532: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/anim_fallen/anim_fallen_animation_glb_url.glb 5455560 байт
-  скачано /home/runner/work/_temp/out/anim_fallen/anim_fallen_animation_fbx_url.fbx 6299900 байт
-  скачано /home/runner/work/_temp/out/anim_fallen/anim_fallen_processed_animation_fps_fbx_url.fbx 6300668 байт
-== rig anim_shadow
-  риг: 01a1f963-69bb-759d-9875-2d6b2a5e2617
-  /v1/rigging 01a1f963-69bb-759d-9875-2d6b2a5e2617: IN_PROGRESS 0%
-  /v1/rigging 01a1f963-69bb-759d-9875-2d6b2a5e2617: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/anim_shadow/anim_shadow_rigged_character_fbx_url.fbx 4289452 байт
-  скачано /home/runner/work/_temp/out/anim_shadow/anim_shadow_rigged_character_glb_url.glb 4407536 байт
-  скачано /home/runner/work/_temp/out/anim_shadow/anim_shadow_walking_glb_url.glb 4387616 байт
-  скачано /home/runner/work/_temp/out/anim_shadow/anim_shadow_walking_fbx_url.fbx 4325564 байт
-  скачано /home/runner/work/_temp/out/anim_shadow/anim_shadow_walking_armature_glb_url.glb 90276 байт
-  скачано /home/runner/work/_temp/out/anim_shadow/anim_shadow_running_glb_url.glb 4377016 байт
-  скачано /home/runner/work/_temp/out/anim_shadow/anim_shadow_running_fbx_url.fbx 4308572 байт
-  скачано /home/runner/work/_temp/out/anim_shadow/anim_shadow_running_armature_glb_url.glb 79664 байт
-  анимация: 01a1f963-a818-759a-b2f2-25d00ea447d0
-  /v1/animations 01a1f963-a818-759a-b2f2-25d00ea447d0: IN_PROGRESS 1%
-  /v1/animations 01a1f963-a818-759a-b2f2-25d00ea447d0: IN_PROGRESS 80%
-  /v1/animations 01a1f963-a818-759a-b2f2-25d00ea447d0: IN_PROGRESS 82%
-  /v1/animations 01a1f963-a818-759a-b2f2-25d00ea447d0: IN_PROGRESS 85%
-  /v1/animations 01a1f963-a818-759a-b2f2-25d00ea447d0: IN_PROGRESS 87%
-  /v1/animations 01a1f963-a818-759a-b2f2-25d00ea447d0: IN_PROGRESS 90%
-  /v1/animations 01a1f963-a818-759a-b2f2-25d00ea447d0: IN_PROGRESS 92%
-  /v1/animations 01a1f963-a818-759a-b2f2-25d00ea447d0: IN_PROGRESS 94%
-  /v1/animations 01a1f963-a818-759a-b2f2-25d00ea447d0: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/anim_shadow/anim_shadow_animation_glb_url.glb 4512192 байт
-  скачано /home/runner/work/_temp/out/anim_shadow/anim_shadow_animation_fbx_url.fbx 5367660 байт
-  скачано /home/runner/work/_temp/out/anim_shadow/anim_shadow_processed_animation_fps_fbx_url.fbx 5368604 байт
-== rig anim_shogun
-  риг: 01a1f965-39b1-7444-ad3f-e36e709dfe23
-  /v1/rigging 01a1f965-39b1-7444-ad3f-e36e709dfe23: IN_PROGRESS 0%
-  /v1/rigging 01a1f965-39b1-7444-ad3f-e36e709dfe23: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/anim_shogun/anim_shogun_rigged_character_fbx_url.fbx 4464892 байт
-  скачано /home/runner/work/_temp/out/anim_shogun/anim_shogun_rigged_character_glb_url.glb 4605524 байт
-  скачано /home/runner/work/_temp/out/anim_shogun/anim_shogun_walking_glb_url.glb 4586252 байт
-  скачано /home/runner/work/_temp/out/anim_shogun/anim_shogun_walking_fbx_url.fbx 4500988 байт
-  скачано /home/runner/work/_temp/out/anim_shogun/anim_shogun_walking_armature_glb_url.glb 89740 байт
-  скачано /home/runner/work/_temp/out/anim_shogun/anim_shogun_running_glb_url.glb 4575656 байт
-  скачано /home/runner/work/_temp/out/anim_shogun/anim_shogun_running_fbx_url.fbx 4484012 байт
-  скачано /home/runner/work/_temp/out/anim_shogun/anim_shogun_running_armature_glb_url.glb 79128 байт
-  анимация: 01a1f965-76d1-73ee-876e-a99c30789b86
-  /v1/animations 01a1f965-76d1-73ee-876e-a99c30789b86: IN_PROGRESS 1%
-  /v1/animations 01a1f965-76d1-73ee-876e-a99c30789b86: IN_PROGRESS 80%
-  /v1/animations 01a1f965-76d1-73ee-876e-a99c30789b86: IN_PROGRESS 82%
-  /v1/animations 01a1f965-76d1-73ee-876e-a99c30789b86: IN_PROGRESS 85%
-  /v1/animations 01a1f965-76d1-73ee-876e-a99c30789b86: IN_PROGRESS 87%
-  /v1/animations 01a1f965-76d1-73ee-876e-a99c30789b86: IN_PROGRESS 90%
-  /v1/animations 01a1f965-76d1-73ee-876e-a99c30789b86: IN_PROGRESS 92%
-  /v1/animations 01a1f965-76d1-73ee-876e-a99c30789b86: IN_PROGRESS 94%
-  /v1/animations 01a1f965-76d1-73ee-876e-a99c30789b86: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/anim_shogun/anim_shogun_animation_glb_url.glb 4704728 байт
-  скачано /home/runner/work/_temp/out/anim_shogun/anim_shogun_animation_fbx_url.fbx 5550924 байт
-  скачано /home/runner/work/_temp/out/anim_shogun/anim_shogun_processed_animation_fps_fbx_url.fbx 5552204 байт
-  аккаунт 1 MESHY_KEY — остаток кредитов: 260
-  аккаунт 2 ALT1 — остаток кредитов: 260
+== animate unit_crimson
+  анимация: 01a1f98f-b76c-7201-a299-ba3abcd13660
+  /v1/animations 01a1f98f-b76c-7201-a299-ba3abcd13660: IN_PROGRESS 1%
+  /v1/animations 01a1f98f-b76c-7201-a299-ba3abcd13660: IN_PROGRESS 80%
+  /v1/animations 01a1f98f-b76c-7201-a299-ba3abcd13660: IN_PROGRESS 82%
+  /v1/animations 01a1f98f-b76c-7201-a299-ba3abcd13660: IN_PROGRESS 85%
+  /v1/animations 01a1f98f-b76c-7201-a299-ba3abcd13660: IN_PROGRESS 87%
+  /v1/animations 01a1f98f-b76c-7201-a299-ba3abcd13660: IN_PROGRESS 90%
+  /v1/animations 01a1f98f-b76c-7201-a299-ba3abcd13660: IN_PROGRESS 92%
+  /v1/animations 01a1f98f-b76c-7201-a299-ba3abcd13660: IN_PROGRESS 94%
+  /v1/animations 01a1f98f-b76c-7201-a299-ba3abcd13660: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/unit_crimson/unit_crimson_animation_glb_url.glb 7484780 байт
+  скачано /home/runner/work/_temp/out/unit_crimson/unit_crimson_animation_fbx_url.fbx 7486620 байт
+  скачано /home/runner/work/_temp/out/unit_crimson/unit_crimson_processed_animation_fps_fbx_url.fbx 7487340 байт
+  аккаунт 1 MESHY_KEY — остаток кредитов: 995
+  аккаунт 2 ALT1 — остаток кредитов: 995
