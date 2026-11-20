@@ -119,7 +119,10 @@ def do(r):
         tid = call("POST", "/v1/image-to-3d", b)["result"]; log("  задача:", tid)
         j = wait("/v1/image-to-3d", tid, 2400); save(name, j, "image")
         if r.get("rig") and j.get("status") == "SUCCEEDED":   # сразу скелет Meshy (дальше наш скелет ставит build_meshy_char.py)
-            rid = call("POST", "/v1/rigging", {"input_task_id": tid, "height_meters": r.get("height", 1.7)})["result"]; log("  риг:", rid)
+            rb = {"input_task_id": tid}
+            if r.get("quadruped"): rb["animation_type"] = "quadruped"   # конь, пёс: свой скелет, размер — как у модели
+            else: rb["height_meters"] = r.get("height", 1.7)
+            rid = call("POST", "/v1/rigging", rb)["result"]; log("  риг:", rid)
             save(name, wait("/v1/rigging", rid), "rig")
         return
     if a == "rig":
