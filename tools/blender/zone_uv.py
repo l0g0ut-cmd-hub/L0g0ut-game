@@ -49,42 +49,57 @@ else:
         zone.append(zn)
     zone = np.array(zone)
     log('ЗОНЫ: граней по зонам', {zn: int((zone == zn).sum()) for zn in ZONES})
-    # новая развёртка
+    # новая развёртка: каждая зона — «труба» вокруг своей оси (тело, рука, нога, голова), перёд — в середине по горизонтали.
+    # Так зона раскладывается одним куском, как выкройка: нарисованное на ней ложится на тело без мешанины кусочков.
     zl = me.uv_layers.new(name='Zones'); me.uv_layers.active = zl
-    bpy.context.view_layer.objects.active = body; body.select_set(True)
+    NUV = np.zeros((nl, 2), dtype=np.float32)
+    def J(bn, tail=False):
+        b_ = rig.data.bones[bn]; return np.array(rig.matrix_world @ (b_.tail_local if tail else b_.head_local))
+    cx = float(np.median(V[:, 0]))
+    FACE_SIDE = np.array([np.sign(V[LV[LS[f]:LS[f] + LT[f]], 0].mean() - cx) for f in range(npoly)])   # +1 — левая (+X)
+    def axis_for(zn, sd):
+        S = '.L' if sd > 0 else '.R'
+        if zn in ('face', 'hair'): return J('Head', True), J('Neck')
+        if zn in ('jacket', 'belt'):
+            top = J('Neck'); bot = J('Hips'); bot = np.array([top[0], top[1], bot[2] - 0.3 * k]); return top, bot
+        if zn == 'sleeves': return J('UpperArm' + S), J('Hand' + S)
+        if zn == 'hands': return J('Forearm' + S, True), J('Hand' + S, True)
+        if zn == 'pants': return J('UpperLeg' + S), J('LowerLeg' + S, True)
+        if zn == 'wraps': return J('LowerLeg' + S), J('LowerLeg' + S, True)
+        if zn == 'feet': return J('Foot' + S) + np.array([0, 0, 0.12 * k]), J('Foot' + S, True)
+        return J('Neck'), J('Hips')
+    SPLIT = ('sleeves', 'hands', 'pants', 'wraps', 'feet')   # по половине прямоугольника на сторону
+    FRONT = np.array([0.0, -1.0, 0.0])
     for zn in ZONES:
-        sel = zone == zn
-        if not sel.any(): continue
-        if zn in ('face', 'hair'): continue   # ниже — цилиндром
-        bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_mode(type='FACE')
-        import bmesh as _bm
-        bm = _bm.from_edit_mesh(me); bm.faces.ensure_lookup_table()
-        for v_ in bm.verts: v_.select_set(False)
-        for f_ in bm.faces: f_.select_set(bool(sel[f_.index]))
-        bm.select_flush(True); _bm.update_edit_mesh(me)
-        bpy.ops.uv.smart_project(angle_limit=math.radians(60), island_margin=0.02, area_weight=1.0, correct_aspect=True, scale_to_bounds=True)
-        bpy.ops.object.mode_set(mode='OBJECT')
-    NUV = np.empty(nl * 2, dtype=np.float32); zl.data.foreach_get('uv', NUV); NUV = NUV.reshape(-1, 2)
-    # голова: цилиндр вокруг оси головы, лицо (−Y) в центре
-    hx, hy = float(np.median(V[dom == names.index('Head'), 0])), float(np.median(V[dom == names.index('Head'), 1]))
-    for zn in ('face', 'hair'):
-        fl = np.concatenate([np.arange(LS[f], LS[f] + LT[f]) for f in np.where(zone == zn)[0]]) if (zone == zn).any() else np.array([], dtype=np.int64)
-        if len(fl) == 0: continue
-        p = V[LV[fl]]
-        ang = np.arctan2(p[:, 0] - hx, -(p[:, 1] - hy))   # 0 — лицо, ±π — затылок
-        u = 0.5 + ang / (2 * np.pi); vv = p[:, 2]
-        vv = (vv - vv.min()) / max(1e-6, vv.max() - vv.min())
-        NUV[fl] = np.stack([0.02 + 0.96 * u, 0.02 + 0.96 * vv], 1)
-    # каждая зона — в свой прямоугольник (с полями)
-    for zn in ZONES:
-        fs = np.where(zone == zn)[0]
-        if len(fs) == 0: continue
-        fl = np.concatenate([np.arange(LS[f], LS[f] + LT[f]) for f in fs])
-        q = NUV[fl]; mn, mx = q.min(0), q.max(0); span = np.maximum(mx - mn, 1e-6)
-        u0, v0, w, h = RECT[zn]; pad = 0.012
-        s = min((w - 2 * pad) / span[0], (h - 2 * pad) / span[1]) if zn not in ('face', 'hair') else None
-        if s is None: NUV[fl] = np.stack([u0 + pad + (q[:, 0] - mn[0]) / span[0] * (w - 2 * pad), v0 + pad + (q[:, 1] - mn[1]) / span[1] * (h - 2 * pad)], 1)
-        else: NUV[fl] = np.stack([u0 + pad + (q[:, 0] - mn[0]) * s, v0 + pad + (q[:, 1] - mn[1]) * s], 1)
+        sides = (1, -1) if zn in SPLIT else (0,)
+        for sd in sides:
+            fs = np.where((zone == zn) & ((FACE_SIDE == sd) | (sd == 0) | ((FACE_SIDE == 0) & (sd == 1))))[0]
+            if len(fs) == 0: continue
+            a_, b_ = axis_for(zn, sd if sd != 0 else 1)
+            d = b_ - a_; L = max(np.linalg.norm(d), 1e-6); d = d / L
+            f_ = FRONT - np.dot(FRONT, d) * d; f_ /= max(np.linalg.norm(f_), 1e-6); side = np.cross(d, f_)
+            fl_list = [np.arange(LS[f], LS[f] + LT[f]) for f in fs]
+            fl = np.concatenate(fl_list)
+            p = V[LV[fl]] - a_
+            t = p @ d; r = p - np.outer(t, d)
+            ang = np.arctan2(r @ side, r @ f_)
+            u = 0.5 + ang / (2 * np.pi); vv = -t
+            # шов на спине: у граней, перешагнувших шов, малые u переносятся за 1
+            pos = 0
+            for arr in fl_list:
+                seg = slice(pos, pos + len(arr)); uu = u[seg]
+                if uu.max() - uu.min() > 0.5: uu[uu < 0.5] += 1.0; u[seg] = uu
+                pos += len(arr)
+            rad = float(np.median(np.linalg.norm(r, axis=1)))
+            circ = 2 * np.pi * max(rad, 1e-3); height = max(float(vv.max() - vv.min()), 1e-3)
+            uspan = max(float(u.max() - u.min()), 1e-6)
+            ux = (u - u.min()) / uspan * circ * uspan; vy = (vv - vv.min())   # в метрах: ширина по окружности, высота по оси
+            u0, v0, w, h = RECT[zn]
+            if zn in SPLIT: w = w * 0.5; u0 = u0 + (0.0 if sd > 0 else w)
+            pad = 0.01
+            sc_ = min((w - 2 * pad) / max(ux.max(), 1e-6), (h - 2 * pad) / max(vy.max(), 1e-6))
+            ox = u0 + (w - ux.max() * sc_) * 0.5; oy = v0 + (h - vy.max() * sc_) * 0.5
+            NUV[fl] = np.stack([ox + ux * sc_, oy + vy * sc_], 1)
     zl.data.foreach_set('uv', NUV.ravel())
     # запекание исходной текстуры в новую развёртку
     out_img = bpy.data.images.new(NAME + '_Zones', 2048, 2048, alpha=False)
