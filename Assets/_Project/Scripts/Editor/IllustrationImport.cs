@@ -9,14 +9,15 @@ namespace BladePath.EditorTools
     /// </summary>
     public class IllustrationImport : AssetPostprocessor
     {
-        public override uint GetVersion() { return 11; }
+        public override uint GetVersion() { return 12; }
 
         static bool IsIllustration(string path)
         {
             if (!path.StartsWith("Assets/_Project/Resources/UI/")) return false;
             string name = System.IO.Path.GetFileNameWithoutExtension(path);
             if (name.StartsWith("place_")) return true;
-            if (path.StartsWith("Assets/_Project/Resources/UI/Battle/")) return true;   // пошаговый бой: поля, листы эффектов 1536×1020, атласы — без растяжения и мыла
+            if (path.StartsWith("Assets/_Project/Resources/UI/Battle/")) return true;
+            if (path.StartsWith("Assets/_Project/Resources/UI/MapObjects/") || name == "general_window" || name == "artifacts") return true;   // объекты карты 5×4, окно полководца, артефакты 4×4   // пошаговый бой: поля, листы эффектов 1536×1020, атласы — без растяжения и мыла
             // картины в окнах карты (2026-11-09): враги и NPC 683×1024 уходили в 512×1024 — окно строилось по этим размерам,
             // и картина выходила сплюснутой по ширине на четверть; фоны привала, игорного дома, таверны, конца области — тоже
             if (name.StartsWith("enemy_full_") || name.StartsWith("npc_") || name.StartsWith("region_clear_") || name == "camp" || name == "dice_bg" || name == "tavern") return true;
