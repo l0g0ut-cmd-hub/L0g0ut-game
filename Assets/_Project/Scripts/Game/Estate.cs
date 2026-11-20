@@ -23,7 +23,10 @@ namespace BladePath
             public int week = 1;
             public bool builtThisWeek;
             public List<ArmySlot> army = new List<ArmySlot>();
+            public bool[] machines = new bool[3];   // боевые машины («Герои 3»): баллиста, палатка лекаря, повозка с боеприпасами — из кузни
         }
+        public static readonly string[] MachineNames = { "БАЛЛИСТА", "ЛЕКАРЬ", "ПОВОЗКА" };
+        public static readonly int[] MachinePrice = { 600, 400, 500 };
         static Data d;
         public static Data D { get { if (d == null) Load(); return d; } }
         static void Load()
@@ -38,6 +41,7 @@ namespace BladePath
             if (d.level == null || d.level.Length != 9) d.level = new int[9];
             if (d.pool == null || d.pool.Length != 12) d.pool = new int[12];
             if (d.army == null) d.army = new List<ArmySlot>();
+            if (d.machines == null || d.machines.Length != 3) d.machines = new bool[3];
         }
         public static void Save() { PlayerPrefs.SetString("estate", JsonUtility.ToJson(D)); PlayerPrefs.Save(); }
 
@@ -273,6 +277,13 @@ namespace BladePath
             if (lv < 2) UiKit.Text(new Rect(x, y, w, 18f), (lv == 0 ? "Построить: " : "Улучшить: ") + CostText(b, Mul(lv)), 11f, CanPay(b, Mul(lv)) ? Ink : new Color(1f, 0.55f, 0.45f), TextAnchor.MiddleLeft);
             if (D.builtThisWeek && lv < 2) UiKit.Text(new Rect(x, y + 16f, w, 16f), "На этой неделе уже строили", 10f, Dim, TextAnchor.MiddleLeft);
             float bw = (w - 8f) / 3f, by = r.yMax - 46f;
+            if (p == 2 && lv > 0)
+                for (int m = 0; m < 3; m++)
+                {   // кузня: боевые машины
+                    bool has = D.machines[m];
+                    if (VisualIdentity.KitButton(new Rect(x + m * (bw + 4f), by - 38f, bw, 30f), MachineNames[m] + (has ? " ✓" : " " + MachinePrice[m]), !has && Profile.Gold >= MachinePrice[m], false))
+                    { D.machines[m] = true; Profile.AddGold(-MachinePrice[m]); Save(); UiFx.Play("coins", 0.8f); Note(MachineNames[m] + " — с армией в каждом бою."); }
+                }
             if (lv < 2 && VisualIdentity.KitButton(new Rect(x, by, bw * 1.3f, 34f), lv == 0 ? "ПОСТРОИТЬ" : "УЛУЧШИТЬ", !D.builtThisWeek && CanPay(b, Mul(lv)), true)) Build(p);
             if (lv > 0 && b.unit >= 0 && VisualIdentity.KitButton(new Rect(x + bw * 1.3f + 6f, by, bw, 34f), "НАНЯТЬ", D.pool[b.unit] > 0 || (lv >= 2 && b.unit2 >= 0 && D.pool[b.unit2] > 0), false))
             { hireUnit = lv >= 2 && b.unit2 >= 0 && D.pool[b.unit2] > 0 ? b.unit2 : b.unit; hireN = MaxHire(hireUnit); }

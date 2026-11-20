@@ -113,7 +113,8 @@ namespace BladePath
         // герой
         static int spirit, spiritMax, heroLv;
         static bool castThisRound;
-        static int gAtk, gDef, gSpd;   // полководец (General): атака, защита, «Тактика» — снимаются в начале боя
+        static int gAtk, gDef, gSpd;
+        static bool mBallista, mTent, mCart;   // боевые машины (кузня поместья): баллиста, палатка лекаря, повозка с боеприпасами   // полководец (General): атака, защита, «Тактика» — снимаются в начале боя
         static int forge, tower;          // кузня и башня поместья
         static bool fromEstate;           // бой армией поместья: выжившие вернутся в армию
         static int fogRounds, windRounds;
@@ -270,6 +271,7 @@ namespace BladePath
             }
             fromEstate = true;
             forge = Estate.ForgeBonus; tower = Estate.SpeedBonus;
+            mBallista = Estate.D.machines[0]; mTent = Estate.D.machines[1]; mCart = Estate.D.machines[2];
             spiritMax += Estate.SpiritBonus; spirit = spiritMax;
             round = 0; queue.Clear(); log.Clear();
             NewRound();
@@ -284,6 +286,7 @@ namespace BladePath
             stacks.Clear(); queue.Clear(); log.Clear(); texts.Clear(); shots.Clear();
             heroLv = Mathf.Max(1, Profile.Level);
             General.Sync();
+            mBallista = mTent = mCart = true;   // пробный бой — со всеми машинами
             gAtk = General.Atk; gDef = General.Def; gSpd = General.Val(7) + General.ArtSpeed;
             spiritMax = 4 + General.Know + General.Val(5); spirit = spiritMax;
             fogRounds = 0; windRounds = 0; castThisRound = false; spellSel = -1; bookOpen = false; info = null;
@@ -322,6 +325,51 @@ namespace BladePath
             stacks.Add(new Stack { t = t, enemy = enemy, count = n, start = n, topHp = t.hp, shots = t.shots, c = c, r = r, born = Time.unscaledTime });
         }
 
+        static Vector2 MachinePos(int m) { Vector2 c = Center(0, 2 + m * 3); return new Vector2(ox - R * 2.1f, c.y); }
+        /// <summary>Начало раунда: баллиста бьёт сильнейший отряд врага, лекарь лечит раненого.</summary>
+        static void Machines()
+        {
+            if (mBallista)
+            {
+                Stack best = null;
+                foreach (Stack o in stacks) if (o.Alive && o.enemy && (best == null || o.Total > best.Total)) best = o;
+                if (best != null)
+                {
+                    int dmg = (gAtk + 2) * Random.Range(5, 9);
+                    Vector2 from = MachinePos(0) + new Vector2(R * 0.6f, -R * 0.5f);
+                    shots.Add(new Shot { a = from, b = best.pos + new Vector2(0f, -R * 0.8f), t0 = Time.unscaledTime, dur = 0.45f });
+                    Hurt(best, dmg); best.flash = 1f; best.hitUntil = Time.unscaledTime + 0.8f;
+                    Burst("fx_arrow_hit", best.pos + new Vector2(0f, -R * 1.0f), R * 2.8f, 40f);
+                    texts.Add(new Float { p = best.pos + new Vector2(0f, -R * 2f), s = "−" + dmg, t0 = Time.unscaledTime + 0.3f, col = new Color(1f, 0.85f, 0.4f) });
+                    Log("Баллиста → " + best.t.name + ": " + dmg + " урона.");
+                }
+            }
+            if (mTent)
+            {
+                Stack hurt = null;
+                foreach (Stack o in stacks) if (o.Alive && !o.enemy && o.topHp < o.t.hp && (hurt == null || o.topHp * hurt.t.hp < hurt.topHp * o.t.hp)) hurt = o;
+                if (hurt != null)
+                {
+                    int h = Mathf.Min(hurt.t.hp - hurt.topHp, Random.Range(10, 26));
+                    hurt.topHp += h;
+                    texts.Add(new Float { p = hurt.pos + new Vector2(0f, -R * 2f), s = "+" + h, t0 = Time.unscaledTime, col = new Color(0.55f, 1f, 0.55f) });
+                    Burst("fx_heal", hurt.pos + new Vector2(0f, -R * 0.9f), R * 2.6f);
+                }
+            }
+        }
+        static void DrawMachines()
+        {
+            Texture2D t = UiKit.Tex("UI/Battle/war_machines");
+            if (t == null) return;
+            bool[] on = { mBallista, mTent, mCart };
+            for (int m = 0; m < 3; m++)
+            {
+                if (!on[m]) continue;
+                Vector2 p = MachinePos(m); float w = R * 2.4f, h = w * 0.9f;
+                GUI.DrawTextureWithTexCoords(new Rect(p.x - w * 0.5f, p.y - h * 0.7f, w, h), t, new Rect(m / 3f, 0f, 1f / 3f, 1f));
+            }
+        }
+
         static void NewRound()
         {
             round++;
@@ -337,6 +385,7 @@ namespace BladePath
                     if (s.curseRounds > 0) s.curseRounds--;
                 }
             }
+            if (round > 1) { Machines(); if (CheckEnd()) return; }   // машины — с начала второго раунда (первый — расстановка)
             queue.Clear();
             foreach (Stack s in stacks) if (s.Alive) queue.Add(s);
             queue.Sort((a, b) => a.Spd != b.Spd ? b.Spd.CompareTo(a.Spd) : a.enemy.CompareTo(b.enemy));
@@ -444,7 +493,7 @@ namespace BladePath
 
         static IEnumerator DoShoot(Stack a, Stack d)
         {
-            a.shots--;
+            if (!(mCart && !a.enemy)) a.shots--;   // повозка с боеприпасами: стрелы не кончаются
             if (a.an != null) yield return Act(a, 0.55f);   // натянул лук / вскинул ружьё / сложил печать
             if (a.t == Ours[2]) Burst("fx_musket", a.pos + new Vector2(R * (a.enemy ? -0.9f : 0.9f), -R * 1.3f), R * 3.2f, 36f);
             Vector2 from = a.pos + new Vector2(0f, -R * 1.1f), to = d.pos + new Vector2(0f, -R * 0.8f);
@@ -984,6 +1033,7 @@ namespace BladePath
 
             DrawGrid();
             DrawRocks();
+            DrawMachines();
             DrawLive();
             DrawStacks();
             DrawFx();
