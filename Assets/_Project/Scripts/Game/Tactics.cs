@@ -71,7 +71,7 @@ namespace BladePath
             public UnitType t; public bool enemy;
             public int count, start, topHp, shots;
             public int c, r;
-            public bool retaliated, waited, defending;
+            public bool retaliated, waited, defending, moraleUsed;
             public int atkB, defB, spdB, buffRounds, curseRounds;
             public Vector2 pos;                 // где нарисован (виртуальные точки)
             public List<Vector2> path = new List<Vector2>();
@@ -187,6 +187,40 @@ namespace BladePath
 
         // ---------------------------------------------------------------- начало боя
 
+        /// <summary>Отрядные бои на карте: дуэли и засады — пошаговым боем армии поместья (меню разработчика «ОТРЯДЫ»).</summary>
+        public static bool MapBattles
+        {
+            get { return PlayerPrefs.GetInt("tactics_map", 0) == 1; }
+            set { PlayerPrefs.SetInt("tactics_map", value ? 1 : 0); PlayerPrefs.Save(); }
+        }
+        static int mapNode = -1;
+        static bool returned;
+        /// <summary>Бой закончился, карта — продолжает (поражение, итог).</summary>
+        public static bool TakeReturned() { bool r = returned; returned = false; return r; }
+
+        /// <summary>Бой на месте карты: враги — по области, ряду места и отряду (засада — ночью, враг сильнее).</summary>
+        public static void ShowNode(int node)
+        {
+            MapNode n = Campaign.Nodes[node];
+            ShowArmy(Campaign.Region);
+            mapNode = node;
+            stacks.RemoveAll(s => s.enemy);
+            int[][] pool = { new[] { 0, 1, 2, 3, 4, 8 }, new[] { 1, 3, 4, 5, 6, 8 }, new[] { 4, 5, 6, 8, 9, 7 } };
+            int reg = Mathf.Clamp(Campaign.Region, 0, 2);
+            int nst = Mathf.Clamp(3 + (n.extra != null ? n.extra.Count : 0) + (n.Type == NodeType.Ambush ? 1 : 0), 3, 6);
+            float power = (1f + 0.15f * n.layer) * (1f + 0.4f * Profile.Cycle) * (n.Type == NodeType.Ambush ? 1.25f : 1f);
+            int[] rows = { 5, 3, 7, 1, 9, 0 };
+            for (int i = 0; i < nst; i++)
+            {
+                UnitType t = Foes[pool[reg][Random.Range(0, pool[reg].Length - (i == 0 ? 0 : 1))]];
+                int cnt = Mathf.Max(1, Mathf.RoundToInt(120f * power / Mathf.Max(8, t.hp) * Random.Range(0.7f, 1.3f)));
+                Add(t, cnt, true, Cols - 1, rows[i]);
+            }
+            round = 0; queue.Clear(); log.Clear();
+            NewRound();
+            Log((n.Type == NodeType.Ambush ? "Засада! " : "Бой на дороге. ") + "Раунд 1.");
+        }
+
         /// <summary>Бой армией поместья (Estate.D.army) против отрядов области.</summary>
         public static void ShowArmy(int reg)
         {
@@ -210,7 +244,7 @@ namespace BladePath
         /// <summary>Пробный бой (меню разработчика): армия героя против отрядов области.</summary>
         public static void ShowDev(int reg)
         {
-            fromEstate = false; forge = 0; tower = 0;
+            fromEstate = false; forge = 0; tower = 0; mapNode = -1;
             region = Mathf.Clamp(reg, 0, 2);
             stacks.Clear(); queue.Clear(); log.Clear(); texts.Clear(); shots.Clear();
             heroLv = Mathf.Max(1, Profile.Level);
@@ -261,7 +295,7 @@ namespace BladePath
                 if (windRounds > 0) windRounds--;
                 foreach (Stack s in stacks)
                 {
-                    s.retaliated = false; s.waited = false;
+                    s.retaliated = false; s.waited = false; s.moraleUsed = false;
                     if (s.buffRounds > 0 && --s.buffRounds == 0) { s.atkB = 0; s.defB = 0; s.spdB = 0; }
                     if (s.curseRounds > 0) s.curseRounds--;
                 }
@@ -373,6 +407,8 @@ namespace BladePath
         {
             if (!ranged) { a.lungeDir = (d.pos - a.pos).normalized; a.lunge = 1f; yield return 0.18f; }
             int dmg = Damage(a, d, ranged, false);
+            bool lucky = !a.enemy && Luck > 0 && Random.value < Luck / 12f;   // удача («Герои»): двойной урон
+            if (lucky) { dmg *= 2; texts.Add(new Float { p = a.pos + new Vector2(0f, -R * 2.6f), s = "УДАЧА!", t0 = Time.unscaledTime, col = new Color(0.6f, 1f, 0.5f) }); }
             int before = d.count;
             Hurt(d, dmg);
             d.flash = 1f;
@@ -408,9 +444,22 @@ namespace BladePath
 
         static void EndTurn()
         {
-            if (cur != null) queue.Remove(cur);
+            Stack s = cur;
+            if (s != null) queue.Remove(s);
+            // боевой дух («Герои»): знаменосцы рядом с армией — шанс, что отряд сходит ещё раз (раз за раунд)
+            if (s != null && s.Alive && !s.enemy && !s.moraleUsed && !finished && Morale > 0 && Random.value < Morale / 12f)
+            {
+                s.moraleUsed = true;
+                queue.Insert(0, s);
+                texts.Add(new Float { p = s.pos + new Vector2(0f, -R * 2.6f), s = "БОЕВОЙ ДУХ!", t0 = Time.unscaledTime, col = new Color(1f, 0.9f, 0.4f) });
+                Log(s.t.name + ": боевой дух — ещё ход!");
+            }
             NextTurn();
         }
+        /// <summary>Боевой дух наших: живые знаменосцы (+1 за отряд, до 3).</summary>
+        static int Morale { get { int m = 0; foreach (Stack s in stacks) if (s.Alive && !s.enemy && s.t == Ours[9]) m++; return Mathf.Min(3, m); } }
+        /// <summary>Удача наших: храм поместья и святилище (пока — храм).</summary>
+        static int Luck { get { return fromEstate ? Estate.D.level[4] : 0; } }
 
         static void Wait()
         {
@@ -936,6 +985,15 @@ namespace BladePath
             if (pt != null) UiKit.Slice(r, pt, 0.42f, 0.15f, 0f, 0.075f, 0f, Color.white);
             UiKit.Text(new Rect(r.x, r.y + 16f, r.width, 30f), won ? "ПОБЕДА" : "ПОРАЖЕНИЕ", 24f, won ? Gold : new Color(1f, 0.5f, 0.4f));
             UiKit.Text(new Rect(r.x + 24f, r.y + 54f, r.width - 48f, 70f), resultText, 13f, Ink);
+            if (mapNode >= 0)
+            {   // бой на карте: итог — как у боя на арене (победа — место пройдено, поражение — к травнице)
+                if (VisualIdentity.KitButton(new Rect(r.center.x - 100f, r.yMax - 54f, 200f, 38f), "НА КАРТУ", true, true))
+                {
+                    if (won) Campaign.FinishFight(); else Campaign.LoseFight();
+                    mapNode = -1; Open = false; returned = true;
+                }
+                return;
+            }
             if (fromEstate)
             {
                 if (VisualIdentity.KitButton(new Rect(r.x + 30f, r.yMax - 54f, 180f, 38f), "В ПОМЕСТЬЕ", true, true)) { Open = false; Estate.Show(); }

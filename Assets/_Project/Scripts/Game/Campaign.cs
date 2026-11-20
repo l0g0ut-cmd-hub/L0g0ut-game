@@ -39,6 +39,7 @@ namespace BladePath
         {
             public int region;
             public List<string> flags = new List<string>();   // метки цепочек своих мест (на область)
+            public int days;            // броски кости пути: каждые 7 — неделя поместья (Estate.NewWeek)
             public int customPlus;      // своя область из редактора карт: номер + 1 (0 — обычная область)
             public int roadsVer;        // 2 — места на новых дорогах (2026-11-03); 3 — карты расширены на восток (2026-11-07)
             public bool foesRolled;     // обитатели Леса теней уже расставлены (старые сохранения — расставить при загрузке)
@@ -473,6 +474,8 @@ namespace BladePath
         {
             if (D.rolls <= 0 || D.steps > 0 || !CurrentSettled || InFight || D.training) return 0;
             D.rolls--; D.lastRoll = UnityEngine.Random.Range(1, 4); D.steps = D.lastRoll;
+            D.days++;
+            if (D.days % 7 == 0) { Estate.NewWeek(); D.note = "Новая неделя: в поместье прибыли бойцы для найма."; }
             MoveHunt(0.6f);   // ронин в розыске тоже не стоит на месте
             Save();
             return D.lastRoll;

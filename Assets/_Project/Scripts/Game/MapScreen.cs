@@ -119,7 +119,11 @@ namespace BladePath
             }
             switch (n.Type)
             {
-                case NodeType.Duel: case NodeType.Elite: case NodeType.Boss: case NodeType.Ambush: OpenModal(Modal.Fight); break;
+                case NodeType.Duel: case NodeType.Elite: case NodeType.Boss: case NodeType.Ambush:
+                    // отрядные бои: дуэли и засады — пошаговым боем армии поместья; сильные противники и владыки — «генеральский бой» на арене
+                    if (Tactics.MapBattles && Estate.D.army.Count > 0 && (n.Type == NodeType.Duel || n.Type == NodeType.Ambush) && !Campaign.InFight)
+                    { modal = Modal.None; Campaign.BeginFight(i); Tactics.ShowNode(i); break; }
+                    OpenModal(Modal.Fight); break;
                 case NodeType.Shrine: OpenModal(Modal.Shrine); break;
                 case NodeType.Smith: OpenModal(Modal.Smith); break;
                 case NodeType.Merchant:
@@ -401,6 +405,14 @@ namespace BladePath
                 Tactics.Draw(W);
                 GUI.matrix = old;
                 return;
+            }
+            if (Tactics.TakeReturned())
+            {   // отрядный бой с места карты кончился: поражение — очнулся у травницы, победа — карта как после боя
+                modal = Modal.None; sel = -1; previewPath.Clear(); moveTo = -1;
+                TerrainRoads.Bind(Campaign.Region, Campaign.Nodes);
+                if (Campaign.Knocked) OpenModal(Modal.Knocked);
+                else if (Campaign.ClearedRegion >= 0) OpenModal(Modal.RegionClear);
+                string tn = Campaign.TakeNote(); if (!string.IsNullOrEmpty(tn)) TavToast(tn);
             }
             if (Estate.Open)
             {   // поместье (меню разработчика) — на весь экран
@@ -1107,7 +1119,8 @@ namespace BladePath
             if (Btn(new Rect(x + (bw + 6f) * 0.5f, y, (bw - 6f) * 0.5f, 38f), "ПОМЕСТЬЕ", ok, true)) { modal = Modal.None; Estate.Show(); return; }
             if (Btn(new Rect(x + bw + 10f, y, bw, 38f), JourneyChoice.FogEnabled ? "ТУМАН: ВКЛ" : "ТУМАН: ВЫКЛ", ok)) { JourneyChoice.FogEnabled = !JourneyChoice.FogEnabled; }
             y += 44f;
-            if (Btn(new Rect(x, y, bw, 38f), "КОСТЬ: 3 ХОДА", ok)) { Campaign.DebugSteps(3); }
+            if (Btn(new Rect(x, y, (bw - 6f) * 0.5f, 38f), "КОСТЬ: 3", ok)) { Campaign.DebugSteps(3); }
+            if (Btn(new Rect(x + (bw + 6f) * 0.5f, y, (bw - 6f) * 0.5f, 38f), Tactics.MapBattles ? "ОТРЯДЫ: ВКЛ" : "ОТРЯДЫ: ВЫКЛ", ok)) Tactics.MapBattles = !Tactics.MapBattles;
             if (Btn(new Rect(x + bw + 10f, y, bw, 38f), "РЕДАКТОР КАРТ", ok, true)) { modal = Modal.None; MapEditor.Show(Campaign.Region); return; }
             y += 44f;
             if (Btn(new Rect(x, y, bw, 38f), SideDuel.Enabled ? "СОРАТНИКИ: ВКЛ" : "СОРАТНИКИ: ВЫКЛ", ok)) { SideDuel.Enabled = !SideDuel.Enabled; }
