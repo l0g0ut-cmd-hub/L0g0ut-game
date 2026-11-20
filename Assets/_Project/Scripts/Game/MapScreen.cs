@@ -1135,7 +1135,8 @@ namespace BladePath
             if (Btn(new Rect(x + bw + 10f, y, bw, 38f), SoundSettings.ScopeShortName, ok && SoundSettings.On)) SoundSettings.NextScope();
             y += 44f;
             // враги Леса теней в обычных боях: как на карте (случайно) или все бои — один облик (проверить модель и повадки)
-            if (Btn(new Rect(x + bw + 10f, y, bw, 38f), "ПОШАГОВЫЙ БОЙ", ok, true)) { modal = Modal.None; Tactics.ShowDev(Campaign.Region); return; }
+            if (Btn(new Rect(x + bw + 10f, y, bw * 0.6f, 38f), "ПОШАГОВЫЙ БОЙ", ok, true)) { modal = Modal.None; Tactics.ShowDev(Campaign.Region); return; }
+            if (Btn(new Rect(x + bw + 10f + bw * 0.62f, y, bw * 0.38f, 38f), "ОСАДА", ok, true)) { modal = Modal.None; Tactics.ShowSiege(Campaign.Region); return; }
             if (Btn(new Rect(x, y, bw, 38f), "ВРАГИ: " + (Ladder.DevFoe > 0 ? Ladder.Foes[Ladder.DevFoe - 1].name : Ladder.DevFoe == 0 ? "ПОВЕРЖЕННЫЙ" : "КАК НА КАРТЕ"), ok))
                 Ladder.DevFoe = Ladder.DevFoe >= Ladder.Foes.Length ? -1 : Ladder.DevFoe + 1;
             if (Btn(new Rect(r.center.x - 80f, r.yMax - 42f, 160f, 34f), "ЗАКРЫТЬ", ok)) modal = Modal.None;

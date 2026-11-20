@@ -162,6 +162,15 @@ namespace BladePath
         // препятствия (как в «Героях»): на клетку не встать; картинки — UI/Battle/obstacles (4×3), нет — камни-заглушки
         static readonly List<Vector3Int> rocks = new List<Vector3Int>();   // x, y — клетка, z — ячейка атласа
         static bool Rock(int c, int r) { foreach (Vector3Int o in rocks) if (o.x == c && o.y == r) return true; return false; }
+
+        // осада («Герои 3»): стена — столбец WallC, у каждой клетки 2 «жизни» (цела → пробита → рухнула), ворота — ряд GateR
+        // (защитники проходят, нападающим — ломать), башни — крайние ряды, стреляют каждый раунд; катапульта нападающих бьёт стену
+        const int WallC = 11, GateR = 5;
+        static bool siege;
+        static readonly int[] wallHp = new int[11];
+        static bool IsTower(int r) { return r == 0 || r == Rows - 1; }
+        static bool WallAt(int c, int r) { return siege && c == WallC && wallHp[r] > 0; }
+        static bool WallBlocks(Stack s, int c, int r) { return WallAt(c, r) && !(r == GateR && s != null && s.enemy); }
         static void PlaceRocks()
         {
             rocks.Clear();
@@ -201,7 +210,7 @@ namespace BladePath
                 if (d >= s.Spd) continue;
                 foreach (Vector2Int b in Nb(a.x, a.y))
                 {
-                    if (reach.ContainsKey(b) || At(b.x, b.y) != null || Rock(b.x, b.y)) continue;
+                    if (reach.ContainsKey(b) || At(b.x, b.y) != null || Rock(b.x, b.y) || WallBlocks(s, b.x, b.y)) continue;
                     reach[b] = d + 1; from[b] = a; q.Enqueue(b);
                 }
             }
@@ -281,7 +290,7 @@ namespace BladePath
         /// <summary>Пробный бой (меню разработчика): армия героя против отрядов области.</summary>
         public static void ShowDev(int reg)
         {
-            fromEstate = false; forge = 0; tower = 0; mapNode = -1;
+            fromEstate = false; forge = 0; tower = 0; mapNode = -1; siege = false;
             region = Mathf.Clamp(reg, 0, 2);
             stacks.Clear(); queue.Clear(); log.Clear(); texts.Clear(); shots.Clear();
             heroLv = Mathf.Max(1, Profile.Level);
@@ -357,6 +366,68 @@ namespace BladePath
                 }
             }
         }
+        public static void ShowSiege(int reg)
+        {
+            ShowDev(reg);
+            siege = true;
+            for (int r = 0; r < Rows; r++) wallHp[r] = 2;
+            rocks.RemoveAll(o => o.x >= WallC - 1);
+            int i = 0;
+            foreach (Stack st in stacks) if (st.enemy) { st.c = Cols - 1 - (i % 3); st.r = 1 + (i * 3) % 9; st.pos = Vector2.zero; i++; }
+            Log("Осада! Ломайте стену и ворота — защитники за стеной получают от стрел вполовину.");
+        }
+        static void SiegeRound()
+        {
+            if (!siege) return;
+            // катапульта нападающих: по воротам, потом — по случайной целой стене
+            int t = wallHp[GateR] > 0 ? GateR : -1;
+            if (t < 0) { List<int> ok = new List<int>(); for (int r = 1; r < Rows - 1; r++) if (wallHp[r] > 0) ok.Add(r); if (ok.Count > 0) t = ok[Random.Range(0, ok.Count)]; }
+            if (t >= 0 && Random.value < 0.75f)
+            {
+                wallHp[t]--; Burst("fx_arrow_hit", Center(WallC, t) + new Vector2(0f, -R), R * 3.6f, 30f);
+                Log("Катапульта: " + (t == GateR ? "ворота" : "стена") + (wallHp[t] == 0 ? " рухнули." : " пробиты."));
+            }
+            else if (t >= 0) Log("Катапульта промахнулась.");
+            // башни защитников
+            for (int r = 0; r < Rows; r += Rows - 1)
+            {
+                if (!IsTower(r) || wallHp[r] <= 0) continue;
+                Stack best = null;
+                foreach (Stack o in stacks) if (o.Alive && !o.enemy && (best == null || o.Total > best.Total)) best = o;
+                if (best == null) continue;
+                int dmg = Random.Range(8, 15) * (1 + Profile.Cycle);
+                shots.Add(new Shot { a = Center(WallC, r) + new Vector2(0f, -R * 2f), b = best.pos + new Vector2(0f, -R * 0.8f), t0 = Time.unscaledTime, dur = 0.45f });
+                Hurt(best, dmg); best.flash = 1f; best.hitUntil = Time.unscaledTime + 0.8f;
+                texts.Add(new Float { p = best.pos + new Vector2(0f, -R * 2f), s = "−" + dmg, t0 = Time.unscaledTime + 0.3f, col = new Color(1f, 0.45f, 0.35f) });
+                Log("Башня → " + best.t.name + ": " + dmg + " урона.");
+            }
+        }
+        static IEnumerator DoWallHit(Stack a, int r)
+        {
+            a.lungeDir = (Center(WallC, r) - a.pos).normalized;
+            if (a.an != null) { a.lunge = 0.6f; yield return Act(a, 0.45f); } else { a.lunge = 1f; yield return 0.18f; }
+            wallHp[r] = Mathf.Max(0, wallHp[r] - 1);
+            Burst("fx_slash_hit", Center(WallC, r) + new Vector2(0f, -R * 1.1f), R * 3f, 36f);
+            Log(a.t.name + ": " + (r == GateR ? "ворота" : IsTower(r) ? "башня" : "стена") + (wallHp[r] == 0 ? " разрушены." : " пробиты."));
+            UiFx.Play("ui_taiko_heavy", 0.5f);
+            yield return 0.3f;
+            EndTurn();
+        }
+        static bool NextToWall(Stack s, int r) { foreach (Vector2Int n in Nb(s.c, s.r)) if (n.x == WallC && n.y == r) return true; return false; }
+        static void DrawWall()
+        {
+            if (!siege) return;
+            Texture2D t = UiKit.Tex("UI/Battle/siege_parts");
+            for (int r = 0; r < Rows; r++)
+            {
+                Vector2 p = Center(WallC, r);
+                int k = IsTower(r) ? (wallHp[r] > 0 ? 6 : 7) : r == GateR ? (wallHp[r] == 2 ? 3 : wallHp[r] == 1 ? 4 : 5) : (wallHp[r] == 2 ? 0 : wallHp[r] == 1 ? 1 : 2);
+                if (t == null) { if (wallHp[r] > 0) UiKit.Disc(p, R * 0.7f, new Color(0.5f, 0.48f, 0.44f)); continue; }
+                float w = R * 2.5f, h = w * 362f / 362f;
+                GUI.DrawTextureWithTexCoords(new Rect(p.x - w * 0.5f, p.y - h * 0.72f, w, h), t, new Rect((k % 4) * 0.25f, 1f - (k / 4 + 1) / 3f, 0.25f, 1f / 3f));
+            }
+        }
+
         static void DrawMachines()
         {
             Texture2D t = UiKit.Tex("UI/Battle/war_machines");
@@ -385,7 +456,7 @@ namespace BladePath
                     if (s.curseRounds > 0) s.curseRounds--;
                 }
             }
-            if (round > 1) { Machines(); if (CheckEnd()) return; }   // машины — с начала второго раунда (первый — расстановка)
+            if (round > 1) { Machines(); SiegeRound(); if (CheckEnd()) return; }   // машины — с начала второго раунда (первый — расстановка)
             queue.Clear();
             foreach (Stack s in stacks) if (s.Alive) queue.Add(s);
             queue.Sort((a, b) => a.Spd != b.Spd ? b.Spd.CompareTo(a.Spd) : a.enemy.CompareTo(b.enemy));
@@ -548,6 +619,7 @@ namespace BladePath
             if (!ranged && a.t.shots > 0 && !a.t.noMeleePen) m *= 0.5f;   // стрелок вплотную — вполсилы
             if (!ranged && a.t.joust) m *= 1f + 0.05f * a.run;          // разгон: +5% за клетку
             if (ranged && a.enemy && fogRounds > 0) m *= 0.5f;
+            if (ranged && !a.enemy && siege && d.c > WallC && wallHp[d.r] > 0) m *= 0.5f;   // по защитникам за целой стеной
             if (!a.enemy) m *= 1f + General.Pct(ranged ? 0 : 1) + (ranged ? General.ArtRanged : 0f);   // «Стрельба» / «Нападение», артефакты стрелков
             if (!d.enemy) m *= 1f - General.Pct(2);               // «Доспехи»
             return Mathf.Max(1, Mathf.RoundToInt(b * m));
@@ -680,6 +752,7 @@ namespace BladePath
                     if (v > tv) { tv = v; target = o; stand = n; }
                 }
             if (target != null) { yield return DoMelee(s, target, stand); yield break; }
+            if (siege && !s.enemy) for (int r = 0; r < Rows; r++) if (WallAt(WallC, r) && NextToWall(s, r)) { yield return DoWallHit(s, r); yield break; }
             // иначе — к ближайшему
             Stack near = null; int nd = int.MaxValue;
             foreach (Stack o in foes) { int d = Dist(s.c, s.r, o.c, o.r); if (d < nd) { nd = d; near = o; } }
@@ -1033,6 +1106,7 @@ namespace BladePath
 
             DrawGrid();
             DrawRocks();
+            DrawWall();
             DrawMachines();
             DrawLive();
             DrawStacks();
@@ -1476,6 +1550,7 @@ namespace BladePath
             }
             if (o == null)
             {
+                if (WallAt(c.x, c.y) && NextToWall(cur, c.y)) { Run(DoWallHit(cur, c.y)); return; }   // осада: бить стену/ворота рядом
                 if (reach.ContainsKey(c) && (c.x != cur.c || c.y != cur.r)) Run(DoMove(cur, c));
                 return;
             }
