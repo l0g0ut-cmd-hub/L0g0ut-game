@@ -272,19 +272,18 @@ namespace BladePath
             fogRounds = 0; windRounds = 0; castThisRound = false; spellSel = -1; bookOpen = false; info = null;
             autoOurs = false; finished = false; won = false; round = 0;
             int k = 1 + Profile.Cycle;
-            Add(Ours[0], 24 * k, false, 0, 1);
-            Add(Ours[1], 12 * k, false, 0, 3);
-            Add(Ours[3], 6 * k, false, 0, 5);
-            Add(Ours[7], 6 * k, false, 0, 7);
-            Add(Ours[8], 4 * k, false, 0, 9);
-            int[][] foes = { new[] { 0, 1, 3, 4, 2 }, new[] { 1, 5, 6, 3, 4 }, new[] { 4, 5, 9, 6, 8 } };
-            int[] counts = { 30, 14, 8, 6, 3 };
-            int[] rows = { 1, 3, 5, 7, 9 };
-            for (int i = 0; i < 5; i++)
+            // тестовый бой разработчика: каждый раз 7 случайных наших и 7 случайных врагов — так видно все живые модели
+            int[] rowsT = { 0, 2, 4, 5, 6, 8, 10 };
+            List<int> ou = new List<int>(); for (int i = 0; i < Ours.Length; i++) ou.Add(i);
+            List<int> fo = new List<int>(); for (int i = 0; i < Foes.Length; i++) fo.Add(i);
+            for (int i = 0; i < 7; i++)
             {
-                UnitType t = Foes[foes[region][i]];
-                int n = Mathf.Max(1, Mathf.RoundToInt(counts[i] * k * (1f + 0.3f * region) * 10f / Mathf.Max(10, t.hp) * (t.hp >= 80 ? 2.5f : 1f)));
-                Add(t, n, true, Cols - 1, rows[i]);
+                int a = Random.Range(i, ou.Count); int x = ou[a]; ou[a] = ou[i]; ou[i] = x;
+                int b = Random.Range(i, fo.Count); int y = fo[b]; fo[b] = fo[i]; fo[i] = y;
+                UnitType tu = Ours[ou[i]];
+                Add(tu, Mathf.Max(1, Mathf.RoundToInt(180f * k / Mathf.Max(10, tu.hp))), false, 0, rowsT[i]);
+                UnitType tf = Foes[fo[i]];
+                Add(tf, Mathf.Max(1, Mathf.RoundToInt(170f * k * (1f + 0.3f * region) / Mathf.Max(10, tf.hp))), true, Cols - 1, rowsT[i]);
             }
             Open = true;
             snapsTaken = false;
