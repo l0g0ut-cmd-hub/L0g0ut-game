@@ -87,6 +87,15 @@ def opt(body, r, key, field=None):
     if v not in (None, ""): body[field or key] = v
 
 
+def anim_after(name, rig_tid, r):
+    """Сразу клипы библиотеки на свежий скелет (action_ids в заявке image/rig)."""
+    if not r.get("action_ids"): return
+    ab = {"rig_task_id": rig_tid, "action_ids": r["action_ids"]}
+    if r.get("fps"): ab["post_process"] = {"operation_type": "change_fps", "fps": r["fps"]}
+    aid = call("POST", "/v1/animations", ab)["result"]; log("  анимация:", aid)
+    save(name, wait("/v1/animations", aid), "anim")
+
+
 def do(r):
     global KEY
     acc = str(r.get("account", "1"))
@@ -123,18 +132,15 @@ def do(r):
             if r.get("quadruped"): rb["animation_type"] = "quadruped"   # конь, пёс: свой скелет, размер — как у модели
             else: rb["height_meters"] = r.get("height", 1.7)
             rid = call("POST", "/v1/rigging", rb)["result"]; log("  риг:", rid)
-            save(name, wait("/v1/rigging", rid), "rig")
+            jr = wait("/v1/rigging", rid); save(name, jr, "rig")
+            if jr.get("status") == "SUCCEEDED": anim_after(name, rid, r)
         return
     if a == "rig":
         b = {"height_meters": r.get("height", 1.7)}
         opt(b, r, "task_id", "input_task_id"); opt(b, r, "model_url")
         tid = call("POST", "/v1/rigging", b)["result"]; log("  риг:", tid)
         j = wait("/v1/rigging", tid); save(name, j, "rig")
-        if r.get("action_ids") and j.get("status") == "SUCCEEDED":   # сразу клипы библиотеки на свежий скелет
-            ab = {"rig_task_id": tid, "action_ids": r["action_ids"]}
-            if r.get("fps"): ab["post_process"] = {"operation_type": "change_fps", "fps": r["fps"]}
-            aid = call("POST", "/v1/animations", ab)["result"]; log("  анимация:", aid)
-            save(name, wait("/v1/animations", aid), "anim")
+        if j.get("status") == "SUCCEEDED": anim_after(name, tid, r)
         return
     if a == "library":
         j = call("GET", "/v1/animations/library")
