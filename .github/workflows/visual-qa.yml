@@ -53,7 +53,7 @@ jobs:
     # Capture actual game frames when an APK is promoted or by manual request.
     if: github.ref_name == 'unity-ui-qa' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     concurrency:
       group: build-android
       cancel-in-progress: false
@@ -90,7 +90,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         run: |
           set +e
-          # Time-box headless Play Mode: a hung editor must not occupy the shared\n          # Unity license / APK concurrency slot indefinitely.\n          timeout --signal=TERM --kill-after=45s 25m game-ci build . \
+          # Time-box headless Play Mode: a hung editor must not occupy the shared\n          # Unity license / APK concurrency slot indefinitely.\n          timeout --signal=TERM --kill-after=45s 45m game-ci build . \
             --engine unity \
             --engine-version "$UNITY_VERSION" \
             --target-platform Android \

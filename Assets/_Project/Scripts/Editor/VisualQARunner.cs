@@ -19,7 +19,7 @@ namespace BladePath.EditorTools
     {
         const string Key = "BladePath.VisualQA.Active";
         const string StartedKey = "BladePath.VisualQA.Started";
-        const double TimeoutMinutes = 18;
+        const double TimeoutMinutes = 32;
         static bool hooked;
         public static bool Finished;
         public static int Failures;

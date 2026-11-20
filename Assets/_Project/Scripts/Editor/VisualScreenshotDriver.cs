@@ -49,6 +49,13 @@ namespace BladePath.EditorTools
             }
             Set("newJourneyStep", 0);
             VisualQARunner.Info("END screenshots=10 failures=" + VisualQARunner.Failures);
+            // затем — сама игра: карта, бой, поместье, окна (GameScreenshotDriver)
+            menu.enabled = false;
+            GameScreenshotDriver.Done = false;
+            gameObject.AddComponent<GameScreenshotDriver>();
+            float until = Time.realtimeSinceStartup + 600f;
+            while (!GameScreenshotDriver.Done && Time.realtimeSinceStartup < until) yield return null;
+            if (!GameScreenshotDriver.Done) VisualQARunner.Fail("game shots timeout");
             VisualQARunner.Finished = true;
         }
 
