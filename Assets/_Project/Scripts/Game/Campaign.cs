@@ -481,7 +481,8 @@ namespace BladePath
             if (D.rolls <= 0 || D.steps > 0 || !CurrentSettled || InFight || D.training) return 0;
             D.rolls--; D.lastRoll = UnityEngine.Random.Range(1, 4); D.steps = D.lastRoll;
             D.days++;
-            if (D.days % 7 == 0) { Estate.NewWeek(); D.note = "Новая неделя: в поместье прибыли бойцы для найма."; }
+            Realm.NewDay();   // доход рудников и управы, календарь
+            if (D.days % 7 == 0) { Estate.NewWeek(); Realm.NewWeek(); D.note = "Новая неделя: в поместье прибыли бойцы для найма."; }
             MoveHunt(0.6f);   // ронин в розыске тоже не стоит на месте
             Save();
             return D.lastRoll;

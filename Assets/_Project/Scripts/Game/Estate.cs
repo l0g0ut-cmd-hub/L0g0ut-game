@@ -167,6 +167,7 @@ namespace BladePath
             if (bg != null) GUI.DrawTexture(new Rect(offX, offY, 1672f * sc, 941f * sc), bg);
             else UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0.1f, 0.08f, 0.06f));
             if (General.Open) { General.Draw(W); return; }   // экран полководца поверх поместья
+            if (Realm.Busy) { Realm.DrawWindow(W); return; }   // рынок, таверна, зал магии
             Texture2D bt = UiKit.Tex("UI/Battle/estate_buildings");
             bool modal = hireUnit >= 0;
             // главный дом (уже стоит на картине): касание — знаменосцы и ронины
@@ -307,6 +308,8 @@ namespace BladePath
             if (lv < 2) UiKit.Text(new Rect(x, y, w, 18f), (lv == 0 ? "Построить: " : "Улучшить: ") + CostText(b, Mul(lv)), 11f, CanPay(b, Mul(lv)) ? Ink : new Color(1f, 0.55f, 0.45f), TextAnchor.MiddleLeft);
             if (D.builtThisWeek && lv < 2) UiKit.Text(new Rect(x, y + 16f, w, 16f), "На этой неделе уже строили", 10f, Dim, TextAnchor.MiddleLeft);
             float bw = (w - 8f) / 3f, by = r.yMax - 46f;
+            if (p == 7 && lv > 0 && VisualIdentity.KitButton(new Rect(x, by - 38f, bw * 1.4f, 30f), "ТОРГОВАТЬ", true, false)) Realm.OpenMarket();
+            if (p == 5 && lv > 0 && VisualIdentity.KitButton(new Rect(x, by - 38f, bw * 1.4f, 30f), "ЗАЛ МАГИИ", true, false)) Realm.OpenHall();
             if (p == 2 && lv > 0)
                 for (int m = 0; m < 3; m++)
                 {   // кузня: боевые машины
@@ -329,6 +332,15 @@ namespace BladePath
             UiKit.Text(new Rect(x, y, w, 30f), "Каждую неделю: ронины, знаменосцы, +5 дерева, +2 стали, +10 риса", 11f, Ink, TextAnchor.UpperLeft); y += 34f;
             UiKit.Text(new Rect(x, y, w, 18f), "Ронины: " + D.pool[7] + " · знаменосцы: " + D.pool[9], 11f, new Color(0.7f, 0.9f, 1f), TextAnchor.MiddleLeft);
             float bw = (w - 8f) * 0.5f, by = r.yMax - 46f;
+            // управа (доход в день) и укрепления (прирост), таверна — как в замке «Героев 3»
+            int hl = Realm.D.hall, fl = Realm.D.fort;
+            int[] hallCost = { 1000, 2500, 5000 }, fortCost = { 1500, 3000, 6000 };
+            float tw = (w - 12f) / 3f, ty = by - 40f;
+            if (VisualIdentity.KitButton(new Rect(x, ty, tw, 32f), hl < 3 ? (new[] { "УПРАВА", "РАТУША", "ДВОРЕЦ" }[hl]) + " " + hallCost[hl] : "ДВОРЕЦ ✓", hl < 3 && Profile.Gold >= (hl < 3 ? hallCost[hl] : 0) && !D.builtThisWeek, false))
+            { Profile.AddGold(-hallCost[hl]); Realm.D.hall++; D.builtThisWeek = true; Realm.Save(); Save(); Note("Доход поместья: +" + new[] { 0, 100, 200, 400 }[Realm.D.hall] + " мон в день."); }
+            if (VisualIdentity.KitButton(new Rect(x + tw + 6f, ty, tw, 32f), fl < 3 ? (new[] { "ФОРТ", "КРЕПОСТЬ", "ЗАМОК" }[fl]) + " " + fortCost[fl] : "ЗАМОК ✓", fl < 3 && Profile.Gold >= (fl < 3 ? fortCost[fl] : 0) && D.steel >= 5 * (fl + 1) && !D.builtThisWeek, false))
+            { Profile.AddGold(-fortCost[fl]); D.steel -= 5 * (fl + 1); Realm.D.fort++; D.builtThisWeek = true; Realm.Save(); Save(); Note("Прирост бойцов: +" + (50 * Realm.D.fort) + "% в неделю."); }
+            if (VisualIdentity.KitButton(new Rect(x + (tw + 6f) * 2f, ty, tw, 32f), "ТАВЕРНА", true, false)) Realm.OpenTavern();
             if (VisualIdentity.KitButton(new Rect(x, by, bw, 34f), "РОНИНЫ", D.pool[7] > 0, false)) { hireUnit = 7; hireN = MaxHire(7); }
             if (VisualIdentity.KitButton(new Rect(x + bw + 8f, by, bw, 34f), "ЗНАМЕНОСЦЫ", D.pool[9] > 0, false)) { hireUnit = 9; hireN = MaxHire(9); }
         }

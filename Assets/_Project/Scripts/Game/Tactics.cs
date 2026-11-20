@@ -132,6 +132,9 @@ namespace BladePath
         static int spirit, spiritMax, heroLv;
         static bool castThisRound;
         static int gAtk, gDef, gSpd;
+        static bool deploy;           // расстановка перед боем (навык «Тактика», как в «Героях 3»): свои отряды переставляются в своих столбцах
+        static Stack deploySel;
+        static int DeployCols { get { return 1 + 2 * General.Skill(7); } }
         static bool mBallista, mTent, mCart;   // боевые машины (кузня поместья): баллиста, палатка лекаря, повозка с боеприпасами   // полководец (General): атака, защита, «Тактика» — снимаются в начале боя
         static int forge, tower;          // кузня и башня поместья
         static bool fromEstate;           // бой армией поместья: выжившие вернутся в армию
@@ -167,6 +170,8 @@ namespace BladePath
             new Spell { icon = 21, cost = 2, name = "БЕРСЕРК", hint = "+10 к атаке отряда, защита −50%, 1 раунд", target = 1 },
             new Spell { icon = 22, cost = 5, name = "ПОДНЯТЬ ПАВШИХ", hint = "Поднимает много павших в отряде", target = 1 },
         };
+        public static void DrawSpellIcon(Rect r, int spell) { if (spell >= 0 && spell < Spells.Length) SpellIcon(r, Spells[spell].icon); }
+        public static string SpellName(int spell) { return spell >= 0 && spell < Spells.Length ? Spells[spell].name : ""; }
         static void SpellIcon(Rect r, int icon)
         {
             Texture2D sk = UiKit.Tex(icon < 11 ? "UI/Battle/skill_icons" : "UI/Battle/skill_icons2");
@@ -351,10 +356,26 @@ namespace BladePath
             Log("Армия поместья вступает в бой. Раунд 1.");
         }
 
+        static System.Action<bool> neutralDone;
+        /// <summary>Бой армией поместья с нейтральным отрядом карты (Realm): численность делится на отряды, как в «Героях».</summary>
+        public static void ShowNeutral(int foe, int count, System.Action<bool> done)
+        {
+            ShowArmy(Campaign.Region);
+            stacks.RemoveAll(s => s.enemy);
+            UnitType t = Foes[Mathf.Clamp(foe, 0, Foes.Length - 1)];
+            int parts = Mathf.Clamp(count / 6 + 1, 1, 5);
+            int[] rows = { 5, 3, 7, 1, 9 };
+            for (int i = 0; i < parts; i++) Add(t, Mathf.Max(1, count / parts + (i < count % parts ? 1 : 0)), true, Cols - 1, rows[i]);
+            foreach (Stack s in stacks) s.pos = Vector2.zero;
+            neutralDone = done;
+            round = 0; queue.Clear(); log.Clear(); NewRound();
+            Log("Нейтралы: " + t.name + " (" + count + "). Раунд 1.");
+        }
+
         /// <summary>Пробный бой (меню разработчика): армия героя против отрядов области.</summary>
         public static void ShowDev(int reg)
         {
-            fromEstate = false; forge = 0; tower = 0; mapNode = -1; siege = false;
+            fromEstate = false; forge = 0; tower = 0; mapNode = -1; siege = false; neutralDone = null;
             region = Mathf.Clamp(reg, 0, 2);
             stacks.Clear(); queue.Clear(); log.Clear(); texts.Clear(); shots.Clear();
             heroLv = Mathf.Max(1, Profile.Level);
@@ -511,6 +532,7 @@ namespace BladePath
         {
             round++;
             castThisRound = false;
+            deploy = round == 1 && General.Skill(7) > 0 && !finished; deploySel = null;
             if (round > 1)
             {
                 if (fogRounds > 0) fogRounds--;
@@ -567,6 +589,9 @@ namespace BladePath
             }
             string loot = "";
             if (won && Random.value < 0.25f) { int art = General.RandomArt(); if (General.Give(art)) loot = "\nТрофей: " + General.Arts[art].name + " (в рюкзаке полководца)."; }
+            int xp = 0; foreach (Stack s in stacks) if (s.enemy) xp += (s.start - Mathf.Max(0, s.count)) * s.t.hp;
+            xp = won ? Mathf.Max(10, xp / 4) : 0;
+            if (xp > 0) { int lv = Profile.AddXp(xp); General.Sync(); loot += "\nОпыт полководца: +" + xp + (lv > 0 ? " — новый уровень!" : ""); }
             if (won) { Profile.AddGold(gold); resultText = "Враг разбит. Сражено врагов: " + killed + ", наших потерь: " + lost + "." + (raised > 0 ? " Знахари подняли: " + raised + "." : "") + "\nДобыча: " + gold + " мон." + loot; }
             else resultText = "Армия разбита. Наших потерь: " + lost + ".";
             return true;
@@ -1250,7 +1275,7 @@ namespace BladePath
                 if (!snapsTaken) { TakeSnaps(); SetupLive(); }
                 Animate();
                 Step();
-                if (!Busy && !finished && cur != null && (cur.enemy || autoOurs)) Run(AiTurn(cur));
+                if (!deploy && !Busy && !finished && cur != null && (cur.enemy || autoOurs)) Run(AiTurn(cur));
             }
 
             Texture2D bg = UiKit.Tex("UI/Battle/battle_field_" + region);
@@ -1267,6 +1292,11 @@ namespace BladePath
             DrawFxSheets();
             DrawQueue();
             DrawHud();
+            if (deploy && !finished)
+            {
+                UiKit.Text(new Rect(0f, 70f, W, 22f), "РАССТАНОВКА («Тактика»): коснись отряда, затем клетки в синих столбцах", 13f, new Color(0.6f, 0.85f, 1f));
+                if (VisualIdentity.KitButton(new Rect(W * 0.5f - 80f, 96f, 160f, 34f), "В БОЙ", true, true)) { deploy = false; deploySel = null; if (cur != null && !cur.enemy) Flood(cur); }
+            }
             if (bookOpen) DrawBook();
             if (info != null) DrawInfo();
             if (finished) DrawResult();
@@ -1325,7 +1355,12 @@ namespace BladePath
         static void DrawGrid()
         {
             if (Event.current.type != EventType.Repaint) return;
-            bool ourTurn = cur != null && !cur.enemy && !autoOurs && !Busy && !finished;
+            bool ourTurn = cur != null && !cur.enemy && !autoOurs && !Busy && !finished && !deploy;
+            if (deploy)
+            {
+                for (int c = 0; c < Mathf.Min(Cols, DeployCols); c++) for (int r = 0; r < Rows; r++) HexFill(Center(c, r), 0.93f, new Color(0.4f, 0.75f, 1f, 0.16f));
+                if (deploySel != null) foreach (Vector2Int cc in Cells(deploySel)) HexSprite("UI/Battle/hex_gold", Center(cc.x, cc.y));
+            }
             for (int c = 0; c < Cols; c++)
                 for (int r = 0; r < Rows; r++)
                 {
@@ -1556,7 +1591,7 @@ namespace BladePath
                 UiKit.Text(new Rect(10f, 92f + i * 16f, 360f, 16f), log[i], 10.5f, new Color(1f, 1f, 1f, 0.5f + 0.5f * i / Mathf.Max(1, log.Count - 1)), TextAnchor.MiddleLeft);
         }
 
-        static bool CanCast(Spell sp) { return !castThisRound && spirit >= sp.cost && cur != null && !cur.enemy && !Busy && !finished; }
+        static bool CanCast(Spell sp) { return Realm.Knows(System.Array.IndexOf(Spells, sp)) && !deploy && !castThisRound && spirit >= sp.cost && cur != null && !cur.enemy && !Busy && !finished; }
         static void Select(int i)
         {
             Spell sp = Spells[i];
@@ -1679,17 +1714,18 @@ namespace BladePath
             }
             string line = resultText.Replace("\n", "  ");
             UiKit.Text(Px(330, 831, 790, 65), line, 9.5f, Ink);
-            string main = mapNode >= 0 ? "НА КАРТУ" : fromEstate ? "В ПОМЕСТЬЕ" : "ЕЩЁ БОЙ";
+            string main = mapNode >= 0 || neutralDone != null ? "НА КАРТУ" : fromEstate ? "В ПОМЕСТЬЕ" : "ЕЩЁ БОЙ";
             Rect mb = Px(476, 914, 477, 76);
             UiKit.Text(mb, main, 14f, Gold);
             if (GUI.Button(mb, GUIContent.none, GUIStyle.none))
             {
-                if (mapNode >= 0) { if (won) Campaign.FinishFight(); else Campaign.LoseFight(); mapNode = -1; Close(); returned = true; }
+                if (neutralDone != null) { System.Action<bool> cb = neutralDone; neutralDone = null; cb(won); Close(); returned = true; }
+                else if (mapNode >= 0) { if (won) Campaign.FinishFight(); else Campaign.LoseFight(); mapNode = -1; Close(); returned = true; }
                 else if (fromEstate) { Close(); Estate.Show(); }
                 else ShowDev((region + 1) % 3);
                 return;
             }
-            if (mapNode < 0 && VisualIdentity.KitButton(new Rect(r.xMax - 120f, r.yMax - 10f - 30f * 1f - 6f, 100f, 30f), "ВЫЙТИ", true, false)) Close();
+            if (mapNode < 0 && neutralDone == null && VisualIdentity.KitButton(new Rect(r.xMax - 120f, r.yMax - 10f - 30f * 1f - 6f, 100f, 30f), "ВЫЙТИ", true, false)) Close();
         }
 
         static void DrawResultPlain()
@@ -1727,6 +1763,16 @@ namespace BladePath
                 return;
             }
             if (e.type != EventType.MouseUp || !downOn) return;
+            if (deploy)
+            {   // расстановка: коснуться своего отряда, потом свободной клетки в своих столбцах
+                downOn = false; e.Use();
+                Vector2Int dc = Pick(e.mousePosition); if (dc.x < 0) return;
+                Stack ds = At(dc.x, dc.y);
+                if (ds != null && !ds.enemy) { deploySel = ds; return; }
+                if (ds == null && deploySel != null && dc.x < DeployCols && !Rock(dc.x, dc.y) && Fits(deploySel, dc.x, dc.y) && (!deploySel.t.wide || dc.x + Back(deploySel) >= 0))
+                { deploySel.c = dc.x; deploySel.r = dc.y; deploySel = null; }
+                return;
+            }
             downOn = false;
             if (cur == null || cur.enemy || autoOurs || Busy) return;
             Vector2Int c = Pick(e.mousePosition);

@@ -427,7 +427,7 @@ namespace BladePath
                 GUI.matrix = old;
                 return;
             }
-            bool interactive = !InventoryScreen.Open;
+            bool interactive = !InventoryScreen.Open && !Realm.Busy;
             // сообщение (утро, награда, подсказка) — касание в любом месте убирает его сразу, а не ждать, пока растает
             if (interactive && Event.current.type == EventType.MouseDown && toastLines.Count > 0 && Time.unscaledTime - toastAt > 0.15f && Time.unscaledTime - toastAt < ToastTime)
             { toastAt = -100f; Event.current.Use(); }
@@ -462,6 +462,7 @@ namespace BladePath
             DrawRouteGlints();
             DrawFog(uw);
             DrawBuildings();
+            Realm.DrawObjects(uv => new Vector2(mapX + (uv.x - u0) * MapFullW, Y(uv.y)), mapX, viewW, interactive && modal == Modal.None && moveTo < 0);   // рудники, нейтралы, сундуки, жилища, обелиски («Герои 3»)
             DrawTower();
             // погода — после зданий, до значков: облака загораживают постройки, но не значки мест
             MapClouds.Draw(Campaign.Region, MapRect, u0, uw);
@@ -488,6 +489,7 @@ namespace BladePath
                     new Color(1f, 0.88f, 0.63f, 0.76f));
             UiKit.Text(new Rect(mapX + 59f, 8f, 355f, 36f),
                 Campaign.RegionName(Campaign.Region), 25f, Gold, TextAnchor.MiddleLeft);
+            Realm.DrawHud(new Rect(mapX + 10f, 62f, Mathf.Min(760f, viewW - 90f), 22f));
             if (Profile.Cycle > 0) UiKit.Text(new Rect(mapX + 18f, 40f, 300f, 20f), "КРУГ " + (Profile.Cycle + 1) + ": враги крепче", 12f, new Color(1f, 0.55f, 0.4f), TextAnchor.MiddleLeft);
             // Only show the re-center control when the map is wider than the screen.
             // карту листают пальцем; увёл её от героя — появляется «К ГЕРОЮ» (кнопка «ОБЗОР» ничего не делала — убрана)
@@ -510,6 +512,7 @@ namespace BladePath
             DrawPanel(new Rect(W - panel, 0f, panel, 540f), interactive && modal == Modal.None && moveTo < 0);
             if (modal != Modal.None) { DrawModal(interactive); if ((modal == Modal.Camp || modal == Modal.Tavern) && interactive) DrawToast(); }
             else if (interactive) DrawToast();
+            if (Realm.Busy) Realm.DrawWindow(W);
             GUI.matrix = old;
         }
 
