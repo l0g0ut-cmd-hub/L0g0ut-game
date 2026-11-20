@@ -229,7 +229,7 @@ namespace BladePath
         void Update()
         {
             UpdateAmbience();
-            if (!Open || MapEditor.Open) return;
+            if (!Open || MapEditor.Open || CharacterEditor.Open) return;
             HandleMapPan();
             if (moveTo >= 0)
             {
@@ -386,6 +386,12 @@ namespace BladePath
             {   // редактор карт (меню разработчика) — на весь экран вместо карты похода
                 MapEditor.Draw(W);
                 if (!MapEditor.Open) { sel = -1; previewPath.Clear(); panU = -1f; TerrainRoads.Bind(Campaign.Region, Campaign.Nodes); }
+                GUI.matrix = old;
+                return;
+            }
+            if (CharacterEditor.Open)
+            {   // редактор персонажей (меню разработчика) — на весь экран
+                CharacterEditor.Draw(W);
                 GUI.matrix = old;
                 return;
             }
@@ -1089,7 +1095,8 @@ namespace BladePath
             if (Btn(new Rect(x, y, bw, 38f), "КОСТЬ: 3 ХОДА", ok)) { Campaign.DebugSteps(3); }
             if (Btn(new Rect(x + bw + 10f, y, bw, 38f), "РЕДАКТОР КАРТ", ok, true)) { modal = Modal.None; MapEditor.Show(Campaign.Region); return; }
             y += 44f;
-            if (Btn(new Rect(x, y, w, 38f), SideDuel.Enabled ? "СОРАТНИКИ: ВКЛ" : "СОРАТНИКИ: ВЫКЛ", ok)) { SideDuel.Enabled = !SideDuel.Enabled; }
+            if (Btn(new Rect(x, y, bw, 38f), SideDuel.Enabled ? "СОРАТНИКИ: ВКЛ" : "СОРАТНИКИ: ВЫКЛ", ok)) { SideDuel.Enabled = !SideDuel.Enabled; }
+            if (Btn(new Rect(x + bw + 10f, y, bw, 38f), "РЕДАКТОР ПЕРСОНАЖЕЙ", ok, true)) { modal = Modal.None; CharacterEditor.Show(); return; }
             y += 44f;
             // время суток (по пути / утро / день / вечер / ночь / выкл — всегда день) и дождь с грозой — на карте и в боях
             if (Btn(new Rect(x, y, bw, 38f), "ВРЕМЯ: " + DayCycle.ModeName(false), ok)) DayCycle.NextMode();

@@ -26,6 +26,9 @@ namespace BladePath.EditorTools
         public const string DzinFbxPath = "Assets/_Project/Models/Dzin_Player.fbx";       // игрок: Дзин, странник в соломенной шляпе с красным шарфом
         public const string AkikoFbxPath = "Assets/_Project/Models/Akiko_Player.fbx";     // игрок: Акико, женщина-самурай в красном доспехе
         public const string RenFbxPath = "Assets/_Project/Models/Ren_Player.fbx";         // игрок: Рэн, молодой мечник с высоким хвостом
+        // основы своих персонажей (редактор персонажей, развёртка по зонам — tools/blender/zone_uv.py): PlayerSkins.models[3], [4]
+        public const string BaseMaleFbxPath = "Assets/_Project/Models/BaseMale_Player.fbx";
+        public const string BaseFemaleFbxPath = "Assets/_Project/Models/BaseFemale_Player.fbx";
         public const string OniFbxPath = "Assets/_Project/Models/Oni_Enemy.fbx";          // враг 3-й ступени: Кровавый Они
         public const string ShogunFbxPath = "Assets/_Project/Models/Shogun_Enemy.fbx";    // враг 4-й ступени: Проклятый сёгун
         public const string FallenFbxPath = "Assets/_Project/Models/Fallen_Enemy.fbx";    // враг 1-й ступени: Поверженный (неупокоенный страж)
@@ -107,9 +110,10 @@ namespace BladePath.EditorTools
             // the older models (Ronin, Samurai2, Hero3) remain only as fallbacks.
             string[] variants = { Exists(DzinFbxPath) ? DzinFbxPath : RoninFbxPath,
                                   Exists(AkikoFbxPath) ? AkikoFbxPath : Samurai2FbxPath,
-                                  Exists(RenFbxPath) ? RenFbxPath : Hero3FbxPath };
-            string[] names = { "HeroDzin", "HeroAkiko", "HeroRen" };
-            GameObject[] models = new GameObject[3];
+                                  Exists(RenFbxPath) ? RenFbxPath : Hero3FbxPath,
+                                  BaseMaleFbxPath, BaseFemaleFbxPath };
+            string[] names = { "HeroDzin", "HeroAkiko", "HeroRen", "HeroBaseMale", "HeroBaseFemale" };
+            GameObject[] models = new GameObject[5];
             for (int i = 0; i < variants.Length; i++)
             {
                 if (!Exists(variants[i])) continue;
@@ -122,7 +126,8 @@ namespace BladePath.EditorTools
                 if (models[i] != null) { fallback = models[i]; break; }
             if (fallback == null) return TryAttach(fighter, bladeRoot, look, false);
             // Missing FBX is never a blank player: use an existing alternative.
-            for (int i = 0; i < models.Length; i++)
+            // основы своих персонажей (3, 4) без запасных: нет основы — нет своего облика (CharacterLook это проверяет)
+            for (int i = 0; i < 3; i++)
                 if (models[i] == null) models[i] = fallback;
 
             PlayerSkins selector = fighter.gameObject.AddComponent<PlayerSkins>();
@@ -170,7 +175,7 @@ namespace BladePath.EditorTools
                     model.transform.localRotation = Quaternion.Euler(0f, Vector3.SignedAngle(fwd, Vector3.forward, Vector3.up), 0f);
             }
             else Debug.LogWarning("HeroModelBuilder: не найден Hips/FrontMarker — ориентация модели не скорректирована");
-            bool meshy = fbx == DzinFbxPath || fbx == RenFbxPath || fbx == AkikoFbxPath || fbx == OniFbxPath || fbx == ShogunFbxPath || fbx == FallenFbxPath || fbx == ShadowEnemyFbxPath || System.Array.IndexOf(ForestFbx, fbx) >= 0;
+            bool meshy = fbx == DzinFbxPath || fbx == BaseMaleFbxPath || fbx == BaseFemaleFbxPath || fbx == RenFbxPath || fbx == AkikoFbxPath || fbx == OniFbxPath || fbx == ShogunFbxPath || fbx == FallenFbxPath || fbx == ShadowEnemyFbxPath || System.Array.IndexOf(ForestFbx, fbx) >= 0;
             model.transform.localScale = Vector3.one * (meshy ? MeshyScale : hero3 ? Hero3Scale : samurai ? SamuraiScale : ronin ? RoninScale : ModelScale);
 
             // Материалы: по имени из Blender → наши текстурированные

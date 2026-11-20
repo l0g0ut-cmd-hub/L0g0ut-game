@@ -9,7 +9,7 @@ namespace BladePath.EditorTools
     /// </summary>
     public class IllustrationImport : AssetPostprocessor
     {
-        public override uint GetVersion() { return 7; }
+        public override uint GetVersion() { return 8; }
 
         static bool IsIllustration(string path)
         {
@@ -54,6 +54,19 @@ namespace BladePath.EditorTools
                 tw.mipmapEnabled = false;
                 tw.wrapMode = UnityEngine.TextureWrapMode.Clamp;
                 tw.maxTextureSize = 4096;
+                return;
+            }
+            // основы своих персонажей (редактор персонажей): читаемые и без сжатия — из них игра собирает текстуру героя
+            if (assetPath.StartsWith("Assets/_Project/Resources/Characters/"))
+            {
+                TextureImporter tc = (TextureImporter)assetImporter;
+                tc.isReadable = true;
+                tc.textureCompression = TextureImporterCompression.Uncompressed;
+                tc.npotScale = TextureImporterNPOTScale.None;
+                tc.mipmapEnabled = false;
+                tc.maxTextureSize = 2048;
+                tc.sRGBTexture = !assetPath.EndsWith("_zonemask.png");
+                tc.wrapMode = UnityEngine.TextureWrapMode.Clamp;
                 return;
             }
             if (!IsIllustration(assetPath)) return;

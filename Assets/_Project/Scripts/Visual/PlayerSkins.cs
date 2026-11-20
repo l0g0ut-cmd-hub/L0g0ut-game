@@ -22,7 +22,8 @@ namespace BladePath
             // deserialization and works in the Android player as well.
             int index = PlayerPrefs.GetInt("journey_started", 0) == 1
                 ? JourneyChoice.Hero : 2; // preserve legacy Hero3 appearance
-            Apply(index);
+            // свой персонаж (редактор персонажей) — облик героя, если включён
+            if (!CharacterLook.ApplyTo(this)) Apply(index);
         }
 
         public void Apply(int index)
