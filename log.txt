@@ -1,155 +1,123 @@
-== image acc_mask_cloth
-  задача: 01a1f671-a896-747f-8031-f04c8c638461
-  /v1/image-to-3d 01a1f671-a896-747f-8031-f04c8c638461: IN_PROGRESS 1%
-  /v1/image-to-3d 01a1f671-a896-747f-8031-f04c8c638461: IN_PROGRESS 9%
-  /v1/image-to-3d 01a1f671-a896-747f-8031-f04c8c638461: IN_PROGRESS 24%
-  /v1/image-to-3d 01a1f671-a896-747f-8031-f04c8c638461: IN_PROGRESS 67%
-  /v1/image-to-3d 01a1f671-a896-747f-8031-f04c8c638461: IN_PROGRESS 74%
-  /v1/image-to-3d 01a1f671-a896-747f-8031-f04c8c638461: IN_PROGRESS 84%
-  /v1/image-to-3d 01a1f671-a896-747f-8031-f04c8c638461: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/acc_mask_cloth/acc_mask_cloth_image.glb 3926632 байт
-  скачано /home/runner/work/_temp/out/acc_mask_cloth/acc_mask_cloth_image.fbx 3784860 байт
-  скачано /home/runner/work/_temp/out/acc_mask_cloth/acc_mask_cloth_image_thumb.png 165322 байт
-  скачано /home/runner/work/_temp/out/acc_mask_cloth/acc_mask_cloth_image_base_color.png 5981757 байт
-== image acc_headband_red
-  задача: 01a1f672-9db6-7641-ac08-b68378da71cb
-  /v1/image-to-3d 01a1f672-9db6-7641-ac08-b68378da71cb: IN_PROGRESS 1%
-  /v1/image-to-3d 01a1f672-9db6-7641-ac08-b68378da71cb: IN_PROGRESS 6%
-  /v1/image-to-3d 01a1f672-9db6-7641-ac08-b68378da71cb: IN_PROGRESS 45%
-  /v1/image-to-3d 01a1f672-9db6-7641-ac08-b68378da71cb: IN_PROGRESS 74%
-  /v1/image-to-3d 01a1f672-9db6-7641-ac08-b68378da71cb: IN_PROGRESS 99%
-  /v1/image-to-3d 01a1f672-9db6-7641-ac08-b68378da71cb: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/acc_headband_red/acc_headband_red_image.glb 4074676 байт
-  скачано /home/runner/work/_temp/out/acc_headband_red/acc_headband_red_image.fbx 3910428 байт
-  скачано /home/runner/work/_temp/out/acc_headband_red/acc_headband_red_image_thumb.png 158157 байт
-  скачано /home/runner/work/_temp/out/acc_headband_red/acc_headband_red_image_base_color.png 6488757 байт
-== image acc_mempo
-  задача: 01a1f673-e100-73be-a250-93a10efc8fef
-  /v1/image-to-3d 01a1f673-e100-73be-a250-93a10efc8fef: IN_PROGRESS 1%
-  /v1/image-to-3d 01a1f673-e100-73be-a250-93a10efc8fef: IN_PROGRESS 9%
-  /v1/image-to-3d 01a1f673-e100-73be-a250-93a10efc8fef: IN_PROGRESS 24%
-  /v1/image-to-3d 01a1f673-e100-73be-a250-93a10efc8fef: IN_PROGRESS 45%
-  /v1/image-to-3d 01a1f673-e100-73be-a250-93a10efc8fef: IN_PROGRESS 67%
-  /v1/image-to-3d 01a1f673-e100-73be-a250-93a10efc8fef: IN_PROGRESS 84%
-  /v1/image-to-3d 01a1f673-e100-73be-a250-93a10efc8fef: IN_PROGRESS 99%
-  /v1/image-to-3d 01a1f673-e100-73be-a250-93a10efc8fef: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/acc_mempo/acc_mempo_image.glb 3783508 байт
-  скачано /home/runner/work/_temp/out/acc_mempo/acc_mempo_image.fbx 3570364 байт
-  скачано /home/runner/work/_temp/out/acc_mempo/acc_mempo_image_thumb.png 159127 байт
-  скачано /home/runner/work/_temp/out/acc_mempo/acc_mempo_image_base_color.png 5940253 байт
-== image acc_hood
-  задача: 01a1f674-fd94-73b0-8b2a-e6acfc540e12
-  /v1/image-to-3d 01a1f674-fd94-73b0-8b2a-e6acfc540e12: IN_PROGRESS 1%
-  /v1/image-to-3d 01a1f674-fd94-73b0-8b2a-e6acfc540e12: IN_PROGRESS 9%
-  /v1/image-to-3d 01a1f674-fd94-73b0-8b2a-e6acfc540e12: IN_PROGRESS 24%
-  /v1/image-to-3d 01a1f674-fd94-73b0-8b2a-e6acfc540e12: IN_PROGRESS 45%
-  /v1/image-to-3d 01a1f674-fd94-73b0-8b2a-e6acfc540e12: IN_PROGRESS 59%
-  /v1/image-to-3d 01a1f674-fd94-73b0-8b2a-e6acfc540e12: IN_PROGRESS 74%
-  /v1/image-to-3d 01a1f674-fd94-73b0-8b2a-e6acfc540e12: IN_PROGRESS 84%
-  /v1/image-to-3d 01a1f674-fd94-73b0-8b2a-e6acfc540e12: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/acc_hood/acc_hood_image.glb 3550212 байт
-  скачано /home/runner/work/_temp/out/acc_hood/acc_hood_image.fbx 3440572 байт
-  скачано /home/runner/work/_temp/out/acc_hood/acc_hood_image_thumb.png 113629 байт
-  скачано /home/runner/work/_temp/out/acc_hood/acc_hood_image_base_color.png 5755759 байт
-== image acc_kabuto
-  задача: 01a1f676-195d-740e-b60f-bd4b23e74a5b
-  /v1/image-to-3d 01a1f676-195d-740e-b60f-bd4b23e74a5b: IN_PROGRESS 1%
-  /v1/image-to-3d 01a1f676-195d-740e-b60f-bd4b23e74a5b: IN_PROGRESS 9%
-  /v1/image-to-3d 01a1f676-195d-740e-b60f-bd4b23e74a5b: IN_PROGRESS 24%
-  /v1/image-to-3d 01a1f676-195d-740e-b60f-bd4b23e74a5b: IN_PROGRESS 45%
-  /v1/image-to-3d 01a1f676-195d-740e-b60f-bd4b23e74a5b: IN_PROGRESS 67%
-  /v1/image-to-3d 01a1f676-195d-740e-b60f-bd4b23e74a5b: IN_PROGRESS 84%
-  /v1/image-to-3d 01a1f676-195d-740e-b60f-bd4b23e74a5b: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/acc_kabuto/acc_kabuto_image.glb 4287308 байт
-  скачано /home/runner/work/_temp/out/acc_kabuto/acc_kabuto_image.fbx 3980012 байт
-  скачано /home/runner/work/_temp/out/acc_kabuto/acc_kabuto_image_thumb.png 157643 байт
-  скачано /home/runner/work/_temp/out/acc_kabuto/acc_kabuto_image_base_color.png 6405242 байт
-== image acc_jingasa
-  задача: 01a1f677-356d-71e5-ac66-78ee86f9755a
-  /v1/image-to-3d 01a1f677-356d-71e5-ac66-78ee86f9755a: IN_PROGRESS 1%
-  /v1/image-to-3d 01a1f677-356d-71e5-ac66-78ee86f9755a: IN_PROGRESS 9%
-  /v1/image-to-3d 01a1f677-356d-71e5-ac66-78ee86f9755a: IN_PROGRESS 24%
-  /v1/image-to-3d 01a1f677-356d-71e5-ac66-78ee86f9755a: IN_PROGRESS 45%
-  /v1/image-to-3d 01a1f677-356d-71e5-ac66-78ee86f9755a: IN_PROGRESS 67%
-  /v1/image-to-3d 01a1f677-356d-71e5-ac66-78ee86f9755a: IN_PROGRESS 84%
-  /v1/image-to-3d 01a1f677-356d-71e5-ac66-78ee86f9755a: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/acc_jingasa/acc_jingasa_image.glb 3675396 байт
-  скачано /home/runner/work/_temp/out/acc_jingasa/acc_jingasa_image.fbx 3534188 байт
-  скачано /home/runner/work/_temp/out/acc_jingasa/acc_jingasa_image_thumb.png 74423 байт
-  скачано /home/runner/work/_temp/out/acc_jingasa/acc_jingasa_image_base_color.png 5689005 байт
-== image acc_hair_short
-  задача: 01a1f678-29b0-718b-bf43-25a44c77b61d
-  /v1/image-to-3d 01a1f678-29b0-718b-bf43-25a44c77b61d: IN_PROGRESS 1%
-  /v1/image-to-3d 01a1f678-29b0-718b-bf43-25a44c77b61d: IN_PROGRESS 9%
-  /v1/image-to-3d 01a1f678-29b0-718b-bf43-25a44c77b61d: IN_PROGRESS 24%
-  /v1/image-to-3d 01a1f678-29b0-718b-bf43-25a44c77b61d: IN_PROGRESS 39%
-  /v1/image-to-3d 01a1f678-29b0-718b-bf43-25a44c77b61d: IN_PROGRESS 45%
-  /v1/image-to-3d 01a1f678-29b0-718b-bf43-25a44c77b61d: IN_PROGRESS 59%
-  /v1/image-to-3d 01a1f678-29b0-718b-bf43-25a44c77b61d: IN_PROGRESS 74%
-  /v1/image-to-3d 01a1f678-29b0-718b-bf43-25a44c77b61d: IN_PROGRESS 84%
-  /v1/image-to-3d 01a1f678-29b0-718b-bf43-25a44c77b61d: IN_PROGRESS 99%
-  /v1/image-to-3d 01a1f678-29b0-718b-bf43-25a44c77b61d: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/acc_hair_short/acc_hair_short_image.glb 3485576 байт
-  скачано /home/runner/work/_temp/out/acc_hair_short/acc_hair_short_image.fbx 2944652 байт
-  скачано /home/runner/work/_temp/out/acc_hair_short/acc_hair_short_image_thumb.png 134522 байт
-  скачано /home/runner/work/_temp/out/acc_hair_short/acc_hair_short_image_base_color.png 4151352 байт
-== image acc_kasa_straw
-  задача: 01a1f67b-6c05-7609-ae6f-78ad998aa49d
-  /v1/image-to-3d 01a1f67b-6c05-7609-ae6f-78ad998aa49d: IN_PROGRESS 1%
-  /v1/image-to-3d 01a1f67b-6c05-7609-ae6f-78ad998aa49d: IN_PROGRESS 9%
-  /v1/image-to-3d 01a1f67b-6c05-7609-ae6f-78ad998aa49d: IN_PROGRESS 24%
-  /v1/image-to-3d 01a1f67b-6c05-7609-ae6f-78ad998aa49d: IN_PROGRESS 45%
-  /v1/image-to-3d 01a1f67b-6c05-7609-ae6f-78ad998aa49d: IN_PROGRESS 67%
-  /v1/image-to-3d 01a1f67b-6c05-7609-ae6f-78ad998aa49d: IN_PROGRESS 84%
-  /v1/image-to-3d 01a1f67b-6c05-7609-ae6f-78ad998aa49d: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/acc_kasa_straw/acc_kasa_straw_image.glb 4657880 байт
-  скачано /home/runner/work/_temp/out/acc_kasa_straw/acc_kasa_straw_image.fbx 4497692 байт
-  скачано /home/runner/work/_temp/out/acc_kasa_straw/acc_kasa_straw_image_thumb.png 152561 байт
-  скачано /home/runner/work/_temp/out/acc_kasa_straw/acc_kasa_straw_image_base_color.png 6876053 байт
-== image acc_hair_long
-  задача: 01a1f67d-4cda-76b6-a24a-6f3e38ff5d3f
-  /v1/image-to-3d 01a1f67d-4cda-76b6-a24a-6f3e38ff5d3f: IN_PROGRESS 1%
-  /v1/image-to-3d 01a1f67d-4cda-76b6-a24a-6f3e38ff5d3f: IN_PROGRESS 9%
-  /v1/image-to-3d 01a1f67d-4cda-76b6-a24a-6f3e38ff5d3f: IN_PROGRESS 24%
-  /v1/image-to-3d 01a1f67d-4cda-76b6-a24a-6f3e38ff5d3f: IN_PROGRESS 39%
-  /v1/image-to-3d 01a1f67d-4cda-76b6-a24a-6f3e38ff5d3f: IN_PROGRESS 45%
-  /v1/image-to-3d 01a1f67d-4cda-76b6-a24a-6f3e38ff5d3f: IN_PROGRESS 67%
-  /v1/image-to-3d 01a1f67d-4cda-76b6-a24a-6f3e38ff5d3f: IN_PROGRESS 84%
-  /v1/image-to-3d 01a1f67d-4cda-76b6-a24a-6f3e38ff5d3f: IN_PROGRESS 99%
-  /v1/image-to-3d 01a1f67d-4cda-76b6-a24a-6f3e38ff5d3f: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/acc_hair_long/acc_hair_long_image.glb 2704860 байт
-  скачано /home/runner/work/_temp/out/acc_hair_long/acc_hair_long_image.fbx 2213004 байт
-  скачано /home/runner/work/_temp/out/acc_hair_long/acc_hair_long_image_thumb.png 121382 байт
-  скачано /home/runner/work/_temp/out/acc_hair_long/acc_hair_long_image_base_color.png 2262646 байт
-== image acc_hair_topknot
-  задача: 01a1f681-545b-733b-964e-626abd8f5c5b
-  /v1/image-to-3d 01a1f681-545b-733b-964e-626abd8f5c5b: IN_PROGRESS 1%
-  /v1/image-to-3d 01a1f681-545b-733b-964e-626abd8f5c5b: IN_PROGRESS 9%
-  /v1/image-to-3d 01a1f681-545b-733b-964e-626abd8f5c5b: IN_PROGRESS 24%
-  /v1/image-to-3d 01a1f681-545b-733b-964e-626abd8f5c5b: IN_PROGRESS 39%
-  /v1/image-to-3d 01a1f681-545b-733b-964e-626abd8f5c5b: IN_PROGRESS 45%
-  /v1/image-to-3d 01a1f681-545b-733b-964e-626abd8f5c5b: IN_PROGRESS 67%
-  /v1/image-to-3d 01a1f681-545b-733b-964e-626abd8f5c5b: IN_PROGRESS 74%
-  /v1/image-to-3d 01a1f681-545b-733b-964e-626abd8f5c5b: IN_PROGRESS 84%
-  /v1/image-to-3d 01a1f681-545b-733b-964e-626abd8f5c5b: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/acc_hair_topknot/acc_hair_topknot_image.glb 4532588 байт
-  скачано /home/runner/work/_temp/out/acc_hair_topknot/acc_hair_topknot_image.fbx 4098972 байт
-  скачано /home/runner/work/_temp/out/acc_hair_topknot/acc_hair_topknot_image_thumb.png 117480 байт
-  скачано /home/runner/work/_temp/out/acc_hair_topknot/acc_hair_topknot_image_base_color.png 5611865 байт
-== image acc_hair_ponytail
-  задача: 01a1f684-200b-74e7-82de-db89cf69e09b
-  /v1/image-to-3d 01a1f684-200b-74e7-82de-db89cf69e09b: IN_PROGRESS 1%
-  /v1/image-to-3d 01a1f684-200b-74e7-82de-db89cf69e09b: IN_PROGRESS 9%
-  /v1/image-to-3d 01a1f684-200b-74e7-82de-db89cf69e09b: IN_PROGRESS 24%
-  /v1/image-to-3d 01a1f684-200b-74e7-82de-db89cf69e09b: IN_PROGRESS 39%
-  /v1/image-to-3d 01a1f684-200b-74e7-82de-db89cf69e09b: IN_PROGRESS 45%
-  /v1/image-to-3d 01a1f684-200b-74e7-82de-db89cf69e09b: IN_PROGRESS 67%
-  /v1/image-to-3d 01a1f684-200b-74e7-82de-db89cf69e09b: IN_PROGRESS 84%
-  /v1/image-to-3d 01a1f684-200b-74e7-82de-db89cf69e09b: IN_PROGRESS 99%
-  /v1/image-to-3d 01a1f684-200b-74e7-82de-db89cf69e09b: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/acc_hair_ponytail/acc_hair_ponytail_image.glb 4108296 байт
-  скачано /home/runner/work/_temp/out/acc_hair_ponytail/acc_hair_ponytail_image.fbx 3619356 байт
-  скачано /home/runner/work/_temp/out/acc_hair_ponytail/acc_hair_ponytail_image_thumb.png 84708 байт
-  скачано /home/runner/work/_temp/out/acc_hair_ponytail/acc_hair_ponytail_image_base_color.png 4705660 байт
-  аккаунт 1 MESHY_KEY — остаток кредитов: 783
-  аккаунт 2 ALT1 — остаток кредитов: 783
+== image unit_archer
+  задача: 01a1f92e-b287-72e8-b8ab-5bbc66c6410f
+  /v1/image-to-3d 01a1f92e-b287-72e8-b8ab-5bbc66c6410f: IN_PROGRESS 1%
+  /v1/image-to-3d 01a1f92e-b287-72e8-b8ab-5bbc66c6410f: IN_PROGRESS 9%
+  /v1/image-to-3d 01a1f92e-b287-72e8-b8ab-5bbc66c6410f: IN_PROGRESS 45%
+  /v1/image-to-3d 01a1f92e-b287-72e8-b8ab-5bbc66c6410f: IN_PROGRESS 74%
+  /v1/image-to-3d 01a1f92e-b287-72e8-b8ab-5bbc66c6410f: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/unit_archer/unit_archer_image.glb 5006188 байт
+  скачано /home/runner/work/_temp/out/unit_archer/unit_archer_image.fbx 4475916 байт
+  скачано /home/runner/work/_temp/out/unit_archer/unit_archer_image_thumb.png 92789 байт
+  скачано /home/runner/work/_temp/out/unit_archer/unit_archer_image_base_color.png 6001338 байт
+  риг: 01a1f92f-d0e9-7340-97ad-4eb5c8c9143f
+  /v1/rigging 01a1f92f-d0e9-7340-97ad-4eb5c8c9143f: IN_PROGRESS 0%
+  /v1/rigging 01a1f92f-d0e9-7340-97ad-4eb5c8c9143f: IN_PROGRESS 31%
+  /v1/rigging 01a1f92f-d0e9-7340-97ad-4eb5c8c9143f: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/unit_archer/unit_archer_rigged_character_fbx_url.fbx 5172860 байт
+  скачано /home/runner/work/_temp/out/unit_archer/unit_archer_rigged_character_glb_url.glb 6342864 байт
+  скачано /home/runner/work/_temp/out/unit_archer/unit_archer_walking_glb_url.glb 6322968 байт
+  скачано /home/runner/work/_temp/out/unit_archer/unit_archer_walking_fbx_url.fbx 5208972 байт
+  скачано /home/runner/work/_temp/out/unit_archer/unit_archer_walking_armature_glb_url.glb 90320 байт
+  скачано /home/runner/work/_temp/out/unit_archer/unit_archer_running_glb_url.glb 6312392 байт
+  скачано /home/runner/work/_temp/out/unit_archer/unit_archer_running_fbx_url.fbx 5191980 байт
+  скачано /home/runner/work/_temp/out/unit_archer/unit_archer_running_armature_glb_url.glb 79728 байт
+== image unit_teppo
+  задача: 01a1f930-35eb-7793-a95b-be14b6f34c78
+  /v1/image-to-3d 01a1f930-35eb-7793-a95b-be14b6f34c78: IN_PROGRESS 1%
+  /v1/image-to-3d 01a1f930-35eb-7793-a95b-be14b6f34c78: IN_PROGRESS 9%
+  /v1/image-to-3d 01a1f930-35eb-7793-a95b-be14b6f34c78: IN_PROGRESS 45%
+  /v1/image-to-3d 01a1f930-35eb-7793-a95b-be14b6f34c78: IN_PROGRESS 74%
+  /v1/image-to-3d 01a1f930-35eb-7793-a95b-be14b6f34c78: IN_PROGRESS 99%
+  /v1/image-to-3d 01a1f930-35eb-7793-a95b-be14b6f34c78: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/unit_teppo/unit_teppo_image.glb 5076844 байт
+  скачано /home/runner/work/_temp/out/unit_teppo/unit_teppo_image.fbx 4658284 байт
+  скачано /home/runner/work/_temp/out/unit_teppo/unit_teppo_image_thumb.png 107318 байт
+  скачано /home/runner/work/_temp/out/unit_teppo/unit_teppo_image_base_color.png 6718592 байт
+  риг: 01a1f931-55e1-70bc-a012-51b1a45bcfe9
+  /v1/rigging 01a1f931-55e1-70bc-a012-51b1a45bcfe9: IN_PROGRESS 0%
+  /v1/rigging 01a1f931-55e1-70bc-a012-51b1a45bcfe9: IN_PROGRESS 31%
+  /v1/rigging 01a1f931-55e1-70bc-a012-51b1a45bcfe9: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/unit_teppo/unit_teppo_rigged_character_fbx_url.fbx 5286572 байт
+  скачано /home/runner/work/_temp/out/unit_teppo/unit_teppo_rigged_character_glb_url.glb 6210764 байт
+  скачано /home/runner/work/_temp/out/unit_teppo/unit_teppo_walking_glb_url.glb 6191644 байт
+  скачано /home/runner/work/_temp/out/unit_teppo/unit_teppo_walking_fbx_url.fbx 5322668 байт
+  скачано /home/runner/work/_temp/out/unit_teppo/unit_teppo_walking_armature_glb_url.glb 89548 байт
+  скачано /home/runner/work/_temp/out/unit_teppo/unit_teppo_running_glb_url.glb 6181044 байт
+  скачано /home/runner/work/_temp/out/unit_teppo/unit_teppo_running_fbx_url.fbx 5305676 байт
+  скачано /home/runner/work/_temp/out/unit_teppo/unit_teppo_running_armature_glb_url.glb 78936 байт
+== image unit_sohei
+  задача: 01a1f931-b636-720b-8cb5-33efe413bbc5
+  /v1/image-to-3d 01a1f931-b636-720b-8cb5-33efe413bbc5: IN_PROGRESS 1%
+  /v1/image-to-3d 01a1f931-b636-720b-8cb5-33efe413bbc5: IN_PROGRESS 9%
+  /v1/image-to-3d 01a1f931-b636-720b-8cb5-33efe413bbc5: IN_PROGRESS 24%
+  /v1/image-to-3d 01a1f931-b636-720b-8cb5-33efe413bbc5: IN_PROGRESS 45%
+  /v1/image-to-3d 01a1f931-b636-720b-8cb5-33efe413bbc5: IN_PROGRESS 67%
+  /v1/image-to-3d 01a1f931-b636-720b-8cb5-33efe413bbc5: IN_PROGRESS 74%
+  /v1/image-to-3d 01a1f931-b636-720b-8cb5-33efe413bbc5: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/unit_sohei/unit_sohei_image.glb 5044132 байт
+  скачано /home/runner/work/_temp/out/unit_sohei/unit_sohei_image.fbx 4543452 байт
+  скачано /home/runner/work/_temp/out/unit_sohei/unit_sohei_image_thumb.png 105001 байт
+  скачано /home/runner/work/_temp/out/unit_sohei/unit_sohei_image_base_color.png 6124181 байт
+  риг: 01a1f933-234e-7563-9006-8c0a058fa070
+  /v1/rigging 01a1f933-234e-7563-9006-8c0a058fa070: IN_PROGRESS 0%
+  /v1/rigging 01a1f933-234e-7563-9006-8c0a058fa070: IN_PROGRESS 31%
+  /v1/rigging 01a1f933-234e-7563-9006-8c0a058fa070: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/unit_sohei/unit_sohei_rigged_character_fbx_url.fbx 5302220 байт
+  скачано /home/runner/work/_temp/out/unit_sohei/unit_sohei_rigged_character_glb_url.glb 6331676 байт
+  скачано /home/runner/work/_temp/out/unit_sohei/unit_sohei_walking_glb_url.glb 6311912 байт
+  скачано /home/runner/work/_temp/out/unit_sohei/unit_sohei_walking_fbx_url.fbx 5338316 байт
+  скачано /home/runner/work/_temp/out/unit_sohei/unit_sohei_walking_armature_glb_url.glb 89980 байт
+  скачано /home/runner/work/_temp/out/unit_sohei/unit_sohei_running_glb_url.glb 6301296 байт
+  скачано /home/runner/work/_temp/out/unit_sohei/unit_sohei_running_fbx_url.fbx 5321340 байт
+  скачано /home/runner/work/_temp/out/unit_sohei/unit_sohei_running_armature_glb_url.glb 79352 байт
+== image unit_onmyoji
+  задача: 01a1f933-838c-7525-941f-8ec45db8161b
+  /v1/image-to-3d 01a1f933-838c-7525-941f-8ec45db8161b: IN_PROGRESS 1%
+  /v1/image-to-3d 01a1f933-838c-7525-941f-8ec45db8161b: IN_PROGRESS 12%
+  /v1/image-to-3d 01a1f933-838c-7525-941f-8ec45db8161b: IN_PROGRESS 27%
+  /v1/image-to-3d 01a1f933-838c-7525-941f-8ec45db8161b: IN_PROGRESS 45%
+  /v1/image-to-3d 01a1f933-838c-7525-941f-8ec45db8161b: IN_PROGRESS 67%
+  /v1/image-to-3d 01a1f933-838c-7525-941f-8ec45db8161b: IN_PROGRESS 84%
+  /v1/image-to-3d 01a1f933-838c-7525-941f-8ec45db8161b: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/unit_onmyoji/unit_onmyoji_image.glb 4995816 байт
+  скачано /home/runner/work/_temp/out/unit_onmyoji/unit_onmyoji_image.fbx 4617132 байт
+  скачано /home/runner/work/_temp/out/unit_onmyoji/unit_onmyoji_image_thumb.png 128898 байт
+  скачано /home/runner/work/_temp/out/unit_onmyoji/unit_onmyoji_image_base_color.png 6439450 байт
+  риг: 01a1f934-a034-756a-a39e-2da8ccd9dad5
+  /v1/rigging 01a1f934-a034-756a-a39e-2da8ccd9dad5: IN_PROGRESS 0%
+  /v1/rigging 01a1f934-a034-756a-a39e-2da8ccd9dad5: IN_PROGRESS 31%
+  /v1/rigging 01a1f934-a034-756a-a39e-2da8ccd9dad5: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/unit_onmyoji/unit_onmyoji_rigged_character_fbx_url.fbx 5292956 байт
+  скачано /home/runner/work/_temp/out/unit_onmyoji/unit_onmyoji_rigged_character_glb_url.glb 6085372 байт
+  скачано /home/runner/work/_temp/out/unit_onmyoji/unit_onmyoji_walking_glb_url.glb 6065576 байт
+  скачано /home/runner/work/_temp/out/unit_onmyoji/unit_onmyoji_walking_fbx_url.fbx 5329068 байт
+  скачано /home/runner/work/_temp/out/unit_onmyoji/unit_onmyoji_walking_armature_glb_url.glb 90192 байт
+  скачано /home/runner/work/_temp/out/unit_onmyoji/unit_onmyoji_running_glb_url.glb 6054944 байт
+  скачано /home/runner/work/_temp/out/unit_onmyoji/unit_onmyoji_running_fbx_url.fbx 5312076 байт
+  скачано /home/runner/work/_temp/out/unit_onmyoji/unit_onmyoji_running_armature_glb_url.glb 79544 байт
+== image unit_banner
+  задача: 01a1f935-01f7-72ea-a6d4-a65f2998a6ac
+  /v1/image-to-3d 01a1f935-01f7-72ea-a6d4-a65f2998a6ac: IN_PROGRESS 1%
+  /v1/image-to-3d 01a1f935-01f7-72ea-a6d4-a65f2998a6ac: IN_PROGRESS 9%
+  /v1/image-to-3d 01a1f935-01f7-72ea-a6d4-a65f2998a6ac: IN_PROGRESS 45%
+  /v1/image-to-3d 01a1f935-01f7-72ea-a6d4-a65f2998a6ac: IN_PROGRESS 59%
+  /v1/image-to-3d 01a1f935-01f7-72ea-a6d4-a65f2998a6ac: IN_PROGRESS 84%
+  /v1/image-to-3d 01a1f935-01f7-72ea-a6d4-a65f2998a6ac: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/unit_banner/unit_banner_image.glb 5222504 байт
+  скачано /home/runner/work/_temp/out/unit_banner/unit_banner_image.fbx 4759820 байт
+  скачано /home/runner/work/_temp/out/unit_banner/unit_banner_image_thumb.png 103656 байт
+  скачано /home/runner/work/_temp/out/unit_banner/unit_banner_image_base_color.png 6802597 байт
+  риг: 01a1f936-480d-71e0-9ece-fd467e1dd042
+  /v1/rigging 01a1f936-480d-71e0-9ece-fd467e1dd042: IN_PROGRESS 0%
+  /v1/rigging 01a1f936-480d-71e0-9ece-fd467e1dd042: IN_PROGRESS 31%
+  /v1/rigging 01a1f936-480d-71e0-9ece-fd467e1dd042: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/unit_banner/unit_banner_rigged_character_fbx_url.fbx 5404876 байт
+  скачано /home/runner/work/_temp/out/unit_banner/unit_banner_rigged_character_glb_url.glb 6416272 байт
+  скачано /home/runner/work/_temp/out/unit_banner/unit_banner_walking_glb_url.glb 6396460 байт
+  скачано /home/runner/work/_temp/out/unit_banner/unit_banner_walking_fbx_url.fbx 5440972 байт
+  скачано /home/runner/work/_temp/out/unit_banner/unit_banner_walking_armature_glb_url.glb 90204 байт
+  скачано /home/runner/work/_temp/out/unit_banner/unit_banner_running_glb_url.glb 6385836 байт
+  скачано /home/runner/work/_temp/out/unit_banner/unit_banner_running_fbx_url.fbx 5423996 байт
+  скачано /home/runner/work/_temp/out/unit_banner/unit_banner_running_armature_glb_url.glb 79564 байт
+  аккаунт 1 MESHY_KEY — остаток кредитов: 608
+  аккаунт 2 ALT1 — остаток кредитов: 608
