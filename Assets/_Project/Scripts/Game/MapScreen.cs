@@ -230,7 +230,7 @@ namespace BladePath
         void Update()
         {
             UpdateAmbience();
-            if (!Open || MapEditor.Open || CharacterEditor.Open) return;
+            if (!Open || MapEditor.Open || CharacterEditor.Open || Tactics.Open) return;
             HandleMapPan();
             if (moveTo >= 0)
             {
@@ -393,6 +393,12 @@ namespace BladePath
             if (CharacterEditor.Open)
             {   // редактор персонажей (меню разработчика) — на весь экран
                 CharacterEditor.Draw(W);
+                GUI.matrix = old;
+                return;
+            }
+            if (Tactics.Open)
+            {   // пошаговый бой (меню разработчика) — на весь экран
+                Tactics.Draw(W);
                 GUI.matrix = old;
                 return;
             }
@@ -1109,7 +1115,8 @@ namespace BladePath
             if (Btn(new Rect(x + bw + 10f, y, bw, 38f), SoundSettings.ScopeShortName, ok && SoundSettings.On)) SoundSettings.NextScope();
             y += 44f;
             // враги Леса теней в обычных боях: как на карте (случайно) или все бои — один облик (проверить модель и повадки)
-            if (Btn(new Rect(x, y, w, 38f), "ВРАГИ ЛЕСА: " + (Ladder.DevFoe > 0 ? Ladder.Foes[Ladder.DevFoe - 1].name : Ladder.DevFoe == 0 ? "ПОВЕРЖЕННЫЙ" : "КАК НА КАРТЕ"), ok))
+            if (Btn(new Rect(x + bw + 10f, y, bw, 38f), "ПОШАГОВЫЙ БОЙ", ok, true)) { modal = Modal.None; Tactics.ShowDev(Campaign.Region); return; }
+            if (Btn(new Rect(x, y, bw, 38f), "ВРАГИ: " + (Ladder.DevFoe > 0 ? Ladder.Foes[Ladder.DevFoe - 1].name : Ladder.DevFoe == 0 ? "ПОВЕРЖЕННЫЙ" : "КАК НА КАРТЕ"), ok))
                 Ladder.DevFoe = Ladder.DevFoe >= Ladder.Foes.Length ? -1 : Ladder.DevFoe + 1;
             if (Btn(new Rect(r.center.x - 80f, r.yMax - 42f, 160f, 34f), "ЗАКРЫТЬ", ok)) modal = Modal.None;
         }
