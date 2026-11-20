@@ -397,7 +397,7 @@ namespace BladePath
         static readonly Vector3[] GroveSpots =
         {
             // большая карта Леса теней (4096×1608, 2026-11-20): у корней древа, под кроной, хижина рыбака, остров отшельника
-            new Vector3(0.5908f, 0.2799f, (int)NodeType.TreeShadow), new Vector3(0.5615f, 0.2239f, (int)NodeType.KamiRoots),
+            new Vector3(0.5991f, 0.2643f, (int)NodeType.TreeShadow), new Vector3(0.5774f, 0.2307f, (int)NodeType.KamiRoots),
             new Vector3(0.6909f, 0.1399f, (int)NodeType.FisherHut), new Vector3(0.6567f, 0.1088f, (int)NodeType.HermitIsle),
         };
         static readonly int[] GroveLayers = { 6, 6, 7, 8 };
