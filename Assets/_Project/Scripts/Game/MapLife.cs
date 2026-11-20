@@ -418,29 +418,94 @@ namespace BladePath
 
         static void DrawSheetFalls(int region, Rect view, float u0, float uw, float t, Texture2D mist)
         {
-            List<MapEffect> fx = Effects(region);
-            if (fx.Count == 0) return;
-            HiFx = region == 0 && MapGeom.TexHt[0] > 1024;   // большая карта Леса теней — новые листы владельца (map_*)
-            float px = view.height / MapGeom.TexHeight(region), texW = MapGeom.TexWidth(region);
-            float kx = view.width / uw / texW;   // точек экрана на пиксель картины по горизонтали
-            for (int i = 0; i < fx.Count; i++)
+            List<MapEffect> effects = Effects(region);
+            if (effects.Count == 0) return;
+            HiFx = region == 0 && MapGeom.TexHt[0] > 1024;
+            float tw = MapGeom.TexWidth(region), sx = view.width / uw / tw;
+            float sy = view.height / MapGeom.TexHeight(region);
+            bool low = DuelManager.Gfx == 0;
+            Color original = GUI.color;
+            for (int i = 0; i < effects.Count; i++)
             {
-                MapEffect e = fx[i];
-                Rect r = new Rect(view.x + (e.x / texW - u0) / uw * view.width, view.y + e.y * px, e.w * kx, e.h * px);
-                if (r.xMax < view.x - 100f || r.x > view.xMax + 100f) continue;
-                if (e.kind == "stream")
+                MapEffect e = effects[i];
+                if (e == null) continue;
+                string kind = e.kind ?? "";
+                if (low && (kind == "smoke" || kind == "smoke_dark" || kind == "spray"))
+                    continue; // Reduce only expensive detail, never essential effects.
+                Rect r = new Rect(view.x + (e.x / tw - u0) / uw * view.width,
+                    view.y + e.y * sy, e.w * sx, e.h * sy);
+                if (r.xMax < view.x - 60f || r.x > view.xMax + 60f ||
+                    r.yMax < 0f || r.y > 540f) continue;
+                if (kind == "stream")
                 {
-                    RiverCurrent(region, e, view, u0, uw, t + i * 0.37f);
-                    continue;
+                    if (HiFx) DrawLocalCurrent(e, r, t + i * 0.37f);
+                    else RiverCurrent(region, e, view, u0, uw, t + i * 0.37f);
                 }
-                // Follow the actual sloping rock face: rotate about the lip, not the center.
-                // GUI.matrix is restored immediately so subsequent map/UI elements never inherit it.
-                Matrix4x4 previousMatrix = GUI.matrix;
-                if (e.kind != null && e.kind.StartsWith("fall_") && Mathf.Abs(e.angle) > 0.05f)
-                    GUIUtility.RotateAroundPivot(e.angle, new Vector2(r.center.x, r.y));
-                DrawEffect(e, r, t * Mathf.Max(0.05f, e.speed) + i * 0.37f, mist);
-                GUI.matrix = previousMatrix;
+                else
+                {
+                    // Never rotate an entire rectangular atlas on a painted waterfall.
+                    DrawEffect(e, r, t * Mathf.Max(0.05f, e.speed) + i * 0.37f, mist);
+                }
+                GUI.color = original;
             }
+            GUI.color = original;
+        }
+
+        // Small blue-white highlights always stay inside an authored stretch of real river.
+        // angle = 0 for downstream right, 90 for downstream down.
+        static void DrawLocalCurrent(MapEffect e, Rect r, float t)
+        {
+            Texture2D glow = SoftSprites.Fog;
+            float a = e.angle * Mathf.Deg2Rad;
+            Vector2 d = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
+            Vector2 cross = new Vector2(-d.y, d.x);
+            float reach = Mathf.Min(r.width, r.height) * 0.44f;
+            int n = DuelManager.Gfx == 0 ? 10 : 19;
+            for (int i = 0; i < n; i++)
+            {
+                float seed = i * 7.91f + e.x * 0.023f + e.y * 0.019f;
+                float phase = Mathf.Repeat(t * (0.24f + 0.20f * H(seed + 2f)) + H(seed), 1f);
+                float off = (H(seed + 3f) - 0.5f) * Mathf.Min(r.width, r.height) * 0.23f;
+                Vector2 p = r.center + d * ((phase - 0.5f) * reach * 2f) + cross * off;
+                float len = 4f + 3f * H(seed + 1f);
+                UiKit.Streak(p - d * len, p + d * len, 2.1f,
+                    new Color(0.84f, 0.96f, 1f, e.alpha * 0.66f *
+                    Mathf.Sin(phase * Mathf.PI)), glow);
+            }
+            GUI.color = Color.white;
+        }
+
+        // Painted waterfall is the silhouette; only soft translucent falling highlights
+        // are animated, so rectangular sheets and rotations cannot land on adjacent rocks.
+        static void DrawWaterfallVeil(MapEffect e, Rect r, float t)
+        {
+            Texture2D glow = SoftSprites.Fog;
+            float a = e.angle * Mathf.Deg2Rad;
+            Vector2 down = new Vector2(Mathf.Sin(a), Mathf.Cos(a)).normalized;
+            Vector2 sideways = new Vector2(down.y, -down.x);
+            Vector2 top = new Vector2(r.center.x, r.y);
+            float width = Mathf.Min(r.width * 0.58f, 26f);
+            int n = DuelManager.Gfx == 0 ? 6 : 11;
+            for (int i = 0; i < n; i++)
+            {
+                float seed = e.x * 0.017f + i * 13.23f;
+                Vector2 start = top + sideways * ((H(seed) - 0.5f) * width);
+                UiKit.Streak(start + down * (r.height * 0.06f),
+                    start + down * (r.height * 0.93f),
+                    1f + 0.7f * H(seed + 4f),
+                    new Color(0.82f, 0.93f, 1f, e.alpha * 0.17f), glow);
+                for (int j = 0; j < 2; j++)
+                {
+                    float phase = Mathf.Repeat(t * (0.60f + H(seed + 7f) * 0.44f) +
+                        H(seed + j * 3.31f), 1f);
+                    float len = Mathf.Min(15f, r.height * 0.19f);
+                    Vector2 p = start + down * (phase * Mathf.Max(1f, r.height - len));
+                    UiKit.Streak(p, p + down * len,
+                        1.2f + 1.1f * H(seed + j), new Color(0.93f, 0.98f, 1f,
+                        e.alpha * 0.55f * Mathf.Sin(Mathf.PI * phase)), glow);
+                }
+            }
+            GUI.color = Color.white;
         }
 
         /// <summary>Один эффект карты в прямоугольнике r (экран). Водопады — бесшовная петля 36 кадров, у подножия брызги или пыль.</summary>
@@ -615,6 +680,7 @@ namespace BladePath
             }
             if (k.StartsWith("fall_"))
             {
+                if (HiFx) { DrawWaterfallVeil(e, r, t); return; }
                 // Distinct silhouettes for lake lips, intermediate cascades and fading bottoms.
                 Texture2D sheet = UiKit.Tex(k == "fall_lip" ? "UI/fx_waterfall_lip" :
                     k == "fall_mid" ? "UI/fx_waterfall_mid" : "UI/fx_waterfall_fade");
