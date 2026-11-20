@@ -537,7 +537,7 @@ namespace BladePath
                 float w = r.width * (0.70f + H(n + 2f) * 0.22f);
                 float h = r.height * (0.60f + H(n + 3f) * 0.28f);
                 float pulse = 0.88f + 0.12f * Mathf.Sin(t * 0.16f + n);
-                GUI.color = new Color(0.95f, 0.96f, 0.99f, alpha * 0.40f * pulse);
+                GUI.color = new Color(0.95f, 0.96f, 0.99f, alpha * 0.64f * pulse);
                 GUI.DrawTexture(new Rect(cx - w * 0.5f, cy - h * 0.5f, w, h),
                     tex, ScaleMode.StretchToFill, true);
             }
