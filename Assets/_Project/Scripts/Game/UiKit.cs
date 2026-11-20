@@ -48,6 +48,9 @@ namespace BladePath
         static readonly System.Collections.Generic.Dictionary<string, float> missingRetry =
             new System.Collections.Generic.Dictionary<string, float>();
         /// <summary>Текстура интерфейса из Resources (UI/…, FX/…); null, если её нет.</summary>
+        /// <summary>Забыть картинку (своя картинка области заменена).</summary>
+        public static void Forget(string path) { if (path != null) { texCache.Remove(path); missingRetry.Remove(path); } }
+
         public static Texture2D Tex(string path)
         {
             Texture2D t;
@@ -58,7 +61,22 @@ namespace BladePath
             float retryAt;
             if (missingRetry.TryGetValue(path, out retryAt) &&
                 Time.unscaledTime < retryAt) return null;
-            t = Resources.Load<Texture2D>(path);
+            if (path.StartsWith("file:"))
+            {   // своя картинка с телефона (новая область редактора карт): persistentDataPath/…
+                try
+                {
+                    string fp = path.Substring(5);
+                    if (!System.IO.Path.IsPathRooted(fp)) fp = System.IO.Path.Combine(Application.persistentDataPath, fp);
+                    if (System.IO.File.Exists(fp))
+                    {
+                        t = new Texture2D(2, 2, TextureFormat.RGB24, false);
+                        if (!t.LoadImage(System.IO.File.ReadAllBytes(fp))) t = null;
+                        else { t.wrapMode = TextureWrapMode.Clamp; t.anisoLevel = 2; }
+                    }
+                }
+                catch { t = null; }
+            }
+            else t = Resources.Load<Texture2D>(path);
             if (t != null) { texCache[path] = t; missingRetry.Remove(path); }
             else missingRetry[path] = Time.unscaledTime + 8f;
             return t;

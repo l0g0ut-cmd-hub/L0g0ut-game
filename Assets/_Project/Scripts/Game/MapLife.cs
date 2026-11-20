@@ -272,7 +272,7 @@ namespace BladePath
             if (!ShowTrails || Event.current.type != EventType.Repaint) return;
             Color oc = GUI.color;
             if (region < 0) return;
-            float px = view.height / MapGeom.TexH, texW = MapGeom.TexW[Mathf.Clamp(region, 0, MapGeom.TexW.Length - 1)];
+            float px = view.height / MapGeom.TexH, texW = MapGeom.TexWidth(region);
             if (region >= TerrainRoads.BranchTrails.Length && MapStore.Get(region) == null) return;
             System.Func<Vector2, Vector2> S = p => new Vector2(view.x + (p.x - u0) / uw * view.width, p.y * view.height);
             MapData md = MapStore.Get(region);
@@ -356,7 +356,7 @@ namespace BladePath
         {
             List<MapEffect> fx = Effects(region);
             if (fx.Count == 0) return;
-            float px = view.height / MapGeom.TexH, texW = MapGeom.TexW[Mathf.Clamp(region, 0, MapGeom.TexW.Length - 1)];
+            float px = view.height / MapGeom.TexH, texW = MapGeom.TexWidth(region);
             float kx = view.width / uw / texW;   // точек экрана на пиксель картины по горизонтали
             for (int i = 0; i < fx.Count; i++)
             {

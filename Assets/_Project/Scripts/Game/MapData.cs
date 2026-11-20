@@ -55,6 +55,7 @@ namespace BladePath
         public int width = 2610;
         public int order;
         public int boss = 1;
+        public int like;            // своя область (редактор карт): по правилам какой области — враги, музыка, погода (0…2)
         public float lairX, lairY;
         public MapPlace[] places = new MapPlace[0];
         public MapPoint[] points = new MapPoint[0];
@@ -100,6 +101,13 @@ namespace BladePath
         /// <summary>Карта области (null — файла нет, игра берёт карты из кода).</summary>
         public static MapData Get(int region)
         {
+            if (Custom >= 0 && region == customRegion) { MapData c = GetCustom(Custom); if (c != null && c.places != null && c.places.Length > 0) return c; }
+            return GetPlain(region);
+        }
+
+        /// <summary>Карта встроенной области (без своей области поверх неё).</summary>
+        public static MapData GetPlain(int region)
+        {
             MapData m;
             if (cache.TryGetValue(region, out m)) return m;
             m = null;
@@ -117,6 +125,59 @@ namespace BladePath
             if (m != null && (m.places == null || m.places.Length == 0)) m = null;   // пустой файл — как будто его нет
             cache[region] = m;
             return m;
+        }
+
+        // ---------------------------------------------------------------- свои области (редактор карт)
+        // persistentDataPath/maps/custom_N.json и картина custom_N.png. В походе своя область идёт вместо области «like»
+        // (её враги, музыка, погода), пока поход не уйдёт в следующую область.
+
+        public const int MaxCustom = 20;
+        static readonly Dictionary<int, MapData> customs = new Dictionary<int, MapData>();
+        public static int Custom { get; private set; } = -1;
+        static int customRegion = -1;
+        static string CustomPath(int n) { return Path.Combine(Dir, "custom_" + n + ".json"); }
+        public static string CustomImage(int n) { return "maps/custom_" + n + ".jpg"; }   // путь от persistentDataPath (UiKit.Tex «file:»)
+
+        /// <summary>Своя область n идёт вместо области region (−1 — своих нет).</summary>
+        public static void SetActive(int custom, int region)
+        {
+            if (custom == Custom && (custom < 0 || region == customRegion)) return;
+            Custom = custom; customRegion = custom >= 0 ? region : -1;
+            TerrainRoads.Reset();
+        }
+        public static bool IsCustom(int region) { return Custom >= 0 && region == customRegion && GetCustom(Custom) != null; }
+
+        public static bool CustomExists(int n) { return File.Exists(CustomPath(n)); }
+        public static List<int> Customs()
+        {
+            List<int> l = new List<int>();
+            for (int i = 0; i < MaxCustom; i++) if (CustomExists(i)) l.Add(i);
+            return l;
+        }
+        public static int FreeCustom() { for (int i = 0; i < MaxCustom; i++) if (!CustomExists(i)) return i; return -1; }
+        public static MapData GetCustom(int n)
+        {
+            MapData m;
+            if (customs.TryGetValue(n, out m)) return m;
+            m = null;
+            try { if (CustomExists(n)) m = JsonUtility.FromJson<MapData>(File.ReadAllText(CustomPath(n))); }
+            catch (System.Exception e) { Debug.LogWarning("MapStore: своя область " + n + " не читается: " + e.Message); }
+            customs[n] = m;
+            return m;
+        }
+        public static void SaveCustom(int n, MapData m)
+        {
+            Directory.CreateDirectory(Dir);
+            File.WriteAllText(CustomPath(n), JsonUtility.ToJson(m, true));
+            customs[n] = m;
+            if (n == Custom) TerrainRoads.Reset();
+        }
+        public static void DeleteCustom(int n)
+        {
+            try { if (File.Exists(CustomPath(n))) File.Delete(CustomPath(n)); } catch { }
+            try { string ip = Path.Combine(Application.persistentDataPath, CustomImage(n)); if (File.Exists(ip)) File.Delete(ip); } catch { }
+            customs.Remove(n);
+            UiKit.Forget("file:" + CustomImage(n));
         }
 
         /// <summary>Есть ли правка этой области, сделанная на телефоне.</summary>

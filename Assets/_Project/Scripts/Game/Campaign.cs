@@ -36,6 +36,7 @@ namespace BladePath
         class Data
         {
             public int region;
+            public int customPlus;      // своя область из редактора карт: номер + 1 (0 — обычная область)
             public int roadsVer;        // 2 — места на новых дорогах (2026-11-03); 3 — карты расширены на восток (2026-11-07)
             public bool foesRolled;     // обитатели Леса теней уже расставлены (старые сохранения — расставить при загрузке)
             public int catBuff;         // благословение кота-хранителя: 0 нет, 1 «Кошачья удача», 2 «Девять жизней»
@@ -202,9 +203,11 @@ namespace BladePath
             d = SafeSave.Read<Data>("campaign_v1");   // испорчено — резервная копия, а не новый поход
             if (d == null || d.nodes == null || d.nodes.Count == 0) { d = new Data(); Generate(0); }
             if (d.at < 0 || d.at >= d.nodes.Count) d.at = 0;
+            MapStore.SetActive(d.customPlus - 1, d.region);
+            if (d.customPlus > 0 && MapStore.GetCustom(d.customPlus - 1) == null) d.customPlus = 0;   // свою область удалили — дальше обычная
             MigrateSpots(d);
-            if (d.region == 0 && !d.nodes.Exists(m => IsGrove(m.Type))) { AddFixedPlaces(d, 0); links = null; }   // поход до ответвления у древа
-            if (d.region == 0)   // места ответвления, которые генерация по ошибке сделала боями (сборка 567), — вернуть
+            if (d.region == 0 && d.customPlus == 0 && !d.nodes.Exists(m => IsGrove(m.Type))) { AddFixedPlaces(d, 0); links = null; }   // поход до ответвления у древа
+            if (d.region == 0 && d.customPlus == 0)   // места ответвления, которые генерация по ошибке сделала боями (сборка 567), — вернуть
                 for (int g = 0; g < GroveSpots.Length; g++)
                     foreach (MapNode gn in d.nodes)
                         if (!gn.done && Mathf.Abs(gn.x - GroveSpots[g].x) < 0.002f && Mathf.Abs(gn.y - GroveSpots[g].y) < 0.003f && gn.type != (int)GroveSpots[g].z)
@@ -590,6 +593,8 @@ namespace BladePath
             dd.tower = -1; dd.towerLit = false; dd.towerTold = false;
             dd.hunt = -1; dd.huntDone = false; dd.huntReward = 0;
             dd.seen.Clear();   // новая область — снова в тумане (первая точка — начало пути, см. Seen)
+            dd.customPlus = pendingCustom + 1; pendingCustom = -1;   // своя область — только когда её запустили из редактора карт
+            MapStore.SetActive(dd.customPlus - 1, region);
             MapData md = MapStore.Get(region);   // файл карты (редактор карт); нет файла — места из кода
             Vector2[][] spots = md != null ? DataSpots(md) : Spots[Mathf.Clamp(region, 0, Spots.Length - 1)];
             int L = spots.Length;
@@ -1004,6 +1009,15 @@ namespace BladePath
         public static void DebugSteps(int n) { D.steps = n; D.lastRoll = n; Save(); }
         public static void DebugNextRegion() { Generate((D.region + 1) % RegionNames.Length); }
         /// <summary>Редактор карт, «ПРОЙТИ КАРТУ»: новый поход по этой области с запасом костей пути.</summary>
+        static int pendingCustom = -1;
+        /// <summary>Редактор карт: новый поход по своей области n (по правилам области like) + 30 костей.</summary>
+        public static void DebugCustom(int n, int like) { pendingCustom = n; Generate(Mathf.Clamp(like, 0, RegionNames.Length - 1)); AddRoll(30); }
+        /// <summary>Имя области на карте (своя область — своё имя).</summary>
+        public static string RegionName(int region)
+        {
+            if (D.customPlus > 0 && region == D.region) { MapData m = MapStore.GetCustom(D.customPlus - 1); if (m != null && !string.IsNullOrEmpty(m.name)) return m.name.ToUpper(); }
+            return RegionNames[Mathf.Clamp(region, 0, RegionNames.Length - 1)];
+        }
         public static void DebugRegion(int region) { Generate(Mathf.Clamp(region, 0, RegionNames.Length - 1)); AddRoll(30); }
         public static void DebugSkipSquad() { MapNode n = FightNode; if (n != null && n.extra != null) { D.foe = n.extra.Count; Save(); } }
 

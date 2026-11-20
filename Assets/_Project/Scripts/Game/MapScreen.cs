@@ -451,7 +451,7 @@ namespace BladePath
                 UiKit.Image(new Vector2(mapX + 34f, 27f), 19f, crest,
                     new Color(1f, 0.88f, 0.63f, 0.76f));
             UiKit.Text(new Rect(mapX + 59f, 8f, 355f, 36f),
-                Campaign.RegionNames[Campaign.Region], 25f, Gold, TextAnchor.MiddleLeft);
+                Campaign.RegionName(Campaign.Region), 25f, Gold, TextAnchor.MiddleLeft);
             if (Profile.Cycle > 0) UiKit.Text(new Rect(mapX + 18f, 40f, 300f, 20f), "КРУГ " + (Profile.Cycle + 1) + ": враги крепче", 12f, new Color(1f, 0.55f, 0.4f), TextAnchor.MiddleLeft);
             // Only show the re-center control when the map is wider than the screen.
             // карту листают пальцем; увёл её от героя — появляется «К ГЕРОЮ» (кнопка «ОБЗОР» ничего не делала — убрана)

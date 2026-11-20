@@ -25,6 +25,7 @@ namespace BladePath
         struct Hit { public int kind, i, k; }
 
         static int region;
+        static int custom = -1;   // своя область (MapStore.GetCustom); −1 — встроенная region
         static MapData data;
         static Texture2D tex;
         static Tool tool;
@@ -70,19 +71,48 @@ namespace BladePath
         public static void Show(int r)
         {
             Open = true; tool = Tool.Select; historyOpen = false; confirm = null;
-            Load(r);
+            if (MapStore.IsCustom(r)) LoadCustom(MapStore.Custom); else Load(r);   // поход идёт по своей области — открыть её
         }
 
         static void Load(int r)
         {
-            region = Mathf.Clamp(r, 0, MapStore.BuiltIn - 1);
-            MapData src = MapStore.Get(region);
-            data = src != null ? Clone(src) : new MapData { name = Campaign.RegionNames[region], texture = MapGeom.Texture(region), width = MapGeom.TexW[region] };
+            region = Mathf.Clamp(r, 0, MapStore.BuiltIn - 1); custom = -1;
+            MapData src = MapStore.GetPlain(region);
+            data = src != null ? Clone(src) : new MapData { name = Campaign.RegionNames[region], texture = "UI/map_wide_" + region, width = MapGeom.TexW[region] };
+            AfterLoad();
+        }
+
+        static void LoadCustom(int n)
+        {
+            MapData src = MapStore.GetCustom(n);
+            if (src == null) { Load(0); return; }
+            custom = n; region = Mathf.Clamp(src.like, 0, MapStore.BuiltIn - 1);
+            data = Clone(src);
+            AfterLoad();
+        }
+
+        /// <summary>Следующая область по кругу: встроенные, потом свои.</summary>
+        static void NextRegion()
+        {
+            List<int> cs = MapStore.Customs();
+            if (custom < 0)
+            {
+                if (region + 1 < MapStore.BuiltIn) Load(region + 1);
+                else if (cs.Count > 0) LoadCustom(cs[0]);
+                else Load(0);
+                return;
+            }
+            int k = cs.IndexOf(custom);
+            if (k >= 0 && k + 1 < cs.Count) LoadCustom(cs[k + 1]); else Load(0);
+        }
+
+        static void AfterLoad()
+        {
             if (data.places == null) data.places = new MapPlace[0];
             if (data.points == null) data.points = new MapPoint[0];
             if (data.roads == null) data.roads = new MapRoad[0];
             if (data.effects == null) data.effects = new MapEffect[0];
-            tex = UiKit.Tex(string.IsNullOrEmpty(data.texture) ? MapGeom.Texture(region) : data.texture);
+            tex = UiKit.Tex(string.IsNullOrEmpty(data.texture) ? "UI/map_wide_" + region : data.texture);
             undo.Clear(); dirty = false; sel = new Hit(); CancelRoad(); ver++;
             zoom = -1f;   // подогнать при первом кадре
         }
@@ -686,18 +716,20 @@ namespace BladePath
                 {
                     case 0:
                         if (!dirty || Confirm("region", "Есть несохранённое — нажми ещё раз, чтобы сменить область без сохранения"))
-                        { Load((region + 1) % MapStore.BuiltIn); Note("Область: " + data.name); }
+                        { NextRegion(); Note("Область: " + data.name + (custom >= 0 ? " (своя)" : "")); }
                         break;
                     case 1: Undo(); break;
                     case 2: SaveNow(); break;
                     case 3: historyOpen = true; break;
                     case 4:
-                        if (Confirm("reset", MapStore.Edited(region) ? "Вернуть область как в игре (правки с телефона удалятся)? Нажми ещё раз" : "Отменить всё несохранённое? Нажми ещё раз"))
+                        if (custom >= 0)
+                        { if (Confirm("reset", "Отменить всё несохранённое в своей области? Нажми ещё раз")) { LoadCustom(custom); Note("Как было при сохранении"); } }
+                        else if (Confirm("reset", MapStore.Edited(region) ? "Вернуть область как в игре (правки с телефона удалятся)? Нажми ещё раз" : "Отменить всё несохранённое? Нажми ещё раз"))
                         { MapStore.Revert(region); Load(region); Note("Область возвращена как в игре"); }
                         break;
                     case 5:
                         if (Confirm("play", "Сохранить и начать поход по этой области заново (текущий поход пропадёт)? Нажми ещё раз"))
-                        { SaveNow(); Campaign.DebugRegion(region); Open = false; }
+                        { SaveNow(); if (custom >= 0) Campaign.DebugCustom(custom, data.like); else Campaign.DebugRegion(region); Open = false; }
                         break;
                     case 6:
                         if (!dirty || Confirm("exit", "Есть несохранённое — нажми ещё раз, чтобы выйти без сохранения")) { CancelRoad(); Open = false; }
@@ -854,8 +886,108 @@ namespace BladePath
                 "Коснись того, что убрать: место, развилку, точку изгиба, дорогу или эффект.",
             };
             Hint(ref y, x, w, help[(int)tool]);
+            if (tool == Tool.Select) { DrawRegionBox(x, ref y, w, r.yMax - 58f); return; }
             UiKit.Text(new Rect(x, r.yMax - 54f, w, 50f), "Кольцо места: золотое — место ряда, белое — доп., зелёное — постоянное. Красное — замечание проверки.", 10f, Dim, TextAnchor.LowerLeft);
         }
+
+        // ---------------------------------------------------------------- своя область
+
+        static GUIStyle field;
+        static void DrawRegionBox(float x, ref float y, float w, float bottom)
+        {
+            y += 4f;
+            UiKit.Text(new Rect(x, y, w, 22f), custom >= 0 ? "СВОЯ ОБЛАСТЬ" : "ОБЛАСТЬ ИГРЫ", 15f, Gold, TextAnchor.MiddleLeft); y += 24f;
+            if (custom >= 0)
+            {
+                Label(ref y, x, w, "Название");
+                if (field == null) { field = new GUIStyle(GUI.skin.textField); field.fontSize = 15; field.normal.textColor = Ink; field.focused.textColor = Ink; field.alignment = TextAnchor.MiddleLeft; }
+                string nn = GUI.TextField(new Rect(x, y, w, 30f), data.name ?? "", 28, field);
+                if (nn != data.name) { data.name = nn; dirty = true; }
+                y += 36f;
+                Label(ref y, x, w, "Враги, музыка, погода — как в области:");
+                if (Btn(new Rect(x, y, w, 30f), Campaign.RegionNames[Mathf.Clamp(data.like, 0, Campaign.RegionNames.Length - 1)])) { Push(); data.like = (data.like + 1) % MapStore.BuiltIn; region = data.like; }
+                y += 36f;
+                if (Btn(new Rect(x, y, w, 30f), "ДРУГАЯ КАРТИНА")) PickMapImage(custom, false);
+                y += 36f;
+                if (Btn(new Rect(x, y, w, 30f), "ПОДЕЛИТЬСЯ ФАЙЛОМ")) ExportCustom();
+                y += 36f;
+                if (Btn(new Rect(x, y, w, 30f), "УДАЛИТЬ ОБЛАСТЬ", true, true) && Confirm("delcustom", "Удалить свою область «" + data.name + "» насовсем? Нажми ещё раз"))
+                { MapStore.DeleteCustom(custom); Load(0); Note("Своя область удалена"); }
+                y += 36f;
+            }
+            if (y < bottom - 34f)
+                if (Btn(new Rect(x, bottom - 34f, w, 34f), "НОВАЯ ОБЛАСТЬ ИЗ КАРТИНКИ", true, custom < 0))
+                {
+                    if (dirty && !Confirm("newregion", "Есть несохранённое — нажми ещё раз, чтобы начать новую область без сохранения")) return;
+                    int n = MapStore.FreeCustom();
+                    if (n < 0) Note("Своих областей уже " + MapStore.MaxCustom + " — удали какую-нибудь"); else PickMapImage(n, true);
+                }
+        }
+
+        /// <summary>Картина области из галереи: по высоте 1024 (как у карт игры), ширина — своя (не уже 1500 и не шире 4096).</summary>
+        static void PickMapImage(int n, bool fresh)
+        {
+            NativeGallery.GetImageFromGallery((path) =>
+            {
+                if (string.IsNullOrEmpty(path)) return;
+                Texture2D src = NativeGallery.LoadImageAtPath(path, 4096, false, false);
+                if (src == null) { Note("Картинка не открылась"); return; }
+                int h = 1024, w = Mathf.Clamp(Mathf.RoundToInt(src.width * 1024f / Mathf.Max(1, src.height)), 1024, 4096);
+                RenderTexture rt = RenderTexture.GetTemporary(w, h, 0, RenderTextureFormat.ARGB32);
+                RenderTexture keep = RenderTexture.active;
+                Graphics.Blit(src, rt);
+                RenderTexture.active = rt;
+                Texture2D dst = new Texture2D(w, h, TextureFormat.RGB24, false);
+                dst.ReadPixels(new Rect(0, 0, w, h), 0, 0); dst.Apply();
+                RenderTexture.active = keep; RenderTexture.ReleaseTemporary(rt);
+                Object.Destroy(src);
+                string rel = MapStore.CustomImage(n);
+                Directory.CreateDirectory(Path.Combine(Application.persistentDataPath, "maps"));
+                File.WriteAllBytes(Path.Combine(Application.persistentDataPath, rel), dst.EncodeToJPG(90));
+                Object.Destroy(dst);
+                UiKit.Forget("file:" + rel);
+                if (fresh)
+                {
+                    float sx = 1f;   // доли по x — от ширины картины
+                    MapData m = new MapData
+                    {
+                        name = "Новая область " + (n + 1), texture = "file:" + rel, width = w, like = 0,
+                        places = new[] { new MapPlace { id = "s1", x = 0.06f * sx, y = 0.5f, layer = 0, kind = 0 }, new MapPlace { id = "b1", x = 0.94f, y = 0.5f, layer = 1, kind = 0 } },
+                        roads = new[] { new MapRoad { a = "s1", b = "b1" } },
+                    };
+                    MapStore.SaveCustom(n, m);
+                    LoadCustom(n);
+                    Note("Новая область: ставь места и прокладывай дороги, имя и правила — справа");
+                }
+                else
+                {
+                    Push();
+                    float k = data.width > 0 ? data.width / (float)w : 1f;   // места остаются на тех же долях картины
+                    data.texture = "file:" + rel; data.width = w;
+                    if (Mathf.Abs(k - 1f) > 0.001f) foreach (MapEffect fx in data.effects) { fx.x /= k; fx.w /= k; }
+                    tex = UiKit.Tex(data.texture);
+                    zoom = -1f;
+                    Note("Картина заменена");
+                }
+            }, "Картина области");
+        }
+
+        /// <summary>Своя область — одним файлом (картина внутри): отправить себе или в чат, чтобы область вошла в игру у всех.</summary>
+        static void ExportCustom()
+        {
+            if (dirty) SaveNow();
+            try
+            {
+                string img = Path.Combine(Application.persistentDataPath, MapStore.CustomImage(custom));
+                CustomExport ex = new CustomExport { map = JsonUtility.ToJson(data), image = File.Exists(img) ? System.Convert.ToBase64String(File.ReadAllBytes(img)) : "" };
+                string safe = System.Text.RegularExpressions.Regex.Replace(data.name ?? "oblast", @"[^\w\-]+", "_");
+                string outp = Path.Combine(Application.temporaryCachePath, "BladePath_" + safe + ".blademap.json");
+                File.WriteAllText(outp, JsonUtility.ToJson(ex));
+                new NativeShare().AddFile(outp).SetSubject("Путь клинка — область «" + data.name + "»").Share();
+            }
+            catch (System.Exception e) { Note("Не получилось: " + e.Message); }
+        }
+        [System.Serializable] class CustomExport { public int version = 1; public string map; public string image; }
 
         static int StepType(int t, int d)
         {
@@ -898,6 +1030,12 @@ namespace BladePath
 
         static void SaveNow()
         {
+            if (custom >= 0)
+            {
+                try { MapStore.SaveCustom(custom, Clone(data)); dirty = false; Note("Своя область сохранена. «ПРОЙТИ КАРТУ» — поход по ней"); }
+                catch (System.Exception e) { Note("Не сохранилось: " + e.Message); }
+                return;
+            }
             try
             {
                 string cur = Path.Combine(Application.persistentDataPath, "maps", "map_" + region + ".json");
@@ -919,6 +1057,7 @@ namespace BladePath
         static List<string> History()
         {
             List<string> l = new List<string>();
+            if (custom >= 0) return l;   // у своей области истории пока нет
             try { if (Directory.Exists(HistDir)) l.AddRange(Directory.GetFiles(HistDir, "map_" + region + "_*.json")); } catch { }
             l.Sort(); l.Reverse();
             return l;

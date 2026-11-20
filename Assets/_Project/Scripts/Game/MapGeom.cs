@@ -15,15 +15,25 @@ namespace BladePath
 
         static int R(int region) { return Mathf.Clamp(region, 0, TexW.Length - 1); }
         /// <summary>Ширина карты области в точках (высота — 540).</summary>
-        public static float W(int region) { return H * TexW[R(region)] / TexH; }
+        public static float W(int region) { return H * TexWidth(region) / TexH; }
+        /// <summary>Ширина картины области в пикселях (своя область из редактора карт — своя ширина).</summary>
+        public static float TexWidth(int region)
+        {
+            if (MapStore.IsCustom(region)) { MapData m = MapStore.Get(region); if (m != null && m.width > 0) return m.width; }
+            return TexW[R(region)];
+        }
         /// <summary>Ширина карты текущей области в точках.</summary>
         public static float Wc { get { return W(Campaign.Region); } }
         /// <summary>Доля старой картины в новой: x_new = x_old × OldU.</summary>
-        public static float OldU(int region) { return OldTexW / TexW[R(region)]; }
+        public static float OldU(int region) { return OldTexW / TexWidth(region); }
         /// <summary>Перевод координаты старой картины (доли) в доли новой.</summary>
         public static Vector2 FromOld(int region, Vector2 uv) { return new Vector2(uv.x * OldU(region), uv.y); }
         /// <summary>Точки карты на долю (по x — ширина области, по y — 540).</summary>
         public static Vector2 Pts(int region) { return new Vector2(W(region), H); }
-        public static string Texture(int region) { return "UI/map_wide_" + R(region); }
+        public static string Texture(int region)
+        {
+            if (MapStore.IsCustom(region)) { MapData m = MapStore.Get(region); if (m != null && !string.IsNullOrEmpty(m.texture)) return m.texture; }
+            return "UI/map_wide_" + R(region);
+        }
     }
 }
