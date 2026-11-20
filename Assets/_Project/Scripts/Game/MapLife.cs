@@ -219,21 +219,25 @@ namespace BladePath
             GUI.DrawTextureWithTexCoords(r, tex, new Rect((b % cols) / (float)cols, 1f - (b / cols + 1) / (float)rows, 1f / cols, 1f / rows));
         }
 
-        static Vector2 Along(Vector2[] pl, float u)
+        static Vector2 Along(Vector2[] pl, float u, int region)
         {
+            if (pl == null || pl.Length == 0) return Vector2.zero;
+            if (pl.Length == 1) return pl[0];
+            Vector2 scale = MapGeom.Pts(region);
             float total = 0f;
-            for (int i = 1; i < pl.Length; i++) total += Vector2.Scale(pl[i] - pl[i - 1], new Vector2(1440f, 540f)).magnitude;
-            float d = Mathf.Repeat(u, 1f) * total;
+            for (int i = 1; i < pl.Length; i++)
+                total += Vector2.Scale(pl[i] - pl[i - 1], scale).magnitude;
+            float d = Mathf.Clamp01(u) * total;
             for (int i = 1; i < pl.Length; i++)
             {
-                float seg = Vector2.Scale(pl[i] - pl[i - 1], new Vector2(1440f, 540f)).magnitude;
-                if (d <= seg) return Vector2.Lerp(pl[i - 1], pl[i], seg > 0f ? d / seg : 0f);
-                d -= seg;
+                float segment = Vector2.Scale(pl[i] - pl[i - 1], scale).magnitude;
+                if (d <= segment) return Vector2.Lerp(pl[i - 1], pl[i], segment > 0f ? d / segment : 0f);
+                d -= segment;
             }
             return pl[pl.Length - 1];
         }
 
-        /// <summary>Рисовать сразу после картины карты (до дорог, тумана и значков).</summary>
+                /// <summary>Рисовать сразу после картины карты (до дорог, тумана и значков).</summary>
         /// <summary>
         /// Окна и фонари нарисованной карты: тёплый свет, каждый в своём ритме, с лёгким колебанием.
         /// Рисуется поверх фильтра времени суток; light — сила (днём 0, ночью ~1,6).
@@ -283,11 +287,19 @@ namespace BladePath
             float f = age * fps; int span = ping ? frames * 2 - 2 : frames;
             int i0 = (int)Mathf.Repeat(Mathf.Floor(f), span), i1 = (i0 + 1) % span; float kk = f - Mathf.Floor(f);
             if (ping) { if (i0 >= frames) i0 = span - i0; if (i1 >= frames) i1 = span - i1; }
-            // текущий кадр целиком, следующий проявляется поверх: прозрачность не проседает посреди перехода (не мерцает)
-            GUI.color = new Color(1f, 1f, 1f, a); GUI.DrawTextureWithTexCoords(r, tex, SheetCell(i0, cols, rows));
-            if (kk > 0.01f) { GUI.color = new Color(1f, 1f, 1f, a * kk); GUI.DrawTextureWithTexCoords(r, tex, SheetCell(i1, cols, rows)); }
+            // Normalized crossfade: the two layers must not double the brightness mid-frame.
+            kk = kk * kk * (3f - 2f * kk);
+            float front = a * kk;
+            float back = a * (1f - kk) / Mathf.Max(0.001f, 1f - front);
+            GUI.color = new Color(1f, 1f, 1f, back);
+            GUI.DrawTextureWithTexCoords(r, tex, SheetCell(i0, cols, rows));
+            if (kk > 0.001f)
+            {
+                GUI.color = new Color(1f, 1f, 1f, front);
+                GUI.DrawTextureWithTexCoords(r, tex, SheetCell(i1, cols, rows));
+            }
         }
-        static Rect SheetCell(int k, int cols, int rows) { int c = k % cols, rw = k / cols; return new Rect(c / (float)cols, 1f - (rw + 1) / (float)rows, 1f / cols, 1f / rows); }
+                static Rect SheetCell(int k, int cols, int rows) { int c = k % cols, rw = k / cols; return new Rect(c / (float)cols, 1f - (rw + 1) / (float)rows, 1f / cols, 1f / rows); }
 
         /// <summary>
         /// Тропы ответвлений, которых нет на картине (TerrainRoads.BranchTrails): светлый пунктир с тёмной каймой; переправы — голубой.
@@ -393,6 +405,11 @@ namespace BladePath
                 MapEffect e = fx[i];
                 Rect r = new Rect(view.x + (e.x / texW - u0) / uw * view.width, view.y + e.y * px, e.w * kx, e.h * px);
                 if (r.xMax < view.x - 100f || r.x > view.xMax + 100f) continue;
+                if (e.kind == "stream")
+                {
+                    RiverCurrent(region, e, view, u0, uw, t + i * 0.37f);
+                    continue;
+                }
                 DrawEffect(e, r, t * Mathf.Max(0.05f, e.speed) + i * 0.37f, mist);
             }
         }
@@ -408,46 +425,156 @@ namespace BladePath
             GUI.color = Color.white;
             return true;
         }
+
+        // Fog from continuously drifting Gaussian wisps: no hard rectangular edge and no flipbook flash.
+        static void SoftFog(Rect r, float t, float alpha, Texture2D mist, int seed)
+        {
+            if (mist == null || alpha <= 0f) return;
+            for (int i = 0; i < 7; i++)
+            {
+                float n = seed * 13.31f + i * 7.71f;
+                float x = r.x + r.width * (0.13f + 0.74f * H(n + 2f)) +
+                          Mathf.Sin(t * 0.23f + n) * r.width * 0.065f;
+                float y = r.y + r.height * (0.31f + 0.35f * H(n + 4f)) +
+                          Mathf.Sin(t * 0.15f + n) * r.height * 0.085f;
+                float w = r.width * (0.36f + 0.23f * H(n + 3f));
+                float h = r.height * (0.68f + 0.2f * H(n + 5f));
+                float breath = 0.82f + 0.18f * Mathf.PerlinNoise(n + 0.5f, t * 0.11f);
+                GUI.color = new Color(0.9f, 0.92f, 0.96f, alpha * 0.16f * breath);
+                GUI.DrawTexture(new Rect(x - w * 0.5f, y - h * 0.5f, w, h), mist);
+            }
+            GUI.color = Color.white;
+        }
+
+        static void SmallWisps(Rect r, float t, float alpha)
+        {
+            Texture2D glow = UiKit.Tex("FX/glow_pool");
+            if (glow == null) return;
+            float size = Mathf.Clamp(Mathf.Min(r.width, r.height) * 0.011f, 1f, 3.3f);
+            for (int i = 0; i < 13; i++)
+            {
+                float seed = i * 17.13f + r.x * 0.13f;
+                float x = r.x + r.width * (0.12f + H(seed) * 0.76f) +
+                    Mathf.Sin(t * 0.51f + seed) * r.width * 0.035f;
+                float y = r.y + r.height * (0.14f + H(seed + 1f) * 0.72f) +
+                    Mathf.Sin(t * 0.73f + seed) * r.height * 0.04f;
+                float pulse = Mathf.Pow(0.5f + 0.5f * Mathf.Sin(t * 1.15f + seed * 3f), 2f);
+                float a = alpha * (0.25f + 0.65f * pulse);
+                float radius = size * (0.66f + 0.48f * H(seed + 2f));
+                GUI.color = new Color(0.24f, 0.85f, 0.42f, a * 0.28f);
+                GUI.DrawTexture(new Rect(x - radius * 2f, y - radius * 2f, radius * 4f, radius * 4f), glow);
+                GUI.color = new Color(0.71f, 1f, 0.72f, a * 0.88f);
+                GUI.DrawTexture(new Rect(x - radius * 0.52f, y - radius * 0.52f, radius * 1.04f, radius * 1.04f), glow);
+            }
+            GUI.color = Color.white;
+        }
+
+        static void SmallPetals(MapEffect e, Rect r, float t)
+        {
+            Texture2D pet = UiKit.Tex("FX/petals8");
+            if (pet == null) return;
+            float scale = r.width / Mathf.Max(1f, e.w);
+            int count = Mathf.Clamp(Mathf.RoundToInt(e.w / 25f), 7, 13);
+            for (int i = 0; i < count; i++)
+            {
+                float seed = i * 13.37f + e.x * 0.013f;
+                float life = 7f + 5f * H(seed);
+                float run = t * Mathf.Max(0.1f, e.speed) / life + H(seed + 2f);
+                float phase = Mathf.Repeat(run, 1f);
+                int cycle = Mathf.FloorToInt(run);
+                float x = r.x + r.width * (0.26f + 0.47f * H(seed + cycle * 2.1f)) +
+                    Mathf.Sin(t * 1.12f + seed) * 7f * scale + phase * 9f * scale;
+                float y = r.y + r.height * (0.04f + 0.92f * phase);
+                float size = (1.6f + 1.6f * H(seed + cycle * 3.7f)) * scale;
+                float a = Mathf.Clamp01(phase / 0.12f) * Mathf.Clamp01((1f - phase) / 0.15f);
+                int cell = Mathf.Min(7, (int)(H(seed + cycle * 0.37f + 4f) * 8f));
+                Rect uv = new Rect((cell % 4) * 0.25f, cell < 4 ? 0.5f : 0f, 0.25f, 0.5f);
+                if (Mathf.Sin(t * 1.85f + seed) < 0f) uv = new Rect(uv.x + 0.25f, uv.y, -0.25f, uv.height);
+                GUI.color = new Color(1f, 0.93f, 0.97f, a * e.alpha * 0.9f);
+                GUI.DrawTextureWithTexCoords(new Rect(x - size, y - size * 0.56f, size * 2f, size * 1.12f), pet, uv);
+            }
+            GUI.color = Color.white;
+        }
+
+        // Snap localized current to the nearest river segment and orient each glint along its tangent.
+        static void RiverCurrent(int region, MapEffect e, Rect view, float u0, float uw, float t)
+        {
+            Region data = regions[Mathf.Clamp(region, 0, regions.Length - 1)];
+            if (data.lava || data.rivers.Length == 0) return;
+            Texture2D glow = UiKit.Tex("FX/glow_pool");
+            if (glow == null) return;
+            float tw = MapGeom.TexWidth(region), th = MapGeom.TexHeight(region);
+            float sx = view.width / uw / tw, sy = view.height / th;
+            Vector2 requested = new Vector2(view.x + ((e.x + e.w * 0.5f) / tw - u0) / uw * view.width,
+                view.y + (e.y + e.h * 0.5f) * sy);
+            Vector2 nearest = requested, direction = Vector2.down;
+            float best = float.MaxValue;
+            foreach (Vector2[] line in data.rivers)
+                for (int j = 1; j < line.Length; j++)
+                {
+                    Vector2 a = new Vector2(view.x + (line[j - 1].x - u0) / uw * view.width, view.y + line[j - 1].y * view.height);
+                    Vector2 b = new Vector2(view.x + (line[j].x - u0) / uw * view.width, view.y + line[j].y * view.height);
+                    Vector2 d = b - a;
+                    if (d.sqrMagnitude < 0.0001f) continue;
+                    Vector2 p = a + d * Mathf.Clamp01(Vector2.Dot(requested - a, d) / d.sqrMagnitude);
+                    float dist = (p - requested).sqrMagnitude;
+                    if (dist < best) { best = dist; nearest = p; direction = d.normalized; }
+                }
+            if (best > Mathf.Pow(90f * Mathf.Max(sx, sy), 2f)) return; // no highlights on banks
+            Vector2 side = new Vector2(-direction.y, direction.x);
+            float length = Mathf.Min(e.w * sx * 0.66f, 75f * sx);
+            for (int i = 0; i < 11; i++)
+            {
+                float seed = i * 5.87f + e.x * 0.011f;
+                float u = Mathf.Repeat(t * 0.20f * Mathf.Max(0.1f, e.speed) + H(seed), 1f);
+                Vector2 p = nearest + direction * (u - 0.5f) * length + side * (H(seed + 8f) - 0.5f) * 11f * sx;
+                float len = (2.8f + 3f * H(seed + 1f)) * sx;
+                UiKit.Streak(p - direction * len, p + direction * len, 1.6f * sx,
+                    new Color(0.79f, 0.91f, 1f, e.alpha * 0.36f * Mathf.Sin(u * Mathf.PI)), glow);
+            }
+            GUI.color = Color.white;
+        }
+
         public static void DrawEffect(MapEffect e, Rect r, float t, Texture2D mist)
         {
             string k = e.kind ?? "";
             // новые виды — только по листам владельца
             if (k == "lantern") { Hi("map_lantern", r, t, 18f, e.alpha); return; }
-            if (k == "wisps") { Hi("map_wisps", r, t, 14f, e.alpha); return; }
-            if (k == "petals") { Hi("map_petals", r, t, 14f, e.alpha); return; }
+            if (k == "wisps") { SmallWisps(r, t, e.alpha); return; }
+            if (k == "petals") { SmallPetals(e, r, t); return; }
+            if (k == "mist") { SoftFog(r, t, e.alpha, mist, (int)e.x); return; }
             if (HiFx)
             {
-                if (k.StartsWith("fall_") && Hi("map_fall", r, t, 24f, e.alpha))
-                {
-                    if (e.foot >= 1) { float fw = r.width * 2.2f, fh = fw * 170f / 192f; Hi("map_foam", new Rect(r.center.x - fw * 0.5f, r.yMax - fh * 0.62f, fw, fh), t * 0.9f + 0.3f, 20f, 0.7f * e.alpha); }
-                    return;
-                }
                 if (k == "stream" && Hi("map_ripples", r, t, 16f, e.alpha)) return;
                 if (k == "splash" && Hi("map_foam", r, t, 20f, e.alpha)) return;
                 if ((k == "smoke" || k == "smoke_dark" || k == "wisp") && Hi("map_smoke", r, t, 14f, e.alpha)) return;
                 if (k == "campfire" && Hi("map_fire", r, t, 22f, e.alpha)) return;
-                if (k == "mist" && Hi("map_mist", r, t, 10f, e.alpha)) return;
             }
             if (k.StartsWith("fall_"))
             {
-                Texture2D sheet = UiKit.Tex(k == "fall_lip" ? "UI/fx_waterfall_lip" : k == "fall_mid" ? "UI/fx_waterfall_mid" : "UI/fx_waterfall_fade");
+                // Distinct silhouettes for lake lips, intermediate cascades and fading bottoms.
+                Texture2D sheet = UiKit.Tex(k == "fall_lip" ? "UI/fx_waterfall_lip" :
+                    k == "fall_mid" ? "UI/fx_waterfall_mid" : "UI/fx_waterfall_fade");
                 if (sheet == null) return;
-                SheetFrame(r, sheet, 6, 6, 36, t, 24f, e.alpha, false);
-                Texture2D sp = UiKit.Tex("UI/fx_splash");
-                float x = r.center.x, w = r.width;
-                if (e.foot == 1 && sp != null)
+                Rect fall = new Rect(r.center.x - r.width * 0.42f, r.y, r.width * 0.84f, r.height);
+                SheetFrame(fall, sheet, 6, 6, 36, t, 20f, e.alpha * 0.85f, false);
+                if (e.foot == 1)
                 {
-                    float sw = w * 1.9f, sh = sw * 128f / 192f;
-                    SheetFrame(new Rect(x - sw * 0.5f, r.yMax - sh * 0.7f, sw, sh), sp, 6, 4, 24, t * 0.9f, 12f, 0.45f, true);
-                }
-                else if (e.foot == 2 && mist != null)
-                    for (int j = 0; j < 5; j++)   // водяная пыль из ущелья: клубы поднимаются и тают
+                    Texture2D splash = UiKit.Tex("UI/fx_splash");
+                    if (splash != null)
                     {
-                        float u = Mathf.Repeat(t * 0.18f + j / 5f, 1f), sz = w * (1.6f + 1.2f * u);
-                        float cx = x + Mathf.Sin(t * 0.5f + j * 1.7f) * w * 0.35f, cy = r.y + r.height * (0.95f - 0.35f * u);
-                        GUI.color = new Color(0.9f, 0.91f, 0.95f, 0.32f * e.alpha * Mathf.Sin(u * Mathf.PI));
-                        GUI.DrawTexture(new Rect(cx - sz * 0.5f, cy - sz * 0.3f, sz, sz * 0.6f), mist);
+                        float w = fall.width * 1.28f, h = w * 128f / 192f;
+                        SheetFrame(new Rect(fall.center.x - w * 0.5f, fall.yMax - h * 0.6f, w, h),
+                            splash, 6, 4, 24, t * 0.9f, 12f, e.alpha * 0.37f, true);
                     }
+                }
+                else if (e.foot == 2)
+                {
+                    Rect spray = new Rect(fall.center.x - fall.width * 0.85f,
+                        fall.yMax - fall.width * 0.7f, fall.width * 1.7f, fall.width);
+                    SoftFog(spray, t, e.alpha * 0.45f, mist, 73);
+                }
+                GUI.color = Color.white;
                 return;
             }
             if (k == "stream")
@@ -507,14 +634,9 @@ namespace BladePath
                 if (fire != null) SheetFrame(r, fire, 16, 13, 208, t, 25f, e.alpha, false);
                 return;
             }
-            if (k == "mist")
-            {   // стелющийся туман: лист UI/fx_mist 6×5 туда-обратно, полоса медленно плывёт
-                Texture2D fs = UiKit.Tex("UI/fx_mist");
-                if (fs != null) SheetFrame(new Rect(r.x + Mathf.Sin(t * 0.05f) * r.width * 0.05f, r.y, r.width, r.height), fs, 6, 5, 30, t, 2f, e.alpha, true);
-            }
         }
 
-        /// <summary>Библиотека эффектов редактора карт: вид, название, размер по умолчанию (пиксели картины), прозрачность, подножие.</summary>
+                /// <summary>Библиотека эффектов редактора карт: вид, название, размер по умолчанию (пиксели картины), прозрачность, подножие.</summary>
         public static readonly string[] FxKinds = { "fall_fade", "fall_fade", "fall_lip", "fall_mid", "splash", "spray", "stream", "smoke", "smoke_dark", "wisp", "campfire", "mist", "lantern", "wisps", "petals" };
         public static readonly string[] FxNames = { "Водопад узкий", "Водопад широкий", "Перелив из озера", "Каскад (средняя ступень)", "Брызги у подножия", "Водяная пыль",
                                                     "Блики ручья", "Дым из трубы", "Дым костра", "Струйка дыма", "Костёр", "Туман стелется", "Огонь фонаря", "Блуждающие огни", "Лепестки сакуры" };
@@ -557,8 +679,8 @@ namespace BladePath
                 {
                     float seed = ri * 37.1f + i * 1.618f;
                     float u = H(seed) + t * (r.lava ? 0.008f : 0.02f) * (0.7f + 0.6f * H(seed + 3f));
-                    Vector2 p = Along(pl, u);
-                    Vector2 q = Along(pl, u + 0.004f);
+                    Vector2 p = Along(pl, Mathf.Repeat(u, 1f), region);
+                    Vector2 q = Along(pl, Mathf.Clamp01(Mathf.Repeat(u, 1f) + 0.004f), region);
                     Vector2 dir = Vector2.Scale(q - p, MapGeom.Pts(region)).normalized;
                     Vector2 side = new Vector2(-dir.y, dir.x);
                     Vector2 sp = S(p) + side * (H(seed + 7f) - 0.5f) * 14f * k;
@@ -624,26 +746,25 @@ namespace BladePath
                     for (int i = 0; i < 9; i++)
                     {
                         float u = Mathf.Repeat(t * 0.012f + i / 9f, 1f);
-                        Vector2 p = S(Along(fl, u));
+                        Vector2 p = S(Along(fl, u, region));
                         if (!Vis(p)) continue;
                         float sz = (46f + 30f * H(i * 3.1f)) * k * (0.8f + 0.4f * u);
                         float a = Mathf.Sin(u * Mathf.PI) * 0.2f;
                         GUI.color = new Color(0.9f, 0.9f, 0.95f, a);
                         GUI.DrawTexture(new Rect(p.x - sz * 0.5f + Mathf.Sin(t * 0.3f + i) * 6f * k, p.y - sz * 0.3f, sz, sz * 0.6f), mist);
                     }
-            // полосы тумана над нарисованным туманом: лист fx_mist (30 кадров туда-обратно) клубится, полоса дышит и плывёт
-            Texture2D fogSheet = r.fog.Length > 0 ? UiKit.Tex("UI/fx_mist") : null;
-            if (fogSheet != null)
+            // Feathered Gaussian mist above the painted clouds, no sheet borders or frame flicker.
+            if (mist != null)
                 for (int i = 0; i < r.fog.Length; i++)
                 {
                     Vector3 f = r.fog[i];
-                    Vector2 p = S(f) + new Vector2(Mathf.Sin(t * 0.05f + i * 1.7f) * 14f * k, 0f);
+                    Vector2 p = S(f);
                     if (!Vis(p)) continue;
-                    float fw = f.z * k * 2f, fh = fw * 0.5f;
-                    float a = 0.13f + 0.06f * Mathf.Sin(t * 0.21f + i * 2.3f);
-                    FlipCell(new Rect(p.x - fw * 0.5f, p.y - fh * 0.5f, fw, fh), fogSheet, 6, 5, 30, 0.8f, i * 3.7f, new Color(0.92f, 0.92f, 0.96f, a));
+                    float fw = f.z * k * 2.6f, fh = fw * 0.65f;
+                    SoftFog(new Rect(p.x - fw * 0.5f, p.y - fh * 0.5f, fw, fh),
+                        t, 0.35f, mist, i + 17);
                 }
-            // стоячая вода: в разных местах по очереди проступает мягкий блик и гаснет (3–5 с), едва смещаясь
+                        // стоячая вода: в разных местах по очереди проступает мягкий блик и гаснет (3–5 с), едва смещаясь
             if (glow != null)
                 for (int i = 0; i < r.lake.Length; i++)
                 {
@@ -658,7 +779,13 @@ namespace BladePath
                 }
             // облетающая сакура: лепестки FX/petals8 (4×2) падают, раскачиваясь, и тают у земли
             Texture2D pet = r.petals.Length > 0 ? UiKit.Tex("FX/petals8") : null;
-            if (pet != null)
+            // One emitter per painted sakura: do not overlay second, offset emitters from the old map.
+            bool authoredPetals = false;
+            MapData authoredMap = MapStore.Get(region);
+            if (authoredMap != null && authoredMap.effects != null)
+                foreach (MapEffect e in authoredMap.effects)
+                    if (e.kind == "petals") { authoredPetals = true; break; }
+            if (pet != null && !authoredPetals)
                 foreach (Vector4 ar in r.petals)
                     for (int i = 0; i < 22; i++)
                     {
@@ -668,7 +795,7 @@ namespace BladePath
                         Vector2 uv = new Vector2(ar.x + ar.z * H(seed), ar.y + ar.w * (0.15f + 0.85f * ph));
                         Vector2 p = S(uv) + new Vector2(Mathf.Sin(t * 1.3f + seed) * 9f * k + ph * 14f * k, 0f);
                         if (!Vis(p)) continue;
-                        float ps = (5.5f + 2.5f * H(seed + 1f)) * k;
+                        float ps = (1.7f + 1.4f * H(seed + 1f)) * k;
                         float a = Mathf.Clamp01(ph / 0.1f) * Mathf.Clamp01((1f - ph) / 0.2f) * 0.9f;
                         int c = (int)(H(seed + 2f) * 8f) % 8;
                         bool fl = Mathf.Sin(t * 2.1f + seed) < 0f;   // лепесток переворачивается в полёте
@@ -725,10 +852,10 @@ namespace BladePath
                     Vector2 p = S(w) + new Vector2(Mathf.Sin(t * 0.7f + w.x * 40f) * 8f, Mathf.Sin(t * 1.1f + w.y * 30f) * 6f - 4f) * k;
                     if (!Vis(p)) continue;
                     float a = 0.45f + 0.35f * Mathf.Sin(t * 1.7f + w.x * 90f);
-                    float g = w.z * k * (1f + 0.3f * a);
-                    GUI.color = new Color(0.35f, 1f, 0.95f, 0.55f * a);
+                    float g = w.z * k * (0.33f + 0.1f * a);
+                    GUI.color = new Color(0.25f, 0.96f, 0.5f, 0.55f * a);
                     GUI.DrawTexture(new Rect(p.x - g, p.y - g, g * 2f, g * 2f), glow);
-                    GUI.color = new Color(0.85f, 1f, 1f, 0.8f * a);
+                    GUI.color = new Color(0.78f, 1f, 0.77f, 0.8f * a);
                     GUI.DrawTexture(new Rect(p.x - g * 0.3f, p.y - g * 0.3f, g * 0.6f, g * 0.6f), glow);
                 }
             // большие медленные пульсы: пасть Они, кровавая луна, закат
