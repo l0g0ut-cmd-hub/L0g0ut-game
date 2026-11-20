@@ -334,7 +334,7 @@ namespace BladePath
             stacks.Add(new Stack { t = t, enemy = enemy, count = n, start = n, topHp = t.hp, shots = t.shots, c = c, r = r, born = Time.unscaledTime });
         }
 
-        static Vector2 MachinePos(int m) { Vector2 c = Center(0, 2 + m * 3); return new Vector2(ox - R * 2.1f, c.y); }
+        static Vector2 MachinePos(int m) { Vector2 c = Center(0, 4 + m * 3); return new Vector2(ox - R * 2.1f, c.y); }
         /// <summary>Начало раунда: баллиста бьёт сильнейший отряд врага, лекарь лечит раненого.</summary>
         static void Machines()
         {
@@ -676,6 +676,7 @@ namespace BladePath
         {
             if (castThisRound || spirit < sp.cost) return;
             spirit -= sp.cost; castThisRound = true; spellSel = -1; bookOpen = false;
+            GeneralCast();
             int lv = General.Power;   // сила умений — «Сила духа» полководца
             Vector2 at = target != null ? target.pos : Center(cell.x, cell.y);
             bool sheet = false;
@@ -890,7 +891,7 @@ namespace BladePath
         static void SetupLive()
         {
             CleanupLive();
-            bool any = false;
+            bool any = Resources.Load<GameObject>("Units/unit_general") != null;   // полководец на коне у края поля («Герои 3»)
             foreach (Stack s in stacks) if (!string.IsNullOrEmpty(s.t.live) && Resources.Load<GameObject>("Units/" + s.t.live) != null) any = true;
             if (!any) return;
             stage = new GameObject("TacticsStage");
@@ -903,6 +904,7 @@ namespace BladePath
             GameObject lg = new GameObject("TacticsSun"); lg.transform.SetParent(stage.transform, false);
             Light l = lg.AddComponent<Light>(); l.type = LightType.Directional; l.intensity = 1.15f; l.color = new Color(1f, 0.93f, 0.82f);
             l.cullingMask = 1 << LiveLayer; lg.transform.rotation = Quaternion.Euler(48f, -35f, 0f);
+            SpawnGeneral();
             foreach (Stack s in stacks)
             {
                 if (string.IsNullOrEmpty(s.t.live)) continue;
@@ -955,8 +957,51 @@ namespace BladePath
             foreach (string k in keys) { if (k == null) continue; foreach (string n in names) if (n.ToLowerInvariant().Contains(k)) return n; }
             return null;
         }
+        static GameObject generalGo; static Animation generalAn; static string genIdle, genCast;
+        static Vector2 GeneralPos() { Vector2 c = Center(0, 1); return new Vector2(ox - R * 2.3f, c.y); }
+        static void SpawnGeneral()
+        {
+            GameObject pf = Resources.Load<GameObject>("Units/unit_general");
+            if (pf == null || stage == null) return;
+            generalGo = Object.Instantiate(pf, stage.transform); generalGo.name = "General";
+            foreach (Transform tr in generalGo.GetComponentsInChildren<Transform>(true)) tr.gameObject.layer = LiveLayer;
+            Texture2D tex = Resources.Load<Texture2D>("Units/unit_general_albedo");
+            Material m = new Material(Shader.Find("Standard")); if (tex != null) m.mainTexture = tex;
+            m.SetFloat("_Glossiness", 0.25f); m.SetFloat("_Metallic", 0.05f); m.color = new Color(1.12f, 1.1f, 1.06f);
+            foreach (Renderer r in generalGo.GetComponentsInChildren<Renderer>(true))
+            {
+                Material[] ms = new Material[r.sharedMaterials.Length]; for (int i = 0; i < ms.Length; i++) ms[i] = m; r.sharedMaterials = ms;
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                SkinnedMeshRenderer sm = r as SkinnedMeshRenderer; if (sm != null) sm.updateWhenOffscreen = true;
+            }
+            Bounds b = new Bounds(); bool has = false;
+            foreach (Renderer r in generalGo.GetComponentsInChildren<Renderer>()) { if (!has) { b = r.bounds; has = true; } else b.Encapsulate(r.bounds); }
+            if (has && b.size.y > 0.01f) generalGo.transform.localScale *= 2.7f / b.size.y;
+            generalAn = generalGo.GetComponentInChildren<Animation>();
+            genIdle = genCast = null;
+            if (generalAn != null)
+            {
+                generalAn.cullingType = AnimationCullingType.AlwaysAnimate;
+                foreach (AnimationState st in generalAn)
+                {
+                    string n = st.name.ToLower();
+                    if (n.Contains("idle")) genIdle = st.name; else if (n.Contains("jump")) genCast = st.name;
+                    st.wrapMode = n.Contains("idle") ? WrapMode.Loop : WrapMode.Once;
+                }
+                if (genIdle != null) generalAn.Play(genIdle);
+            }
+        }
+        /// <summary>Полководец колдует — конь встаёт на дыбы.</summary>
+        static void GeneralCast()
+        {
+            if (generalAn == null || genCast == null) return;
+            generalAn[genCast].time = 0f; generalAn.Play(genCast);
+            if (genIdle != null) generalAn.CrossFadeQueued(genIdle, 0.25f, QueueMode.CompleteOthers);
+        }
+
         static void CleanupLive()
         {
+            generalGo = null; generalAn = null;
             if (stage != null) Object.Destroy(stage);
             stage = null; liveCam = null;
             if (liveRT != null) { liveRT.Release(); Object.Destroy(liveRT); liveRT = null; }
@@ -988,6 +1033,11 @@ namespace BladePath
             Vector3 centerGround = StageAt;
             liveCam.transform.position = centerGround - liveCam.transform.forward * 60f;
             float now = Time.unscaledTime;
+            if (generalGo != null)
+            {
+                generalGo.transform.position = Ground(GeneralPos());
+                generalGo.transform.rotation = Quaternion.LookRotation(Vector3.right, Vector3.up);
+            }
             foreach (Stack s in stacks)
             {
                 if (s.go == null) continue;
