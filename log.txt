@@ -1,4 +1,77 @@
-== library model
-  анимаций в библиотеке: 805
-  аккаунт 1 MESHY_KEY — остаток кредитов: 608
-  аккаунт 2 ALT1 — остаток кредитов: 608
+== animate anim_archer
+  анимация: 01a1f93b-1543-7444-9fa3-f83655fdc81d
+  /v1/animations 01a1f93b-1543-7444-9fa3-f83655fdc81d: IN_PROGRESS 0%
+  /v1/animations 01a1f93b-1543-7444-9fa3-f83655fdc81d: IN_PROGRESS 68%
+  /v1/animations 01a1f93b-1543-7444-9fa3-f83655fdc81d: IN_PROGRESS 81%
+  /v1/animations 01a1f93b-1543-7444-9fa3-f83655fdc81d: IN_PROGRESS 84%
+  /v1/animations 01a1f93b-1543-7444-9fa3-f83655fdc81d: IN_PROGRESS 86%
+  /v1/animations 01a1f93b-1543-7444-9fa3-f83655fdc81d: IN_PROGRESS 89%
+  /v1/animations 01a1f93b-1543-7444-9fa3-f83655fdc81d: IN_PROGRESS 91%
+  /v1/animations 01a1f93b-1543-7444-9fa3-f83655fdc81d: IN_PROGRESS 94%
+  /v1/animations 01a1f93b-1543-7444-9fa3-f83655fdc81d: IN_PROGRESS 95%
+  /v1/animations 01a1f93b-1543-7444-9fa3-f83655fdc81d: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/anim_archer/anim_archer_animation_glb_url.glb 6007916 байт
+  скачано /home/runner/work/_temp/out/anim_archer/anim_archer_animation_fbx_url.fbx 6366588 байт
+  скачано /home/runner/work/_temp/out/anim_archer/anim_archer_processed_animation_fps_fbx_url.fbx 6367452 байт
+== animate anim_teppo
+  анимация: 01a1f93d-3f14-70d7-b25a-fb10d78970ad
+  /v1/animations 01a1f93d-3f14-70d7-b25a-fb10d78970ad: IN_PROGRESS 0%
+  /v1/animations 01a1f93d-3f14-70d7-b25a-fb10d78970ad: IN_PROGRESS 68%
+  /v1/animations 01a1f93d-3f14-70d7-b25a-fb10d78970ad: IN_PROGRESS 82%
+  /v1/animations 01a1f93d-3f14-70d7-b25a-fb10d78970ad: IN_PROGRESS 84%
+  /v1/animations 01a1f93d-3f14-70d7-b25a-fb10d78970ad: IN_PROGRESS 87%
+  /v1/animations 01a1f93d-3f14-70d7-b25a-fb10d78970ad: IN_PROGRESS 89%
+  /v1/animations 01a1f93d-3f14-70d7-b25a-fb10d78970ad: IN_PROGRESS 92%
+  /v1/animations 01a1f93d-3f14-70d7-b25a-fb10d78970ad: IN_PROGRESS 94%
+  /v1/animations 01a1f93d-3f14-70d7-b25a-fb10d78970ad: IN_PROGRESS 95%
+  /v1/animations 01a1f93d-3f14-70d7-b25a-fb10d78970ad: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/anim_teppo/anim_teppo_animation_glb_url.glb 6007540 байт
+  скачано /home/runner/work/_temp/out/anim_teppo/anim_teppo_animation_fbx_url.fbx 6557388 байт
+  скачано /home/runner/work/_temp/out/anim_teppo/anim_teppo_processed_animation_fps_fbx_url.fbx 6557660 байт
+== animate anim_sohei
+  анимация: 01a1f940-053f-74eb-a6b3-ec2ed3b44d4f
+  /v1/animations 01a1f940-053f-74eb-a6b3-ec2ed3b44d4f: IN_PROGRESS 0%
+  /v1/animations 01a1f940-053f-74eb-a6b3-ec2ed3b44d4f: IN_PROGRESS 68%
+  /v1/animations 01a1f940-053f-74eb-a6b3-ec2ed3b44d4f: IN_PROGRESS 82%
+  /v1/animations 01a1f940-053f-74eb-a6b3-ec2ed3b44d4f: IN_PROGRESS 84%
+  /v1/animations 01a1f940-053f-74eb-a6b3-ec2ed3b44d4f: IN_PROGRESS 87%
+  /v1/animations 01a1f940-053f-74eb-a6b3-ec2ed3b44d4f: IN_PROGRESS 89%
+  /v1/animations 01a1f940-053f-74eb-a6b3-ec2ed3b44d4f: IN_PROGRESS 92%
+  /v1/animations 01a1f940-053f-74eb-a6b3-ec2ed3b44d4f: IN_PROGRESS 94%
+  /v1/animations 01a1f940-053f-74eb-a6b3-ec2ed3b44d4f: IN_PROGRESS 95%
+  /v1/animations 01a1f940-053f-74eb-a6b3-ec2ed3b44d4f: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/anim_sohei/anim_sohei_animation_glb_url.glb 5966056 байт
+  скачано /home/runner/work/_temp/out/anim_sohei/anim_sohei_animation_fbx_url.fbx 6422444 байт
+  скачано /home/runner/work/_temp/out/anim_sohei/anim_sohei_processed_animation_fps_fbx_url.fbx 6423532 байт
+== animate anim_onmyoji
+  анимация: 01a1f941-dffb-71cc-83b9-bc3caf7e167e
+  /v1/animations 01a1f941-dffb-71cc-83b9-bc3caf7e167e: IN_PROGRESS 0%
+  /v1/animations 01a1f941-dffb-71cc-83b9-bc3caf7e167e: IN_PROGRESS 68%
+  /v1/animations 01a1f941-dffb-71cc-83b9-bc3caf7e167e: IN_PROGRESS 82%
+  /v1/animations 01a1f941-dffb-71cc-83b9-bc3caf7e167e: IN_PROGRESS 84%
+  /v1/animations 01a1f941-dffb-71cc-83b9-bc3caf7e167e: IN_PROGRESS 87%
+  /v1/animations 01a1f941-dffb-71cc-83b9-bc3caf7e167e: IN_PROGRESS 89%
+  /v1/animations 01a1f941-dffb-71cc-83b9-bc3caf7e167e: IN_PROGRESS 92%
+  /v1/animations 01a1f941-dffb-71cc-83b9-bc3caf7e167e: IN_PROGRESS 94%
+  /v1/animations 01a1f941-dffb-71cc-83b9-bc3caf7e167e: IN_PROGRESS 95%
+  /v1/animations 01a1f941-dffb-71cc-83b9-bc3caf7e167e: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/anim_onmyoji/anim_onmyoji_animation_glb_url.glb 5877712 байт
+  скачано /home/runner/work/_temp/out/anim_onmyoji/anim_onmyoji_animation_fbx_url.fbx 6512572 байт
+  скачано /home/runner/work/_temp/out/anim_onmyoji/anim_onmyoji_processed_animation_fps_fbx_url.fbx 6513212 байт
+== animate anim_banner
+  анимация: 01a1f944-592d-7251-8f84-24ca25b0cb26
+  /v1/animations 01a1f944-592d-7251-8f84-24ca25b0cb26: IN_PROGRESS 0%
+  /v1/animations 01a1f944-592d-7251-8f84-24ca25b0cb26: IN_PROGRESS 68%
+  /v1/animations 01a1f944-592d-7251-8f84-24ca25b0cb26: IN_PROGRESS 82%
+  /v1/animations 01a1f944-592d-7251-8f84-24ca25b0cb26: IN_PROGRESS 84%
+  /v1/animations 01a1f944-592d-7251-8f84-24ca25b0cb26: IN_PROGRESS 87%
+  /v1/animations 01a1f944-592d-7251-8f84-24ca25b0cb26: IN_PROGRESS 89%
+  /v1/animations 01a1f944-592d-7251-8f84-24ca25b0cb26: IN_PROGRESS 92%
+  /v1/animations 01a1f944-592d-7251-8f84-24ca25b0cb26: IN_PROGRESS 94%
+  /v1/animations 01a1f944-592d-7251-8f84-24ca25b0cb26: IN_PROGRESS 95%
+  /v1/animations 01a1f944-592d-7251-8f84-24ca25b0cb26: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/anim_banner/anim_banner_animation_glb_url.glb 6171836 байт
+  скачано /home/runner/work/_temp/out/anim_banner/anim_banner_animation_fbx_url.fbx 6661420 байт
+  скачано /home/runner/work/_temp/out/anim_banner/anim_banner_processed_animation_fps_fbx_url.fbx 6662172 байт
+  аккаунт 1 MESHY_KEY — остаток кредитов: 518
+  аккаунт 2 ALT1 — остаток кредитов: 518
