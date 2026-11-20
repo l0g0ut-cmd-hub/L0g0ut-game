@@ -1530,7 +1530,8 @@
       "h": 170,
       "alpha": 0.6,
       "speed": 1,
-      "foot": 1
+      "foot": 1,
+      "angle": -8
     },
     {
       "kind": "fall_mid",
@@ -1540,7 +1541,8 @@
       "h": 150,
       "alpha": 0.6,
       "speed": 1,
-      "foot": 1
+      "foot": 1,
+      "angle": 13
     },
     {
       "kind": "fall_mid",
@@ -1550,7 +1552,8 @@
       "h": 180,
       "alpha": 0.62,
       "speed": 1,
-      "foot": 1
+      "foot": 1,
+      "angle": -10
     },
     {
       "kind": "fall_fade",
@@ -1560,7 +1563,8 @@
       "h": 50,
       "alpha": 0.6,
       "speed": 1,
-      "foot": 1
+      "foot": 1,
+      "angle": -4
     },
     {
       "kind": "fall_fade",
@@ -1570,7 +1574,8 @@
       "h": 60,
       "alpha": 0.6,
       "speed": 1,
-      "foot": 1
+      "foot": 1,
+      "angle": 12
     },
     {
       "kind": "fall_fade",
@@ -1580,7 +1585,8 @@
       "h": 50,
       "alpha": 0.55,
       "speed": 1,
-      "foot": 1
+      "foot": 1,
+      "angle": 8
     },
     {
       "kind": "fall_lip",
@@ -1588,9 +1594,10 @@
       "y": 560,
       "w": 40,
       "h": 200,
-      "alpha": 0.85,
+      "alpha": 0.73,
       "speed": 1,
-      "foot": 2
+      "foot": 2,
+      "angle": -11
     },
     {
       "kind": "fall_mid",
@@ -1600,7 +1607,8 @@
       "h": 80,
       "alpha": 0.6,
       "speed": 1,
-      "foot": 1
+      "foot": 1,
+      "angle": 10
     },
     {
       "kind": "fall_mid",
@@ -1610,7 +1618,8 @@
       "h": 90,
       "alpha": 0.6,
       "speed": 1,
-      "foot": 1
+      "foot": 1,
+      "angle": -9
     },
     {
       "kind": "fall_mid",
@@ -1620,7 +1629,8 @@
       "h": 90,
       "alpha": 0.6,
       "speed": 1,
-      "foot": 1
+      "foot": 1,
+      "angle": -7
     },
     {
       "kind": "fall_fade",
@@ -1630,7 +1640,8 @@
       "h": 70,
       "alpha": 0.65,
       "speed": 1,
-      "foot": 1
+      "foot": 1,
+      "angle": 7
     },
     {
       "kind": "fall_fade",
@@ -1640,7 +1651,8 @@
       "h": 70,
       "alpha": 0.6,
       "speed": 1,
-      "foot": 1
+      "foot": 1,
+      "angle": -5
     },
     {
       "kind": "fall_fade",
@@ -1650,7 +1662,8 @@
       "h": 40,
       "alpha": 0.5,
       "speed": 1,
-      "foot": 0
+      "foot": 0,
+      "angle": 5
     },
     {
       "kind": "smoke",
@@ -1818,7 +1831,7 @@
       "y": 1203,
       "w": 260,
       "h": 228,
-      "alpha": 0.8,
+      "alpha": 0.72,
       "speed": 1,
       "foot": 0
     },
@@ -1828,7 +1841,7 @@
       "y": 1204,
       "w": 280,
       "h": 246,
-      "alpha": 0.8,
+      "alpha": 0.72,
       "speed": 1,
       "foot": 0
     },
@@ -1838,27 +1851,27 @@
       "y": 1002,
       "w": 240,
       "h": 211,
-      "alpha": 0.8,
+      "alpha": 0.72,
       "speed": 1,
       "foot": 0
     },
     {
       "kind": "petals",
-      "x": 820,
-      "y": 640,
-      "w": 300,
-      "h": 200,
-      "alpha": 0.85,
+      "x": 775,
+      "y": 555,
+      "w": 170,
+      "h": 195,
+      "alpha": 0.76,
       "speed": 1,
       "foot": 0
     },
     {
       "kind": "petals",
-      "x": 3700,
-      "y": 1150,
-      "w": 300,
-      "h": 200,
-      "alpha": 0.85,
+      "x": 3620,
+      "y": 995,
+      "w": 175,
+      "h": 205,
+      "alpha": 0.76,
       "speed": 1,
       "foot": 0
     },
@@ -1866,9 +1879,9 @@
       "kind": "mist",
       "x": 1340,
       "y": 530,
-      "w": 320,
-      "h": 140,
-      "alpha": 0.45,
+      "w": 304,
+      "h": 161,
+      "alpha": 0.34,
       "speed": 1,
       "foot": 0
     },
@@ -1876,9 +1889,9 @@
       "kind": "mist",
       "x": 1900,
       "y": 910,
-      "w": 320,
-      "h": 140,
-      "alpha": 0.45,
+      "w": 304,
+      "h": 161,
+      "alpha": 0.34,
       "speed": 1,
       "foot": 0
     },
@@ -1886,9 +1899,9 @@
       "kind": "mist",
       "x": 2920,
       "y": 570,
-      "w": 320,
-      "h": 140,
-      "alpha": 0.45,
+      "w": 304,
+      "h": 161,
+      "alpha": 0.34,
       "speed": 1,
       "foot": 0
     },
@@ -1896,9 +1909,9 @@
       "kind": "mist",
       "x": 540,
       "y": 1380,
-      "w": 320,
-      "h": 140,
-      "alpha": 0.45,
+      "w": 304,
+      "h": 161,
+      "alpha": 0.34,
       "speed": 1,
       "foot": 0
     },
@@ -1908,7 +1921,7 @@
       "y": 470,
       "w": 120,
       "h": 60,
-      "alpha": 0.9,
+      "alpha": 0.72,
       "speed": 1,
       "foot": 0
     },
@@ -1918,7 +1931,7 @@
       "y": 660,
       "w": 120,
       "h": 60,
-      "alpha": 0.9,
+      "alpha": 0.72,
       "speed": 1,
       "foot": 0
     },
@@ -1928,7 +1941,7 @@
       "y": 1000,
       "w": 120,
       "h": 60,
-      "alpha": 0.9,
+      "alpha": 0.72,
       "speed": 1,
       "foot": 0
     },
@@ -1938,7 +1951,27 @@
       "y": 1270,
       "w": 120,
       "h": 60,
-      "alpha": 0.9,
+      "alpha": 0.72,
+      "speed": 1,
+      "foot": 0
+    },
+    {
+      "kind": "petals",
+      "x": 242,
+      "y": 100,
+      "w": 170,
+      "h": 160,
+      "alpha": 0.76,
+      "speed": 1,
+      "foot": 0
+    },
+    {
+      "kind": "petals",
+      "x": 1510,
+      "y": 690,
+      "w": 170,
+      "h": 185,
+      "alpha": 0.76,
       "speed": 1,
       "foot": 0
     }

@@ -1796,6 +1796,9 @@ namespace BladePath
         // obscure routes or medallions. One 256x128 texture, three draw calls.
         void DrawPaintedMist()
         {
+            // The extended forest uses real terrain-anchored fog in MapLife; do not draw
+            // three horizontally drifting bands at fixed screen Y over unrelated landmarks.
+            if (Campaign.Region == 0 && MapGeom.TexHt[0] > 1024) return;
             if (Event.current.type != EventType.Repaint || viewW < 160f) return;
             Texture2D mist = JourneyMistArt.Texture;
             if (mist == null) return;

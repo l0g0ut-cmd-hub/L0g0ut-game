@@ -410,7 +410,13 @@ namespace BladePath
                     RiverCurrent(region, e, view, u0, uw, t + i * 0.37f);
                     continue;
                 }
+                // Follow the actual sloping rock face: rotate about the lip, not the center.
+                // GUI.matrix is restored immediately so subsequent map/UI elements never inherit it.
+                Matrix4x4 previousMatrix = GUI.matrix;
+                if (e.kind != null && e.kind.StartsWith("fall_") && Mathf.Abs(e.angle) > 0.05f)
+                    GUIUtility.RotateAroundPivot(e.angle, new Vector2(r.center.x, r.y));
                 DrawEffect(e, r, t * Mathf.Max(0.05f, e.speed) + i * 0.37f, mist);
+                GUI.matrix = previousMatrix;
             }
         }
 
@@ -446,14 +452,14 @@ namespace BladePath
             GUI.color = Color.white;
         }
 
-        static void SmallWisps(Rect r, float t, float alpha)
+        static void SmallWisps(MapEffect e, Rect r, float t, float alpha)
         {
             Texture2D glow = UiKit.Tex("FX/glow_pool");
             if (glow == null) return;
             float size = Mathf.Clamp(Mathf.Min(r.width, r.height) * 0.011f, 1f, 3.3f);
             for (int i = 0; i < 13; i++)
             {
-                float seed = i * 17.13f + r.x * 0.13f;
+                float seed = i * 17.13f + e.x * 0.013f + e.y * 0.017f;   // stable as camera pans
                 float x = r.x + r.width * (0.12f + H(seed) * 0.76f) +
                     Mathf.Sin(t * 0.51f + seed) * r.width * 0.035f;
                 float y = r.y + r.height * (0.14f + H(seed + 1f) * 0.72f) +
@@ -482,9 +488,10 @@ namespace BladePath
                 float run = t * Mathf.Max(0.1f, e.speed) / life + H(seed + 2f);
                 float phase = Mathf.Repeat(run, 1f);
                 int cycle = Mathf.FloorToInt(run);
-                float x = r.x + r.width * (0.26f + 0.47f * H(seed + cycle * 2.1f)) +
-                    Mathf.Sin(t * 1.12f + seed) * 7f * scale + phase * 9f * scale;
-                float y = r.y + r.height * (0.04f + 0.92f * phase);
+                // Emit from the painted crown; fall below it rather than scattering across the whole rectangle.
+                float x = r.center.x + r.width * (H(seed + cycle * 2.1f) - 0.5f) * 0.50f +
+                    Mathf.Sin(t * 1.12f + seed) * 5f * scale + phase * 6f * scale;
+                float y = r.y + r.height * (0.28f + 0.68f * phase);
                 float size = (1.6f + 1.6f * H(seed + cycle * 3.7f)) * scale;
                 float a = Mathf.Clamp01(phase / 0.12f) * Mathf.Clamp01((1f - phase) / 0.15f);
                 int cell = Mathf.Min(7, (int)(H(seed + cycle * 0.37f + 4f) * 8f));
@@ -496,41 +503,69 @@ namespace BladePath
             GUI.color = Color.white;
         }
 
-        // Snap localized current to the nearest river segment and orient each glint along its tangent.
+        // River flow is sampled from the painted route itself (not from a stationary, rotated rectangle).
+        // Each glint recomputes its local tangent while passing bends; all positions use stable map UV.
         static void RiverCurrent(int region, MapEffect e, Rect view, float u0, float uw, float t)
         {
-            Region data = regions[Mathf.Clamp(region, 0, regions.Length - 1)];
-            if (data.lava || data.rivers.Length == 0) return;
+            Region area = regions[Mathf.Clamp(region, 0, regions.Length - 1)];
+            if (area.lava || area.rivers.Length == 0) return;
             Texture2D glow = UiKit.Tex("FX/glow_pool");
             if (glow == null) return;
+            Vector2 pixelsToMap = MapGeom.Pts(region);
             float tw = MapGeom.TexWidth(region), th = MapGeom.TexHeight(region);
             float sx = view.width / uw / tw, sy = view.height / th;
-            Vector2 requested = new Vector2(view.x + ((e.x + e.w * 0.5f) / tw - u0) / uw * view.width,
-                view.y + (e.y + e.h * 0.5f) * sy);
-            Vector2 nearest = requested, direction = Vector2.down;
-            float best = float.MaxValue;
-            foreach (Vector2[] line in data.rivers)
-                for (int j = 1; j < line.Length; j++)
-                {
-                    Vector2 a = new Vector2(view.x + (line[j - 1].x - u0) / uw * view.width, view.y + line[j - 1].y * view.height);
-                    Vector2 b = new Vector2(view.x + (line[j].x - u0) / uw * view.width, view.y + line[j].y * view.height);
-                    Vector2 d = b - a;
-                    if (d.sqrMagnitude < 0.0001f) continue;
-                    Vector2 p = a + d * Mathf.Clamp01(Vector2.Dot(requested - a, d) / d.sqrMagnitude);
-                    float dist = (p - requested).sqrMagnitude;
-                    if (dist < best) { best = dist; nearest = p; direction = d.normalized; }
-                }
-            if (best > Mathf.Pow(90f * Mathf.Max(sx, sy), 2f)) return; // no highlights on banks
-            Vector2 side = new Vector2(-direction.y, direction.x);
-            float length = Mathf.Min(e.w * sx * 0.66f, 75f * sx);
-            for (int i = 0; i < 11; i++)
+            Vector2 anchor = new Vector2((e.x + e.w * 0.5f) / tw, (e.y + e.h * 0.5f) / th);
+            Vector2[] bestLine = null;
+            float bestDistance = float.MaxValue, centerU = 0f, totalLength = 1f;
+            foreach (Vector2[] line in area.rivers)
             {
-                float seed = i * 5.87f + e.x * 0.011f;
-                float u = Mathf.Repeat(t * 0.20f * Mathf.Max(0.1f, e.speed) + H(seed), 1f);
-                Vector2 p = nearest + direction * (u - 0.5f) * length + side * (H(seed + 8f) - 0.5f) * 11f * sx;
-                float len = (2.8f + 3f * H(seed + 1f)) * sx;
-                UiKit.Streak(p - direction * len, p + direction * len, 1.6f * sx,
-                    new Color(0.79f, 0.91f, 1f, e.alpha * 0.36f * Mathf.Sin(u * Mathf.PI)), glow);
+                if (line.Length < 2) continue;
+                float total = 0f;
+                for (int i = 1; i < line.Length; i++)
+                    total += Vector2.Scale(line[i] - line[i-1], pixelsToMap).magnitude;
+                if (total < 0.01f) continue;
+                float passed = 0f;
+                for (int i = 1; i < line.Length; i++)
+                {
+                    Vector2 segment = Vector2.Scale(line[i] - line[i-1], pixelsToMap);
+                    Vector2 start = Vector2.Scale(line[i-1], pixelsToMap);
+                    Vector2 point = Vector2.Scale(anchor, pixelsToMap);
+                    float along = Mathf.Clamp01(Vector2.Dot(point - start, segment) / Mathf.Max(0.0001f, segment.sqrMagnitude));
+                    Vector2 projected = start + segment * along;
+                    float distance = (point - projected).sqrMagnitude;
+                    if (distance < bestDistance)
+                    {
+                        bestDistance = distance;
+                        bestLine = line;
+                        centerU = (passed + segment.magnitude * along) / total;
+                        totalLength = total;
+                    }
+                    passed += segment.magnitude;
+                }
+            }
+            // A marker outside the real water is skipped; never draw ripples on grass or rocks.
+            float tolerance = 45f * MapGeom.H / 1024f;
+            if (bestLine == null || bestDistance > tolerance * tolerance) return;
+            float mapScale = MapGeom.H / 1024f;
+            float halfU = Mathf.Min((e.w * 0.60f * mapScale) / totalLength, 0.055f);
+            for (int i = 0; i < 12; i++)
+            {
+                float seed = e.x * 0.019f + e.y * 0.017f + i * 7.47f;
+                float phase = Mathf.Repeat(t * 0.15f * Mathf.Max(0.1f, e.speed) + H(seed), 1f);
+                float u = Mathf.Clamp01(centerU + (phase - 0.5f) * halfU * 2f);
+                Vector2 at = Along(bestLine, u, region);
+                Vector2 before = Along(bestLine, Mathf.Max(0f, u - 0.0015f), region);
+                Vector2 after = Along(bestLine, Mathf.Min(1f, u + 0.0015f), region);
+                Vector2 d = Vector2.Scale(after - before, pixelsToMap).normalized;
+                if (d.sqrMagnitude < 0.01f) continue;
+                Vector2 side = new Vector2(-d.y, d.x);
+                Vector2 pos = new Vector2(view.x + (at.x - u0) / uw * view.width, view.y + at.y * view.height) +
+                    side * (H(seed + 3f) - 0.5f) * 9f * sx;
+                if (pos.x < view.x - 30f || pos.x > view.xMax + 30f) continue;
+                float len = (2.2f + 3f * H(seed + 1f)) * sx;
+                float fade = Mathf.Sin(phase * Mathf.PI);
+                UiKit.Streak(pos - d * len, pos + d * len, 1.25f * sx,
+                    new Color(0.78f, 0.91f, 1f, e.alpha * 0.26f * fade), glow);
             }
             GUI.color = Color.white;
         }
@@ -540,7 +575,7 @@ namespace BladePath
             string k = e.kind ?? "";
             // новые виды — только по листам владельца
             if (k == "lantern") { Hi("map_lantern", r, t, 18f, e.alpha); return; }
-            if (k == "wisps") { SmallWisps(r, t, e.alpha); return; }
+            if (k == "wisps") { SmallWisps(e, r, t, e.alpha); return; }
             if (k == "petals") { SmallPetals(e, r, t); return; }
             if (k == "mist") { SoftFog(r, t, e.alpha, mist, (int)e.x); return; }
             if (HiFx)

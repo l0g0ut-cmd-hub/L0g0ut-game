@@ -76,6 +76,7 @@ namespace BladePath
         public string kind;         // fall_fade, fall_mid, fall_lip, stream, smoke, campfire, mist…
         public float x, y, w, h;    // левый верхний угол и размер, пиксели картины
         public float alpha = 1f, speed = 1f;
+        public float angle;        // clockwise degrees in map screen coordinates, waterfall lip is pivot
         public int foot;            // у водопада: 0 — ничего, 1 — брызги, 2 — водяная пыль ущелья
     }
 
