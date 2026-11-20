@@ -730,10 +730,15 @@ namespace BladePath
                     s.an.cullingType = AnimationCullingType.AlwaysAnimate;
                     List<string> names = new List<string>();
                     foreach (AnimationState st in s.an) names.Add(st.name);
-                    s.clipIdle = Find(names, "idle", null); s.clipWalk = Find(names, "walk", "canter", "run");
-                    s.clipAct = Find(names, "shot", "shoot", "slash", "thrust", "spell", "cast", "attack", "combo", "jump");
-                    s.clipHit = Find(names, "hit", "reaction"); s.clipDie = Find(names, "dying", "dead", "death", "fall", "knock");
-                    s.clipWin = Find(names, "victory", "cheer", "howl");
+                    // по очереди, чтобы «Shot_and_Fall» был смертью, а «Gunshot_Reaction» — попаданием, а не выстрелом
+                    s.clipDie = Find(names, "dying", "dead", "death", "fall", "knock");
+                    List<string> left = new List<string>(names); left.Remove(s.clipDie);
+                    s.clipHit = Find(left, "reaction", "hit"); left.Remove(s.clipHit);
+                    s.clipWin = Find(left, "victory", "cheer", "howl"); left.Remove(s.clipWin);
+                    s.clipIdle = Find(left, "idle", "stance"); left.Remove(s.clipIdle);
+                    s.clipWalk = Find(left, "walk", "canter", "run"); left.Remove(s.clipWalk);
+                    s.clipAct = Find(left, "shot", "shoot", "slash", "thrust", "spell", "cast", "attack", "combo", "jump");
+                    if (s.clipAct == null && left.Count > 0) s.clipAct = left[0];
                     if (s.clipIdle == null && names.Count > 0) s.clipIdle = names[0];
                     foreach (AnimationState st in s.an)
                         st.wrapMode = st.name == s.clipIdle || st.name == s.clipWalk ? WrapMode.Loop : st.name == s.clipDie ? WrapMode.ClampForever : WrapMode.Once;
