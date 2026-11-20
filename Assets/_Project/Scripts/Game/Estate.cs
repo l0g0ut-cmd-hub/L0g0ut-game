@@ -176,8 +176,9 @@ namespace BladePath
                     int k = PlotArt[p];
                     float bw = pr.width * 0.98f, bh = bw * 0.82f;   // постройка — по ширине площадки, стоит на её нижнем краю
                     Rect br = new Rect(pr.center.x - bw * 0.5f, pr.yMax + 8f * sc - bh, bw, bh);
-                    GUI.DrawTextureWithTexCoords(br, bt, new Rect((k % 3) / 3f, 1f - (k / 3 + 1) / 3f, 1f / 3f, 1f / 3f));
-                    if (D.level[p] >= 2) UiKit.Text(new Rect(br.xMax - 30f, br.y, 30f, 18f), "★★", 12f, Gold);
+                    Texture2D bt2 = D.level[p] >= 2 ? UiKit.Tex("UI/Battle/estate_buildings2") : null;   // улучшенные постройки (если лист есть)
+                    GUI.DrawTextureWithTexCoords(br, bt2 != null ? bt2 : bt, new Rect((k % 3) / 3f, 1f - (k / 3 + 1) / 3f, 1f / 3f, 1f / 3f));
+                    if (D.level[p] >= 2 && bt2 == null) UiKit.Text(new Rect(br.xMax - 30f, br.y, 30f, 18f), "★★", 12f, Gold);
                     if (p == selPlot) Frame(new Rect(br.x - 3f, br.y - 3f, br.width + 6f, pr.yMax - br.y + 10f), Gold, 2f);
                 }
                 else
