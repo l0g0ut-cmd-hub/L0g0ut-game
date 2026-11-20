@@ -141,6 +141,21 @@ namespace BladePath
             return Mathf.Max(Mathf.Abs(dx), Mathf.Max(Mathf.Abs(dy), Mathf.Abs(dz)));
         }
         static Stack At(int c, int r) { foreach (Stack s in stacks) if (s.Alive && s.c == c && s.r == r) return s; return null; }
+
+        // препятствия (как в «Героях»): на клетку не встать; картинки — UI/Battle/obstacles (4×3), нет — камни-заглушки
+        static readonly List<Vector3Int> rocks = new List<Vector3Int>();   // x, y — клетка, z — ячейка атласа
+        static bool Rock(int c, int r) { foreach (Vector3Int o in rocks) if (o.x == c && o.y == r) return true; return false; }
+        static void PlaceRocks()
+        {
+            rocks.Clear();
+            int n = Random.Range(3, 7);
+            for (int g = 0; g < 60 && rocks.Count < n; g++)
+            {
+                int c = Random.Range(3, Cols - 3), r = Random.Range(0, Rows);
+                if (Rock(c, r) || At(c, r) != null) continue;
+                rocks.Add(new Vector3Int(c, r, Random.Range(0, 12)));
+            }
+        }
         static Vector2Int Pick(Vector2 p)
         {
             float best = float.MaxValue; Vector2Int h = new Vector2Int(-1, -1);
@@ -169,7 +184,7 @@ namespace BladePath
                 if (d >= s.Spd) continue;
                 foreach (Vector2Int b in Nb(a.x, a.y))
                 {
-                    if (reach.ContainsKey(b) || At(b.x, b.y) != null) continue;
+                    if (reach.ContainsKey(b) || At(b.x, b.y) != null || Rock(b.x, b.y)) continue;
                     reach[b] = d + 1; from[b] = a; q.Enqueue(b);
                 }
             }
@@ -272,6 +287,7 @@ namespace BladePath
             }
             Open = true;
             snapsTaken = false;
+            PlaceRocks();
             NewRound();
             running = null; busyUntil = Time.unscaledTime + 0.6f;
             Log("Бой начался. Раунд 1.");
@@ -800,7 +816,18 @@ namespace BladePath
                     Quaternion want = Quaternion.LookRotation(wd.normalized, Vector3.up);
                     s.go.transform.rotation = Quaternion.Slerp(s.go.transform.rotation, want, Mathf.Min(1f, Time.unscaledDeltaTime * 10f));
                 }
-                if (dead) Play(s, s.clipDie, s.playing != s.clipDie);
+                // вспышка попадания — цвет материала (у снимков — цвет картинки)
+                foreach (Renderer rr in s.go.GetComponentsInChildren<Renderer>())
+                    foreach (Material mm in rr.sharedMaterials)
+                        if (mm != null) mm.color = Color.Lerp(s.enemy ? new Color(1.05f, 0.95f, 0.92f) : new Color(1.12f, 1.1f, 1.06f), new Color(1.6f, 0.45f, 0.4f), s.flash);
+                if (dead && s.clipDie == null)
+                {   // клипа смерти нет (конь): заваливается набок и уходит в землю
+                    float k = Mathf.Clamp01((now - s.die) / 0.9f);
+                    s.go.transform.position += Vector3.down * Mathf.Clamp01((now - s.die - 2f) / 3f) * s.t.liveH * 0.6f;
+                    Transform tr = s.go.transform;
+                    tr.rotation = Quaternion.AngleAxis(-82f * k * k, tr.forward) * Quaternion.LookRotation(tr.forward, Vector3.up);
+                }
+                else if (dead) Play(s, s.clipDie, s.playing != s.clipDie);
                 else if (s.path.Count > 0) Play(s, s.clipWalk ?? s.clipIdle, false);
                 else if (s.actUntil > now) { }
                 else if (s.hitUntil > now && s.clipHit != null) { if (s.playing != s.clipHit) Play(s, s.clipHit, true); }
@@ -890,6 +917,7 @@ namespace BladePath
             else UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0.12f, 0.14f, 0.1f));
 
             DrawGrid();
+            DrawRocks();
             DrawLive();
             DrawStacks();
             DrawFx();
@@ -971,6 +999,26 @@ namespace BladePath
             }
         }
         static bool CanMeleeAny(Stack o) { foreach (Vector2Int n in Nb(o.c, o.r)) if (reach.ContainsKey(n)) return true; return false; }
+
+        static void DrawRocks()
+        {
+            Texture2D t = UiKit.Tex("UI/Battle/obstacles");
+            foreach (Vector3Int o in rocks)
+            {
+                Vector2 p = Center(o.x, o.y);
+                if (t != null)
+                {
+                    float w = R * 2.6f, h = w * 341f / 384f;
+                    GUI.DrawTextureWithTexCoords(new Rect(p.x - w * 0.5f, p.y - h * 0.62f, w, h), t, new Rect((o.z % 4) * 0.25f, 1f - (o.z / 4 + 1) / 3f, 0.25f, 1f / 3f));
+                }
+                else
+                {
+                    UiKit.Disc(p + new Vector2(0f, 3f), R * 0.62f, new Color(0f, 0f, 0f, 0.35f));
+                    UiKit.Disc(p - new Vector2(0f, R * 0.18f), R * 0.55f, new Color(0.36f, 0.34f, 0.3f, 0.95f));
+                    UiKit.Disc(p - new Vector2(R * 0.12f, R * 0.32f), R * 0.3f, new Color(0.5f, 0.48f, 0.42f, 0.95f));
+                }
+            }
+        }
 
         static void DrawStacks()
         {
