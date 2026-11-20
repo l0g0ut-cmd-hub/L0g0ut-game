@@ -1,30 +1,28 @@
 [
  {
-  "action": "image",
+  "action": "animate",
   "account": "2",
-  "name": "unit_cavalry",
-  "image": "tools/meshy/in/units/cavalry.png",
-  "ai_model": "latest",
-  "polycount": 25000,
-  "topology": "triangle",
-  "texture": true,
-  "enable_pbr": false,
-  "symmetry_mode": "off",
-  "rig": true,
-  "quadruped": true
+  "name": "anim_cavalry",
+  "rig_task_id": "01a1f949-b918-7334-8a93-490c532a4ed7",
+  "action_ids": [
+   1155,
+   1174,
+   1157
+  ],
+  "fps": 30
  },
  {
-  "action": "image",
+  "action": "animate",
   "account": "2",
-  "name": "unit_dog",
-  "image": "tools/meshy/in/units/dog.png",
-  "ai_model": "latest",
-  "polycount": 25000,
-  "topology": "triangle",
-  "texture": true,
-  "enable_pbr": false,
-  "symmetry_mode": "off",
-  "rig": true,
-  "quadruped": true
+  "name": "anim_dog",
+  "rig_task_id": "01a1f94b-ee31-7124-b87d-8ea75137b891",
+  "action_ids": [
+   1104,
+   1107,
+   1256,
+   1250,
+   1252
+  ],
+  "fps": 30
  }
 ]
