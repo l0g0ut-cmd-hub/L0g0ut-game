@@ -237,7 +237,7 @@ namespace BladePath
                         px[i] = new Color32((byte)Mathf.Clamp(c.r * 255f, 0, 255), (byte)Mathf.Clamp(c.g * 255f, 0, 255), (byte)Mathf.Clamp(c.b * 255f, 0, 255), 255);
                     }
             }
-            if (photo != null) PaintFace(info, d.face, photo, px, size);
+            if (photo != null) PaintFace(info, d.face, photo, px, size, PhotoGain(info, d.face, photo, src, size) * d.Zone("face").bright);
             outT.SetPixels32(px);
             outT.Apply(true);
             outT.wrapMode = TextureWrapMode.Clamp; outT.anisoLevel = 2;
@@ -273,11 +273,18 @@ namespace BladePath
             r = new Vector2(Mathf.Abs(fr.x - fl.x) * 0.5f, Mathf.Abs(ch.y - tp.y) * 0.5f);
         }
 
-        static Color SkinRatio(BaseInfo b, FaceLook f, Texture2D photo, Color32[] src, int size)
+        static float Lum(Color c) { return c.r * 0.3f + c.g * 0.59f + c.b * 0.11f; }
+        /// <summary>Автояркость фото: тёмное (вечер, комната) или пересвеченное фото — к яркости кожи основы.</summary>
+        public static float PhotoGain(BaseInfo b, FaceLook f, Texture2D photo, Color32[] src, int size)
         {
-            // средний цвет щёк и лба: на фото и у основы (внутренняя часть овала, без глаз и рта — по кольцу)
+            Color ps, bs;
+            if (!Sample(b, f, photo, src, size, out ps, out bs)) return 1f;
+            return Mathf.Clamp(Lum(bs) / Mathf.Max(0.02f, Lum(ps)), 0.7f, 3.2f);
+        }
+        static bool Sample(BaseInfo b, FaceLook f, Texture2D photo, Color32[] src, int size, out Color ps, out Color bs)
+        {
             Vector2 oc, orr; FaceOval(b, out oc, out orr);
-            Color ps = Color.black, bs = Color.black; int n = 0;
+            ps = Color.black; bs = Color.black; int n = 0;
             for (int k = 0; k < 64; k++)
             {
                 float a = k / 64f * Mathf.PI * 2f;
@@ -289,13 +296,21 @@ namespace BladePath
                 int ix = Mathf.Clamp((int)ap.x, 0, size - 1), iy = Mathf.Clamp((int)ap.y, 0, size - 1);
                 bs += (Color)src[iy * size + ix]; n++;
             }
-            if (n < 8) return Color.white;
+            if (n < 8) return false;
             ps /= n; bs /= n;
-            Color k2 = new Color(ps.r / Mathf.Max(0.05f, bs.r), ps.g / Mathf.Max(0.05f, bs.g), ps.b / Mathf.Max(0.05f, bs.b));
-            k2 = new Color(Mathf.Clamp(k2.r, 0.4f, 2f), Mathf.Clamp(k2.g, 0.4f, 2f), Mathf.Clamp(k2.b, 0.4f, 2f));
-            return Color.Lerp(Color.white, k2, f.skin);
+            return true;
         }
 
+        static Color SkinRatio(BaseInfo b, FaceLook f, Texture2D photo, Color32[] src, int size)
+        {
+            // только оттенок кожи (яркость фото уже выровнена PhotoGain): кожа головы, шеи и кистей — под тон лица на фото
+            Color ps0, bs0;
+            if (!Sample(b, f, photo, src, size, out ps0, out bs0)) return Color.white;
+            float g = Mathf.Clamp(Lum(bs0) / Mathf.Max(0.02f, Lum(ps0)), 0.7f, 3.2f);
+            Color k3 = new Color(ps0.r * g / Mathf.Max(0.05f, bs0.r), ps0.g * g / Mathf.Max(0.05f, bs0.g), ps0.b * g / Mathf.Max(0.05f, bs0.b));
+            k3 = new Color(Mathf.Clamp(k3.r, 0.6f, 1.6f), Mathf.Clamp(k3.g, 0.6f, 1.6f), Mathf.Clamp(k3.b, 0.6f, 1.6f));
+            return Color.Lerp(Color.white, k3, f.skin);
+        }
         /// <summary>Рамка → пиксель атласа (y вверх) — обратное к AtlasToFrame.</summary>
         public static Vector2 FrameToAtlas(BaseInfo b, Vector2 fr)
         {
@@ -307,7 +322,7 @@ namespace BladePath
             return new Vector2(q.x, -q.y);
         }
 
-        static void PaintFace(BaseInfo b, FaceLook f, Texture2D photo, Color32[] px, int size)
+        static void PaintFace(BaseInfo b, FaceLook f, Texture2D photo, Color32[] px, int size, float gain)
         {
             ZoneInfo fz = null;
             foreach (ZoneInfo z in b.zones) if (z.id == "face") fz = z;
@@ -332,7 +347,9 @@ namespace BladePath
                     Vector2 pu = FrameToPhoto(f, photo, fr);
                     if (pu.x < 0f || pu.x > 1f || pu.y < 0f || pu.y > 1f) continue;
                     Color pc = photo.GetPixelBilinear(pu.x, pu.y);
-                    Color c = Color.Lerp(c0, pc, a * pc.a);
+                    float pa = pc.a;
+                    pc *= gain;
+                    Color c = Color.Lerp(c0, pc, a * pa);
                     px[i] = new Color32((byte)Mathf.Clamp(c.r * 255f, 0, 255), (byte)Mathf.Clamp(c.g * 255f, 0, 255), (byte)Mathf.Clamp(c.b * 255f, 0, 255), 255);
                 }
         }

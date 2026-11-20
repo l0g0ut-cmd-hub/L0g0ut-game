@@ -1326,8 +1326,10 @@ namespace BladePath
 
             // на ходу колени чуть врозь (по носку и немного наружу) — ноги в широких хакама не сходятся «иксом»
             float splay = 0.25f * postK;
-            Vector3 poleF = Quaternion.AngleAxis(relF, up) * ft.forward + right * (splay * gF.side) + up * 0.1f;
-            Vector3 poleR = Quaternion.AngleAxis(relR, up) * ft.forward + right * (splay * gR.side) + up * 0.1f;
+            // колено — между носком и направлением корпуса: развёрнутая наружу задняя стопа (стойка) не выворачивает колено вбок
+            // (в широких хакама не видно, у основ своих персонажей в узких штанах нога выглядела сломанной)
+            Vector3 poleF = Vector3.Slerp(Quaternion.AngleAxis(relF, up) * ft.forward, ft.forward, 0.55f) + right * (splay * gF.side) + up * 0.1f;
+            Vector3 poleR = Vector3.Slerp(Quaternion.AngleAxis(relR, up) * ft.forward, ft.forward, 0.55f) + right * (splay * gR.side) + up * 0.1f;
             SolveArm(fU, fL_, fF, f1, f2, frontPos, poleF);
             SolveArm(rU, rL_, rF, r1, r2, rearPos, poleR);
             float pitF = gF.pit - (stepLift > 0f ? 12f * keyLift / stepLift : 0f);   // шаг клипа удара: носок чуть вверх

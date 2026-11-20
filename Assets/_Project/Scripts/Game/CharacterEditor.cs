@@ -113,7 +113,8 @@ namespace BladePath
         {
             composedVer = ver; composeAt = Time.unscaledTime;
             if (preview != null) Object.Destroy(preview);
-            preview = CharacterLook.Compose(data, 512);
+            // с фото лица — крупнее (лицо — 37% атласа: в 512 оно мыльное)
+            preview = CharacterLook.Compose(data, string.IsNullOrEmpty(data.face.photo) ? 512 : 1024);
             if (skins != null) CharacterLook.ApplyTo(skins, data, preview);
         }
 
