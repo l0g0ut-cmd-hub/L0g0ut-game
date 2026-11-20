@@ -36,6 +36,7 @@ namespace BladePath
         // превью героя
         static Camera cam; static RenderTexture rt;
         static float yaw = 200f;
+        const int PreviewLayer = 30;
         static PlayerSkins skins;
 
         // лицо по рамке
@@ -114,7 +115,21 @@ namespace BladePath
             if (skins != null) CharacterLook.ApplyTo(skins, data, preview);
         }
 
-        static void Box(Rect r) { UiKit.Rect(r, Panel); Frame(r, Edge, 1.5f); }
+        static void Box(Rect r)
+        {
+            Texture2D pt = r.height > 120f ? UiKit.Tex("UI/editor_panel") : null;
+            if (pt != null) { UiKit.Rect(new Rect(r.x + 4f, r.y + 4f, r.width - 8f, r.height - 8f), new Color(0.05f, 0.02f, 0.02f, 0.96f)); UiKit.Slice(r, pt, 0.42f, 0.15f, 0f, 0.075f, 0f, Color.white); return; }
+            UiKit.Rect(r, Panel); Frame(r, Edge, 1.5f);
+        }
+        // значки зон (UI/char_zone_icons, 4×3): лицо, волосы, кожа, кисти, стопы, куртка, рукава, пояс, штаны, обмотки, шляпа, маска
+        static readonly string[] IconOrder = { "face", "hair", "skin", "hands", "feet", "jacket", "sleeves", "belt", "pants", "wraps", "hat", "mask" };
+        static void ZoneIcon(Rect r, string id)
+        {
+            Texture2D t = UiKit.Tex("UI/char_zone_icons");
+            int i = System.Array.IndexOf(IconOrder, id);
+            if (t == null || i < 0) return;
+            GUI.DrawTextureWithTexCoords(r, t, new Rect((i % 4) / 4f, 1f - (i / 4 + 1) / 3f, 0.25f, 1f / 3f));
+        }
         static void Frame(Rect r, Color c, float th)
         {
             UiKit.Rect(new Rect(r.x, r.y, r.width, th), c); UiKit.Rect(new Rect(r.x, r.yMax - th, r.width, th), c);
@@ -196,7 +211,10 @@ namespace BladePath
                 Rect r = new Rect(zl.x + 8f, zy, zl.width - 16f, zh);
                 string n = zi.name.ToUpper();
                 bool custom = zi.id == "face" ? !string.IsNullOrEmpty(data.face.photo) : (z.tint || !string.IsNullOrEmpty(z.image) || z.wear > 0.01f || Mathf.Abs(z.bright - 1f) > 0.01f);
-                if (Btn(r, custom ? n + " •" : n, true, false, i == zone)) { zone = i; }
+                if (Btn(r, "", true, false, i == zone)) { zone = i; }
+                float ic = r.height - 4f;
+                ZoneIcon(new Rect(r.x + 3f, r.y + 2f, ic, ic), zi.id);
+                UiKit.Text(new Rect(r.x + ic + 8f, r.y, r.width - ic - 22f, r.height), custom ? n + " •" : n, 12f, i == zone ? Gold : Ink, TextAnchor.MiddleLeft);
                 if (z.tint && zi.id != "face") UiKit.Rect(new Rect(r.xMax - 12f, r.y + 6f, 6f, r.height - 12f), z.color);
                 zy += zh + 4f;
             }
@@ -257,6 +275,18 @@ namespace BladePath
                     cam.nearClipPlane = 0.05f; cam.farClipPlane = 30f; cam.allowMSAA = true;
                 }
                 cam.targetTexture = rt;
+                Texture2D bg = UiKit.Tex("UI/char_editor_bg");
+                if (bg != null)
+                {   // фон — комната додзё (по покрытию), камера стирает только глубину: арены за героем не видно
+                    float ar = rt.width / (float)rt.height, ab = bg.width / (float)bg.height;
+                    Vector2 sc = ar < ab ? new Vector2(ar / ab, 1f) : new Vector2(1f, ab / ar);
+                    RenderTexture keep = RenderTexture.active;
+                    Graphics.Blit(bg, rt, sc, (Vector2.one - sc) * 0.5f);
+                    RenderTexture.active = keep;   // иначе интерфейс дальше рисовался бы в превью
+                    cam.clearFlags = CameraClearFlags.Depth;
+                    cam.cullingMask = 1 << PreviewLayer;
+                }
+                else { cam.clearFlags = CameraClearFlags.SolidColor; cam.cullingMask = ~0; }
                 Transform root = skins.transform, head = Head();
                 bool faceZone = b.zones[Mathf.Clamp(zone, 0, b.zones.Length - 1)].id == "face" || b.zones[Mathf.Clamp(zone, 0, b.zones.Length - 1)].id == "hair";
                 Vector3 target = faceZone && head != null ? head.position + Vector3.up * 0.04f : root.position + Vector3.up * 0.95f;
@@ -265,7 +295,12 @@ namespace BladePath
                 Quaternion q = Quaternion.Euler(6f, root.eulerAngles.y + yaw, 0f);
                 cam.transform.position = target - q * Vector3.forward * dist;
                 cam.transform.rotation = q;
+                // на время снимка — только герой (свой слой)
+                Renderer[] rs = skins.GetComponentsInChildren<Renderer>();
+                int[] was = new int[rs.Length];
+                for (int i = 0; i < rs.Length; i++) { was[i] = rs[i].gameObject.layer; rs[i].gameObject.layer = PreviewLayer; }
                 cam.Render();
+                for (int i = 0; i < rs.Length; i++) if (rs[i] != null) rs[i].gameObject.layer = was[i];
             }
             if (rt != null) GUI.DrawTexture(pv, rt, ScaleMode.ScaleAndCrop, false);
             UiKit.Text(new Rect(pv.x + 8f, pv.yMax - 24f, pv.width - 16f, 20f), "Проведи пальцем — повернуть героя", 11f, Dim);

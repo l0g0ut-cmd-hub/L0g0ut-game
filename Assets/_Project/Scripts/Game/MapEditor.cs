@@ -657,7 +657,13 @@ namespace BladePath
 
         // ---------------------------------------------------------------- панели
 
-        static void Box(Rect r) { UiKit.Rect(r, Panel); Frame(r, Edge, 1.5f); }
+        static void Box(Rect r)
+        {
+            // высокие панели — лакированная доска с золотой каймой (UI/editor_panel), полосы — как раньше
+            Texture2D pt = r.height > 120f ? UiKit.Tex("UI/editor_panel") : null;
+            if (pt != null) { UiKit.Rect(new Rect(r.x + 4f, r.y + 4f, r.width - 8f, r.height - 8f), new Color(0.05f, 0.02f, 0.02f, 0.96f)); UiKit.Slice(r, pt, 0.42f, 0.15f, 0f, 0.075f, 0f, Color.white); return; }
+            UiKit.Rect(r, Panel); Frame(r, Edge, 1.5f);
+        }
         static bool locked;   // открыто окно истории — кнопки под ним не нажимаются
         static bool Btn(Rect r, string s, bool on = true, bool red = false) { return VisualIdentity.KitButton(r, s, on, red) && !locked; }
 
@@ -705,8 +711,17 @@ namespace BladePath
                 Rect b = new Rect(8f, 58f + i * 66f, 92f, 60f);
                 bool on = (int)tool == i;
                 if (Btn(b, "", true, on)) { if (tool == Tool.Road || tool == Tool.Water) CancelRoad(); tool = (Tool)i; if (tool != Tool.Select) sel = new Hit(); }
-                UiKit.Text(new Rect(b.x, b.y + 10f, b.width, 22f), ToolNames[i], 13f, Ink);
-                UiKit.Text(new Rect(b.x, b.y + 32f, b.width, 16f), ToolHints[i], 10f, Dim);
+                Texture2D ti = UiKit.Tex("UI/editor_tools");   // значки 3×2: выбор, место, дорога, переправа, эффект, ластик
+                if (ti != null)
+                {
+                    GUI.DrawTextureWithTexCoords(new Rect(b.center.x - 19f, b.y + 3f, 38f, 38f), ti, new Rect((i % 3) / 3f, 1f - (i / 3 + 1) / 2f, 1f / 3f, 0.5f));
+                    UiKit.Text(new Rect(b.x, b.y + 41f, b.width, 16f), ToolNames[i], 11f, on ? Gold : Ink);
+                }
+                else
+                {
+                    UiKit.Text(new Rect(b.x, b.y + 10f, b.width, 22f), ToolNames[i], 13f, Ink);
+                    UiKit.Text(new Rect(b.x, b.y + 32f, b.width, 16f), ToolHints[i], 10f, Dim);
+                }
             }
             // инспектор справа
             Rect ins = new Rect(W - 232f, 50f, 232f, 540f - 50f - 30f);
