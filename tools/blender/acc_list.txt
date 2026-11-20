@@ -1,7 +1,7 @@
 # имя_в_игре  папка_meshy(meshy-gen)  вид  ширина(×голова, 0 — по виду)  сдвиг_вверх_м  сдвиг_назад_м  поворот_град  треугольников
 Hair_Short     acc_hair_short     hair   0     0     0     0   9000
 Hair_Long      acc_hair_long      hair   0     0     0     0   9000
-Hair_Topknot   acc_hair_topknot   hair   0     0     0     0   9000
+Hair_Topknot   acc_hair_topknot   hair   0     0.045 0     0   9000
 Hair_Ponytail  acc_hair_ponytail  hair   0     0     0     0   9000
 Kasa_Straw     acc_kasa_straw     hat    0     0     0     0   5000
 Jingasa        acc_jingasa        hat    2.6   0     0     0   4000
@@ -9,4 +9,4 @@ Kabuto         acc_kabuto         helmet 0     0     0     0   7000
 Hood           acc_hood           hood   0     0     0     0   6000
 Mempo          acc_mempo          mask   0     0     0     0   6000
 Mask_Cloth     acc_mask_cloth     mask   1.2   0     0     0   4000
-Headband_Red   acc_headband_red   band   0     0     0     180 3000
+Headband_Red   acc_headband_red   band   0     0     0     0   3000
