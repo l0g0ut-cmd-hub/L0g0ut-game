@@ -1,15 +1,16 @@
 FBX version: 7400
 ACC Kasa_Straw F голова: верх 1.726 подбородок 1.474 ширина 0.171 центр (0.026, 0.035) лицо y -0.092
-01:18:55 | INFO: Data are loaded, start creating Blender stuff
-01:18:55 | INFO: Blender create Mesh node 0
-01:18:55 | INFO: glTF import finished in 0.02s
+01:23:11 | INFO: Data are loaded, start creating Blender stuff
+01:23:11 | INFO: Blender create Mesh node 0
+01:23:11 | INFO: glTF import finished in 0.02s
 ACC Kasa_Straw F треугольников 8805 → 5000
 ACC Kasa_Straw F вещь: размер 1.933 × 1.898 × 1.002
-ACC Kasa_Straw F масштаб 0.265, низ 1.615, верх 1.880
+ACC Kasa_Straw F шляпа: опора на высоте 0.162 из 0.266
+ACC Kasa_Straw F масштаб 0.265, низ 1.549, верх 1.815
 
 FBX export starting... 'out/Accessories/Kasa_Straw_F.fbx'
-export finished in 0.0257 sec.
-ACC Kasa_Straw F ЭКСПОРТ out/Accessories/Kasa_Straw_F.fbx 391 КБ
+export finished in 0.0291 sec.
+ACC Kasa_Straw F ЭКСПОРТ out/Accessories/Kasa_Straw_F.fbx 392 КБ
 Blender 4.2.3 LTS (hash 0e22e4fcea03 built 2024-10-14 23:31:34)
 Fra:1 Mem:42.15M (Peak 42.15M) | Time:00:00.00 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | BaseFemale_Player_Body
 Fra:1 Mem:42.15M (Peak 42.15M) | Time:00:00.00 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Kasa_Straw
@@ -51,35 +52,35 @@ Fra:1 Mem:69.60M (Peak 80.68M) | Time:00:00.04 | Mem:23.05M, Peak:23.13M | Scene
 Fra:1 Mem:69.60M (Peak 80.68M) | Time:00:00.04 | Mem:23.13M, Peak:23.13M | Scene, ViewLayer | Updating Baking
 Fra:1 Mem:69.60M (Peak 80.68M) | Time:00:00.04 | Mem:23.13M, Peak:23.13M | Scene, ViewLayer | Updating Device | Writing constant memory
 Fra:1 Mem:69.60M (Peak 80.68M) | Time:00:00.04 | Mem:23.13M, Peak:23.13M | Scene, ViewLayer | Sample 0/10
-Fra:1 Mem:74.80M (Peak 80.68M) | Time:00:00.12 | Remaining:00:00.71 | Mem:28.33M, Peak:28.33M | Scene, ViewLayer | Sample 1/10
-Fra:1 Mem:77.11M (Peak 81.73M) | Time:00:00.74 | Mem:28.33M, Peak:28.33M | Scene, ViewLayer | Sample 10/10
-Fra:1 Mem:77.11M (Peak 81.73M) | Time:00:00.74 | Mem:28.33M, Peak:28.33M | Scene, ViewLayer | Finished
+Fra:1 Mem:74.80M (Peak 80.68M) | Time:00:00.14 | Remaining:00:00.90 | Mem:28.33M, Peak:28.33M | Scene, ViewLayer | Sample 1/10
+Fra:1 Mem:77.11M (Peak 81.73M) | Time:00:00.81 | Mem:28.33M, Peak:28.33M | Scene, ViewLayer | Sample 10/10
+Fra:1 Mem:77.11M (Peak 81.73M) | Time:00:00.81 | Mem:28.33M, Peak:28.33M | Scene, ViewLayer | Finished
 Saved: 'out/Accessories/Kasa_Straw_F_front.png'
-Time: 00:00.76 (Saving: 00:00.02)
+Time: 00:00.84 (Saving: 00:00.02)
 
 Fra:1 Mem:44.65M (Peak 44.66M) | Time:00:00.00 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | BaseFemale_Player_Body
 Fra:1 Mem:44.65M (Peak 44.66M) | Time:00:00.00 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Kasa_Straw
 Fra:1 Mem:51.78M (Peak 52.50M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Initializing
 Fra:1 Mem:48.68M (Peak 52.50M) | Time:00:00.02 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Updating Images | Loading Image_0
-Fra:1 Mem:64.33M (Peak 80.68M) | Time:00:00.02 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Waiting for render to start
-Fra:1 Mem:64.33M (Peak 80.68M) | Time:00:00.02 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Loading render kernels (may take a few minutes the first time)
-Fra:1 Mem:64.33M (Peak 80.68M) | Time:00:00.02 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Scene
-Fra:1 Mem:64.33M (Peak 80.68M) | Time:00:00.02 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Shaders
-Fra:1 Mem:64.42M (Peak 80.68M) | Time:00:00.02 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Procedurals
-Fra:1 Mem:64.42M (Peak 80.68M) | Time:00:00.02 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Background
-Fra:1 Mem:64.42M (Peak 80.68M) | Time:00:00.02 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Camera
-Fra:1 Mem:64.42M (Peak 80.68M) | Time:00:00.02 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Meshes Flags
-Fra:1 Mem:64.42M (Peak 80.68M) | Time:00:00.02 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Objects
-Fra:1 Mem:64.42M (Peak 80.68M) | Time:00:00.02 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Objects | Copying Transformations to device
-Fra:1 Mem:64.42M (Peak 80.68M) | Time:00:00.02 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Objects | Applying Static Transformations
-Fra:1 Mem:64.42M (Peak 80.68M) | Time:00:00.02 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Particle Systems
-Fra:1 Mem:64.42M (Peak 80.68M) | Time:00:00.02 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Particle Systems | Copying Particles to device
-Fra:1 Mem:64.42M (Peak 80.68M) | Time:00:00.02 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Meshes
-Fra:1 Mem:64.97M (Peak 80.68M) | Time:00:00.02 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Mesh | Computing attributes
-Fra:1 Mem:67.68M (Peak 80.68M) | Time:00:00.02 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Mesh | Copying Attributes to device
-Fra:1 Mem:67.68M (Peak 80.68M) | Time:00:00.02 | Mem:18.71M, Peak:18.71M | Scene, ViewLayer | Updating Scene BVH | Building
-Fra:1 Mem:67.68M (Peak 80.68M) | Time:00:00.02 | Mem:18.71M, Peak:18.71M | Scene, ViewLayer | Updating Scene BVH | Building BVH
-Fra:1 Mem:67.68M (Peak 80.68M) | Time:00:00.02 | Mem:19.82M, Peak:19.82M | Scene, ViewLayer | Updating Scene BVH | Building BVH 0%
+Fra:1 Mem:64.33M (Peak 80.68M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Waiting for render to start
+Fra:1 Mem:64.33M (Peak 80.68M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Loading render kernels (may take a few minutes the first time)
+Fra:1 Mem:64.33M (Peak 80.68M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Scene
+Fra:1 Mem:64.33M (Peak 80.68M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Shaders
+Fra:1 Mem:64.42M (Peak 80.68M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Procedurals
+Fra:1 Mem:64.42M (Peak 80.68M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Background
+Fra:1 Mem:64.42M (Peak 80.68M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Camera
+Fra:1 Mem:64.42M (Peak 80.68M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Meshes Flags
+Fra:1 Mem:64.42M (Peak 80.68M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Objects
+Fra:1 Mem:64.42M (Peak 80.68M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Objects | Copying Transformations to device
+Fra:1 Mem:64.42M (Peak 80.68M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Objects | Applying Static Transformations
+Fra:1 Mem:64.42M (Peak 80.68M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Particle Systems
+Fra:1 Mem:64.42M (Peak 80.68M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Particle Systems | Copying Particles to device
+Fra:1 Mem:64.42M (Peak 80.68M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Meshes
+Fra:1 Mem:64.97M (Peak 80.68M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Mesh | Computing attributes
+Fra:1 Mem:67.68M (Peak 80.68M) | Time:00:00.03 | Mem:16.00M, Peak:16.00M | Scene, ViewLayer | Updating Mesh | Copying Attributes to device
+Fra:1 Mem:67.68M (Peak 80.68M) | Time:00:00.03 | Mem:18.71M, Peak:18.71M | Scene, ViewLayer | Updating Scene BVH | Building
+Fra:1 Mem:67.68M (Peak 80.68M) | Time:00:00.03 | Mem:18.71M, Peak:18.71M | Scene, ViewLayer | Updating Scene BVH | Building BVH
+Fra:1 Mem:67.68M (Peak 80.68M) | Time:00:00.03 | Mem:19.82M, Peak:19.82M | Scene, ViewLayer | Updating Scene BVH | Building BVH 0%
 Fra:1 Mem:67.68M (Peak 80.68M) | Time:00:00.03 | Mem:21.13M, Peak:22.24M | Scene, ViewLayer | Updating Scene BVH | Copying BVH to device
 Fra:1 Mem:67.68M (Peak 80.68M) | Time:00:00.03 | Mem:21.13M, Peak:22.24M | Scene, ViewLayer | Updating Mesh | Computing normals
 Fra:1 Mem:69.59M (Peak 80.68M) | Time:00:00.03 | Mem:21.13M, Peak:22.24M | Scene, ViewLayer | Updating Mesh | Copying Mesh to device
@@ -97,11 +98,11 @@ Fra:1 Mem:69.60M (Peak 80.68M) | Time:00:00.03 | Mem:23.05M, Peak:23.13M | Scene
 Fra:1 Mem:69.60M (Peak 80.68M) | Time:00:00.03 | Mem:23.13M, Peak:23.13M | Scene, ViewLayer | Updating Baking
 Fra:1 Mem:69.60M (Peak 80.68M) | Time:00:00.03 | Mem:23.13M, Peak:23.13M | Scene, ViewLayer | Updating Device | Writing constant memory
 Fra:1 Mem:69.60M (Peak 80.68M) | Time:00:00.03 | Mem:23.13M, Peak:23.13M | Scene, ViewLayer | Sample 0/10
-Fra:1 Mem:74.80M (Peak 80.68M) | Time:00:00.09 | Remaining:00:00.57 | Mem:28.33M, Peak:28.33M | Scene, ViewLayer | Sample 1/10
-Fra:1 Mem:77.11M (Peak 81.73M) | Time:00:00.65 | Mem:28.33M, Peak:28.33M | Scene, ViewLayer | Sample 10/10
-Fra:1 Mem:77.11M (Peak 81.73M) | Time:00:00.65 | Mem:28.33M, Peak:28.33M | Scene, ViewLayer | Finished
+Fra:1 Mem:74.80M (Peak 80.68M) | Time:00:00.10 | Remaining:00:00.57 | Mem:28.33M, Peak:28.33M | Scene, ViewLayer | Sample 1/10
+Fra:1 Mem:77.11M (Peak 81.73M) | Time:00:00.66 | Mem:28.33M, Peak:28.33M | Scene, ViewLayer | Sample 10/10
+Fra:1 Mem:77.11M (Peak 81.73M) | Time:00:00.66 | Mem:28.33M, Peak:28.33M | Scene, ViewLayer | Finished
 Saved: 'out/Accessories/Kasa_Straw_F_side.png'
-Time: 00:00.67 (Saving: 00:00.02)
+Time: 00:00.68 (Saving: 00:00.02)
 
 Fra:1 Mem:44.65M (Peak 44.99M) | Time:00:00.00 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | BaseFemale_Player_Body
 Fra:1 Mem:44.65M (Peak 44.99M) | Time:00:00.00 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Kasa_Straw
@@ -143,11 +144,11 @@ Fra:1 Mem:69.60M (Peak 80.68M) | Time:00:00.03 | Mem:23.05M, Peak:23.13M | Scene
 Fra:1 Mem:69.60M (Peak 80.68M) | Time:00:00.03 | Mem:23.13M, Peak:23.13M | Scene, ViewLayer | Updating Baking
 Fra:1 Mem:69.60M (Peak 80.68M) | Time:00:00.03 | Mem:23.13M, Peak:23.13M | Scene, ViewLayer | Updating Device | Writing constant memory
 Fra:1 Mem:69.60M (Peak 80.68M) | Time:00:00.03 | Mem:23.13M, Peak:23.13M | Scene, ViewLayer | Sample 0/10
-Fra:1 Mem:74.80M (Peak 80.68M) | Time:00:00.10 | Remaining:00:00.64 | Mem:28.33M, Peak:28.33M | Scene, ViewLayer | Sample 1/10
-Fra:1 Mem:77.11M (Peak 81.73M) | Time:00:00.72 | Mem:28.33M, Peak:28.33M | Scene, ViewLayer | Sample 10/10
-Fra:1 Mem:77.11M (Peak 81.73M) | Time:00:00.72 | Mem:28.33M, Peak:28.33M | Scene, ViewLayer | Finished
+Fra:1 Mem:74.80M (Peak 80.68M) | Time:00:00.10 | Remaining:00:00.67 | Mem:28.33M, Peak:28.33M | Scene, ViewLayer | Sample 1/10
+Fra:1 Mem:77.11M (Peak 81.73M) | Time:00:00.76 | Mem:28.33M, Peak:28.33M | Scene, ViewLayer | Sample 10/10
+Fra:1 Mem:77.11M (Peak 81.73M) | Time:00:00.76 | Mem:28.33M, Peak:28.33M | Scene, ViewLayer | Finished
 Saved: 'out/Accessories/Kasa_Straw_F_q.png'
-Time: 00:00.74 (Saving: 00:00.02)
+Time: 00:00.78 (Saving: 00:00.02)
 
 ACC Kasa_Straw F ГОТОВО
 
