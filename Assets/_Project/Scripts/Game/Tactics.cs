@@ -373,7 +373,8 @@ namespace BladePath
             for (int r = 0; r < Rows; r++) wallHp[r] = 2;
             rocks.RemoveAll(o => o.x >= WallC - 1);
             int i = 0;
-            foreach (Stack st in stacks) if (st.enemy) { st.c = Cols - 1 - (i % 3); st.r = 1 + (i * 3) % 9; st.pos = Vector2.zero; i++; }
+            int[,] spot = { { 13, 1 }, { 13, 3 }, { 13, 5 }, { 13, 7 }, { 13, 9 }, { 14, 2 }, { 14, 8 }, { 12, 4 }, { 12, 6 } };
+            foreach (Stack st in stacks) if (st.enemy && i < 9) { st.c = spot[i, 0]; st.r = spot[i, 1]; st.pos = Vector2.zero; i++; }
             Log("Осада! Ломайте стену и ворота — защитники за стеной получают от стрел вполовину.");
         }
         static void SiegeRound()
