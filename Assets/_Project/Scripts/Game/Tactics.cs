@@ -284,7 +284,7 @@ namespace BladePath
             stacks.Clear(); queue.Clear(); log.Clear(); texts.Clear(); shots.Clear();
             heroLv = Mathf.Max(1, Profile.Level);
             General.Sync();
-            gAtk = General.Atk; gDef = General.Def; gSpd = General.Val(7);
+            gAtk = General.Atk; gDef = General.Def; gSpd = General.Val(7) + General.ArtSpeed;
             spiritMax = 4 + General.Know + General.Val(5); spirit = spiritMax;
             fogRounds = 0; windRounds = 0; castThisRound = false; spellSel = -1; bookOpen = false; info = null;
             autoOurs = false; finished = false; won = false; round = 0;
@@ -379,7 +379,9 @@ namespace BladePath
                 foreach (Stack s in stacks) if (!s.enemy && s.unit >= 0) sv.Add(new KeyValuePair<int, int>(s.unit, Mathf.Max(0, s.count)));
                 Estate.AfterBattle(sv, ours);
             }
-            if (won) { Profile.AddGold(gold); resultText = "Враг разбит. Сражено врагов: " + killed + ", наших потерь: " + lost + "." + (raised > 0 ? " Знахари подняли: " + raised + "." : "") + "\nДобыча: " + gold + " мон."; }
+            string loot = "";
+            if (won && Random.value < 0.25f) { int art = General.RandomArt(); if (General.Give(art)) loot = "\nТрофей: " + General.Arts[art].name + " (в рюкзаке полководца)."; }
+            if (won) { Profile.AddGold(gold); resultText = "Враг разбит. Сражено врагов: " + killed + ", наших потерь: " + lost + "." + (raised > 0 ? " Знахари подняли: " + raised + "." : "") + "\nДобыча: " + gold + " мон." + loot; }
             else resultText = "Армия разбита. Наших потерь: " + lost + ".";
             return true;
         }
@@ -497,7 +499,7 @@ namespace BladePath
             if (!ranged && a.t.shots > 0 && !a.t.noMeleePen) m *= 0.5f;   // стрелок вплотную — вполсилы
             if (!ranged && a.t.joust) m *= 1f + 0.05f * a.run;          // разгон: +5% за клетку
             if (ranged && a.enemy && fogRounds > 0) m *= 0.5f;
-            if (!a.enemy) m *= 1f + General.Pct(ranged ? 0 : 1);   // «Стрельба» / «Нападение»
+            if (!a.enemy) m *= 1f + General.Pct(ranged ? 0 : 1) + (ranged ? General.ArtRanged : 0f);   // «Стрельба» / «Нападение», артефакты стрелков
             if (!d.enemy) m *= 1f - General.Pct(2);               // «Доспехи»
             return Mathf.Max(1, Mathf.RoundToInt(b * m));
         }
@@ -525,9 +527,9 @@ namespace BladePath
             NextTurn();
         }
         /// <summary>Боевой дух наших: живые знаменосцы (+1 за отряд, до 3).</summary>
-        static int Morale { get { int m = 0; foreach (Stack s in stacks) if (s.Alive && !s.enemy && s.t == Ours[9]) m++; return Mathf.Min(3, m + General.Val(3)); } }
+        static int Morale { get { int m = 0; foreach (Stack s in stacks) if (s.Alive && !s.enemy && s.t == Ours[9]) m++; return Mathf.Min(3, m + General.Val(3) + General.ArtMorale); } }
         /// <summary>Удача наших: храм поместья и святилище (пока — храм).</summary>
-        static int Luck { get { return (fromEstate ? Estate.D.level[4] : 0) + General.Val(4); } }
+        static int Luck { get { return (fromEstate ? Estate.D.level[4] : 0) + General.Val(4) + General.ArtLuck; } }
 
         static void Wait()
         {
