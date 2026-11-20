@@ -24,6 +24,12 @@ namespace BladePath
             public int obelisks;                      // битовая маска посещённых обелисков
             public bool grail;
             public int tavernA = -1, tavernB = -1;
+            public bool grailBuilt, silo;
+            public int stableDay;                     // до какого дня действует конюшня (+1 шаг)
+            // вражеский полководец: шаг маршрута, направление, уровень армии, жив ли, день возвращения
+            public int egStep, egDir = 1, egLevel = 1, egBack;
+            public bool egDead;
+            public List<int> enemyOwned = new List<int>();
         }
         static Data d;
         public static Data D { get { if (d == null) Load(); return d; } }
@@ -33,6 +39,7 @@ namespace BladePath
             if (d == null) d = new Data();
             if (d.done == null) d.done = new List<int>();
             if (d.owned == null) d.owned = new List<int>();
+            if (d.enemyOwned == null) d.enemyOwned = new List<int>();
         }
         public static void Save() { PlayerPrefs.SetString("realm", JsonUtility.ToJson(D)); PlayerPrefs.Save(); }
 
@@ -42,7 +49,7 @@ namespace BladePath
         // ---------------------------------------------------------------- объекты карты
         public class Obj
         {
-            public int kind, cell; public Vector2 at, anchor;   // 0 рудник, 1 россыпь, 2 сундук, 3 нейтралы, 4 жилище, 5 обелиск
+            public int kind, cell; public Vector2 at, anchor;   // 0 рудник, 1 россыпь, 2 сундук, 3 нейтралы, 4 жилище, 5 обелиск, 6 артефакт под охраной
             public Obj(int k, int c, float x, float y, float ax, float ay) { kind = k; cell = c; at = new Vector2(x, y); anchor = new Vector2(ax, ay); }
         }
         public static readonly Obj[] Objs =
@@ -78,7 +85,14 @@ namespace BladePath
             new Obj(5, 0, 0.2127f, 0.574f, 0.2219f, 0.5087f),   // B3
             new Obj(5, 1, 0.6162f, 0.7836f, 0.5908f, 0.7556f),   // N2
             new Obj(5, 2, 0.9231f, 0.3541f, 0.9514f, 0.3396f),   // Z
+            new Obj(6, 0, 0.8798f, 0.8969f, 0.8716f, 0.8383f),   // N6: артефакт под охраной
+            new Obj(6, 4, 0.1245f, 0.8356f, 0.1086f, 0.8881f),   // S: артефакт под охраной
+            new Obj(6, 8, 0.5367f, 0.9423f, 0.5449f, 0.8837f),   // N9: артефакт под охраной
+            new Obj(6, 13, 0.3043f, 0.4429f, 0.2698f, 0.3769f),   // X3: артефакт под охраной
         };
+        static readonly int[] ArtGuardFoe = { 6, 9, 3, 4 }; static readonly int[] ArtGuardN = { 4, 14, 8, 10 };
+        static int ArtGuard(int i) { int k = 0; for (int j = 0; j < i; j++) if (Objs[j].kind == 6) k++; return k; }
+        public static int StepBonus { get { return General.Val(8) + (D.stableDay >= D.day ? 1 : 0); } }
         static readonly string[] MineNames = { "ЗОЛОТОЙ РУДНИК", "ЛЕСОПИЛКА", "ЖЕЛЕЗНЫЙ РУДНИК", "РИСОВЫЕ ТЕРРАСЫ", "СЕРНАЯ ЯМА", "ПЕЩЕРА КРИСТАЛЛОВ" };
         static readonly string[] MineGive = { "+100 мон в день", "+2 дерева в день", "+1 сталь в день", "+4 риса в день", "+1 сера в день", "+1 кристалл в день" };
         static readonly string[] PickNames = { "РОССЫПЬ МОНЕТ", "БРЁВНА", "СЛИТКИ СТАЛИ", "МЕШКИ РИСА", "КРИСТАЛЛЫ" };
@@ -100,7 +114,7 @@ namespace BladePath
             if (at < 0 || at >= ns.Count) return false;
             return Mathf.Abs(ns[at].x - Objs[i].anchor.x) < 0.004f && Mathf.Abs(ns[at].y - Objs[i].anchor.y) < 0.005f;
         }
-        static bool Gone(int i) { Obj o = Objs[i]; return (o.kind == 1 || o.kind == 2 || o.kind == 3) && D.done.Contains(i); }
+        static bool Gone(int i) { Obj o = Objs[i]; return (o.kind == 1 || o.kind == 2 || o.kind == 3 || o.kind == 6) && D.done.Contains(i); }
 
         /// <summary>Объекты карты: рисуются после построек; касание — окно объекта (герой должен стоять у места рядом).</summary>
         public static void DrawObjects(Func<Vector2, Vector2> toScreen, float viewX, float viewW, bool input)
@@ -121,6 +135,7 @@ namespace BladePath
                     case 3: t = neut; uv = Cell(o.cell, 5, 4); w = 66f; h = 53f; break;
                     case 4: t = dw; uv = Cell(o.cell, 5, 2); w = 74f; h = 59f; break;
                     case 5: t = ob; uv = Cell(9, 5, 4); w = 60f; h = 48f; break;
+                    case 6: t = UiKit.Tex("UI/artifacts"); uv = Cell(o.cell, 4, 4); w = 40f; h = 40f; break;
                 }
                 Rect r = new Rect(p.x - w * 0.5f, p.y - h * 0.9f, w, h);
                 if (Event.current.type == EventType.Repaint && t != null)
@@ -129,7 +144,7 @@ namespace BladePath
                     GUI.DrawTextureWithTexCoords(r, t, uv); GUI.color = oc;
                     if ((o.kind == 0 || o.kind == 4) && flags != null)   // флаг владельца на шесте: наш — алый, ничей — серый
                     {
-                        int f = D.owned.Contains(i) ? 0 : 7;
+                        int f = D.owned.Contains(i) ? 0 : D.enemyOwned.Contains(i) ? 4 : 7;
                         GUI.DrawTextureWithTexCoords(new Rect(r.x + w * 0.02f, r.y - h * 0.12f, w * 0.26f, h * 0.5f), flags, Cell(f, 4, 2));
                     }
                     if (o.kind == 3)
@@ -145,6 +160,7 @@ namespace BladePath
                     else { sel = i; win = Win.Object; }
                 }
             }
+            DrawEnemy(toScreen, viewX, viewW, input);
             if (Event.current.type == EventType.Repaint && note != null && Time.unscaledTime - noteAt < 3f)
                 UiKit.Text(new Rect(viewX, 470f, viewW, 24f), note, 14f, new Color(1f, 0.85f, 0.55f));
         }
@@ -180,13 +196,16 @@ namespace BladePath
                 }
             }
             if (D.hall > 0) Profile.AddGold(new[] { 0, 100, 200, 400 }[Mathf.Clamp(D.hall, 0, 3)]);
+            if (D.silo) { D.crystal++; D.sulfur++; }
+            if (D.grailBuilt) Profile.AddGold(1000);
+            EnemyDay();
             Estate.Save(); Save();
         }
         /// <summary>Новая неделя (после Estate.NewWeek): событие недели, укрепления, жилища на карте.</summary>
         public static void NewWeek()
         {
             D.week = UnityEngine.Random.Range(0, 12);
-            float fortK = new[] { 0f, 0.5f, 1f, 1.5f }[Mathf.Clamp(D.fort, 0, 3)];
+            float fortK = new[] { 0f, 0.5f, 1f, 1.5f }[Mathf.Clamp(D.fort, 0, 3)] + (D.grailBuilt ? 0.5f : 0f);
             for (int u = 0; u < Tactics.BaseUnits; u++)
             {
                 if (Estate.D.pool[u] <= 0) continue;
@@ -201,10 +220,13 @@ namespace BladePath
             D.tavernA = D.tavernB = -1;
             Estate.Save(); Save();
             win = Win.Week;
+            if (!D.egDead) D.egLevel++;
+            // каждый месяц живой вражеский полководец идёт на поместье
+            if (!D.egDead && (D.day - 1) / 7 % 4 == 3) pendingSiege = true;
         }
 
         // ---------------------------------------------------------------- окна
-        enum Win { None, Object, Market, Tavern, Hall, Week, Puzzle }
+        enum Win { None, Object, Market, Tavern, Hall, Week, Puzzle, Enemy, Siege }
         static Win win; static int sel = -1;
         public static bool Busy { get { return win != Win.None; } }
         public static void OpenMarket() { win = Win.Market; }
@@ -228,8 +250,10 @@ namespace BladePath
                 case Win.Market: DrawMarket(W); break;
                 case Win.Tavern: DrawTavern(W); break;
                 case Win.Hall: DrawHall(W); break;
-                case Win.Week: DrawWeek(W); break;
+                case Win.Week: DrawWeek(W); if (win == Win.None && pendingSiege) { pendingSiege = false; win = Win.Siege; } break;
                 case Win.Puzzle: DrawPuzzle(W); break;
+                case Win.Enemy: DrawEnemyWin(W, false); break;
+                case Win.Siege: DrawEnemyWin(W, true); break;
             }
         }
         static bool Btn(Rect r, string s, bool ok = true, bool red = false) { return VisualIdentity.KitButton(r, s, ok, red); }
@@ -251,6 +275,7 @@ namespace BladePath
                 case 2: title = ChestNames[o.cell]; text = o.cell == 2 ? "Цепи и череп. Внутри что-то ценное — и проклятое." : o.cell == 3 ? "Свиток тайных приёмов: опыт полководцу." : o.cell == 4 ? "Брошенные припасы." : "Взять золото или раздать воинам (опыт)?"; t = mines; uv = Cell(15 + o.cell, 5, 4); break;
                 case 3: { int n = NeutN(sel); title = NeutNames[o.cell].ToUpper(); text = "На дороге — " + Size(n) + " (" + n + "). " + (Estate.D.army.Count > 0 ? "Сразиться армией поместья?" : "Армии нет — найми бойцов в поместье."); t = UiKit.Tex("UI/H3/neutrals"); uv = Cell(o.cell, 5, 4); break; }
                 case 4: { int u = DwellUnit[o.cell]; title = DwellNames[o.cell]; text = (D.owned.Contains(sel) ? "Жилище наше: каждую неделю " : "Поставь флаг — каждую неделю ") + Tactics.UnitName(u).ToLower() + " приходят в поместье для найма. Сейчас можно нанять: " + Estate.D.pool[u] + "."; t = UiKit.Tex("UI/H3/dwellings"); uv = Cell(o.cell, 5, 2); break; }
+                case 6: { int g = ArtGuard(sel); title = General.Arts[o.cell].name.ToUpper(); text = "Артефакт на земле. Охрана: " + Tactics.FoeName(ArtGuardFoe[g]).ToLower() + ", " + Size(ArtGuardN[g]) + ". " + General.ArtText(o.cell) + "."; t = UiKit.Tex("UI/artifacts"); uv = Cell(o.cell, 4, 4); break; }
                 case 5: { int got = 0; for (int b = 0; b < 3; b++) if ((D.obelisks & (1 << b)) != 0) got++; title = "ОБЕЛИСК"; text = "Знаки на камне — часть древней карты. Открыто обелисков: " + got + " из 3."; t = UiKit.Tex("UI/MapObjects/objects_dark_0"); uv = Cell(9, 5, 4); break; }
             }
             if (t != null) GUI.DrawTextureWithTexCoords(pic, t, uv);
@@ -284,6 +309,22 @@ namespace BladePath
                     }
                     break;
                 case 3:
+                {
+                    int n = NeutN(sel), ours = ArmyPower(), theirs = Tactics.FoePower(NeutFoe[o.cell]) * n;
+                    int joinU = JoinUnit(o.cell);
+                    if (ours >= theirs * 4)
+                    {   // слабые бегут при виде армии
+                        UiKit.Text(new Rect(pic.xMax + 16f, r.y + 160f, r.xMax - pic.xMax - 36f, 40f), "Отряд дрогнул и готов бежать.", 12f, Gold, TextAnchor.UpperLeft);
+                        if (Btn(new Rect(bx + 210f, by, 160f, 36f), "ОТПУСТИТЬ")) { D.done.Add(sel); Save(); win = Win.None; return; }
+                    }
+                    else if (joinU >= 0 && ours >= theirs * 2)
+                    {   // люди просятся на службу
+                        int cost = n * Estate.Price[joinU];
+                        UiKit.Text(new Rect(pic.xMax + 16f, r.y + 160f, r.xMax - pic.xMax - 36f, 40f), "Просятся на службу за " + cost + " мон.", 12f, Gold, TextAnchor.UpperLeft);
+                        if (Btn(new Rect(bx + 210f, by, 160f, 36f), "ПРИНЯТЬ", Profile.Gold >= cost))
+                        { if (Estate.AddTroops(joinU, n)) { Profile.AddGold(-cost); D.done.Add(sel); Save(); Note("К армии примкнули: " + n + "."); } else Note("В армии уже 7 отрядов."); win = Win.None; return; }
+                    }
+                }
                     if (Btn(new Rect(bx, by, 200f, 36f), "СРАЗИТЬСЯ", Estate.D.army.Count > 0, true))
                     {
                         int idx = sel; win = Win.None;
@@ -304,6 +345,19 @@ namespace BladePath
                     if (Btn(new Rect(bx + 210f, by, 170f, 36f), "НАНЯТЬ " + n, n > 0)) { Estate.Hire(u, n); Note("Нанято: " + n + " — в армии поместья."); }
                     break;
                 }
+                case 6:
+                    if (Btn(new Rect(bx, by, 260f, 36f), "СРАЗИТЬСЯ С ОХРАНОЙ", Estate.D.army.Count > 0, true))
+                    {
+                        int idx = sel, g = ArtGuard(sel); win = Win.None;
+                        Tactics.ShowNeutral(ArtGuardFoe[g], Mathf.RoundToInt(ArtGuardN[g] * (1f + 0.4f * Profile.Cycle)), won =>
+                        {
+                            if (!won) return;
+                            D.done.Add(idx); Save();
+                            if (!General.Give(Objs[idx].cell)) Note("Рюкзак полон — артефакт оставлен.");
+                        });
+                        return;
+                    }
+                    break;
                 case 5:
                     if ((D.obelisks & (1 << o.cell)) == 0 && Btn(new Rect(bx, by, 200f, 36f), "ПРОЧЕСТЬ ЗНАКИ", true, true)) { D.obelisks |= 1 << o.cell; Save(); win = Win.Puzzle; return; }
                     if (Btn(new Rect(bx + 210f, by, 170f, 36f), "КАРТА")) { win = Win.Puzzle; return; }
@@ -311,6 +365,8 @@ namespace BladePath
             }
             if (Btn(new Rect(r.xMax - 150f, by, 126f, 36f), "УЙТИ")) win = Win.None;
         }
+        static int ArmyPower() { int v = 0; foreach (Estate.ArmySlot a in Estate.D.army) v += a.count * Tactics.OursPower(a.unit); return v; }
+        static int JoinUnit(int cell) { switch (cell) { case 0: case 1: return 0; case 2: return 7; case 3: return 5; case 4: return 8; } return -1; }
         static void Take() { D.done.Add(sel); Save(); UiFx.Play("coins", 0.8f); win = Win.None; }
         static void Exp(int v) { int up = Profile.AddXp(v); General.Sync(); Note("+" + v + " опыта" + (up > 0 ? " — новый уровень!" : "")); }
 
@@ -516,5 +572,87 @@ namespace BladePath
             Rect pb = new Rect(at.xMax - 74f, at.y + 1f, 72f, at.height - 2f);
             if (VisualIdentity.KitButton(pb, "КАРТА", true, false)) win = Win.Puzzle;
         }
+
+        // ---------------------------------------------------------------- вражеский полководец («Герои 3»)
+        // ходит по маршруту через карту (туда и обратно), захватывает наши рудники и жилища, нападает на армию, раз в месяц — на поместье
+        static readonly Vector2[] EnemyRoute =
+        {
+            new Vector2(0.9514f, 0.3396f), new Vector2(0.918f, 0.4757f), new Vector2(0.8403f, 0.5796f), new Vector2(0.793f, 0.7351f), new Vector2(0.7021f, 0.7488f),
+            new Vector2(0.5908f, 0.7556f), new Vector2(0.4834f, 0.7363f), new Vector2(0.4146f, 0.6561f), new Vector2(0.3394f, 0.5933f), new Vector2(0.2759f, 0.6555f), new Vector2(0.1985f, 0.7251f)
+        };
+        static bool pendingSiege;
+        static Vector2 EnemyAt { get { return EnemyRoute[Mathf.Clamp(D.egStep, 0, EnemyRoute.Length - 1)]; } }
+        static bool HeroAt(Vector2 p)
+        {
+            List<MapNode> ns = Campaign.Nodes; int at = Campaign.At;
+            return at >= 0 && at < ns.Count && Mathf.Abs(ns[at].x - p.x) < 0.004f && Mathf.Abs(ns[at].y - p.y) < 0.005f;
+        }
+        static void EnemyDay()
+        {
+            if (D.egDead) { if (D.day >= D.egBack) { D.egDead = false; D.egStep = 0; D.egDir = 1; D.egLevel += 2; } return; }
+            int ns = D.egStep + D.egDir;
+            if (ns < 0 || ns >= EnemyRoute.Length) { D.egDir = -D.egDir; ns = D.egStep + D.egDir; }
+            D.egStep = Mathf.Clamp(ns, 0, EnemyRoute.Length - 1);
+            Vector2 p = EnemyAt;
+            for (int i = 0; i < Objs.Length; i++)
+            {   // захват рудников и жилищ у места, где он встал
+                if (Objs[i].kind != 0 && Objs[i].kind != 4) continue;
+                if ((Objs[i].anchor - p).sqrMagnitude > 0.0001f) continue;
+                if (D.owned.Remove(i) || !D.enemyOwned.Contains(i)) { if (!D.enemyOwned.Contains(i)) D.enemyOwned.Add(i); Note("Вражеский полководец захватил " + (Objs[i].kind == 0 ? MineNames[Objs[i].cell].ToLower() : DwellNames[Objs[i].cell].ToLower()) + "."); }
+            }
+            if (HeroAt(p)) win = Win.Enemy;
+        }
+        static void DrawEnemy(Func<Vector2, Vector2> toScreen, float viewX, float viewW, bool input)
+        {
+            if (D.egDead) return;
+            Vector2 p = toScreen(EnemyAt);
+            if (p.x < viewX - 80f || p.x > viewX + viewW + 80f) return;
+            Texture2D t = UiKit.Tex("UI/H3/neutrals"), f = UiKit.Tex("UI/H3/flags");
+            Rect r = new Rect(p.x - 34f, p.y - 62f, 68f, 54f);
+            if (Event.current.type == EventType.Repaint)
+            {
+                if (t != null) GUI.DrawTextureWithTexCoords(r, t, Cell(19, 5, 4));
+                if (f != null) GUI.DrawTextureWithTexCoords(new Rect(r.xMax - 14f, r.y - 14f, 18f, 32f), f, Cell(4, 4, 2));
+                Rect lr = new Rect(p.x - 52f, r.yMax - 2f, 104f, 14f);
+                UiKit.Rect(lr, new Color(0.15f, 0.05f, 0.18f, 0.8f)); UiKit.Text(lr, "ВРАГ · ур. " + D.egLevel, 9.5f, new Color(0.85f, 0.7f, 1f));
+            }
+            if (input && GUI.Button(r, GUIContent.none, GUIStyle.none))
+            {
+                if (HeroAt(EnemyAt)) win = Win.Enemy;
+                else Note("Вражеский полководец (ур. " + D.egLevel + "). Встань на его место — будет бой.");
+            }
+        }
+        static void DrawEnemyWin(float W, bool siege)
+        {
+            Rect r = new Rect(W * 0.5f - 260f, 140f, 520f, 250f);
+            UiKit.Rect(r, new Color(0.1f, 0.03f, 0.08f, 0.97f));
+            Texture2D pt = UiKit.Tex("UI/editor_panel"); if (pt != null) UiKit.Slice(r, pt, 0.36f, 0.15f, 0f, 0.075f, 0f, Color.white);
+            Texture2D t = UiKit.Tex("UI/H3/neutrals");
+            if (t != null) GUI.DrawTextureWithTexCoords(new Rect(r.x + 24f, r.y + 50f, 150f, 120f), t, Cell(19, 5, 4));
+            UiKit.Text(new Rect(r.x, r.y + 14f, r.width, 26f), siege ? "ОСАДА ПОМЕСТЬЯ" : "ВРАЖЕСКИЙ ПОЛКОВОДЕЦ", 17f, new Color(0.9f, 0.7f, 1f));
+            string txt = siege ? "Армия врага (ур. " + D.egLevel + ") у стен поместья. Стены: " + new[] { "частокол", "форт", "крепость", "замок" }[Mathf.Clamp(D.fort, 0, 3)] + ". Обороняйся — или откупись."
+                               : "Он преградил путь (армия ур. " + D.egLevel + "). Бой армией поместья — или отступить на прежнее место.";
+            UiKit.Text(new Rect(r.x + 190f, r.y + 54f, r.width - 210f, 120f), txt, 12f, Ink, TextAnchor.UpperLeft);
+            float by = r.yMax - 52f;
+            if (Btn(new Rect(r.x + 24f, by, 200f, 36f), siege ? "ОБОРОНЯТЬСЯ" : "СРАЗИТЬСЯ", true, true))
+            {
+                win = Win.None;
+                System.Action<bool> done = won =>
+                {
+                    if (won) { D.egDead = true; D.egBack = D.day + 14; D.enemyOwned.Clear(); Profile.AddGold(1500 + 500 * D.egLevel); int a = General.RandomArt(); General.Give(a); Note("Вражеский полководец разбит! Его земли свободны. Трофей: " + General.Arts[a].name + "."); }
+                    else if (siege) { Estate.D.rice = Estate.D.rice / 2; Estate.D.steel /= 2; Estate.D.wood /= 2; for (int u = 0; u < Estate.D.pool.Length; u++) Estate.D.pool[u] /= 2; Estate.Save(); Note("Поместье разграблено."); }
+                    Save();
+                };
+                if (siege) Tactics.ShowSiegeDefense(D.egLevel, done); else Tactics.ShowWarband(D.egLevel, done);
+                return;
+            }
+            int ransom = 800 * D.egLevel;
+            if (siege && Btn(new Rect(r.x + 234f, by, 150f, 36f), "ОТКУП " + ransom, Profile.Gold >= ransom)) { Profile.AddGold(-ransom); win = Win.None; Note("Враг ушёл с выкупом."); return; }
+            if (!siege && Btn(new Rect(r.x + 234f, by, 150f, 36f), "ОТСТУПИТЬ")) { D.egStep = Mathf.Clamp(D.egStep - D.egDir, 0, EnemyRoute.Length - 1); win = Win.None; }
+        }
+        /// <summary>Здание Грааля в поместье (после раскопок): +1000 мон в день, прирост +50%.</summary>
+        public static bool CanBuildGrail { get { return D.grail && !D.grailBuilt; } }
+        public static void BuildGrail() { if (!CanBuildGrail) return; D.grailBuilt = true; Save(); }
+        public static void BuildSilo() { if (D.silo || Profile.Gold < 2000) return; Profile.AddGold(-2000); D.silo = true; Save(); }
     }
 }

@@ -18,7 +18,7 @@ namespace BladePath
         public class Data
         {
             public int[] level = new int[9];        // 0 — пусто, 1 — построено, 2 — улучшено
-            public int[] pool = new int[24];        // сколько бойцов каждого отряда можно нанять сейчас
+            public int[] pool = new int[25];        // сколько бойцов каждого отряда можно нанять сейчас
             public int rice = 20, steel = 10, wood = 20, honor;
             public int week = 1;
             public bool builtThisWeek;
@@ -39,7 +39,7 @@ namespace BladePath
                 d.army.Add(new ArmySlot { unit = 1, count = 8 });
             }
             if (d.level == null || d.level.Length != 9) d.level = new int[9];
-            if (d.pool == null || d.pool.Length != 24) { int[] np = new int[24]; if (d.pool != null) System.Array.Copy(d.pool, np, Mathf.Min(24, d.pool.Length)); d.pool = np; }
+            if (d.pool == null || d.pool.Length != 25) { int[] np = new int[25]; if (d.pool != null) System.Array.Copy(d.pool, np, Mathf.Min(25, d.pool.Length)); d.pool = np; }
             if (d.army == null) d.army = new List<ArmySlot>();
             if (d.machines == null || d.machines.Length != 3) d.machines = new bool[3];
         }
@@ -74,8 +74,8 @@ namespace BladePath
             new Rect(300, 560, 271, 130), new Rect(724, 563, 272, 127), new Rect(1130, 560, 275, 130),
         };
         static readonly int[] PlotArt = { 0, 1, 2, 4, 3, 8, 5, 6, 7 };   // ячейка атласа построек
-        public static readonly int[] Growth = { 14, 9, 6, 6, 3, 5, 4, 5, 3, 4, 1, 8, 14, 9, 6, 6, 3, 5, 4, 5, 3, 4, 1, 8 };            // в неделю
-        public static readonly int[] Price = { 30, 60, 90, 150, 400, 130, 200, 120, 350, 80, 1500, 50, 50, 95, 140, 230, 600, 200, 300, 180, 520, 130, 2300, 85 };   // мон за бойца
+        public static readonly int[] Growth = { 14, 9, 6, 6, 3, 5, 4, 5, 3, 4, 1, 8, 14, 9, 6, 6, 3, 5, 4, 5, 3, 4, 1, 8, 0 };            // в неделю
+        public static readonly int[] Price = { 30, 60, 90, 150, 400, 130, 200, 120, 350, 80, 1500, 50, 50, 95, 140, 230, 600, 200, 300, 180, 520, 130, 2300, 85, 40 };   // мон за бойца
 
         public static int Level(int plot) { return D.level[plot]; }
         /// <summary>Бонусы построек в бою.</summary>
@@ -126,6 +126,14 @@ namespace BladePath
 
         // ---------------------------------------------------------------- армия
 
+        /// <summary>Бойцы в армию без найма (некромантия, присоединившиеся нейтралы); false — в армии уже 7 отрядов.</summary>
+        public static bool AddTroops(int unit, int n)
+        {
+            if (n <= 0) return false;
+            ArmySlot s = D.army.Find(a => a.unit == unit);
+            if (s == null) { if (D.army.Count >= 7) return false; s = new ArmySlot { unit = unit }; D.army.Add(s); }
+            s.count += n; Save(); return true;
+        }
         public static void Hire(int unit, int n)
         {
             n = Mathf.Min(n, D.pool[unit], Profile.Gold / Mathf.Max(1, Price[unit]));
@@ -253,11 +261,20 @@ namespace BladePath
                 ArmySlot a = D.army[armySel]; int up = Tactics.UpgradeOf(a.unit);
                 Rect ur = new Rect(8f, 540f - 70f - 64f, 7f * 58f + 12f, 40f);
                 UiKit.Rect(ur, new Color(0.08f, 0.04f, 0.02f, 0.92f));
-                if (up < 0) UiKit.Text(new Rect(ur.x + 8f, ur.y, ur.width - 16f, ur.height), Tactics.UnitName(a.unit) + " — уже лучшие", 12f, Ink, TextAnchor.MiddleLeft);
+                if (up < 0)
+                {
+                    UiKit.Text(new Rect(ur.x + 8f, ur.y, ur.width - 120f, ur.height), Tactics.UnitName(a.unit) + " — уже лучшие", 12f, Ink, TextAnchor.MiddleLeft);
+                    if (VisualIdentity.KitButton(new Rect(ur.xMax - 106f, ur.y + 4f, 100f, 32f), "ПРОДАТЬ", true, false))
+                    { int g = a.count * Price[Mathf.Min(a.unit, Price.Length - 1)] / 3; Profile.AddGold(g); D.army.Remove(a); armySel = -1; Save(); Note("Отряд распущен: +" + g + " мон."); return; }
+                }
                 else
                 {
                     int cost = UpgradeCost(a); bool ok = CanUpgradeHere(a.unit) && Profile.Gold >= cost;
-                    UiKit.Text(new Rect(ur.x + 8f, ur.y, ur.width - 170f, ur.height), Tactics.UnitName(a.unit) + " → " + Tactics.UnitName(up) + (CanUpgradeHere(a.unit) ? " · " + cost + " мон" : " · нужна улучшенная постройка"), 10.5f, Ink, TextAnchor.MiddleLeft);
+                    UiKit.Text(new Rect(ur.x + 8f, ur.y, ur.width - 272f, ur.height), Tactics.UnitName(a.unit) + " → " + Tactics.UnitName(up) + (CanUpgradeHere(a.unit) ? " · " + cost + " мон" : " · нужна улучшенная постройка"), 10.5f, Ink, TextAnchor.MiddleLeft);
+                    if (VisualIdentity.KitButton(new Rect(ur.xMax - 262f, ur.y + 4f, 100f, 32f), "ПРОДАТЬ", true, false))
+                    {   // гильдия наёмников: треть цены
+                        int g = a.count * Price[a.unit] / 3; Profile.AddGold(g); D.army.Remove(a); armySel = -1; Save(); Note("Отряд распущен: +" + g + " мон."); return;
+                    }
                     if (VisualIdentity.KitButton(new Rect(ur.xMax - 156f, ur.y + 4f, 150f, 32f), "УЛУЧШИТЬ", ok, true))
                     {
                         Profile.AddGold(-cost);
@@ -309,6 +326,7 @@ namespace BladePath
             if (D.builtThisWeek && lv < 2) UiKit.Text(new Rect(x, y + 16f, w, 16f), "На этой неделе уже строили", 10f, Dim, TextAnchor.MiddleLeft);
             float bw = (w - 8f) / 3f, by = r.yMax - 46f;
             if (p == 7 && lv > 0 && VisualIdentity.KitButton(new Rect(x, by - 38f, bw * 1.4f, 30f), "ТОРГОВАТЬ", true, false)) Realm.OpenMarket();
+            if (p == 7 && lv > 0 && VisualIdentity.KitButton(new Rect(x + bw * 1.4f + 6f, by - 38f, bw * 1.5f, 30f), Realm.D.silo ? "СКЛАД ✓" : "СКЛАД 2000", !Realm.D.silo && Profile.Gold >= 2000, false)) { Realm.BuildSilo(); Note("Склад: +1 кристалл и +1 сера в день."); }
             if (p == 5 && lv > 0 && VisualIdentity.KitButton(new Rect(x, by - 38f, bw * 1.4f, 30f), "ЗАЛ МАГИИ", true, false)) Realm.OpenHall();
             if (p == 2 && lv > 0)
                 for (int m = 0; m < 3; m++)
@@ -341,6 +359,8 @@ namespace BladePath
             if (VisualIdentity.KitButton(new Rect(x + tw + 6f, ty, tw, 32f), fl < 3 ? (new[] { "ФОРТ", "КРЕПОСТЬ", "ЗАМОК" }[fl]) + " " + fortCost[fl] : "ЗАМОК ✓", fl < 3 && Profile.Gold >= (fl < 3 ? fortCost[fl] : 0) && D.steel >= 5 * (fl + 1) && !D.builtThisWeek, false))
             { Profile.AddGold(-fortCost[fl]); D.steel -= 5 * (fl + 1); Realm.D.fort++; D.builtThisWeek = true; Realm.Save(); Save(); Note("Прирост бойцов: +" + (50 * Realm.D.fort) + "% в неделю."); }
             if (VisualIdentity.KitButton(new Rect(x + (tw + 6f) * 2f, ty, tw, 32f), "ТАВЕРНА", true, false)) Realm.OpenTavern();
+            if (Realm.CanBuildGrail && VisualIdentity.KitButton(new Rect(x, ty - 36f, w, 32f), "ВОЗДВИГНУТЬ ГРААЛЬ", true, true)) { Realm.BuildGrail(); Note("Грааль в поместье: +1000 мон в день, прирост +50%."); }
+            if (Realm.D.grailBuilt) UiKit.Text(new Rect(x, ty - 22f, w, 18f), "★ Грааль: +1000 мон в день, прирост +50%", 10f, Gold, TextAnchor.MiddleLeft);
             if (VisualIdentity.KitButton(new Rect(x, by, bw, 34f), "РОНИНЫ", D.pool[7] > 0, false)) { hireUnit = 7; hireN = MaxHire(7); }
             if (VisualIdentity.KitButton(new Rect(x + bw + 8f, by, bw, 34f), "ЗНАМЕНОСЦЫ", D.pool[9] > 0, false)) { hireUnit = 9; hireN = MaxHire(9); }
         }

@@ -24,13 +24,18 @@ namespace BladePath
             // способности («Герои 3»): двойной удар, бесконечные ответы, разгон (+5% урона за клетку пути), стрелок без штрафа вплотную,
             // удар по всем соседним врагам, пробой доспеха (доля защиты цели не в счёт)
             public bool dbl, unlimRet, joust, noMeleePen, sweep; public float pierce;
+            public bool fly;                // летает («Герои 3»): над препятствиями, отрядами и стенами
+            public bool undead;             // нежить: без боевого духа, не боится проклятий и страха
+            public float resist;            // сопротивление умениям (доля)
+            public int fireImmune;          // 1 — огонь не берёт (огненный талисман, гром)
+            public int atlasCell = -1;      // портрет из атласа нейтралов UI/H3/neutrals (5×4)
             public bool wide;               // большое существо — две клетки («Герои 3»): голова и круп/хвост позади
             public string Ability
             {
                 get
                 {
                     string a = "";
-                    if (wide) a += " · две клетки"; if (dbl) a += " · двойной удар"; if (unlimRet) a += " · отвечает всем"; if (joust) a += " · разгон";
+                    if (wide) a += " · две клетки"; if (fly) a += " · летает"; if (undead) a += " · нежить"; if (resist > 0f) a += " · сопротивление " + Mathf.RoundToInt(resist * 100f) + "%"; if (fireImmune > 0) a += " · огонь не берёт"; if (dbl) a += " · двойной удар"; if (unlimRet) a += " · отвечает всем"; if (joust) a += " · разгон";
                     if (noMeleePen) a += " · вплотную без штрафа"; if (sweep) a += " · бьёт всех рядом"; if (pierce > 0f) a += " · пробивает доспех";
                     if (noRetal) a += " · по нему не отвечают"; if (magic) a += " · бьёт чарами";
                     return a.Length > 0 ? a.Substring(3) : "";
@@ -53,7 +58,7 @@ namespace BladePath
             new UnitType("Тэппо", 8, 3, 3, 5, 12, 3, 8, 6) { cell = 2, live = "unit_teppo", pierce = 0.4f },
             new UnitType("Самураи", 8, 8, 4, 6, 25, 5, 0, 0) { cell = 3, live = "unit_samurai", unlimRet = true },
             new UnitType("Конные самураи", 11, 9, 7, 11, 45, 8, 0, 3) { cell = 4, live = "unit_cavalry", liveH = 2.6f, joust = true, wide = true },
-            new UnitType("Сохэи", 7, 7, 3, 6, 20, 5, 0, 7) { cell = 5, live = "unit_sohei" },
+            new UnitType("Сохэи", 7, 7, 3, 6, 20, 5, 0, 7) { cell = 5, live = "unit_sohei", resist = 0.2f },
             new UnitType("Синоби", 9, 4, 3, 5, 15, 8, 0, 5) { cell = 6, noRetal = true, live = "unit_shinobi", liveH = 1.68f },
             new UnitType("Ронины", 7, 6, 3, 5, 18, 6, 0, 1) { cell = 7, live = "unit_ronin" },
             new UnitType("Онмёдзи", 9, 6, 4, 7, 20, 5, 10, -3) { cell = 8, magic = true, live = "unit_onmyoji", noMeleePen = true },
@@ -66,14 +71,16 @@ namespace BladePath
             new UnitType("Тэппо-гвардия", 10, 5, 4, 7, 16, 4, 10, 6) { cell = 2, up = true, live = "unit_teppo2", pierce = 0.6f },
             new UnitType("Самураи-ветераны", 11, 10, 6, 8, 32, 6, 0, 0) { cell = 3, up = true, live = "unit_samurai2", unlimRet = true },
             new UnitType("Тяжёлая конница", 14, 12, 9, 14, 60, 9, 0, 3) { cell = 4, up = true, live = "unit_cavalry2", liveH = 2.7f, joust = true, wide = true },
-            new UnitType("Сохэи-мастера", 9, 9, 4, 8, 26, 6, 0, 7) { cell = 5, up = true, live = "unit_sohei2", sweep = true },
+            new UnitType("Сохэи-мастера", 9, 9, 4, 8, 26, 6, 0, 7) { cell = 5, up = true, live = "unit_sohei2", sweep = true, resist = 0.4f },
             new UnitType("Мастера синоби", 12, 6, 4, 7, 18, 10, 0, 5) { cell = 6, up = true, live = "unit_shinobi2", noRetal = true, dbl = true },
             new UnitType("Ронины-мечники", 9, 8, 4, 7, 24, 7, 0, 1) { cell = 7, up = true, live = "unit_ronin2", unlimRet = true },
             new UnitType("Онмёдзи-архимаги", 12, 8, 6, 9, 26, 6, 14, -3) { cell = 8, up = true, magic = true, live = "unit_onmyoji2", noMeleePen = true },
             new UnitType("Знамя клана", 5, 8, 2, 3, 20, 6, 0, -1) { cell = 9, up = true, live = "unit_banner2" },
             new UnitType("Гвардия сёгуна", 16, 18, 12, 22, 100, 6, 0, 3) { cell = 10, up = true, live = "unit_hatamoto2", liveH = 1.9f, dbl = true },
             new UnitType("Псы Они", 9, 5, 3, 6, 18, 10, 0, -99) { cell = 11, up = true, live = "unit_dog2", liveH = 1.0f, dbl = true },
+            new UnitType("Павшие воины", 5, 5, 2, 4, 10, 4, 0, 4) { portrait = "UI/portrait_fallen", live = "unit_fallen", undead = true },   // 24: некромантия
         };
+        public const int RisenUnit = 24;
         public const int BaseUnits = 12;
         /// <summary>Улучшенная версия отряда (−1 — уже улучшен).</summary>
         public static int UpgradeOf(int u) { return u >= 0 && u < BaseUnits ? u + BaseUnits : -1; }
@@ -83,12 +90,14 @@ namespace BladePath
             new UnitType("Ямабуси", 6, 5, 2, 4, 15, 5, 0, 7) { portrait = "UI/portrait_yamabushi", live = "unit_yamabushi", liveH = 1.76f },
             new UnitType("Дезертиры", 4, 5, 1, 3, 10, 4, 0, 8) { portrait = "UI/portrait_ashigaru", live = "unit_ashigaru" },
             new UnitType("Маски кицунэ", 8, 6, 3, 5, 18, 7, 6, 9) { portrait = "UI/portrait_kitsune", magic = true, live = "unit_kitsune", liveH = 1.64f, noMeleePen = true },
-            new UnitType("Поверженные", 7, 7, 3, 6, 25, 4, 0, 4) { portrait = "UI/portrait_fallen", live = "unit_fallen", liveH = 1.75f },
+            new UnitType("Поверженные", 7, 7, 3, 6, 25, 4, 0, 4) { portrait = "UI/portrait_fallen", live = "unit_fallen", liveH = 1.75f, undead = true },
             new UnitType("Клан теней", 9, 5, 3, 6, 15, 8, 0, 5) { portrait = "UI/portrait_shadow", noRetal = true, live = "unit_shadow" },
-            new UnitType("Они", 14, 12, 12, 20, 100, 5, 0, 2) { portrait = "UI/portrait_oni", live = "unit_oni", liveH = 2.3f, sweep = true, wide = true },
-            new UnitType("Сёгун", 16, 16, 20, 30, 180, 6, 0, 3) { portrait = "UI/portrait_shogun", live = "unit_shogun", liveH = 1.85f, dbl = true, unlimRet = true },
+            new UnitType("Они", 14, 12, 12, 20, 100, 5, 0, 2) { portrait = "UI/portrait_oni", live = "unit_oni", liveH = 2.3f, sweep = true, wide = true, fireImmune = 1 },
+            new UnitType("Сёгун", 16, 16, 20, 30, 180, 6, 0, 3) { portrait = "UI/portrait_shogun", live = "unit_shogun", liveH = 1.85f, dbl = true, unlimRet = true, undead = true, resist = 0.3f },
             new UnitType("Ронины", 7, 6, 3, 5, 18, 6, 0, 1) { portrait = "UI/portrait_ronin", live = "unit_ronin" },
             new UnitType("Алый самурай", 11, 10, 7, 12, 45, 6, 0, 0) { portrait = "UI/portrait_red_samurai", live = "unit_crimson", liveH = 1.78f, dbl = true },
+            new UnitType("Тэнгу-воины", 8, 5, 3, 6, 18, 9, 0, 1) { atlasCell = 6, fly = true, live = "unit_tengu" },
+            new UnitType("Дайтэнгу", 13, 10, 8, 14, 50, 9, 8, 1) { atlasCell = 6, fly = true, magic = true, resist = 0.3f, live = "unit_daitengu", liveH = 2f },
         };
 
         public static string UnitName(int u) { return Ours[Mathf.Clamp(u, 0, Ours.Length - 1)].name; }
@@ -135,7 +144,21 @@ namespace BladePath
         static bool deploy;           // расстановка перед боем (навык «Тактика», как в «Героях 3»): свои отряды переставляются в своих столбцах
         static Stack deploySel;
         static int DeployCols { get { return 1 + 2 * General.Skill(7); } }
-        static bool mBallista, mTent, mCart;   // боевые машины (кузня поместья): баллиста, палатка лекаря, повозка с боеприпасами   // полководец (General): атака, защита, «Тактика» — снимаются в начале боя
+        static bool mBallista, mTent, mCart;
+        static bool ballistaReady;   // «Артиллерия»: баллиста ждёт цель от игрока (раз в раунд)
+        static void BallistaShot(Stack best)
+        {
+            ballistaReady = false; spellSel = -1;
+            int dmg = (gAtk + 2) * Random.Range(5, 9) * Mathf.Max(1, General.Val(9));
+            Vector2 from = MachinePos(0) + new Vector2(R * 0.6f, -R * 0.5f);
+            shots.Add(new Shot { a = from, b = best.pos + new Vector2(0f, -R * 0.8f), t0 = Time.unscaledTime, dur = 0.45f });
+            Hurt(best, dmg); best.flash = 1f; best.hitUntil = Time.unscaledTime + 0.8f;
+            Burst("fx_arrow_hit", best.pos + new Vector2(0f, -R * 1.0f), R * 2.8f, 40f);
+            texts.Add(new Float { p = best.pos + new Vector2(0f, -R * 2f), s = "−" + dmg, t0 = Time.unscaledTime + 0.3f, col = new Color(1f, 0.85f, 0.4f) });
+            Log("Баллиста (наводка) → " + best.t.name + ": " + dmg + " урона.");
+            queue.RemoveAll(o => !o.Alive);
+            CheckEnd();
+        }   // боевые машины (кузня поместья): баллиста, палатка лекаря, повозка с боеприпасами   // полководец (General): атака, защита, «Тактика» — снимаются в начале боя
         static int forge, tower;          // кузня и башня поместья
         static bool fromEstate;           // бой армией поместья: выжившие вернутся в армию
         static int fogRounds, windRounds;
@@ -232,12 +255,14 @@ namespace BladePath
 
         // осада («Герои 3»): стена — столбец WallC, у каждой клетки 2 «жизни» (цела → пробита → рухнула), ворота — ряд GateR
         // (защитники проходят, нападающим — ломать), башни — крайние ряды, стреляют каждый раунд; катапульта нападающих бьёт стену
-        const int WallC = 11, GateR = 5;
-        static bool siege;
+        const int GateR = 5;
+        static bool siege, siegeDef;   // siegeDef — мы обороняем поместье: стена слева (столбец 3), враг штурмует
+        static int WallC { get { return siegeDef ? 3 : 11; } }
+        static bool Attacker(Stack s) { return s != null && s.enemy == siegeDef; }
         static readonly int[] wallHp = new int[11];
         static bool IsTower(int r) { return r == 0 || r == Rows - 1; }
         static bool WallAt(int c, int r) { return siege && c == WallC && wallHp[r] > 0; }
-        static bool WallBlocks(Stack s, int c, int r) { return WallAt(c, r) && !(r == GateR && s != null && s.enemy); }
+        static bool WallBlocks(Stack s, int c, int r) { return WallAt(c, r) && !(r == GateR && s != null && !Attacker(s)); }
         static void PlaceRocks()
         {
             rocks.Clear();
@@ -269,18 +294,21 @@ namespace BladePath
         {
             reach.Clear(); from.Clear();
             Vector2Int st = new Vector2Int(s.c, s.r);
-            reach[st] = 0;
+            Dictionary<Vector2Int, int> dist = new Dictionary<Vector2Int, int>();   // и клетки, над которыми летун только пролетает
+            dist[st] = 0; reach[st] = 0;
             Queue<Vector2Int> q = new Queue<Vector2Int>(); q.Enqueue(st);
             while (q.Count > 0)
             {
-                Vector2Int a = q.Dequeue(); int d = reach[a];
+                Vector2Int a = q.Dequeue(); int d = dist[a];
                 if (d >= s.Spd) continue;
                 foreach (Vector2Int b in Nb(a.x, a.y))
                 {
-                    if (reach.ContainsKey(b) || Rock(b.x, b.y) || WallBlocks(s, b.x, b.y)) continue;
-                    Stack ob = At(b.x, b.y); if (ob != null && ob != s) continue;
-                    if (!Fits(s, b.x, b.y)) continue;
-                    reach[b] = d + 1; from[b] = a; q.Enqueue(b);
+                    if (dist.ContainsKey(b)) continue;
+                    Stack ob = At(b.x, b.y);
+                    bool blocked = Rock(b.x, b.y) || WallBlocks(s, b.x, b.y) || ob != null && ob != s || !Fits(s, b.x, b.y);
+                    if (blocked && !s.t.fly) continue;
+                    dist[b] = d + 1; from[b] = a; q.Enqueue(b);
+                    if (!blocked) reach[b] = d + 1;   // летун пролетает над занятым, но садится только на свободное
                 }
             }
         }
@@ -357,6 +385,22 @@ namespace BladePath
         }
 
         static System.Action<bool> neutralDone;
+        /// <summary>Сила бойца (для бегства и найма нейтралов): здоровье × (атака + защита).</summary>
+        public static int OursPower(int u) { UnitType t = Ours[Mathf.Clamp(u, 0, Ours.Length - 1)]; return t.hp * (t.atk + t.def); }
+        public static int FoePower(int f) { UnitType t = Foes[Mathf.Clamp(f, 0, Foes.Length - 1)]; return t.hp * (t.atk + t.def); }
+        public static string FoeName(int f) { return Foes[Mathf.Clamp(f, 0, Foes.Length - 1)].name; }
+        /// <summary>Бой с армией вражеского полководца (Realm): смешанные отряды, сила растёт с его уровнем.</summary>
+        public static void ShowWarband(int level, System.Action<bool> done)
+        {
+            ShowArmy(Campaign.Region);
+            stacks.RemoveAll(o => o.enemy);
+            int[] mix = { 9, 4, 5, 2, 6, 7, 10 }; int[] rows = { 1, 3, 5, 7, 9 };
+            for (int i = 0; i < 5; i++) { UnitType t = Foes[mix[(i + level) % mix.Length]]; Add(t, Mathf.Max(1, Mathf.RoundToInt((10 + 7 * level) * 25f / Mathf.Max(10, t.hp))), true, Cols - 1, rows[i]); }
+            foreach (Stack st in stacks) st.pos = Vector2.zero;
+            neutralDone = done;
+            round = 0; queue.Clear(); log.Clear(); NewRound();
+            Log("Армия вражеского полководца! Раунд 1.");
+        }
         /// <summary>Бой армией поместья с нейтральным отрядом карты (Realm): численность делится на отряды, как в «Героях».</summary>
         public static void ShowNeutral(int foe, int count, System.Action<bool> done)
         {
@@ -375,7 +419,7 @@ namespace BladePath
         /// <summary>Пробный бой (меню разработчика): армия героя против отрядов области.</summary>
         public static void ShowDev(int reg)
         {
-            fromEstate = false; forge = 0; tower = 0; mapNode = -1; siege = false; neutralDone = null;
+            fromEstate = false; forge = 0; tower = 0; mapNode = -1; siege = false; siegeDef = false; neutralDone = null;
             region = Mathf.Clamp(reg, 0, 2);
             stacks.Clear(); queue.Clear(); log.Clear(); texts.Clear(); shots.Clear();
             heroLv = Mathf.Max(1, Profile.Level);
@@ -407,6 +451,13 @@ namespace BladePath
             Log("Бой начался. Раунд 1.");
         }
 
+        /// <summary>Выкуп при сдаче («Герои 3»): половина цены уцелевших бойцов.</summary>
+        static int Ransom()
+        {
+            int v = 0;
+            foreach (Stack st in stacks) if (st.Alive && !st.enemy) v += st.count * (st.unit >= 0 && st.unit < Estate.Price.Length ? Estate.Price[st.unit] : st.t.hp * 3) / 2;
+            return Mathf.Max(100, v);
+        }
         static List<KeyValuePair<int, int>> Survivors()
         {
             List<KeyValuePair<int, int>> sv = new List<KeyValuePair<int, int>>();
@@ -424,7 +475,8 @@ namespace BladePath
         /// <summary>Начало раунда: баллиста бьёт сильнейший отряд врага, лекарь лечит раненого.</summary>
         static void Machines()
         {
-            if (mBallista)
+            ballistaReady = mBallista && General.Skill(9) > 0 && !autoOurs;
+            if (mBallista && !ballistaReady)
             {
                 Stack best = null;
                 foreach (Stack o in stacks) if (o.Alive && o.enemy && (best == null || o.Total > best.Total)) best = o;
@@ -452,10 +504,27 @@ namespace BladePath
                 }
             }
         }
+        /// <summary>Враг штурмует поместье: наша армия за стеной (столбец 3), башни бьют штурмующих; итог — Realm.</summary>
+        public static void ShowSiegeDefense(int foeLevel, System.Action<bool> done)
+        {
+            ShowArmy(Campaign.Region);
+            if (Estate.D.army.Count == 0) { stacks.RemoveAll(o => !o.enemy); Add(Ours[0], 10 + 5 * Realm.D.fort, false, 0, 5); }   // гарнизон
+            stacks.RemoveAll(o => o.enemy);
+            int[] mix = { 0, 2, 5, 6, 4, 7 }; int[] rows = { 1, 3, 5, 7, 9 };
+            for (int i = 0; i < 5; i++) { UnitType t = Foes[mix[(i + foeLevel) % mix.Length]]; Add(t, Mathf.Max(1, Mathf.RoundToInt((8 + 6 * foeLevel) * 25f / Mathf.Max(10, t.hp))), true, Cols - 1, rows[i]); }
+            siege = true; siegeDef = true;
+            for (int r = 0; r < Rows; r++) wallHp[r] = 1 + Mathf.Min(2, Realm.D.fort);
+            rocks.RemoveAll(o => o.x <= 4);
+            foreach (Stack st in stacks) st.pos = Vector2.zero;
+            neutralDone = done;
+            round = 0; queue.Clear(); log.Clear(); NewRound();
+            Log("Враг штурмует поместье! Держите стену — башни бьют штурмующих.");
+        }
+
         public static void ShowSiege(int reg)
         {
             ShowDev(reg);
-            siege = true;
+            siege = true; siegeDef = false;
             for (int r = 0; r < Rows; r++) wallHp[r] = 2;
             rocks.RemoveAll(o => o.x >= WallC - 1);
             int i = 0;
@@ -480,9 +549,9 @@ namespace BladePath
             {
                 if (!IsTower(r) || wallHp[r] <= 0) continue;
                 Stack best = null;
-                foreach (Stack o in stacks) if (o.Alive && !o.enemy && (best == null || o.Total > best.Total)) best = o;
+                foreach (Stack o in stacks) if (o.Alive && Attacker(o) && (best == null || o.Total > best.Total)) best = o;
                 if (best == null) continue;
-                int dmg = Random.Range(8, 15) * (1 + Profile.Cycle);
+                int dmg = siegeDef ? Random.Range(10, 18) * (1 + Estate.ForgeBonus) * (1 + Realm.D.fort) : Random.Range(8, 15) * (1 + Profile.Cycle);
                 shots.Add(new Shot { a = Center(WallC, r) + new Vector2(0f, -R * 2f), b = best.pos + new Vector2(0f, -R * 0.8f), t0 = Time.unscaledTime, dur = 0.45f });
                 Hurt(best, dmg); best.flash = 1f; best.hitUntil = Time.unscaledTime + 0.8f;
                 texts.Add(new Float { p = best.pos + new Vector2(0f, -R * 2f), s = "−" + dmg, t0 = Time.unscaledTime + 0.3f, col = new Color(1f, 0.45f, 0.35f) });
@@ -511,7 +580,9 @@ namespace BladePath
                 int k = IsTower(r) ? (wallHp[r] > 0 ? 6 : 7) : r == GateR ? (wallHp[r] == 2 ? 3 : wallHp[r] == 1 ? 4 : 5) : (wallHp[r] == 2 ? 0 : wallHp[r] == 1 ? 1 : 2);
                 if (t == null) { if (wallHp[r] > 0) UiKit.Disc(p, R * 0.7f, new Color(0.5f, 0.48f, 0.44f)); continue; }
                 float w = R * 2.5f, h = w * 362f / 362f;
-                GUI.DrawTextureWithTexCoords(new Rect(p.x - w * 0.5f, p.y - h * 0.72f, w, h), t, new Rect((k % 4) * 0.25f, 1f - (k / 4 + 1) / 3f, 0.25f, 1f / 3f));
+                Rect uvw = new Rect((k % 4) * 0.25f, 1f - (k / 4 + 1) / 3f, 0.25f, 1f / 3f);
+                if (siegeDef) uvw = new Rect(uvw.xMax, uvw.y, -uvw.width, uvw.height);   // штурм справа — стена развёрнута
+                GUI.DrawTextureWithTexCoords(new Rect(p.x - w * 0.5f, p.y - h * 0.72f, w, h), t, uvw);
             }
         }
 
@@ -559,6 +630,11 @@ namespace BladePath
             if (queue.Count == 0) { NewRound(); return; }
             cur = queue[0];
             cur.defending = false;
+            if (!cur.enemy && !cur.t.undead && Morale < 0 && Random.value < -Morale / 12f)
+            {   // дурной дух: отряд дрогнул и пропускает ход
+                texts.Add(new Float { p = cur.pos + new Vector2(0f, -R * 2.6f), s = "ДРОГНУЛИ", t0 = Time.unscaledTime, col = new Color(0.7f, 0.6f, 1f) });
+                Log(cur.t.name + ": дух пал — пропускают ход."); queue.RemoveAt(0); NextTurn(); return;
+            }
             Flood(cur);
         }
 
@@ -588,6 +664,12 @@ namespace BladePath
                 Estate.AfterBattle(sv, ours);
             }
             string loot = "";
+            if (won && fromEstate && General.Val(10) > 0)
+            {   // «Некромантия»: часть сражённых врагов встаёт нашими павшими воинами
+                int hpKilled = 0; foreach (Stack st in stacks) if (st.enemy) hpKilled += (st.start - Mathf.Max(0, st.count)) * st.t.hp;
+                int risen = Mathf.FloorToInt(hpKilled * General.Pct(10) / Ours[RisenUnit].hp);
+                if (risen > 0 && Estate.AddTroops(RisenUnit, risen)) loot += "\nПавших подняли: " + risen + " (в армии).";
+            }
             if (won && Random.value < 0.25f) { int art = General.RandomArt(); if (General.Give(art)) loot = "\nТрофей: " + General.Arts[art].name + " (в рюкзаке полководца)."; }
             int xp = 0; foreach (Stack s in stacks) if (s.enemy) xp += (s.start - Mathf.Max(0, s.count)) * s.t.hp;
             xp = won ? Mathf.Max(10, xp / 4) : 0;
@@ -710,7 +792,7 @@ namespace BladePath
             if (!ranged && a.t.shots > 0 && !a.t.noMeleePen) m *= 0.5f;   // стрелок вплотную — вполсилы
             if (!ranged && a.t.joust) m *= 1f + 0.05f * a.run;          // разгон: +5% за клетку
             if (ranged && a.enemy && fogRounds > 0) m *= 0.5f;
-            if (ranged && !a.enemy && siege && d.c > WallC && wallHp[d.r] > 0) m *= 0.5f;   // по защитникам за целой стеной
+            if (ranged && siege && Attacker(a) && (siegeDef ? d.c < WallC : d.c > WallC) && wallHp[d.r] > 0) m *= 0.5f;   // по защитникам за целой стеной
             if (!a.enemy) m *= 1f + General.Pct(ranged ? 0 : 1) + (ranged ? General.ArtRanged : 0f);   // «Стрельба» / «Нападение», артефакты стрелков
             if (!d.enemy) m *= 1f - General.Pct(2);               // «Доспехи»
             return Mathf.Max(1, Mathf.RoundToInt(b * m));
@@ -729,7 +811,7 @@ namespace BladePath
             Stack s = cur;
             if (s != null) queue.Remove(s);
             // боевой дух («Герои»): знаменосцы рядом с армией — шанс, что отряд сходит ещё раз (раз за раунд)
-            if (s != null && s.Alive && !s.enemy && !s.moraleUsed && !finished && Morale > 0 && Random.value < Morale / 12f)
+            if (s != null && s.Alive && !s.enemy && !s.t.undead && !s.moraleUsed && !finished && Morale > 0 && Random.value < Morale / 12f)
             {
                 s.moraleUsed = true;
                 queue.Insert(0, s);
@@ -739,7 +821,21 @@ namespace BladePath
             NextTurn();
         }
         /// <summary>Боевой дух наших: живые знаменосцы (+1 за отряд, до 3).</summary>
-        static int Morale { get { int m = 0; foreach (Stack s in stacks) if (s.Alive && !s.enemy && (s.t == Ours[9] || s.t == Ours[21])) m += s.t == Ours[21] ? 2 : 1; return Mathf.Min(3, m + General.Val(3) + General.ArtMorale); } }
+        static int Morale
+        {
+            get
+            {
+                int m = 0; bool und = false, liv = false;
+                foreach (Stack s in stacks)
+                {
+                    if (!s.Alive || s.enemy) continue;
+                    if (s.t == Ours[9]) m += 1; else if (s.t == Ours[21]) m += 2;
+                    if (s.t.undead) und = true; else liv = true;
+                }
+                if (und && liv) m -= 1;   // живые рядом с нежитью — дух падает
+                return Mathf.Min(3, m + General.Val(3) + General.ArtMorale);
+            }
+        }
         /// <summary>Удача наших: храм поместья и святилище (пока — храм).</summary>
         static int Luck { get { return (fromEstate ? Estate.D.level[4] : 0) + General.Val(4) + General.ArtLuck; } }
 
@@ -767,6 +863,17 @@ namespace BladePath
             if (castThisRound || spirit < sp.cost) return;
             spirit -= sp.cost; castThisRound = true; spellSel = -1; bookOpen = false;
             GeneralCast();
+            if (target != null && target.enemy && sp.target == 0)
+            {   // сопротивление и иммунитеты («Герои 3»)
+                bool imm = target.t.fireImmune > 0 && (sp.icon == 4 || sp.icon == 8) || target.t.undead && (sp.icon == 9 || sp.icon == 16);
+                if (imm || target.t.resist > 0f && Random.value < target.t.resist)
+                {
+                    texts.Add(new Float { p = target.pos + new Vector2(0f, -R * 2.4f), s = imm ? "НЕ ДЕЙСТВУЕТ" : "СОПРОТИВЛЕНИЕ", t0 = Time.unscaledTime, col = new Color(0.7f, 0.85f, 1f) });
+                    Log(target.t.name + ": умение не подействовало."); UiFx.Play("ui_taiko_heavy", 0.3f);
+                    if (cur != null && cur.Alive) Flood(cur);
+                    return;
+                }
+            }
             int lv = General.Power;   // сила умений — «Сила духа» полководца
             Vector2 at = target != null ? target.pos : Center(cell.x, cell.y);
             bool sheet = false;
@@ -880,7 +987,7 @@ namespace BladePath
                     if (v > tv) { tv = v; target = o; stand = n; }
                 }
             if (target != null) { yield return DoMelee(s, target, stand); yield break; }
-            if (siege && !s.enemy) for (int r = 0; r < Rows; r++) if (WallAt(WallC, r) && NextToWall(s, r)) { yield return DoWallHit(s, r); yield break; }
+            if (siege && Attacker(s)) for (int r = 0; r < Rows; r++) if (WallAt(WallC, r) && NextToWall(s, r)) { yield return DoWallHit(s, r); yield break; }
             // иначе — к ближайшему
             Stack near = null; int nd = int.MaxValue;
             foreach (Stack o in foes) { int d = Dist(s.c, s.r, o.c, o.r); if (d < nd) { nd = d; near = o; } }
@@ -1292,6 +1399,7 @@ namespace BladePath
             DrawFxSheets();
             DrawQueue();
             DrawHud();
+            DrawBallistaButton();
             if (deploy && !finished)
             {
                 UiKit.Text(new Rect(0f, 70f, W, 22f), "РАССТАНОВКА («Тактика»): коснись отряда, затем клетки в синих столбцах", 13f, new Color(0.6f, 0.85f, 1f));
@@ -1451,6 +1559,7 @@ namespace BladePath
         static Texture2D Portrait(UnitType t)
         {
             if (t.cell >= 0) return UiKit.Tex(t.up ? "UI/Battle/unit_portraits2" : "UI/Battle/unit_portraits");
+            if (t.atlasCell >= 0) return UiKit.Tex("UI/H3/neutrals");
             return string.IsNullOrEmpty(t.portrait) ? null : UiKit.Tex(t.portrait);
         }
         static void DrawPortrait(Rect r, UnitType t)
@@ -1458,6 +1567,7 @@ namespace BladePath
             Texture2D p = Portrait(t);
             if (p == null) { UiKit.Disc(r.center, r.width * 0.5f, Dim); return; }
             if (t.cell >= 0) GUI.DrawTextureWithTexCoords(r, p, new Rect((t.cell % 4) * 0.25f, 1f - (t.cell / 4 + 1) / 3f, 0.25f, 1f / 3f));
+            else if (t.atlasCell >= 0) GUI.DrawTextureWithTexCoords(r, p, new Rect((t.atlasCell % 5) * 0.2f + 0.02f, 1f - (t.atlasCell / 5 + 1) * 0.25f + 0.02f, 0.16f, 0.2f));
             else GUI.DrawTexture(r, p);
         }
 
@@ -1533,6 +1643,12 @@ namespace BladePath
         }
 
         static readonly int[] QuickSpells = { 0, 1, 4, 6 };
+        static void DrawBallistaButton()
+        {
+            if (!ballistaReady || finished || cur == null || cur.enemy || Busy) return;
+            Rect r = new Rect(80f + 4f * 38f + 8f, 540f - 38f, 96f, 34f);
+            if (VisualIdentity.KitButton(r, spellSel == -2 ? "ЦЕЛЬ?" : "БАЛЛИСТА", true, spellSel == -2)) spellSel = spellSel == -2 ? -1 : -2;
+        }
         static void DrawHud()
         {
             // герой
@@ -1572,8 +1688,15 @@ namespace BladePath
                     case 1: Defend(); break;
                     case 2: autoOurs = !autoOurs; break;
                     case 3: case 4:
+                    {
+                        int ransom = Ransom();
+                        if (i == 4 && Profile.Gold < ransom) { Log("Выкуп " + ransom + " мон — не хватает."); break; }
                         if (fromEstate) Estate.AfterBattle(i == 4 ? Survivors() : new List<KeyValuePair<int, int>>(), false);   // сдался — армия цела, бежал — рассеялась
-                        finished = true; won = false; resultText = i == 3 ? "Ты отступил. Армия рассеялась." : "Ты сдался: армия цела, но враг забрал половину мон."; if (i == 4) Profile.AddGold(-Profile.Gold / 2); break;
+                        finished = true; won = false;
+                        resultText = i == 3 ? "Ты отступил. Армия рассеялась, полководец ушёл." : "Ты сдался и заплатил выкуп " + ransom + " мон: армия цела.";
+                        if (i == 4) Profile.AddGold(-ransom);
+                        break;
+                    }
                     case 5: bookOpen = !bookOpen; break;
                 }
             }
@@ -1779,6 +1902,11 @@ namespace BladePath
             if (c.x < 0) return;
             Stack o = At(c.x, c.y);
             e.Use();
+            if (spellSel == -2)
+            {   // наводка баллисты
+                if (o != null && o.enemy) BallistaShot(o); else spellSel = -1;
+                return;
+            }
             if (spellSel >= 0)
             {
                 Spell sp = Spells[spellSel];
@@ -1788,7 +1916,7 @@ namespace BladePath
             }
             if (o == null)
             {
-                if (WallAt(c.x, c.y) && NextToWall(cur, c.y)) { Run(DoWallHit(cur, c.y)); return; }   // осада: бить стену/ворота рядом
+                if (WallAt(c.x, c.y) && Attacker(cur) && NextToWall(cur, c.y)) { Run(DoWallHit(cur, c.y)); return; }   // осада: бить стену/ворота рядом
                 if (reach.ContainsKey(c) && (c.x != cur.c || c.y != cur.r)) Run(DoMove(cur, c));
                 return;
             }

@@ -56,6 +56,13 @@ namespace BladePath
             return a.name + " (" + SlotNames[a.slot].ToLower() + ")" + (t.Length > 0 ? ": " + t.Substring(2) : "");
         }
         static int Sum(System.Func<Art, int> f) { int v = 0; foreach (int id in D.equip) if (id >= 0 && id < Arts.Length) v += f(Arts[id]); return v; }
+        // наборы артефактов («Герои 3»): все вещи набора надеты — общий бонус
+        public static readonly string[] SetNames = { "ДОСПЕХ ДРАКОНА", "ТАЙНЫ ОНМЁДЗИ" };
+        static readonly int[][] SetItems = { new[] { 0, 4, 5 }, new[] { 8, 10, 14 } };
+        public static readonly string[] SetText = { "клинок, шлем и доспех дракона: +3 к атаке и защите", "магатама, инро и чётки: +2 к силе духа и знанию" };
+        public static bool SetOn(int k) { foreach (int id in SetItems[k]) if (System.Array.IndexOf(D.equip, id) < 0) return false; return true; }
+        static int SetAtk { get { return SetOn(0) ? 3 : 0; } }
+        static int SetPow { get { return SetOn(1) ? 2 : 0; } }
         public static int ArtMorale { get { return Sum(a => a.morale); } }
         public static int ArtLuck { get { return Sum(a => a.luck); } }
         public static int ArtSpeed { get { return Sum(a => a.spd); } }
@@ -82,22 +89,23 @@ namespace BladePath
             D.bag.Add(D.equip[slot]); D.equip[slot] = -1; Save();
         }
 
-        public const int SkillCount = 8, MaxSkills = 6;
+        public const int SkillCount = 11, MaxSkills = 6;
         public static readonly string[] PrimaryNames = { "АТАКА", "ЗАЩИТА", "СИЛА ДУХА", "ЗНАНИЕ" };
         public static readonly string[] PrimaryHint =
         {
             "+1 к атаке всех отрядов", "+1 к защите всех отрядов", "сила умений героя", "запас духа в бою"
         };
-        public static readonly string[] SkillNames = { "СТРЕЛЬБА", "НАПАДЕНИЕ", "ДОСПЕХИ", "ЛИДЕРСТВО", "УДАЧА", "МИСТИЦИЗМ", "ЗНАХАРСТВО", "ТАКТИКА" };
+        public static readonly string[] SkillNames = { "СТРЕЛЬБА", "НАПАДЕНИЕ", "ДОСПЕХИ", "ЛИДЕРСТВО", "УДАЧА", "МИСТИЦИЗМ", "ЗНАХАРСТВО", "ТАКТИКА", "ЛОГИСТИКА", "АРТИЛЛЕРИЯ", "НЕКРОМАНТИЯ" };
         static readonly string[] SkillHint =
         {
             "урон стрелков +{0}%", "урон в ближнем бою +{0}%", "получаемый урон −{0}%", "боевой дух +{0}",
-            "удача +{0}", "дух в бою +{0}", "после боя встают {0}% павших", "скорость отрядов +{0}"
+            "удача +{0}", "дух в бою +{0}", "после боя встают {0}% павших", "скорость отрядов +{0}", "шагов пути +{0} в день", "баллиста в руках, урон ×{0}", "{0}% сражённых врагов встают нашими павшими"
         };
         static readonly int[][] SkillVal =
         {
             new[] { 0, 10, 25, 50 }, new[] { 0, 10, 20, 30 }, new[] { 0, 5, 10, 15 }, new[] { 0, 1, 2, 3 },
-            new[] { 0, 1, 2, 3 }, new[] { 0, 1, 2, 3 }, new[] { 0, 10, 20, 30 }, new[] { 0, 0, 1, 2 }
+            new[] { 0, 1, 2, 3 }, new[] { 0, 1, 2, 3 }, new[] { 0, 10, 20, 30 }, new[] { 0, 0, 1, 2 },
+            new[] { 0, 1, 1, 2 }, new[] { 0, 1, 2, 3 }, new[] { 0, 10, 20, 30 }
         };
         public static readonly string[] Ranks = { "", "ОСНОВЫ", "ОПЫТНЫЙ", "МАСТЕР" };
         static readonly int[] PrimaryWeight = { 35, 35, 15, 15 };   // воевода: больше атаки и защиты
@@ -115,10 +123,10 @@ namespace BladePath
         }
         public static void Save() { PlayerPrefs.SetString("general", JsonUtility.ToJson(D)); PlayerPrefs.Save(); }
 
-        public static int Atk { get { Sync(); return D.atk + Sum(a => a.atk); } }
-        public static int Def { get { Sync(); return D.def + Sum(a => a.def); } }
-        public static int Power { get { Sync(); return D.power + Sum(a => a.pow); } }
-        public static int Know { get { Sync(); return D.know + Sum(a => a.know); } }
+        public static int Atk { get { Sync(); return D.atk + Sum(a => a.atk) + SetAtk; } }
+        public static int Def { get { Sync(); return D.def + Sum(a => a.def) + SetAtk; } }
+        public static int Power { get { Sync(); return D.power + Sum(a => a.pow) + SetPow; } }
+        public static int Know { get { Sync(); return D.know + Sum(a => a.know) + SetPow; } }
         public static int Skill(int i) { return D.skill[i]; }
         public static int Val(int i) { return SkillVal[i][D.skill[i]]; }
         public static float Pct(int i) { return Val(i) / 100f; }
@@ -237,7 +245,11 @@ namespace BladePath
             }
             if (Time.unscaledTime - tipAt < 4f && tip.Length > 0)
                 UiKit.Text(Px(600, 856, 1000, 40), tip, 10f, Gold);
-            else UiKit.Text(Px(600, 856, 1000, 40), "Рюкзак: коснись артефакта, чтобы надеть; коснись надетого — снять", 9.5f, Dim);
+            else
+            {
+                string sets = ""; for (int q = 0; q < SetNames.Length; q++) if (SetOn(q)) sets += (sets.Length > 0 ? " · " : "") + SetNames[q] + " — " + SetText[q];
+                UiKit.Text(Px(600, 856, 1000, 40), sets.Length > 0 ? "Набор собран: " + sets : "Наборы: " + SetNames[0].ToLower() + " (клинок, шлем, доспех), " + SetNames[1].ToLower() + " (магатама, инро, чётки)", 9.5f, sets.Length > 0 ? Gold : Dim);
+            }
             // выбор навыка при повышении уровня — поверх окна
             if (D.pending > 0 && D.offerA >= 0)
             {
