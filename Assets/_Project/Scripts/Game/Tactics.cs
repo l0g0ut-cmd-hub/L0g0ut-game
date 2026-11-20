@@ -1129,7 +1129,7 @@ namespace BladePath
         static void DrawQueue()
         {
             Texture2D q = UiKit.Tex("UI/Battle/queue_bar");
-            float qw = Mathf.Min(W * 0.6f, 600f), qh = q != null ? qw * q.height / q.width : 60f;
+            float qw = Mathf.Min(W * 0.42f, 380f), qh = q != null ? qw * q.height / q.width : 60f;
             Rect qr = new Rect((W - qw) * 0.5f, 4f, qw, qh);
             if (q != null) GUI.DrawTexture(qr, q); else UiKit.Rect(qr, new Color(0.1f, 0.05f, 0.03f, 0.9f));
             // очередь: этот раунд, затем следующий (по скорости)
