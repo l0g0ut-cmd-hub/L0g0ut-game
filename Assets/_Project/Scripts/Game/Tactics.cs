@@ -22,6 +22,8 @@ namespace BladePath
             public bool noRetal;            // по нему не отвечают (синоби, клан теней)
             public bool magic;              // дальний удар без штрафа за расстояние
             public string portrait;         // путь к портрету (свой — по ячейке атласа отрядов)
+            public string live;             // живая 3D-модель с клипами Meshy: Resources/Units/<live> (+ <live>_albedo); нет — снимок
+            public float liveH = 1.7f;      // рост на поле, м
             public int cell = -1;           // ячейка UI/Battle/unit_portraits (4×3)
             public int model;               // ≥0 — облик врага (EnemySkins), −1…−3 — облик странника (PlayerSkins 0…2), −99 — нет модели
             public UnitType(string n, int a, int d, int mn, int mx, int h, int s, int sh, int mdl) { name = n; atk = a; def = d; dmin = mn; dmax = mx; hp = h; spd = s; shots = sh; model = mdl; }
@@ -31,17 +33,17 @@ namespace BladePath
         public static readonly UnitType[] Ours =
         {
             new UnitType("Асигару", 4, 5, 1, 3, 10, 4, 0, 8) { cell = 0 },
-            new UnitType("Лучники", 6, 3, 2, 3, 10, 4, 12, -2) { cell = 1 },
-            new UnitType("Тэппо", 8, 3, 3, 5, 12, 3, 8, 6) { cell = 2 },
+            new UnitType("Лучники", 6, 3, 2, 3, 10, 4, 12, -2) { cell = 1, live = "unit_archer" },
+            new UnitType("Тэппо", 8, 3, 3, 5, 12, 3, 8, 6) { cell = 2, live = "unit_teppo" },
             new UnitType("Самураи", 8, 8, 4, 6, 25, 5, 0, 0) { cell = 3 },
-            new UnitType("Конные самураи", 11, 9, 7, 11, 45, 8, 0, 3) { cell = 4 },
-            new UnitType("Сохэи", 7, 7, 3, 6, 20, 5, 0, 7) { cell = 5 },
+            new UnitType("Конные самураи", 11, 9, 7, 11, 45, 8, 0, 3) { cell = 4, live = "unit_cavalry", liveH = 2.6f },
+            new UnitType("Сохэи", 7, 7, 3, 6, 20, 5, 0, 7) { cell = 5, live = "unit_sohei" },
             new UnitType("Синоби", 9, 4, 3, 5, 15, 8, 0, 5) { cell = 6, noRetal = true },
             new UnitType("Ронины", 7, 6, 3, 5, 18, 6, 0, 1) { cell = 7 },
-            new UnitType("Онмёдзи", 9, 6, 4, 7, 20, 5, 10, -3) { cell = 8, magic = true },
-            new UnitType("Знаменосцы", 3, 6, 1, 2, 15, 5, 0, -1) { cell = 9 },
+            new UnitType("Онмёдзи", 9, 6, 4, 7, 20, 5, 10, -3) { cell = 8, magic = true, live = "unit_onmyoji" },
+            new UnitType("Знаменосцы", 3, 6, 1, 2, 15, 5, 0, -1) { cell = 9, live = "unit_banner" },
             new UnitType("Хатамото", 13, 14, 10, 18, 80, 5, 0, 3) { cell = 10 },
-            new UnitType("Боевые псы", 6, 3, 2, 4, 12, 9, 0, -99) { cell = 11 },
+            new UnitType("Боевые псы", 6, 3, 2, 4, 12, 9, 0, -99) { cell = 11, live = "unit_dog", liveH = 0.9f },
         };
         public static readonly UnitType[] Foes =
         {
@@ -76,6 +78,8 @@ namespace BladePath
             public Vector2 pos;                 // где нарисован (виртуальные точки)
             public List<Vector2> path = new List<Vector2>();
             public float lunge; public Vector2 lungeDir; public float flash, die = -1f, born;
+            public GameObject go; public Animation an; public string playing; public float actUntil, hitUntil;
+            public string clipIdle, clipWalk, clipAct, clipHit, clipDie, clipWin;
             public int Total { get { return count <= 0 ? 0 : (count - 1) * t.hp + topHp; } }
             public bool Alive { get { return count > 0; } }
             public int Atk { get { return t.atk + atkB + (curseRounds > 0 ? -4 : 0) + (enemy ? 0 : HeroBonus + forge); } }
@@ -396,6 +400,7 @@ namespace BladePath
         static IEnumerator DoShoot(Stack a, Stack d)
         {
             a.shots--;
+            if (a.an != null) yield return Act(a, 0.55f);   // натянул лук / вскинул ружьё / сложил печать
             Vector2 from = a.pos + new Vector2(0f, -R * 1.1f), to = d.pos + new Vector2(0f, -R * 0.8f);
             shots.Add(new Shot { a = from, b = to, t0 = Time.unscaledTime, dur = 0.35f, magic = a.t.magic });
             yield return 0.35f;
@@ -405,13 +410,18 @@ namespace BladePath
 
         static IEnumerator Strike(Stack a, Stack d, bool ranged)
         {
-            if (!ranged) { a.lungeDir = (d.pos - a.pos).normalized; a.lunge = 1f; yield return 0.18f; }
+            if (a.an != null && !ranged)
+            {   // живой боец: клип удара, урон — на середине замаха
+                a.lungeDir = (d.pos - a.pos).normalized; a.lunge = 0.6f;
+                yield return Act(a, 0.45f);
+            }
+            else if (!ranged) { a.lungeDir = (d.pos - a.pos).normalized; a.lunge = 1f; yield return 0.18f; }
             int dmg = Damage(a, d, ranged, false);
             bool lucky = !a.enemy && Luck > 0 && Random.value < Luck / 12f;   // удача («Герои»): двойной урон
             if (lucky) { dmg *= 2; texts.Add(new Float { p = a.pos + new Vector2(0f, -R * 2.6f), s = "УДАЧА!", t0 = Time.unscaledTime, col = new Color(0.6f, 1f, 0.5f) }); }
             int before = d.count;
             Hurt(d, dmg);
-            d.flash = 1f;
+            d.flash = 1f; d.hitUntil = Time.unscaledTime + 0.55f;
             int dead = before - Mathf.Max(0, d.count);
             texts.Add(new Float { p = d.pos + new Vector2(0f, -R * 2f), s = "−" + dmg + (dead > 0 ? "  (" + dead + " пало)" : ""), t0 = Time.unscaledTime, col = d.enemy ? new Color(1f, 0.85f, 0.4f) : new Color(1f, 0.45f, 0.35f) });
             Log((a.enemy ? "Враг: " : "") + a.t.name + " → " + d.t.name + ": " + dmg + " урона" + (dead > 0 ? ", пало " + dead : "") + ".");
@@ -639,6 +649,157 @@ namespace BladePath
             if (ps != null && !CharacterLook.ApplyTo(ps)) ps.Apply(JourneyChoice.Hero);
         }
 
+        // ---------------------------------------------------------------- живые бойцы (3D-модели с клипами Meshy)
+        // Сцена далеко внизу (слой 30), ортокамера под 34° — как сплющены клетки (Sq = sin 34°): клетка на поле = клетка на земле.
+        // Камера рисует в прозрачную текстуру поверх картины поля; бойцы стоят на земле там, где их клетка на экране.
+
+        const int LiveLayer = 30;
+        static readonly Vector3 StageAt = new Vector3(0f, -1000f, 0f);
+        static GameObject stage; static Camera liveCam; static RenderTexture liveRT;
+        static float PPM { get { return R * 2.45f / (1.7f * 0.829f); } }   // точек на метр (рост 1,7 м = как снимок)
+
+        static IEnumerator Act(Stack s, float impact)
+        {
+            s.actUntil = Time.unscaledTime + Mathf.Max(impact + 0.3f, ClipLen(s, s.clipAct, 1.1f));
+            if (s.clipAct != null) { Play(s, s.clipAct, true); }
+            yield return impact;
+        }
+        static float ClipLen(Stack s, string c, float def)
+        {
+            if (s.an == null || c == null || s.an[c] == null) return def;
+            return Mathf.Clamp(s.an[c].length, 0.3f, 2.2f);
+        }
+        static void Play(Stack s, string clip, bool restart)
+        {
+            if (s.an == null || clip == null || s.an[clip] == null) return;
+            if (s.playing == clip && !restart) return;
+            s.playing = clip;
+            if (restart) { s.an[clip].time = 0f; s.an.Play(clip); }
+            else s.an.CrossFade(clip, 0.18f);
+        }
+
+        static void SetupLive()
+        {
+            CleanupLive();
+            bool any = false;
+            foreach (Stack s in stacks) if (!string.IsNullOrEmpty(s.t.live) && Resources.Load<GameObject>("Units/" + s.t.live) != null) any = true;
+            if (!any) return;
+            stage = new GameObject("TacticsStage");
+            stage.transform.position = StageAt;
+            GameObject cg = new GameObject("TacticsCam"); cg.transform.SetParent(stage.transform, false);
+            liveCam = cg.AddComponent<Camera>();
+            liveCam.enabled = false; liveCam.orthographic = true;
+            liveCam.clearFlags = CameraClearFlags.SolidColor; liveCam.backgroundColor = new Color(0f, 0f, 0f, 0f);
+            liveCam.cullingMask = 1 << LiveLayer; liveCam.nearClipPlane = 0.1f; liveCam.farClipPlane = 200f; liveCam.allowMSAA = false;
+            GameObject lg = new GameObject("TacticsSun"); lg.transform.SetParent(stage.transform, false);
+            Light l = lg.AddComponent<Light>(); l.type = LightType.Directional; l.intensity = 1.15f; l.color = new Color(1f, 0.93f, 0.82f);
+            l.cullingMask = 1 << LiveLayer; lg.transform.rotation = Quaternion.Euler(48f, -35f, 0f);
+            foreach (Stack s in stacks)
+            {
+                if (string.IsNullOrEmpty(s.t.live)) continue;
+                GameObject pf = Resources.Load<GameObject>("Units/" + s.t.live);
+                if (pf == null) continue;
+                GameObject go = Object.Instantiate(pf, stage.transform);
+                go.name = "Unit_" + s.t.live;
+                foreach (Transform tr in go.GetComponentsInChildren<Transform>(true)) tr.gameObject.layer = LiveLayer;
+                Texture2D tex = Resources.Load<Texture2D>("Units/" + s.t.live + "_albedo");
+                Shader sh = Shader.Find("Standard");
+                foreach (Renderer r in go.GetComponentsInChildren<Renderer>(true))
+                {
+                    Material m = new Material(sh); if (tex != null) m.mainTexture = tex;
+                    m.SetFloat("_Glossiness", 0.25f); m.SetFloat("_Metallic", 0.05f);
+                    m.color = s.enemy ? new Color(1.05f, 0.95f, 0.92f) : new Color(1.12f, 1.1f, 1.06f);
+                    Material[] ms = new Material[r.sharedMaterials.Length]; for (int i = 0; i < ms.Length; i++) ms[i] = m;
+                    r.sharedMaterials = ms;
+                    r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    SkinnedMeshRenderer sm = r as SkinnedMeshRenderer; if (sm != null) sm.updateWhenOffscreen = true;
+                }
+                // рост — по меркам модели
+                Bounds b = new Bounds(go.transform.position, Vector3.zero); bool has = false;
+                foreach (Renderer r in go.GetComponentsInChildren<Renderer>()) { if (!has) { b = r.bounds; has = true; } else b.Encapsulate(r.bounds); }
+                if (has && b.size.y > 0.01f) go.transform.localScale *= s.t.liveH / b.size.y;
+                s.go = go; s.an = go.GetComponentInChildren<Animation>();
+                if (s.an != null)
+                {
+                    s.an.cullingType = AnimationCullingType.AlwaysAnimate;
+                    List<string> names = new List<string>();
+                    foreach (AnimationState st in s.an) names.Add(st.name);
+                    s.clipIdle = Find(names, "idle", null); s.clipWalk = Find(names, "walk", "canter", "run");
+                    s.clipAct = Find(names, "shot", "shoot", "slash", "thrust", "spell", "cast", "attack", "combo", "jump");
+                    s.clipHit = Find(names, "hit", "reaction"); s.clipDie = Find(names, "dying", "dead", "death", "fall", "knock");
+                    s.clipWin = Find(names, "victory", "cheer", "howl");
+                    if (s.clipIdle == null && names.Count > 0) s.clipIdle = names[0];
+                    foreach (AnimationState st in s.an)
+                        st.wrapMode = st.name == s.clipIdle || st.name == s.clipWalk ? WrapMode.Loop : st.name == s.clipDie ? WrapMode.ClampForever : WrapMode.Once;
+                    Play(s, s.clipIdle, true);
+                }
+            }
+        }
+        static string Find(List<string> names, params string[] keys)
+        {
+            foreach (string k in keys) { if (k == null) continue; foreach (string n in names) if (n.ToLowerInvariant().Contains(k)) return n; }
+            return null;
+        }
+        static void CleanupLive()
+        {
+            if (stage != null) Object.Destroy(stage);
+            stage = null; liveCam = null;
+            if (liveRT != null) { liveRT.Release(); Object.Destroy(liveRT); liveRT = null; }
+            foreach (Stack s in stacks) { s.go = null; s.an = null; s.playing = null; }
+        }
+        static void Close() { CleanupLive(); Open = false; }
+
+        static Vector3 Ground(Vector2 v)
+        {
+            Ray ray = liveCam.ViewportPointToRay(new Vector3(v.x / W, 1f - v.y / 540f, 0f));
+            float t = (StageAt.y - ray.origin.y) / ray.direction.y;
+            return ray.origin + ray.direction * t;
+        }
+
+        /// <summary>Кадр живых бойцов: где стоят, куда смотрят, какой клип; камера — в прозрачную текстуру.</summary>
+        static void DrawLive()
+        {
+            if (liveCam == null || Event.current.type != EventType.Repaint) return;
+            int pw = Mathf.Max(64, Mathf.RoundToInt(W * UiKit.Scale)), ph = Mathf.Max(64, Mathf.RoundToInt(540f * UiKit.Scale));
+            if (liveRT == null || liveRT.width != pw || liveRT.height != ph)
+            {
+                if (liveRT != null) { liveRT.Release(); Object.Destroy(liveRT); }
+                liveRT = new RenderTexture(pw, ph, 24, RenderTextureFormat.ARGB32); liveRT.antiAliasing = 1;
+            }
+            liveCam.targetTexture = liveRT;
+            liveCam.orthographicSize = 270f / PPM;
+            liveCam.aspect = W / 540f;
+            liveCam.transform.rotation = Quaternion.Euler(34f, 0f, 0f);
+            Vector3 centerGround = StageAt;
+            liveCam.transform.position = centerGround - liveCam.transform.forward * 60f;
+            float now = Time.unscaledTime;
+            foreach (Stack s in stacks)
+            {
+                if (s.go == null) continue;
+                bool dead = !s.Alive;
+                if (dead && s.die > 0f && now - s.die > 6f) { s.go.SetActive(false); continue; }   // тело лежит — потом убирается
+                Vector2 p = s.pos + s.lungeDir * Mathf.Sin(s.lunge * Mathf.PI) * R * 0.35f;
+                s.go.transform.position = Ground(new Vector2(p.x - W * 0.5f + W * 0.5f, p.y));
+                // направление: на ходу — по пути, иначе — к врагам
+                Vector2 dir = s.path.Count > 0 ? s.path[0] - s.pos : new Vector2(s.enemy ? -1f : 1f, 0f);
+                if (s.actUntil > now && s.lungeDir.sqrMagnitude > 0.01f) dir = s.lungeDir;
+                if (dir.sqrMagnitude > 0.01f)
+                {
+                    Vector3 wd = new Vector3(dir.x, 0f, -dir.y / 0.559f);
+                    Quaternion want = Quaternion.LookRotation(wd.normalized, Vector3.up);
+                    s.go.transform.rotation = Quaternion.Slerp(s.go.transform.rotation, want, Mathf.Min(1f, Time.unscaledDeltaTime * 10f));
+                }
+                if (dead) Play(s, s.clipDie, s.playing != s.clipDie);
+                else if (s.path.Count > 0) Play(s, s.clipWalk ?? s.clipIdle, false);
+                else if (s.actUntil > now) { }
+                else if (s.hitUntil > now && s.clipHit != null) { if (s.playing != s.clipHit) Play(s, s.clipHit, true); }
+                else if (finished && won && !s.enemy && s.clipWin != null) Play(s, s.clipWin, false);
+                else Play(s, s.clipIdle, false);
+            }
+            liveCam.Render();
+            GUI.DrawTexture(new Rect(0f, 0f, W, 540f), liveRT, ScaleMode.StretchToFill, true);
+        }
+
         // ---------------------------------------------------------------- рисование
 
         static readonly Color Gold = new Color(0.9f, 0.76f, 0.47f), Ink = new Color(0.93f, 0.89f, 0.8f), Dim = new Color(0.68f, 0.64f, 0.56f);
@@ -659,7 +820,7 @@ namespace BladePath
             Event e = Event.current;
             if (e.type == EventType.Repaint)
             {
-                if (!snapsTaken) TakeSnaps();
+                if (!snapsTaken) { TakeSnaps(); SetupLive(); }
                 Animate();
                 Step();
                 if (!Busy && !finished && cur != null && (cur.enemy || autoOurs)) Run(AiTurn(cur));
@@ -670,6 +831,7 @@ namespace BladePath
             else UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0.12f, 0.14f, 0.1f));
 
             DrawGrid();
+            DrawLive();
             DrawStacks();
             DrawFx();
             DrawQueue();
@@ -763,6 +925,11 @@ namespace BladePath
                 float bob = Mathf.Sin(Time.unscaledTime * 2.2f + s.c * 1.7f + s.r) * 1.2f;
                 // тень
                 UiKit.Disc(p + new Vector2(0f, 2f), R * 0.5f, new Color(0f, 0f, 0f, 0.28f * fade));
+                if (s.go != null)
+                {   // живой боец — уже нарисован камерой; здесь — только число бойцов
+                    if (!s.Alive) continue;
+                    goto plaqueOnly;
+                }
                 Texture2D t = Snap(s.t.model);
                 Color oc = GUI.color;
                 Color tint = Color.Lerp(Color.white, new Color(1f, 0.35f, 0.3f), s.flash);
@@ -784,6 +951,7 @@ namespace BladePath
                 }
                 GUI.color = oc;
                 if (!s.Alive) continue;
+                plaqueOnly:
                 // число бойцов
                 Rect pr = new Rect(p.x + R * 0.25f, p.y - R * 0.05f, R * 1.25f, R * 0.5f);
                 if (plaque != null) GUI.DrawTexture(pr, plaque); else UiKit.Rect(pr, new Color(0.15f, 0.05f, 0.03f, 0.9f));
@@ -990,16 +1158,16 @@ namespace BladePath
                 if (VisualIdentity.KitButton(new Rect(r.center.x - 100f, r.yMax - 54f, 200f, 38f), "НА КАРТУ", true, true))
                 {
                     if (won) Campaign.FinishFight(); else Campaign.LoseFight();
-                    mapNode = -1; Open = false; returned = true;
+                    mapNode = -1; Close(); returned = true;
                 }
                 return;
             }
             if (fromEstate)
             {
-                if (VisualIdentity.KitButton(new Rect(r.x + 30f, r.yMax - 54f, 180f, 38f), "В ПОМЕСТЬЕ", true, true)) { Open = false; Estate.Show(); }
+                if (VisualIdentity.KitButton(new Rect(r.x + 30f, r.yMax - 54f, 180f, 38f), "В ПОМЕСТЬЕ", true, true)) { Close(); Estate.Show(); }
             }
             else if (VisualIdentity.KitButton(new Rect(r.x + 30f, r.yMax - 54f, 180f, 38f), "ЕЩЁ БОЙ", true, true)) ShowDev((region + 1) % 3);
-            if (VisualIdentity.KitButton(new Rect(r.xMax - 210f, r.yMax - 54f, 180f, 38f), "ВЫЙТИ", true, false)) Open = false;
+            if (VisualIdentity.KitButton(new Rect(r.xMax - 210f, r.yMax - 54f, 180f, 38f), "ВЫЙТИ", true, false)) Close();
         }
 
         // ---------------------------------------------------------------- касания
