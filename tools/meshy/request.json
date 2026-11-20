@@ -1,9 +1,10 @@
 [
  {
-  "action": "animate",
+  "action": "rig",
   "account": "3",
   "name": "unit_crimson",
-  "rig_task_id": "01a1f97d-491e-77ea-ab9d-192b4e15b2a6",
+  "model_url": "https://raw.githubusercontent.com/l0g0ut-cmd-hub/L0g0ut-game/meshy-gen/unit_crimson/unit_crimson_image.glb",
+  "height": 1.78,
   "action_ids": [
    89,
    21,
