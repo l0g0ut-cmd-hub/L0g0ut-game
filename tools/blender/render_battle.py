@@ -19,9 +19,9 @@ for a in arms:
         if not a.animation_data: a.animation_data_create()
         a.animation_data.action = bpy.data.actions[pick]
 sc.frame_set(12)
-# поворот к врагу: перед модели (−Y) → (±1, −0.63) в плоскости XY
+# поворот к врагу: перед модели (−Y) → (±1, −0.215) в плоскости XY
 sx = 1.0 if SIDE == 'ours' else -1.0
-want = math.atan2(-0.63, sx); front = math.atan2(-1.0, 0.0)
+want = math.atan2(-0.215, sx); front = math.atan2(-1.0, 0.0)
 root = bpy.data.objects.new('Root', None); sc.collection.objects.link(root)
 for o in sc.objects:
     if o.parent is None and o is not root: o.parent = root
