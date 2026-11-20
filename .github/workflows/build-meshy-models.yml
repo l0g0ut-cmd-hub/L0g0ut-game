@@ -28,9 +28,11 @@ jobs:
         run: |
           set -e
           mkdir -p out/Models out/Art out/preview
+          ONLY=""; [ -f tools/blender/meshy_only.txt ] && ONLY=" $(tr '\n' ' ' < tools/blender/meshy_only.txt) "
           build() {
+            if [ -n "$ONLY" ] && ! echo "$ONLY" | grep -q " $2 "; then return 0; fi
             MESHY_GLB="$( [ -f tools/models/meshy/$1_rig.fbx ] && echo tools/models/meshy/$1_rig.fbx || echo tools/models/meshy/$1.glb )" MESHY_NAME="$2" MESHY_OUT=out/Models \
-            BODY_H="$3" TOP_FRAC="$4" ARM_PAD="$5" SHOULDER_X="$6" HEAD_Z="${7:-0}" \
+            BODY_H="$3" TOP_FRAC="$4" ARM_PAD="$5" SHOULDER_X="$6" HEAD_Z="${7:-0}" ZONE_UV="${8:-}" ALBEDO="tools/models/meshy/$1_rig_albedo.jpg" ZONE_OUT=out/Zones \
               blender -b --factory-startup --python tools/blender/build_meshy_char.py > "out/$2.log" 2>&1 || true
             grep -E "^MZ|Error|Traceback" "out/$2.log" | head -60
             test -f "out/Models/$2.fbx" || { tail -60 "out/$2.log"; exit 1; }
@@ -50,8 +52,8 @@ jobs:
           build ashigaru  Ashigaru_Enemy  1.70 0.925 0.02 0.17
           build kitsune   Kitsune_Enemy   1.64 0.955 0.00 0.16
           # основы редактора персонажей (концепты владельца, 2026-11-20)
-          build base_male   BaseMale_Player   1.74 0.930 0.00 0.17
-          build base_female BaseFemale_Player 1.64 0.950 0.00 0.16
+          build base_male   BaseMale_Player   1.74 0.930 0.00 0.17 0 1
+          build base_female BaseFemale_Player 1.64 0.950 0.00 0.16 0 1
 
       - name: Extract textures
         run: |
@@ -81,11 +83,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -e
-          D="$RUNNER_TEMP/models"; rm -rf "$D"; mkdir -p "$D"
+          D="$RUNNER_TEMP/models"; rm -rf "$D"
+          URL="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git ls-remote --exit-code "$URL" meshy-models >/dev/null 2>&1; then git clone -q --depth 1 -b meshy-models "$URL" "$D"; else mkdir -p "$D"; (cd "$D"; git init -q; git checkout -q -b meshy-models); fi
           cp -r out/. "$D/"
           cd "$D"
           echo "run ${GITHUB_RUN_NUMBER} sha ${GITHUB_SHA}" > info.txt
-          git init -q; git checkout -q -b meshy-models
           git -c user.name=ci -c user.email=ci@local add -A
           git -c user.name=ci -c user.email=ci@local commit -qm "meshy models run ${GITHUB_RUN_NUMBER}"
           git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" meshy-models

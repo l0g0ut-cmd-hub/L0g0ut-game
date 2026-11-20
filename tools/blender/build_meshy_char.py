@@ -430,6 +430,9 @@ for mt in body.data.materials:
     if mt: mt.name = 'MZ_' + NAME
 log('групп весов', len(body.vertex_groups), 'материалов', len(body.data.materials))
 
+# ------------------------------------------------------------------ 4б. развёртка по зонам (основы редактора персонажей, ZONE_UV=1)
+if os.environ.get('ZONE_UV') == '1':
+    exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'zone_uv.py'), encoding='utf-8').read())
 # ------------------------------------------------------------------ 5. клипы (общий код из build_ronin.py) и экспорт
 for act in list(bpy.data.actions): bpy.data.actions.remove(act)
 here = os.path.dirname(os.path.abspath(__file__))
