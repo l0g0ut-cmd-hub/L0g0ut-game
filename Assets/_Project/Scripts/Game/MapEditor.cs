@@ -696,7 +696,7 @@ namespace BladePath
             UiKit.Rect(r, Panel); Frame(r, Edge, 1.5f);
         }
         static bool locked;   // открыто окно истории — кнопки под ним не нажимаются
-        static bool Btn(Rect r, string s, bool on = true, bool red = false) { return VisualIdentity.KitButton(r, s, on, red) && !locked; }
+        static bool Btn(Rect r, string s, bool on = true, bool red = false, bool sel = false) { return VisualIdentity.KitButton(r, s, on, red, sel) && !locked; }
 
         static void DrawPanels()
         {
@@ -902,6 +902,7 @@ namespace BladePath
         // ---------------------------------------------------------------- своё место (строение, событие)
 
         static MapCustom customEdit;
+        static bool chainView;
         static int foeIdx(int code) { int i = System.Array.IndexOf(MapCustom.FoeCodes, code); return i < 0 ? 0 : i; }
 
         static MapCustom MakeCustom(MapPlace q)
@@ -970,13 +971,28 @@ namespace BladePath
             Label(ref y, x, w, "Название");
             c.name = TextField(new Rect(x, y, Mathf.Min(w, 420f), 32f), c.name, 32); y += 40f;
             Label(ref y, x, w, "Текст карточки");
-            c.text = TextField(new Rect(x, y, w, 96f), c.text, 600, true); y += 104f;
-            // бой
-            Label(ref y, x, w, "Если выбор — «БОЙ»: противник и сила");
-            float bw = Mathf.Min(260f, (w - 8f) * 0.5f);
-            if (Btn(new Rect(x, y, bw, 32f), MapCustom.FoeNames[foeIdx(c.foe)])) { c.foe = MapCustom.FoeCodes[(foeIdx(c.foe) + 1) % MapCustom.FoeCodes.Length]; dirty = true; }
-            if (Btn(new Rect(x + bw + 8f, y, bw, 32f), c.strong ? "СИЛЬНЫЙ: ДА" : "СИЛЬНЫЙ: НЕТ")) { c.strong = !c.strong; dirty = true; }
-            y += 42f;
+            c.text = TextField(new Rect(x, y, w, 80f), c.text, 600, true); y += 88f;
+            // вкладки: кнопки — или бой и цепочка
+            if (Btn(new Rect(x, y, 200f, 30f), "КНОПКИ", true, false, !chainView)) chainView = false;
+            if (Btn(new Rect(x + 206f, y, 240f, 30f), "БОЙ И ЦЕПОЧКА", true, false, chainView)) chainView = true;
+            y += 38f;
+            if (chainView)
+            {
+                // бой
+                Label(ref y, x, w, "Если выбор — «БОЙ»: противник и сила");
+                float bw = Mathf.Min(260f, (w - 8f) * 0.5f);
+                if (Btn(new Rect(x, y, bw, 32f), MapCustom.FoeNames[foeIdx(c.foe)])) { c.foe = MapCustom.FoeCodes[(foeIdx(c.foe) + 1) % MapCustom.FoeCodes.Length]; dirty = true; }
+                if (Btn(new Rect(x + bw + 8f, y, bw, 32f), c.strong ? "СИЛЬНЫЙ: ДА" : "СИЛЬНЫЙ: НЕТ")) { c.strong = !c.strong; dirty = true; }
+                y += 42f;
+                Label(ref y, x, w, "Цепочка: после любого выбора здесь ставится метка (слово) — другое место может её требовать");
+                c.setFlag = TextField(new Rect(x, y, Mathf.Min(260f, w), 30f), c.setFlag, 24); y += 40f;
+                Label(ref y, x, w, "Нужна метка (пусто — место открыто всегда)");
+                c.needFlag = TextField(new Rect(x, y, Mathf.Min(260f, w), 30f), c.needFlag, 24); y += 40f;
+                Label(ref y, x, w, "Текст, пока метки нет");
+                c.lockedText = TextField(new Rect(x, y, w, 30f), c.lockedText, 200); y += 40f;
+            }
+            else
+            {
             // выборы
             Label(ref y, x, w, "Кнопки (до трёх): надпись · что даёт · сколько · что написать после");
             List<MapChoice> ch = new List<MapChoice>(c.choices ?? new MapChoice[0]);
@@ -1005,6 +1021,7 @@ namespace BladePath
             if (remove >= 0) { ch.RemoveAt(remove); dirty = true; }
             if (ch.Count < 3 && Btn(new Rect(x, y, 200f, 32f), "+ КНОПКА")) { ch.Add(new MapChoice { label = "ДАЛЬШЕ" }); dirty = true; }
             c.choices = ch.ToArray();
+            }
             if (note != null && Time.unscaledTime - noteAt < 3f)
             {
                 Rect nr = new Rect(W * 0.5f - 300f, 54f, 600f, 30f);

@@ -38,6 +38,7 @@ namespace BladePath
         class Data
         {
             public int region;
+            public List<string> flags = new List<string>();   // метки цепочек своих мест (на область)
             public int customPlus;      // своя область из редактора карт: номер + 1 (0 — обычная область)
             public int roadsVer;        // 2 — места на новых дорогах (2026-11-03); 3 — карты расширены на восток (2026-11-07)
             public bool foesRolled;     // обитатели Леса теней уже расставлены (старые сохранения — расставить при загрузке)
@@ -596,6 +597,7 @@ namespace BladePath
             dd.tower = -1; dd.towerLit = false; dd.towerTold = false;
             dd.hunt = -1; dd.huntDone = false; dd.huntReward = 0;
             dd.seen.Clear();   // новая область — снова в тумане (первая точка — начало пути, см. Seen)
+            if (dd.flags == null) dd.flags = new List<string>(); dd.flags.Clear();
             dd.customPlus = pendingCustom + 1; pendingCustom = -1;   // своя область — только когда её запустили из редактора карт
             MapStore.SetActive(dd.customPlus - 1, region);
             MapData md = MapStore.Get(region);   // файл карты (редактор карт); нет файла — места из кода
@@ -864,6 +866,14 @@ namespace BladePath
             if (n == null || n.Type != NodeType.Custom) return null;
             MapData md = MapStore.Get(D.region);
             return md != null ? md.Custom(n.cust) : null;
+        }
+        public static bool HasFlag(string f) { return string.IsNullOrEmpty(f) || (D.flags != null && D.flags.Contains(f.Trim().ToLowerInvariant())); }
+        public static void SetFlag(string f)
+        {
+            if (string.IsNullOrEmpty(f)) return;
+            if (D.flags == null) D.flags = new List<string>();
+            string k = f.Trim().ToLowerInvariant();
+            if (!D.flags.Contains(k)) { D.flags.Add(k); Save(); }
         }
         /// <summary>Бой из своего места: противник и сила — как задано в редакторе.</summary>
         public static void TurnToCustomFight(int i, int foe, bool strong)

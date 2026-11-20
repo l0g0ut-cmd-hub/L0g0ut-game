@@ -3122,9 +3122,12 @@ namespace BladePath
         {
             MapCustom c = Campaign.CustomOf(n);
             if (c == null) { Result("Место пустует."); return; }
-            MapChoice[] ch = c.choices != null && c.choices.Length > 0 ? c.choices : new[] { new MapChoice { label = "ДАЛЬШЕ" } };
+            bool locked = !Campaign.HasFlag(c.needFlag);   // цепочка: метки ещё нет — место закрыто
+            MapChoice[] ch = locked ? new[] { new MapChoice { label = "УЙТИ", outcome = -1 } }
+                           : c.choices != null && c.choices.Length > 0 ? c.choices : new[] { new MapChoice { label = "ДАЛЬШЕ" } };
             int nb = Mathf.Min(3, ch.Length);
-            string text = string.IsNullOrEmpty(c.text) ? "…" : c.text;
+            string text = locked ? (string.IsNullOrEmpty(c.lockedText) ? "Сюда пока не войти. Может, где-то на дороге найдётся ответ." : c.lockedText)
+                        : string.IsNullOrEmpty(c.text) ? "…" : c.text;
             float pw = 300f, tx = 318f;
             Rect r = Card(720f, Mathf.Clamp(22f + 36f + LinesH(720f - tx - 18f, text, 38, 13f) + 16f + nb * 54f + 12f, 340f, 520f));
             Picture(new Rect(r.x, r.y, pw, r.height), !string.IsNullOrEmpty(c.art) ? c.art : !string.IsNullOrEmpty(c.icon) ? c.icon : "UI/path_panorama");
@@ -3139,6 +3142,8 @@ namespace BladePath
                 bool can = ok && (o.outcome != 2 || Profile.Gold >= Mathf.Max(0, o.amount));
                 string label = string.IsNullOrEmpty(o.label) ? MapCustom.Outcomes[Mathf.Clamp(o.outcome, 0, MapCustom.Outcomes.Length - 1)] : o.label.ToUpper();
                 if (!Btn(b, label, can, i == 0)) continue;
+                if (o.outcome < 0) { modal = Modal.None; return; }   // закрыто — место остаётся, можно вернуться с меткой
+                Campaign.SetFlag(c.setFlag);
                 string res = o.result;
                 switch (o.outcome)
                 {

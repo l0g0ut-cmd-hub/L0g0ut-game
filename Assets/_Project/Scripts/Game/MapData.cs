@@ -42,6 +42,9 @@ namespace BladePath
         public string text = "";
         public int foe;              // противник для выбора «БОЙ»: 0 — по области, 1…4 — обитатели леса, 52 — алый самурай
         public bool strong;          // бой как с сильным противником
+        public string setFlag;       // цепочка: после любого выбора ставится метка (на всю область)
+        public string needFlag;      // цепочка: место открыто только с этой меткой
+        public string lockedText;    // что написать, пока метки нет
         public MapChoice[] choices = new MapChoice[0];
 
         public static readonly string[] Outcomes = { "НИЧЕГО", "МОНЫ +", "ПЛАТА −", "ОПЫТ +", "ВЕЩЬ", "СВИТОК", "БЛАГОСЛОВЕНИЕ", "ПРОКЛЯТИЕ", "БОЙ" };
