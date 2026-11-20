@@ -2,26 +2,60 @@
  {
   "action": "animate",
   "account": "2",
-  "name": "anim_cavalry",
-  "rig_task_id": "01a1f949-b918-7334-8a93-490c532a4ed7",
+  "name": "anim_ashigaru",
+  "rig_task_id": "01a1ec0e-7b66-7728-996c-9bc0f78af220",
   "action_ids": [
-   1155,
-   1174,
-   1157
+   0,
+   560,
+   240,
+   178,
+   189,
+   412
   ],
   "fps": 30
  },
  {
   "action": "animate",
   "account": "2",
-  "name": "anim_dog",
-  "rig_task_id": "01a1f94b-ee31-7124-b87d-8ea75137b891",
+  "name": "anim_bandit",
+  "rig_task_id": "01a1ec0a-ec97-7668-b491-713cc8b40db3",
   "action_ids": [
-   1104,
-   1107,
-   1256,
-   1250,
-   1252
+   89,
+   21,
+   219,
+   178,
+   187,
+   403
+  ],
+  "fps": 30
+ },
+ {
+  "action": "animate",
+  "account": "2",
+  "name": "anim_kitsune",
+  "rig_task_id": "01a1ec10-082d-7406-9dbe-706e85b12531",
+  "action_ids": [
+   0,
+   30,
+   130,
+   178,
+   188,
+   412
+  ],
+  "fps": 30
+ },
+ {
+  "action": "animate",
+  "account": "2",
+  "name": "anim_yamabushi",
+  "rig_task_id": "01a1ec0c-a1ac-71b3-9ee0-5bccd193032f",
+  "action_ids": [
+   89,
+   30,
+   92,
+   178,
+   189,
+   412
   ],
   "fps": 30
  }
