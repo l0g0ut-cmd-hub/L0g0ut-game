@@ -9,7 +9,10 @@
   {"action": "image", "name": "oni_mask", "image": "tools/meshy/in/oni.png", "rig": true, "height": 1.7,  — картинка → модель (+скелет Meshy)
    "polycount": 20000, "topology": "triangle", "texture": true, "enable_pbr": false, "pose_mode": "", "texture_prompt": ""}
   {"action": "rig",   "name": "ronin", "task_id": "..." | "model_url": "...", "height": 1.7}   — скелет + базовые анимации
-  {"action": "status", "kind": "text-to-3d|image-to-3d|rigging", "task_id": "..."}             — докачать готовую задачу
+  {"action": "status", "kind": "text-to-3d|image-to-3d|rigging|animations", "task_id": "..."}  — докачать готовую задачу
+  {"action": "library"}                                                                         — список готовых анимаций (бесплатно)
+  {"action": "animate", "name": "unit_archer", "rig_task_id": "...", "action_ids": [1, 2, 3], "fps": 30}
+                                                                    — анимации из библиотеки Meshy на риг (один FBX, клип на действие)
 Результат — out/<name>/: task.json (ответ API без ключа), model.glb/.fbx, превью, текстуры; общий журнал out/log.txt.
 """
 import base64, json, mimetypes, os, sys, time, urllib.request, urllib.error
@@ -124,8 +127,21 @@ def do(r):
         opt(b, r, "task_id", "input_task_id"); opt(b, r, "model_url")
         tid = call("POST", "/v1/rigging", b)["result"]; log("  риг:", tid)
         save(name, wait("/v1/rigging", tid), "rig"); return
+    if a == "library":
+        j = call("GET", "/v1/animations/library")
+        d = os.path.join(OUT, "_library"); os.makedirs(d, exist_ok=True)
+        with open(os.path.join(d, "library.json"), "w") as f: json.dump(j, f, ensure_ascii=False, indent=1)
+        n = len(j) if isinstance(j, list) else len(j.get("result", j.get("data", [])) or [])
+        log("  анимаций в библиотеке:", n); return
+    if a == "animate":
+        b = {"rig_task_id": r["rig_task_id"]}
+        if r.get("action_ids"): b["action_ids"] = r["action_ids"]
+        else: b["action_id"] = r["action_id"]
+        if r.get("fps"): b["post_process"] = {"operation_type": "change_fps", "fps": r["fps"]}
+        tid = call("POST", "/v1/animations", b)["result"]; log("  анимация:", tid)
+        save(name, wait("/v1/animations", tid), "anim"); return
     if a == "status":
-        kind = {"text-to-3d": "/v2/text-to-3d", "image-to-3d": "/v1/image-to-3d", "rigging": "/v1/rigging"}[r["kind"]]
+        kind = {"text-to-3d": "/v2/text-to-3d", "image-to-3d": "/v1/image-to-3d", "rigging": "/v1/rigging", "animations": "/v1/animations"}[r["kind"]]
         save(name, wait(kind, r["task_id"]), "status"); return
     raise RuntimeError("неизвестное действие: " + str(a))
 
