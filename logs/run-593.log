@@ -1,0 +1,779 @@
+== uname
+Linux runnervmccnms 7.0.0-1019-azure #20-Ubuntu SMP PREEMPT Mon Oct 19 22:41:16 UTC 2026 x86_64 GNU/Linux
+== docker
+Client: Docker Engine - Community
+ Version:           29.4.2
+ API version:       1.54
+ Go version:        go1.26.2
+ Git commit:        055a478
+ Built:             Fri May  1 10:24:04 2026
+ OS/Arch:           linux/amd64
+ Context:           default
+
+Server: Docker Engine - Community
+ Engine:
+  Version:          29.4.2
+  API version:      1.54 (minimum version 1.40)
+  Go version:       go1.26.2
+  Git commit:       d329809
+  Built:            Fri May  1 10:24:04 2026
+  OS/Arch:          linux/amd64
+  Experimental:     false
+ containerd:
+  Version:          v2.4.2
+== df
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root       145G   60G   86G  42% /
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root       145G   38G  108G  26% /
+Downloading game-ci CLI v0.1.72 from https://github.com/game-ci/cli/releases/download/v0.1.72/game-ci-linux-x64.tar.gz
+Checksum verified (SHA256) for game-ci-linux-x64.tar.gz
+/home/runner/work/_temp/game-ci/bin/game-ci
+[INFO] Versioning strategy: None
+[INFO] Version of this build: none
+[INFO] Versioning strategy is set to none, so android version code should not be applied.
+[INFO] linux Android 6000.0.36f1
+::group::Unity build
+[WARN] running docker process for linux (linux)
+Unable to find image 'unityci/editor:ubuntu-6000.0.36f1-android-3' locally
+ubuntu-6000.0.36f1-android-3: Pulling from unityci/editor
+9a4d47d5aa13: Pulling fs layer
+8e578c7fd715: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+bef3b93c3984: Pulling fs layer
+96c832531c38: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+d3a5feebe29b: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+46805e80f2d7: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+7bcf62982864: Pulling fs layer
+39cd9db1617e: Pulling fs layer
+dc7a969c82d9: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+e1e0763b8b7f: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+a636358af2c8: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+8d5d2a3e6b0f: Pulling fs layer
+a1ff4bc3f481: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+bef3b93c3984: Download complete
+7bcf62982864: Download complete
+4f4fb700ef54: Download complete
+9a4d47d5aa13: Download complete
+8e578c7fd715: Download complete
+d3a5feebe29b: Download complete
+e1e0763b8b7f: Download complete
+a1ff4bc3f481: Download complete
+a636358af2c8: Download complete
+39cd9db1617e: Download complete
+dc7a969c82d9: Download complete
+96c832531c38: Download complete
+54e8aef068c6: Download complete
+46805e80f2d7: Download complete
+9a4d47d5aa13: Pull complete
+96c832531c38: Pull complete
+46805e80f2d7: Pull complete
+dc7a969c82d9: Pull complete
+a1ff4bc3f481: Pull complete
+a636358af2c8: Pull complete
+bef3b93c3984: Pull complete
+d3a5feebe29b: Pull complete
+8d5d2a3e6b0f: Download complete
+7bcf62982864: Pull complete
+8e578c7fd715: Pull complete
+e1e0763b8b7f: Pull complete
+8d5d2a3e6b0f: Pull complete
+4f4fb700ef54: Pull complete
+39cd9db1617e: Pull complete
+Digest: sha256:3c18892b45bbe8448d64330521b029a8bf7b733f2038ddf45b47440273c1f22a
+Status: Downloaded newer image for unityci/editor:ubuntu-6000.0.36f1-android-3
+Updating Android SDK with auto detected target API version
+grep: /github/workspace/./ProjectSettings/ProjectSettings.asset: No such file or directory
+Loading package information...                                                  
+Loading local repository...                                                     
+[                                       ] 3% Loading local repository...        
+[                                       ] 3% Fetch remote repository...         
+[=                                      ] 3% Fetch remote repository...         
+[=                                      ] 4% Fetch remote repository...         
+[=                                      ] 5% Fetch remote repository...         
+[==                                     ] 5% Fetch remote repository...         
+[==                                     ] 6% Fetch remote repository...         
+[==                                     ] 7% Fetch remote repository...         
+[==                                     ] 7% Computing updates...               
+[===                                    ] 8% Computing updates...               
+[===                                    ] 10% Computing updates...              
+                                                                                
+[===                                    ] 10% Computing updates...              
+Warning: Failed to find package 'platforms;android-'
+Updated Android SDK.
+Running as root
+GIT_CONFIG_EXTENSIONS unset skipping
+---------- git config --list -------------
+filter.lfs.clean=git-lfs clean -- %f
+filter.lfs.smudge=git-lfs smudge -- %f
+filter.lfs.process=git-lfs filter-process
+filter.lfs.required=true
+---------- git config --list --show-origin -------------
+file:/etc/gitconfig	filter.lfs.clean=git-lfs clean -- %f
+file:/etc/gitconfig	filter.lfs.smudge=git-lfs smudge -- %f
+file:/etc/gitconfig	filter.lfs.process=git-lfs filter-process
+file:/etc/gitconfig	filter.lfs.required=true
+GIT_PRIVATE_TOKEN unset skipping
+---------- git config --list -------------
+filter.lfs.clean=git-lfs clean -- %f
+filter.lfs.smudge=git-lfs smudge -- %f
+filter.lfs.process=git-lfs filter-process
+filter.lfs.required=true
+---------- git config --list --show-origin -------------
+file:/etc/gitconfig	filter.lfs.clean=git-lfs clean -- %f
+file:/etc/gitconfig	filter.lfs.smudge=git-lfs smudge -- %f
+file:/etc/gitconfig	filter.lfs.process=git-lfs filter-process
+file:/etc/gitconfig	filter.lfs.required=true
+Changing to "/github/workspace/_activate-license~" directory.
+/github/workspace/_activate-license~ /github/workspace
+Licensing method: personal
+Requesting activation (personal license via Unity account)
+Trying to activate all seats ...
+Activation processed successfully.
+
+Seat ID: 5774143681452-UnityPersonal
+Status: [200] ASSIGN_SEAT
+
+
+Trying to update entitlement license file ...
+Successfully updated UnityEntitlementLicense.xml!
+Activation complete.
+/github/workspace
+Using project path "/github/workspace/.".
+Using build name "BladePath".
+Using build target "Android".
+Doing a default "Android" platform build.
+Using build path "build/Android" to save file "BladePath.apk".
+Using build method "BladePath.EditorTools.BuildScript.BuildAndroid".
+
+###########################
+#    Custom parameters    #
+###########################
+
+
+
+###########################
+#    Current build dir    #
+###########################
+
+Creating "/github/workspace/build/Android" if it does not exist.
+total 8.0K
+drwxr-xr-x 2 root root 4.0K Nov 20 20:01 .
+drwxr-xr-x 3 1001 1001 4.0K Nov 20 20:01 ..
+
+###########################
+#    Project directory    #
+###########################
+
+total 192K
+drwxr-xr-x 13 1001 1001 4.0K Nov 20 20:01 .
+drwxr-xr-x  3 root root 4.0K Nov 20 20:01 ..
+drwxr-xr-x  3 1001 1001 4.0K Nov 20 19:53 .claude
+drwxr-xr-x  7 1001 1001 4.0K Nov 20 19:53 .git
+drwxr-xr-x  3 1001 1001 4.0K Nov 20 19:53 .github
+-rw-r--r--  1 1001 1001  305 Nov 20 19:53 .gitignore
+drwxr-xr-x  5 1001 1001 4.0K Nov 20 19:53 Assets
+drwxr-xr-x 14 1001 1001 4.0K Nov 20 19:22 Library
+drwxr-xr-x  2 1001 1001 4.0K Nov 20 19:53 Packages
+drwxr-xr-x  2 1001 1001 4.0K Nov 20 19:53 ProjectSettings
+-rw-r--r--  1 1001 1001  15K Nov 20 19:53 README.md
+-rw-r--r--  1 1001 1001 3.7K Nov 20 19:53 THIRD_PARTY_SOUNDS.md
+drwxr-xr-x  2 root root 4.0K Nov 20 20:01 _activate-license~
+-rw-r--r--  1 1001 1001 105K Nov 20 19:53 actions-log.txt
+drwxr-xr-x  3 1001 1001 4.0K Nov 20 20:01 build
+-rw-r--r--  1 1001 1001 4.6K Nov 20 19:53 codemagic.yaml
+drwxr-xr-x  2 1001 1001 4.0K Nov 20 19:53 docs
+drwxr-xr-x 12 1001 1001 4.0K Nov 20 19:53 tools
+
+###########################
+#    Building project     #
+###########################
+
+[UnityConnectServicesConfig] Local config successfully read: "/usr/share/unity3d/config/services-config.json"
+[UnityConnectServicesConfig] "clientConnectTimeoutSec" was overridden with "5"
+[UnityConnectServicesConfig] "clientHandshakeTimeoutSec" was overridden with "10"
+[UnityConnectServicesConfig] Service configuration:
+    "servicesConfigBaseUrl": "",
+    "disableServicesWindow": false,
+    "disableUserLogin": false,
+    "entitlementCacheTimeoutInSeconds": 60,
+    "clientConnectTimeoutSec": 5,
+    "clientHandshakeTimeoutSec": 10,
+    "clientResolveEntitlementsTimeoutSec": 30,
+    "clientUpdateLicenseTimeoutSec": 30,
+    "licensingServiceBaseUrl": "",
+    "enableProxyAutoconfig": "false"
+
+Unity Editor version:    6000.0.36f1 (9fe3b5f71dbb)
+Branch:                  6000.0/staging
+Build type:              Release
+Batch mode:              YES
+System name:             Linux
+Distro version:          #20-Ubuntu SMP PREEMPT Mon Oct 19 22:41:16 UTC 2026
+Kernel version:          7.0.0-1019-azure
+Architecture:            x86_64
+Available memory:        15983 MB
+[Licensing::Module] Trying to connect to existing licensing client channel...
+[Licensing::IpcConnector] Connection attempt to the License Client on channel: "LicenseClient-root" failed because channel doesn't exist; code: "0x80000002"
+[Licensing::Module] Successfully launched the LicensingClient (PId: 167)
+[Licensing::IpcConnector] Successfully connected to the License Client on channel: "LicenseClient-root" at "2026-11-20T20:01:30.285516Z"
+[SignatureVerifier] Application signature verification not supported on this platform.
+[Licensing::Client] Handshaking with LicensingClient:
+  Version:                 1.16.2+bdef8f5
+  Session Id:              daf3850814af4d49805066acd3e1f981
+  Correlation Id:          7a1b933990bd50cd9a474967889d759a
+  External correlation Id: 6478085601929816264
+  Machine Id:              D7nTUnjNAmtsUMcnoyrqkgIbYdM=
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-root" (connect: 0.38s, validation: 0.04s, handshake: 0.00s)
+[Licensing::IpcConnector] Successfully connected to the License Notification on channel: "LicenseClient-root-notifications" at "2026-11-20T20:01:30.328169Z"
+[Licensing::Module] Connected to LicensingClient (PId: 167, launch time: 0.00, total connection time: 0.42s)
+[Licensing::Module] Error: Access token is unavailable; failed to update
+[Licensing::Client] Error: Code 500 while processing request (status: Unable to update licenses. Errors: No ULF license found.,Token not found in cache)
+[Licensing::Client] Error: Code 500 while updating license in client (status: Unable to update licenses. Errors: No ULF license found.,Token not found in cache)
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] Serial number assigned to: "5774143681452-UnityPersXXXX"
+Pro License: NO
+The selected window backend is (null) 
+Desktop is 1280 x 1024 @ 60 Hz
+Initialize udev device monitor.
+CreateDirectory '/root/.cache/unity3d' failed:  (current dir: /github/workspace)
+[Licensing::Client] Successfully resolved entitlement details
+
+COMMAND LINE ARGUMENTS:
+/opt/unity/Editor/Unity
+-batchmode
+-logfile
+/dev/stdout
+-quit
+-customBuildName
+BladePath
+-projectPath
+/github/workspace/.
+-buildTarget
+Android
+-customBuildTarget
+Android
+-customBuildPath
+/github/workspace/build/Android/BladePath.apk
+-customBuildProfile
+
+-executeMethod
+BladePath.EditorTools.BuildScript.BuildAndroid
+-buildVersion
+none
+-androidVersionCode
+0
+-androidKeystoreName
+
+-androidKeystorePass
+
+-androidKeyaliasName
+
+-androidKeyaliasPass
+
+-androidTargetSdkVersion
+
+-androidExportType
+androidPackage
+-androidSymbolType
+none
+Successfully changed project path to: /github/workspace/.
+
+(Unity:161): Gtk-CRITICAL **: 20:01:30.794: gtk_label_set_text: assertion 'GTK_IS_LABEL (label)' failed
+
+(Unity:161): Gtk-CRITICAL **: 20:01:30.794: gtk_label_set_text: assertion 'GTK_IS_LABEL (label)' failed
+/github/workspace
+[UnityMemory] Configuration Parameters - Can be set up in boot.config
+    "memorysetup-bucket-allocator-granularity=16"
+    "memorysetup-bucket-allocator-bucket-count=8"
+    "memorysetup-bucket-allocator-block-size=33554432"
+    "memorysetup-bucket-allocator-block-count=8"
+    "memorysetup-main-allocator-block-size=16777216"
+    "memorysetup-thread-allocator-block-size=16777216"
+    "memorysetup-gfx-main-allocator-block-size=16777216"
+    "memorysetup-gfx-thread-allocator-block-size=16777216"
+    "memorysetup-cache-allocator-block-size=4194304"
+    "memorysetup-typetree-allocator-block-size=2097152"
+    "memorysetup-profiler-bucket-allocator-granularity=16"
+    "memorysetup-profiler-bucket-allocator-bucket-count=8"
+    "memorysetup-profiler-bucket-allocator-block-size=33554432"
+    "memorysetup-profiler-bucket-allocator-block-count=8"
+    "memorysetup-profiler-allocator-block-size=16777216"
+    "memorysetup-profiler-editor-allocator-block-size=1048576"
+    "memorysetup-temp-allocator-size-main=16777216"
+    "memorysetup-job-temp-allocator-block-size=2097152"
+    "memorysetup-job-temp-allocator-block-size-background=1048576"
+    "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+    "memorysetup-allocator-temp-initial-block-size-main=262144"
+    "memorysetup-allocator-temp-initial-block-size-worker=262144"
+    "memorysetup-temp-allocator-size-background-worker=32768"
+    "memorysetup-temp-allocator-size-job-worker=262144"
+    "memorysetup-temp-allocator-size-preload-manager=33554432"
+    "memorysetup-temp-allocator-size-nav-mesh-worker=65536"
+    "memorysetup-temp-allocator-size-audio-worker=65536"
+    "memorysetup-temp-allocator-size-cloud-worker=32768"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gfx=262144"
+Player connection [129205645292864]  Target information:
+
+Player connection [129205645292864]  * "[IP] 172.17.0.2 [Port] 55504 [Flags] 2 [Guid] 2753156244 [EditorId] 2753156244 [Version] 1048832 [Id] LinuxEditor(16,172.17.0.2) [Debug] 1 [PackageName] LinuxEditor [ProjectName] Editor" 
+
+Player connection [129205645292864] Host joined multi-casting on [225.0.0.222:54997]...
+Player connection [129205645292864] Host joined alternative multi-casting on [225.0.0.222:34997]...
+Input System module state changed to: Initialized.
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+[Package Manager] Connected to IPC stream "Upm-161" after 0.1 seconds.
+Library Redirect Path: Library/
+[Package Manager] Restoring resolved packages state from cache
+[Licensing::Client] Successfully resolved entitlement details
+[Package Manager] Registered 38 packages:
+  Packages from [https://registry.npmjs.org]:
+    com.kyrylokuzyk.primetween@1.5.0 (location: /github/workspace/Library/PackageCache/com.kyrylokuzyk.primetween@425c7ceaa7d5)
+  Built-in packages:
+    com.unity.modules.accessibility@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.accessibility)
+    com.unity.modules.ai@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.ai)
+    com.unity.modules.androidjni@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.androidjni)
+    com.unity.modules.animation@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.animation)
+    com.unity.modules.assetbundle@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.assetbundle)
+    com.unity.modules.audio@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.audio)
+    com.unity.modules.cloth@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.cloth)
+    com.unity.modules.director@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.director)
+    com.unity.modules.hierarchycore@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.hierarchycore)
+    com.unity.modules.imageconversion@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.imageconversion)
+    com.unity.modules.imgui@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.imgui)
+    com.unity.modules.jsonserialize@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.jsonserialize)
+    com.unity.modules.particlesystem@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.particlesystem)
+    com.unity.modules.physics@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.physics)
+    com.unity.modules.physics2d@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.physics2d)
+    com.unity.modules.screencapture@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.screencapture)
+    com.unity.modules.subsystems@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.subsystems)
+    com.unity.modules.terrain@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.terrain)
+    com.unity.modules.terrainphysics@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.terrainphysics)
+    com.unity.modules.tilemap@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.tilemap)
+    com.unity.modules.ui@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.ui)
+    com.unity.modules.uielements@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.uielements)
+    com.unity.modules.umbra@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.umbra)
+    com.unity.modules.unityanalytics@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unityanalytics)
+    com.unity.modules.unitywebrequest@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequest)
+    com.unity.modules.unitywebrequestassetbundle@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequestassetbundle)
+    com.unity.modules.unitywebrequestaudio@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequestaudio)
+    com.unity.modules.unitywebrequesttexture@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequesttexture)
+    com.unity.modules.unitywebrequestwww@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequestwww)
+    com.unity.modules.vehicles@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.vehicles)
+    com.unity.modules.video@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.video)
+    com.unity.modules.vr@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.vr)
+    com.unity.modules.wind@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.wind)
+    com.unity.modules.xr@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.xr)
+  Git packages:
+    com.yasirkula.nativegallery@https://github.com/yasirkula/UnityNativeGallery.git (location: /github/workspace/Library/PackageCache/com.yasirkula.nativegallery@6fdfae306298)
+    com.yasirkula.nativeshare@https://github.com/yasirkula/UnityNativeShare.git (location: /github/workspace/Library/PackageCache/com.yasirkula.nativeshare@5f3680e2938f)
+    com.yasirkula.nativecamera@https://github.com/yasirkula/UnityNativeCamera.git (location: /github/workspace/Library/PackageCache/com.yasirkula.nativecamera@95f3f3a00777)
+[Physics::Module] Selected backend.
+[Physics::Module] Name: PhysX
+[Physics::Module] Id: 0xf2b8ea05
+[Physics::Module] SDK Version: 4.1.2
+[Physics::Module] Integration Version: 1.0.0
+[Physics::Module] Threading Mode: Multi-Threaded
+Unable to load player prefs
+[Subsystems] No new subsystems found in resolved package list.
+Package Manager log level set to [2]
+[Package Manager] Done registering packages in 0.04 seconds
+[Package Manager] Done resolving packages in 2.81 seconds
+[Package Manager] Lock file was created
+[Package Manager] Registered 38 packages:
+  Packages from [https://registry.npmjs.org]:
+    com.kyrylokuzyk.primetween@1.5.0 (location: /github/workspace/Library/PackageCache/com.kyrylokuzyk.primetween@425c7ceaa7d5)
+  Built-in packages:
+    com.unity.modules.accessibility@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.accessibility)
+    com.unity.modules.ai@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.ai)
+    com.unity.modules.androidjni@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.androidjni)
+    com.unity.modules.animation@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.animation)
+    com.unity.modules.assetbundle@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.assetbundle)
+    com.unity.modules.audio@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.audio)
+    com.unity.modules.cloth@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.cloth)
+    com.unity.modules.director@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.director)
+    com.unity.modules.hierarchycore@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.hierarchycore)
+    com.unity.modules.imageconversion@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.imageconversion)
+    com.unity.modules.imgui@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.imgui)
+    com.unity.modules.jsonserialize@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.jsonserialize)
+    com.unity.modules.particlesystem@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.particlesystem)
+    com.unity.modules.physics@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.physics)
+    com.unity.modules.physics2d@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.physics2d)
+    com.unity.modules.screencapture@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.screencapture)
+    com.unity.modules.subsystems@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.subsystems)
+    com.unity.modules.terrain@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.terrain)
+    com.unity.modules.terrainphysics@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.terrainphysics)
+    com.unity.modules.tilemap@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.tilemap)
+    com.unity.modules.ui@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.ui)
+    com.unity.modules.uielements@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.uielements)
+    com.unity.modules.umbra@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.umbra)
+    com.unity.modules.unityanalytics@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unityanalytics)
+    com.unity.modules.unitywebrequest@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequest)
+    com.unity.modules.unitywebrequestassetbundle@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequestassetbundle)
+    com.unity.modules.unitywebrequestaudio@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequestaudio)
+    com.unity.modules.unitywebrequesttexture@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequesttexture)
+    com.unity.modules.unitywebrequestwww@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.unitywebrequestwww)
+    com.unity.modules.vehicles@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.vehicles)
+    com.unity.modules.video@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.video)
+    com.unity.modules.vr@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.vr)
+    com.unity.modules.wind@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.wind)
+    com.unity.modules.xr@1.0.0 (location: /opt/unity/Editor/Data/Resources/PackageManager/BuiltInPackages/com.unity.modules.xr)
+  Git packages:
+    com.yasirkula.nativegallery@https://github.com/yasirkula/UnityNativeGallery.git (location: /github/workspace/Library/PackageCache/com.yasirkula.nativegallery@6fdfae306298)
+    com.yasirkula.nativeshare@https://github.com/yasirkula/UnityNativeShare.git (location: /github/workspace/Library/PackageCache/com.yasirkula.nativeshare@5f3680e2938f)
+    com.yasirkula.nativecamera@https://github.com/yasirkula/UnityNativeCamera.git (location: /github/workspace/Library/PackageCache/com.yasirkula.nativecamera@95f3f3a00777)
+[Subsystems] No new subsystems found in resolved package list.
+[Package Manager] Done registering packages in 0.00 seconds
+Artifact Garbage Collection - Removed 90 unused hashed content files[Licensing::Client] Successfully resolved entitlement details
+Targeting platform: Android
+Refreshing native plugins compatible for Editor in 0.40 ms, found 0 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Initialize engine version: 6000.0.36f1 (9fe3b5f71dbb)
+[Subsystems] Discovering subsystems at path /opt/unity/Editor/Data/Resources/UnitySubsystems
+[Subsystems] Discovering subsystems at path /github/workspace/Assets
+kGfxThreadingModeNonThreaded is not supported on OpenGL Core. Reverting to kGfxThreadingModeDirect instead.
+GfxDevice: creating device client; kGfxThreadingModeDirect
+GLX Extensions: GLX_ARB_context_flush_control GLX_ARB_create_context GLX_ARB_create_context_no_error GLX_ARB_create_context_profile GLX_ARB_fbconfig_float GLX_ARB_framebuffer_sRGB GLX_ARB_get_proc_address GLX_ARB_multisample GLX_EXT_create_context_es2_profile GLX_EXT_create_context_es_profile GLX_EXT_fbconfig_packed_float GLX_EXT_framebuffer_sRGB GLX_EXT_no_config_context GLX_EXT_texture_from_pixmap GLX_EXT_visual_info GLX_EXT_visual_rating GLX_MESA_copy_sub_buffer GLX_MESA_query_renderer GLX_OML_swap_method GLX_SGIS_multisample GLX_SGIX_fbconfig GLX_SGIX_pbuffer GLX_SGIX_visual_select_group GLX_SGI_make_current_read 
+Renderer: llvmpipe (LLVM 15.0.7, 256 bits)
+Vendor:   Mesa
+Version:  4.5 (Core Profile) Mesa 23.2.1-1ubuntu3.1~22.04.3
+GLES:     0
+ GL_3DFX_texture_compression_FXT1 GL_AMD_conservative_depth GL_AMD_draw_buffers_blend GL_AMD_gpu_shader_int64 GL_AMD_multi_draw_indirect GL_AMD_pinned_memory GL_AMD_query_buffer_object GL_AMD_seamless_cubemap_per_texture GL_AMD_shader_stencil_export GL_AMD_shader_trinary_minmax GL_AMD_texture_texture4 GL_AMD_vertex_shader_layer GL_AMD_vertex_shader_viewport_index GL_ANGLE_texture_compression_dxt3 GL_ANGLE_texture_compression_dxt5 GL_ARB_ES2_compatibility GL_ARB_ES3_1_compatibility GL_ARB_ES3_2_compatibility GL_ARB_ES3_compatibility GL_ARB_arrays_of_arrays GL_ARB_base_instance GL_ARB_blend_func_extended GL_ARB_buffer_storage GL_ARB_clear_buffer_object GL_ARB_clear_texture GL_ARB_clip_control GL_ARB_compressed_texture_pixel_storage GL_ARB_compute_shader GL_ARB_conditional_render_inverted GL_ARB_conservative_depth GL_ARB_copy_buffer GL_ARB_copy_image GL_ARB_cull_distance GL_ARB_debug_output GL_ARB_depth_buffer_float GL_ARB_depth_clamp GL_ARB_derivative_control GL_ARB_direct_state_access GL_ARB_draw_buffers GL_A
+RB_draw_buffers_blend GL_ARB_draw_elements_base_vertex GL_ARB_draw_indirect GL_ARB_draw_instanced GL_ARB_enhanced_layouts GL_ARB_explicit_attrib_location GL_ARB_explicit_uniform_location GL_ARB_fragment_coord_conventions GL_ARB_fragment_layer_viewport GL_ARB_fragment_shader GL_ARB_framebuffer_no_attachments GL_ARB_framebuffer_object GL_ARB_framebuffer_sRGB GL_ARB_get_program_binary GL_ARB_get_texture_sub_image GL_ARB_gl_spirv GL_ARB_gpu_shader5 GL_ARB_gpu_shader_fp64 GL_ARB_gpu_shader_int64 GL_ARB_half_float_pixel GL_ARB_half_float_vertex GL_ARB_indirect_parameters GL_ARB_instanced_arrays GL_ARB_internalformat_query GL_ARB_internalformat_query2 GL_ARB_invalidate_subdata GL_ARB_map_buffer_alignment GL_ARB_map_buffer_range GL_ARB_multi_bind GL_ARB_multi_draw_indirect GL_ARB_occlusion_query2 GL_ARB_parallel_shader_compile GL_ARB_pipeline_statistics_query GL_ARB_pixel_buffer_object GL_ARB_point_sprite GL_ARB_polygon_offset_clamp GL_ARB_post_depth_coverage GL_ARB_program_interface_query GL_ARB_provoking_vertex GL
+_ARB_query_buffer_object GL_ARB_robust_buffer_access_behavior GL_ARB_robustness GL_ARB_sample_shading GL_ARB_sampler_objects GL_ARB_seamless_cube_map GL_ARB_seamless_cubemap_per_texture GL_ARB_separate_shader_objects GL_ARB_shader_atomic_counter_ops GL_ARB_shader_atomic_counters GL_ARB_shader_ballot GL_ARB_shader_bit_encoding GL_ARB_shader_clock GL_ARB_shader_draw_parameters GL_ARB_shader_group_vote GL_ARB_shader_image_load_store GL_ARB_shader_image_size GL_ARB_shader_objects GL_ARB_shader_precision GL_ARB_shader_stencil_export GL_ARB_shader_storage_buffer_object GL_ARB_shader_subroutine GL_ARB_shader_texture_image_samples GL_ARB_shader_texture_lod GL_ARB_shader_viewport_layer_array GL_ARB_shading_language_420pack GL_ARB_shading_language_include GL_ARB_shading_language_packing GL_ARB_spirv_extensions GL_ARB_stencil_texturing GL_ARB_sync GL_ARB_tessellation_shader GL_ARB_texture_barrier GL_ARB_texture_buffer_object GL_ARB_texture_buffer_object_rgb32 GL_ARB_texture_buffer_range GL_ARB_texture_compression_bptc 
+GL_ARB_texture_compression_rgtc GL_ARB_texture_cube_map_array GL_ARB_texture_filter_anisotropic GL_ARB_texture_filter_minmax GL_ARB_texture_float GL_ARB_texture_gather GL_ARB_texture_mirror_clamp_to_edge GL_ARB_texture_multisample GL_ARB_texture_non_power_of_two GL_ARB_texture_query_levels GL_ARB_texture_query_lod GL_ARB_texture_rectangle GL_ARB_texture_rg GL_ARB_texture_rgb10_a2ui GL_ARB_texture_stencil8 GL_ARB_texture_storage GL_ARB_texture_storage_multisample GL_ARB_texture_swizzle GL_ARB_texture_view GL_ARB_timer_query GL_ARB_transform_feedback2 GL_ARB_transform_feedback3 GL_ARB_transform_feedback_instanced GL_ARB_transform_feedback_overflow_query GL_ARB_uniform_buffer_object GL_ARB_vertex_array_bgra GL_ARB_vertex_array_object GL_ARB_vertex_attrib_64bit GL_ARB_vertex_attrib_binding GL_ARB_vertex_buffer_object GL_ARB_vertex_shader GL_ARB_vertex_type_10f_11f_11f_rev GL_ARB_vertex_type_2_10_10_10_rev GL_ARB_viewport_array GL_ARM_shader_framebuffer_fetch_depth_stencil GL_ATI_blend_equation_separate GL_ATI_me
+minfo GL_ATI_texture_float GL_ATI_texture_mirror_once GL_EXT_EGL_image_storage GL_EXT_EGL_sync GL_EXT_abgr GL_EXT_blend_equation_separate GL_EXT_debug_label GL_EXT_draw_buffers2 GL_EXT_draw_instanced GL_EXT_framebuffer_blit GL_EXT_framebuffer_multisample GL_EXT_framebuffer_multisample_blit_scaled GL_EXT_framebuffer_object GL_EXT_framebuffer_sRGB GL_EXT_memory_object GL_EXT_memory_object_fd GL_EXT_packed_depth_stencil GL_EXT_packed_float GL_EXT_pixel_buffer_object GL_EXT_polygon_offset_clamp GL_EXT_provoking_vertex GL_EXT_shader_framebuffer_fetch GL_EXT_shader_framebuffer_fetch_non_coherent GL_EXT_shader_integer_mix GL_EXT_texture_array GL_EXT_texture_compression_dxt1 GL_EXT_texture_compression_rgtc GL_EXT_texture_compression_s3tc GL_EXT_texture_filter_anisotropic GL_EXT_texture_filter_minmax GL_EXT_texture_integer GL_EXT_texture_mirror_clamp GL_EXT_texture_sRGB GL_EXT_texture_sRGB_R8 GL_EXT_texture_sRGB_RG8 GL_EXT_texture_sRGB_decode GL_EXT_texture_shadow_lod GL_EXT_texture_shared_exponent GL_EXT_texture_sno
+rm GL_EXT_texture_swizzle GL_EXT_timer_query GL_EXT_transform_feedback GL_EXT_vertex_array_bgra GL_EXT_vertex_attrib_64bit GL_IBM_multimode_draw_arrays GL_INTEL_shader_atomic_float_minmax GL_KHR_blend_equation_advanced GL_KHR_blend_equation_advanced_coherent GL_KHR_context_flush_control GL_KHR_debug GL_KHR_no_error GL_KHR_parallel_shader_compile GL_KHR_robust_buffer_access_behavior GL_KHR_robustness GL_KHR_texture_compression_astc_ldr GL_KHR_texture_compression_astc_sliced_3d GL_MESA_framebuffer_flip_y GL_MESA_pack_invert GL_MESA_shader_integer_functions GL_MESA_texture_signed_rgba GL_MESA_ycbcr_texture GL_NVX_gpu_memory_info GL_NV_conditional_render GL_NV_copy_image GL_NV_depth_clamp GL_NV_packed_depth_stencil GL_NV_shader_atomic_float GL_NV_texture_barrier GL_OES_EGL_image GL_S3_s3tc
+OPENGL LOG: Creating OpenGL 4.5 graphics device ; Context level  <OpenGL 4.5> ; Context handle -1226760416
+[Licensing::Client] Successfully resolved entitlement details
+Initialize mono
+Mono path[0] = '/opt/unity/Editor/Data/Managed'
+Mono path[1] = '/opt/unity/Editor/Data/MonoBleedingEdge/lib/mono/unityjit-linux'
+Mono config path = '/opt/unity/Editor/Data/MonoBleedingEdge/etc'
+Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56161
+Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
+Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
+ImportWorker Server TCP listen port: 0
+AcceleratorClientConnectionCallback - disconnected - :0
+Begin MonoManager ReloadAssembly
+Registering precompiled unity dll's ...
+Register platform support module: /opt/unity/Editor/Data/PlaybackEngines/AndroidPlayer/UnityEditor.Android.Extensions.dll
+Register platform support module: /opt/unity/Editor/Data/PlaybackEngines/LinuxStandaloneSupport/UnityEditor.LinuxStandalone.Extensions.dll
+Registered in 0.058043 seconds.
+- Loaded All Assemblies, in  0.519 seconds
+Native extension for LinuxStandalone target not found
+Native extension for Android target not found
+Android Extension - Scanning For ADB Devices 115 ms
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  0.560 seconds
+Domain Reload Profiling: 1079ms
+	BeginReloadAssembly (211ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (0ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (2ms)
+	RebuildCommonClasses (41ms)
+	RebuildNativeTypeToScriptingClass (7ms)
+	initialDomainReloadingComplete (110ms)
+	LoadAllAssembliesAndSetupDomain (149ms)
+		LoadAssemblies (209ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (145ms)
+			TypeCache.Refresh (143ms)
+				TypeCache.ScanAssembly (130ms)
+			BuildScriptInfoCaches (0ms)
+			ResolveRequiredComponents (1ms)
+	FinalizeReload (561ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (524ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (240ms)
+			SetLoadedEditorAssemblies (4ms)
+			BeforeProcessingInitializeOnLoad (62ms)
+			ProcessInitializeOnLoadAttributes (163ms)
+			ProcessInitializeOnLoadMethodAttributes (55ms)
+			AfterProcessingInitializeOnLoad (0ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (0ms)
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Client] Successfully resolved entitlement details
+Application.AssetDatabase Initial Refresh Start
+[ScriptCompilation] Requested script compilation because: Assetdatabase observed changes in script compilation related files
+[40m[32minfo[39m[22m[49m: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://unix:/tmp/ilpp.sock-f07a9074cf124f978827f2e08a2ba3a4
+[40m[32minfo[39m[22m[49m: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+[40m[32minfo[39m[22m[49m: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+[40m[32minfo[39m[22m[49m: Microsoft.Hosting.Lifetime[0]
+      Content root path: /github/workspace/
+[40m[32minfo[39m[22m[49m: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/Ping application/grpc -
+[40m[32minfo[39m[22m[49m: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'gRPC - /UnityILPP.PostProcessing/Ping'
+[40m[32minfo[39m[22m[49m: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'gRPC - /UnityILPP.PostProcessing/Ping'
+[40m[32minfo[39m[22m[49m: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/Ping application/grpc - - 200 - application/grpc 44.7258ms
+Starting: /opt/unity/Editor/Data/bee_backend --dont-print-to-structured-log --ipc --defer-dag-verification --dagfile="Library/Bee/1300b0aE.dag" --continue-on-failure --profile="Library/Bee/backend1.traceevents" ScriptAssemblies
+WorkingDir: /github/workspace
+DisplayProgressbar: Compiling Scripts
+ExitCode: 0 Duration: 5s406ms
+[198/204    4s] Csc Library/Bee/artifacts/1300b0aE.dag/Assembly-CSharp.dll (+2 others)
+Assets/_Project/Scripts/Game/Juice.cs(482,13): warning CS0162: Unreachable code detected
+Assets/_Project/Scripts/Game/Juice.cs(498,13): warning CS0162: Unreachable code detected
+Assets/_Project/Scripts/Game/Juice.cs(512,44): warning CS0219: The variable 'low' is assigned but its value is never used
+Assets/_Project/Scripts/Game/Juice.cs(2059,28): warning CS0219: The variable 'bp' is assigned but its value is never used
+Assets/_Project/Scripts/Game/Juice.cs(2059,37): warning CS0219: The variable 'lo' is assigned but its value is never used
+Assets/_Project/Scripts/Game/MapLife.cs(350,19): warning CS0219: The variable 'd0' is assigned but its value is never used
+Assets/_Project/Scripts/Game/Weather.cs(56,25): warning CS0414: The field 'Weather.ambBaseK' is assigned but its value is never used
+[199/204    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp.pdb
+[200/204    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp.dll
+[201/204    0s] Csc Library/Bee/artifacts/1300b0aE.dag/Assembly-CSharp-Editor.dll (+2 others)
+[202/204    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp-Editor.pdb
+[203/204    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp-Editor.dll
+*** Tundra build success (5.38 seconds), 6 items updated, 204 evaluated
+Total cache size 0
+Assets/_Project/Scripts/Game/Juice.cs(482,13): warning CS0162: Unreachable code detected
+Assets/_Project/Scripts/Game/Juice.cs(498,13): warning CS0162: Unreachable code detected
+Assets/_Project/Scripts/Game/Juice.cs(512,44): warning CS0219: The variable 'low' is assigned but its value is never used
+Assets/_Project/Scripts/Game/Juice.cs(2059,28): warning CS0219: The variable 'bp' is assigned but its value is never used
+Assets/_Project/Scripts/Game/Juice.cs(2059,37): warning CS0219: The variable 'lo' is assigned but its value is never used
+Assets/_Project/Scripts/Game/MapLife.cs(350,19): warning CS0219: The variable 'd0' is assigned but its value is never used
+Assets/_Project/Scripts/Game/Weather.cs(56,25): warning CS0414: The field 'Weather.ambBaseK' is assigned but its value is never used
+Total cache size after purge 0, took 00:00:00.0077393
+AssetDatabase: script compilation time: 5.950337s
+Begin MonoManager ReloadAssembly
+- Loaded All Assemblies, in  0.253 seconds
+Start importing ProjectSettings/ProjectSettings.asset using Guid(00000000000000004000000000000000) (LibraryAssetImporter) -> (artifact id: '8dd977f039773dedb7542cb675aed101') in 0.022024355 seconds
+Start importing ProjectSettings/DynamicsManager.asset using Guid(00000000000000008000000000000000) (LibraryAssetImporter) -> (artifact id: '1fe601a3892f0714bfc608f554405352') in 0.000943169 seconds
+Start importing ProjectSettings/QualitySettings.asset using Guid(00000000000000009000000000000000) (LibraryAssetImporter) -> (artifact id: 'd061689c56213398e4149c0e09cfc3a0') in 0.001166119 seconds
+Start importing ProjectSettings/EditorBuildSettings.asset using Guid(0000000000000000b000000000000000) (LibraryAssetImporter) -> (artifact id: '1923232d45cb936aef47cec131f33975') in 0.000779786 seconds
+Start importing Assets/_Project using Guid(36033d9b5af6032a5b020e8b2ccb976d) (DefaultImporter) -> (artifact id: '820450e51d0681e4816375d386cfacd2') in 0.007791903 seconds
+Start importing Assets/StreamingAssets using Guid(2991ca1fbbb2457b1a7655edbbc4937f) (DefaultImporter) -> (artifact id: 'eb14d61ca596262c651c96c3201e3123') in 0.000881737 seconds
+Start importing Assets/Resources using Guid(9e97f577bd8f0682abcb439c9ecc62e9) (DefaultImporter) -> (artifact id: '479744a62a5035686aed01e917d95eba') in 0.000844842 seconds
+Start importing Assets/Resources/UI using Guid(235a98b071e57927681315ef458c891b) (DefaultImporter) -> (artifact id: '897c1511bc8411ac4aef1c35f2027fca') in 0.00077531 seconds
+Start importing Assets/_Project/Scripts using Guid(64ed906f56ac567d4bbbf3e6dd58bb57) (DefaultImporter) -> (artifact id: '766075cc21a603da6b47a95c83d5de5f') in 0.000807277 seconds
+Start importing Assets/_Project/Shaders using Guid(c4009bdb7d4061abb9358a959d9f6513) (DefaultImporter) -> (artifact id: 'd9fdbc445376c732c143b50fc9f7eaa7') in 0.000831733 seconds
+Start importing Assets/_Project/Resources using Guid(595e2bf608f941d1eb30036c20557325) (DefaultImporter) -> (artifact id: 'ac16a12ab12f3f2db00584fc632b8254') in 0.000821218 seconds
+Start importing Assets/_Project/Art using Guid(c94fcd4606c4ad804bffc8671924a412) (DefaultImporter) -> (artifact id: '518714d1d0684960b2e9e43c6db6766a') in 0.000853305 seconds
+Start importing Assets/_Project/Models using Guid(7d91c7f66ae3ae6e68f4838b32ec4859) (DefaultImporter) -> (artifact id: 'eb84deec4bba49555f9e3b50db5e59e0') in 0.000879003 seconds
+Start importing Assets/Resources/FX using Guid(5fe7a32194af3bd39a04e01556f87e9f) (DefaultImporter) -> (artifact id: '04f74046ea01dc76dc3c4c140cfc0b95') in 0.000976758 seconds
+Start importing Assets/_Project/Resources/UI using Guid(001106b32fe58ce4f8d64dfee74f9f78) (DefaultImporter) -> (artifact id: '4d96b78d1865a2c178ca59da0c34ba24') in 0.000973433 seconds
+Start importing Assets/_Project/Models/Props using Guid(00dcdf93b4d869b42b48e1b2a7fd25dd) (DefaultImporter) -> (artifact id: '20ef0aa14b6e69247dd44fef00af78f4') in 0.001086762 seconds
+Start importing Assets/_Project/Art/Samurai2 using Guid(c06219a6afbeba9fc9fe2071b8b2bf8b) (DefaultImporter) -> (artifact id: 'f7a03669a720ab4084e6ab7194d36236') in 0.001096155 seconds
+Start importing Assets/_Project/Art/BaseMale using Guid(d007d96a15318eff191c24b216af5b7a) (DefaultImporter) -> (artifact id: '3d7686e407bd4a5b104bf27ffbba9bf5') in 0.001116716 seconds
+Start importing Assets/_Project/Art/Dzin using Guid(d0bebcf9f0d5eb925bc8eb197931e738) (DefaultImporter) -> (artifact id: '57095035af53c336830a8aae1fe509b2') in 0.001041525 seconds
+Start importing Assets/_Project/Resources/Shaders using Guid(f0c622e190e0e64588398f496bf25f77) (DefaultImporter) -> (artifact id: 'e8261581e77c91e5f1aa049c121577e4') in 0.001034865 seconds
+Start importing Assets/_Project/Art/Akiko using Guid(71968e4827cc156048e8535c9998a654) (DefaultImporter) -> (artifact id: '1c648a16e806c19a8a52d5fcbb2a8fe2') in 0.001046232 seconds
+Start importing Assets/_Project/Resources/Audio using Guid(9152202ee9696cee287d7ab5eb783f5b) (DefaultImporter) -> (artifact id: '523045c36cf13907f175875574490296') in 0.001136585 seconds
+Start importing Assets/_Project/Resources/Maps using Guid(a38079bb41e27a78b9f0fb1d48f2cbf8) (DefaultImporter) -> (artifact id: '0e4e1d0bb0075b88f377e44791cdebb0') in 0.001073301 seconds
+Start importing Assets/_Project/Art/Shadow using Guid(c3454356805a87d41a222e19ceeee983) (DefaultImporter) -> (artifact id: '4f09f6a405bf396f941108643068189f') in 0.001062826 seconds
+Start importing Assets/_Project/Scripts/Core using Guid(243aeb2173bcf892ba871844037f7b92) (DefaultImporter) -> (artifact id: 'e1177073a5ce5bd6a348ae24b85c74ee') in 0.00109899 seconds
+Start importing Assets/_Project/Art/Shogun using Guid(b463551a87f568575ad678fafb7a0998) (DefaultImporter) -> (artifact id: '8f8dd60a6e1627f1836a1ec77159760b') in 0.001090878 seconds
+Start importing Assets/_Project/Resources/Fonts using Guid(e4641e790a5555642a3c95e6c02fc67c) (DefaultImporter) -> (artifact id: 'c0f0ab46f73237b9b3395493307a333a') in 0.001062045 seconds
+Start importing Assets/_Project/Art/Yamabushi using Guid(75cf54ebef462c14092d4573a3f79ad4) (DefaultImporter) -> (artifact id: 'fc1b05720eb0b16299e0a0e1eb4f5dc3') in 0.001095064 seconds
+Start importing Assets/Resources/UI/pack02 using Guid(06b4e77fe74d1df33890d7840f2b0df3) (DefaultImporter) -> (artifact id: '885e1696390bc767e3d103134c94ee66') in 0.001042505 seconds
+Start importing Assets/_Project/Models/Shogun using Guid(264b4239c7905e0969a4e69f44be0fd3) (DefaultImporter) -> (artifact id: '86356880a5777d81fe32fc926e08e1e4') in 0.00115359 seconds
+Start importing Assets/_Project/Scripts/Fighter using Guid(17bd0dc0210b1dde3bc3658762b52478) (DefaultImporter) -> (artifact id: '06d8fe20425dfa3d0f214a42303269c7') in 0.001203765 seconds
+Start importing Assets/_Project/Art/BaseFemale using Guid(27309f75257eccd4ba7f533bff8135b7) (DefaultImporter) -> (artifact id: '368d2cb29f1ac878549ad4f9d86a1a26') in 0.001157677 seconds
+Start importing Assets/_Project/Resources/Units using Guid(27feedcf42627e203ab4c4c0948c4af3) (DefaultImporter) -> (artifact id: '786594284ea165c6e4bb15aeaf9eb449') in 0.001094333 seconds
+Start importing Assets/_Project/Models/Arenas using Guid(b8d91abb081db0fef923f19fc4cc3272) (DefaultImporter) -> (artifact id: '0c92d80865eb6feead6eac15d6e152a1') in 0.001074313 seconds
+Start importing Assets/_Project/Resources/Accessories using Guid(89f4f4ae6d883080098afb3ff3a15388) (DefaultImporter) -> (artifact id: '267f0ee392abeab819b430f6232dbdf0') in 0.000965953 seconds
+Start importing Assets/_Project/Resources/FX using Guid(c9c815aa9cee00314a43d655ec4ea1db) (DefaultImporter) -> (artifact id: '2d1bd104f9134b9d1493bc5a44a2b721') in 0.000947675 seconds
+Start importing Assets/_Project/Scripts/Menu using Guid(e982ba5dd9bebea4291746eabf0b08c9) (DefaultImporter) -> (artifact id: '6a4462c118bb1c30635737f8a4a3dada') in 0.000948576 seconds
+Start importing Assets/_Project/Art/Fallen using Guid(7a2d615ac978c6e3d8bfe571b8900b7c) (DefaultImporter) -> (artifact id: 'cbe14363c8dfa5ad14fdf257c8844457') in 0.001054954 seconds
+Start importing Assets/_Project/Art/Bandit using Guid(7bf1521cf4c8759bdaced97ae0eaf39a) (DefaultImporter) -> (artifact id: '0f6b279d7853a1ab86c761867defb919') in 0.00106596 seconds
+Start importing Assets/_Project/Models/OniWarrior using Guid(7baf1589ce8e7b2689097a039ee99fa3) (DefaultImporter) -> (artifact id: '3ac1305463c2acdaf9af0d880dca7e1e') in 0.001059571 seconds
+Start importing Assets/_Project/Art/Textures using Guid(fbd1dd05f52e7211b840868a37abe7f3) (DefaultImporter) -> (artifact id: 'eefe4bfc5d868f65e86db6ff4a6f6d40') in 0.000987073 seconds
+Start importing Assets/_Project/Scripts/Combat using Guid(2ce98fdcaf35734339aa047ab464c7e0) (DefaultImporter) -> (artifact id: '72984e4b5e87c0105a635c39a848349d') in 0.000924061 seconds
+Start importing Assets/_Project/Resources/Characters using Guid(2d6ddaed7f48565b4b3d4a86999e09fc) (DefaultImporter) -> (artifact id: '2690730522db21e4cef9a38bd13e817e') in 0.000945462 seconds
+Start importing Assets/_Project/Scripts/Input using Guid(4d11321782f01bb77a1390c808933753) (DefaultImporter) -> (artifact id: 'a5f3c0fd3a128a71d9a3c3e7fffc0879') in 0.000920826 seconds
+Start importing Assets/_Project/Art/Hero3 using Guid(5d7f9a981e9338ce6b95e818ce4067d2) (DefaultImporter) -> (artifact id: '8bc2ed8c166359a3ce94cacf0b4eb58a') in 0.000945612 seconds
+Start importing Assets/_Project/Scripts/Game using Guid(9d1879c3ad90c0e44ab00307c369d389) (DefaultImporter) -> (artifact id: '7fe728a744fb64d6b50dbe4e8d412245') in 0.001029016 seconds
+Start importing Assets/_Project/Models/ShadowAssassin using Guid(bd442705e38978161b23b31eab278663) (DefaultImporter) -> (artifact id: 'b47d223c4ebc8a8defb758026a035aa8') in 0.001089005 seconds
+Start importing Assets/_Project/Art/Ren using Guid(ed8af5b078d91b9e5b592e3b2766bbdd) (DefaultImporter) -> (artifact id: '2a1ec67a52e8bfdb2067117efbfe2410') in 0.001040443 seconds
+Start importing Assets/_Project/Art/Kitsune using Guid(be5c88f6c8f8f6ad997e75482b48f725) (DefaultImporter) -> (artifact id: '025f7ada5099f0bfbc1d63012dc7ec44') in 0.000988365 seconds
+Start importing Assets/_Project/Scripts/Weapon using Guid(ee276932958fda9e6988cdaec5f31d9d) (DefaultImporter) -> (artifact id: '0471da787ee05d8c4ac19c438fdca33b') in 0.001114512 seconds
+Start importing Assets/_Project/Art/Oni using Guid(1fde1cefb4f5d922dbe655e29fddcb8b) (DefaultImporter) -> (artifact id: '3d0e5430448d6277f0e9e12ff975912e') in 0.001046192 seconds
+Start importing Assets/_Project/Scripts/Visual using Guid(2f671d4a65067edcab8984cc7cb341e1) (DefaultImporter) -> (artifact id: '1d49a5b463a1ab96f57eee663959fe07') in 0.001130446 seconds
+Start importing Assets/_Project/Scripts/Debug using Guid(6f3c459208949da1dbc26fd3ecae80f4) (DefaultImporter) -> (artifact id: 'b653ae7eb74abedbe2da24dbcf7ed5e1') in 0.00105931 seconds
+Start importing Assets/_Project/Art/Ashigaru using Guid(bf05eb799d97ec412bc7099bde56b797) (DefaultImporter) -> (artifact id: '77caef2726a4c745483bb09ac3361556') in 0.001087552 seconds
+Start importing Assets/_Project/Scripts/Editor using Guid(df92b5e687525f9d282e6d1362837488) (DefaultImporter) -> (artifact id: 'e6d7d86b41fdf579922068aa3e491e72') in 0.001104688 seconds
+Start importing Assets/_Project/Resources/UI/selection using Guid(414500a4dfc1baf9b80d45d2c194730a) (DefaultImporter) -> (artifact id: '91e1e5dd87042365817d45e54b3c90db') in 0.001113381 seconds
+Start importing Assets/_Project/Resources/UI/H3 using Guid(42a8733fe7d6386a6bc6df100af5eba6) (DefaultImporter) -> (artifact id: '1c7c5191cb9114971d4727d4b919d7c5') in 0.001563017 seconds
+Start importing Assets/_Project/Resources/UI/Kit using Guid(72463828bf59785038ae6b01db4e38a0) (DefaultImporter) -> (artifact id: '31255fd1cb733a3c0661619f18873576') in 0.001613012 seconds
+Start importing Assets/_Project/Resources/UI/Battle using Guid(f380cea91a68d7e70837547a689f7769) (DefaultImporter) -> (artifact id: 'e9ea7e5e580a65ebd24e242c47f14775') in 0.001636937 seconds
+Start importing Assets/_Project/Models/Arenas/Detail using Guid(54596c848b26f45d381ce33d57ddd5c4) (DefaultImporter) -> (artifact id: '30d1122585a4b623b9b77cdd7b922cdf') in 0.001160761 seconds
+Start importing Assets/_Project/Resources/UI/MapObjects using Guid(744a7c559c857c4b49f372da76f8cdad) (DefaultImporter) -> (artifact id: '4bd152511e02dac631d4378019f284fc') in 0.001713481 seconds
+Refreshing native plugins compatible for Editor in 0.45 ms, found 0 plugins.
+Native extension for LinuxStandalone target not found
+Native extension for Android target not found
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  0.585 seconds
+Domain Reload Profiling: 838ms
+	BeginReloadAssembly (155ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (9ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (50ms)
+	RebuildCommonClasses (33ms)
+	RebuildNativeTypeToScriptingClass (7ms)
+	initialDomainReloadingComplete (25ms)
+	LoadAllAssembliesAndSetupDomain (32ms)
+		LoadAssemblies (72ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (21ms)
+			TypeCache.Refresh (16ms)
+				TypeCache.ScanAssembly (11ms)
+			BuildScriptInfoCaches (2ms)
+			ResolveRequiredComponents (1ms)
+	FinalizeReload (586ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (351ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (42ms)
+			SetLoadedEditorAssemblies (4ms)
+			BeforeProcessingInitializeOnLoad (115ms)
+			ProcessInitializeOnLoadAttributes (154ms)
+			ProcessInitializeOnLoadMethodAttributes (29ms)
+			AfterProcessingInitializeOnLoad (7ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (8ms)
+Start importing Assets/StreamingAssets/camp_loop.mp4 using Guid(a1a580dd3b4b1c8c1abbdb411ae3e5d3) (DefaultImporter) -> (artifact id: '5d652565cb2000d246d9e342dfd7ebc5') in 0.008999353 seconds
+Start importing Assets/StreamingAssets/menu_bg.mp4 using Guid(74bb8c666dd47d0728648c504de89a83) (DefaultImporter) -> (artifact id: '36702328b4066e5f3fdef5df987d5daf') in 0.00113271 seconds
+Start importing Assets/StreamingAssets/tavern_loop.mp4 using Guid(cc502f3d826e9c3e695aa47559827d9e) (DefaultImporter) -> (artifact id: 'c9c0c8817df5d52f48966a8fa9f5d626') in 0.001068254 seconds
+Start importing Assets/_Project/Resources/UI/npc_3.jpg using Guid(00921ec25ad8cbc298ed6e9378bccbb6) (TextureImporter) -> (artifact id: '0279a456182fcc1486687f006c5c7230') in 0.12975878 seconds
+Start importing Assets/_Project/Resources/UI/btn_pause.png using Guid(00c20bd6f146f8ed5a69ce04537b6131) (TextureImporter) -> (artifact id: '29fe2388f63c676d44c11dd4b9a56a60') in 0.094792989 seconds
+Start importing Assets/_Project/Resources/FX/pillar_loop_rage.png using Guid(0086063d92bdaf3168c0123da6a16347) (TextureImporter) -> (artifact id: 'f9ced068f7f5aec5a307b9f4f1e48b79') in 1.699345478 seconds
+Start importing Assets/_Project/Resources/FX/sigil_sun.png using Guid(10078a2d820dcfeed834c7c4fe9d69f0) (TextureImporter) -> (artifact id: 'cec8e12d890fe59a9612e85fd991a522') in 0.451685685 seconds
+Start importing Assets/Resources/FX/slash_red.png using Guid(104777896754147749a396507068c767) (TextureImporter) -> (artifact id: 'abae0106d191a2c86e9625a9a30cec19') in 0.076686261 seconds
+Start importing Assets/_Project/Resources/UI/Battle/skill_icons2.png using Guid(10e808b5579589199a58dd27615957bc) (TextureImporter) -> (artifact id: '37055640a9298d0599d7a6c42fc53c9b') in 0.060574562 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_divider.png using Guid(100907fb6f7f19aba86f5b63e89a89e0) (TextureImporter) -> (artifact id: 'd8570551d037fe3e3d7fd4d3c302cee3') in 0.056185414 seconds
+Start importing Assets/_Project/Resources/UI/selection/difficulty_0.jpg using Guid(203585d328d2c5ec7a3284e44fa9e736) (TextureImporter) -> (artifact id: '17abb532d0e29b19142443c8934598e8') in 0.072981178 seconds
+Start importing Assets/_Project/Resources/UI/Battle/fx_arrow_hit.png using Guid(20cae9e4ecda95808b50dbafd8c19e1b) (TextureImporter) -> (artifact id: 'c0a3b2e94c0cf9223e459808692c8702') in 1.549735984 seconds
+Start importing Assets/_Project/Resources/FX/pillar_sun.png using Guid(204da6f350844097980fca586a2954d9) (TextureImporter) -> (artifact id: '4790313df8d4d761f40159830a10c00e') in 0.094468586 seconds
+Start importing Assets/_Project/Resources/UI/sakura_branch.png using Guid(20bf904a887460f79aadb458015c9083) (TextureImporter) -> (artifact id: '8fce328d645da6ef58a90adc397bb8a7') in 0.340654112 seconds
+Start importing Assets/_Project/Resources/UI/enemy_full_bandit.png using Guid(20ef90ab925630f17bc924a5a4668bab) (TextureImporter) -> (artifact id: '76292e5a7c081fe0191451f41048d745') in 0.020112681 seconds
+Start importing Assets/_Project/Models/Shogun/Shogun_roughness.png using Guid(30392321813ba5f6aa6497f429f1e3c1) (TextureImporter) -> (artifact id: '55f25002803c7a5518b03c165f4e6293') in 1.49226254 seconds
+Start importing Assets/Resources/UI/pack02/herbalist.png using Guid(304b3df042616145ea1267ed415c37a2) (TextureImporter) -> (artifact id: 'd738deb1004a0bf0fdbe972e8e363319') in 0.009177487 seconds
+Start importing Assets/_Project/Resources/FX/dragonfly.png using Guid(4091b1d541cb055adb8b0af57460c9b5) (TextureImporter) -> (artifact id: '47ecea87a56f80b50927a1f0abce0691') in 0.094264094 seconds
+Start importing Assets/_Project/Art/Textures/koi.png using Guid(40eae1c9942ccf3c4b084877ea822eca) (TextureImporter) -> (artifact id: 'e51b560a68fdbd8179a067424b43a790') in 0.151822784 seconds
+Start importing Assets/_Project/Resources/UI/speed_lines.png using Guid(50d38b17ed857d52a82247b680492b51) (TextureImporter) -> (artifact id: 'b88da2eec5e07c95d5b24c7b392966f3') in 1.22558347 seconds
+Start importing Assets/_Project/Resources/UI/bar_ki.png using Guid(50a43d855823c672e98221184d24badf) (TextureImporter) -> (artifact id: '14ce1da5a894e8c22b274822b14aba71') in 0.0322933 seconds
+Start importing Assets/_Project/Models/Arenas/Detail/bamboo.jpg using Guid(6050d40351bf9be98930eabbde7dab91) (TextureImporter) -> (artifact id: '3b0dc443bfd1d17de3a07081b8729ae3') in 0.390438576 seconds
+Start importing Assets/_Project/Resources/UI/MapObjects/objects_dark_5.png using Guid(60d5c51c2470bfd98b0f9f7dda7294f3) (TextureImporter) -> (artifact id: '58efd3ab0f13dfd02e89f1eceab53703') in 0.043863846 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_btn_red_pressed.png using Guid(60a6a05382954d6b4b121fcb4f2870f2) (TextureImporter) -> (artifact id: 'c08cc94fea56ad522da8583712fe8db6') in 0.137450775 seconds
+Start importing Assets/_Project/Resources/UI/Battle/fx_arrows.png using Guid(6039d0c3fceb185afba7e8d938e33c00) (TextureImporter) -> (artifact id: '664ed91e2272b45b41618d260b578b18') in 1.590566283 seconds
+Start importing Assets/_Project/Resources/UI/Battle/unit_portraits2.png using Guid(606924d740e5ad865b91fe28c9ab848d) (TextureImporter) -> (artifact id: 'ff138bb6d8f1f06656147999ce522d8b') in 0.044503435 seconds
+Start importing Assets/_Project/Resources/UI/mountains.png using Guid(60b97726774c7f564a5089a30e0f87a7) (TextureImporter) -> (artifact id: '17f2015126e76ad7d5e69f34d3870465') in 0.308970825 seconds
+Start importing Assets/_Project/Resources/UI/zan.png using Guid(605a75d768f79a8b688816817dffe415) (TextureImporter) -> (artifact id: 'f91dd5244da0bacb1dc9456919614711') in 0.094990981 seconds
+Start importing Assets/_Project/Resources/UI/enemy_full_oni.png using Guid(605a5d57d4b87b111bd123c618ce13a8) (TextureImporter) -> (artifact id: '296b0a095c956f3e3db18f8e0ee8257a') in 0.019306816 seconds
+Start importing Assets/_Project/Resources/UI/btn_base.png using Guid(60cbaef34695459788ad0196c588a0ec) (TextureImporter) -> (artifact id: '89206d32378948dbcb7de8e466005479') in 0.076908511 seconds
+Start importing Assets/_Project/Resources/UI/map_bird_white.png using Guid(70582275e9a0565daba4a61c8e389754) (TextureImporter) -> (artifact id: 'b3b488c80e9ad3bd19cc9f4299d02b13') in 0.546763365 seconds
+Start importing Assets/_Project/Resources/UI/fx_ui_flash_white.png using Guid(704d8e5089c6d6c97b671e9a286c69bc) (TextureImporter) -> (artifact id: 'eeb1a7fee19bb2e385aa9385ee146b3d') in 0.53174563 seconds
+Start importing Assets/_Project/Resources/FX/pillar_flame.png using Guid(80537ad2b8d32b95684235e44dbe418b) (TextureImporter) -> (artifact id: 'e78aa46dd113182351edce700d79a4d5') in 0.106008788 seconds
+Start importing Assets/_Project/Art/Textures/wood_normal.png using Guid(804b54582248567f39ec5b9c177148f6) (TextureImporter) -> (artifact id: '406cfa113cdb8bb2a1a88f9216433d7b') in 0.113810234 seconds
+Start importing Assets/_Project/Resources/UI/tech_1.png using Guid(9040f9bd0468c6ecdbdb3515a9f50fdc) (TextureImporter) -> (artifact id: 'e856df5620ece4b2db2bcaa6911f38c0') in 0.075744164 seconds
+Start importing Assets/_Project/Resources/UI/Kit/hud_hp_r.png using Guid(90c0a6b47ea104aafab4984d9f533222) (TextureImporter) -> (artifact id: 'ef127301015b09ff2c0af1a7e9f6c50c') in 0.078090643 seconds
+Start importing Assets/_Project/Resources/FX/rock_burst.png using Guid(905510de10c791feba65ff93a18c720f) (TextureImporter) -> (artifact id: '5d5ecb165fbcb9f8de2f48b5113a8d37') in 0.617508799 seconds
+Start importing Assets/_Project/Resources/FX/geta_print.png using Guid(907eaced8d05a5efebc7364abc8f67f1) (TextureImporter) -> (artifact id: '9a20e8e35005ac7a1744fc7303db96dc') in 0.055612706 seconds
+Start importing Assets/_Project/Resources/UI/dice_rogue_0.png using Guid(a074edaee2690d649b2354743608e0ed) (TextureImporter) -> (artifact id: '02e69149eec1d244a3a3a5c59de0132d') in 0.280692527 seconds
+Start importing Assets/_Project/Resources/FX/smoke_teleport.png using Guid(a026967129de4b3318ba930f4cac09e3) (TextureImporter) -> (artifact id: 'f4bf4353d4652816a3e8ae9ea05fbcf2') in 0.672149184 seconds
+Start importing Assets/Resources/UI/pack02/shrine.png using Guid(b06efd16338b36a6094996b911920bd0) (TextureImporter) -> (artifact id: 'a61838438e65d7faaffde14b1e40d98b') in 0.009792489 seconds
+Start importing Assets/_Project/Resources/UI/map_camps_2.png using Guid(c060c6c4459d564af939bd92149bf760) (TextureImporter) -> (artifact id: 'f244b4176261d59ff7947d4155d07ca0') in 2.254836884 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_btn_red.png using Guid(c006ad827e05ad1578971e10fc9ab2ec) (TextureImporter) -> (artifact id: '9b51aaecc65511ffb30c0b343a2fc6f7') in 0.152839201 seconds
+Start importing Assets/_Project/Resources/UI/deathblow_mark.png using Guid(c0ab29236af07dd788c5bd7038403d44) (TextureImporter) -> (artifact id: '10661c43feb60dafea8992b609b167a0') in 0.084421681 seconds
+Start importing Assets/_Project/Art/Textures/wall_stains.png using Guid(c06ef9df03b3b39a5a7301e64cfd6dc5) (TextureImporter) -> (artifact id: '18ecda97428c587704cfe0263539ac54') in 0.099195936 seconds
+Start importing Assets/_Project/Resources/UI/Kit/hud_ki_caps.png using Guid(d00642fccb115d85590380e8c759ed3d) (TextureImporter) -> (artifact id: 'cdf105a2d487ee24f4fe0fa159f6f4ef') in 0.047938167 seconds
+Start importing Assets/_Project/Resources/FX/sigil_draw.png using Guid(d058063725467cad5bc184c3560b09ef) (TextureImporter) -> (artifact id: 'c71a072dbcc9e1d03d1f9cbd18dee403') in 1.267053586 seconds
+Start importing Assets/_Project/Art/Textures/rope_normal.png using Guid(d01a09eba2e086233a0fd6f0f8c9e520) (TextureImporter) -> (artifact id: 'aae800338f91dd07764c165319d98d9f') in 0.1140498 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_panel_frame.png using Guid(e071fbb92ede9234189a4f3b62297b13) (TextureImporter) -> (artifact id: '83a6d3bc59aa3612ef2eab108851877b') in 0.163719434 seconds
+Start importing Assets/_Project/Resources/UI/map_icon_herbalist.png using Guid(e0826c4c0f749f6da85d14175b1b4ead) (TextureImporter) -> (artifact id: '3e97156619989ca47620b66a14d318d0') in 0.084220943 seconds
+Start importing Assets/_Project/Models/Arenas/Detail/wood.jpg using Guid(e0d2e8250cf61a0fa8f08b64cc1006df) (TextureImporter) -> (artifact id: '3e0a61051fa4d35e871a38bcf153df09') in 0.415164937 seconds
+Start importing Assets/_Project/Resources/FX/pillar_loop_flame.png using Guid(e0f38f0865016946da0f9291d2e37955) (TextureImporter) -> (artifact id: '2585cd05812ec51ed1cb0f689dc2de53') in 0.773125709 seconds
+Start importing Assets/_Project/Resources/UI/Battle/fx_dash.png using Guid(e084caa0843ae5fce9be8dddc198c242) (TextureImporter) -> (artifact id: '4599451c4ddfece20dac6b0f82fba7f5') in 1.433669495 seconds
+Start importing Assets/_Project/Resources/UI/MapObjects/objects_dark_2.png using Guid(f0f4c574d35c12b6f9136899c70125e4) (TextureImporter) -> (artifact id: '08077c357037f794d54619c52e646c30') in 0.048853975 seconds
+Start importing Assets/_Project/Resources/FX/lightning_burst.png using Guid(f025b61d2f525adc786167dca5fe88b0) (TextureImporter) -> (artifact id: 'c921fb545c1dc22397112318cd5aa8b9') in 0.343533771 seconds
+Start importing Assets/_Project/Resources/UI/Battle/map_foam.png using Guid(f00a32aaef136c6bea0758ee61965b89) (TextureImporter) -> (artifact id: '6396bd71c306b70b89a17b8fac752be8') in 1.399540833 seconds
+Start importing Assets/_Project/Resources/UI/buff_icons.png using Guid(f09c13749571da6169fbd22c0b4274b4) (TextureImporter) -> (artifact id: '2f0a37606c396ea06a3e210d66ace26e') in 0.551019346 seconds
+Start importing Assets/_Project/Resources/FX/fx_aura_red.png using Guid(f00f1e5b3e9c0f24eb66e03619016228) (TextureImporter) -> (artifact id: '86e72b4e7d312739a0274f17b4e47988') in 0.353336686 seconds
+Start importing Assets/_Project/Resources/FX/seal_circle.png using Guid(0150c0c3d9f6e3e5bae2e5ab8d4a834e) (TextureImporter) -> (artifact id: 'e7c8b6c3a79f5e8e3ddca05088df5f46') in 0.115270209 seconds
+Start importing Assets/_Project/Resources/UI/rank_c_ru.png using Guid(01237c98a62bfbc369edd78004a8fb0e) (TextureImporter) -> (artifact id: 'bfe585ba1ec434ca543964e8d515daaf') in 0.093691354 seconds
+Start importing Assets/_Project/Art/Textures/ronin_albedo.jpg using Guid(01d64a9e9805d9627b92e9e62adbcebf) (TextureImporter) -> (artifact id: 'c4bfe98cca4d4106621bafcc3cd27e24') in 1.554086935 seconds
+Start importing Assets/_Project/Resources/UI/H3/market.png using Guid(11f15fea02c06eb1ebec27382895bee1) (TextureImporter) -> (artifact id: '18c11d82cc2c7264e04990761af9e1b5') in 0.049413755 seconds
+Start importing Assets/_Project/Art/Textures/stoneblock_normal.png using Guid(1142c614e6ca0fc61b6501d12f953d49) (TextureImporter) -> (artifact id: 'ff0bd103e4ed8033284f0d4084b618f5') in 0.119736791 seconds
+Start importing Assets/_Project/Art/Textures/grass_tuft.png using Guid(115226f18723ea605b026c7505f74ceb) (TextureImporter) -> (artifact id: '9da0cdcdd1d9ea10ae9f738324cfc3d7') in 0.096114206 seconds
+Start importing Assets/_Project/Resources/UI/H3/flags.png using Guid(111829374eb96acf68ab32b27e598acb) (TextureImporter) -> (artifact id: 'dcf473e794e79c33eda0330a148c6df8') in 0.035195414 seconds
+Start importing Assets/_Project/Resources/UI/set_items.png using Guid(11ceccc9c5d849e3e817e77ccfc74214) (TextureImporter) -> (artifact id: '36f0aa230046b2fc4a868f5dbe27f397') in 1.371839922 seconds
+Start importing Assets/_Project/Resources/UI/hero_face_sq_2.jpg using Guid(2112a1ac36b7c0972b3c102cd3efc5ed) (TextureImporter) -> (artifact id: '48c369f4013b671475aef03ea4307a34') in 0.03025647 seconds
+Start importing Assets/_Project/Art/Textures/blood_splat.png using Guid(2172aa5c72dd7e7198366d056dee9485) (TextureImporter) -> (artifact id: '10f9e6bad5b445f7cafb82d82fd2a44d') in 0.105225406 seconds
+Start importing Assets/Resources/UI/pack02/wounded_ronin.png using Guid(21971c39979e414efbe2c033ee1787fb) (TextureImporter) -> (artifact id: '7f2b07244e3813a1d17edd11fdbf8334') in 0.009904936 seconds
+Start importing Assets/_Project/Art/Textures/blossom_albedo.png using Guid(21cb1b744daa7bd578d807cb877d884c) (TextureImporter) -> (artifact id: '37b2b030599c9f069412c2d7c99330bd') in 0.113578461 seconds
+Start importing Assets/_Project/Resources/UI/brush_slash.png using Guid(31d05bcacb0beb1adbb703dcf2b71657) (TextureImporter) -> (artifact id: '1feabcd61b1512b9a39874d2dd2edf90') in 1.254196704 seconds
+Start importing Assets/_Project/Resources/UI/editor_tools.png using Guid(3193df09d08791bad862ce4fb1aaa2a9) (TextureImporter) -> (artifact id: 'e3ebd4b4c2319cf2ca0ffacb798726d4') in 0.546808222 seconds
+Start importing Assets/_Project/Resources/FX/spark_burst.png using Guid(318c9066b41c80de882260ff81c4f4c9) (TextureImporter) -> (artifact id: '0827debc8e6802f45e077217476c1422') in 0.093389758 seconds
+Start importing Assets/_Project/Resources/UI/Battle/recruit_window.png using Guid(41b3002dc942dbb7e8ec973a78c5a721) (TextureImporter) -> (artifact id: 'ab1cab98fc5eadd5b866f915fba44e80') in 0.044812683 seconds
+Start importing Assets/_Project/Resources/UI/selection/approved_difficulty_0.png using Guid(5161487db4ca276aabdb1d181e008344) (TextureImporter) -> (artifact id: '36a8b8d2c8c6e874dad14c788be3ef7a') in 0.111919862 seconds
+Start importing Assets/_Project/Resources/UI/map_2.jpg using Guid(61f0f70851e1d8e7ba412903de1e2f97) (TextureImporter) -> (artifact id: '405ecfe1311d69af01aaa89a52153753') in 0.860331847 seconds
+Start importing Assets/_Project/Resources/Units/unit_teppo_albedo.jpg using Guid(61544eb6f1ba281c5adaaa16016136a8) (TextureImporter) -> (artifact id: 'a0a7c70f01de0c333b3279fa9c7e9b3f') in 0.429052318 seconds
+Start importing Assets/_Project/Resources/UI/Kit/hud_ring_enemy.png using Guid(61ab3ce853ddd72059a646c85898e832) (TextureImporter) -> (artifact id: 'ec0313544d2779eb9ecb51d2eee51ac6') in 0.072870894 seconds
+Start importing Assets/_Project/Resources/UI/btn_block.png using Guid(7171a64a785ee2f70b2b300948081da0) (TextureImporter) -> (artifact id: 'e0316d1247dfa7d1dcaf575274bda9b8') in 0.080716707 seconds
+Start importing Assets/_Project/Art/Textures/roof_normal.png using Guid(7119b519686d283a49332151598145f5) (TextureImporter) -> (artifact id: '71bc0d7cf4edc10f09afdc0b87b5dbe9') in 0.111381604 seconds
+Start importing Assets/_Project/Resources/UI/general_window.png using Guid(717dec244283024549c6bbc72bb8577c) (TextureImporter) -> (artifact id: 'a6caae4bdecf73ca054bf3f697567ebd') in 0.045940665 seconds
+Start importing Assets/_Project/Resources/UI/Battle/fx_curse.png using Guid(71ad76f67cc921a5bacb3af3a467ec33) (TextureImporter) -> (artifact id: 'd46af1570d12217621c3ce56af89a07a') in 1.465005005 seconds
+Start importing Assets/_Project/Resources/UI/fx_ui_flash_red.png using Guid(81c9a00868498bd52902fbcc97876d1d) (TextureImporter) -> (artifact id: '58eca78380c63ab0bf1534332879f793') in 0.547363065 seconds
+Start importing Assets/_Project/Resources/FX/fx_guard_break.png using Guid(916013e7b18431902901d5afac34bb90) (TextureImporter) -> (artifact id: '4709dd3865fb2aa2a4518a9c324be32e') in 0.360447709 seconds
+Start importing Assets/_Project/Art/Textures/katana_blade_ms.png using Guid(91a1eefb7cc0472509cb3339a2c41422) (TextureImporter) -> (artifact id: '953b9d446d4a9fb2b106dcd3a0d5dc53') in 0.628746962 seconds
+Start importing Assets/_Project/Resources/UI/event_0.jpg using Guid(910de112578fb8445a247b5d581ed188) (TextureImporter) -> (artifact id: '85b413c31bc28fa13f065d06d38dd0fa') in 0.112676754 seconds
+Start importing Assets/_Project/Resources/UI/Kit/hud_banner_oni.png using Guid(a16d6e1728610f27fa37f3f03f7d560a) (TextureImporter) -> (artifact id: 'ec1ab2ef32553ab122afdc27f0ac8aae') in 0.935951067 seconds
+Start importing Assets/_Project/Art/Textures/stone_albedo.png using Guid(a1cf0ae4c41a1bda483a636f03ace1d1) (TextureImporter) -> (artifact id: '785bf4f46457a76d55890a138e10c565') in 0.10855326 seconds
+Start importing Assets/_Project/Resources/UI/portrait_bandit.png using Guid(b17118e0ac27288d888cd5c19739437e) (TextureImporter) -> (artifact id: '1fd80cd127b84c732cae9d99de71d22b') in 0.078029913 seconds
+Start importing Assets/_Project/Resources/UI/ru_deathblow.png using Guid(b16717dd6eb163712b8df077a7b63575) (TextureImporter) -> (artifact id: 'fff421da7b7f0c7a497ccc1f3a5ee005') in 0.179258543 seconds
+Start importing Assets/_Project/Resources/UI/fx_ui_ring.png using Guid(b1b7d988c3fc36f79ac539ddf833c40a) (TextureImporter) -> (artifact id: 'a9712f4a8e646e7c6c2108efdf8b8e02') in 0.446706113 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_board_tile.jpg using Guid(c1223cbdd4e1fcedc9eee688feaf4cc3) (TextureImporter) -> (artifact id: '4496b69fe53f1570c9aa8721a8d54091') in 0.10345489 seconds
+Start importing Assets/_Project/Resources/UI/btn_super.png using Guid(c1c93144e6e8f02168265fbcb21bd5c9) (TextureImporter) -> (artifact id: 'ea5caf843dda0eae52ebeb2783ac138c') in 0.097800877 seconds
+Start importing Assets/_Project/Resources/UI/items5.png using Guid(c1dcde2f3dfc9bd7a869da78c0ac52c5) (TextureImporter) -> (artifact id: 'c97dcc436d82d97d53b3a6da07d0f59d') in 1.850424069 seconds
+Start importing Assets/_Project/Resources/UI/levelup.png using Guid(c1ae2a129c0849966a1c1f6e0d55470b) (TextureImporter) -> (artifact id: '8e8a954be2feee24277c00f1571d5695') in 0.032170168 seconds
+Start importing Assets/_Project/Resources/UI/portrait_ronin.png using Guid(d151faec1410af1cb9547f3ba5ac3a99) (TextureImporter) -> (artifact id: 'dc0257b2baab4cc7bb5007309311f68d') in 0.024421469 seconds
+Start importing Assets/_Project/Art/Samurai2/samurai2_normal.jpg using Guid(d1e435dfce53514f3993a51e67f20b7e) (TextureImporter) -> (artifact id: 'ee2847e2af765c4811674c084f82e971') in 1.528106875 seconds
+Start importing Assets/_Project/Art/Textures/lacquer_albedo.png using Guid(d1c88b7b8b36a4ed88125963330c2b10) (TextureImporter) -> (artifact id: '9ab0a45df3751faae0dc86b2e71db2d2') in 0.110584642 seconds
+Start importing Assets/_Project/Resources/UI/ru_cut.png using Guid(e150bf8c9504e62cd931e22e6df558d2) (TextureImporter) -> (artifact id: 'c25ff86e9b2ae325c8ad1ba330e4082b') in 0.175901145 seconds
+Start importing Assets/_Project/Resources/UI/event_8.jpg using Guid(e1e31793fd5f344fcb5d8cb377917574) (TextureImporter) -> (artifact id: '81f227e05c16749c11cf080435f9e228') in 0.11883204 seconds
+Start importing Assets/_Project/Resources/FX/sigil_storm_early.png using Guid(e1f462f7ea2ad71d69c10c2a7528bbf9) (TextureImporter) -> (artifact id: 'f74f28783fb5b6a42c348fcdee65ad89') in 0.318145248 seconds
+Start importing Assets/_Project/Resources/UI/map_clouds.png using Guid(e17a2e943681a0a36b372b008fe3d8db) (TextureImporter) -> (artifact id: 'f2650d700ede2a97996ef7e0bfd27809') in 1.137821997 seconds
+Start importing Assets/_Project/Resources/Accessories/hair_ponytail_albedo.jpg using Guid(e19cf736abb66d80d9dcf36556e4a739) (TextureImporter) -> (artifact id: '6d73b0b4fe3a0404e9d0cca109b7b07a') in 0.482552291 seconds
+Start importing Assets/_Project/Art/menu_poster_last.jpg using Guid(f1a345134ef223fdb81eb212bb72bc0c) (TextureImporter) -> (artifact id: '0a1ab17d3202051a5fb7dc6175b9cee2') in 0.210328891 seconds
+Start importing Assets/_Project/Resources/Units/unit_shogun_albedo.jpg using Guid(f16d11f302e31acf5b6d7fd9ed89ee08) (TextureImporter) -> (artifact id: '6bd51e6462dce098c46123d07e452dec') in 0.411899035 seconds
+Start importing Assets/_Project/Resources/UI/companion_snake.png using Guid(f15e94fc8ee278020a920e0e6153de73) (TextureImporter) -> (artifact id: 'df781f0831ab914c46104f551f50b292') in 0.064555856 seconds
+Start importing Assets/_Project/Resources/UI/map_wide_1.jpg using Guid(02d4ea574de48b0c182fc234badd552c) (TextureImporter) -> (artifact id: 'ded54ff0231c63f38ab19a6d58c9c3d4') in 0.051529763 seconds
+Start importing Assets/_Project/Resources/UI/Kit/ui_slider_track.png using Guid(02b78b5fc70586da8b28523cabfe945a) (TextureImporter) -> (artifact id: '32203b6ac25274642e09754c44ed65fd') in 0.017571152 seconds
+Start importing Assets/_Project/Resources/FX/fx_aura_blue.png using Guid(020b09369910ae7abb0acd4cdfb56135) (TextureImporter) -> (artifact id: 'e6d6918f85b3bfaccdbd87293cae3810') in 0.423194712 seconds
+Start importing Assets/_Project/Resources/UI/map_1.jpg using Guid(027bbb9d105042edbbc843aee0aa9748) (TextureImporter) -> (artifact id: 'd9bf62495b5677675799c6db3ddc329f') in 0.816064894 seconds
+Start importing Assets/Resources/UI/pack02/bandits.png using Guid(12bd0fa352a833b8199b0ab2729cd519) (TextureImporter) -> (artifact id: 'e7874fe8058467df7864f3cc60d595ab') in 0.010193885 seconds
+Start importing Assets/_Project/Resources/UI/Battle/fx_arrow_fly.png using Guid(2296440a6993d4f228fac679bf1c01dc) (TextureImporter)
