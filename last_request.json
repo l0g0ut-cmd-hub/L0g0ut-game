@@ -1,26 +1,45 @@
 [
  {
-  "action": "rig",
+  "action": "image",
   "account": "2",
-  "name": "anim_oni",
-  "model_url": "https://raw.githubusercontent.com/l0g0ut-cmd-hub/L0g0ut-game/bladepath-development/tools/models/meshy/oni.glb",
-  "height": 2.2,
+  "name": "unit_samurai",
+  "image": "tools/meshy/in/units/samurai.png",
+  "rig": true,
+  "height": 1.72,
   "action_ids": [
    89,
-   21,
-   92,
+   560,
+   240,
    178,
-   187,
-   403
+   189,
+   412
   ],
   "fps": 30
  },
  {
-  "action": "rig",
+  "action": "image",
   "account": "2",
-  "name": "anim_fallen",
-  "model_url": "https://raw.githubusercontent.com/l0g0ut-cmd-hub/L0g0ut-game/bladepath-development/tools/models/meshy/fallen.glb",
-  "height": 1.75,
+  "name": "unit_shinobi",
+  "image": "tools/meshy/in/units/shinobi.png",
+  "rig": true,
+  "height": 1.68,
+  "action_ids": [
+   89,
+   21,
+   97,
+   178,
+   183,
+   59
+  ],
+  "fps": 30
+ },
+ {
+  "action": "image",
+  "account": "2",
+  "name": "unit_ronin",
+  "image": "tools/meshy/in/units/ronin.png",
+  "rig": true,
+  "height": 1.72,
   "action_ids": [
    89,
    30,
@@ -32,34 +51,36 @@
   "fps": 30
  },
  {
-  "action": "rig",
+  "action": "image",
   "account": "2",
-  "name": "anim_shadow",
-  "model_url": "https://raw.githubusercontent.com/l0g0ut-cmd-hub/L0g0ut-game/bladepath-development/tools/models/meshy/shadow.glb",
-  "height": 1.72,
+  "name": "unit_hatamoto",
+  "image": "tools/meshy/in/units/hatamoto.png",
+  "rig": true,
+  "height": 1.82,
   "action_ids": [
    89,
    21,
-   97,
-   178,
-   189,
-   59
-  ],
-  "fps": 30
- },
- {
-  "action": "rig",
-  "account": "2",
-  "name": "anim_shogun",
-  "model_url": "https://raw.githubusercontent.com/l0g0ut-cmd-hub/L0g0ut-game/bladepath-development/tools/models/meshy/shogun.glb",
-  "height": 1.8,
-  "action_ids": [
-   89,
-   30,
    92,
    178,
    189,
    412
+  ],
+  "fps": 30
+ },
+ {
+  "action": "image",
+  "account": "2",
+  "name": "unit_crimson",
+  "image": "tools/meshy/in/units/crimson.png",
+  "rig": true,
+  "height": 1.78,
+  "action_ids": [
+   89,
+   21,
+   219,
+   178,
+   187,
+   403
   ],
   "fps": 30
  }
