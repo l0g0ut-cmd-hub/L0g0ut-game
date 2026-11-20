@@ -9,7 +9,7 @@ namespace BladePath.EditorTools
     /// </summary>
     public class IllustrationImport : AssetPostprocessor
     {
-        public override uint GetVersion() { return 9; }
+        public override uint GetVersion() { return 10; }
 
         static bool IsIllustration(string path)
         {
@@ -69,6 +69,8 @@ namespace BladePath.EditorTools
                 tc.wrapMode = UnityEngine.TextureWrapMode.Clamp;
                 return;
             }
+            // текстуры надеваемых вещей (редактор персонажей): голова на экране мелкая — хватит 1024
+            if (assetPath.StartsWith("Assets/_Project/Resources/Accessories/")) { ((TextureImporter)assetImporter).maxTextureSize = 1024; return; }
             if (!IsIllustration(assetPath)) return;
             TextureImporter ti = (TextureImporter)assetImporter;
             ti.npotScale = TextureImporterNPOTScale.None;
