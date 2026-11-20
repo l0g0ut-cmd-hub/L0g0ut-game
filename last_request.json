@@ -1,1 +1,32 @@
-[{"action":"balance","account":"1"}]
+[
+ {
+  "action": "image",
+  "account": "2",
+  "name": "base_male",
+  "image": "tools/meshy/in/base_male.png",
+  "ai_model": "latest",
+  "polycount": 30000,
+  "topology": "triangle",
+  "texture": true,
+  "enable_pbr": false,
+  "pose_mode": "a-pose",
+  "symmetry_mode": "on",
+  "rig": true,
+  "height": 1.74
+ },
+ {
+  "action": "image",
+  "account": "2",
+  "name": "base_female",
+  "image": "tools/meshy/in/base_female.png",
+  "ai_model": "latest",
+  "polycount": 30000,
+  "topology": "triangle",
+  "texture": true,
+  "enable_pbr": false,
+  "pose_mode": "a-pose",
+  "symmetry_mode": "on",
+  "rig": true,
+  "height": 1.64
+ }
+]
