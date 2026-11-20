@@ -1736,96 +1736,6 @@
       "foot": 0
     },
     {
-      "kind": "campfire",
-      "x": 2334,
-      "y": 574,
-      "w": 32,
-      "h": 32,
-      "alpha": 0.95,
-      "speed": 1,
-      "foot": 0
-    },
-    {
-      "kind": "campfire",
-      "x": 1814,
-      "y": 1224,
-      "w": 32,
-      "h": 32,
-      "alpha": 0.95,
-      "speed": 1,
-      "foot": 0
-    },
-    {
-      "kind": "lantern",
-      "x": 1969,
-      "y": 94,
-      "w": 32,
-      "h": 32,
-      "alpha": 0.85,
-      "speed": 1,
-      "foot": 0
-    },
-    {
-      "kind": "lantern",
-      "x": 2024,
-      "y": 79,
-      "w": 32,
-      "h": 32,
-      "alpha": 0.85,
-      "speed": 1,
-      "foot": 0
-    },
-    {
-      "kind": "lantern",
-      "x": 3784,
-      "y": 404,
-      "w": 32,
-      "h": 32,
-      "alpha": 0.85,
-      "speed": 1,
-      "foot": 0
-    },
-    {
-      "kind": "lantern",
-      "x": 3849,
-      "y": 1159,
-      "w": 32,
-      "h": 32,
-      "alpha": 0.85,
-      "speed": 1,
-      "foot": 0
-    },
-    {
-      "kind": "lantern",
-      "x": 3889,
-      "y": 1164,
-      "w": 32,
-      "h": 32,
-      "alpha": 0.85,
-      "speed": 1,
-      "foot": 0
-    },
-    {
-      "kind": "lantern",
-      "x": 1734,
-      "y": 314,
-      "w": 32,
-      "h": 32,
-      "alpha": 0.85,
-      "speed": 1,
-      "foot": 0
-    },
-    {
-      "kind": "lantern",
-      "x": 1864,
-      "y": 304,
-      "w": 32,
-      "h": 32,
-      "alpha": 0.85,
-      "speed": 1,
-      "foot": 0
-    },
-    {
       "kind": "wisps",
       "x": 130,
       "y": 1203,
@@ -1972,6 +1882,176 @@
       "w": 170,
       "h": 185,
       "alpha": 0.76,
+      "speed": 1,
+      "foot": 0
+    },
+    {
+      "kind": "campfire",
+      "x": 2396,
+      "y": 592,
+      "w": 44,
+      "h": 44,
+      "alpha": 0.78,
+      "speed": 0.84,
+      "foot": 0
+    },
+    {
+      "kind": "lantern",
+      "x": 1792,
+      "y": 311,
+      "w": 20,
+      "h": 23,
+      "alpha": 0.7,
+      "speed": 1,
+      "foot": 0
+    },
+    {
+      "kind": "lantern",
+      "x": 1866,
+      "y": 313,
+      "w": 20,
+      "h": 23,
+      "alpha": 0.7,
+      "speed": 1,
+      "foot": 0
+    },
+    {
+      "kind": "lantern",
+      "x": 3940,
+      "y": 1157,
+      "w": 20,
+      "h": 23,
+      "alpha": 0.7,
+      "speed": 1,
+      "foot": 0
+    },
+    {
+      "kind": "lantern",
+      "x": 3970,
+      "y": 1157,
+      "w": 20,
+      "h": 23,
+      "alpha": 0.7,
+      "speed": 1,
+      "foot": 0
+    },
+    {
+      "kind": "window_glow",
+      "x": 1973,
+      "y": 122,
+      "w": 15,
+      "h": 12,
+      "alpha": 0.44,
+      "speed": 1,
+      "foot": 0
+    },
+    {
+      "kind": "window_glow",
+      "x": 2003,
+      "y": 122,
+      "w": 15,
+      "h": 12,
+      "alpha": 0.44,
+      "speed": 1,
+      "foot": 0
+    },
+    {
+      "kind": "window_glow",
+      "x": 2039,
+      "y": 124,
+      "w": 15,
+      "h": 12,
+      "alpha": 0.44,
+      "speed": 1,
+      "foot": 0
+    },
+    {
+      "kind": "window_glow",
+      "x": 963,
+      "y": 530,
+      "w": 15,
+      "h": 12,
+      "alpha": 0.44,
+      "speed": 1,
+      "foot": 0
+    },
+    {
+      "kind": "window_glow",
+      "x": 1019,
+      "y": 528,
+      "w": 15,
+      "h": 12,
+      "alpha": 0.44,
+      "speed": 1,
+      "foot": 0
+    },
+    {
+      "kind": "window_glow",
+      "x": 963,
+      "y": 612,
+      "w": 15,
+      "h": 12,
+      "alpha": 0.44,
+      "speed": 1,
+      "foot": 0
+    },
+    {
+      "kind": "window_glow",
+      "x": 1017,
+      "y": 610,
+      "w": 15,
+      "h": 12,
+      "alpha": 0.44,
+      "speed": 1,
+      "foot": 0
+    },
+    {
+      "kind": "window_glow",
+      "x": 931,
+      "y": 708,
+      "w": 15,
+      "h": 12,
+      "alpha": 0.44,
+      "speed": 1,
+      "foot": 0
+    },
+    {
+      "kind": "window_glow",
+      "x": 3821,
+      "y": 398,
+      "w": 15,
+      "h": 12,
+      "alpha": 0.44,
+      "speed": 1,
+      "foot": 0
+    },
+    {
+      "kind": "window_glow",
+      "x": 3859,
+      "y": 394,
+      "w": 15,
+      "h": 12,
+      "alpha": 0.44,
+      "speed": 1,
+      "foot": 0
+    },
+    {
+      "kind": "window_glow",
+      "x": 3821,
+      "y": 440,
+      "w": 15,
+      "h": 12,
+      "alpha": 0.44,
+      "speed": 1,
+      "foot": 0
+    },
+    {
+      "kind": "window_glow",
+      "x": 3865,
+      "y": 438,
+      "w": 15,
+      "h": 12,
+      "alpha": 0.44,
       "speed": 1,
       "foot": 0
     }

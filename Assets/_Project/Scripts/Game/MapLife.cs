@@ -97,13 +97,8 @@ namespace BladePath
                     new[] { B(230, 720), B(330, 820), B(450, 880), B(560, 930), B(680, 990), B(780, 1060) },
                     // ручей из горного озера на востоке
                     new[] { B(3620, 260), B(3560, 380), B(3480, 450) } },
-                lights = new[] {
-                    BL(1960, 80, 6), BL(2010, 70, 6), BL(2050, 95, 6), BL(1985, 120, 5),             // замок на вершине
-                    BL(1040, 540, 5), BL(1170, 530, 5), BL(960, 600, 5), BL(1030, 640, 5), BL(920, 720, 5),   // деревня у рисовых полей
-                    BL(2390, 590, 5), BL(2560, 630, 5), BL(2340, 600, 4),                              // хижины углежогов
-                    BL(2920, 290, 5), BL(2960, 340, 5), BL(3000, 400, 5), BL(2940, 450, 5), BL(3010, 240, 5),   // деревня на утёсе
-                    BL(2830, 215, 5), BL(3790, 420, 6), BL(3810, 445, 5),                              // лодочный сарай; пагода у озера
-                    BL(1750, 330, 5), BL(1880, 320, 5), BL(3865, 1170, 5), BL(3905, 1175, 5) },        // фонари у тории
+                // Source-of-truth is map_0.json: no floating torch glows on old guessed landmarks.
+                lights = new Vector3[0],
                 steam = new[] { BL(2870, 700, 60), BL(2900, 1120, 50), BL(210, 760, 50) },
                 lake = new[] { B(3650, 330), B(3740, 300), B(3600, 420), B(3820, 360), B(2640, 180), B(2760, 220), B(2600, 230) },
                 fog = new[] { BL(560, 140, 70), BL(1500, 120, 70), BL(2880, 620, 60), BL(240, 1480, 70), BL(1900, 260, 60), BL(3600, 120, 60) },
@@ -242,6 +237,23 @@ namespace BladePath
         /// Окна и фонари нарисованной карты: тёплый свет, каждый в своём ритме, с лёгким колебанием.
         /// Рисуется поверх фильтра времени суток; light — сила (днём 0, ночью ~1,6).
         /// </summary>
+        /// <summary>A single stable source of light: the same painted-map anchor as its VFX sprite.</summary>
+        static void DrawLightPoint(Vector3 l, Rect view, float u0, float uw, float k,
+            float t, float light, float opacity, Texture2D glow)
+        {
+            Vector2 p = new Vector2(view.x + (l.x - u0) / uw * view.width, view.y + l.y * view.height);
+            if (p.x < view.x - 60f || p.x > view.xMax + 60f) return;
+            float fl = 0.86f + 0.1f * Mathf.PerlinNoise(t * 1.1f + l.x * 50f, l.y * 30f)
+                + 0.04f * Mathf.Sin(t * 5.3f + l.x * 90f);
+            float g = l.z * k * 1.6f;
+            GUI.color = new Color(1f, 0.6f, 0.26f, Mathf.Clamp01(0.3f * light * fl * opacity));
+            GUI.DrawTexture(new Rect(p.x - g, p.y - g, g * 2f, g * 2f), glow);
+            float core = l.z * k * 0.5f;
+            GUI.color = new Color(1f, 0.85f, 0.55f, Mathf.Clamp01(0.45f * light * fl * opacity));
+            GUI.DrawTexture(new Rect(p.x - core, p.y - core, core * 2f, core * 2f), glow);
+        }
+
+        /// <summary>Night lighting follows fire/lantern/window anchors in the authored map.</summary>
         public static void DrawLights(int region, Rect view, float u0, float uw, float light)
         {
             if (Event.current.type != EventType.Repaint || DuelManager.Gfx == 0 || light <= 0.01f) return;
@@ -250,18 +262,29 @@ namespace BladePath
             if (glow == null) return;
             float t = Time.unscaledTime, k = view.width / uw / MapGeom.W(region);
             Color oc = GUI.color;
-            foreach (Vector3 l in r.lights)
+            if (region == 0 && MapGeom.TexHeight(region) > 1024f)
             {
-                Vector2 p = new Vector2(view.x + (l.x - u0) / uw * view.width, view.y + l.y * view.height);
-                if (p.x < view.x - 60f || p.x > view.xMax + 60f) continue;
-                float fl = 0.86f + 0.1f * Mathf.PerlinNoise(t * 1.1f + l.x * 50f, l.y * 30f) + 0.04f * Mathf.Sin(t * 5.3f + l.x * 90f);
-                float g = l.z * k * 1.6f;
-                GUI.color = new Color(1f, 0.6f, 0.26f, Mathf.Clamp01(0.3f * light * fl));
-                GUI.DrawTexture(new Rect(p.x - g, p.y - g, g * 2f, g * 2f), glow);
-                float c = l.z * k * 0.5f;
-                GUI.color = new Color(1f, 0.85f, 0.55f, Mathf.Clamp01(0.45f * light * fl));
-                GUI.DrawTexture(new Rect(p.x - c, p.y - c, c * 2f, c * 2f), glow);
+                // Do not stack hard-coded window glows over the authored flame locations.
+                // Custom map editor changes are respected automatically.
+                MapData painted = MapStore.Get(region);
+                if (painted != null && painted.effects != null)
+                    foreach (MapEffect fx in painted.effects)
+                    {
+                        if (fx == null) continue;
+                        bool fire = fx.kind == "campfire", lantern = fx.kind == "lantern",
+                            window = fx.kind == "window_glow";
+                        if (!fire && !lantern && !window) continue;
+                        Vector3 anchor = new Vector3(
+                            (fx.x + fx.w * 0.5f) / MapGeom.TexWidth(region),
+                            (fx.y + fx.h * (fire ? 0.77f : 0.5f)) / MapGeom.TexHeight(region),
+                            fire ? 12f : (window ? 4.8f : 6.5f));
+                        DrawLightPoint(anchor, view, u0, uw, k, t, light,
+                            Mathf.Clamp01(fx.alpha) * (window ? 0.56f : 1f), glow);
+                    }
             }
+            else
+                foreach (Vector3 l in r.lights)
+                    DrawLightPoint(l, view, u0, uw, k, t, light, 1f, glow);
             GUI.color = oc;
         }
 
@@ -575,6 +598,7 @@ namespace BladePath
             string k = e.kind ?? "";
             // новые виды — только по листам владельца
             if (k == "lantern") { Hi("map_lantern", r, t, 18f, e.alpha); return; }
+            if (k == "window_glow") return; // warm lit windows are glows only, never large flame sprites
             if (k == "wisps") { SmallWisps(e, r, t, e.alpha); return; }
             if (k == "petals") { SmallPetals(e, r, t); return; }
             if (k == "mist") { SoftFog(r, t, e.alpha, mist, (int)e.x); return; }
@@ -672,15 +696,15 @@ namespace BladePath
         }
 
                 /// <summary>Библиотека эффектов редактора карт: вид, название, размер по умолчанию (пиксели картины), прозрачность, подножие.</summary>
-        public static readonly string[] FxKinds = { "fall_fade", "fall_fade", "fall_lip", "fall_mid", "splash", "spray", "stream", "smoke", "smoke_dark", "wisp", "campfire", "mist", "lantern", "wisps", "petals" };
+        public static readonly string[] FxKinds = { "fall_fade", "fall_fade", "fall_lip", "fall_mid", "splash", "spray", "stream", "smoke", "smoke_dark", "wisp", "campfire", "mist", "lantern", "wisps", "petals", "window_glow" };
         public static readonly string[] FxNames = { "Водопад узкий", "Водопад широкий", "Перелив из озера", "Каскад (средняя ступень)", "Брызги у подножия", "Водяная пыль",
-                                                    "Блики ручья", "Дым из трубы", "Дым костра", "Струйка дыма", "Костёр", "Туман стелется", "Огонь фонаря", "Блуждающие огни", "Лепестки сакуры" };
+                                                    "Блики ручья", "Дым из трубы", "Дым костра", "Струйка дыма", "Костёр", "Туман стелется", "Огонь фонаря", "Блуждающие огни", "Лепестки сакуры", "Окно (тёплый свет)" };
         public static readonly Vector4[] FxDefaults =   // ширина, высота, прозрачность, подножие
         {
             new Vector4(30, 90, 0.6f, 1), new Vector4(70, 160, 0.7f, 1), new Vector4(60, 200, 0.9f, 2), new Vector4(45, 70, 0.55f, 0), new Vector4(80, 55, 0.6f, 0),
             new Vector4(60, 80, 0.8f, 0), new Vector4(76, 42, 1f, 0), new Vector4(70, 110, 0.8f, 0), new Vector4(90, 150, 0.8f, 0), new Vector4(30, 70, 0.7f, 0),
             new Vector4(26, 34, 0.95f, 0), new Vector4(240, 120, 0.2f, 0),
-            new Vector4(40, 36, 0.9f, 0), new Vector4(160, 140, 0.8f, 0), new Vector4(220, 190, 0.85f, 0),
+            new Vector4(20, 22, 0.72f, 0), new Vector4(160, 140, 0.8f, 0), new Vector4(220, 190, 0.85f, 0), new Vector4(16, 12, 0.42f, 0),
         };
         public static string FxName(MapEffect e)
         {
@@ -689,7 +713,7 @@ namespace BladePath
                 case "fall_fade": return e.w > 50f ? FxNames[1] : FxNames[0];
                 case "fall_lip": return FxNames[2]; case "fall_mid": return FxNames[3]; case "splash": return FxNames[4]; case "spray": return FxNames[5];
                 case "stream": return FxNames[6]; case "smoke": return FxNames[7]; case "smoke_dark": return FxNames[8]; case "wisp": return FxNames[9];
-                case "campfire": return FxNames[10]; case "mist": return FxNames[11];
+                case "campfire": return FxNames[10]; case "mist": return FxNames[11]; case "lantern": return FxNames[12]; case "wisps": return FxNames[13]; case "petals": return FxNames[14]; case "window_glow": return FxNames[15];
             }
             return e.kind;
         }
