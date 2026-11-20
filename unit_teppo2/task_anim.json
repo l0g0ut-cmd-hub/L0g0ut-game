@@ -1,0 +1,20 @@
+{
+ "id": "01a1fa40-c043-73bf-bb84-954829cfd98b",
+ "type": "animate",
+ "name": "",
+ "status": "SUCCEEDED",
+ "created_at": 1795199910150,
+ "progress": 100,
+ "started_at": 1795199910160,
+ "finished_at": 1795200102316,
+ "expires_at": 1795459302316,
+ "task_error": null,
+ "result": {
+  "animation_glb_url": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a1fa40-c043-73bf-bb84-954829cfd98b/output/merged_animations.glb?Expires=1795459302&Signature=H-1woOUZZps9fBl8-KMpH2H6OtEqG913~lNp5cuLBGFQG3nI0eWTUqQEawYJmK8xBxfMVw3BRCsnzS7-cMlOUIuHv07F~jJ6XZ~VnxQvcj73CG3eHUstkm87bAVZfQe3H5vIkM135nwd24ShWHXiMTPcePI7iZThXoEEofEhm3~XOjn-Yn6UIycWiEZj6Yl81ncuyxXtrdV1JfR1Ri~Sr8npWY09zfDIyaZg7HF3PTgoipbsYI8VnLnxEQMC1ALnSWLCAlJQWiXKKdip7acbZoGisI4hqELpLFjg-fyRJeqjDSEKwr5zur8-VJVPyzfQ14mPxMmNL7QMKQrAQnfXTw__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "animation_fbx_url": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a1fa40-c043-73bf-bb84-954829cfd98b/output/merged_animations.fbx?Expires=1795459302&Signature=kmmMDgDWEzkdsf-Fmv-sr3R4w280u5bXgarSu9LXuDjCt44vZqI9xZVEEsIiQCe0j8FsyJb0kWFXDhyaE-UDzcRXcJHtgVgRBlozVfc2y4fUDVhjwuA6XZ10ZaylqaVF5vog3lYXpLdNSJhI54HM~Xlkx55-eFnmggmvQo0OBCuosMiur2je~kHuFrfns0KOCH3OfZ18sxB0ISIovQWQw3ilrwQ0EusH7pNzlXIEcaJwWilil4boteY2zCVjGAl30XWV5enhRlB5db9oAq4hUltJPaRMYkWzznN58HQceUCFFrceR93mpAsFOy39WBDOYfwXSeWkYlZVTE8yHb4U0A__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "processed_usdz_url": "",
+  "processed_armature_fbx_url": "",
+  "processed_animation_fps_fbx_url": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a1fa40-c043-73bf-bb84-954829cfd98b/output/processed_30fps.fbx?Expires=1795459302&Signature=dNHtnH3hqLu1G7wBR-l-1md31ROSeOXSf7o0U8qVXicQxkvt5bXtWhFU1TovQqfbUL7yAFwYRqEbR1MdQPWwY1gpVqOoMo5SOWrJ9~C988T3odSx0Yc4APLxt8J28qb1NIphNstuIXvhOofkLG8TO6G-Gt9LfdhSXRA5wK6uWsEilZt63VHOXhI~qmIQRBFimLVw0aACED9lgkfHGnC8CTfnGKUfTEicOhI0I1xNveMs9CTj9Q8eLQSu2H1IgaBynlieAVhlsIln7ZH9POVCWsL24HOMMpoQrEXwkhUPbuPDWw24DW4UfpdhGfZpaBhUAGx7kBBe6~Njlh91ijVKRA__&Key-Pair-Id=K1VGYTHIYLM9UM"
+ },
+ "consumed_credits": 18
+}
