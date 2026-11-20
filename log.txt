@@ -1,26 +1,60 @@
-== animate anim_cavalry
-  анимация: 01a1f94f-d87b-7708-911c-7c65c462ce23
-  /v1/animations 01a1f94f-d87b-7708-911c-7c65c462ce23: IN_PROGRESS 0%
-  /v1/animations 01a1f94f-d87b-7708-911c-7c65c462ce23: IN_PROGRESS 80%
-  /v1/animations 01a1f94f-d87b-7708-911c-7c65c462ce23: IN_PROGRESS 83%
-  /v1/animations 01a1f94f-d87b-7708-911c-7c65c462ce23: IN_PROGRESS 85%
-  /v1/animations 01a1f94f-d87b-7708-911c-7c65c462ce23: IN_PROGRESS 88%
-  /v1/animations 01a1f94f-d87b-7708-911c-7c65c462ce23: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/anim_cavalry/anim_cavalry_animation_glb_url.glb 6970328 байт
-  скачано /home/runner/work/_temp/out/anim_cavalry/anim_cavalry_animation_fbx_url.fbx 7255868 байт
-  скачано /home/runner/work/_temp/out/anim_cavalry/anim_cavalry_processed_animation_fps_fbx_url.fbx 7256588 байт
-== animate anim_dog
-  анимация: 01a1f950-c8c4-7627-b9d0-4db31437bc80
-  /v1/animations 01a1f950-c8c4-7627-b9d0-4db31437bc80: IN_PROGRESS 1%
-  /v1/animations 01a1f950-c8c4-7627-b9d0-4db31437bc80: IN_PROGRESS 19%
-  /v1/animations 01a1f950-c8c4-7627-b9d0-4db31437bc80: IN_PROGRESS 81%
-  /v1/animations 01a1f950-c8c4-7627-b9d0-4db31437bc80: IN_PROGRESS 84%
-  /v1/animations 01a1f950-c8c4-7627-b9d0-4db31437bc80: IN_PROGRESS 86%
-  /v1/animations 01a1f950-c8c4-7627-b9d0-4db31437bc80: IN_PROGRESS 89%
-  /v1/animations 01a1f950-c8c4-7627-b9d0-4db31437bc80: IN_PROGRESS 92%
-  /v1/animations 01a1f950-c8c4-7627-b9d0-4db31437bc80: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/anim_dog/anim_dog_animation_glb_url.glb 7809612 байт
-  скачано /home/runner/work/_temp/out/anim_dog/anim_dog_animation_fbx_url.fbx 7946524 байт
-  скачано /home/runner/work/_temp/out/anim_dog/anim_dog_processed_animation_fps_fbx_url.fbx 7947564 байт
-  аккаунт 1 MESHY_KEY — остаток кредитов: 424
-  аккаунт 2 ALT1 — остаток кредитов: 424
+== animate anim_ashigaru
+  анимация: 01a1f955-ce84-74f3-b38a-020e432d66ab
+  /v1/animations 01a1f955-ce84-74f3-b38a-020e432d66ab: IN_PROGRESS 1%
+  /v1/animations 01a1f955-ce84-74f3-b38a-020e432d66ab: IN_PROGRESS 68%
+  /v1/animations 01a1f955-ce84-74f3-b38a-020e432d66ab: IN_PROGRESS 82%
+  /v1/animations 01a1f955-ce84-74f3-b38a-020e432d66ab: IN_PROGRESS 84%
+  /v1/animations 01a1f955-ce84-74f3-b38a-020e432d66ab: IN_PROGRESS 87%
+  /v1/animations 01a1f955-ce84-74f3-b38a-020e432d66ab: IN_PROGRESS 89%
+  /v1/animations 01a1f955-ce84-74f3-b38a-020e432d66ab: IN_PROGRESS 92%
+  /v1/animations 01a1f955-ce84-74f3-b38a-020e432d66ab: IN_PROGRESS 94%
+  /v1/animations 01a1f955-ce84-74f3-b38a-020e432d66ab: IN_PROGRESS 95%
+  /v1/animations 01a1f955-ce84-74f3-b38a-020e432d66ab: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/anim_ashigaru/anim_ashigaru_animation_glb_url.glb 6835852 байт
+  скачано /home/runner/work/_temp/out/anim_ashigaru/anim_ashigaru_animation_fbx_url.fbx 7024108 байт
+  скачано /home/runner/work/_temp/out/anim_ashigaru/anim_ashigaru_processed_animation_fps_fbx_url.fbx 7025100 байт
+== animate anim_bandit
+  анимация: 01a1f958-25e7-7731-b520-bc6eb892e6ad
+  /v1/animations 01a1f958-25e7-7731-b520-bc6eb892e6ad: IN_PROGRESS 1%
+  /v1/animations 01a1f958-25e7-7731-b520-bc6eb892e6ad: IN_PROGRESS 80%
+  /v1/animations 01a1f958-25e7-7731-b520-bc6eb892e6ad: IN_PROGRESS 82%
+  /v1/animations 01a1f958-25e7-7731-b520-bc6eb892e6ad: IN_PROGRESS 85%
+  /v1/animations 01a1f958-25e7-7731-b520-bc6eb892e6ad: IN_PROGRESS 87%
+  /v1/animations 01a1f958-25e7-7731-b520-bc6eb892e6ad: IN_PROGRESS 90%
+  /v1/animations 01a1f958-25e7-7731-b520-bc6eb892e6ad: IN_PROGRESS 92%
+  /v1/animations 01a1f958-25e7-7731-b520-bc6eb892e6ad: IN_PROGRESS 94%
+  /v1/animations 01a1f958-25e7-7731-b520-bc6eb892e6ad: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/anim_bandit/anim_bandit_animation_glb_url.glb 6727740 байт
+  скачано /home/runner/work/_temp/out/anim_bandit/anim_bandit_animation_fbx_url.fbx 6931980 байт
+  скачано /home/runner/work/_temp/out/anim_bandit/anim_bandit_processed_animation_fps_fbx_url.fbx 6932492 байт
+== animate anim_kitsune
+  анимация: 01a1f959-b72e-7688-bed3-1f317da2b952
+  /v1/animations 01a1f959-b72e-7688-bed3-1f317da2b952: IN_PROGRESS 1%
+  /v1/animations 01a1f959-b72e-7688-bed3-1f317da2b952: IN_PROGRESS 68%
+  /v1/animations 01a1f959-b72e-7688-bed3-1f317da2b952: IN_PROGRESS 82%
+  /v1/animations 01a1f959-b72e-7688-bed3-1f317da2b952: IN_PROGRESS 84%
+  /v1/animations 01a1f959-b72e-7688-bed3-1f317da2b952: IN_PROGRESS 87%
+  /v1/animations 01a1f959-b72e-7688-bed3-1f317da2b952: IN_PROGRESS 89%
+  /v1/animations 01a1f959-b72e-7688-bed3-1f317da2b952: IN_PROGRESS 92%
+  /v1/animations 01a1f959-b72e-7688-bed3-1f317da2b952: IN_PROGRESS 94%
+  /v1/animations 01a1f959-b72e-7688-bed3-1f317da2b952: IN_PROGRESS 95%
+  /v1/animations 01a1f959-b72e-7688-bed3-1f317da2b952: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/anim_kitsune/anim_kitsune_animation_glb_url.glb 6129112 байт
+  скачано /home/runner/work/_temp/out/anim_kitsune/anim_kitsune_animation_fbx_url.fbx 6589660 байт
+  скачано /home/runner/work/_temp/out/anim_kitsune/anim_kitsune_processed_animation_fps_fbx_url.fbx 6590748 байт
+== animate anim_yamabushi
+  анимация: 01a1f95c-3522-7114-b9dd-1401fc808eab
+  /v1/animations 01a1f95c-3522-7114-b9dd-1401fc808eab: IN_PROGRESS 1%
+  /v1/animations 01a1f95c-3522-7114-b9dd-1401fc808eab: IN_PROGRESS 68%
+  /v1/animations 01a1f95c-3522-7114-b9dd-1401fc808eab: IN_PROGRESS 82%
+  /v1/animations 01a1f95c-3522-7114-b9dd-1401fc808eab: IN_PROGRESS 84%
+  /v1/animations 01a1f95c-3522-7114-b9dd-1401fc808eab: IN_PROGRESS 87%
+  /v1/animations 01a1f95c-3522-7114-b9dd-1401fc808eab: IN_PROGRESS 89%
+  /v1/animations 01a1f95c-3522-7114-b9dd-1401fc808eab: IN_PROGRESS 92%
+  /v1/animations 01a1f95c-3522-7114-b9dd-1401fc808eab: IN_PROGRESS 95%
+  /v1/animations 01a1f95c-3522-7114-b9dd-1401fc808eab: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/anim_yamabushi/anim_yamabushi_animation_glb_url.glb 6811756 байт
+  скачано /home/runner/work/_temp/out/anim_yamabushi/anim_yamabushi_animation_fbx_url.fbx 7428812 байт
+  скачано /home/runner/work/_temp/out/anim_yamabushi/anim_yamabushi_processed_animation_fps_fbx_url.fbx 7429724 байт
+  аккаунт 1 MESHY_KEY — остаток кредитов: 352
+  аккаунт 2 ALT1 — остаток кредитов: 352
