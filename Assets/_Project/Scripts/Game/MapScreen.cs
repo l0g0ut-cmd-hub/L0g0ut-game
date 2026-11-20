@@ -789,9 +789,64 @@ namespace BladePath
             GUI.color = oc;
         }
 
+        // тёмные постройки (UI/MapObjects/objects_dark_N — 5×4) для большой карты Леса теней: атлас и ячейка по типу места
+        static Vector2Int DarkOf(MapNode n)
+        {
+            if (n.IsTavern) return new Vector2Int(0, 16);
+            switch (n.Type)
+            {
+                case NodeType.Smith: return new Vector2Int(1, 16);
+                case NodeType.Merchant: return new Vector2Int(0, 4);
+                case NodeType.Rest: return new Vector2Int(0, 16);
+                case NodeType.Herbalist: return new Vector2Int(0, 8);
+                case NodeType.Shrine: return new Vector2Int(0, 5);
+                case NodeType.Treasure: return new Vector2Int(2, 18);
+                case NodeType.Ambush: return new Vector2Int(0, 14);
+                case NodeType.Duel: return new Vector2Int(0, 14);
+                case NodeType.Elite: return new Vector2Int(0, 15);
+                case NodeType.Event: return new Vector2Int(0, 17);
+                case NodeType.Onsen: return new Vector2Int(1, 7);
+                case NodeType.Dojo: return new Vector2Int(0, 0);
+                case NodeType.Gamble: return new Vector2Int(4, 5);
+                case NodeType.ClanShrine: return new Vector2Int(2, 8);
+                case NodeType.HunterCamp: return new Vector2Int(4, 1);
+            }
+            return new Vector2Int(-1, -1);
+        }
+        void DrawDarkBuildings()
+        {
+            Texture2D glow = UiKit.Tex("FX/glow_pool");
+            List<MapNode> ns = Campaign.Nodes;
+            Color oc = GUI.color;
+            for (int i = 0; i < ns.Count; i++)
+            {
+                MapNode n = ns[i];
+                if (!Known(n)) continue;
+                Vector2Int k = DarkOf(n);
+                if (k.x < 0 || (n.Type == NodeType.Ambush && n.done)) continue;
+                Texture2D at = UiKit.Tex("UI/MapObjects/objects_dark_" + k.x);
+                if (at == null) continue;
+                Vector2 p;
+                if (!PadAt(n, out p)) continue;
+                if (p.x < mapX - 80f || p.x > mapX + viewW + 80f) continue;
+                float w = MapPads.Size * 1.05f, h = w * 0.8f;
+                Rect r = new Rect(p.x - w * 0.5f, p.y - h * 0.9f, w, h);
+                bool dim = n.done && (n.Type == NodeType.Duel || n.Type == NodeType.Elite || n.Type == NodeType.Event || n.Type == NodeType.Treasure);
+                if (lightPass)
+                {   // ночью — тёплый отсвет окон и огней постройки
+                    if (glow != null && !dim) { GUI.color = new Color(1f, 0.62f, 0.3f, 0.22f * DayCycle.LightK); GUI.DrawTexture(new Rect(r.center.x - w * 0.45f, r.center.y - h * 0.2f, w * 0.9f, h * 0.7f), glow); }
+                    continue;
+                }
+                GUI.color = dim ? new Color(0.62f, 0.6f, 0.58f, 0.9f) : Color.white;
+                GUI.DrawTextureWithTexCoords(r, at, new Rect((k.y % 5) * 0.2f, 1f - (k.y / 5 + 1) * 0.25f, 0.2f, 0.25f));
+            }
+            GUI.color = oc;
+        }
+
         void DrawBuildings()
         {
             if (Event.current.type != EventType.Repaint) return;
+            if (Campaign.Region == 0 && MapGeom.TexHt[0] > 1024) { DrawDarkBuildings(); return; }
             // свой набор у каждой области: лес (_0), горы Они (общий), сёгунат (_2)
             Texture2D atlas = Campaign.Region != 1 ? UiKit.Tex("UI/map_buildings_" + Campaign.Region) : null, glow = UiKit.Tex("FX/glow_pool");
             if (atlas == null) atlas = UiKit.Tex("UI/map_buildings");
