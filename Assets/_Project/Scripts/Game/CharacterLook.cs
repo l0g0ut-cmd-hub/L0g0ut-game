@@ -205,7 +205,7 @@ namespace BladePath
                 int x1 = Mathf.Min(size, Mathf.CeilToInt((zi.rect[0] + zi.rect[2]) * size)), y1 = Mathf.Min(size, Mathf.CeilToInt((zi.rect[1] + zi.rect[3]) * size));
                 // средняя яркость зоны — чтобы перекраска сохранила складки и тени ткани
                 double sum = 0; int cnt = 0;
-                for (int y = y0; y < y1; y += 2) for (int x = x0; x < x1; x += 2) { Color32 c = src[y * size + x]; int l = c.r + c.g + c.b; if (l > 24) { sum += l; cnt++; } }
+                for (int y = y0; y < y1; y += 2) for (int x = x0; x < x1; x += 2) { Color32 c = src[y * size + x]; int l = c.r + c.g + c.b; if (l > 3) { sum += l; cnt++; } }
                 float mean = cnt > 0 ? (float)(sum / cnt) / 765f : 0.5f;
                 float rw = x1 - x0, rh = y1 - y0;
                 float ia = img != null ? img.width / (float)img.height : 1f, ra = rw / Mathf.Max(1f, rh);
@@ -214,7 +214,7 @@ namespace BladePath
                     {
                         int i = y * size + x;
                         Color32 c0 = src[i];
-                        if (c0.r + c0.g + c0.b <= 24) continue;   // пустое место атласа
+                        if (c0.r + c0.g + c0.b <= 3) continue;   // пустое место атласа
                         Color c = c0;
                         float lum = (c.r * 0.3f + c.g * 0.59f + c.b * 0.11f);
                         float shade = Mathf.Clamp(lum / Mathf.Max(0.05f, mean), 0.2f, 1.8f);
@@ -322,7 +322,7 @@ namespace BladePath
                 {
                     int i = y * size + x;
                     Color32 c0 = px[i];
-                    if (c0.r + c0.g + c0.b <= 24) continue;
+                    if (c0.r + c0.g + c0.b <= 3) continue;
                     Vector2 fr = AtlasToFrame(b, new Vector2((x + 0.5f) * k, (y + 0.5f) * k));
                     Vector2 e = new Vector2((fr.x - oc.x) / orr.x, (fr.y - oc.y) / orr.y);
                     float rr = e.magnitude;

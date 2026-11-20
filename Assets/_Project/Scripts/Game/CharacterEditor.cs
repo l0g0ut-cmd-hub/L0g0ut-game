@@ -92,7 +92,7 @@ namespace BladePath
         {
             W = w;
             Event e = Event.current;
-            if (e.type == EventType.Layout)
+            if (e.type == EventType.Repaint)
             {
                 if (ver != composedVer && Time.unscaledTime - composeAt > 0.15f) Recompose();
                 if (camWanted) TryStartCam();
@@ -170,7 +170,7 @@ namespace BladePath
             UiKit.Text(new Rect(10f, 6f, 210f, 36f), "РЕДАКТОР ПЕРСОНАЖЕЙ", 17f, Gold, TextAnchor.MiddleLeft);
             float x = 222f, gap = 6f, avail = W - x - 8f;
             bool active = CharacterLook.Active == slot;
-            string[] labels = { "МЕСТО " + (slot + 1) + (CharacterLook.Exists(slot) ? "" : " · ПУСТО"), data.female ? "ОСНОВА: ЖЕНСКАЯ" : "ОСНОВА: МУЖСКАЯ",
+            string[] labels = { "МЕСТО " + (slot + 1) + (CharacterLook.Exists(slot) ? "" : " · ПУСТО"), data.female ? "МОДЕЛЬ: ЖЕНСКАЯ ▸" : "МОДЕЛЬ: МУЖСКАЯ ▸",
                                 "СОХРАНИТЬ", active ? "ОБЛИК ГЕРОЯ: ДА" : "ОБЛИК ГЕРОЯ: НЕТ", showAtlas ? "МОДЕЛЬ" : "ТЕКСТУРА", "ВЫЙТИ" };
             float[] wt = { 1.2f, 1.5f, 1.1f, 1.6f, 1f, 0.8f };
             float sum = 0f; foreach (float f in wt) sum += f;
@@ -575,7 +575,7 @@ namespace BladePath
             Event e = Event.current;
             if (Input.touchCount >= 2)
             {
-                if (e.type != EventType.Layout) { if (e.isMouse) e.Use(); return; }
+                if (e.type != EventType.Repaint) { if (e.isMouse) e.Use(); return; }
                 Vector2 a = Gui(Input.GetTouch(0).position), bb = Gui(Input.GetTouch(1).position);
                 Vector2 mid = (a + bb) * 0.5f, d = bb - a;
                 float dist = Mathf.Max(10f, d.magnitude), ang = Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg;

@@ -331,7 +331,7 @@ namespace BladePath
             mapR = new Rect(112f, 52f, W - 112f - 236f, 540f - 52f - 30f);
             if (zoom < 0f) { zoom = MinZoom * 1.6f; vx = TW * 0.5f - mapR.width / zoom * 0.5f; vy = TH * 0.3f; }
             ClampView();
-            if (Event.current.type == EventType.Layout) { HandlePinch(); }
+            if (Event.current.type == EventType.Repaint) { HandlePinch(); }
             if (!historyOpen) HandleMap();
             if (checkVer != ver) { Check(); checkVer = ver; }
 
