@@ -1331,6 +1331,53 @@ namespace BladePath
 
         static void DrawResult()
         {
+            UiKit.Rect(new Rect(0f, 0f, W, 540f), new Color(0f, 0f, 0f, 0.55f));
+            Texture2D win = UiKit.Tex("UI/Battle/result_window");
+            if (win == null) { DrawResultPlain(); return; }
+            // окно итога (картина владельца 1448×1086): наши потери слева, вражеские справа, добыча, кнопка
+            float k = Mathf.Min((W - 40f) / 1448f, 500f / 1086f);
+            Rect r = new Rect((W - 1448f * k) * 0.5f, (540f - 1086f * k) * 0.5f, 1448f * k, 1086f * k);
+            System.Func<float, float, float, float, Rect> Px = (x, y, w, h) => new Rect(r.x + x * k, r.y + y * k, w * k, h * k);
+            GUI.DrawTexture(r, win);
+            UiKit.Text(Px(238, 50, 937, 80), won ? "ПОБЕДА" : "ПОРАЖЕНИЕ", 22f, won ? Gold : new Color(1f, 0.55f, 0.45f));
+            UiKit.Text(Px(122, 198, 525, 79), "НАШИ ПОТЕРИ", 12f, Ink);
+            UiKit.Text(Px(779, 196, 533, 81), "ПОТЕРИ ВРАГА", 12f, Ink);
+            float[] cx = { 226f, 391f, 557f }, cy = { 368f, 528f, 688f };
+            for (int side = 0; side < 2; side++)
+            {
+                int q = 0;
+                foreach (Stack st in stacks)
+                {
+                    if (st.enemy != (side == 1) || q >= 9) continue;
+                    int lost = st.start - Mathf.Max(0, st.count);
+                    Vector2 c = new Vector2(r.x + (cx[q % 3] + side * 664f) * k, r.y + cy[q / 3] * k);
+                    float d = 128f * k;
+                    Color oc = GUI.color; if (lost <= 0) GUI.color = new Color(1f, 1f, 1f, 0.5f);
+                    DrawPortrait(new Rect(c.x - d * 0.5f, c.y - d * 0.5f, d, d), st.t);
+                    GUI.color = oc;
+                    Rect pl = new Rect(c.x - d * 0.42f, c.y + d * 0.22f, d * 0.84f, d * 0.32f);
+                    UiKit.Rect(pl, new Color(0.08f, 0.03f, 0.02f, 0.85f));
+                    UiKit.Text(pl, lost > 0 ? "−" + lost : "0", 11f, lost > 0 ? new Color(1f, 0.6f, 0.5f) : Dim);
+                    q++;
+                }
+            }
+            string line = resultText.Replace("\n", "  ");
+            UiKit.Text(Px(330, 831, 790, 65), line, 9.5f, Ink);
+            string main = mapNode >= 0 ? "НА КАРТУ" : fromEstate ? "В ПОМЕСТЬЕ" : "ЕЩЁ БОЙ";
+            Rect mb = Px(476, 914, 477, 76);
+            UiKit.Text(mb, main, 14f, Gold);
+            if (GUI.Button(mb, GUIContent.none, GUIStyle.none))
+            {
+                if (mapNode >= 0) { if (won) Campaign.FinishFight(); else Campaign.LoseFight(); mapNode = -1; Close(); returned = true; }
+                else if (fromEstate) { Close(); Estate.Show(); }
+                else ShowDev((region + 1) % 3);
+                return;
+            }
+            if (mapNode < 0 && VisualIdentity.KitButton(new Rect(r.xMax - 120f, r.yMax - 10f - 30f * 1f - 6f, 100f, 30f), "ВЫЙТИ", true, false)) Close();
+        }
+
+        static void DrawResultPlain()
+        {
             Rect r = new Rect(W * 0.5f - 230f, 170f, 460f, 200f);
             UiKit.Rect(r, new Color(0.06f, 0.03f, 0.02f, 0.95f));
             Texture2D pt = UiKit.Tex("UI/editor_panel");
@@ -1338,18 +1385,12 @@ namespace BladePath
             UiKit.Text(new Rect(r.x, r.y + 16f, r.width, 30f), won ? "ПОБЕДА" : "ПОРАЖЕНИЕ", 24f, won ? Gold : new Color(1f, 0.5f, 0.4f));
             UiKit.Text(new Rect(r.x + 24f, r.y + 54f, r.width - 48f, 70f), resultText, 13f, Ink);
             if (mapNode >= 0)
-            {   // бой на карте: итог — как у боя на арене (победа — место пройдено, поражение — к травнице)
+            {
                 if (VisualIdentity.KitButton(new Rect(r.center.x - 100f, r.yMax - 54f, 200f, 38f), "НА КАРТУ", true, true))
-                {
-                    if (won) Campaign.FinishFight(); else Campaign.LoseFight();
-                    mapNode = -1; Close(); returned = true;
-                }
+                { if (won) Campaign.FinishFight(); else Campaign.LoseFight(); mapNode = -1; Close(); returned = true; }
                 return;
             }
-            if (fromEstate)
-            {
-                if (VisualIdentity.KitButton(new Rect(r.x + 30f, r.yMax - 54f, 180f, 38f), "В ПОМЕСТЬЕ", true, true)) { Close(); Estate.Show(); }
-            }
+            if (fromEstate) { if (VisualIdentity.KitButton(new Rect(r.x + 30f, r.yMax - 54f, 180f, 38f), "В ПОМЕСТЬЕ", true, true)) { Close(); Estate.Show(); } }
             else if (VisualIdentity.KitButton(new Rect(r.x + 30f, r.yMax - 54f, 180f, 38f), "ЕЩЁ БОЙ", true, true)) ShowDev((region + 1) % 3);
             if (VisualIdentity.KitButton(new Rect(r.xMax - 210f, r.yMax - 54f, 180f, 38f), "ВЫЙТИ", true, false)) Close();
         }
