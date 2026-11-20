@@ -65,7 +65,7 @@ namespace BladePath
                 if (u >= 1f) { flocks.RemoveAt(fi); continue; }
                 Texture2D tex = f.crow ? crow : white;
                 if (tex == null) continue;
-                Vector2 dir = (f.to - f.from); dir.y *= 540f / MapGeom.Wc;
+                Vector2 dir = (f.to - f.from); dir.y *= MapGeom.Hc / MapGeom.Wc;
                 float ang = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg + 90f;   // спрайт смотрит вверх
                 Vector2 c = Vector2.Lerp(f.from, f.to, u);
                 c.y += 0.015f * Mathf.Sin(u * 9f);   // лёгкая волна пролёта
@@ -74,7 +74,7 @@ namespace BladePath
                 {
                     float breathe = 1f + 0.08f * Mathf.Sin(now * 0.7f + b.wob);
                     Vector2 p = c + fwd * b.off.x + side * b.off.y * breathe + new Vector2(0f, 0.004f * Mathf.Sin(now * 1.3f + b.wob));
-                    float sx = view.x + (p.x - u0) / uw * view.width, sy = p.y * view.height;
+                    float sx = view.x + (p.x - u0) / uw * view.width, sy = view.y + p.y * view.height;
                     if (sx < view.x - 40f || sx > view.xMax + 40f) continue;
                     float s = b.size;
                     // тень на земле: ниже и правее, бледная

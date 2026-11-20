@@ -86,6 +86,7 @@ namespace BladePath
         public string name;
         public string texture;
         public int width = 2610;
+        public int height;   // высота картины (0 — 1024)
         public int order;
         public int boss = 1;
         public int like;            // своя область (редактор карт): по правилам какой области — враги, музыка, погода (0…2)
@@ -156,6 +157,8 @@ namespace BladePath
             {
                 string p = UserPath(region);
                 if (File.Exists(p)) m = JsonUtility.FromJson<MapData>(File.ReadAllText(p));
+                // правка встроенной области под старую картину (другой размер) — к новой картине не подходит, берём встроенную
+                if (m != null && region >= 0 && region < MapGeom.TexW.Length && (m.width != MapGeom.TexW[region] || Mathf.Max(1024, m.height) != MapGeom.TexHt[region])) m = null;
             }
             catch (System.Exception e) { Debug.LogWarning("MapStore: правка карты " + region + " не читается: " + e.Message); m = null; }
             if (m == null)

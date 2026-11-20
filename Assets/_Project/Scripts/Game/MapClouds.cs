@@ -65,7 +65,7 @@ namespace BladePath
             {
                 Vector2 d = Center(c) - p;
                 float t = Time.realtimeSinceStartup, k = Swell(c, t);
-                float rx = c.size * 0.46f * k, ry = c.size * 0.46f * k * MapGeom.W(r) / 540f;   // облако квадратное: по высоте в долях оно больше во столько, во сколько карта шире
+                float rx = c.size * 0.46f * k, ry = c.size * 0.46f * k * MapGeom.W(r) / MapGeom.Hgt(r);   // облако квадратное: по высоте в долях оно больше во столько, во сколько карта шире
                 // облако висит над тенью (рисуется выше на 0,2 своей ширины): место под дождём — и под тенью, и под самим облаком,
                 // иначе игрок видит тучу над местом, а в бою ясно
                 Vector2 body = d - new Vector2(0f, c.size * k * 0.3f);   // центр облака выше тени на карте
@@ -128,7 +128,7 @@ namespace BladePath
                 Cloud c = clouds[i];
                 Vector2 cp = Center(c);
                 float k = Swell(c, t), storm = Storminess(c, t);
-                float sx = view.x + (cp.x - u0) / uw * view.width, sy = cp.y * view.height;
+                float sx = view.x + (cp.x - u0) / uw * view.width, sy = view.y + cp.y * view.height;
                 float w = c.size * view.width / uw * k;
                 if (sx + w < view.x || sx - w > view.xMax) continue;
                 Vector2 cc = new Vector2(sx, sy - w * 0.2f);   // облако висит над своей тенью

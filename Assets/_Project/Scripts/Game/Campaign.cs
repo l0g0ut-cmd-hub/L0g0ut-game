@@ -211,6 +211,11 @@ namespace BladePath
             MapStore.SetActive(d.customPlus - 1, d.region);
             if (d.customPlus > 0 && MapStore.GetCustom(d.customPlus - 1) == null) d.customPlus = 0;   // свою область удалили — дальше обычная
             MigrateSpots(d);
+            if (d.roadsVer < 4)
+            {   // большая карта Леса теней (2026-11-20): поход по старой картине леса — заново по новой; другие области — как были
+                if (d.region == 0 && d.customPlus == 0) Generate(0);
+                d.roadsVer = 4;
+            }
             if (d.region == 0 && d.customPlus == 0 && !d.nodes.Exists(m => IsGrove(m.Type))) { AddFixedPlaces(d, 0); links = null; }   // поход до ответвления у древа
             if (d.region == 0 && d.customPlus == 0)   // места ответвления, которые генерация по ошибке сделала боями (сборка 567), — вернуть
                 for (int g = 0; g < GroveSpots.Length; g++)
@@ -391,8 +396,9 @@ namespace BladePath
         /// </summary>
         static readonly Vector3[] GroveSpots =
         {
-            new Vector3(0.6513f, 0.2441f, (int)NodeType.TreeShadow), new Vector3(0.6981f, 0.4648f, (int)NodeType.KamiRoots),
-            new Vector3(0.8966f, 0.2773f, (int)NodeType.FisherHut), new Vector3(0.8218f, 0.1982f, (int)NodeType.HermitIsle),
+            // большая карта Леса теней (4096×1608, 2026-11-20): у корней древа, под кроной, хижина рыбака, остров отшельника
+            new Vector3(0.5493f, 0.2923f, (int)NodeType.TreeShadow), new Vector3(0.5811f, 0.3483f, (int)NodeType.KamiRoots),
+            new Vector3(0.6909f, 0.143f, (int)NodeType.FisherHut), new Vector3(0.6567f, 0.1057f, (int)NodeType.HermitIsle),
         };
         static readonly int[] GroveLayers = { 6, 6, 7, 8 };
         static void AddFixedPlaces(Data dd, int region)
@@ -593,7 +599,7 @@ namespace BladePath
         static void Generate(int region)
         {
             Data dd = d;
-            dd.region = region; dd.nodes.Clear(); dd.at = 0; dd.fight = -1; dd.roadsVer = 3; dd.foesRolled = true;
+            dd.region = region; dd.nodes.Clear(); dd.at = 0; dd.fight = -1; dd.roadsVer = 4; dd.foesRolled = true;
             if (dd.travelled == null) dd.travelled = new List<int>();
             dd.travelled.Clear(); dd.travelled.Add(0);
             if (dd.seen == null) dd.seen = new List<Vector2>();

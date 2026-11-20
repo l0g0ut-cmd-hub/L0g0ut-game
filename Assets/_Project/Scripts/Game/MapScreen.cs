@@ -87,7 +87,7 @@ namespace BladePath
             int resume = !Campaign.Knocked && Campaign.ClearedRegion < 0 && plannedRegion == Campaign.Region ? sel : -1;
             Weather.MapSky = -1;   // вне боя с карты (тренировка с ронином) — погода как раньше
             Weather.MapTime = -1;
-            shownAt = Time.unscaledTime; sel = -1; previewPath.Clear(); moveTo = -1; modal = Modal.None; panU = -1f; continueRideAt = -1f;
+            shownAt = Time.unscaledTime; sel = -1; previewPath.Clear(); moveTo = -1; modal = Modal.None; panU = -1f; panV = -1f; continueRideAt = -1f;
             routeAutopilot = false; nextRouteAt = 0f; toastLines.Clear(); gambleTable = false;
             manualPan = false; panArmed = false; panDragging = false;
             if (resume >= 0 && resume < Campaign.Nodes.Count && resume != Campaign.At) SelectNode(resume);
@@ -350,7 +350,7 @@ namespace BladePath
                 if (panArmed)
                 {
                     panTouchOrigin = pt;
-                    panAtOrigin = panU;
+                    panAtOrigin = panU; panAtOriginV = panV;
                     panDragging = false;
                 }
             }
@@ -363,8 +363,11 @@ namespace BladePath
                     routeAutopilot = false;
                 }
                 if (panDragging)
+                {
                     panU = Mathf.Clamp(panAtOrigin - (pt.x - panTouchOrigin.x) / MapFullW,
                         0f, Mathf.Max(0f, 1f - viewW / MapFullW));
+                    panV = Mathf.Clamp(panAtOriginV - (pt.y - panTouchOrigin.y) / MapFullH, 0f, Mathf.Max(0f, 1f - MapH / MapFullH));
+                }
             }
             if (Input.GetMouseButtonUp(0))
             {
@@ -376,10 +379,14 @@ namespace BladePath
         // ------------------------------------------------------------------ отрисовка
 
         float W, mapX, mapW, viewW, u0;   // карта: 810×540 при высоте экрана 540; видимое окно — [u0, u0 + viewW/810]
-        const float MapH = 540f;
+        const float MapH = 540f;   // высота окна карты на экране
         static float MapFullW { get { return MapGeom.Wc; } }   // ширина карты области в точках (карты расширены — MapGeom)
+        static float MapFullH { get { return MapGeom.Hc; } }   // высота карты области в точках (больше 540 — листается вверх-вниз)
+        float mapY, panV = -1f, panAtOriginV;                   // сдвиг карты по вертикали (≤ 0) и доля прокрутки
+        Rect MapRect { get { return new Rect(mapX, mapY, viewW, MapFullH); } }
+        float Y(float v) { return mapY + v * MapFullH; }
 
-        Vector2 P(MapNode n) { return new Vector2(mapX + (n.x - u0) * MapFullW, n.y * MapH); }
+        Vector2 P(MapNode n) { return new Vector2(mapX + (n.x - u0) * MapFullW, Y(n.y)); }
 
         void OnGUI()
         {
@@ -390,7 +397,7 @@ namespace BladePath
             if (MapEditor.Open)
             {   // редактор карт (меню разработчика) — на весь экран вместо карты похода
                 MapEditor.Draw(W);
-                if (!MapEditor.Open) { sel = -1; previewPath.Clear(); panU = -1f; TerrainRoads.Bind(Campaign.Region, Campaign.Nodes); }
+                if (!MapEditor.Open) { sel = -1; previewPath.Clear(); panU = -1f; panV = -1f; TerrainRoads.Bind(Campaign.Region, Campaign.Nodes); }
                 GUI.matrix = old;
                 return;
             }
@@ -439,10 +446,14 @@ namespace BladePath
                 Mathf.Lerp(panU, target, Mathf.Clamp01(Time.unscaledDeltaTime * 3f));
             panU = Mathf.Clamp(panU, 0f, Mathf.Max(0f, 1f - uw));
             u0 = panU;
+            float vh = MapH / MapFullH, targetV = Mathf.Clamp(hu.y - vh * 0.5f, 0f, Mathf.Max(0f, 1f - vh));
+            panV = panV < 0f ? targetV : manualPan ? panV : Mathf.Lerp(panV, targetV, Mathf.Clamp01(Time.unscaledDeltaTime * 3f));
+            panV = Mathf.Clamp(panV, 0f, Mathf.Max(0f, 1f - vh));
+            mapY = -panV * MapFullH;
             Texture2D mt = UiKit.Tex(Campaign.MapTexture(Campaign.Region));
-            if (mt != null) GUI.DrawTextureWithTexCoords(new Rect(mapX, 0f, viewW, MapH), mt, new Rect(u0, 0f, uw, 1f));
-            MapLife.DrawTrails(Campaign.Region, new Rect(mapX, 0f, viewW, MapH), u0, uw);   // тропы ответвлений, которых нет на картине (и при низкой графике)
-            MapLife.Draw(Campaign.Region, new Rect(mapX, 0f, viewW, MapH), u0, uw);   // вода бежит, огни мерцают, пар, лава, блуждающие огни
+            if (mt != null) GUI.DrawTextureWithTexCoords(MapRect, mt, new Rect(u0, 0f, uw, 1f));
+            MapLife.DrawTrails(Campaign.Region, MapRect, u0, uw);   // тропы ответвлений, которых нет на картине (и при низкой графике)
+            MapLife.Draw(Campaign.Region, MapRect, u0, uw);   // вода бежит, огни мерцают, пар, лава, блуждающие огни
             DrawPaintedMist();
             DrawLandmarkLights();
             DrawAmbientLandmarkMotes();
@@ -453,18 +464,18 @@ namespace BladePath
             DrawBuildings();
             DrawTower();
             // погода — после зданий, до значков: облака загораживают постройки, но не значки мест
-            MapClouds.Draw(Campaign.Region, new Rect(mapX, 0f, viewW, MapH), u0, uw);
+            MapClouds.Draw(Campaign.Region, MapRect, u0, uw);
             // время суток: фильтр на карту, поверх — свет окон, фонарей и огонь (не темнеют)
             DayCycle.Tick();
             DayCycle.DrawFilter(new Rect(mapX, 0f, viewW, MapH));
-            MapLife.DrawLights(Campaign.Region, new Rect(mapX, 0f, viewW, MapH), u0, uw, DayCycle.LightK);
+            MapLife.DrawLights(Campaign.Region, MapRect, u0, uw, DayCycle.LightK);
             lightPass = true; DrawBuildings(); lightPass = false;
             nodeLabels.Clear();
             DrawNodes(interactive && modal == Modal.None && moveTo < 0);
             DrawHuntMarker();
             DrawHero();
             DrawNodeLabels();
-            MapBirds.Draw(new Rect(mapX, 0f, viewW, MapH), u0, uw);   // ворон или стайка цапель пролетают над всем — и над значками (под ними значки видно, это не облака)
+            MapBirds.Draw(MapRect, u0, uw);   // ворон или стайка цапель пролетают над всем — и над значками (под ними значки видно, это не облака)
             DrawJourneyLegend();
             // туман по краям и название области
             Texture2D fog = SoftSprites.Fog;
@@ -482,7 +493,7 @@ namespace BladePath
             // карту листают пальцем; увёл её от героя — появляется «К ГЕРОЮ» (кнопка «ОБЗОР» ничего не делала — убрана)
             if (uw < 0.999f && manualPan && Btn(new Rect(mapX + viewW - 116f, 14f, 104f, 33f), "К ГЕРОЮ", interactive && modal == Modal.None && moveTo < 0))
             {
-                manualPan = false; panU = -1f;
+                manualPan = false; panU = -1f; panV = -1f;
             }
             // меню разработчика (отладка): телепорт, лагерь, трактир, следующая область
             {   // время суток: медальон в правом верхнем углу карты; нажатие — что сейчас и сколько шагов до смены
@@ -673,7 +684,7 @@ namespace BladePath
         {
             Vector2 uv;
             if (!MapPads.Get(Campaign.Region, n.x, n.y, out uv)) { screen = Vector2.zero; return false; }
-            screen = new Vector2(mapX + (uv.x - u0) * MapFullW, uv.y * MapH);
+            screen = new Vector2(mapX + (uv.x - u0) * MapFullW, Y(uv.y));
             return true;
         }
 
@@ -721,7 +732,7 @@ namespace BladePath
                     float dRoad = 1e9f; foreach (Vector2 rp in road) dRoad = Mathf.Min(dRoad, Mathf.Min((rp - basePt).magnitude, (rp - center).magnitude));
                     float dWater = 1e9f;   // по основанию, центру и бокам спрайта (74 точки шириной)
                     foreach (Vector2 wp in new[] { basePt, center, basePt + new Vector2(-30f, -8f), basePt + new Vector2(30f, -8f) })
-                        dWater = Mathf.Min(dWater, MapLife.DistToWater(Campaign.Region, new Vector2(wp.x / MapGeom.Wc, wp.y / 540f)));
+                        dWater = Mathf.Min(dWater, MapLife.DistToWater(Campaign.Region, new Vector2(wp.x / MapGeom.Wc, (wp.y - mapY) / MapFullH)));
                     float dNode = 1e9f; for (int o = 0; o < ns.Count; o++) if (o != i) dNode = Mathf.Min(dNode, (Vector2.Scale(new Vector2(ns[o].x, ns[o].y), k) - center).magnitude);
                     // река широкая (линия — её середина): ближе ~60 точек к середине здание стоит на воде или на самом берегу — сильный штраф
                     float far = si >= BuildingSpots.Length ? 14f : sp.magnitude > 50f ? 6f : 0f;
@@ -1110,7 +1121,7 @@ namespace BladePath
             if (Btn(new Rect(x + bw + 10f, y, bw, 38f), "ЛАГЕРЬ", ok)) { OpenCamp(); return; }
             y += 44f;
             if (Btn(new Rect(x, y, bw, 38f), "ТРАКТИР", ok && UiKit.Tex("UI/tavern") != null)) { OpenTavern(); return; }
-            if (Btn(new Rect(x + bw + 10f, y, bw, 38f), "СЛЕД. ОБЛАСТЬ", ok)) { Campaign.DebugNextRegion(); modal = Modal.None; sel = -1; previewPath.Clear(); panU = -1f; TerrainRoads.Bind(Campaign.Region, Campaign.Nodes); return; }
+            if (Btn(new Rect(x + bw + 10f, y, bw, 38f), "СЛЕД. ОБЛАСТЬ", ok)) { Campaign.DebugNextRegion(); modal = Modal.None; sel = -1; previewPath.Clear(); panU = -1f; panV = -1f; TerrainRoads.Bind(Campaign.Region, Campaign.Nodes); return; }
             y += 44f;
             if (Btn(new Rect(x, y, bw, 38f), "+3 КОСТИ ПУТИ", ok)) { Campaign.AddRoll(3); }
             if (Btn(new Rect(x + bw + 10f, y, bw, 38f), "+500 МОН", ok)) { Profile.AddGold(500); }
@@ -1242,7 +1253,7 @@ namespace BladePath
         {
             if (!JourneyChoice.FogEnabled) return;
             MapNode tw = Campaign.Nodes.Count > 0 ? Campaign.Nodes[Campaign.Tower] : null;
-            FogOfWar.Draw(new Rect(mapX, 0f, viewW, MapH), u0, uw, Campaign.Seen, SightR, Campaign.Region + ":" + SightR,
+            FogOfWar.Draw(MapRect, u0, uw, Campaign.Seen, SightR, Campaign.Region + ":" + SightR,
                 tw != null ? new Vector2(tw.x, tw.y) : Vector2.zero, TowerReveal());
         }
 
@@ -1411,12 +1422,12 @@ namespace BladePath
                 float t = j / (float)count;
                 if (t < 0.13f || t > 0.87f || t > progress) continue;
                 Vector2 uv = TerrainRoads.Route(from, to).Position(t);
-                Vector2 point = new Vector2(mapX + (uv.x - u0) * MapFullW, uv.y * MapH);
+                Vector2 point = new Vector2(mapX + (uv.x - u0) * MapFullW, Y(uv.y));
                 if (point.x < mapX + 7f || point.x > mapX + viewW - 7f) continue;
                 TerrainRoads.Path road = TerrainRoads.Route(from, to);
                 Vector2 back = road.Position(Mathf.Max(0f, t - 0.015f));
                 Vector2 ahead = road.Position(Mathf.Min(1f, t + 0.015f));
-                Vector2 tangent = new Vector2((ahead.x - back.x) * MapFullW, (ahead.y - back.y) * MapH);
+                Vector2 tangent = new Vector2((ahead.x - back.x) * MapFullW, (ahead.y - back.y) * MapFullH);
                 float angle = Mathf.Atan2(tangent.y, tangent.x) * Mathf.Rad2Deg + 90f;
                 float pulse = shimmer ? 0.84f + 0.16f * Mathf.Sin(Time.unscaledTime * 4.5f - j * 0.55f) : 1f;
                 GUI.color = new Color(tint.r, tint.g, tint.b, tint.a * pulse);
@@ -1454,7 +1465,7 @@ namespace BladePath
                         float t = k / (float)dots;
                         if (t < 0.12f || t > 0.88f) continue;   // не залезать на медальоны
                         Vector2 p = road.Position(t);
-                        Vector2 s = new Vector2(mapX + (p.x - u0) * MapFullW, p.y * MapH);
+                        Vector2 s = new Vector2(mapX + (p.x - u0) * MapFullW, Y(p.y));
                         if (s.x < mapX - 6f || s.x > mapX + viewW + 6f) continue;
                         float r = walked ? 4.2f : 3.4f;
                         GUI.color = col;
@@ -1464,7 +1475,7 @@ namespace BladePath
                     {
                         // стрелка тушью ближе к концу открытой дороги
                         Vector2 p1 = road.Position(0.74f), p2 = road.Position(0.8f);
-                        Vector2 s1 = new Vector2(mapX + (p1.x - u0) * MapFullW, p1.y * MapH), s2 = new Vector2(mapX + (p2.x - u0) * MapFullW, p2.y * MapH);
+                        Vector2 s1 = new Vector2(mapX + (p1.x - u0) * MapFullW, Y(p1.y)), s2 = new Vector2(mapX + (p2.x - u0) * MapFullW, Y(p2.y));
                         float ang = Mathf.Atan2(s2.y - s1.y, s2.x - s1.x) * Mathf.Rad2Deg;
                         Matrix4x4 m = GUI.matrix;
                         GUIUtility.RotateAroundPivot(ang, s2 * UiKit.Scale);
@@ -1621,7 +1632,7 @@ namespace BladePath
                     if (devTeleport)
                     {
                         devTeleport = false; sel = -1; previewPath.Clear();
-                        Campaign.DebugTeleport(i); manualPan = false; panU = -1f;
+                        Campaign.DebugTeleport(i); manualPan = false; panU = -1f; panV = -1f;
                         if (!Campaign.Nodes[i].done || Campaign.Nodes[i].IsTavern) OpenNode(i);
                         Haptics.Pulse(20);
                         continue;
@@ -1679,7 +1690,7 @@ namespace BladePath
             Texture2D ht = newSheet ? riderAtlas : UiKit.Tex("UI/map_hero");
             Texture2D ic = UiKit.Tex("UI/map_icons");
             Vector2 uv = HeroUV();
-            Vector2 p = new Vector2(mapX + (uv.x - u0) * MapFullW, uv.y * MapH);
+            Vector2 p = new Vector2(mapX + (uv.x - u0) * MapFullW, Y(uv.y));
             bool moving = moveTo >= 0;
             // Shadow and warm aureole make the tiny animated hero readable over foliage.
             UiKit.Disc(p + new Vector2(0f, 8f), moving ? 16f : 12f, new Color(0.035f, 0.02f, 0.01f, 0.45f));
@@ -1731,7 +1742,7 @@ namespace BladePath
             Texture2D mist = JourneyMistArt.Texture;
             if (mist == null) return;
             Color previous = GUI.color;
-            GUI.BeginGroup(new Rect(mapX, 0f, viewW, MapH));
+            GUI.BeginGroup(new Rect(mapX, 0f, viewW, MapH));   // туман — по экрану
             float clock = Time.unscaledTime;
             Color baseTint = Campaign.Region == 2
                 ? new Color(0.97f, 0.65f, 0.62f, 0.14f)
@@ -1834,7 +1845,7 @@ namespace BladePath
                 Vector2 b = new Vector2(nodes[to].x, nodes[to].y);
                 Vector2 uv = TerrainRoads.Route(from, to).Position(t);
                 Vector2 point = new Vector2(mapX + (uv.x - u0) * MapFullW,
-                    uv.y * MapH);
+                    Y(uv.y));
                 if (point.x < mapX + 9f || point.x > mapX + viewW - 9f) continue;
                 UiKit.Disc(point, 5f, new Color(0.82f, 1f, 0.65f, 0.14f));
                 UiKit.Disc(point, 2.0f, new Color(0.92f, 1f, 0.77f, 0.50f));

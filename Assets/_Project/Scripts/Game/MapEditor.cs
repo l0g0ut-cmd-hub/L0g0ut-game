@@ -119,7 +119,7 @@ namespace BladePath
 
         static MapData Clone(MapData m) { return JsonUtility.FromJson<MapData>(JsonUtility.ToJson(m)); }
         static float TW { get { return data.width > 0 ? data.width : 2610f; } }
-        const float TH = 1024f;
+        static float TH { get { return data != null && data.height > 0 ? data.height : 1024f; } }   // высота картины (большие карты — 1608)
 
         // ---------------------------------------------------------------- координаты
 

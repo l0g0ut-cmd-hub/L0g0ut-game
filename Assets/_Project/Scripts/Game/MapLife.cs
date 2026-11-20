@@ -78,9 +78,38 @@ namespace BladePath
                 for (int i = 0; i < r.pulses.Length; i++) r.pulses[i].x *= u;
                 if (ri < NewParts.Length) NewParts[ri](r, MapGeom.TexW[ri]);
             }
+            if (MapGeom.TexHt[0] > 1024) regions[0] = BigForest();   // Лес теней — большая картина 4096×1608
+
         }
         static Vector2 P(float x, float y, int w) { return new Vector2(x / w, y / 1024f); }
         static Vector3 Q(float x, float y, float s, int w) { return new Vector3(x / w, y / 1024f, s); }
+        // большая карта Леса теней (4096×1608): всё — в пикселях картины, сверено по сетке 128 px
+        static Vector2 B(float x, float y) { return new Vector2(x / 4096f, y / 1608f); }
+        static Vector3 BL(float x, float y, float sz) { return new Vector3(x / 4096f, y / 1608f, sz); }
+        static Region BigForest()
+        {
+            return new Region
+            {
+                rivers = new[] {
+                    // главная река: от водопада под горой через долину, под каменным мостом — к нижнему краю
+                    new[] { B(1290, 230), B(1340, 330), B(1420, 430), B(1520, 520), B(1640, 600), B(1760, 680), B(1880, 780), B(1980, 900), B(2120, 990), B(2300, 1030), B(2480, 1060), B(2610, 1120), B(2680, 1230), B(2760, 1380), B(2840, 1560) },
+                    // западная река: от водопада у мельницы — к рисовым полям
+                    new[] { B(230, 720), B(330, 820), B(450, 880), B(560, 930), B(680, 990), B(780, 1060) },
+                    // ручей из горного озера на востоке
+                    new[] { B(3620, 260), B(3560, 380), B(3480, 450) } },
+                lights = new[] {
+                    BL(1960, 80, 6), BL(2010, 70, 6), BL(2050, 95, 6), BL(1985, 120, 5),             // замок на вершине
+                    BL(1040, 540, 5), BL(1170, 530, 5), BL(960, 600, 5), BL(1030, 640, 5), BL(920, 720, 5),   // деревня у рисовых полей
+                    BL(2390, 590, 5), BL(2560, 630, 5), BL(2340, 600, 4),                              // хижины углежогов
+                    BL(2920, 290, 5), BL(2960, 340, 5), BL(3000, 400, 5), BL(2940, 450, 5), BL(3010, 240, 5),   // деревня на утёсе
+                    BL(2830, 215, 5), BL(3790, 420, 6), BL(3810, 445, 5),                              // лодочный сарай; пагода у озера
+                    BL(1750, 330, 5), BL(1880, 320, 5), BL(3865, 1170, 5), BL(3905, 1175, 5) },        // фонари у тории
+                steam = new[] { BL(2870, 700, 60), BL(2900, 1120, 50), BL(210, 760, 50) },
+                lake = new[] { B(3650, 330), B(3740, 300), B(3600, 420), B(3820, 360), B(2640, 180), B(2760, 220), B(2600, 230) },
+                fog = new[] { BL(560, 140, 70), BL(1500, 120, 70), BL(2880, 620, 60), BL(240, 1480, 70), BL(1900, 260, 60), BL(3600, 120, 60) },
+                petals = new[] { new Vector4(820f / 4096f, 640f / 1608f, 300f / 4096f, 200f / 1608f), new Vector4(3700f / 4096f, 1150f / 1608f, 300f / 4096f, 200f / 1608f) },
+            };
+        }
         static T[] Join<T>(T[] a, T[] b) { T[] c = new T[a.Length + b.Length]; a.CopyTo(c, 0); b.CopyTo(c, a.Length); return c; }
 
         // новые (восточные) части карт: вода/лава, окна и фонари (на картине не горят — свет даёт игра), дым и пар, огни
@@ -219,7 +248,7 @@ namespace BladePath
             Color oc = GUI.color;
             foreach (Vector3 l in r.lights)
             {
-                Vector2 p = new Vector2(view.x + (l.x - u0) / uw * view.width, l.y * view.height);
+                Vector2 p = new Vector2(view.x + (l.x - u0) / uw * view.width, view.y + l.y * view.height);
                 if (p.x < view.x - 60f || p.x > view.xMax + 60f) continue;
                 float fl = 0.86f + 0.1f * Mathf.PerlinNoise(t * 1.1f + l.x * 50f, l.y * 30f) + 0.04f * Mathf.Sin(t * 5.3f + l.x * 90f);
                 float g = l.z * k * 1.6f;
@@ -272,9 +301,9 @@ namespace BladePath
             if (!ShowTrails || Event.current.type != EventType.Repaint) return;
             Color oc = GUI.color;
             if (region < 0) return;
-            float px = view.height / MapGeom.TexH, texW = MapGeom.TexWidth(region);
+            float px = view.height / MapGeom.TexHeight(region), texW = MapGeom.TexWidth(region);
             if (region >= TerrainRoads.BranchTrails.Length && MapStore.Get(region) == null) return;
-            System.Func<Vector2, Vector2> S = p => new Vector2(view.x + (p.x - u0) / uw * view.width, p.y * view.height);
+            System.Func<Vector2, Vector2> S = p => new Vector2(view.x + (p.x - u0) / uw * view.width, view.y + p.y * view.height);
             MapData md = MapStore.Get(region);
             if (md != null)
             {   // файл карты: тропы и переправы, которых нет на картине
@@ -291,7 +320,7 @@ namespace BladePath
                 foreach (Vector2[] line in TerrainRoads.BranchTrails[region]) Dashes(line, S, px, new Color(0.93f, 0.87f, 0.7f, 0.92f), 3.2f, 11f, 8f);
                 foreach (Vector2[] line in TerrainRoads.BranchWater[region]) Dashes(line, S, px, new Color(0.68f, 0.84f, 0.95f, 0.85f), 2.6f, 6f, 7f);
             }
-            if (region == 0)
+            if (region == 0 && MapGeom.TexHeight(0) <= 1024f)   // вырезка древа — со старой картины
             {
                 Texture2D over = UiKit.Tex("UI/map0_tree_over");   // вырезка карты 1590…2070 × 80…500
                 if (over != null)
@@ -347,7 +376,7 @@ namespace BladePath
                 for (int i = 0; i < fs.Length; i++)
                     codeFx.Add(new MapEffect { kind = look[i].x > 1.5f ? "fall_lip" : look[i].x > 0.5f ? "fall_mid" : "fall_fade", x = fs[i].x - fs[i].w * 0.5f, y = fs[i].y,
                                                w = fs[i].w, h = fs[i].z, alpha = look[i].y, speed = 1f, foot = Mathf.RoundToInt(look[i].z) });
-                if (region == 0) codeFx.Add(new MapEffect { kind = "stream", x = 2226f, y = 370f, w = 76f, h = 42f, alpha = 1f, speed = 1f });
+                if (region == 0 && MapGeom.TexHeight(0) <= 1024f) codeFx.Add(new MapEffect { kind = "stream", x = 2226f, y = 370f, w = 76f, h = 42f, alpha = 1f, speed = 1f });
             }
             return codeFx;
         }
@@ -356,12 +385,12 @@ namespace BladePath
         {
             List<MapEffect> fx = Effects(region);
             if (fx.Count == 0) return;
-            float px = view.height / MapGeom.TexH, texW = MapGeom.TexWidth(region);
+            float px = view.height / MapGeom.TexHeight(region), texW = MapGeom.TexWidth(region);
             float kx = view.width / uw / texW;   // точек экрана на пиксель картины по горизонтали
             for (int i = 0; i < fx.Count; i++)
             {
                 MapEffect e = fx[i];
-                Rect r = new Rect(view.x + (e.x / texW - u0) / uw * view.width, e.y * px, e.w * kx, e.h * px);
+                Rect r = new Rect(view.x + (e.x / texW - u0) / uw * view.width, view.y + e.y * px, e.w * kx, e.h * px);
                 if (r.xMax < view.x - 100f || r.x > view.xMax + 100f) continue;
                 DrawEffect(e, r, t * Mathf.Max(0.05f, e.speed) + i * 0.37f, mist);
             }
@@ -487,7 +516,7 @@ namespace BladePath
             Texture2D glow = UiKit.Tex("FX/glow_pool"), mist = SoftSprites.Fog;
             Color oc = GUI.color;
             float k = view.width / uw / MapGeom.W(region);   // точек экрана на точку карты
-            System.Func<Vector2, Vector2> S = p => new Vector2(view.x + (p.x - u0) / uw * view.width, p.y * view.height);
+            System.Func<Vector2, Vector2> S = p => new Vector2(view.x + (p.x - u0) / uw * view.width, view.y + p.y * view.height);
             System.Func<Vector2, bool> Vis = p => p.x > view.x - 60f && p.x < view.xMax + 60f;
 
             // вода / лава: блики плывут по руслу, у лавы — ещё и медленные пятна жара

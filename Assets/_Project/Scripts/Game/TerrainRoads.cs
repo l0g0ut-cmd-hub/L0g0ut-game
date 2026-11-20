@@ -59,7 +59,7 @@ namespace BladePath
                 // Compare positions in screen-space, not UV: the panorama is 810x540.
                 Vector2 d = Position(Mathf.Min(1f, progress + 0.018f)) -
                             Position(Mathf.Max(0f, progress - 0.018f));
-                return new Vector2(d.x * MapGeom.W(activeRegion), d.y * 540f).normalized;
+                return new Vector2(d.x * MapGeom.W(activeRegion), d.y * MapGeom.Hgt(activeRegion)).normalized;
             }
 
             static List<Vector2> RoundCorners(List<Vector2> raw)
@@ -122,7 +122,7 @@ namespace BladePath
 
         static float Length(Vector2 uv)
         {
-            return new Vector2(uv.x * MapGeom.W(activeRegion < 0 ? 0 : activeRegion), uv.y * 540f).magnitude;
+            return new Vector2(uv.x * MapGeom.W(activeRegion < 0 ? 0 : activeRegion), uv.y * MapGeom.Hgt(activeRegion < 0 ? 0 : activeRegion)).magnitude;
         }
 
         public static void Bind(int region, List<MapNode> nodes)
@@ -478,7 +478,7 @@ namespace BladePath
             int h = Nearest(g, pos, region);
             if (h < 0) return false;
             Vector2 dv = g.hubs[h].pos - pos;
-            return g.hubs[h].shore == 2 && new Vector2(dv.x * MapGeom.W(region), dv.y * 540f).magnitude < 12f;
+            return g.hubs[h].shore == 2 && new Vector2(dv.x * MapGeom.W(region), dv.y * MapGeom.Hgt(region)).magnitude < 12f;
         }
 
         // Diagnostics for build-time and debug tests: road crossings MUST contain

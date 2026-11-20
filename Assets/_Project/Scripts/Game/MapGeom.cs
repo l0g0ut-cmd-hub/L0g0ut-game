@@ -10,12 +10,23 @@ namespace BladePath
     /// </summary>
     public static class MapGeom
     {
-        public static readonly int[] TexW = { 2610, 2610, 2815 };   // UI/map_wide_0..2 (высота 1024)
+        public static readonly int[] TexW = { 4096, 2610, 2815 };   // UI/map_wide_0..2
+        // высота картины: 1024 — карта ровно в экран; больше — карта листается и вверх-вниз (2026-11-20: Лес теней 4096×1608)
+        public static readonly int[] TexHt = { 1608, 1024, 1024 };
         public const float TexH = 1024f, OldTexW = 1536f, H = 540f, OldW = 810f;
 
         static int R(int region) { return Mathf.Clamp(region, 0, TexW.Length - 1); }
         /// <summary>Ширина карты области в точках (высота — 540).</summary>
         public static float W(int region) { return H * TexWidth(region) / TexH; }
+        /// <summary>Высота карты области в точках (540 — ровно экран; масштаб — как у прежних карт: 1024 px = 540 точек).</summary>
+        public static float Hgt(int region) { return H * TexHeight(region) / TexH; }
+        public static float TexHeight(int region)
+        {
+            if (MapStore.IsCustom(region)) { MapData m = MapStore.Get(region); if (m != null && m.height > 0) return m.height; }
+            return TexHt[R(region)];
+        }
+        /// <summary>Высота карты текущей области в точках.</summary>
+        public static float Hc { get { return Hgt(Campaign.Region); } }
         /// <summary>Ширина картины области в пикселях (своя область из редактора карт — своя ширина).</summary>
         public static float TexWidth(int region)
         {
@@ -29,7 +40,7 @@ namespace BladePath
         /// <summary>Перевод координаты старой картины (доли) в доли новой.</summary>
         public static Vector2 FromOld(int region, Vector2 uv) { return new Vector2(uv.x * OldU(region), uv.y); }
         /// <summary>Точки карты на долю (по x — ширина области, по y — 540).</summary>
-        public static Vector2 Pts(int region) { return new Vector2(W(region), H); }
+        public static Vector2 Pts(int region) { return new Vector2(W(region), Hgt(region)); }
         public static string Texture(int region)
         {
             if (MapStore.IsCustom(region)) { MapData m = MapStore.Get(region); if (m != null && !string.IsNullOrEmpty(m.texture)) return m.texture; }

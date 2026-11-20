@@ -12,7 +12,8 @@ namespace BladePath
     /// </summary>
     public static class FogOfWar
     {
-        const int MH = 108;              // маска: 5 точек карты на пиксель; ширина — по ширине области (карты расширены, MapGeom)
+        static int MH = 108;             // маска: 5 точек карты на пиксель; ширина и высота — по размеру области (MapGeom)
+        static float HP = 540f;          // высота карты области в точках
         static int MW = 162;
         static float WP = 810f;          // ширина карты области в точках
         public const float Soft = 46f;   // ширина мягкого края тумана, в точках карты 810×540
@@ -39,9 +40,10 @@ namespace BladePath
         {
             LoadTile();
             WP = MapGeom.Wc;
-            int mw = Mathf.Max(8, Mathf.RoundToInt(WP / 5f));
-            if (mask != null && mw != MW) { Object.Destroy(mask); mask = null; }
-            MW = mw;
+            HP = MapGeom.Hc;
+            int mw = Mathf.Max(8, Mathf.RoundToInt(WP / 5f)), mh = Mathf.Max(8, Mathf.RoundToInt(HP / 5f));
+            if (mask != null && (mw != MW || mh != MH)) { Object.Destroy(mask); mask = null; }
+            MW = mw; MH = mh;
             if (mask == null)
             {
                 mask = new Texture2D(MW, MH, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
@@ -51,7 +53,7 @@ namespace BladePath
                 for (int x = 0; x < MW; x++)
                 {
                     int i = y * MW + x;
-                    px[i] = tilePx[((y * 2 * tileH / MH) % tileH) * tileW + (x * 3 * tileW / 162) % tileW];   // плитка: 3×2 на 810 точек
+                    px[i] = tilePx[((y * 2 * tileH / 108) % tileH) * tileW + (x * 3 * tileW / 162) % tileW];   // плитка: 3×2 на 810 точек
                     fa[i] = 1f;
                 }
             done = 0; beaconDone = 0f; dirty = true;
@@ -60,7 +62,7 @@ namespace BladePath
         /// <summary>Открыть круг радиуса r (точки карты 810×540) вокруг p (доли карты): альфа только убывает.</summary>
         static void Open(Vector2 p, float r)
         {
-            float sx = WP / MW, sy = 540f / MH, cx = p.x * WP, cy = p.y * 540f, reach = r + Soft;
+            float sx = WP / MW, sy = HP / MH, cx = p.x * WP, cy = p.y * HP, reach = r + Soft;
             int x0 = Mathf.Max(0, (int)((cx - reach) / sx)), x1 = Mathf.Min(MW - 1, (int)((cx + reach) / sx) + 1);
             int yTop = Mathf.Max(0, (int)((cy - reach) / sy)), yBot = Mathf.Min(MH - 1, (int)((cy + reach) / sy) + 1);
             for (int my = yTop; my <= yBot; my++)
@@ -82,14 +84,14 @@ namespace BladePath
         static void Upload()
         {
             puffs.Clear();
-            float sx = WP / MW, sy = 540f / MH;
+            float sx = WP / MW, sy = HP / MH;
             for (int y = 0; y < MH; y++)
                 for (int x = 0; x < MW; x++)
                 {
                     int i = y * MW + x; float t = fa[i];
                     px[i].a = (byte)(t * 240f);
                     if (t > 0.25f && t < 0.6f && ((x * 7 + y * 13) % 23) == 0 && puffs.Count < 48 * MW / 162)
-                        puffs.Add(new Vector3((x + 0.5f) * sx / WP, (MH - 1 - y + 0.5f) * sy / 540f, (x * 0.37f + y * 0.71f) % 6.28f));
+                        puffs.Add(new Vector3((x + 0.5f) * sx / WP, (MH - 1 - y + 0.5f) * sy / HP, (x * 0.37f + y * 0.71f) % 6.28f));
                 }
             mask.SetPixels32(px); mask.Apply(false);
             dirty = false;
@@ -124,7 +126,7 @@ namespace BladePath
             for (int i = 0; i < puffs.Count; i++)
             {
                 Vector3 p = puffs[i];
-                float sx = view.x + (p.x - u0) / uw * view.width, sy = p.y * view.height;
+                float sx = view.x + (p.x - u0) / uw * view.width, sy = view.y + p.y * view.height;
                 if (sx < view.x - 60f || sx > view.xMax + 60f) continue;
                 float br = 0.5f + 0.5f * Mathf.Sin(t * 0.35f + p.z);
                 float size = 86f + 22f * br;
