@@ -76,7 +76,6 @@ namespace BladePath
         public string kind;         // fall_fade, fall_mid, fall_lip, stream, smoke, campfire, mist…
         public float x, y, w, h;    // левый верхний угол и размер, пиксели картины
         public float alpha = 1f, speed = 1f;
-        public float angle;        // clockwise degrees in map screen coordinates, waterfall lip is pivot
         public int foot;            // у водопада: 0 — ничего, 1 — брызги, 2 — водяная пыль ущелья
     }
 
@@ -162,23 +161,6 @@ namespace BladePath
                 if (m != null && region >= 0 && region < MapGeom.TexW.Length && (m.width != MapGeom.TexW[region] || Mathf.Max(1024, m.height) != MapGeom.TexHt[region])) m = null;
             }
             catch (System.Exception e) { Debug.LogWarning("MapStore: правка карты " + region + " не читается: " + e.Message); m = null; }
-            // Update effects from newer bundled art in an old phone-saved map.
-            // Keep all existing user roads, custom buildings and place coordinates.
-            if (m != null && region == 0 && MapGeom.TexHt[0] > 1024)
-            {
-                TextAsset standard = Resources.Load<TextAsset>("Maps/map_0");
-                if (standard != null)
-                    try
-                    {
-                        MapData art = JsonUtility.FromJson<MapData>(standard.text);
-                        if (art != null && art.version > m.version && art.width == m.width && art.height == m.height)
-                        {
-                            m.effects = art.effects;
-                            m.version = art.version;
-                        }
-                    }
-                    catch (System.Exception ex) { Debug.LogWarning("MapStore: FX migration: " + ex.Message); }
-            }
             if (m == null)
             {
                 TextAsset ta = Resources.Load<TextAsset>("Maps/map_" + region);

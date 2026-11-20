@@ -123,7 +123,6 @@ namespace BladePath
                 glow = UiKit.Tex("FX/glow_pool"), shade = SoftSprites.Fog;
             Color oc = GUI.color;
             float t = Time.realtimeSinceStartup;
-            float visualAlpha = r == 0 && MapGeom.TexHt[0] > 1024 ? 0.28f : 1f;
             for (int i = 0; i < clouds.Length; i++)
             {
                 Cloud c = clouds[i];
@@ -136,7 +135,7 @@ namespace BladePath
                 // тень на земле — мягкая, смещена от солнца; по ней видно, где пойдёт дождь
                 if (shade != null)
                 {
-                    GUI.color = new Color(0.02f, 0.02f, 0.06f, Mathf.Lerp(0.26f, 0.42f, storm) * visualAlpha);
+                    GUI.color = new Color(0.02f, 0.02f, 0.06f, Mathf.Lerp(0.26f, 0.42f, storm));
                     GUI.DrawTexture(new Rect(sx - w * 0.48f + w * 0.04f, sy - w * 0.14f, w * 0.96f, w * 0.62f), shade);
                 }
                 // дождь: косые струи разной длины и яркости, падают из-под облака до тени, гуще в грозу
@@ -179,7 +178,7 @@ namespace BladePath
                             {
                                 float rowA = row == 1 ? storm : 1f - storm;   // дождевое ↔ грозовое — плавно
                                 if (rowA <= 0.01f) continue;
-                                GUI.color = new Color(shadeK, shadeK, shadeK * 1.05f, pa * rowA * (pass == 0 ? 0.55f : 0.9f) * visualAlpha);
+                                GUI.color = new Color(shadeK, shadeK, shadeK * 1.05f, pa * rowA * (pass == 0 ? 0.55f : 0.9f));
                                 if (puffs != null && (pk > 0 || atlas == null))   // ядро — целое облако из UI/map_clouds, клубы — из атласа клубов
                                 {
                                     // UI/map_cloud_puffs: 4×4, два верхних ряда — 8 дождевых клубов, два нижних — 8 грозовых
