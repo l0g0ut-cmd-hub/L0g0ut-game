@@ -49,6 +49,9 @@ jobs:
           build yamabushi Yamabushi_Enemy 1.76 0.965 0.03 0.18
           build ashigaru  Ashigaru_Enemy  1.70 0.925 0.02 0.17
           build kitsune   Kitsune_Enemy   1.64 0.955 0.00 0.16
+          # основы редактора персонажей (концепты владельца, 2026-11-20)
+          build base_male   BaseMale_Player   1.74 0.930 0.00 0.17
+          build base_female BaseFemale_Player 1.64 0.950 0.00 0.16
 
       - name: Extract textures
         run: |
@@ -69,6 +72,8 @@ jobs:
           tex yamabushi Yamabushi
           tex ashigaru Ashigaru
           tex kitsune Kitsune
+          tex base_male BaseMale
+          tex base_female BaseFemale
 
       - name: Publish to meshy-models branch
         if: always()
