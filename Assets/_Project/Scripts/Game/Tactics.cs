@@ -401,6 +401,7 @@ namespace BladePath
         {
             a.shots--;
             if (a.an != null) yield return Act(a, 0.55f);   // натянул лук / вскинул ружьё / сложил печать
+            if (a.t == Ours[2]) Burst("fx_musket", a.pos + new Vector2(R * (a.enemy ? -0.9f : 0.9f), -R * 1.3f), R * 3.2f, 36f);
             Vector2 from = a.pos + new Vector2(0f, -R * 1.1f), to = d.pos + new Vector2(0f, -R * 0.8f);
             shots.Add(new Shot { a = from, b = to, t0 = Time.unscaledTime, dur = 0.35f, magic = a.t.magic });
             yield return 0.35f;
@@ -422,6 +423,7 @@ namespace BladePath
             int before = d.count;
             Hurt(d, dmg);
             d.flash = 1f; d.hitUntil = Time.unscaledTime + 0.55f;
+            if (!ranged) Burst("fx_slash_hit", d.pos + new Vector2(0f, -R * 1.1f), R * 3f, 36f);
             int dead = before - Mathf.Max(0, d.count);
             texts.Add(new Float { p = d.pos + new Vector2(0f, -R * 2f), s = "−" + dmg + (dead > 0 ? "  (" + dead + " пало)" : ""), t0 = Time.unscaledTime, col = d.enemy ? new Color(1f, 0.85f, 0.4f) : new Color(1f, 0.45f, 0.35f) });
             Log((a.enemy ? "Враг: " : "") + a.t.name + " → " + d.t.name + ": " + dmg + " урона" + (dead > 0 ? ", пало " + dead : "") + ".");
@@ -496,7 +498,11 @@ namespace BladePath
             spirit -= sp.cost; castThisRound = true; spellSel = -1; bookOpen = false;
             int lv = heroLv;
             Vector2 at = target != null ? target.pos : Center(cell.x, cell.y);
-            casts.Add(new Float { p = at, s = "", t0 = Time.unscaledTime, icon = sp.icon });
+            bool sheet = false;
+            if (sp.icon == 3) sheet = Burst(SpellFx[3], at + new Vector2(0f, -R * 0.6f), R * 6f, 26f);
+            else if (sp.icon < SpellFx.Length && sp.target != 3) sheet = Burst(SpellFx[sp.icon], at + new Vector2(0f, -R * 0.9f), R * (sp.icon == 8 ? 5.5f : 4.2f));
+            else if (sp.icon < SpellFx.Length) foreach (Stack o in stacks) if (o.Alive && o.enemy == (sp.icon == 5)) sheet |= Burst(SpellFx[sp.icon], o.pos + new Vector2(0f, -R * 0.9f), R * 3.5f);
+            if (!sheet) casts.Add(new Float { p = at, s = "", t0 = Time.unscaledTime, icon = sp.icon });
             switch (sp.icon)
             {
                 case 0: HurtSpell(target, 30 + 15 * lv); break;
@@ -806,6 +812,54 @@ namespace BladePath
         struct Shot { public Vector2 a, b; public float t0, dur; public bool magic; }
         class Float { public Vector2 p; public string s; public float t0; public Color col = Color.white; public int icon = -1; }
         static readonly List<Shot> shots = new List<Shot>();
+
+        // покадровые эффекты (листы 8×6 = 48 кадров на прозрачном — из генераций владельца, UI/Battle/fx_<имя>):
+        // кадр рисуется целиком, следующий — поверх с долей (без мигания), как у водопадов карты
+        class Fx { public string sheet; public Vector2 p; public float t0, size, fps = 30f; public bool loop; }
+        static readonly List<Fx> fxs = new List<Fx>();
+        static readonly string[] SpellFx = { "fx_cross", "", "", "fx_arrows", "fx_fire", "fx_wind", "fx_heal", "fx_fog", "fx_thunder", "fx_curse", "" };
+        /// <summary>Эффект в точке поля; false — листа нет (тогда рисуется простой эффект).</summary>
+        static bool Burst(string sheet, Vector2 p, float size, float fps = 30f)
+        {
+            if (string.IsNullOrEmpty(sheet) || UiKit.Tex("UI/Battle/" + sheet) == null) return false;
+            fxs.Add(new Fx { sheet = sheet, p = p, t0 = Time.unscaledTime, size = size, fps = fps });
+            return true;
+        }
+        static Rect FxCell(int i) { int c = i % 8, r = i / 8; return new Rect(c / 8f, 1f - (r + 1) / 6f, 1f / 8f, 1f / 6f); }
+        static void DrawSheet(Texture2D t, Rect r, float frame, float alpha, bool loop)
+        {
+            int i0 = Mathf.FloorToInt(frame); float k = frame - i0;
+            int i1 = loop ? (i0 + 1) % 48 : Mathf.Min(47, i0 + 1);
+            i0 = loop ? i0 % 48 : Mathf.Min(47, i0);
+            Color oc = GUI.color;
+            GUI.color = new Color(1f, 1f, 1f, alpha); GUI.DrawTextureWithTexCoords(r, t, FxCell(i0));
+            GUI.color = new Color(1f, 1f, 1f, alpha * k); GUI.DrawTextureWithTexCoords(r, t, FxCell(i1));
+            GUI.color = oc;
+        }
+        static void DrawFxSheets()
+        {
+            if (Event.current.type != EventType.Repaint) return;
+            float now = Time.unscaledTime;
+            // туман над полем врага, пока действует
+            Texture2D fog = fogRounds > 0 ? UiKit.Tex("UI/Battle/fx_fog") : null;
+            if (fog != null)
+                for (int i = 0; i < 3; i++)
+                {
+                    float w = R * 9f, h = w * 170f / 192f;
+                    Vector2 c = Center(Cols - 3, 2 + i * 3) + new Vector2(Mathf.Sin(now * 0.2f + i) * R, 0f);
+                    DrawSheet(fog, new Rect(c.x - w * 0.5f, c.y - h * 0.6f, w, h), (now * 12f + i * 16f), 0.55f, true);
+                }
+            for (int i = fxs.Count - 1; i >= 0; i--)
+            {
+                Fx f = fxs[i];
+                float fr = (now - f.t0) * f.fps;
+                if (fr >= 47f) { fxs.RemoveAt(i); continue; }
+                Texture2D t = UiKit.Tex("UI/Battle/" + f.sheet);
+                if (t == null) { fxs.RemoveAt(i); continue; }
+                float h = f.size * 170f / 192f;
+                DrawSheet(t, new Rect(f.p.x - f.size * 0.5f, f.p.y - h * 0.5f, f.size, h), fr, 1f, false);
+            }
+        }
         static readonly List<Float> texts = new List<Float>(), casts = new List<Float>();
         static readonly List<string> log = new List<string>();
         static void Log(string s) { log.Add(s); if (log.Count > 4) log.RemoveAt(0); }
@@ -834,6 +888,7 @@ namespace BladePath
             DrawLive();
             DrawStacks();
             DrawFx();
+            DrawFxSheets();
             DrawQueue();
             DrawHud();
             if (bookOpen) DrawBook();
