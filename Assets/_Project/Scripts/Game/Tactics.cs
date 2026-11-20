@@ -440,6 +440,7 @@ namespace BladePath
             Hurt(d, dmg);
             d.flash = 1f; d.hitUntil = Time.unscaledTime + 0.55f;
             if (!ranged) Burst("fx_slash_hit", d.pos + new Vector2(0f, -R * 1.1f), R * 3f, 36f);
+            else if (!a.t.magic) Burst("fx_arrow_hit", d.pos + new Vector2(0f, -R * 1.0f), R * 2.6f, 40f);
             int dead = before - Mathf.Max(0, d.count);
             texts.Add(new Float { p = d.pos + new Vector2(0f, -R * 2f), s = "−" + dmg + (dead > 0 ? "  (" + dead + " пало)" : ""), t0 = Time.unscaledTime, col = d.enemy ? new Color(1f, 0.85f, 0.4f) : new Color(1f, 0.45f, 0.35f) });
             Log((a.enemy ? "Враг: " : "") + a.t.name + " → " + d.t.name + ": " + dmg + " урона" + (dead > 0 ? ", пало " + dead : "") + ".");
@@ -465,7 +466,7 @@ namespace BladePath
         static void Hurt(Stack d, int dmg)
         {
             int left = d.Total - dmg;
-            if (left <= 0) { d.count = 0; d.topHp = 0; d.die = Time.unscaledTime; return; }
+            if (left <= 0) { d.count = 0; d.topHp = 0; d.die = Time.unscaledTime; Burst("fx_death", d.pos + new Vector2(0f, -R * 0.9f), R * 3.4f, 30f); return; }
             d.count = Mathf.CeilToInt(left / (float)d.t.hp);
             d.topHp = left - (d.count - 1) * d.t.hp;
         }
@@ -849,7 +850,7 @@ namespace BladePath
         // кадр рисуется целиком, следующий — поверх с долей (без мигания), как у водопадов карты
         class Fx { public string sheet; public Vector2 p; public float t0, size, fps = 30f; public bool loop; }
         static readonly List<Fx> fxs = new List<Fx>();
-        static readonly string[] SpellFx = { "fx_cross", "", "", "fx_arrows", "fx_fire", "fx_wind", "fx_heal", "fx_fog", "fx_thunder", "fx_curse", "" };
+        static readonly string[] SpellFx = { "fx_cross", "fx_warcry", "fx_shield", "fx_arrows", "fx_fire", "fx_wind", "fx_heal", "fx_fog", "fx_thunder", "fx_curse", "fx_dash" };
         /// <summary>Эффект в точке поля; false — листа нет (тогда рисуется простой эффект).</summary>
         static bool Burst(string sheet, Vector2 p, float size, float fps = 30f)
         {
@@ -1090,7 +1091,17 @@ namespace BladePath
                 if (k >= 1f) { shots.RemoveAt(i); continue; }
                 Vector2 p = Vector2.Lerp(s.a, s.b, k) + new Vector2(0f, -Mathf.Sin(k * Mathf.PI) * R * (s.magic ? 0.4f : 1.4f));
                 Vector2 q = Vector2.Lerp(s.a, s.b, Mathf.Max(0f, k - 0.08f)) + new Vector2(0f, -Mathf.Sin(Mathf.Max(0f, k - 0.08f) * Mathf.PI) * R * (s.magic ? 0.4f : 1.4f));
-                if (s.magic) { UiKit.Disc(p, R * 0.22f, new Color(1f, 0.7f, 0.3f, 0.9f)); UiKit.Disc(p, R * 0.4f, new Color(1f, 0.5f, 0.2f, 0.25f)); }
+                // снаряд из листа владельца (петля, нарисован летящим вправо) — повёрнут по касательной полёта
+                Texture2D pt = Event.current.type == EventType.Repaint ? UiKit.Tex(s.magic ? "UI/Battle/fx_orb_fly" : "UI/Battle/fx_arrow_fly") : null;
+                if (pt != null && (p - q).sqrMagnitude > 0.01f)
+                {
+                    float ang = Mathf.Atan2(p.y - q.y, p.x - q.x) * Mathf.Rad2Deg, sz = R * (s.magic ? 2.2f : 2.6f), h = sz * 170f / 192f;
+                    Matrix4x4 om = GUI.matrix;
+                    GUIUtility.RotateAroundPivot(ang, p);
+                    DrawSheet(pt, new Rect(p.x - sz * 0.5f, p.y - h * 0.5f, sz, h), (now - s.t0) * 40f, 1f, true);
+                    GUI.matrix = om;
+                }
+                else if (s.magic) { UiKit.Disc(p, R * 0.22f, new Color(1f, 0.7f, 0.3f, 0.9f)); UiKit.Disc(p, R * 0.4f, new Color(1f, 0.5f, 0.2f, 0.25f)); }
                 else UiKit.Line(q, p, 2f, new Color(0.25f, 0.18f, 0.1f, 1f));
             }
             for (int i = texts.Count - 1; i >= 0; i--)
