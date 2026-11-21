@@ -120,6 +120,12 @@ namespace BladePath
             public List<Vector2> path = new List<Vector2>();
             public float lunge; public Vector2 lungeDir; public float flash, die = -1f, born;
             public GameObject go; public Animation an; public string playing; public float actUntil, hitUntil;
+            public Material surface;
+            public Transform hips;
+            public Vector3 restHips;
+            public float clipStart, previousStart, actStart, contactAt;
+            public Vector2 attackStep;
+            public string previousClip;
             public string clipIdle, clipWalk, clipAct, clipHit, clipDie, clipWin;
             public int run;                     // сколько клеток пробежал перед ударом (разгон конницы)
             public float idleYaw;               // насколько стойка разворачивает грудь от носков (боевая стойка — боком); поправка, чтобы грудь смотрела на врага
@@ -561,7 +567,8 @@ namespace BladePath
         static IEnumerator DoWallHit(Stack a, int r)
         {
             a.lungeDir = (Center(WallC, r) - a.pos).normalized;
-            if (a.an != null) { a.lunge = 0.6f; yield return Act(a, 0.45f); } else { a.lunge = 1f; yield return 0.18f; }
+            a.attackStep = a.lungeDir * R * 0.48f;
+            if (a.an != null) { yield return Act(a, 0.45f); } else { a.lunge = 1f; yield return 0.18f; }
             wallHp[r] = Mathf.Max(0, wallHp[r] - 1);
             Burst("fx_slash_hit", Center(WallC, r) + new Vector2(0f, -R * 1.1f), R * 3f, 36f);
             Log(a.t.name + ": " + (r == GateR ? "ворота" : IsTower(r) ? "башня" : "стена") + (wallHp[r] == 0 ? " разрушены." : " пробиты."));
@@ -738,6 +745,8 @@ namespace BladePath
         static IEnumerator DoShoot(Stack a, Stack d)
         {
             if (!(mCart && !a.enemy)) a.shots--;   // повозка с боеприпасами: стрелы не кончаются
+            a.lungeDir = (d.pos - a.pos).normalized;
+            a.attackStep = Vector2.zero;
             if (a.an != null) yield return Act(a, 0.55f);   // натянул лук / вскинул ружьё / сложил печать
             if (a.t == Ours[2] || a.t == Ours[14]) Burst("fx_musket", a.pos + new Vector2(R * (a.enemy ? -0.9f : 0.9f), -R * 1.3f), R * 3.2f, 36f);
             Vector2 from = a.pos + new Vector2(0f, -R * 1.1f), to = d.pos + new Vector2(0f, -R * 0.8f);
@@ -751,7 +760,8 @@ namespace BladePath
         {
             if (a.an != null && !ranged)
             {   // живой боец: клип удара, урон — на середине замаха
-                a.lungeDir = (d.pos - a.pos).normalized; a.lunge = 0.6f;
+                a.lungeDir = (d.pos - a.pos).normalized;
+                a.attackStep = Vector2.ClampMagnitude((d.pos - a.pos) * 0.43f, R * 0.78f);
                 yield return Act(a, 0.45f);
             }
             else if (!ranged) { a.lungeDir = (d.pos - a.pos).normalized; a.lunge = 1f; yield return 0.18f; }
@@ -771,12 +781,12 @@ namespace BladePath
                     Burst("fx_slash_hit", o.pos + new Vector2(0f, -R * 1.1f), R * 2.6f, 36f);
                     texts.Add(new Float { p = o.pos + new Vector2(0f, -R * 2f), s = "−" + od, t0 = Time.unscaledTime, col = o.enemy ? new Color(1f, 0.85f, 0.4f) : new Color(1f, 0.45f, 0.35f) });
                 }
-            else if (!a.t.magic) Burst("fx_arrow_hit", d.pos + new Vector2(0f, -R * 1.0f), R * 2.6f, 40f);
+            if (ranged && !a.t.magic) Burst("fx_arrow_hit", d.pos + new Vector2(0f, -R * 1.0f), R * 2.6f, 40f);
             int dead = before - Mathf.Max(0, d.count);
             texts.Add(new Float { p = d.pos + new Vector2(0f, -R * 2f), s = "−" + dmg + (dead > 0 ? "  (" + dead + " пало)" : ""), t0 = Time.unscaledTime, col = d.enemy ? new Color(1f, 0.85f, 0.4f) : new Color(1f, 0.45f, 0.35f) });
             Log((a.enemy ? "Враг: " : "") + a.t.name + " → " + d.t.name + ": " + dmg + " урона" + (dead > 0 ? ", пало " + dead : "") + ".");
             UiFx.Play("ui_taiko_heavy", ranged ? 0.3f : 0.5f);
-            yield return 0.3f;
+            yield return Mathf.Max(0.3f, a.actUntil - Time.unscaledTime);
         }
 
         static int Damage(Stack a, Stack d, bool ranged, bool estimate)
@@ -1017,7 +1027,7 @@ namespace BladePath
             DuelManager dm = DuelManager.Instance;
             if (dm == null) return;
             HashSet<int> need = new HashSet<int>();
-            foreach (Stack s in stacks) if (s.t.model > -99 && !snaps.ContainsKey(s.t.model)) need.Add(s.t.model);
+            foreach (Stack s in stacks) if (s.go == null && s.t.atlasCell < 0 && s.t.model > -99 && !snaps.ContainsKey(s.t.model)) need.Add(s.t.model);
             if (need.Count == 0) return;
             const int SW = 192, SH = 288, Layer = 30;
             RenderTexture rt = RenderTexture.GetTemporary(SW, SH, 24, RenderTextureFormat.ARGB32);
@@ -1081,9 +1091,13 @@ namespace BladePath
 
         static IEnumerator Act(Stack s, float impact)
         {
-            s.actUntil = Time.unscaledTime + Mathf.Max(impact + 0.3f, ClipLen(s, s.clipAct, 1.1f));
-            if (s.clipAct != null) { Play(s, s.clipAct, true); }
-            yield return impact;
+            float duration = ClipLen(s, s.clipAct, 0.7f);
+            s.actUntil = Time.unscaledTime + duration;
+            s.actStart = Time.unscaledTime;
+            s.contactAt = s.actStart + duration * impact;
+            if (s.clipAct != null) Play(s, s.clipAct, true);
+            else Play(s, s.clipIdle, false);
+            yield return duration * impact;
         }
         static float ClipLen(Stack s, string c, float def)
         {
@@ -1116,9 +1130,70 @@ namespace BladePath
         {
             if (s.an == null || clip == null || s.an[clip] == null) return;
             if (s.playing == clip && !restart) return;
+            if (s.previousClip != null) s.an[s.previousClip].enabled = false;
+            s.previousClip = clip != s.playing ? s.playing : null;
+            s.previousStart = s.clipStart;
             s.playing = clip;
-            if (restart) { s.an[clip].time = 0f; s.an.Play(clip); }
-            else s.an.CrossFade(clip, 0.18f);
+            s.clipStart = Time.unscaledTime;
+        }
+
+        // The board advances on unscaled time, including while the duel is paused.
+        static void SamplePose(Stack s, float now)
+        {
+            if (s.an == null || s.playing == null) return;
+            AnimationState current = s.an[s.playing];
+            float elapsed = now - s.clipStart;
+            float blend = s.previousClip == null ? 1f : Mathf.Clamp01(elapsed / 0.12f);
+            if (s.previousClip != null)
+            {
+                AnimationState previous = s.an[s.previousClip];
+                previous.enabled = blend < 1f;
+                previous.weight = 1f - blend;
+                previous.time = PoseTime(s, previous, now - s.previousStart);
+                if (blend >= 1f) s.previousClip = null;
+            }
+            current.enabled = true;
+            current.weight = blend;
+            current.time = PoseTime(s, current, elapsed);
+            s.an.Sample();
+            // The hex path owns horizontal travel. Keep vertical motion from the gait.
+            if (s.hips != null && s.playing == s.clipWalk)
+            {
+                Vector3 local = s.go.transform.InverseTransformPoint(s.hips.position);
+                local.x = Mathf.Lerp(local.x, s.restHips.x, blend);
+                local.z = Mathf.Lerp(local.z, s.restHips.z, blend);
+                s.hips.position = s.go.transform.TransformPoint(local);
+            }
+        }
+
+        static float PoseTime(Stack s, AnimationState clip, float elapsed)
+        {
+            if (clip.length <= 0f) return 0f;
+            if (clip.name == s.clipWalk)
+            {
+                float stride = s.t.joust ? 2.3f : s.t.cell == 11 ? 1.05f : 1.45f;
+                float cycles = elapsed * BoardSpeed(s) / (PPM * stride);
+                return Mathf.Repeat(cycles, 1f) * clip.length;
+            }
+            if (clip.wrapMode == WrapMode.Loop) return Mathf.Repeat(elapsed, clip.length);
+            if (clip.name == s.clipAct)
+                elapsed *= clip.length / ClipLen(s, s.clipAct, 1f);
+            return Mathf.Clamp(elapsed, 0f, clip.length);
+        }
+
+        static float BodyHeight(GameObject model, bool humanoid, float boundsHeight)
+        {
+            if (!humanoid) return boundsHeight;
+            Transform head = null, left = null, right = null;
+            foreach (Transform bone in model.GetComponentsInChildren<Transform>(true))
+            {
+                if (bone.name == "Head") head = bone;
+                else if (bone.name == "LeftFoot") left = bone;
+                else if (bone.name == "RightFoot") right = bone;
+            }
+            if (head == null || left == null || right == null) return boundsHeight;
+            float height = (head.position.y - (left.position.y + right.position.y) * 0.5f) / 0.79f;
+            return height > 0.01f ? height : boundsHeight;
         }
 
         static void SetupLive()
@@ -1141,19 +1216,25 @@ namespace BladePath
             foreach (Stack s in stacks)
             {
                 if (string.IsNullOrEmpty(s.t.live)) continue;
-                GameObject pf = Resources.Load<GameObject>("Units/" + s.t.live);
+                string resource = s.t.live;
+                GameObject pf = Resources.Load<GameObject>("Units/" + resource);
+                if (pf == null && s.t.up && s.t.cell >= 0 && s.t.cell < BaseUnits)
+                {
+                    resource = Ours[s.t.cell].live;
+                    pf = Resources.Load<GameObject>("Units/" + resource);
+                }
                 if (pf == null) continue;
-                GameObject go = Object.Instantiate(pf, stage.transform);
-                go.name = "Unit_" + s.t.live;
+                GameObject go = new GameObject("Unit_" + s.t.live);
+                go.transform.SetParent(stage.transform, false);
+                Object.Instantiate(pf, go.transform, false);
                 foreach (Transform tr in go.GetComponentsInChildren<Transform>(true)) tr.gameObject.layer = LiveLayer;
-                Texture2D tex = Resources.Load<Texture2D>("Units/" + s.t.live + "_albedo");
-                Shader sh = Shader.Find("Standard");
+                Texture2D tex = Resources.Load<Texture2D>("Units/" + resource + "_albedo");
+                Shader sh = Resources.Load<Shader>("TacticsUnit");
+                s.surface = new Material(sh != null ? sh : Shader.Find("Standard"));
+                if (tex != null) s.surface.mainTexture = tex;
                 foreach (Renderer r in go.GetComponentsInChildren<Renderer>(true))
                 {
-                    Material m = new Material(sh); if (tex != null) m.mainTexture = tex;
-                    m.SetFloat("_Glossiness", 0.25f); m.SetFloat("_Metallic", 0.05f);
-                    m.color = s.enemy ? new Color(1.05f, 0.95f, 0.92f) : new Color(1.12f, 1.1f, 1.06f);
-                    Material[] ms = new Material[r.sharedMaterials.Length]; for (int i = 0; i < ms.Length; i++) ms[i] = m;
+                    Material[] ms = new Material[r.sharedMaterials.Length]; for (int i = 0; i < ms.Length; i++) ms[i] = s.surface;
                     r.sharedMaterials = ms;
                     r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                     SkinnedMeshRenderer sm = r as SkinnedMeshRenderer; if (sm != null) sm.updateWhenOffscreen = true;
@@ -1161,10 +1242,16 @@ namespace BladePath
                 // рост — по меркам модели
                 Bounds b = new Bounds(go.transform.position, Vector3.zero); bool has = false;
                 foreach (Renderer r in go.GetComponentsInChildren<Renderer>()) { if (!has) { b = r.bounds; has = true; } else b.Encapsulate(r.bounds); }
-                if (has && b.size.y > 0.01f) go.transform.localScale *= s.t.liveH / b.size.y;
+                bool humanoid = resource != "unit_dog" && resource != "unit_cavalry" && s.t.cell != 11 && s.t.cell != 4;
+                float height = BodyHeight(go, humanoid, has ? b.size.y : 0f);
+                if (height > 0.01f) go.transform.localScale *= s.t.liveH / height;
                 s.go = go; s.an = go.GetComponentInChildren<Animation>();
+                foreach (Transform bone in go.GetComponentsInChildren<Transform>(true))
+                    if (bone.name == "Hips") { s.hips = bone; s.restHips = go.transform.InverseTransformPoint(bone.position); break; }
                 if (s.an != null)
                 {
+                    s.an.Stop();
+                    s.an.playAutomatically = false;
                     s.an.cullingType = AnimationCullingType.AlwaysAnimate;
                     List<string> names = new List<string>();
                     foreach (AnimationState st in s.an) names.Add(st.name);
@@ -1176,10 +1263,13 @@ namespace BladePath
                     s.clipIdle = Find(left, "idle", "stance"); left.Remove(s.clipIdle);
                     s.clipWalk = Find(left, "walk", "canter", "run"); left.Remove(s.clipWalk);
                     s.clipAct = Find(left, "shot", "shoot", "slash", "thrust", "spell", "cast", "attack", "combo", "jump");
-                    if (s.clipAct == null && left.Count > 0) s.clipAct = left[0];
+                    if (s.clipAct == null) s.clipAct = Find(left, "bite", "strike", "swing", "punch", "kick", "fire");
                     if (s.clipIdle == null && names.Count > 0) s.clipIdle = names[0];
                     foreach (AnimationState st in s.an)
+                    {
+                        st.speed = 0f;
                         st.wrapMode = st.name == s.clipIdle || st.name == s.clipWalk ? WrapMode.Loop : st.name == s.clipDie ? WrapMode.ClampForever : WrapMode.Once;
+                    }
                     s.idleYaw = ChestYaw(s);
                     Play(s, s.clipIdle, true);
                 }
@@ -1187,7 +1277,7 @@ namespace BladePath
         }
         static string Find(List<string> names, params string[] keys)
         {
-            foreach (string k in keys) { if (k == null) continue; foreach (string n in names) if (n.ToLowerInvariant().Contains(k)) return n; }
+            foreach (string k in keys) { if (k == null) continue; foreach (string n in names) if (n.Substring(n.LastIndexOf('|') + 1).ToLowerInvariant().Contains(k)) return n; }
             return null;
         }
         static GameObject generalGo; static Animation generalAn; static string genIdle, genCast;
@@ -1238,9 +1328,22 @@ namespace BladePath
             if (stage != null) Object.Destroy(stage);
             stage = null; liveCam = null;
             if (liveRT != null) { liveRT.Release(); Object.Destroy(liveRT); liveRT = null; }
-            foreach (Stack s in stacks) { s.go = null; s.an = null; s.playing = null; }
+            foreach (Stack s in stacks) { if (s.surface != null) Object.Destroy(s.surface); s.surface = null; s.go = null; s.an = null; s.playing = null; s.previousClip = null; }
         }
         static void Close() { CleanupLive(); Open = false; }
+
+        static Vector2 UnitPosition(Stack s)
+        {
+            float now = Time.unscaledTime;
+            if (s.Alive && s.an != null && now < s.actUntil)
+            {
+                float weight = now < s.contactAt
+                    ? Mathf.InverseLerp(s.actStart, s.contactAt, now)
+                    : 1f - Mathf.InverseLerp(s.contactAt, s.actUntil, now);
+                return s.pos + s.attackStep * Mathf.SmoothStep(0f, 1f, weight);
+            }
+            return s.pos + s.lungeDir * Mathf.Sin(s.lunge * Mathf.PI) * R * 0.6f;
+        }
 
         static Vector3 Ground(Vector2 v)
         {
@@ -1276,8 +1379,8 @@ namespace BladePath
                 if (s.go == null) continue;
                 bool dead = !s.Alive;
                 if (dead && s.die > 0f && now - s.die > 6f) { s.go.SetActive(false); continue; }   // тело лежит — потом убирается
-                Vector2 p = s.pos + s.lungeDir * Mathf.Sin(s.lunge * Mathf.PI) * R * 0.35f;
-                s.go.transform.position = Ground(new Vector2(p.x - W * 0.5f + W * 0.5f, p.y));
+                Vector2 p = UnitPosition(s);
+                s.go.transform.position = Ground(p);
                 // направление: на ходу — по пути, иначе — к врагам
                 Vector2 dir = s.path.Count > 0 ? s.path[0] - s.pos : new Vector2(s.enemy ? -1f : 1f, 0f);   // армии смотрят строго друг на друга (владелец)
                 if (s.actUntil > now && s.lungeDir.sqrMagnitude > 0.01f) dir = s.lungeDir;
@@ -1289,9 +1392,7 @@ namespace BladePath
                     s.go.transform.rotation = Quaternion.Slerp(s.go.transform.rotation, want, Mathf.Min(1f, Time.unscaledDeltaTime * 10f));
                 }
                 // вспышка попадания — цвет материала (у снимков — цвет картинки)
-                foreach (Renderer rr in s.go.GetComponentsInChildren<Renderer>())
-                    foreach (Material mm in rr.sharedMaterials)
-                        if (mm != null) mm.color = Color.Lerp(s.enemy ? new Color(1.05f, 0.95f, 0.92f) : new Color(1.12f, 1.1f, 1.06f), new Color(1.6f, 0.45f, 0.4f), s.flash);
+                if (s.surface != null) s.surface.color = Color.Lerp(s.enemy ? new Color(1.05f, 0.95f, 0.92f) : new Color(1.12f, 1.1f, 1.06f), new Color(1.6f, 0.45f, 0.4f), s.flash);
                 if (dead && s.clipDie == null)
                 {   // клипа смерти нет (конь): заваливается набок и уходит в землю
                     float k = Mathf.Clamp01((now - s.die) / 0.9f);
@@ -1305,6 +1406,7 @@ namespace BladePath
                 else if (s.hitUntil > now && s.clipHit != null) { if (s.playing != s.clipHit) Play(s, s.clipHit, true); }
                 else if (finished && won && !s.enemy && s.clipWin != null) Play(s, s.clipWin, false);
                 else Play(s, s.clipIdle, false);
+                SamplePose(s, now);
             }
             liveCam.Render();
             GUI.DrawTexture(new Rect(0f, 0f, W, 540f), liveRT, ScaleMode.StretchToFill, true);
@@ -1379,7 +1481,7 @@ namespace BladePath
             Event e = Event.current;
             if (e.type == EventType.Repaint)
             {
-                if (!snapsTaken) { TakeSnaps(); SetupLive(); }
+                if (!snapsTaken) { SetupLive(); TakeSnaps(); }
                 Animate();
                 Step();
                 if (!deploy && !Busy && !finished && cur != null && (cur.enemy || autoOurs)) Run(AiTurn(cur));
@@ -1411,6 +1513,11 @@ namespace BladePath
             else if (!bookOpen && info == null) HandleInput();
         }
 
+        static float BoardSpeed(Stack s)
+        {
+            return R * Mathf.Lerp(2.8f, 4.2f, Mathf.InverseLerp(3f, 11f, s.Spd));
+        }
+
         static void Animate()
         {
             float dt = Mathf.Min(0.05f, Time.unscaledDeltaTime);
@@ -1421,7 +1528,10 @@ namespace BladePath
                 if (s.path.Count > 0)
                 {
                     Vector2 t = s.path[0];
-                    s.pos = Vector2.MoveTowards(s.pos, t, hw * 7f * dt);
+                    Vector2 step = t - s.pos;
+                    float groundDistance = new Vector2(step.x, step.y / Sq).magnitude;
+                    float travel = BoardSpeed(s) * dt;
+                    s.pos = groundDistance <= travel ? t : s.pos + step * (travel / groundDistance);
                     if ((s.pos - t).sqrMagnitude < 0.5f) { s.pos = t; s.path.RemoveAt(0); }
                 }
                 else s.pos = Vector2.MoveTowards(s.pos, home, hw * 10f * dt);
@@ -1517,7 +1627,7 @@ namespace BladePath
             {
                 float fade = 1f;
                 if (!s.Alive) { if (s.die < 0f) continue; fade = 1f - (Time.unscaledTime - s.die) / 0.8f; if (fade <= 0f) continue; }
-                Vector2 p = s.pos + s.lungeDir * Mathf.Sin(s.lunge * Mathf.PI) * R * 0.6f;
+                Vector2 p = UnitPosition(s);
                 float bob = Mathf.Sin(Time.unscaledTime * 2.2f + s.c * 1.7f + s.r) * 1.2f;
                 // тень
                 UiKit.Disc(p + new Vector2(0f, 2f), R * 0.5f, new Color(0f, 0f, 0f, 0.28f * fade));
@@ -1526,14 +1636,14 @@ namespace BladePath
                     if (!s.Alive) continue;
                     goto plaqueOnly;
                 }
-                Texture2D t = Snap(s.t.model);
+                Texture2D t = s.t.atlasCell < 0 ? Snap(s.t.model) : null;
                 Color oc = GUI.color;
                 Color tint = Color.Lerp(Color.white, new Color(1f, 0.35f, 0.3f), s.flash);
                 tint.a = fade;
                 GUI.color = tint;
                 if (t != null)
                 {
-                    float h = R * (s.t.hp >= 80 ? 3.1f : 2.45f), w = h * t.width / t.height;
+                    float h = R * 2.45f * s.t.liveH / 1.7f, w = h * t.width / t.height;
                     Rect rr = new Rect(p.x - w * 0.5f, p.y - h * 0.93f + bob, w, h);
                     bool flip = s.enemy;   // снимки смотрят вправо — враги разворачиваются к нам
                     GUI.DrawTextureWithTexCoords(rr, t, flip ? new Rect(1f, 0f, -1f, 1f) : new Rect(0f, 0f, 1f, 1f));
@@ -1541,7 +1651,7 @@ namespace BladePath
                 else
                 {
                     Texture2D pt = Portrait(s.t);
-                    float d = R * 1.3f;
+                    float d = s.t.atlasCell >= 0 ? R * 2.2f * s.t.liveH / 1.7f : R * 1.3f;
                     if (pt != null) DrawPortrait(new Rect(p.x - d * 0.5f, p.y - d * 1.05f + bob, d, d), s.t);
                     else UiKit.Disc(p - new Vector2(0f, R * 0.6f), R * 0.5f, s.enemy ? new Color(0.6f, 0.2f, 0.15f) : new Color(0.3f, 0.4f, 0.6f));
                 }

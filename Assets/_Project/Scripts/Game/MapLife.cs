@@ -539,10 +539,11 @@ namespace BladePath
             for (int i = 0; i < 3; i++)
             {
                 float phase = locationPhase + i * 2.17f;
-                float drift = t * (0.72f + 0.17f * i) + phase;
-                float x = 0.23f + i * 0.27f + 0.09f * Mathf.Sin(drift);
-                float y = 0.49f + 0.22f * Mathf.Sin(drift * 0.81f + phase)
-                    + 0.06f * Mathf.Sin(t * 1.21f + phase);
+                float drift = t * (0.46f + 0.09f * i) + phase;
+                float orbit = drift + 0.36f * Mathf.Sin(0.51f * drift + phase);
+                float x = 0.5f + 0.27f * Mathf.Cos(orbit) + 0.045f * Mathf.Sin(drift * 1.71f);
+                float y = 0.5f + 0.19f * Mathf.Sin(orbit + phase * 0.27f)
+                    + 0.075f * Mathf.Sin(t * (0.33f + 0.06f * i) + phase);
                 float size = extent * (0.29f - 0.025f * i);
                 Rect sprite = new Rect(region.x + x * region.width - size * 0.5f,
                     region.y + y * region.height - size * 0.5f, size, size);
