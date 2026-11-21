@@ -123,9 +123,9 @@ namespace BladePath
                 glow = UiKit.Tex("FX/glow_pool"), shade = SoftSprites.Fog;
             Color oc = GUI.color;
             float t = Time.realtimeSinceStartup;
-            // Keep rain, lightning and cloud positions; dark cloud bodies on this
-            // detailed forest map must not look like opaque black paint.
-            float paintedForestOpacity = r == 0 && MapGeom.TexHt[0] > 1024 ? 0.47f : 1f;
+            // Restore the full storm contrast lost in previous builds.
+            // Terrain mist is rendered separately and must not dim storm clouds.
+            float paintedForestOpacity = 1f; // Never wash out original storm-cloud artwork.
             for (int i = 0; i < clouds.Length; i++)
             {
                 Cloud c = clouds[i];
