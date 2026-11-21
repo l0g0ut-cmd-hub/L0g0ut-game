@@ -450,8 +450,12 @@ namespace BladePath
             if (atlas == null) return false;
             Matrix4x4 matrix = GUI.matrix;
             if (degrees != 0f)
-                GUIUtility.RotateAroundPivot(degrees,
-                    pivotAtLip ? new Vector2(area.center.x, area.y) : area.center);
+            {
+                // Rotate in map coordinates before the outer GUI transform scales the screen.
+                Vector2 pivot = pivotAtLip ? new Vector2(area.center.x, area.y) : area.center;
+                GUI.matrix = matrix * Matrix4x4.TRS(pivot, Quaternion.Euler(0f, 0f, degrees), Vector3.one);
+                area.position -= pivot;
+            }
             OriginalAtlasFrame(area, atlas, t, fps, alpha, smoothMist);
             GUI.matrix = matrix;
             return true;
@@ -496,11 +500,11 @@ namespace BladePath
             int count = DuelManager.Gfx == 0 ? 2 : 3;
             for (int i = 0; i < count; i++)
             {
-                float phase = Mathf.Repeat(t / 4.2f + (float)i / count, 1f);
+                float phase = Mathf.Repeat(t / 8.4f + (float)i / count, 1f);
                 float x = region.x + (region.width - width) * (0.08f + i * (0.68f / (count - 1)) + 0.20f * phase);
                 float y = region.y + (region.height - height) * phase;
                 float fade = Mathf.SmoothStep(0f, 1f, Mathf.Min(phase, 1f - phase) * 7f);
-                OriginalAtlasFrame(new Rect(x, y, width, height), petals, t + i * 1.7f, 14f, e.alpha * fade);
+                OriginalAtlasFrame(new Rect(x, y, width, height), petals, t + i * 3.4f, 7f, e.alpha * fade);
             }
         }
 
