@@ -30,6 +30,7 @@ namespace BladePath
         const float Hold = 2.5f;       // экран держится, пока screencap забирает кадр
         const float StepLimit = 150f;   // шаг дольше этого — считается зависшим и пропускается
         static QATour inst;
+        static bool MapVfxOnly = true; // map QA branch only; not part of main game's workflow
         int shotIndex, fails;
         MonoBehaviour map;
 
@@ -192,6 +193,12 @@ namespace BladePath
             if (map != null)
             {
                 yield return Step("map_vfx", () => MapVfx());
+                // Dedicated QA branch: map-only. No endless unrelated battle/window tour.
+                if (MapVfxOnly)
+                {
+                    Debug.Log("QATOUR_DONE shots=" + shotIndex + " fails=" + fails);
+                    yield break;
+                }
                 yield return Step("ride", () => Ride());
                 yield return Step("node_windows", () => NodeWindows());
                 for (int k = 0; k < MapScreen.EventCount; k++) { int kk = k; yield return Step("event_" + k, () => EventShot(kk)); }
