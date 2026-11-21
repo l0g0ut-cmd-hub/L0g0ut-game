@@ -529,17 +529,28 @@ namespace BladePath
 
         static void TerrainWisps(MapEffect e, Rect region, float t)
         {
-            Texture2D spirits = UiKit.Tex("UI/Battle/map_wisps_loop");
-            if (spirits == null) return;
-            float width = Mathf.Min(region.width, region.height * 192f / 170f);
-            float height = width * 170f / 192f;
-            Rect group = new Rect(region.center.x - width * 0.5f, region.center.y - height * 0.5f,
-                width, height);
-            // Three motion-interpolated samples per original frame, including the loop seam.
-            int frame = Mathf.FloorToInt(Mathf.Repeat(t * 48f, 144f));
+            Texture2D atlas = UiKit.Tex("UI/Battle/map_wisp_sprites");
+            if (atlas == null) return;
+            // Each strip follows one painted flame, centred on its luminous core.
+            // World motion stays continuous when the sprite reaches either end of its strip.
+            float locationPhase = Mathf.Repeat(e.x * 0.073f + e.y * 0.041f, 2f * Mathf.PI);
+            float extent = Mathf.Min(region.width, region.height);
             Color tint = GUI.color;
-            GUI.color = new Color(1f, 1f, 1f, Mathf.Clamp01(e.alpha));
-            GUI.DrawTextureWithTexCoords(group, spirits, MapAtlasCell(spirits, frame, 12, 12));
+            for (int i = 0; i < 3; i++)
+            {
+                float phase = locationPhase + i * 2.17f;
+                float drift = t * (0.72f + 0.17f * i) + phase;
+                float x = 0.23f + i * 0.27f + 0.09f * Mathf.Sin(drift);
+                float y = 0.49f + 0.22f * Mathf.Sin(drift * 0.81f + phase)
+                    + 0.06f * Mathf.Sin(t * 1.21f + phase);
+                float size = extent * (0.29f - 0.025f * i);
+                Rect sprite = new Rect(region.x + x * region.width - size * 0.5f,
+                    region.y + y * region.height - size * 0.5f, size, size);
+                float shimmer = t * (0.58f + 0.09f * i) + phase;
+                int frame = 48 * i + Mathf.RoundToInt(23.5f * (1f - Mathf.Cos(shimmer)));
+                GUI.color = new Color(1f, 1f, 1f, Mathf.Clamp01(e.alpha));
+                GUI.DrawTextureWithTexCoords(sprite, atlas, MapAtlasCell(atlas, frame, 16, 9));
+            }
             GUI.color = tint;
         }
 
