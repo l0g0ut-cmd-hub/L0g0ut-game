@@ -448,40 +448,35 @@ namespace BladePath
 
         // Sparse breathing forest lights, with a very soft halo instead of
         // neon dots. Different orbits and lifetimes prevent visible grid patterns.
+        // Original 48-frame green forest-spirit animation from
+        // Resources/UI/Battle/map_wisps.png (8 columns x 6 rows).
+        // Keep its painted flame shape and movement; only scale down each spirit.
         static void TerrainWisps(MapEffect e, Rect r, float t)
         {
-            Texture2D halo = SoftSprites.Fog, core = SoftSprites.Disc;
-            if (e.alpha <= 0f || halo == null || core == null) return;
-            Color original = GUI.color;
-            int count = DuelManager.Gfx == 0 ? 7 : 12;
+            Texture2D atlas = UiKit.Tex("UI/Battle/map_wisps");
+            if (atlas == null || e.alpha <= 0f) return;
+            Color before = GUI.color;
+            int count = DuelManager.Gfx == 0 ? 5 : 9;
+            float baseSize = Mathf.Clamp(Mathf.Min(r.width, r.height) * 0.145f, 9f, 22f);
             for (int i = 0; i < count; i++)
             {
                 float seed = e.x * 0.021f + e.y * 0.014f + i * 13.83f;
-                float drift = t * (0.21f + 0.17f * H(seed + 7f)) + seed;
-                float x = r.x + r.width * (0.16f + 0.66f * H(seed))
-                    + Mathf.Sin(drift) * (3f + 2.0f * H(seed + 2f));
-                float y = r.y + r.height * (0.20f + 0.60f * H(seed + 1f))
-                    + Mathf.Cos(drift * 1.19f) * (3f + 2f * H(seed + 4f));
-                float breathe = Mathf.Pow(0.5f + 0.5f *
-                    Mathf.Sin(t * (0.68f + H(seed + 4f) * 0.52f) + seed * 3.2f), 2f);
-                float alpha = e.alpha * (0.12f + 0.70f * breathe);
-                float rad = 1.25f + 0.65f * H(seed + 6f);
-                float soft = rad * 5.2f;
-                GUI.color = new Color(0.17f, 0.67f, 0.40f, alpha * 0.38f);
-                GUI.DrawTexture(new Rect(x - soft, y - soft,
-                    soft * 2f, soft * 2f), halo);
-                GUI.color = new Color(0.59f, 0.95f, 0.67f, alpha * 0.72f);
-                GUI.DrawTexture(new Rect(x - rad * 1.3f, y - rad * 1.3f,
-                    rad * 2.6f, rad * 2.6f), core);
-                GUI.color = new Color(0.86f, 1f, 0.82f, alpha * 0.45f);
-                GUI.DrawTexture(new Rect(x - rad * 0.52f, y - rad * 0.52f,
-                    rad * 1.04f, rad * 1.04f), core);
+                float driftTime = t * (0.15f + 0.10f * H(seed + 5f)) + seed;
+                float x = r.x + r.width * (0.15f + 0.69f * H(seed))
+                    + Mathf.Sin(driftTime) * Mathf.Min(4.2f, r.width * 0.045f);
+                float y = r.y + r.height * (0.20f + 0.59f * H(seed + 1f))
+                    + Mathf.Cos(driftTime * 1.19f) * Mathf.Min(3.2f, r.height * 0.04f);
+                float size = baseSize * (0.78f + 0.28f * H(seed + 3f));
+                float breathe = 0.77f + 0.17f * Mathf.Sin(t * 0.69f + seed * 3.2f);
+                float animTime = t * (0.90f + 0.16f * H(seed + 7f))
+                    + H(seed + 9f) * 3.42f;
+                SheetFrame(new Rect(x - size * 0.5f, y - size * 0.5f, size, size),
+                    atlas, 8, 6, 48, animTime, 14f,
+                    Mathf.Clamp01(e.alpha * breathe), false);
             }
-            GUI.color = original;
+            GUI.color = before;
         }
 
-        // Terrain mist is pale and partially transparent, its actual alpha mask
-        // fades on all sides. Unlike weather puffs it never has a black background.
         static void TerrainMist(MapEffect e, Rect r, float t)
         {
             Texture2D wisp = JourneyMistArt.Texture;
