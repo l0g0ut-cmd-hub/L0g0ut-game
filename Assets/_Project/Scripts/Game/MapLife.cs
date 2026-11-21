@@ -461,14 +461,33 @@ namespace BladePath
             return true;
         }
 
-        static bool DrawCurvedFall(MapEffect e, Rect r, float t, out Vector2 impact)
+        static bool DrawTerrainFall(MapEffect e, Rect r, float t, out Vector2 impact)
         {
-            float[] offsets = e.fallOffsets;
-            impact = new Vector2(r.center.x + offsets[offsets.Length - 1] * r.width, r.yMax);
+            Vector2 lip = new Vector2(r.center.x, r.y);
+            impact = lip;
             Texture2D atlas = UiKit.Tex("UI/Battle/map_fall");
-            if (atlas == null || r.height <= 0f) return false;
+            if (atlas == null || r.height <= 0f || r.width <= 0f) return false;
             int frame = Mathf.FloorToInt(Mathf.Repeat(t * 20f, 48f));
             Rect uv = MapAtlasCell(atlas, frame);
+            // The moving column occupies the middle of each 192-pixel frame.
+            // Fit its painted width to the ledge while keeping the soft edges.
+            uv = new Rect(uv.x + uv.width * (44f / 192f), uv.y,
+                uv.width * (116f / 192f), uv.height);
+            float[] offsets = e.fallOffsets;
+            if (offsets == null || offsets.Length < 2)
+            {
+                Quaternion rotation = Quaternion.Euler(0f, 0f, e.angle);
+                impact = lip + (Vector2)(rotation * new Vector3(0f, r.height, 0f));
+                Matrix4x4 matrix = GUI.matrix;
+                Color color = GUI.color;
+                GUI.matrix = matrix * Matrix4x4.TRS(lip, rotation, Vector3.one);
+                GUI.color = new Color(1f, 1f, 1f, Mathf.Clamp01(e.alpha));
+                GUI.DrawTextureWithTexCoords(new Rect(-r.width * 0.5f, 0f, r.width, r.height), atlas, uv);
+                GUI.color = color;
+                GUI.matrix = matrix;
+                return true;
+            }
+            impact = new Vector2(lip.x + offsets[offsets.Length - 1] * r.width, r.yMax);
             int bands = offsets.Length - 1;
             float height = r.height / bands;
             Matrix4x4 saved = GUI.matrix;
@@ -590,13 +609,8 @@ namespace BladePath
             }
             if (HiFx && k.StartsWith("fall_"))
             {
-                float radians = e.angle * Mathf.Deg2Rad;
-                Vector2 impact = new Vector2(r.center.x - r.height * Mathf.Sin(radians),
-                    r.y + r.height * Mathf.Cos(radians));
-                bool drawn = e.fallOffsets != null && e.fallOffsets.Length >= 2
-                    ? DrawCurvedFall(e, r, t, out impact)
-                    : AtlasAt("map_fall", r, t, 20f, e.alpha, e.angle, true);
-                if (drawn)
+                Vector2 impact;
+                if (DrawTerrainFall(e, r, t, out impact))
                 {
                     if (e.foot != 0)
                     {
