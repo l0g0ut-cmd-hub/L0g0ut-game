@@ -1,0 +1,119 @@
+[Licensing::Module] Error: Access token is unavailable; failed to update
+[Licensing::Client] Error: Code 500 while processing request (status: Unable to update licenses. Errors: No ULF license found.,Token not found in cache)
+[Licensing::Client] Error: Code 500 while updating license in client (status: Unable to update licenses. Errors: No ULF license found.,Token not found in cache)
+GLX Extensions: GLX_ARB_context_flush_control GLX_ARB_create_context GLX_ARB_create_context_no_error GLX_ARB_create_context_profile GLX_ARB_fbconfig_float GLX_ARB_framebuffer_sRGB GLX_ARB_get_proc_address GLX_ARB_multisample GLX_EXT_create_context_es2_profile GLX_EXT_create_context_es_profile GLX_EXT_fbconfig_packed_float GLX_EXT_framebuffer_sRGB GLX_EXT_no_config_context GLX_EXT_texture_from_pixmap GLX_EXT_visual_info GLX_EXT_visual_rating GLX_MESA_copy_sub_buffer GLX_MESA_query_renderer GLX_OML_swap_method GLX_SGIS_multisample GLX_SGIX_fbconfig GLX_SGIX_pbuffer GLX_SGIX_visual_select_group GLX_SGI_make_current_read 
+rm GL_EXT_texture_swizzle GL_EXT_timer_query GL_EXT_transform_feedback GL_EXT_vertex_array_bgra GL_EXT_vertex_attrib_64bit GL_IBM_multimode_draw_arrays GL_INTEL_shader_atomic_float_minmax GL_KHR_blend_equation_advanced GL_KHR_blend_equation_advanced_coherent GL_KHR_context_flush_control GL_KHR_debug GL_KHR_no_error GL_KHR_parallel_shader_compile GL_KHR_robust_buffer_access_behavior GL_KHR_robustness GL_KHR_texture_compression_astc_ldr GL_KHR_texture_compression_astc_sliced_3d GL_MESA_framebuffer_flip_y GL_MESA_pack_invert GL_MESA_shader_integer_functions GL_MESA_texture_signed_rgba GL_MESA_ycbcr_texture GL_NVX_gpu_memory_info GL_NV_conditional_render GL_NV_copy_image GL_NV_depth_clamp GL_NV_packed_depth_stencil GL_NV_shader_atomic_float GL_NV_texture_barrier GL_OES_EGL_image GL_S3_s3tc
+			LogAssemblyErrors (0ms)
+			LogAssemblyErrors (0ms)
+			LogAssemblyErrors (0ms)
+GLX Extensions: GLX_ARB_context_flush_control GLX_ARB_create_context GLX_ARB_create_context_no_error GLX_ARB_create_context_profile GLX_ARB_fbconfig_float GLX_ARB_framebuffer_sRGB GLX_ARB_get_proc_address GLX_ARB_multisample GLX_EXT_create_context_es2_profile GLX_EXT_create_context_es_profile GLX_EXT_fbconfig_packed_float GLX_EXT_framebuffer_sRGB GLX_EXT_no_config_context GLX_EXT_texture_from_pixmap GLX_EXT_visual_info GLX_EXT_visual_rating GLX_MESA_copy_sub_buffer GLX_MESA_query_renderer GLX_OML_swap_method GLX_SGIS_multisample GLX_SGIX_fbconfig GLX_SGIX_pbuffer GLX_SGIX_visual_select_group GLX_SGI_make_current_read 
+BladePath.MainMenuController:OnError (UnityEngine.Video.VideoPlayer,string) (at Assets/_Project/Scripts/Menu/MainMenuController.cs:68)
+UnityEngine.Video.VideoPlayer:InvokeErrorReceivedCallback_Internal (UnityEngine.Video.VideoPlayer,string) (at /home/bokken/build/output/unity/unity/Modules/Video/Public/ScriptBindings/VideoPlayer.bindings.cs:347)
+VISUAL_QA_FAIL Timeout waiting for game frames
+UnityEngine.Debug:LogError (object)
+VISUAL_QA_DONE failures=1
+An error occured while trying to return the ULF license. Ulf license file not found (/root/.local/share/unity3d/Unity/Unity_lic.ulf) (1404)
+[Licensing::Module] Error: Serial number unavailable for ULF return; skipping operation
+To find the reason for failure: please search for errors in the log above.
+[ERROR] Error: Unable to find image 'unityci/editor:ubuntu-6000.0.36f1-android-3' locally
+----- log tail -----
+[Licensing::IpcConnector] Connection attempt to the License Client on channel: "LicenseClient-root" failed because channel doesn't exist; code: "0x80000002"
+[Licensing::Module] Successfully launched the LicensingClient (PId: 2066)
+[Licensing::IpcConnector] Successfully connected to the License Client on channel: "LicenseClient-root" at "2026-11-21T02:05:22.466549Z"
+[SignatureVerifier] Application signature verification not supported on this platform.
+[Licensing::Client] Handshaking with LicensingClient:
+  Version:                 1.16.2+bdef8f5
+  Session Id:              e8b57e9d13534d1fa304980b15b62b55
+  Correlation Id:          0adafbee08fed659d871859cc4b203cd
+  External correlation Id: 2047025044061818839
+  Machine Id:              D7nTUnjNAmtsUMcnoyrqkgIbYdM=
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-root" (connect: 0.38s, validation: 0.04s, handshake: 0.00s)
+[Licensing::IpcConnector] Successfully connected to the License Notification on channel: "LicenseClient-root-notifications" at "2026-11-21T02:05:22.503439Z"
+[Licensing::Module] Connected to LicensingClient (PId: 2066, launch time: 0.00, total connection time: 0.41s)
+[Licensing::Client] Successfully updated the access token
+[Licensing::Module] Successfully updated the access token MgYITdBEeY...
+[Licensing::Client] Successfully processed license management request
+[Licensing::Module] Successfully returned the entitlement license
+[Licensing::Client] Successfully queried for the EntitlementGroupsDetails
+[Licensing::Module] Error: Serial number unavailable for ULF return; skipping operation
+/github/workspace
+
+###########################
+#         Failure         #
+###########################
+
+Please note that the exit code is not very descriptive.
+Most likely it will not help you solve the issue.
+
+To find the reason for failure: please search for errors in the log above.
+
+::endgroup::
+[ERROR] Error: Unable to find image 'unityci/editor:ubuntu-6000.0.36f1-android-3' locally
+ubuntu-6000.0.36f1-android-3: Pulling from unityci/editor
+96c832531c38: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+8e578c7fd715: Pulling fs layer
+9a4d47d5aa13: Pulling fs layer
+46805e80f2d7: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+39cd9db1617e: Pulling fs layer
+dc7a969c82d9: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+7bcf62982864: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+a1ff4bc3f481: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+e1e0763b8b7f: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+a636358af2c8: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+bef3b93c3984: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+d3a5feebe29b: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+8d5d2a3e6b0f: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+bef3b93c3984: Download complete
+e1e0763b8b7f: Download complete
+d3a5feebe29b: Download complete
+4f4fb700ef54: Download complete
+7bcf62982864: Download complete
+a636358af2c8: Download complete
+9a4d47d5aa13: Download complete
+a1ff4bc3f481: Download complete
+8e578c7fd715: Download complete
+39cd9db1617e: Download complete
+dc7a969c82d9: Download complete
+96c832531c38: Download complete
+54e8aef068c6: Download complete
+46805e80f2d7: Download complete
+9a4d47d5aa13: Pull complete
+96c832531c38: Pull complete
+46805e80f2d7: Pull complete
+a1ff4bc3f481: Pull complete
+dc7a969c82d9: Pull complete
+bef3b93c3984: Pull complete
+d3a5feebe29b: Pull complete
+a636358af2c8: Pull complete
+8d5d2a3e6b0f: Download complete
+8d5d2a3e6b0f: Pull complete
+7bcf62982864: Pull complete
+e1e0763b8b7f: Pull complete
+8e578c7fd715: Pull complete
+39cd9db1617e: Pull complete
+4f4fb700ef54: Pull complete
+Digest: sha256:3c18892b45bbe8448d64330521b029a8bf7b733f2038ddf45b47440273c1f22a
+Status: Downloaded newer image for unityci/editor:ubuntu-6000.0.36f1-android-3
+grep: /github/workspace/./ProjectSettings/ProjectSettings.asset: No such file or directory
+Warning: Failed to find package 'platforms;android-'
+
+    at <anonymous> (/$bunfs/root/game-ci:14389:41)
+    at emit (node:events:98:22)
+    at #maybeClose (node:child_process:766:16)
+    at #handleOnExit (node:child_process:520:72)
+    at processTicksAndRejections (native:7:39)
