@@ -76,6 +76,7 @@ namespace BladePath
         public string kind;         // fall_fade, fall_mid, fall_lip, stream, smoke, campfire, mist…
         public float x, y, w, h;    // левый верхний угол и размер, пиксели картины
         public float alpha = 1f, speed = 1f;
+        public float angle;         // угол направленного течения/склона, в градусах по часовой стрелке
         public int foot;            // у водопада: 0 — ничего, 1 — брызги, 2 — водяная пыль ущелья
     }
 
@@ -161,6 +162,29 @@ namespace BladePath
                 if (m != null && region >= 0 && region < MapGeom.TexW.Length && (m.width != MapGeom.TexW[region] || Mathf.Max(1024, m.height) != MapGeom.TexHt[region])) m = null;
             }
             catch (System.Exception e) { Debug.LogWarning("MapStore: правка карты " + region + " не читается: " + e.Message); m = null; }
+            // Older on-device map edits may contain stale VFX and hide new built-in animation.
+            // Upgrade effects only; retain the saved roads, places, markers and buildings.
+            if (m != null && region == 0 && MapGeom.TexHt[0] > 1024)
+            {
+                TextAsset builtAsset = Resources.Load<TextAsset>("Maps/map_0");
+                if (builtAsset != null)
+                {
+                    try
+                    {
+                        MapData bundled = JsonUtility.FromJson<MapData>(builtAsset.text);
+                        if (bundled != null && bundled.width == m.width &&
+                            bundled.height == m.height && bundled.version > m.version)
+                        {
+                            m.effects = bundled.effects;
+                            m.version = bundled.version;
+                        }
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogWarning("MapStore: visual effect upgrade: " + ex.Message);
+                    }
+                }
+            }
             if (m == null)
             {
                 TextAsset ta = Resources.Load<TextAsset>("Maps/map_" + region);
