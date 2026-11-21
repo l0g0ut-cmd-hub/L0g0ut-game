@@ -481,7 +481,6 @@ namespace BladePath
             DrawHero();
             DrawNodeLabels();
             MapBirds.Draw(MapRect, u0, uw);   // ворон или стайка цапель пролетают над всем — и над значками (под ними значки видно, это не облака)
-            DrawJourneyLegend();
             // туман по краям и название области
             Texture2D fog = SoftSprites.Fog;
             Color oc = GUI.color; GUI.color = new Color(0f, 0f, 0f, 0.55f);
@@ -504,7 +503,7 @@ namespace BladePath
             // меню разработчика (отладка): телепорт, лагерь, трактир, следующая область
             {   // время суток: медальон в правом верхнем углу карты; нажатие — что сейчас и сколько шагов до смены
                 bool dayOk = interactive && modal == Modal.None && moveTo < 0;
-                Rect dayR = new Rect(mapX + viewW - 60f, 54f, 48f, 48f);   // под кнопками справа (слева заняты название области и легенда)
+                Rect dayR = new Rect(mapX + viewW - 60f, 54f, 48f, 48f);   // под кнопками справа (слева заняты название области и ресурсы)
                 DayCycle.DrawBadge(dayR);
                 if (dayOk && Event.current.type == EventType.MouseDown && dayR.Contains(Event.current.mousePosition)) { SetToast(DayCycle.Hint()); Event.current.Use(); }
             }
@@ -1917,44 +1916,12 @@ namespace BladePath
             }
         }
 
-        static readonly string[] JourneyLegendNames =
-            { "ПРОЙДЕНО", "В ПРЕДЕЛАХ ХОДА", "НЕДОСТУПНО" };
-        static readonly Color[] JourneyLegendColors =
-            { new Color(0.72f, 0.42f, 0.22f),
-              new Color(0.70f, 0.95f, 0.62f),
-              new Color(1f, 0.39f, 0.31f) };
-        static readonly float[] JourneyLegendWidths = { 114f, 172f, 126f };
-
-        Rect JourneyLegendRect()
-        {
-            float y = Profile.Cycle > 0 ? 62f : 46f;
-            // Справа на высоте легенды расположен медальон времени суток.
-            return new Rect(mapX + 14f, y, Mathf.Min(432f, viewW - 84f), viewW >= 350f ? 31f : 0f);
-        }
-
         Rect ResourceBarRect()
         {
-            float y = JourneyLegendRect().yMax + 5f;
-            float rightMargin = y < 104f ? 68f : 12f;
-            float width = Mathf.Max(0f, Mathf.Min(760f, viewW - 14f - rightMargin));
+            float y = Profile.Cycle > 0 ? 64f : 50f;
+            // Справа остаётся место для медальона времени суток.
+            float width = Mathf.Max(0f, Mathf.Min(760f, viewW - 82f));
             return new Rect(mapX + 14f, y, width, Realm.HudHeight(width));
-        }
-
-        void DrawJourneyLegend()
-        {
-            Rect bar = JourneyLegendRect();
-            if (Event.current.type != EventType.Repaint || bar.height == 0f) return;
-            VisualIdentity.RowPanel(bar, 0.95f);
-            float px = bar.x + 10f;
-            for (int i = 0; i < JourneyLegendNames.Length; i++)
-            {
-                float slot = (bar.width - 20f) * JourneyLegendWidths[i] / 412f;
-                UiKit.Disc(new Vector2(px + 6f, bar.y + 15f), 6f, JourneyLegendColors[i]);
-                // светлее и крупнее: серо-бежевый 9,2 на тёмной плашке читался с трудом
-                UiKit.Text(new Rect(px + 17f, bar.y + 5f, slot - 16f, 21f),
-                    JourneyLegendNames[i], 10.5f, new Color(0.9f, 0.85f, 0.76f), TextAnchor.MiddleLeft, false);
-                px += slot;
-            }
         }
 
         // ------------------------------------------------------------------ панель справа

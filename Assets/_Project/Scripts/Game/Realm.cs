@@ -569,7 +569,7 @@ namespace BladePath
         public static void DrawHud(Rect at, bool input)
         {
             if (!Active || at.width <= 0f) return;
-            UiKit.Rect(at, new Color(0.06f, 0.03f, 0.02f, 0.78f));
+            UiKit.Rect(at, new Color(0f, 0f, 0f, 0.55f));
             Rect button = new Rect(at.xMax - 72f, at.y + 2f, 68f, HudRow - 4f);
             bool inline = at.height == HudRow;
             float dateWidth = inline ? 158f : button.x - at.x - 10f;
