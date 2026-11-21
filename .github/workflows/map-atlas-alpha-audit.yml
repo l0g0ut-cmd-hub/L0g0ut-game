@@ -22,7 +22,6 @@ jobs:
           python - <<'PY'
           from PIL import Image
           from pathlib import Path
-          import numpy as np
           atlas = Path('Assets/_Project/Resources/UI/Battle')
           for name in ['map_wisps', 'map_petals', 'map_mist', 'map_fall', 'map_ripples', 'map_foam']:
               path = atlas/(name+'.png')
