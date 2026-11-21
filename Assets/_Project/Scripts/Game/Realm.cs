@@ -557,20 +557,36 @@ namespace BladePath
         }
 
         // ---------------------------------------------------------------- строка ресурсов и даты на карте
-        public static void DrawHud(Rect at)
+        const float HudRow = 24f;
+        const int HudResources = 8;
+
+        public static float HudHeight(float width)
         {
-            if (!Active) return;
+            if (width >= 580f) return HudRow;
+            return width >= 320f ? 2f * HudRow : 3f * HudRow;
+        }
+
+        public static void DrawHud(Rect at, bool input)
+        {
+            if (!Active || at.width <= 0f) return;
             UiKit.Rect(at, new Color(0.06f, 0.03f, 0.02f, 0.78f));
-            UiKit.Text(new Rect(at.x + 6f, at.y, 200f, at.height), DateText, 11f, Gold, TextAnchor.MiddleLeft);
-            float x = at.x + 200f;
-            for (int i = 0; i < 8 && x < at.xMax - 40f; i++)
+            Rect button = new Rect(at.xMax - 72f, at.y + 2f, 68f, HudRow - 4f);
+            bool inline = at.height == HudRow;
+            float dateWidth = inline ? 158f : button.x - at.x - 10f;
+            UiKit.Text(new Rect(at.x + 6f, at.y, dateWidth, HudRow), DateText, 11f, Gold, TextAnchor.MiddleLeft);
+            int columns = at.height > 2f * HudRow ? 4 : HudResources;
+            float left = at.x + 6f + (inline ? dateWidth + 4f : 0f);
+            float right = inline ? button.x - 5f : at.xMax - 6f;
+            float slot = (right - left) / columns;
+            for (int i = 0; i < HudResources; i++)
             {
-                ResIcon(new Rect(x, at.y + 2f, at.height - 4f, at.height - 4f), i);
-                UiKit.Text(new Rect(x + at.height - 2f, at.y, 46f, at.height), Res(i).ToString(), 10f, Ink, TextAnchor.MiddleLeft);
-                x += at.height + 44f;
+                float x = left + i % columns * slot;
+                float y = at.y + (inline ? 0f : HudRow) + i / columns * HudRow;
+                ResIcon(new Rect(x, y + 3f, 18f, 18f), i);
+                UiKit.Text(new Rect(x + 19f, y, slot - 20f, HudRow),
+                    Res(i).ToString(), 10f, Ink, TextAnchor.MiddleLeft);
             }
-            Rect pb = new Rect(at.xMax - 74f, at.y + 1f, 72f, at.height - 2f);
-            if (VisualIdentity.KitButton(pb, "КАРТА", true, false)) win = Win.Puzzle;
+            if (VisualIdentity.KitButton(button, "КАРТА", input, false)) win = Win.Puzzle;
         }
 
         // ---------------------------------------------------------------- вражеский полководец («Герои 3»)

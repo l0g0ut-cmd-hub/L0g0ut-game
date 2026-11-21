@@ -334,7 +334,8 @@ namespace BladePath
             if (Input.GetMouseButtonDown(0))
             {
                 panArmed = pt.x >= mapX + 4f && pt.x <= mapX + viewW - 4f &&
-                    pt.y >= 5f && pt.y <= MapH - 5f;
+                    pt.y >= 5f && pt.y <= MapH - 5f &&
+                    !(Realm.Active && ResourceBarRect().Contains(pt));
                 // Tapping a destination medal should select the node, not start dragging.
                 if (panArmed)
                 {
@@ -462,7 +463,10 @@ namespace BladePath
             DrawRouteGlints();
             DrawFog(uw);
             DrawBuildings();
-            Realm.DrawObjects(uv => new Vector2(mapX + (uv.x - u0) * MapFullW, Y(uv.y)), mapX, viewW, interactive && modal == Modal.None && moveTo < 0);   // рудники, нейтралы, сундуки, жилища, обелиски («Герои 3»)
+            Rect resources = ResourceBarRect();
+            bool mapInput = interactive && modal == Modal.None && moveTo < 0;
+            bool worldInput = mapInput && !(Realm.Active && resources.Contains(Event.current.mousePosition));
+            Realm.DrawObjects(uv => new Vector2(mapX + (uv.x - u0) * MapFullW, Y(uv.y)), mapX, viewW, worldInput);   // рудники, нейтралы, сундуки, жилища, обелиски («Герои 3»)
             DrawTower();
             // погода — после зданий, до значков: облака загораживают постройки, но не значки мест
             MapClouds.Draw(Campaign.Region, MapRect, u0, uw);
@@ -472,7 +476,7 @@ namespace BladePath
             MapLife.DrawLights(Campaign.Region, MapRect, u0, uw, DayCycle.LightK);
             lightPass = true; DrawBuildings(); lightPass = false;
             nodeLabels.Clear();
-            DrawNodes(interactive && modal == Modal.None && moveTo < 0);
+            DrawNodes(worldInput);
             DrawHuntMarker();
             DrawHero();
             DrawNodeLabels();
@@ -489,7 +493,7 @@ namespace BladePath
                     new Color(1f, 0.88f, 0.63f, 0.76f));
             UiKit.Text(new Rect(mapX + 59f, 8f, 355f, 36f),
                 Campaign.RegionName(Campaign.Region), 25f, Gold, TextAnchor.MiddleLeft);
-            Realm.DrawHud(new Rect(mapX + 10f, 62f, Mathf.Min(760f, viewW - 90f), 22f));
+            Realm.DrawHud(resources, mapInput);
             if (Profile.Cycle > 0) UiKit.Text(new Rect(mapX + 18f, 40f, 300f, 20f), "КРУГ " + (Profile.Cycle + 1) + ": враги крепче", 12f, new Color(1f, 0.55f, 0.4f), TextAnchor.MiddleLeft);
             // Only show the re-center control when the map is wider than the screen.
             // карту листают пальцем; увёл её от героя — появляется «К ГЕРОЮ» (кнопка «ОБЗОР» ничего не делала — убрана)
@@ -1921,24 +1925,35 @@ namespace BladePath
               new Color(1f, 0.39f, 0.31f) };
         static readonly float[] JourneyLegendWidths = { 114f, 172f, 126f };
 
-        // Low-profile route legend: never obscures the map or interactive cards.
+        Rect JourneyLegendRect()
+        {
+            float y = Profile.Cycle > 0 ? 62f : 46f;
+            // Справа на высоте легенды расположен медальон времени суток.
+            return new Rect(mapX + 14f, y, Mathf.Min(432f, viewW - 84f), viewW >= 350f ? 31f : 0f);
+        }
+
+        Rect ResourceBarRect()
+        {
+            float y = JourneyLegendRect().yMax + 5f;
+            float rightMargin = y < 104f ? 68f : 12f;
+            float width = Mathf.Max(0f, Mathf.Min(760f, viewW - 14f - rightMargin));
+            return new Rect(mapX + 14f, y, width, Realm.HudHeight(width));
+        }
+
         void DrawJourneyLegend()
         {
-            if (Event.current.type != EventType.Repaint || viewW < 350f) return;
-            const float h = 31f;
-            float w = Mathf.Min(viewW - 20f, 432f);
-            // под названием области (внизу закрывала подписи узлов — «СУНДУК» у нижнего края)
-            Rect bar = new Rect(mapX + 14f, Profile.Cycle > 0 ? 62f : 46f, w, h);
+            Rect bar = JourneyLegendRect();
+            if (Event.current.type != EventType.Repaint || bar.height == 0f) return;
             VisualIdentity.RowPanel(bar, 0.95f);
             float px = bar.x + 10f;
             for (int i = 0; i < JourneyLegendNames.Length; i++)
             {
-                if (px + JourneyLegendWidths[i] > bar.xMax + 2f) break;
+                float slot = (bar.width - 20f) * JourneyLegendWidths[i] / 412f;
                 UiKit.Disc(new Vector2(px + 6f, bar.y + 15f), 6f, JourneyLegendColors[i]);
                 // светлее и крупнее: серо-бежевый 9,2 на тёмной плашке читался с трудом
-                UiKit.Text(new Rect(px + 17f, bar.y + 5f, JourneyLegendWidths[i] - 16f, 21f),
+                UiKit.Text(new Rect(px + 17f, bar.y + 5f, slot - 16f, 21f),
                     JourneyLegendNames[i], 10.5f, new Color(0.9f, 0.85f, 0.76f), TextAnchor.MiddleLeft, false);
-                px += JourneyLegendWidths[i];
+                px += slot;
             }
         }
 

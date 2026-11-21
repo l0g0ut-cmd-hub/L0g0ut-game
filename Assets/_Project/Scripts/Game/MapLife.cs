@@ -414,93 +414,73 @@ namespace BladePath
             return codeFx;
         }
 
-        // Draw the actual 8x6, 48-frame artwork; only the geographic footprint
-        // and rotation change. Restoring IMGUI state avoids affecting other layers.
-        // These are the owner's 8x6 atlases, 48 frames each. On each repaint draw ONE
-        // source frame: blending the next on top made fog pulse and leaves look giant.
-        // Do not affect the shared SheetFrame used by other game screens.
+        // Полпикселя запаса исключают примесь соседней ячейки при билинейной фильтрации.
+        static Rect MapAtlasCell(Texture2D atlas, int frame)
+        {
+            Rect uv = SheetCell(frame, 8, 6);
+            float dx = 0.5f / atlas.width, dy = 0.5f / atlas.height;
+            return Rect.MinMaxRect(uv.xMin + dx, uv.yMin + dy, uv.xMax - dx, uv.yMax - dy);
+        }
+
         static void OriginalAtlasFrame(Rect area, Texture2D atlas, float t, float fps,
-            float opacity, bool pingPong)
+            float opacity, bool smoothMist = false)
         {
             if (atlas == null || opacity <= 0f || area.width <= 0f || area.height <= 0f) return;
-            const int frameCount = 48;
-            int span = pingPong ? frameCount * 2 - 2 : frameCount;
-            int index = Mathf.FloorToInt(Mathf.Repeat(t * fps, span));
-            if (pingPong && index >= frameCount) index = span - index;
+            const int last = 47;
+            float frame = smoothMist ? Mathf.PingPong(t * fps, last) : Mathf.Repeat(t * fps, last + 1);
+            int index = Mathf.FloorToInt(frame);
+            float nextAlpha = smoothMist ? Mathf.Clamp01(opacity) * (frame - index) : 0f;
             Color saved = GUI.color;
-            GUI.color = new Color(1f, 1f, 1f, Mathf.Clamp01(opacity));
-            GUI.DrawTextureWithTexCoords(area, atlas, SheetCell(index, 8, 6));
+            GUI.color = new Color(1f, 1f, 1f, Mathf.Clamp01(opacity) - nextAlpha);
+            GUI.DrawTextureWithTexCoords(area, atlas, MapAtlasCell(atlas, index));
+            if (nextAlpha > 0f)
+            {
+                GUI.color = new Color(1f, 1f, 1f, nextAlpha);
+                GUI.DrawTextureWithTexCoords(area, atlas, MapAtlasCell(atlas, Mathf.Min(index + 1, last)));
+            }
             GUI.color = saved;
         }
 
         static bool AtlasAt(string name, Rect area, float t, float fps, float alpha,
-            float degrees, bool pivotAtLip, bool pingPong = false)
+            float degrees, bool pivotAtLip, bool smoothMist = false)
         {
             Texture2D atlas = UiKit.Tex("UI/Battle/" + name);
             if (atlas == null) return false;
             Matrix4x4 matrix = GUI.matrix;
-            Color tint = GUI.color;
-            if (Mathf.Abs(degrees) > 0.10f)
+            if (degrees != 0f)
                 GUIUtility.RotateAroundPivot(degrees,
                     pivotAtLip ? new Vector2(area.center.x, area.y) : area.center);
-            OriginalAtlasFrame(area, atlas, t, fps, alpha, pingPong);
+            OriginalAtlasFrame(area, atlas, t, fps, alpha, smoothMist);
             GUI.matrix = matrix;
-            GUI.color = tint;
             return true;
         }
 
-        // A small animated leaf per particle. The original frame art is never
-        // enlarged to the size of an entire tree's falling-petal corridor.
+        // Каждый кадр уже содержит несколько лепестков. Размер привязан к кроне на картине.
         static void SakuraAtlasPetals(MapEffect e, Rect region, float t)
         {
             Texture2D petals = UiKit.Tex("UI/Battle/map_petals");
-            if (petals == null || e.alpha <= 0f) return;
-            int count = DuelManager.Gfx == 0 ? 12 : 24;
-            float nominalSize = Mathf.Clamp(Mathf.Min(region.width, region.height) * 0.13f, 8f, 14f);
+            if (petals == null) return;
+            float width = Mathf.Min(region.width * 0.43f, region.height * 0.55f);
+            float height = width * 170f / 192f;
+            int count = DuelManager.Gfx == 0 ? 1 : 2;
             for (int i = 0; i < count; i++)
             {
-                float seed = e.x * 0.019f + e.y * 0.017f + i * 7.319f;
-                float cycleTime = 6.0f + 4.0f * H(seed + 2f);
-                float age = t / cycleTime + H(seed + 4f);
-                float phase = Mathf.Repeat(age, 1f);
-                int cycle = Mathf.FloorToInt(age);
-                float x = region.x + region.width * (0.13f + 0.72f *
-                    H(seed + cycle * 2.7f)) + Mathf.Sin(t * 0.9f + seed) * 2.2f
-                    + phase * Mathf.Min(6f, region.width * 0.08f);
-                float y = region.y + region.height * (0.04f + phase * 0.91f);
-                float size = nominalSize * (0.68f + 0.30f * H(seed + cycle * 3.1f));
-                float fade = Mathf.Clamp01(phase / 0.10f) *
-                    Mathf.Clamp01((1f - phase) / 0.16f);
-                OriginalAtlasFrame(new Rect(x - size * 0.5f, y - size * 0.5f,
-                    size, size), petals,
-                    t + seed * 0.71f, 14f, e.alpha * fade, false);
+                float phase = Mathf.Repeat(t / 5f + i * 0.5f, 1f);
+                float x = region.x + (region.width - width) * (0.20f + i * 0.39f + 0.15f * phase);
+                float y = region.y + (region.height - height) * phase;
+                float fade = Mathf.SmoothStep(0f, 1f, Mathf.Min(phase, 1f - phase) * 7f);
+                OriginalAtlasFrame(new Rect(x, y, width, height), petals, t + i * 1.7f, 14f, e.alpha * fade);
             }
         }
 
-        // Exact original green-spirit animation, not procedural glowing dots.
-        // Size refers to a sprite cell, not to the full geographic forest region.
         static void TerrainWisps(MapEffect e, Rect region, float t)
         {
             Texture2D spirits = UiKit.Tex("UI/Battle/map_wisps");
-            if (spirits == null || e.alpha <= 0f) return;
-            int count = DuelManager.Gfx == 0 ? 6 : 10;
-            float baseSize = Mathf.Clamp(
-                Mathf.Min(region.width, region.height) * 0.40f, 24f, 42f);
-            for (int i = 0; i < count; i++)
-            {
-                float seed = e.x * 0.021f + e.y * 0.014f + i * 13.83f;
-                float drift = t * (0.13f + 0.10f * H(seed + 5f)) + seed;
-                float x = region.x + region.width * (0.12f + 0.74f * H(seed)) +
-                    Mathf.Sin(drift) * Mathf.Min(4f, region.width * 0.043f);
-                float y = region.y + region.height * (0.14f + 0.68f * H(seed + 1f)) +
-                    Mathf.Cos(drift * 1.19f) * Mathf.Min(4f, region.height * 0.048f);
-                float size = baseSize * (0.74f + 0.30f * H(seed + 3f));
-                float pulse = 0.82f + 0.13f * Mathf.Sin(t * 0.63f + seed * 3.2f);
-                OriginalAtlasFrame(new Rect(x - size * 0.5f, y - size * 0.5f,
-                    size, size), spirits,
-                    t * (0.86f + 0.16f * H(seed + 7f)) + H(seed + 9f) * 3.42f,
-                    14f, Mathf.Clamp01(e.alpha * pulse), false);
-            }
+            float width = Mathf.Min(region.width, region.height * 192f / 170f);
+            float height = width * 170f / 192f;
+            Rect group = new Rect(region.center.x - width * 0.5f, region.center.y - height * 0.5f,
+                width, height);
+            OriginalAtlasFrame(group, spirits, t, 16f, e.alpha);
         }
 
         static void DrawSheetFalls(int region, Rect view, float u0, float uw, float t, Texture2D mist)
@@ -557,30 +537,34 @@ namespace BladePath
             if (HiFx && k == "petals") { SakuraAtlasPetals(e, r, t); return; }
             if (HiFx && k == "mist")
             {
-                Rect fog = new Rect(r.x + Mathf.Sin(t * 0.11f + e.x) * r.width * 0.025f,
-                    r.y, r.width, r.height);
-                if (AtlasAt("map_mist", fog, t, 5.5f, e.alpha, 0f, false, true)) return;
+                if (AtlasAt("map_mist", r, t, 9f, e.alpha, 0f, false, true)) return;
             }
             if (HiFx && k == "stream")
             {
-                Rect small = new Rect(r.center.x - r.width * 0.43f,
-                    r.center.y - r.height * 0.34f, r.width * 0.86f, r.height * 0.68f);
-                if (AtlasAt("map_ripples", small, t, 16f, e.alpha, e.angle, false))
-                    return;
+                // Один проход атласа слева направо: начало выше по течению, конец ниже.
+                float phase = Mathf.Repeat(t * (16f / 48f), 1f);
+                float radians = e.angle * Mathf.Deg2Rad;
+                Vector2 direction = new Vector2(Mathf.Cos(radians), Mathf.Sin(radians));
+                float width = r.width * 0.55f;
+                Vector2 center = r.center + direction * ((phase - 0.5f) * (r.width - width));
+                Rect ripples = new Rect(center.x - width * 0.5f, center.y - r.height * 0.5f,
+                    width, r.height);
+                float fade = Mathf.SmoothStep(0f, 1f, Mathf.Min(phase, 1f - phase) * 9f);
+                if (AtlasAt("map_ripples", ripples, t, 16f, e.alpha * fade, e.angle, false)) return;
             }
             if (HiFx && k.StartsWith("fall_"))
             {
-                Rect fall = new Rect(r.center.x - r.width * 0.43f,
-                    r.y, r.width * 0.86f, r.height);
-                if (AtlasAt("map_fall", fall, t, 20f, e.alpha, e.angle, true))
+                if (AtlasAt("map_fall", r, t, 20f, e.alpha, e.angle, true))
                 {
                     if (e.foot != 0)
                     {
-                        float fw = Mathf.Clamp(r.width * 1.35f, 8f, 45f);
-                        float fh = fw * 170f / 192f;
-                        AtlasAt("map_foam", new Rect(r.center.x - fw * 0.5f,
-                            r.yMax - fh * 0.55f, fw, fh),
-                            t * 0.90f, 14f, e.alpha * 0.36f, 0f, false);
+                        float radians = e.angle * Mathf.Deg2Rad;
+                        Vector2 impact = new Vector2(r.center.x - r.height * Mathf.Sin(radians),
+                            r.y + r.height * Mathf.Cos(radians));
+                        float fw = Mathf.Min(r.width * 0.83f, r.height * 1.15f);
+                        float fh = fw * 0.45f;
+                        AtlasAt("map_foam", new Rect(impact.x - fw * 0.5f,
+                            impact.y - fh * 0.80f, fw, fh), t, 14f, e.alpha * 0.45f, 0f, false);
                     }
                     return;
                 }
