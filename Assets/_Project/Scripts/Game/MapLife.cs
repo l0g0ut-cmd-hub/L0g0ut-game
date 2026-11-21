@@ -427,7 +427,9 @@ namespace BladePath
         {
             if (atlas == null || opacity <= 0f || area.width <= 0f || area.height <= 0f) return;
             const int last = 47;
-            float frame = smoothMist ? Mathf.PingPong(t * fps, last) : Mathf.Repeat(t * fps, last + 1);
+            float frame = smoothMist
+                ? Mathf.SmoothStep(0f, last, Mathf.PingPong(t * fps / last, 1f))
+                : Mathf.Repeat(t * fps, last + 1);
             int index = Mathf.FloorToInt(frame);
             float nextAlpha = smoothMist ? Mathf.Clamp01(opacity) * (frame - index) : 0f;
             Color saved = GUI.color;
@@ -460,13 +462,13 @@ namespace BladePath
         {
             Texture2D petals = UiKit.Tex("UI/Battle/map_petals");
             if (petals == null) return;
-            float width = Mathf.Min(region.width * 0.43f, region.height * 0.55f);
+            float width = Mathf.Min(region.width * 0.65f, region.height * 0.74f);
             float height = width * 170f / 192f;
-            int count = DuelManager.Gfx == 0 ? 1 : 2;
+            int count = DuelManager.Gfx == 0 ? 2 : 3;
             for (int i = 0; i < count; i++)
             {
-                float phase = Mathf.Repeat(t / 5f + i * 0.5f, 1f);
-                float x = region.x + (region.width - width) * (0.20f + i * 0.39f + 0.15f * phase);
+                float phase = Mathf.Repeat(t / 4.2f + (float)i / count, 1f);
+                float x = region.x + (region.width - width) * (0.08f + i * (0.68f / (count - 1)) + 0.20f * phase);
                 float y = region.y + (region.height - height) * phase;
                 float fade = Mathf.SmoothStep(0f, 1f, Mathf.Min(phase, 1f - phase) * 7f);
                 OriginalAtlasFrame(new Rect(x, y, width, height), petals, t + i * 1.7f, 14f, e.alpha * fade);
@@ -537,7 +539,8 @@ namespace BladePath
             if (HiFx && k == "petals") { SakuraAtlasPetals(e, r, t); return; }
             if (HiFx && k == "mist")
             {
-                if (AtlasAt("map_mist", r, t, 9f, e.alpha, 0f, false, true)) return;
+                float mistTime = t + Mathf.Repeat(e.x * 0.017f + e.y * 0.031f, 11f);
+                if (AtlasAt("map_mist", r, mistTime, 9f, e.alpha, 0f, false, true)) return;
             }
             if (HiFx && k == "stream")
             {
@@ -545,7 +548,7 @@ namespace BladePath
                 float phase = Mathf.Repeat(t * (16f / 48f), 1f);
                 float radians = e.angle * Mathf.Deg2Rad;
                 Vector2 direction = new Vector2(Mathf.Cos(radians), Mathf.Sin(radians));
-                float width = r.width * 0.55f;
+                float width = r.width * 0.72f;
                 Vector2 center = r.center + direction * ((phase - 0.5f) * (r.width - width));
                 Rect ripples = new Rect(center.x - width * 0.5f, center.y - r.height * 0.5f,
                     width, r.height);
