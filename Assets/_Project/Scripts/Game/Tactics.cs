@@ -1121,23 +1121,6 @@ namespace BladePath
             else s.an.CrossFade(clip, 0.18f);
         }
 
-        // У лучниц лук и крайние позы клипов выходят за силуэт тела.
-        static float ArcherHeight(GameObject model, float fallback)
-        {
-            Transform head = null, leftFoot = null, rightFoot = null;
-            foreach (Transform bone in model.GetComponentsInChildren<Transform>(true))
-            {
-                if (bone.name == "Head") head = bone;
-                else if (bone.name == "LeftFoot") leftFoot = bone;
-                else if (bone.name == "RightFoot") rightFoot = bone;
-            }
-            if (head == null || leftFoot == null || rightFoot == null) return fallback;
-            float ankleY = (leftFoot.position.y + rightFoot.position.y) * 0.5f;
-            // В исходном скелете Meshy от лодыжек до основания головы около 79% роста.
-            float height = (head.position.y - ankleY) / 0.79f;
-            return height > 0.01f ? height : fallback;
-        }
-
         static void SetupLive()
         {
             CleanupLive();
@@ -1178,9 +1161,7 @@ namespace BladePath
                 // рост — по меркам модели
                 Bounds b = new Bounds(go.transform.position, Vector3.zero); bool has = false;
                 foreach (Renderer r in go.GetComponentsInChildren<Renderer>()) { if (!has) { b = r.bounds; has = true; } else b.Encapsulate(r.bounds); }
-                float height = has ? b.size.y : 0f;
-                if (s.t.live == "unit_archer" || s.t.live == "unit_archer2") height = ArcherHeight(go, height);
-                if (height > 0.01f) go.transform.localScale *= s.t.liveH / height;
+                if (has && b.size.y > 0.01f) go.transform.localScale *= s.t.liveH / b.size.y;
                 s.go = go; s.an = go.GetComponentInChildren<Animation>();
                 if (s.an != null)
                 {
