@@ -415,9 +415,9 @@ namespace BladePath
         }
 
         // Полпикселя запаса исключают примесь соседней ячейки при билинейной фильтрации.
-        static Rect MapAtlasCell(Texture2D atlas, int frame)
+        static Rect MapAtlasCell(Texture2D atlas, int frame, int cols = 8, int rows = 6)
         {
-            Rect uv = SheetCell(frame, 8, 6);
+            Rect uv = SheetCell(frame, cols, rows);
             float dx = 0.5f / atlas.width, dy = 0.5f / atlas.height;
             return Rect.MinMaxRect(uv.xMin + dx, uv.yMin + dy, uv.xMax - dx, uv.yMax - dy);
         }
@@ -465,7 +465,7 @@ namespace BladePath
         {
             Vector2 lip = new Vector2(r.center.x, r.y);
             impact = lip;
-            Texture2D atlas = UiKit.Tex("UI/Battle/map_fall");
+            Texture2D atlas = UiKit.Tex(e.kind == "fall_fade" ? "UI/Battle/map_fall_gorge" : "UI/Battle/map_fall");
             if (atlas == null || r.height <= 0f || r.width <= 0f) return false;
             int frame = Mathf.FloorToInt(Mathf.Repeat(t * 20f, 48f));
             Rect uv = MapAtlasCell(atlas, frame);
@@ -529,12 +529,18 @@ namespace BladePath
 
         static void TerrainWisps(MapEffect e, Rect region, float t)
         {
-            Texture2D spirits = UiKit.Tex("UI/Battle/map_wisps");
+            Texture2D spirits = UiKit.Tex("UI/Battle/map_wisps_loop");
+            if (spirits == null) return;
             float width = Mathf.Min(region.width, region.height * 192f / 170f);
             float height = width * 170f / 192f;
             Rect group = new Rect(region.center.x - width * 0.5f, region.center.y - height * 0.5f,
                 width, height);
-            OriginalAtlasFrame(group, spirits, t, 16f, e.alpha);
+            // Three motion-interpolated samples per original frame, including the loop seam.
+            int frame = Mathf.FloorToInt(Mathf.Repeat(t * 48f, 144f));
+            Color tint = GUI.color;
+            GUI.color = new Color(1f, 1f, 1f, Mathf.Clamp01(e.alpha));
+            GUI.DrawTextureWithTexCoords(group, spirits, MapAtlasCell(spirits, frame, 12, 12));
+            GUI.color = tint;
         }
 
         static void DrawSheetFalls(int region, Rect view, float u0, float uw, float t, Texture2D mist)

@@ -1,5 +1,5 @@
 {
-  "version": 14,
+  "version": 15,
   "name": "ЛЕС ТЕНЕЙ",
   "texture": "UI/map_wide_0",
   "width": 4096,
@@ -2344,7 +2344,7 @@
       "angle": -26.57
     },
     {
-      "kind": "fall_mid",
+      "kind": "fall_fade",
       "x": 2862.5,
       "y": 625,
       "w": 19,
@@ -2355,7 +2355,7 @@
       "angle": -8.65
     },
     {
-      "kind": "fall_mid",
+      "kind": "fall_fade",
       "x": 2875,
       "y": 625,
       "w": 18,
@@ -2366,7 +2366,7 @@
       "angle": -4.9
     },
     {
-      "kind": "fall_mid",
+      "kind": "fall_fade",
       "x": 2904,
       "y": 661,
       "w": 30,
@@ -2377,7 +2377,7 @@
       "angle": 20.35
     },
     {
-      "kind": "fall_mid",
+      "kind": "fall_fade",
       "x": 2901,
       "y": 864,
       "w": 42,
@@ -2388,7 +2388,7 @@
       "angle": 19.41
     },
     {
-      "kind": "fall_mid",
+      "kind": "fall_fade",
       "x": 2963.5,
       "y": 928,
       "w": 31,
@@ -2399,7 +2399,7 @@
       "angle": 18.43
     },
     {
-      "kind": "fall_mid",
+      "kind": "fall_fade",
       "x": 2995.5,
       "y": 1036,
       "w": 63,
@@ -2410,7 +2410,7 @@
       "angle": 27.76
     },
     {
-      "kind": "fall_mid",
+      "kind": "fall_fade",
       "x": 3079,
       "y": 1063,
       "w": 46,
@@ -2773,7 +2773,7 @@
       "foot": 1
     },
     {
-      "kind": "fall_mid",
+      "kind": "fall_fade",
       "x": 3036,
       "y": 1038,
       "w": 28,
@@ -3141,7 +3141,7 @@
       ]
     },
     {
-      "kind": "fall_mid",
+      "kind": "fall_fade",
       "x": 2807,
       "y": 309,
       "w": 50,
@@ -3216,7 +3216,7 @@
       ]
     },
     {
-      "kind": "fall_mid",
+      "kind": "fall_fade",
       "x": 3009.95,
       "y": 1029,
       "w": 18.1,
@@ -3268,7 +3268,7 @@
       ]
     },
     {
-      "kind": "fall_mid",
+      "kind": "fall_fade",
       "x": 3084.75,
       "y": 1063,
       "w": 14.5,
@@ -3338,7 +3338,7 @@
       ]
     },
     {
-      "kind": "fall_mid",
+      "kind": "fall_fade",
       "x": 2850,
       "y": 494,
       "w": 54,
@@ -3356,7 +3356,7 @@
       ]
     },
     {
-      "kind": "fall_mid",
+      "kind": "fall_fade",
       "x": 2833.5,
       "y": 575,
       "w": 31,
