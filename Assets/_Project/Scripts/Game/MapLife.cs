@@ -238,27 +238,60 @@ namespace BladePath
         /// Окна и фонари нарисованной карты: тёплый свет, каждый в своём ритме, с лёгким колебанием.
         /// Рисуется поверх фильтра времени суток; light — сила (днём 0, ночью ~1,6).
         /// </summary>
+        // One warm glow per actual lantern, campfire or window, never guessed points.
+        static void DrawWarmPoint(Vector2 p, float radius, float alpha, float t, Texture2D glow)
+        {
+            float pulse = 0.88f + 0.08f * Mathf.PerlinNoise(t * 1.9f + p.x * 0.04f,
+                p.y * 0.03f);
+            float halo = radius * 2.35f;
+            GUI.color = new Color(1f, 0.59f, 0.24f, Mathf.Clamp01(alpha * 0.48f * pulse));
+            GUI.DrawTexture(new Rect(p.x - halo, p.y - halo, halo * 2f, halo * 2f), glow);
+            GUI.color = new Color(1f, 0.90f, 0.54f, Mathf.Clamp01(alpha * 0.68f * pulse));
+            GUI.DrawTexture(new Rect(p.x - radius, p.y - radius, radius * 2f, radius * 2f), glow);
+        }
+
         public static void DrawLights(int region, Rect view, float u0, float uw, float light)
         {
             if (Event.current.type != EventType.Repaint || light <= 0.01f) return;
-            Region r = regions[Mathf.Clamp(region, 0, regions.Length - 1)];
-            Texture2D glow = UiKit.Tex("FX/glow_pool");
-            if (glow == null) return;
-            float t = Time.unscaledTime, k = view.width / uw / MapGeom.W(region);
-            Color oc = GUI.color;
-            foreach (Vector3 l in r.lights)
+            Texture2D glow = SoftSprites.Fog;  // transparent, no atlas background
+            Color old = GUI.color;
+            float t = Time.unscaledTime;
+            if (region == 0 && MapGeom.TexHt[0] > 1024)
             {
-                Vector2 p = new Vector2(view.x + (l.x - u0) / uw * view.width, view.y + l.y * view.height);
-                if (p.x < view.x - 60f || p.x > view.xMax + 60f) continue;
-                float fl = 0.86f + 0.1f * Mathf.PerlinNoise(t * 1.1f + l.x * 50f, l.y * 30f) + 0.04f * Mathf.Sin(t * 5.3f + l.x * 90f);
-                float g = l.z * k * 1.6f;
-                GUI.color = new Color(1f, 0.6f, 0.26f, Mathf.Clamp01(0.3f * light * fl));
-                GUI.DrawTexture(new Rect(p.x - g, p.y - g, g * 2f, g * 2f), glow);
-                float c = l.z * k * 0.5f;
-                GUI.color = new Color(1f, 0.85f, 0.55f, Mathf.Clamp01(0.45f * light * fl));
-                GUI.DrawTexture(new Rect(p.x - c, p.y - c, c * 2f, c * 2f), glow);
+                MapData map = MapStore.Get(region);
+                if (map != null && map.effects != null)
+                {
+                    float tw = MapGeom.TexWidth(region), th = MapGeom.TexHeight(region);
+                    foreach (MapEffect effect in map.effects)
+                    {
+                        if (effect == null) continue;
+                        string kind = effect.kind ?? "";
+                        if (kind != "campfire" && kind != "lantern" && kind != "window_glow") continue;
+                        Vector2 p = new Vector2(
+                            view.x + ((effect.x + effect.w * 0.5f) / tw - u0) / uw * view.width,
+                            view.y + (effect.y + effect.h * (kind == "campfire" ? 0.72f : 0.5f)) / th * view.height);
+                        if (p.x < view.x - 35f || p.x > view.xMax + 35f ||
+                            p.y < -35f || p.y > 575f) continue;
+                        float radius = kind == "campfire" ? 8f : kind == "lantern" ? 5f : 3.5f;
+                        float opacity = Mathf.Clamp01(light * effect.alpha *
+                            (kind == "window_glow" ? 0.47f : 0.85f));
+                        DrawWarmPoint(p, radius, opacity, t, glow);
+                    }
+                }
             }
-            GUI.color = oc;
+            else
+            {
+                Region r = regions[Mathf.Clamp(region, 0, regions.Length - 1)];
+                float scale = view.width / uw / MapGeom.W(region);
+                foreach (Vector3 l in r.lights)
+                {
+                    Vector2 p = new Vector2(view.x + (l.x - u0) / uw * view.width,
+                        view.y + l.y * view.height);
+                    if (p.x < view.x - 35f || p.x > view.xMax + 35f) continue;
+                    DrawWarmPoint(p, l.z * scale * 0.9f, light * 0.65f, t, glow);
+                }
+            }
+            GUI.color = old;
         }
 
         // ---- водопады из листов (пока только лес теней): x, y верха, высота, ширина — пиксели широкой картины; пена у подножия
@@ -552,6 +585,7 @@ namespace BladePath
                 return;
             }
             if (k == "lantern") { Hi("map_lantern", r, t, 18f, e.alpha); return; }
+            if (k == "window_glow") return; // after the dusk filter in DrawLights only
             if (k == "wisps") { TerrainWisps(e, r, t); return; }
             if (k == "petals") { TerrainPetals(e, r, t); return; }
             if (HiFx)
