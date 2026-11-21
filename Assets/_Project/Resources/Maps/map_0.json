@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "name": "ЛЕС ТЕНЕЙ",
   "texture": "UI/map_wide_0",
   "width": 4096,
@@ -1603,16 +1603,6 @@
       "foot": 0
     },
     {
-      "kind": "campfire",
-      "x": 1814,
-      "y": 1224,
-      "w": 32,
-      "h": 32,
-      "alpha": 0.95,
-      "speed": 1,
-      "foot": 0
-    },
-    {
       "kind": "lantern",
       "x": 1969,
       "y": 94,
@@ -1805,14 +1795,14 @@
     },
     {
       "kind": "fall_fade",
-      "x": 3558,
-      "y": 182,
-      "w": 89,
-      "h": 92,
-      "alpha": 0.64,
+      "x": 3660,
+      "y": 188,
+      "w": 90,
+      "h": 100,
+      "alpha": 0.61,
       "speed": 1,
       "foot": 1,
-      "angle": 5
+      "angle": 0
     },
     {
       "kind": "petals",
@@ -2143,6 +2133,138 @@
       "speed": 1,
       "foot": 0,
       "angle": 60
+    },
+    {
+      "kind": "window_glow",
+      "x": 1970,
+      "y": 82,
+      "w": 16,
+      "h": 14,
+      "alpha": 0.5,
+      "speed": 1,
+      "foot": 0,
+      "angle": 0
+    },
+    {
+      "kind": "window_glow",
+      "x": 2000,
+      "y": 87,
+      "w": 16,
+      "h": 14,
+      "alpha": 0.5,
+      "speed": 1,
+      "foot": 0,
+      "angle": 0
+    },
+    {
+      "kind": "window_glow",
+      "x": 2032,
+      "y": 93,
+      "w": 16,
+      "h": 14,
+      "alpha": 0.5,
+      "speed": 1,
+      "foot": 0,
+      "angle": 0
+    },
+    {
+      "kind": "window_glow",
+      "x": 961,
+      "y": 529,
+      "w": 16,
+      "h": 14,
+      "alpha": 0.5,
+      "speed": 1,
+      "foot": 0,
+      "angle": 0
+    },
+    {
+      "kind": "window_glow",
+      "x": 1042,
+      "y": 538,
+      "w": 16,
+      "h": 14,
+      "alpha": 0.5,
+      "speed": 1,
+      "foot": 0,
+      "angle": 0
+    },
+    {
+      "kind": "window_glow",
+      "x": 1147,
+      "y": 543,
+      "w": 16,
+      "h": 14,
+      "alpha": 0.5,
+      "speed": 1,
+      "foot": 0,
+      "angle": 0
+    },
+    {
+      "kind": "window_glow",
+      "x": 919,
+      "y": 658,
+      "w": 16,
+      "h": 14,
+      "alpha": 0.5,
+      "speed": 1,
+      "foot": 0,
+      "angle": 0
+    },
+    {
+      "kind": "window_glow",
+      "x": 998,
+      "y": 668,
+      "w": 16,
+      "h": 14,
+      "alpha": 0.5,
+      "speed": 1,
+      "foot": 0,
+      "angle": 0
+    },
+    {
+      "kind": "window_glow",
+      "x": 2386,
+      "y": 587,
+      "w": 16,
+      "h": 14,
+      "alpha": 0.5,
+      "speed": 1,
+      "foot": 0,
+      "angle": 0
+    },
+    {
+      "kind": "window_glow",
+      "x": 2472,
+      "y": 581,
+      "w": 16,
+      "h": 14,
+      "alpha": 0.5,
+      "speed": 1,
+      "foot": 0,
+      "angle": 0
+    },
+    {
+      "kind": "window_glow",
+      "x": 3782,
+      "y": 412,
+      "w": 16,
+      "h": 14,
+      "alpha": 0.5,
+      "speed": 1,
+      "foot": 0,
+      "angle": 0
+    },
+    {
+      "kind": "window_glow",
+      "x": 3806,
+      "y": 432,
+      "w": 16,
+      "h": 14,
+      "alpha": 0.5,
+      "speed": 1,
+      "foot": 0,
+      "angle": 0
     }
   ],
   "height": 1608
