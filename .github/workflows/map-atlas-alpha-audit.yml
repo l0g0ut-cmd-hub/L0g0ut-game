@@ -1,0 +1,42 @@
+name: Map Atlas Transparency Audit
+on:
+  push:
+    branches: [bladepath-development]
+    paths:
+      - '.github/workflows/map-atlas-alpha-audit.yml'
+      - 'Assets/_Project/Scripts/Game/MapLife.cs'
+      - 'Assets/_Project/Resources/UI/Battle/map_*.png'
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install --quiet pillow
+      - name: Inspect original atlas channel data
+        shell: bash
+        run: |
+          python - <<'PY'
+          from PIL import Image
+          from pathlib import Path
+          import numpy as np
+          atlas = Path('Assets/_Project/Resources/UI/Battle')
+          for name in ['map_wisps', 'map_petals', 'map_mist', 'map_fall', 'map_ripples', 'map_foam']:
+              path = atlas/(name+'.png')
+              if not path.exists():
+                  print('MISSING',path)
+                  continue
+              im = Image.open(path).convert('RGBA')
+              # sample regularly to keep large 8x6 sheets fast
+              small = im.resize((192, 144))
+              data=list(small.getdata())
+              count=len(data)
+              transparent=sum(a <= 20 for r,g,b,a in data)
+              opaque_dark=sum(a > 220 and max(r,g,b) < 20 for r,g,b,a in data)
+              a_min=min(a for r,g,b,a in data)
+              a_max=max(a for r,g,b,a in data)
+              print(f'{name}: {im.size}, alpha=[{a_min},{a_max}], transparent={transparent/count:.2%}, opaque_black={opaque_dark/count:.2%}')
+          PY
