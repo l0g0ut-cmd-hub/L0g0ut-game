@@ -416,45 +416,91 @@ namespace BladePath
 
         // Draw the actual 8x6, 48-frame artwork; only the geographic footprint
         // and rotation change. Restoring IMGUI state avoids affecting other layers.
-        static bool AtlasAt(string name, Rect r, float t, float fps, float alpha, float angle, bool pivotAtLip)
+        // These are the owner's 8x6 atlases, 48 frames each. On each repaint draw ONE
+        // source frame: blending the next on top made fog pulse and leaves look giant.
+        // Do not affect the shared SheetFrame used by other game screens.
+        static void OriginalAtlasFrame(Rect area, Texture2D atlas, float t, float fps,
+            float opacity, bool pingPong)
         {
-            Texture2D sheet = UiKit.Tex("UI/Battle/" + name);
-            if (sheet == null) return false;
-            Matrix4x4 savedMatrix = GUI.matrix;
-            Color savedColor = GUI.color;
-            if (Mathf.Abs(angle) > 0.1f)
-                GUIUtility.RotateAroundPivot(angle,
-                    pivotAtLip ? new Vector2(r.center.x, r.y) : r.center);
-            SheetFrame(r, sheet, 8, 6, 48, t, fps, Mathf.Clamp01(alpha), false);
-            GUI.matrix = savedMatrix;
-            GUI.color = savedColor;
+            if (atlas == null || opacity <= 0f || area.width <= 0f || area.height <= 0f) return;
+            const int frameCount = 48;
+            int span = pingPong ? frameCount * 2 - 2 : frameCount;
+            int index = Mathf.FloorToInt(Mathf.Repeat(t * fps, span));
+            if (pingPong && index >= frameCount) index = span - index;
+            Color saved = GUI.color;
+            GUI.color = new Color(1f, 1f, 1f, Mathf.Clamp01(opacity));
+            GUI.DrawTextureWithTexCoords(area, atlas, SheetCell(index, 8, 6));
+            GUI.color = saved;
+        }
+
+        static bool AtlasAt(string name, Rect area, float t, float fps, float alpha,
+            float degrees, bool pivotAtLip, bool pingPong = false)
+        {
+            Texture2D atlas = UiKit.Tex("UI/Battle/" + name);
+            if (atlas == null) return false;
+            Matrix4x4 matrix = GUI.matrix;
+            Color tint = GUI.color;
+            if (Mathf.Abs(degrees) > 0.10f)
+                GUIUtility.RotateAroundPivot(degrees,
+                    pivotAtLip ? new Vector2(area.center.x, area.y) : area.center);
+            OriginalAtlasFrame(area, atlas, t, fps, alpha, pingPong);
+            GUI.matrix = matrix;
+            GUI.color = tint;
             return true;
         }
 
-        static void TerrainWisps(MapEffect e, Rect r, float t)
+        // A small animated leaf per particle. The original frame art is never
+        // enlarged to the size of an entire tree's falling-petal corridor.
+        static void SakuraAtlasPetals(MapEffect e, Rect region, float t)
         {
-            Texture2D atlas = UiKit.Tex("UI/Battle/map_wisps");
-            if (atlas == null || e.alpha <= 0f) return;
-            Color before = GUI.color;
-            int count = DuelManager.Gfx == 0 ? 5 : 9;
-            float baseSize = Mathf.Clamp(Mathf.Min(r.width, r.height) * 0.145f, 9f, 22f);
+            Texture2D petals = UiKit.Tex("UI/Battle/map_petals");
+            if (petals == null || e.alpha <= 0f) return;
+            int count = DuelManager.Gfx == 0 ? 12 : 24;
+            float nominalSize = Mathf.Clamp(Mathf.Min(region.width, region.height) * 0.13f, 8f, 14f);
+            for (int i = 0; i < count; i++)
+            {
+                float seed = e.x * 0.019f + e.y * 0.017f + i * 7.319f;
+                float cycleTime = 6.0f + 4.0f * H(seed + 2f);
+                float age = t / cycleTime + H(seed + 4f);
+                float phase = Mathf.Repeat(age, 1f);
+                int cycle = Mathf.FloorToInt(age);
+                float x = region.x + region.width * (0.13f + 0.72f *
+                    H(seed + cycle * 2.7f)) + Mathf.Sin(t * 0.9f + seed) * 2.2f
+                    + phase * Mathf.Min(6f, region.width * 0.08f);
+                float y = region.y + region.height * (0.04f + phase * 0.91f);
+                float size = nominalSize * (0.68f + 0.30f * H(seed + cycle * 3.1f));
+                float fade = Mathf.Clamp01(phase / 0.10f) *
+                    Mathf.Clamp01((1f - phase) / 0.16f);
+                OriginalAtlasFrame(new Rect(x - size * 0.5f, y - size * 0.5f,
+                    size, size), petals,
+                    t + seed * 0.71f, 14f, e.alpha * fade, false);
+            }
+        }
+
+        // Exact original green-spirit animation, not procedural glowing dots.
+        // Size refers to a sprite cell, not to the full geographic forest region.
+        static void TerrainWisps(MapEffect e, Rect region, float t)
+        {
+            Texture2D spirits = UiKit.Tex("UI/Battle/map_wisps");
+            if (spirits == null || e.alpha <= 0f) return;
+            int count = DuelManager.Gfx == 0 ? 6 : 10;
+            float baseSize = Mathf.Clamp(
+                Mathf.Min(region.width, region.height) * 0.40f, 24f, 42f);
             for (int i = 0; i < count; i++)
             {
                 float seed = e.x * 0.021f + e.y * 0.014f + i * 13.83f;
-                float driftTime = t * (0.15f + 0.10f * H(seed + 5f)) + seed;
-                float x = r.x + r.width * (0.15f + 0.69f * H(seed))
-                    + Mathf.Sin(driftTime) * Mathf.Min(4.2f, r.width * 0.045f);
-                float y = r.y + r.height * (0.20f + 0.59f * H(seed + 1f))
-                    + Mathf.Cos(driftTime * 1.19f) * Mathf.Min(3.2f, r.height * 0.04f);
-                float size = baseSize * (0.78f + 0.28f * H(seed + 3f));
-                float breathe = 0.77f + 0.17f * Mathf.Sin(t * 0.69f + seed * 3.2f);
-                float animTime = t * (0.90f + 0.16f * H(seed + 7f))
-                    + H(seed + 9f) * 3.42f;
-                SheetFrame(new Rect(x - size * 0.5f, y - size * 0.5f, size, size),
-                    atlas, 8, 6, 48, animTime, 14f,
-                    Mathf.Clamp01(e.alpha * breathe), false);
+                float drift = t * (0.13f + 0.10f * H(seed + 5f)) + seed;
+                float x = region.x + region.width * (0.12f + 0.74f * H(seed)) +
+                    Mathf.Sin(drift) * Mathf.Min(4f, region.width * 0.043f);
+                float y = region.y + region.height * (0.14f + 0.68f * H(seed + 1f)) +
+                    Mathf.Cos(drift * 1.19f) * Mathf.Min(4f, region.height * 0.048f);
+                float size = baseSize * (0.74f + 0.30f * H(seed + 3f));
+                float pulse = 0.82f + 0.13f * Mathf.Sin(t * 0.63f + seed * 3.2f);
+                OriginalAtlasFrame(new Rect(x - size * 0.5f, y - size * 0.5f,
+                    size, size), spirits,
+                    t * (0.86f + 0.16f * H(seed + 7f)) + H(seed + 9f) * 3.42f,
+                    14f, Mathf.Clamp01(e.alpha * pulse), false);
             }
-            GUI.color = before;
         }
 
         static void DrawSheetFalls(int region, Rect view, float u0, float uw, float t, Texture2D mist)
@@ -508,13 +554,12 @@ namespace BladePath
             if (k == "lantern") { Hi("map_lantern", r, t, 18f, e.alpha); return; }
             if (k == "window_glow") return; // after the dusk filter in DrawLights only
             if (k == "wisps") { TerrainWisps(e, r, t); return; }
-            if (HiFx && k == "petals" &&
-                AtlasAt("map_petals", r, t, 13f, e.alpha, 0f, false)) return;
+            if (HiFx && k == "petals") { SakuraAtlasPetals(e, r, t); return; }
             if (HiFx && k == "mist")
             {
                 Rect fog = new Rect(r.x + Mathf.Sin(t * 0.11f + e.x) * r.width * 0.025f,
                     r.y, r.width, r.height);
-                if (AtlasAt("map_mist", fog, t, 8f, e.alpha, 0f, false)) return;
+                if (AtlasAt("map_mist", fog, t, 5.5f, e.alpha, 0f, false, true)) return;
             }
             if (HiFx && k == "stream")
             {
