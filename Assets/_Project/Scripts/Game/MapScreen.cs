@@ -367,7 +367,7 @@ namespace BladePath
                 {
                     panU = Mathf.Clamp(panAtOrigin - (pt.x - panTouchOrigin.x) / MapFullW,
                         0f, Mathf.Max(0f, 1f - viewW / MapFullW));
-                    panV = Mathf.Clamp(panAtOriginV - (pt.y - panTouchOrigin.y) / MapFullH, 0f, Mathf.Max(0f, 1f - MapH / MapFullH));
+                    panV = Mathf.Clamp(panAtOriginV - (pt.y - panTouchOrigin.y) / MapFullH, 0f, Mathf.Max(0f, 1f - VisibleMapHeight / MapFullH));
                 }
             }
             if (Input.GetMouseButtonUp(0))
@@ -447,7 +447,7 @@ namespace BladePath
                 Mathf.Lerp(panU, target, Mathf.Clamp01(Time.unscaledDeltaTime * 3f));
             panU = Mathf.Clamp(panU, 0f, Mathf.Max(0f, 1f - uw));
             u0 = panU;
-            float vh = MapH / MapFullH, targetV = Mathf.Clamp(hu.y - vh * 0.5f, 0f, Mathf.Max(0f, 1f - vh));
+            float vh = VisibleMapHeight / MapFullH, targetV = Mathf.Clamp(hu.y - vh * 0.5f, 0f, Mathf.Max(0f, 1f - vh));
             panV = panV < 0f ? targetV : manualPan ? panV : Mathf.Lerp(panV, targetV, Mathf.Clamp01(Time.unscaledDeltaTime * 3f));
             panV = Mathf.Clamp(panV, 0f, Mathf.Max(0f, 1f - vh));
             mapY = -panV * MapFullH;
@@ -1666,11 +1666,14 @@ namespace BladePath
                 if (n.Type == NodeType.Herbalist && herb == null)
                     HerbalistMark(p + new Vector2(s * 0.26f, s * 0.27f), 10f);
                 // Only nearby / selected nodes show labels. Avoid crowding the panorama.
-                if ((can || i == sel) && known && n.Type != NodeType.Start)
+                if ((can || i == sel) && known && n.Type != NodeType.Start && p.y < VisibleMapHeight)
                 {
                     float tw = 90f;
                     // подписи рисуются после всадника (DrawNodeLabels), иначе он закрывает «ТРАВНИЦА», «СУНДУК»
-                    nodeLabels.Add(new KeyValuePair<Rect, string>(new Rect(p.x - tw * 0.5f, p.y + s * 0.45f + 3f, tw, 18f),
+                    float labelY = p.y + s * 0.45f + 3f;
+                    if (Realm.Active && labelY + 20f > VisibleMapHeight)
+                        labelY = p.y - s * 0.45f - 21f;
+                    nodeLabels.Add(new KeyValuePair<Rect, string>(new Rect(p.x - tw * 0.5f, labelY, tw, 18f),
                         n.IsTavern ? "ТРАКТИР" : n.Type == NodeType.Custom ? NodeName(n) : ShortTypeNames[(int)n.Type]));
                 }
                 int routeIndex = previewPath.IndexOf(i);
@@ -1916,12 +1919,12 @@ namespace BladePath
             }
         }
 
+        float VisibleMapHeight { get { return Realm.Active ? ResourceBarRect().y : MapH; } }
+
         Rect ResourceBarRect()
         {
-            float y = Profile.Cycle > 0 ? 64f : 50f;
-            // Справа остаётся место для медальона времени суток.
-            float width = Mathf.Max(0f, Mathf.Min(760f, viewW - 82f));
-            return new Rect(mapX + 14f, y, width, Realm.HudHeight(width));
+            float height = Realm.HudHeight(viewW);
+            return new Rect(mapX, MapH - height, viewW, height);
         }
 
         // ------------------------------------------------------------------ панель справа
