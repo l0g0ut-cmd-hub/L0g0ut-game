@@ -77,6 +77,7 @@ namespace BladePath
         public float x, y, w, h;    // левый верхний угол и размер, пиксели картины
         public float alpha = 1f, speed = 1f;
         public float angle;         // угол направленного течения/склона, в градусах по часовой стрелке
+        public float[] fallOffsets;   // сдвиги оси струи в долях ширины, с равным шагом от уступа до подножия
         public int foot;            // у водопада: 0 — ничего, 1 — брызги, 2 — водяная пыль ущелья
     }
 

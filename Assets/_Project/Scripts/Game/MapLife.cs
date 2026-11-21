@@ -457,6 +457,35 @@ namespace BladePath
             return true;
         }
 
+        static bool DrawCurvedFall(MapEffect e, Rect r, float t, out Vector2 impact)
+        {
+            float[] offsets = e.fallOffsets;
+            impact = new Vector2(r.center.x + offsets[offsets.Length - 1] * r.width, r.yMax);
+            Texture2D atlas = UiKit.Tex("UI/Battle/map_fall");
+            if (atlas == null || r.height <= 0f) return false;
+            int frame = Mathf.FloorToInt(Mathf.Repeat(t * 20f, 48f));
+            Rect uv = MapAtlasCell(atlas, frame);
+            int bands = offsets.Length - 1;
+            float height = r.height / bands;
+            Matrix4x4 saved = GUI.matrix;
+            Color tint = GUI.color;
+            GUI.color = new Color(1f, 1f, 1f, Mathf.Clamp01(e.alpha));
+            for (int i = 0; i < bands; i++)
+            {
+                Matrix4x4 strip = Matrix4x4.identity;
+                strip.m03 = r.x + offsets[i] * r.width;
+                strip.m13 = r.y + i * height;
+                strip.m01 = (offsets[i + 1] - offsets[i]) * r.width / height;
+                GUI.matrix = saved * strip;
+                Rect source = new Rect(uv.x, uv.yMax - (i + 1) * uv.height / bands,
+                    uv.width, uv.height / bands);
+                GUI.DrawTextureWithTexCoords(new Rect(0f, 0f, r.width, height), atlas, source);
+            }
+            GUI.matrix = saved;
+            GUI.color = tint;
+            return true;
+        }
+
         // Каждый кадр уже содержит несколько лепестков. Размер привязан к кроне на картине.
         static void SakuraAtlasPetals(MapEffect e, Rect region, float t)
         {
@@ -557,13 +586,16 @@ namespace BladePath
             }
             if (HiFx && k.StartsWith("fall_"))
             {
-                if (AtlasAt("map_fall", r, t, 20f, e.alpha, e.angle, true))
+                float radians = e.angle * Mathf.Deg2Rad;
+                Vector2 impact = new Vector2(r.center.x - r.height * Mathf.Sin(radians),
+                    r.y + r.height * Mathf.Cos(radians));
+                bool drawn = e.fallOffsets != null && e.fallOffsets.Length >= 2
+                    ? DrawCurvedFall(e, r, t, out impact)
+                    : AtlasAt("map_fall", r, t, 20f, e.alpha, e.angle, true);
+                if (drawn)
                 {
                     if (e.foot != 0)
                     {
-                        float radians = e.angle * Mathf.Deg2Rad;
-                        Vector2 impact = new Vector2(r.center.x - r.height * Mathf.Sin(radians),
-                            r.y + r.height * Mathf.Cos(radians));
                         float fw = Mathf.Min(r.width * 0.83f, r.height * 1.15f);
                         float fh = fw * 0.45f;
                         AtlasAt("map_foam", new Rect(impact.x - fw * 0.5f,
