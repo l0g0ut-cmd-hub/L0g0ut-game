@@ -22,9 +22,25 @@ jobs:
           ACCOUNT_11: ${{ secrets.MESHY_KEY4 }}
           ACCOUNT_12: ${{ secrets.MESHY_KEY5 }}
           ACCOUNT_13: ${{ secrets.MESHY_KEY6 }}
+          ACCOUNT_EXTRA_0: ${{ secrets.MESHY_API_KEY_2 }}
+          ACCOUNT_EXTRA_1: ${{ secrets.MESHY_API_KEY2 }}
+          ACCOUNT_EXTRA_2: ${{ secrets.MESHY_API_KEY_3 }}
+          ACCOUNT_EXTRA_3: ${{ secrets.MESHY_KEY_3 }}
+          ACCOUNT_EXTRA_4: ${{ secrets.MESHY_KEY_4 }}
+          ACCOUNT_EXTRA_5: ${{ secrets.MESHY_KEY_5 }}
+          ACCOUNT_EXTRA_6: ${{ secrets.MESHY_API_KEY_4 }}
+          ACCOUNT_EXTRA_7: ${{ secrets.MESHY_API_KEY_5 }}
+          ACCOUNT_EXTRA_8: ${{ secrets.MESHY_API_KEY3 }}
+          ACCOUNT_EXTRA_9: ${{ secrets.MESHY_API_KEY4 }}
         shell: python
         run: |
           import json, os, urllib.request, urllib.error
+          import io, base64, subprocess, tempfile, urllib.parse
+          from PIL import Image, ImageDraw
+          known = {"01a1f67d-4cda-76b6-a24a-6f3e38ff5d3f":"acc_hair_long","01a1f684-200b-74e7-82de-db89cf69e09b":"acc_hair_ponytail","01a1f678-29b0-718b-bf43-25a44c77b61d":"acc_hair_short","01a1f681-545b-733b-964e-626abd8f5c5b":"acc_hair_topknot","01a1f672-9db6-7641-ac08-b68378da71cb":"acc_headband_red","01a1f674-fd94-73b0-8b2a-e6acfc540e12":"acc_hood","01a1f677-356d-71e5-ac66-78ee86f9755a":"acc_jingasa","01a1f676-195d-740e-b60f-bd4b23e74a5b":"acc_kabuto","01a1f67b-6c05-7609-ae6f-78ad998aa49d":"acc_kasa_straw","01a1f671-a896-747f-8031-f04c8c638461":"acc_mask_cloth","01a1f673-e100-73be-a250-93a10efc8fef":"acc_mempo","01a1f648-6492-77dd-a1e6-b973092674b4":"base_female","01a1f646-aaaa-713c-809b-0a1c3de51509":"base_male","01a1ec0d-06dc-7092-957f-65b3e576f172":"forest_ashigaru","01a1ec09-9d31-75fc-9e0c-f1a7db1d006d":"forest_bandit","01a1ec0e-e14b-70b6-9576-ac5ca8c0bcf4":"forest_kitsune","01a1ec0b-53ed-770a-947d-35cc535e8f9e":"forest_yamabushi","01a1f92e-b287-72e8-b8ab-5bbc66c6410f":"unit_archer","01a1fa3a-59d0-767f-a896-77ccb733ee6e":"unit_archer2","01a1fa34-8fc8-76bd-80ea-683a1ad87954":"unit_ashigaru2","01a1f935-01f7-72ea-a6d4-a65f2998a6ac":"unit_banner","01a1fa57-f03d-76f4-bea1-53eb149883a2":"unit_banner2","01a1f948-2508-77fb-8576-f551f7f6630f":"unit_cavalry","01a1fa63-f0a3-71ef-a5a9-98777206c536":"unit_cavalry2","01a1f97c-2aa2-700d-b5fc-7dd1321a2072":"unit_crimson","01a1f94a-370c-7163-a039-3aa12a7af363":"unit_dog","01a1fa60-e527-76cf-ace9-c9b041a66b92":"unit_dog2","01a1f9ea-75f5-7419-b584-2120379e8cdf":"unit_general","01a1f978-4901-7231-8598-76a34fbaa44f":"unit_hatamoto","01a1fa5c-754f-73bd-8e3d-977b56bc7810":"unit_hatamoto2","01a1f933-838c-7525-941f-8ec45db8161b":"unit_onmyoji","01a1fa53-4f51-7270-9341-dd5b02998aad":"unit_onmyoji2","01a1f96f-f7a9-74c0-8646-438074d96588":"unit_ronin","01a1fa4f-2fb3-7376-80b6-9cc37dfa0b14":"unit_ronin2","01a1f968-6f80-7111-be45-daede514f461":"unit_samurai","01a1fa43-d945-72eb-b08b-28dfb09001a6":"unit_samurai2","01a1f96c-4753-7664-857b-b287e756e596":"unit_shinobi","01a1fa4b-3233-7449-b063-bfe08622a372":"unit_shinobi2","01a1f931-b636-720b-8cb5-33efe413bbc5":"unit_sohei","01a1fa47-836a-7531-837e-0faf486c432e":"unit_sohei2","01a1f930-35eb-7793-a95b-be14b6f34c78":"unit_teppo","01a1fa3e-f16f-706e-87b7-9b03ef0dfc8e":"unit_teppo2"}
+          pub = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAr+FlV4EDjDEib/SL8buD\nkS2t9JHH0mOHA+hFgZ48Btzb5DFPnA5HCrphQdGbfKLL6N68K73lhmso0BGwnvly\npaNIhi7riQJQSn4uJrgZDTubrKB1udYE7luSEN1NhkaNrmSd1X661gR03TJ/lNKL\nh1slVbq4pF+gQgP/RRTN4NJUMTSZxQiWRnjjgXrHjWXGOIlk5h2UlUZff82ct53J\nZXCRY3C9IEqvN2oCQMebReL0bdz9cjA5dPZArdd27OWnkCRrlp85zwlVoNeuqVbc\n//HxH6EKR5Cnj3V8WUjdrsbsdwm4nj0iS0fwi6jCgLaTRDYauPH08SFpJ+6FF9Dn\noQIDAQAB\n-----END PUBLIC KEY-----\n"
+          seen_tasks = set()
+          previews = []
           seen = set()
           for slot, key in sorted(os.environ.items()):
               if not slot.startswith("ACCOUNT_") or not key or key in seen:
@@ -49,6 +65,20 @@ jobs:
                       previous = rows[0].get("id")
                       for row in rows:
                           count += 1
+                          tid = row.get('id')
+                          if tid in known or tid in seen_tasks or row.get('status') != 'SUCCEEDED':
+                              continue
+                          seen_tasks.add(tid)
+                          thumb = row.get('thumbnail_url')
+                          if not thumb or urllib.parse.urlsplit(thumb).scheme != 'https':
+                              continue
+                          try:
+                              with urllib.request.urlopen(thumb,timeout=15) as resp:
+                                  im = Image.open(io.BytesIO(resp.read(10000000))).convert('RGB')
+                              im.thumbnail((145,130))
+                              previews.append((slot, kind, tid, im))
+                          except Exception as err:
+                              print('thumbnail unavailable',type(err).__name__)
                           desc = " ".join(str(row.get(f) or "") for f in ("name","title","task_name","prompt","texture_prompt","model_name","file_name","image_url")).lower()
                           if row.get("status") == "SUCCEEDED" and any(w in desc for w in ("tengu","тэнгу","тенгу","天狗")):
                               print("MATCH",slot,kind,row["id"])
@@ -56,4 +86,26 @@ jobs:
                       if len(rows) < 50:
                           break
                   print(slot, kind, "tasks", count, "matches", matches)
-          print("Accounts checked", len(seen))
+          print("Accounts checked", len(seen), "unarchived previews", len(previews))
+          if previews:
+              from cryptography.hazmat.primitives import hashes, serialization
+              from cryptography.hazmat.primitives.asymmetric import padding
+              from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+              out = Image.new('RGB',(600,155*((len(previews)+3)//4)), '#454545')
+              draw = ImageDraw.Draw(out)
+              rows = []
+              for i,(slot,kind,tid,im) in enumerate(previews):
+                  x,y=(i%4)*150,(i//4)*155
+                  out.paste(im,(x,y))
+                  draw.text((x,y+132),str(i),fill='white')
+                  rows.append([slot,kind,tid])
+              b=io.BytesIO()
+              out.save(b,format='JPEG',quality=75)
+              key=AESGCM.generate_key(bit_length=256)
+              pk=serialization.load_pem_public_key(pub.encode())
+              enc=pk.encrypt(key,padding.OAEP(mgf=padding.MGF1(hashes.SHA256()),algorithm=hashes.SHA256(),label=None))
+              nonce=os.urandom(12)
+              payload=json.dumps([rows,base64.b64encode(b.getvalue()).decode()]).encode()
+              data=base64.b64encode(enc+nonce+AESGCM(key).encrypt(nonce,payload,None)).decode()
+              for i in range(0,len(data),1000):
+                  print('PREVIEW_CIPHER',data[i:i+1000])
