@@ -191,6 +191,7 @@ namespace BladePath
 
             if (map != null)
             {
+                yield return Step("map_vfx", () => MapVfx());
                 yield return Step("ride", () => Ride());
                 yield return Step("node_windows", () => NodeWindows());
                 for (int k = 0; k < MapScreen.EventCount; k++) { int kk = k; yield return Step("event_" + k, () => EventShot(kk)); }
@@ -217,6 +218,43 @@ namespace BladePath
             JourneyChoice.FogEnabled = fog;
             yield return Shot(name);
             Set(menu, "settingsOpen", false);
+        }
+
+        /// <summary>Real Android renders of the painted terrain across both graphics modes.</summary>
+        IEnumerator MapVfx()
+        {
+            int original = DuelManager.Gfx;
+            try
+            {
+                CloseMap();
+                Set(map, "manualPan", true);
+                DuelManager.Gfx = 1;
+            }
+            catch (Exception ex) { Fail("map_vfx_setup", ex.ToString()); yield break; }
+            float[] us = { 0f, 0.30f, 0.60f };
+            float[] vs = { 0f, 1f };
+            for (int vi = 0; vi < vs.Length; vi++)
+            {
+                for (int ui = 0; ui < us.Length; ui++)
+                {
+                    try { Set(map, "panU", us[ui]); Set(map, "panV", vs[vi]); }
+                    catch (Exception ex) { Fail("map_vfx_pan", ex.ToString()); }
+                    yield return Shot("map_fx_high_" + ui + "_" + vi);
+                }
+            }
+            // Compare the same terrain at low graphics; essential effects must remain visible.
+            DuelManager.Gfx = 0;
+            try { Set(map, "panU", 0f); Set(map, "panV", 0f); }
+            catch (Exception ex) { Fail("map_vfx_low", ex.ToString()); }
+            yield return Shot("map_fx_low_0_0");
+            yield return new WaitForSecondsRealtime(2f);
+            yield return Shot("map_fx_low_0_0_later");
+            try { Set(map, "panU", 0.55f); Set(map, "panV", 1f); }
+            catch (Exception ex) { Fail("map_vfx_low_right", ex.ToString()); }
+            yield return Shot("map_fx_low_2_1");
+            DuelManager.Gfx = original;
+            try { Set(map, "manualPan", false); Set(map, "panU", -1f); Set(map, "panV", -1f); }
+            catch (Exception ex) { Fail("map_vfx_reset", ex.ToString()); }
         }
 
         /// <summary>Поездка по карте: выбор далёкой цели (маршрут со следами и кольцом конца хода), бросок, езда, прибытие.</summary>
