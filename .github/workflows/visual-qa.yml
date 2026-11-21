@@ -84,13 +84,15 @@ jobs:
           curl -fsSL "https://raw.githubusercontent.com/game-ci/cli/${GAMECI_VERSION}/scripts/install.sh" -o "$RUNNER_TEMP/gc-install.sh"
           bash "$RUNNER_TEMP/gc-install.sh" "$GAMECI_VERSION" "$GAME_CI_INSTALL"
           echo "$GAME_CI_INSTALL" >> "$GITHUB_PATH"
-      - name: Execute Unity Play Mode and capture main menu, six difficulty states and all heroes
+      - name: Execute Unity Play Mode and capture menu, whole map, low graphics, battle and estate
         env:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         run: |
           set +e
-          # Time-box headless Play Mode: a hung editor must not occupy the shared\n          # Unity license / APK concurrency slot indefinitely.\n          timeout --signal=TERM --kill-after=45s 45m game-ci build . \
+          # Time-box headless Play Mode; never leave Unity occupying the license slot.
+          # Avoid literal \\n in the shell block: that silently broke the command.
+          timeout --signal=TERM --kill-after=45s 45m game-ci build . \
             --engine unity \
             --engine-version "$UNITY_VERSION" \
             --target-platform Android \
@@ -101,11 +103,13 @@ jobs:
           tool_status=${PIPESTATUS[0]}
           set -e
           if [ "$tool_status" -eq 124 ] || [ "$tool_status" -eq 137 ]; then
-            echo "::error::Visual QA Unity Play Mode hung for 25 minutes; releasing CI slot"
+            echo "::error::Visual QA Unity Play Mode timed out after 45 minutes; releasing CI slot"
             exit 124
           fi
           echo "GameCI status=$tool_status (no APK expected from screenshot-only Play Mode)"
+          test -f build/visual-runtime/status.txt || { echo "::error::Unity generated no status"; exit 1; }
           grep -q "END screenshots=10 failures=0" build/visual-runtime/status.txt
+          grep -q "GAME_END failures=0" build/visual-runtime/status.txt || { echo "::error::Game map capture did not complete"; cat build/visual-runtime/status.txt; exit 1; }
           if grep -q "^FAIL:" build/visual-runtime/status.txt; then cat build/visual-runtime/status.txt; exit 1; fi
           python3 tools/validate_runtime_shots.py build/visual-runtime
       - name: Save real Unity screenshots even if rendering failed

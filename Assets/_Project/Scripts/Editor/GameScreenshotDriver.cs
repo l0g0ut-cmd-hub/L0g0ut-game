@@ -46,7 +46,17 @@ namespace BladePath.EditorTools
             }
             catch (Exception e) { VisualQARunner.Fail("map show: " + e); }
             yield return new WaitForSecondsRealtime(3f);
+            DuelManager.Gfx = 1;
             yield return Shot("game_map_hero");
+            yield return Shot("game_map_fx_high_t0");
+            yield return new WaitForSecondsRealtime(2f);
+            yield return Shot("game_map_fx_high_t2");
+            DuelManager.Gfx = 0;
+            yield return new WaitForSecondsRealtime(2f);
+            yield return Shot("game_map_fx_low_t0");
+            yield return new WaitForSecondsRealtime(2f);
+            yield return Shot("game_map_fx_low_t2");
+            DuelManager.Gfx = 1;
             object inst = Get(typeof(MapScreen), "inst");
             float[] us = { 0f, 0.33f, 0.66f, 1f };
             float[] vs = { 0f, 1f };
