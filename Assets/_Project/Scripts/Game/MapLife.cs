@@ -416,128 +416,187 @@ namespace BladePath
 
         // All terrain particles below use alpha-correct procedural textures rather than
         // old opaque-black flipbooks. They are positioned in painted-map pixel space.
+        // The rectangle is a falling corridor BELOW a specific blossom crown,
+        // never a box encompassing its upper silhouette or the sky above it.
         static void TerrainPetals(MapEffect e, Rect r, float t)
         {
-            Texture2D pet = SoftSprites.Petal;
-            if (pet == null || e.alpha <= 0f) return;
-            Color old = GUI.color;
-            int n = DuelManager.Gfx == 0 ? 11 : 20;
-            for (int i = 0; i < n; i++)
+            Texture2D tex = SoftSprites.Petal;
+            if (tex == null || e.alpha <= 0f) return;
+            Color original = GUI.color;
+            int count = DuelManager.Gfx == 0 ? 11 : 21;
+            for (int i = 0; i < count; i++)
             {
                 float seed = e.x * 0.023f + e.y * 0.031f + i * 17.19f;
-                float life = 5.6f + 4.2f * H(seed);
-                float travel = t / life + H(seed + 3.7f);
-                float phase = Mathf.Repeat(travel, 1f);
-                int cycle = Mathf.FloorToInt(travel);
-                float x = r.center.x + (H(seed + cycle * 4.1f) - 0.5f) * r.width * 0.62f
-                    + Mathf.Sin(t * 1.2f + seed) * 3.3f + phase * 6.1f;
-                float y = r.y + r.height * (0.09f + 0.86f * phase);
-                float sz = 2.1f + 1.2f * H(seed + cycle * 6.1f);
-                float fade = Mathf.Clamp01(phase / 0.13f) * Mathf.Clamp01((1f - phase) / 0.20f);
-                GUI.color = new Color(1f, 0.76f + 0.16f * H(seed + 5f), 0.88f, e.alpha * fade * 0.92f);
-                GUI.DrawTexture(new Rect(x - sz, y - sz * 0.52f, 2f * sz, 1.04f * sz), pet);
+                float life = 5.5f + 4.1f * H(seed);
+                float elapsed = t / life + H(seed + 3.7f);
+                float phase = Mathf.Repeat(elapsed, 1f);
+                int cycle = Mathf.FloorToInt(elapsed);
+                float x = r.center.x + (H(seed + cycle * 4.1f) - 0.5f) * r.width * 0.74f
+                    + Mathf.Sin(t * 0.93f + seed) * 3.1f + phase * 5.2f;
+                float y = r.y + r.height * (0.03f + 0.92f * phase);
+                float size = 1.5f + 1.25f * H(seed + cycle * 6.1f);
+                float flutter = 0.55f + 0.33f * Mathf.Sin(t * 2.9f + seed);
+                float fade = Mathf.Clamp01(phase / 0.12f)
+                    * Mathf.Clamp01((1f - phase) / 0.16f);
+                GUI.color = new Color(1f, 0.81f + 0.12f * H(seed + 5f),
+                    0.91f, e.alpha * fade * 0.82f);
+                GUI.DrawTexture(new Rect(x - size, y - size * flutter * 0.5f,
+                    size * 2f, Mathf.Max(0.6f, size * flutter)), tex);
             }
-            GUI.color = old;
+            GUI.color = original;
         }
 
+        // Sparse breathing forest lights, with a very soft halo instead of
+        // neon dots. Different orbits and lifetimes prevent visible grid patterns.
         static void TerrainWisps(MapEffect e, Rect r, float t)
         {
             Texture2D halo = SoftSprites.Fog, core = SoftSprites.Disc;
-            Color old = GUI.color;
-            int n = DuelManager.Gfx == 0 ? 8 : 16;
-            for (int i = 0; i < n; i++)
+            if (e.alpha <= 0f || halo == null || core == null) return;
+            Color original = GUI.color;
+            int count = DuelManager.Gfx == 0 ? 7 : 12;
+            for (int i = 0; i < count; i++)
             {
                 float seed = e.x * 0.021f + e.y * 0.014f + i * 13.83f;
-                float x = r.x + r.width * (0.12f + 0.75f * H(seed)) +
-                    Mathf.Sin(t * 0.48f + seed) * 3.8f;
-                float y = r.y + r.height * (0.16f + 0.64f * H(seed + 1f)) +
-                    Mathf.Sin(t * 0.64f + seed) * 3.2f;
-                float a = e.alpha * (0.58f + 0.34f * Mathf.Sin(t * 1.4f + seed * 3.2f));
-                float rad = 2.4f + 0.7f * H(seed + 7f);
-                GUI.color = new Color(0.16f, 0.89f, 0.35f, a * 0.65f);
-                GUI.DrawTexture(new Rect(x - 3f * rad, y - 3f * rad, rad * 6f, rad * 6f), halo);
-                GUI.color = new Color(0.72f, 1f, 0.66f, a);
-                GUI.DrawTexture(new Rect(x - rad * 0.7f, y - rad * 0.7f, rad * 1.4f, rad * 1.4f), core);
+                float drift = t * (0.21f + 0.17f * H(seed + 7f)) + seed;
+                float x = r.x + r.width * (0.16f + 0.66f * H(seed))
+                    + Mathf.Sin(drift) * (3f + 2.0f * H(seed + 2f));
+                float y = r.y + r.height * (0.20f + 0.60f * H(seed + 1f))
+                    + Mathf.Cos(drift * 1.19f) * (3f + 2f * H(seed + 4f));
+                float breathe = Mathf.Pow(0.5f + 0.5f *
+                    Mathf.Sin(t * (0.68f + H(seed + 4f) * 0.52f) + seed * 3.2f), 2f);
+                float alpha = e.alpha * (0.12f + 0.70f * breathe);
+                float rad = 1.25f + 0.65f * H(seed + 6f);
+                float soft = rad * 5.2f;
+                GUI.color = new Color(0.17f, 0.67f, 0.40f, alpha * 0.38f);
+                GUI.DrawTexture(new Rect(x - soft, y - soft,
+                    soft * 2f, soft * 2f), halo);
+                GUI.color = new Color(0.59f, 0.95f, 0.67f, alpha * 0.72f);
+                GUI.DrawTexture(new Rect(x - rad * 1.3f, y - rad * 1.3f,
+                    rad * 2.6f, rad * 2.6f), core);
+                GUI.color = new Color(0.86f, 1f, 0.82f, alpha * 0.45f);
+                GUI.DrawTexture(new Rect(x - rad * 0.52f, y - rad * 0.52f,
+                    rad * 1.04f, rad * 1.04f), core);
             }
-            GUI.color = old;
+            GUI.color = original;
         }
 
+        // Terrain mist is pale and partially transparent, its actual alpha mask
+        // fades on all sides. Unlike weather puffs it never has a black background.
         static void TerrainMist(MapEffect e, Rect r, float t)
         {
-            Texture2D tex = JourneyMistArt.Texture;  // white alpha-only wisps, never black rain cloud
-            if (tex == null || e.alpha <= 0f) return;
-            Color old = GUI.color;
-            int n = DuelManager.Gfx == 0 ? 2 : 4;
-            for (int i = 0; i < n; i++)
+            Texture2D wisp = JourneyMistArt.Texture;
+            Texture2D halo = SoftSprites.Fog;
+            if (wisp == null || e.alpha <= 0f) return;
+            Color original = GUI.color;
+            float slow = t * 0.12f;
+            int count = DuelManager.Gfx == 0 ? 3 : 5;
+            for (int i = 0; i < count; i++)
             {
                 float seed = e.x * 0.014f + e.y * 0.018f + i * 11.23f;
-                float x = r.x + r.width * (0.18f + 0.60f * H(seed + 3f))
-                    + Mathf.Sin(t * 0.13f + seed) * r.width * 0.06f;
-                float y = r.y + r.height * (0.42f + 0.15f * H(seed + 4f))
+                float x = r.x + r.width * (0.18f + 0.62f * H(seed + 3f))
+                    + Mathf.Sin(slow + seed) * r.width * 0.045f;
+                float y = r.y + r.height * (0.39f + 0.21f * H(seed + 4f))
                     + Mathf.Sin(t * 0.08f + seed) * r.height * 0.05f;
-                float w = r.width * (0.64f + 0.22f * H(seed));
-                float h = r.height * (0.55f + 0.23f * H(seed + 7f));
-                float breath = 0.92f + 0.08f * Mathf.Sin(t * 0.18f + seed);
-                GUI.color = new Color(0.94f, 0.96f, 1f, e.alpha * 0.67f * breath);
-                GUI.DrawTexture(new Rect(x - w * 0.5f, y - h * 0.5f, w, h),
-                    tex, ScaleMode.StretchToFill, true);
+                float w = r.width * (0.71f + 0.27f * H(seed));
+                float h = r.height * (0.58f + 0.26f * H(seed + 7f));
+                float breathe = 0.87f + 0.13f * Mathf.Sin(t * 0.19f + seed);
+                float strength = Mathf.Clamp01(e.alpha * 0.94f * breathe);
+                if (halo != null && i < 2)
+                {
+                    GUI.color = new Color(0.91f, 0.95f, 1f, strength * 0.22f);
+                    GUI.DrawTexture(new Rect(x - w * 0.5f, y - h * 0.40f,
+                        w, h * 0.8f), halo, ScaleMode.StretchToFill, true);
+                }
+                GUI.color = new Color(0.92f, 0.96f, 1f, strength);
+                GUI.DrawTexture(new Rect(x - w * 0.5f, y - h * 0.5f,
+                    w, h), wisp, ScaleMode.StretchToFill, true);
             }
-            GUI.color = old;
+            GUI.color = original;
         }
 
         // Animated downstream highlights stay inside their short authored stretch
         // of river; angle=0 points right, angle=90 points down on the painted map.
+        // Travelling highlights follow the local painted river tangent. Two
+        // translucent layers keep movement readable at phone resolution without
+        // looking like straight white lines pasted over the painting.
         static void TerrainCurrent(MapEffect e, Rect r, float t)
         {
-            Texture2D glow = SoftSprites.Fog;
-            Color old = GUI.color;
-            float ang = e.angle * Mathf.Deg2Rad;
-            Vector2 dir = new Vector2(Mathf.Cos(ang), Mathf.Sin(ang));
+            Texture2D glow = SoftSprites.Fog, core = SoftSprites.Disc;
+            Color original = GUI.color;
+            Vector2 dir = new Vector2(Mathf.Cos(e.angle * Mathf.Deg2Rad),
+                Mathf.Sin(e.angle * Mathf.Deg2Rad));
             Vector2 across = new Vector2(-dir.y, dir.x);
-            float reach = Mathf.Min(r.width, r.height) * 0.40f;
-            int n = DuelManager.Gfx == 0 ? 6 : 13;
-            for (int i = 0; i < n; i++)
+            float crossWidth = Mathf.Min(r.width, r.height) * 0.27f;
+            float reach = Mathf.Min(r.width, r.height) * 0.47f;
+            int count = DuelManager.Gfx == 0 ? 9 : 16;
+            for (int i = 0; i < count; i++)
             {
                 float seed = e.x * 0.011f + e.y * 0.023f + i * 7.23f;
-                float ph = Mathf.Repeat(t * (0.27f + 0.20f * H(seed + 3f)) + H(seed), 1f);
-                Vector2 p = r.center + dir * ((ph - 0.5f) * reach * 2f) +
-                    across * (H(seed + 5f) - 0.5f) * Mathf.Min(r.width, r.height) * 0.24f;
-                float len = 4f + 4f * H(seed + 6f);
-                float alpha = e.alpha * 0.65f * Mathf.Sin(ph * Mathf.PI);
-                UiKit.Streak(p - dir * len, p + dir * len, 1.5f,
-                    new Color(0.84f, 0.96f, 1f, alpha), glow);
+                float phase = Mathf.Repeat(t * (0.25f + 0.16f * H(seed + 3f))
+                    + H(seed), 1f);
+                float side = (H(seed + 5f) - 0.5f) * crossWidth;
+                Vector2 at = r.center + dir * ((phase - 0.5f) * reach * 2f)
+                    + across * side;
+                float length = 4.0f + 4.2f * H(seed + 6f);
+                float fade = Mathf.Pow(Mathf.Sin(phase * Mathf.PI), 1.4f);
+                float a = e.alpha * fade;
+                UiKit.Streak(at - dir * length, at + dir * length,
+                    4.2f, new Color(0.65f, 0.85f, 1f, a * 0.40f), glow);
+                UiKit.Streak(at - dir * length * 0.64f,
+                    at + dir * length * 0.64f,
+                    1.9f, new Color(0.89f, 0.97f, 1f, a * 0.77f), core);
             }
-            GUI.color = old;
+            GUI.color = original;
         }
 
         // Only streaks are animated: the detailed falls remain those painted
         // on the map, so no rectangular sprite can overwrite rock or foliage.
+        // Painted waterfall is the exact silhouette. Layer a soft flowing veil
+        // and travelling foam highlights within the measured waterfall corridor.
         static void TerrainFalls(MapEffect e, Rect r, float t)
         {
-            Texture2D glow = SoftSprites.Fog;
-            Color old = GUI.color;
-            float a = e.angle * Mathf.Deg2Rad;
-            Vector2 down = new Vector2(Mathf.Sin(a), Mathf.Cos(a));
-            Vector2 lateral = new Vector2(down.y, -down.x);
+            Texture2D soft = SoftSprites.Fog, glint = SoftSprites.Disc;
+            Color original = GUI.color;
+            float angle = e.angle * Mathf.Deg2Rad;
+            Vector2 down = new Vector2(Mathf.Sin(angle), Mathf.Cos(angle));
+            Vector2 across = new Vector2(down.y, -down.x);
             Vector2 lip = new Vector2(r.center.x, r.y);
-            float spread = Mathf.Min(r.width * 0.55f, 22f);
-            int count = DuelManager.Gfx == 0 ? 6 : 10;
-            for (int i = 0; i < count; i++)
+            float width = Mathf.Max(5f, r.width * 0.70f);
+            float fall = r.height * 0.92f;
+            int streams = DuelManager.Gfx == 0 ? 6 : 10;
+            for (int i = 0; i < streams; i++)
             {
-                float seed = e.x * 0.013f + e.y * 0.027f + i * 12.43f;
-                Vector2 start = lip + lateral * ((H(seed) - 0.5f) * spread);
-                for (int k = 0; k < 3; k++)
+                float seed = e.x * 0.019f + e.y * 0.014f + i * 13.23f;
+                float offset = (H(seed) - 0.5f) * width;
+                Vector2 start = lip + across * offset;
+                float flicker = 0.78f + 0.22f * Mathf.Sin(t * 1.13f + seed);
+                UiKit.Streak(start + down * (fall * 0.04f),
+                    start + down * (fall * 0.98f), 2.5f + H(seed + 4f) * 1.6f,
+                    new Color(0.78f, 0.90f, 1f, e.alpha * 0.28f * flicker), soft);
+                for (int j = 0; j < 3; j++)
                 {
-                    float phase = Mathf.Repeat(t * (0.58f + H(seed + 7f) * 0.35f) +
-                        H(seed + k * 3.13f), 1f);
-                    float len = Mathf.Min(15f, r.height * 0.23f);
-                    Vector2 pos = start + down * (phase * Mathf.Max(1f, r.height - len));
+                    float phase = Mathf.Repeat(t * (0.48f + H(seed + 7f) * 0.35f)
+                        + H(seed + j * 3.31f), 1f);
+                    float length = Mathf.Min(18f, fall * 0.22f);
+                    Vector2 pos = start + down * (phase * Mathf.Max(1f, fall - length));
                     float fade = Mathf.Sin(phase * Mathf.PI);
-                    UiKit.Streak(pos, pos + down * len, 1.1f + 1.0f * H(seed + k),
-                        new Color(0.88f, 0.96f, 1f, e.alpha * 0.49f * fade), glow);
+                    UiKit.Streak(pos, pos + down * length,
+                        2.2f + H(seed + j) * 1.0f,
+                        new Color(0.86f, 0.96f, 1f, e.alpha * 0.72f * fade), glint);
                 }
             }
-            GUI.color = old;
+            // Soft foam only at the painted foot; no large smoke sheet in the rocks.
+            if (e.foot != 0 && soft != null)
+            {
+                float p = 0.77f + 0.23f * Mathf.Sin(t * 2.5f + e.x);
+                float foamWidth = Mathf.Min(r.width * 0.86f, 32f);
+                Vector2 foot = lip + down * fall;
+                GUI.color = new Color(0.93f, 0.98f, 1f, e.alpha * 0.30f * p);
+                GUI.DrawTexture(new Rect(foot.x - foamWidth * 0.5f,
+                    foot.y - foamWidth * 0.17f, foamWidth,
+                    Mathf.Max(5f, foamWidth * 0.35f)), soft);
+            }
+            GUI.color = original;
         }
 
         static void DrawSheetFalls(int region, Rect view, float u0, float uw, float t, Texture2D mist)
@@ -763,7 +822,7 @@ namespace BladePath
             }
             DrawSheetFalls(region, view, u0, uw, t, mist);
             // водопады: струи срываются вниз, у подножия — пена
-            foreach (Vector4 f in r.falls)
+            if (region != 0 || MapGeom.TexHt[0] <= 1024) foreach (Vector4 f in r.falls)
             {
                 Vector2 top = S(new Vector2(f.x, f.y));
                 if (!Vis(top)) continue;
@@ -814,7 +873,8 @@ namespace BladePath
                         GUI.DrawTexture(new Rect(p.x - sz * 0.5f + Mathf.Sin(t * 0.3f + i) * 6f * k, p.y - sz * 0.3f, sz, sz * 0.6f), mist);
                     }
             // полосы тумана над нарисованным туманом: лист fx_mist (30 кадров туда-обратно) клубится, полоса дышит и плывёт
-            Texture2D fogSheet = r.fog.Length > 0 ? UiKit.Tex("UI/fx_mist") : null;
+            Texture2D fogSheet = (region != 0 || MapGeom.TexHt[0] <= 1024) && r.fog.Length > 0
+                ? UiKit.Tex("UI/fx_mist") : null;
             if (fogSheet != null)
                 for (int i = 0; i < r.fog.Length; i++)
                 {
@@ -903,7 +963,7 @@ namespace BladePath
                     }
                 }
             // блуждающие огни (кладбище сёгуната): парят, кружат и меркнут
-            if (glow != null)
+            if (glow != null && (region != 0 || MapGeom.TexHt[0] <= 1024))
                 foreach (Vector3 w in r.wisps)
                 {
                     Vector2 p = S(w) + new Vector2(Mathf.Sin(t * 0.7f + w.x * 40f) * 8f, Mathf.Sin(t * 1.1f + w.y * 30f) * 6f - 4f) * k;
