@@ -176,6 +176,48 @@ namespace BladePath.EditorTools
             anim.Stop();
         }
 
+        static AnimationClip FromUnit(Animation target,string unit,string take)
+        {
+            var donor=Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(Models+unit+".fbx"));
+            try
+            {
+                var source=donor.GetComponentInChildren<Animation>();source.Stop();
+                return ArmyAdvanceBaker.FullBody(target,source,Named(source,take));
+            }
+            finally {Object.DestroyImmediate(donor);}
+        }
+
+        static void CaptureShot(View view,Texture2D sheet,Animation anim,AnimationClip take,
+            TacticsFigureProfile profile,Transform anchor,Vector3 center,Quaternion board,bool gun)
+        {
+            var bones=anim.GetComponentsInChildren<Transform>();
+            var left=bones.First(b=>b.name=="LeftHand");
+            var right=bones.First(b=>b.name=="RightHand");
+            var held=TacticsShotRig.Create(anim.gameObject,profile,left,right,gun);
+            if(held==null) throw new Exception("No equipped shooter: "+take.name);
+            float release=gun?Tactics.GunRelease:Tactics.BowRelease;
+            float[] phases={0,.12f,.25f,release-.03f,release,release+.035f,.79f,1f};
+            for(int side=0;side<2;side++)
+            {
+                anchor.rotation=Quaternion.Euler(0,side==0?90f:-90f,0);
+                for(int i=0;i<phases.Length;i++)
+                {
+                    float f=phases[i];take.SampleAnimation(anim.gameObject,f*take.length);held.Pose(true,f);
+                    if(i==4)
+                    {
+                        Vector3 axis=Vector3.ProjectOnPlane(left.position-right.position,Vector3.up).normalized;
+                        float alignment=Vector3.Dot(axis,anchor.forward);
+                        if(alignment<.95f || !held.tip.gameObject.activeInHierarchy)
+                            throw new Exception("Release misses board heading: "+take.name+" direction="+alignment);
+                        Debug.Log("ARMY_SHOT "+take.name+" release="+release+" alignment="+alignment+" side="+side);
+                    }
+                    view.Frame(center,board,2.65f);
+                    sheet.SetPixels32(i*Size,((gun?0:2)+side)*Size,Size,Size,view.pixels);
+                }
+            }
+            held.Pose(false,1);anchor.rotation=Quaternion.Euler(0,90,0);
+        }
+
         [MenuItem("BladePath/Verify army roster")]
         public static void Build()
         {
@@ -185,6 +227,8 @@ namespace BladePath.EditorTools
             var sheet=new Texture2D(Size*4,Size*names.Length,TextureFormat.RGBA32,false);
             var gaitSheet=new Texture2D(Size*8,Size*names.Length,TextureFormat.RGBA32,false);
             var combatSheet=new Texture2D(Size*12,Size*names.Length,TextureFormat.RGBA32,false);
+            var shooters=new Texture2D(Size*8,Size*4,TextureFormat.RGBA32,false);
+            Tactics.VerifyArmyHud();
             var report=new List<string>{"model,stance_height,advance_height,attack_height,side2_height,stride"};
             using(var view=new View())
             {
@@ -237,15 +281,23 @@ namespace BladePath.EditorTools
                         }
                         if(name=="unit_samurai")
                         {
-                            // The base samurai FBX supplies a spear thrust. Use the sword take
-                            // from the project's archived Meshy swordsman on this rig.
-                            var swordsman=Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(Models+"unit_ronin.fbx"));
-                            try
-                            {
-                                var from=swordsman.GetComponentInChildren<Animation>();from.Stop();
-                                authoredAttack=ArmyAdvanceBaker.FullBody(an,from,Named(from,"Right_Hand_Sword_Slash"));
-                            }
-                            finally {Object.DestroyImmediate(swordsman);}
+                            authoredAttack=FromUnit(an,"unit_ronin","Right_Hand_Sword_Slash");
+                        }
+                        bool bow=name=="unit_archer", gun=name=="unit_teppo";
+                        if(bow||gun) ArmyShotAssets.Bake(profile,an,gun);
+                        if(bow||gun)
+                            authoredAttack=ArmyAdvanceBaker.AlignShot(an,hit,bow?Tactics.BowRelease:Tactics.GunRelease);
+                        if(name=="unit_daitengu")
+                            authoredAttack=FromUnit(an,"unit_onmyoji","Charged_Spell_Cast");
+                        if(bow||gun||name=="unit_onmyoji"||name=="unit_kitsune"||name=="unit_daitengu"||
+                            hit.name.IndexOf("double_combo",StringComparison.OrdinalIgnoreCase)>=0)
+                        {
+                            var close=FromUnit(an,gun||name=="unit_onmyoji"?"unit_sohei":"unit_ronin",
+                                gun||name=="unit_onmyoji"?"Thrust_Slash":"Right_Hand_Sword_Slash");
+                            profile.melee=ArmyAdvanceBaker.AnchorAction(an,close);
+                            if(profile.melee) Object.DestroyImmediate(close); else profile.melee=close;
+                            profile.melee.name="Melee_"+profile.melee.name;
+                            AssetDatabase.AddObjectToAsset(profile.melee,profile);
                         }
                         profile.attack=ArmyAdvanceBaker.AnchorAction(an,authoredAttack);
                         if(authoredAttack!=hit)
@@ -318,6 +370,7 @@ namespace BladePath.EditorTools
                         if(profile.advance) CheckFootContacts(name,an,profile,anchor.transform,model.GetComponentsInChildren<Transform>());
                         CombatSequence(view,combatSheet,(names.Length-row-1)*Size,an,
                             profile.advance?profile.advance:flying?idle:walk,hit,idle,center,board);
+                        if(bow||gun) CaptureShot(view,shooters,an,hit,profile,anchor.transform,center,board,gun);
                         EditorUtility.SetDirty(profile);
                         report.Add(name+","+string.Join(",",heights.Select(h=>h.ToString("F3",System.Globalization.CultureInfo.InvariantCulture)))+","+profile.stride.ToString("F3",System.Globalization.CultureInfo.InvariantCulture));
                         Debug.Log("ARMY_ROSTER "+report.Last());
@@ -342,6 +395,7 @@ namespace BladePath.EditorTools
                 }
                 Debug.Log("ARMY_BIND "+types[i].name+" both sides including revival");
             }
+            shooters.Apply();File.WriteAllBytes(Capture+"/army-shooters.png",shooters.EncodeToPNG());Object.DestroyImmediate(shooters);
             deployed.Apply();File.WriteAllBytes(Capture+"/army-deployment.png",deployed.EncodeToPNG());Object.DestroyImmediate(deployed);
             sheet.Apply();File.WriteAllBytes(Capture+"/army-roster.png",sheet.EncodeToPNG());Object.DestroyImmediate(sheet);
             gaitSheet.Apply();File.WriteAllBytes(Capture+"/army-advance.png",gaitSheet.EncodeToPNG());Object.DestroyImmediate(gaitSheet);

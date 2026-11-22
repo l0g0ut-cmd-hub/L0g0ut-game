@@ -127,12 +127,13 @@ namespace BladePath
             public Transform wingL, wingR;
             public Quaternion wingRestL, wingRestR;
             public float wingLift;
-            public Transform hips;
+            public Transform hips, leftHand, rightHand, chest;
+            public TacticsShotRig weapon;
             public Vector3 restHips;
             public float clipStart, previousStart, actStart, contactAt;
             public Vector2 attackStep;
             public string previousClip;
-            public string clipIdle, clipWalk, clipAct, clipHit, clipDie, clipWin;
+            public string clipIdle, clipWalk, clipAct, clipMelee, clipHit, clipDie, clipWin;
             public int run;                     // сколько клеток пробежал перед ударом (разгон конницы)
             public Vector3 facing;
             public int Total { get { return count <= 0 ? 0 : (count - 1) * t.hp + topHp; } }
@@ -753,13 +754,26 @@ namespace BladePath
             if (!(mCart && !a.enemy)) a.shots--;   // повозка с боеприпасами: стрелы не кончаются
             a.lungeDir = (d.pos - a.pos).normalized;
             a.attackStep = Vector2.zero;
-            if (a.an != null) yield return Act(a, 0.55f);   // натянул лук / вскинул ружьё / сложил печать
-            if (a.t == Ours[2] || a.t == Ours[14]) Burst("fx_musket", a.pos + new Vector2(R * (a.enemy ? -0.9f : 0.9f), -R * 1.3f), R * 3.2f, 36f);
-            Vector2 from = a.pos + new Vector2(0f, -R * 1.1f), to = d.pos + new Vector2(0f, -R * 0.8f);
-            shots.Add(new Shot { a = from, b = to, t0 = Time.unscaledTime, dur = 0.35f, magic = a.t.magic });
-            yield return 0.35f;
+            if (a.an != null) yield return Act(a, 0.55f, true);
+            if (a.an != null) SamplePose(a,a.contactAt);
+            bool gun=a.t.cell==2;
+            Vector2 from=ScreenPoint(a.weapon!=null ? a.weapon.tip : a.leftHand,a.pos+Vector2.up*(-R));
+            Vector2 to=ScreenPoint(d.chest,d.pos+Vector2.up*(-R));
+            Vector2 direction=to-from;
+            float cells=direction.magnitude/Mathf.Max(R,1f);
+            float flight=gun?Mathf.Clamp(cells*.006f,.05f,.14f):Mathf.Clamp(cells*.028f,.16f,.55f);
+            if(gun) Burst("fx_musket",from,R*2.5f,48f,Mathf.Atan2(direction.y,direction.x)*Mathf.Rad2Deg);
+            else shots.Add(new Shot { a=from,b=to,t0=Time.unscaledTime,dur=flight,magic=a.t.magic });
+            yield return flight;
             yield return Strike(a, d, true);
             EndTurn();
+        }
+
+        static Vector2 ScreenPoint(Transform joint,Vector2 fallback)
+        {
+            if(!joint || !liveCam) return fallback;
+            Vector3 view=liveCam.WorldToViewportPoint(joint.position);
+            return new Vector2(view.x*W,(1f-view.y)*540f);
         }
 
         static IEnumerator Strike(Stack a, Stack d, bool ranged)
@@ -778,15 +792,18 @@ namespace BladePath
             Hurt(d, dmg);
             if (!ranged) Burst("fx_slash_hit", d.pos + new Vector2(0f, -R * 1.1f), R * 3f, 36f);
             if (!ranged && a.t.sweep)
-                foreach (Vector2Int n in Nb(a.c, a.r))
+                {
+                var struck=new HashSet<Stack> { d };
+                foreach (Vector2Int n in Around(a))
                 {
                     Stack o = At(n.x, n.y);
-                    if (o == null || o == d || o.enemy == a.enemy || !o.Alive) continue;
+                    if (o == null || o.enemy == a.enemy || !o.Alive || !struck.Add(o)) continue;
                     int od = Damage(a, o, false, false); Hurt(o,od);
                     Burst("fx_slash_hit", o.pos + new Vector2(0f, -R * 1.1f), R * 2.6f, 36f);
                     texts.Add(new Float { p = o.pos + new Vector2(0f, -R * 2f), s = "−" + od, t0 = Time.unscaledTime, col = o.enemy ? new Color(1f, 0.85f, 0.4f) : new Color(1f, 0.45f, 0.35f) });
                 }
-            if (ranged && !a.t.magic) Burst("fx_arrow_hit", d.pos + new Vector2(0f, -R * 1.0f), R * 2.6f, 40f);
+            }
+            if (ranged && !a.t.magic && a.t.cell!=2) Burst("fx_arrow_hit", d.pos + new Vector2(0f, -R * 1.0f), R * 2.6f, 40f);
             int dead = before - Mathf.Max(0, d.count);
             texts.Add(new Float { p = d.pos + new Vector2(0f, -R * 2f), s = "−" + dmg + (dead > 0 ? "  (" + dead + " пало)" : ""), t0 = Time.unscaledTime, col = d.enemy ? new Color(1f, 0.85f, 0.4f) : new Color(1f, 0.45f, 0.35f) });
             Log((a.enemy ? "Враг: " : "") + a.t.name + " → " + d.t.name + ": " + dmg + " урона" + (dead > 0 ? ", пало " + dead : "") + ".");
@@ -1097,14 +1114,21 @@ namespace BladePath
         static GameObject stage; static Camera liveCam; static RenderTexture liveRT;
         static float PPM { get { return R * 2.45f / (1.7f * 0.829f); } }   // точек на метр (рост 1,7 м = как снимок)
 
-        static IEnumerator Act(Stack s, float impact)
+        static IEnumerator Act(Stack s, float impact, bool ranged=false)
         {
-            float duration = ClipLen(s, s.clipAct, 0.7f);
+            string action=ranged?s.clipAct:(s.clipMelee??s.clipAct);
+            if(s.go && s.lungeDir.sqrMagnitude>.01f)
+            {
+                s.facing=new Vector3(s.lungeDir.x,0f,-s.lungeDir.y/Sq).normalized;
+                float turn=Quaternion.Angle(s.go.transform.rotation,Quaternion.LookRotation(s.facing))/300f;
+                if(turn>.06f) yield return turn;
+            }
+            float duration = ClipLen(s, action, 0.7f);
             s.actUntil = Time.unscaledTime + duration;
             s.actStart = Time.unscaledTime;
-            impact = ContactPhase(s.clipAct, impact);
+            impact = ContactPhase(action, impact);
             s.contactAt = s.actStart + duration * impact;
-            if (s.clipAct != null) Play(s, s.clipAct, true);
+            if (action != null) Play(s, action, true);
             else Play(s, s.clipIdle, false);
             yield return duration * impact;
         }
@@ -1143,6 +1167,12 @@ namespace BladePath
             current.weight = blend;
             current.time = PoseTime(s, current, elapsed);
             s.an.Sample();
+            if(s.weapon!=null)
+            {
+                bool drawing=s.playing==s.clipAct && now<s.actUntil;
+                float phase=(now-s.actStart)/Mathf.Max(.01f,s.actUntil-s.actStart);
+                s.weapon.Pose(drawing,phase);
+            }
             // The hex path owns horizontal travel. Keep vertical motion from the gait.
             if (s.hips != null && s.playing == s.clipWalk && (s.figureProfile == null || s.figureProfile.advance == null))
             {
@@ -1165,8 +1195,8 @@ namespace BladePath
             }
             if (clip.wrapMode == WrapMode.Loop) return Mathf.Repeat(elapsed, clip.length);
             if(clip.name==s.clipHit) elapsed*=clip.length/Mathf.Max(.01f,s.hitUntil-s.hitStart);
-            if (clip.name == s.clipAct)
-                elapsed *= clip.length / ClipLen(s, s.clipAct, 1f);
+            if (clip.name == s.clipAct || clip.name == s.clipMelee)
+                elapsed *= clip.length / ClipLen(s, clip.name, 1f);
             return Mathf.Clamp(elapsed, 0f, clip.length);
         }
 
@@ -1200,12 +1230,14 @@ namespace BladePath
             figure.localPosition = figure.localPosition * k - Vector3.up * (sole * k);
         }
 
+        public const float BowRelease=.64f, GunRelease=.33f;
         static float ContactPhase(string clip, float fallback)
         {
             string n = (clip ?? "").ToLowerInvariant();
             if (n.Contains("right_hand_sword_slash")) return .36f;
             if (n.Contains("thrust_slash") || n.Contains("double_combo_attack") || n.Contains("left_slash")) return .24f;
-            if (n.Contains("side_shot")) return .73f;
+            if (n.Contains("side_shot")) return GunRelease;
+            if (n.Contains("archery_shot")) return BowRelease;
             return fallback;
         }
 
@@ -1292,12 +1324,18 @@ namespace BladePath
                     foreach (Transform bone in figure.GetComponentsInChildren<Transform>())
                     {
                         if (bone.name == "Hips") { s.hips = bone; s.restHips = go.transform.InverseTransformPoint(bone.position); }
+                        if (bone.name=="LeftHand") s.leftHand=bone;
+                        if (bone.name=="RightHand") s.rightHand=bone;
+                        if (bone.name=="Spine2" || (bone.name=="Spine" && s.chest==null)) s.chest=bone;
                         if (bone.name == "TenguWingL") { s.wingL = bone; s.wingRestL = bone.localRotation; }
                         if (bone.name == "TenguWingR") { s.wingR = bone; s.wingRestR = bone.localRotation; }
                     }
                     if(s.figureProfile!=null)
                     {
                         s.clipAct=TacticsFigureProfile.InstallAction(s.an,s.figureProfile.attack,s.clipAct);
+                        s.clipMelee=TacticsFigureProfile.InstallAction(s.an,s.figureProfile.melee,s.clipAct);
+                        if(s.figureProfile.drawnBody)
+                            s.weapon=TacticsShotRig.Create(s.an.gameObject,s.figureProfile,s.leftHand,s.rightHand,s.t.cell==2);
                         s.clipHit=TacticsFigureProfile.InstallAction(s.an,s.figureProfile.reaction,s.clipHit);
                     }
                     if (s.figureProfile != null && s.figureProfile.advance != null)
@@ -1370,9 +1408,29 @@ namespace BladePath
             if (stage != null) ReleaseFigureObject(stage);
             stage = null; liveCam = null;
             if (liveRT != null) { liveRT.Release(); ReleaseFigureObject(liveRT); liveRT = null; }
-            foreach (Stack s in stacks) { if (s.surface != null) ReleaseFigureObject(s.surface); s.surface = null; s.go = null; s.an = null; s.figureProfile = null; s.figureMount = null; s.gaitPhase = 0f; s.wingL = s.wingR = null; s.hips = null; s.playing = null; s.previousClip = null; }
+            foreach (Stack s in stacks) { if (s.surface != null) ReleaseFigureObject(s.surface); s.surface = null; s.go = null; s.an = null; s.figureProfile = null; s.figureMount = null; s.gaitPhase = 0f; s.wingL = s.wingR = null; s.weapon=null; s.hips=s.leftHand=s.rightHand=s.chest=null; s.playing = null; s.previousClip = null; }
         }
 #if UNITY_EDITOR
+        public static void VerifyArmyHud()
+        {
+            foreach(int width in new[]{960,1080,1140,1200,1260})
+                foreach(int inset in new[]{0,26})
+                {
+                    Rect safe=new Rect(inset,0,width-inset*2,540-inset*.5f);
+                    var h=new HudLayout(safe);
+                    if(h.hero.Overlaps(h.orders)||h.orders.Overlaps(h.actions)||h.orders.width<170)
+                        throw new System.InvalidOperationException("Army HUD regions collide at "+width);
+                    for(int i=0;i<6;i++)
+                    {
+                        var button=h.Action(i);
+                        if(button.x<safe.x || button.xMax>safe.xMax || button.yMax>safe.yMax ||
+                            (i>0 && button.Overlaps(h.Action(i-1))))
+                            throw new System.InvalidOperationException("Army command outside safe area "+i+" at "+width);
+                    }
+                }
+            Debug.Log("ARMY_HUD command, log and hero bounds verified at 5 landscape widths with and without insets");
+        }
+
         public static Color32[] CaptureBoardUnit(UnitType type, bool enemy, int size)
         {
             if (Open || Application.isPlaying) throw new System.InvalidOperationException("Run roster checks outside play mode.");
@@ -1516,15 +1574,15 @@ namespace BladePath
 
         // покадровые эффекты (листы 8×6 = 48 кадров на прозрачном — из генераций владельца, UI/Battle/fx_<имя>):
         // кадр рисуется целиком, следующий — поверх с долей (без мигания), как у водопадов карты
-        class Fx { public string sheet; public Vector2 p; public float t0, size, fps = 30f; public bool loop; }
+        class Fx { public string sheet; public Vector2 p; public float t0, size, angle, fps = 30f; public bool loop; }
         static readonly List<Fx> fxs = new List<Fx>();
         static readonly string[] SpellFx = { "fx_cross", "fx_warcry", "fx_shield", "fx_arrows", "fx_fire", "fx_wind", "fx_heal", "fx_fog", "fx_thunder", "fx_curse", "fx_dash",
             "fx_wind", "fx_arrow_hit", "fx_warcry", "fx_shield", "fx_fire", "fx_curse", "fx_thunder", "fx_heal", "fx_dash", "fx_wind", "fx_warcry", "fx_heal" };
         /// <summary>Эффект в точке поля; false — листа нет (тогда рисуется простой эффект).</summary>
-        static bool Burst(string sheet, Vector2 p, float size, float fps = 30f)
+        static bool Burst(string sheet, Vector2 p, float size, float fps = 30f, float angle=0f)
         {
             if (string.IsNullOrEmpty(sheet) || UiKit.Tex("UI/Battle/" + sheet) == null) return false;
-            fxs.Add(new Fx { sheet = sheet, p = p, t0 = Time.unscaledTime, size = size, fps = fps });
+            fxs.Add(new Fx { sheet = sheet, p = p, t0 = Time.unscaledTime, size = size, fps = fps, angle=angle });
             return true;
         }
         static Rect FxCell(int i) { int c = i % 8, r = i / 8; return new Rect(c / 8f, 1f - (r + 1) / 6f, 1f / 8f, 1f / 6f); }
@@ -1559,7 +1617,10 @@ namespace BladePath
                 Texture2D t = UiKit.Tex("UI/Battle/" + f.sheet);
                 if (t == null) { fxs.RemoveAt(i); continue; }
                 float h = f.size * 170f / 192f;
+                var matrix=GUI.matrix;
+                if(f.angle!=0f) GUIUtility.RotateAroundPivot(f.angle,f.p);
                 DrawSheet(t, new Rect(f.p.x - f.size * 0.5f, f.p.y - h * 0.5f, f.size, h), fr, 1f, false);
+                GUI.matrix=matrix;
             }
         }
         static readonly List<Float> texts = new List<Float>(), casts = new List<Float>();
@@ -1570,9 +1631,10 @@ namespace BladePath
         static void LayoutBoard(float w)
         {
             W = w;
-            R = Mathf.Min(W * 0.86f / 23f, 380f / (11.5f * 1.7320508f * Sq));
+            var bounds=SafeHud();
+            R=Mathf.Min(bounds.width*.86f/23f,(bounds.height-160f)/(11.5f*1.7320508f*Sq));
             hw = 1.5f * R; hh = 1.7320508f * R * Sq;
-            ox = (W - (hw * (Cols - 1) + 2f * R)) * 0.5f + R; oy = 88f + hh * 0.5f;
+            ox=bounds.center.x-hw*(Cols-1)*.5f;oy=bounds.y+88f+hh*.5f;
         }
 
         public static void Draw(float w)
@@ -1602,17 +1664,22 @@ namespace BladePath
             DrawFx();
             DrawFxSheets();
             DrawQueue();
+            bool modal=bookOpen||info!=null||finished;
+            bool enabled=GUI.enabled;GUI.enabled=enabled&&!modal&&!deploy;
             DrawHud();
             DrawBallistaButton();
+            GUI.enabled=enabled&&!modal;
             if (deploy && !finished)
             {
                 UiKit.Text(new Rect(0f, 70f, W, 22f), "РАССТАНОВКА («Тактика»): коснись отряда, затем клетки в синих столбцах", 13f, new Color(0.6f, 0.85f, 1f));
                 if (VisualIdentity.KitButton(new Rect(W * 0.5f - 80f, 96f, 160f, 34f), "В БОЙ", true, true)) { deploy = false; deploySel = null; if (cur != null && !cur.enemy) Flood(cur); }
             }
-            if (bookOpen) DrawBook();
-            if (info != null) DrawInfo();
-            if (finished) DrawResult();
-            else if (!bookOpen && info == null) HandleInput();
+            GUI.enabled=enabled;
+            if(finished) DrawResult();
+            else if(bookOpen) DrawBook();
+            else if(info!=null) DrawInfo();
+            else if(!modal) HandleInput();
+            if(modal) downOn=false;
         }
 
         static float BoardSpeed(Stack s)
@@ -1769,9 +1836,9 @@ namespace BladePath
                 if (!s.Alive) continue;
                 plaqueOnly:
                 // число бойцов
-                Rect pr = new Rect(p.x + R * 0.25f, p.y - R * 0.05f, R * 1.25f, R * 0.5f);
+                Rect pr=new Rect(p.x-R*.59f,p.y+R*.05f,R*1.18f,R*.46f);
                 if (plaque != null) GUI.DrawTexture(pr, plaque); else UiKit.Rect(pr, new Color(0.15f, 0.05f, 0.03f, 0.9f));
-                UiKit.Text(pr, s.count.ToString(), Mathf.Max(10f, R * 0.3f), s.enemy ? new Color(1f, 0.62f, 0.5f) : new Color(1f, 0.9f, 0.62f));
+                Label(new Rect(pr.x+pr.width*.12f,pr.y+pr.height*.10f,pr.width*.76f,pr.height*.80f), s.count.ToString(), Mathf.Max(10f, R * 0.3f), s.enemy ? new Color(1f, 0.62f, 0.5f) : new Color(1f, 0.9f, 0.62f));
                 if (s.defending) UiKit.Text(new Rect(pr.x - R * 0.5f, pr.y, R * 0.5f, pr.height), "⛨", R * 0.32f, Gold);
             }
         }
@@ -1834,11 +1901,65 @@ namespace BladePath
             }
         }
 
+        static GUIStyle battleLabel;
+        static readonly GUIContent caption=new GUIContent();
+        static void Label(Rect box,string value,float size,Color color,TextAnchor alignment=TextAnchor.MiddleCenter,bool wrap=false)
+        {
+            if(Event.current.type!=EventType.Repaint || string.IsNullOrEmpty(value) || box.width<=2 || box.height<=2) return;
+            if(battleLabel==null)
+                battleLabel=new GUIStyle(GUI.skin.label){font=Resources.Load<Font>("Fonts/OldStandard-Bold"),fontStyle=FontStyle.Bold,
+                    clipping=TextClipping.Clip,padding=new RectOffset(),margin=new RectOffset(),richText=false};
+            float k=UiKit.Scale;
+            var matrix=GUI.matrix;
+            GUI.matrix=matrix*Matrix4x4.Scale(new Vector3(1f/k,1f/k,1f));
+            var r=new Rect(box.x*k+1,box.y*k+1,box.width*k-2,box.height*k-2);
+            float shadow=Mathf.Max(1f,.7f*k);
+            r.width=Mathf.Max(1f,r.width-shadow);r.height=Mathf.Max(1f,r.height-shadow);
+            battleLabel.alignment=alignment;battleLabel.wordWrap=wrap;caption.text=value;
+            battleLabel.fontSize=Mathf.Max(1,Mathf.RoundToInt(size*k));
+            while(battleLabel.fontSize>1 && ((!wrap && battleLabel.CalcSize(caption).x>r.width) ||
+                battleLabel.CalcHeight(caption,r.width)>r.height)) battleLabel.fontSize--;
+            var under=r;under.position+=Vector2.one*shadow;
+            battleLabel.normal.textColor=new Color(0,0,0,.82f*color.a);GUI.Label(under,caption,battleLabel);
+            battleLabel.normal.textColor=color;GUI.Label(r,caption,battleLabel);GUI.matrix=matrix;
+        }
+        static Rect SafeHud()
+        {
+            var safe=Screen.safeArea;
+            if(safe.width<=0 || safe.height<=0) return new Rect(0,0,W,540);
+            float x=W/Mathf.Max(1,Screen.width), y=540f/Mathf.Max(1,Screen.height);
+            return new Rect(safe.x*x,(Screen.height-safe.yMax)*y,safe.width*x,safe.height*y);
+        }
+        struct HudLayout
+        {
+            public Rect footer,hero,orders,actions;
+            public float button;
+            public HudLayout(Rect safe)
+            {
+                footer=new Rect(safe.x,safe.yMax-66,safe.width,66);
+                float pad=5f,gap=5f;
+                button=Mathf.Clamp((safe.width-370f)/6f,36f,57f);
+                float heroWidth=Mathf.Min(230f,safe.width*.245f);
+                hero=new Rect(footer.x+pad,footer.y+3,heroWidth,60);
+                actions=new Rect(footer.xMax-pad-6*button,hero.y,6*button,60);
+                orders=Rect.MinMaxRect(hero.xMax+gap,hero.y,actions.x-gap,hero.yMax);
+            }
+            public Rect Action(int i) {return new Rect(actions.x+i*button+1,actions.y,button-2,actions.height);}
+        }
+        static bool HudButton(Rect box,string title,bool enabled,bool red)
+        {
+            bool hit=VisualIdentity.KitButton(box,"",enabled,red);
+            var area=new Rect(box.x+box.width*.12f,box.y+box.height*.15f,box.width*.76f,box.height*.70f);
+            Label(area,title,Mathf.Min(16f,box.height*.42f),enabled?Ink:Dim);
+            return hit;
+        }
+
         static void DrawQueue()
         {
             Texture2D q = UiKit.Tex("UI/Battle/queue_bar");
             float qw = Mathf.Min(W * 0.42f, 380f), qh = q != null ? qw * q.height / q.width : 60f;
-            Rect qr = new Rect((W - qw) * 0.5f, 4f, qw, qh);
+            Rect safe=SafeHud();
+            Rect qr = new Rect(safe.center.x-qw*.5f,safe.y+4f,qw,qh);
             if (q != null) GUI.DrawTexture(qr, q); else UiKit.Rect(qr, new Color(0.1f, 0.05f, 0.03f, 0.9f));
             // очередь: этот раунд, затем следующий (по скорости)
             List<Stack> l = new List<Stack>(queue);
@@ -1859,48 +1980,54 @@ namespace BladePath
                 if (i == 0 && cur != null) UiKit.Ring(c, d * 0.5f + 3.5f, Gold, true);
                 if (i == sep && sep < l.Count) UiKit.Line(new Vector2(c.x - qw * 0.046f, qr.y + qh * 0.2f), new Vector2(c.x - qw * 0.046f, qr.y + qh * 0.8f), 2f, Gold);
             }
-            UiKit.Text(new Rect(qr.xMax + 8f, qr.y + 6f, 120f, 22f), "РАУНД " + round, 14f, Gold, TextAnchor.MiddleLeft);
+            Label(new Rect(qr.xMax + 8f, qr.y + 6f, 120f, 22f), "РАУНД " + round, 14f, Gold, TextAnchor.MiddleLeft);
         }
 
         static readonly int[] QuickSpells = { 0, 1, 4, 6 };
         static void DrawBallistaButton()
         {
             if (!ballistaReady || finished || cur == null || cur.enemy || Busy) return;
-            Rect r = new Rect(80f + 4f * 38f + 8f, 540f - 38f, 96f, 34f);
-            if (VisualIdentity.KitButton(r, spellSel == -2 ? "ЦЕЛЬ?" : "БАЛЛИСТА", true, spellSel == -2)) spellSel = spellSel == -2 ? -1 : -2;
+            Rect hero=new HudLayout(SafeHud()).hero;
+            Rect r=new Rect(hero.x+141f,hero.yMax-29f,Mathf.Max(39f,hero.width-142f),27f);
+            if (HudButton(r,spellSel==-2?"ЦЕЛЬ":"БАЛЛИСТА",true,spellSel==-2)) spellSel=spellSel==-2?-1:-2;
         }
         static void DrawHud()
         {
-            // герой
-            Rect hp = new Rect(10f, 540f - 76f, 64f, 64f);
+            var hud=new HudLayout(SafeHud());
+            UiKit.Rect(hud.footer,new Color(.045f,.028f,.022f,.90f));
+            UiKit.Rect(new Rect(hud.footer.x,hud.footer.y,hud.footer.width,1f),new Color(.63f,.44f,.21f,.85f));
+            Rect h=hud.hero;
+            Rect hp=new Rect(h.x+2f,h.y+1f,30f,30f);
             General.DrawFace(hp);
-            UiKit.Ring(hp.center, 33f, Gold);
-            UiKit.Text(new Rect(80f, 540f - 76f, 340f, 20f), "ГЕРОЙ · УР. " + heroLv + "   А" + gAtk + " З" + gDef + " С" + General.Power + " Зн" + General.Know, 13f, Gold, TextAnchor.MiddleLeft);
-            UiKit.Text(new Rect(80f, 540f - 58f, 220f, 18f), "Дух " + spirit + "/" + spiritMax + (castThisRound ? " · умение уже было" : ""), 12f, new Color(0.6f, 0.8f, 1f), TextAnchor.MiddleLeft);
-            for (int i = 0; i < QuickSpells.Length; i++)
+            UiKit.Ring(hp.center,15.5f,Gold);
+            Label(new Rect(h.x+37,h.y,h.width-38,16),"ГЕРОЙ · УР. "+heroLv+"    А"+gAtk+"  З"+gDef+"  С"+General.Power+"  Зн"+General.Know,12f,Gold,TextAnchor.MiddleLeft);
+            Label(new Rect(h.x+37,h.y+16,h.width-38,14),"Дух "+spirit+"/"+spiritMax+(castThisRound?" · умение применено":""),10.5f,new Color(.66f,.84f,1f),TextAnchor.MiddleLeft);
+            for(int i=0;i<QuickSpells.Length;i++)
             {
-                Spell sp = Spells[QuickSpells[i]];
-                Rect r = new Rect(80f + i * 38f, 540f - 38f, 34f, 34f);
-                bool can = CanCast(sp);
-                Color oc = GUI.color; GUI.color = can ? Color.white : new Color(1f, 1f, 1f, 0.35f);
-                SpellIcon(r, sp.icon);
-                GUI.color = oc;
-                if (spellSel == QuickSpells[i]) UiKit.Ring(r.center, 19f, Gold, true);
-                if (GUI.Button(r, GUIContent.none, GUIStyle.none) && can) Select(QuickSpells[i]);
+                Spell sp=Spells[QuickSpells[i]];
+                Rect r=new Rect(h.x+1f+i*34f,h.yMax-29,28,28);
+                bool can=CanCast(sp);
+                Color oc=GUI.color;GUI.color=can?Color.white:new Color(1,1,1,.38f);
+                SpellIcon(r,sp.icon);GUI.color=oc;
+                if(spellSel==QuickSpells[i]) UiKit.Ring(r.center,15f,Gold,true);
+                if(GUI.Button(r,GUIContent.none,GUIStyle.none) && can) Select(QuickSpells[i]);
             }
-            // кнопки
-            string[] tips = { "ЖДАТЬ", "ЗАЩИТА", autoOurs ? "АВТО: ВКЛ" : "АВТОБОЙ", "БЕГСТВО", "СДАТЬСЯ", "УМЕНИЯ" };
-            float bs = 50f, bx = W - 6f * (bs + 4f) - 6f, by = 540f - bs - 8f;
+            string[] tips={"ЖДАТЬ","ЗАЩИТА",autoOurs?"АВТО: ВКЛ":"АВТОБОЙ","БЕГСТВО","СДАТЬСЯ","УМЕНИЯ"};
             bool ourTurn = cur != null && !cur.enemy && !Busy && !finished && !autoOurs;
             for (int i = 0; i < 6; i++)
             {
-                Rect r = new Rect(bx + i * (bs + 4f), by, bs, bs);
+                Rect r=hud.Action(i);
+                float iconSize=Mathf.Min(43f,r.width-2f);
+                Rect icon=new Rect(r.center.x-iconSize*.5f,r.y,iconSize,iconSize);
                 Texture2D t = UiKit.Tex("UI/Battle/btn_" + i);
                 bool on = i == 2 || i == 3 || i == 4 || ourTurn && (i != 0 || !cur.waited) || i == 5 && !finished;
                 Color oc = GUI.color; GUI.color = on ? Color.white : new Color(1f, 1f, 1f, 0.4f);
-                if (t != null) GUI.DrawTexture(r, t); else UiKit.Rect(r, new Color(0.3f, 0.1f, 0.05f));
+                if(t!=null) GUI.DrawTexture(icon,t); else UiKit.Rect(icon,new Color(.3f,.1f,.05f));
                 GUI.color = oc;
-                UiKit.Text(new Rect(r.x - 6f, r.yMax - 2f, r.width + 12f, 10f), tips[i], 7.5f, Ink);
+                Rect band=new Rect(r.x,r.yMax-18,r.width,18);
+                Texture2D plate=UiKit.Tex("UI/Battle/count_plaque");
+                if(plate) GUI.DrawTexture(band,plate);
+                Label(new Rect(band.x+4,band.y+1,band.width-8,band.height-2),tips[i],10f,on?Ink:Dim);
                 if (!GUI.Button(r, GUIContent.none, GUIStyle.none) || !on) continue;
                 switch (i)
                 {
@@ -1924,14 +2051,13 @@ namespace BladePath
             string line = finished ? "" : cur == null ? "" : cur.enemy ? "Ход врага: " + cur.t.name + " ×" + cur.count
                 : spellSel >= 0 ? Spells[spellSel].name + ": " + (Spells[spellSel].target == 0 ? "выбери отряд врага" : Spells[spellSel].target == 1 ? "выбери свой отряд" : "выбери клетку")
                 : cur.t.name + " ×" + cur.count + " — " + (CanShoot(cur) ? "стреляй по врагу или иди" : "иди или бей (до " + cur.Spd + " клеток)");
-            if (line.Length > 0)
-            {
-                Rect lr = new Rect(W * 0.5f - 230f, 540f - 34f, 460f, 26f);
-                UiKit.Rect(lr, new Color(0.06f, 0.03f, 0.02f, 0.82f));
-                UiKit.Text(lr, line, 13f, Ink);
-            }
-            for (int i = 0; i < log.Count; i++)
-                UiKit.Text(new Rect(10f, 92f + i * 16f, 360f, 16f), log[i], 10.5f, new Color(1f, 1f, 1f, 0.5f + 0.5f * i / Mathf.Max(1, log.Count - 1)), TextAnchor.MiddleLeft);
+            Rect orders=hud.orders;
+            UiKit.Rect(new Rect(orders.x,orders.y+1,1,orders.height-2),new Color(.59f,.40f,.19f,.65f));
+            float x=orders.x+7f,w=orders.width-13f;
+            int count=Mathf.Min(log.Count,2);
+            for(int i=0;i<count;i++)
+                Label(new Rect(x,orders.y+1+i*14,w,14),log[log.Count-count+i],10.5f,i==count-1?Ink:Dim,TextAnchor.MiddleLeft);
+            Label(new Rect(x,orders.y+31,w,28),line,13f,Gold,TextAnchor.MiddleLeft,true);
         }
 
         static bool CanCast(Spell sp) { return Realm.Knows(System.Array.IndexOf(Spells, sp)) && !deploy && !castThisRound && spirit >= sp.cost && cur != null && !cur.enemy && !Busy && !finished; }
@@ -1964,12 +2090,12 @@ namespace BladePath
             {
                 Rect tr = new Rect(r.x + 1430f * k, r.y + (222f + t * 150f) * k, 140f * k, 80f * k);
                 if (t >= pages) continue;
-                UiKit.Text(new Rect(tr.x, tr.y, tr.width * 0.7f, tr.height), tabs[t], 14f, t == bookPage ? Gold : Dim);
+                Label(new Rect(tr.x, tr.y, tr.width * 0.7f, tr.height), tabs[t], 14f, t == bookPage ? Gold : Dim);
                 if (GUI.Button(tr, GUIContent.none, GUIStyle.none)) { bookPage = t; bookFocus = -1; }
             }
             Spell fs = bookFocus >= 0 && bookFocus < Spells.Length ? Spells[bookFocus] : null;
-            UiKit.Text(new Rect(r.x + 280f * k, r.y + 135f * k, 340f * k, 62f * k), fs != null ? fs.name : "УМЕНИЯ ГЕРОЯ", 12f, Gold);
-            UiKit.Text(new Rect(r.x + 925f * k, r.y + 135f * k, 345f * k, 62f * k), fs != null ? fs.hint + " · дух " + fs.cost : "Дух " + spirit + "/" + spiritMax + (castThisRound ? " · уже было" : ""), 9.5f, Ink);
+            Label(new Rect(r.x + 280f * k, r.y + 135f * k, 340f * k, 62f * k), fs != null ? fs.name : "УМЕНИЯ ГЕРОЯ", 12f, Gold);
+            Label(new Rect(r.x + 925f * k, r.y + 135f * k, 345f * k, 62f * k), fs != null ? fs.hint + " · дух " + fs.cost : "Дух " + spirit + "/" + spiritMax + (castThisRound ? " · уже было" : ""), 10.5f, Ink,TextAnchor.MiddleCenter,true);
             for (int q = 0; q < 12; q++)
             {
                 int i = bookPage * 12 + q;
@@ -1983,27 +2109,27 @@ namespace BladePath
                 GUI.color = oc;
                 if (i == bookFocus) UiKit.Ring(c, rad + 3f, Gold, true);
                 Rect cr = new Rect(c.x + rad * 0.45f, c.y + rad * 0.5f, rad * 0.6f, rad * 0.45f);
-                UiKit.Rect(cr, new Color(0.08f, 0.03f, 0.02f, 0.85f)); UiKit.Text(cr, sp.cost.ToString(), 10f, can ? Gold : Dim);
+                UiKit.Rect(cr, new Color(0.08f, 0.03f, 0.02f, 0.85f)); Label(cr, sp.cost.ToString(), 10f, can ? Gold : Dim);
                 // первое касание — описание, второе — применить
                 if (GUI.Button(ic, GUIContent.none, GUIStyle.none)) { if (bookFocus == i && can) { bookFocus = -1; Select(i); return; } bookFocus = i; }
             }
-            if (VisualIdentity.KitButton(new Rect(r.center.x - 60f, r.yMax - 4f - 30f, 120f, 30f), "ЗАКРЫТЬ", true, false)) { bookOpen = false; bookFocus = -1; }
+            if (HudButton(new Rect(r.center.x - 60f, r.yMax - 4f - 30f, 120f, 30f), "ЗАКРЫТЬ", true, false)) { bookOpen = false; bookFocus = -1; }
         }
         static void DrawBookPlain()
         {
             Rect r = new Rect(W * 0.5f - 300f, 60f, 600f, 420f);
             UiKit.Rect(r, new Color(0.06f, 0.03f, 0.02f, 0.97f));
-            UiKit.Text(new Rect(r.x, r.y + 12f, r.width, 26f), "УМЕНИЯ ГЕРОЯ · дух " + spirit + "/" + spiritMax, 17f, Gold);
+            Label(new Rect(r.x, r.y + 12f, r.width, 26f), "УМЕНИЯ ГЕРОЯ · дух " + spirit + "/" + spiritMax, 17f, Gold);
             for (int i = 0; i < Spells.Length; i++)
             {
                 Spell sp = Spells[i];
                 float x = r.x + 20f + (i % 3) * 190f, y = r.y + 44f + (i / 3) * 42f;
                 Rect ic = new Rect(x, y, 36f, 36f); bool can = CanCast(sp);
                 Color oc = GUI.color; GUI.color = can ? Color.white : new Color(1f, 1f, 1f, 0.4f); SpellIcon(ic, sp.icon); GUI.color = oc;
-                UiKit.Text(new Rect(x + 40f, y, 140f, 36f), sp.name + " · " + sp.cost, 9.5f, can ? Gold : Dim, TextAnchor.MiddleLeft);
+                Label(new Rect(x + 40f, y, 140f, 36f), sp.name + " · " + sp.cost, 9.5f, can ? Gold : Dim, TextAnchor.MiddleLeft);
                 if (GUI.Button(new Rect(x, y, 180f, 38f), GUIContent.none, GUIStyle.none) && can) Select(i);
             }
-            if (VisualIdentity.KitButton(new Rect(r.center.x - 70f, r.yMax - 40f, 140f, 32f), "ЗАКРЫТЬ", true, false)) bookOpen = false;
+            if (HudButton(new Rect(r.center.x - 70f, r.yMax - 40f, 140f, 32f), "ЗАКРЫТЬ", true, false)) bookOpen = false;
         }
 
         static void DrawInfo()
@@ -2014,13 +2140,13 @@ namespace BladePath
             if (win != null) GUI.DrawTexture(r, win); else UiKit.Rect(r, new Color(0.08f, 0.04f, 0.03f, 0.97f));
             Rect pf = new Rect(r.x + r.width * 0.075f, r.y + r.height * 0.155f, r.width * 0.31f, r.height * 0.7f);
             DrawPortrait(new Rect(pf.center.x - pf.width * 0.45f, pf.center.y - pf.width * 0.45f, pf.width * 0.9f, pf.width * 0.9f), s.t);
-            UiKit.Text(new Rect(pf.x, pf.yMax - 26f, pf.width, 22f), s.t.name.ToUpper(), 13f, Gold);
+            Label(new Rect(pf.x, pf.yMax - 26f, pf.width, 22f), s.t.name.ToUpper(), 13f, Gold);
             string[] vals = { "Атака " + s.Atk + "   урон " + s.t.dmin + "–" + s.t.dmax, "Защита " + s.Def, "Здоровье " + s.t.hp + "   у первого " + s.topHp, "Скорость " + s.Spd + (s.t.shots > 0 ? "   выстрелов " + s.shots : "") };
             for (int i = 0; i < 4; i++)
-                UiKit.Text(new Rect(r.x + r.width * 0.56f, r.y + r.height * (0.15f + 0.122f * i), r.width * 0.37f, r.height * 0.09f), vals[i], 11.5f, Ink, TextAnchor.MiddleLeft);
+                Label(new Rect(r.x + r.width * 0.56f, r.y + r.height * (0.15f + 0.122f * i), r.width * 0.37f, r.height * 0.09f), vals[i], 11.5f, Ink, TextAnchor.MiddleLeft);
             string extra = "Бойцов: " + s.count + " из " + s.start + (s.t.Ability.Length > 0 ? " · " + s.t.Ability : "");
-            UiKit.Text(new Rect(r.x + r.width * 0.45f, r.y + r.height * 0.64f, r.width * 0.5f, 18f), extra, 10.5f, Dim);
-            if (VisualIdentity.KitButton(new Rect(r.x + r.width * 0.7f, r.y + r.height * 0.77f, r.width * 0.22f, r.height * 0.12f), "ЗАКРЫТЬ", true, false)) info = null;
+            Label(new Rect(r.x + r.width * 0.45f, r.y + r.height * 0.64f, r.width * 0.5f, r.height*.115f), extra, 11f, Dim,TextAnchor.MiddleCenter,true);
+            if (HudButton(new Rect(r.x + r.width * 0.7f, r.y + r.height * 0.77f, r.width * 0.22f, r.height * 0.12f), "ЗАКРЫТЬ", true, false)) info = null;
         }
 
         static void DrawResult()
@@ -2033,9 +2159,9 @@ namespace BladePath
             Rect r = new Rect((W - 1448f * k) * 0.5f, (540f - 1086f * k) * 0.5f, 1448f * k, 1086f * k);
             System.Func<float, float, float, float, Rect> Px = (x, y, w, h) => new Rect(r.x + x * k, r.y + y * k, w * k, h * k);
             GUI.DrawTexture(r, win);
-            UiKit.Text(Px(238, 50, 937, 80), won ? "ПОБЕДА" : "ПОРАЖЕНИЕ", 22f, won ? Gold : new Color(1f, 0.55f, 0.45f));
-            UiKit.Text(Px(122, 198, 525, 79), "НАШИ ПОТЕРИ", 12f, Ink);
-            UiKit.Text(Px(779, 196, 533, 81), "ПОТЕРИ ВРАГА", 12f, Ink);
+            Label(Px(238, 50, 937, 80), won ? "ПОБЕДА" : "ПОРАЖЕНИЕ", 22f, won ? Gold : new Color(1f, 0.55f, 0.45f));
+            Label(Px(122, 198, 525, 79), "НАШИ ПОТЕРИ", 12f, Ink);
+            Label(Px(779, 196, 533, 81), "ПОТЕРИ ВРАГА", 12f, Ink);
             float[] cx = { 226f, 391f, 557f }, cy = { 368f, 528f, 688f };
             for (int side = 0; side < 2; side++)
             {
@@ -2051,15 +2177,15 @@ namespace BladePath
                     GUI.color = oc;
                     Rect pl = new Rect(c.x - d * 0.42f, c.y + d * 0.22f, d * 0.84f, d * 0.32f);
                     UiKit.Rect(pl, new Color(0.08f, 0.03f, 0.02f, 0.85f));
-                    UiKit.Text(pl, lost > 0 ? "−" + lost : "0", 11f, lost > 0 ? new Color(1f, 0.6f, 0.5f) : Dim);
+                    Label(pl, lost > 0 ? "−" + lost : "0", 11f, lost > 0 ? new Color(1f, 0.6f, 0.5f) : Dim);
                     q++;
                 }
             }
-            string line = resultText.Replace("\n", "  ");
-            UiKit.Text(Px(330, 831, 790, 65), line, 9.5f, Ink);
+            string line = resultText;
+            Label(Px(330, 831, 790, 65), line, 11f, Ink,TextAnchor.MiddleCenter,true);
             string main = mapNode >= 0 || neutralDone != null ? "НА КАРТУ" : fromEstate ? "В ПОМЕСТЬЕ" : "ЕЩЁ БОЙ";
             Rect mb = Px(476, 914, 477, 76);
-            UiKit.Text(mb, main, 14f, Gold);
+            Label(mb, main, 14f, Gold);
             if (GUI.Button(mb, GUIContent.none, GUIStyle.none))
             {
                 if (neutralDone != null) { System.Action<bool> cb = neutralDone; neutralDone = null; cb(won); Close(); returned = true; }
@@ -2068,7 +2194,7 @@ namespace BladePath
                 else ShowDev((region + 1) % 3);
                 return;
             }
-            if (mapNode < 0 && neutralDone == null && VisualIdentity.KitButton(new Rect(r.xMax - 120f, r.yMax - 10f - 30f * 1f - 6f, 100f, 30f), "ВЫЙТИ", true, false)) Close();
+            if (mapNode < 0 && neutralDone == null && HudButton(new Rect(r.xMax - 120f, r.yMax - 10f - 30f * 1f - 6f, 100f, 30f), "ВЫЙТИ", true, false)) Close();
         }
 
         static void DrawResultPlain()
@@ -2077,17 +2203,23 @@ namespace BladePath
             UiKit.Rect(r, new Color(0.06f, 0.03f, 0.02f, 0.95f));
             Texture2D pt = UiKit.Tex("UI/editor_panel");
             if (pt != null) UiKit.Slice(r, pt, 0.42f, 0.15f, 0f, 0.075f, 0f, Color.white);
-            UiKit.Text(new Rect(r.x, r.y + 16f, r.width, 30f), won ? "ПОБЕДА" : "ПОРАЖЕНИЕ", 24f, won ? Gold : new Color(1f, 0.5f, 0.4f));
-            UiKit.Text(new Rect(r.x + 24f, r.y + 54f, r.width - 48f, 70f), resultText, 13f, Ink);
+            Label(new Rect(r.x, r.y + 16f, r.width, 30f), won ? "ПОБЕДА" : "ПОРАЖЕНИЕ", 24f, won ? Gold : new Color(1f, 0.5f, 0.4f));
+            Label(new Rect(r.x + 24f, r.y + 54f, r.width - 48f, 70f), resultText, 13f, Ink,TextAnchor.MiddleCenter,true);
+            if(neutralDone!=null)
+            {
+                if(HudButton(new Rect(r.center.x-100,r.yMax-54,200,38),"НА КАРТУ",true,true))
+                {var cb=neutralDone;neutralDone=null;cb(won);Close();returned=true;}
+                return;
+            }
             if (mapNode >= 0)
             {
-                if (VisualIdentity.KitButton(new Rect(r.center.x - 100f, r.yMax - 54f, 200f, 38f), "НА КАРТУ", true, true))
+                if (HudButton(new Rect(r.center.x - 100f, r.yMax - 54f, 200f, 38f), "НА КАРТУ", true, true))
                 { if (won) Campaign.FinishFight(); else Campaign.LoseFight(); mapNode = -1; Close(); returned = true; }
                 return;
             }
-            if (fromEstate) { if (VisualIdentity.KitButton(new Rect(r.x + 30f, r.yMax - 54f, 180f, 38f), "В ПОМЕСТЬЕ", true, true)) { Close(); Estate.Show(); } }
-            else if (VisualIdentity.KitButton(new Rect(r.x + 30f, r.yMax - 54f, 180f, 38f), "ЕЩЁ БОЙ", true, true)) ShowDev((region + 1) % 3);
-            if (VisualIdentity.KitButton(new Rect(r.xMax - 210f, r.yMax - 54f, 180f, 38f), "ВЫЙТИ", true, false)) Close();
+            if (fromEstate) { if (HudButton(new Rect(r.x + 30f, r.yMax - 54f, 180f, 38f), "В ПОМЕСТЬЕ", true, true)) { Close(); Estate.Show(); } }
+            else if (HudButton(new Rect(r.x + 30f, r.yMax - 54f, 180f, 38f), "ЕЩЁ БОЙ", true, true)) ShowDev((region + 1) % 3);
+            if (HudButton(new Rect(r.xMax - 210f, r.yMax - 54f, 180f, 38f), "ВЫЙТИ", true, false)) Close();
         }
 
         // ---------------------------------------------------------------- касания
@@ -2097,7 +2229,10 @@ namespace BladePath
         {
             Event e = Event.current;
             if (e.isMouse) hover = e.mousePosition;
-            if (e.type == EventType.MouseDown && e.mousePosition.y > 80f && e.mousePosition.y < 540f - 64f) { downOn = true; downAt = Time.unscaledTime; downPos = e.mousePosition; }
+            Rect safe=SafeHud();
+            bool board=safe.Contains(e.mousePosition) && e.mousePosition.y>safe.y+80f && e.mousePosition.y<new HudLayout(safe).footer.y;
+            if(e.type==EventType.MouseUp && !board) {downOn=false;return;}
+            if (e.type == EventType.MouseDown && board) { downOn = true; downAt = Time.unscaledTime; downPos = e.mousePosition; }
             if (e.type == EventType.Repaint && downOn && Time.unscaledTime - downAt > 0.5f)
             {   // долгое нажатие — сведения об отряде
                 downOn = false;

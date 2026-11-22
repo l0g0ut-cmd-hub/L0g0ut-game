@@ -10,7 +10,9 @@ namespace BladePath
         public Vector3 offset;
         public float stride;
         public float[] headingScale;
-        public AnimationClip advance, attack, reaction;
+        public AnimationClip advance, attack, melee, reaction;
+        public Mesh drawnBody, heldWeapon, bowCord;
+        public Material weaponSurface;
         public float[] walkDistances;
 
         public sealed class CombatClips

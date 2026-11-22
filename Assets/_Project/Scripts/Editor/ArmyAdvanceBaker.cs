@@ -113,6 +113,42 @@ namespace BladePath.EditorTools
             return stride;
         }
 
+        public static AnimationClip AlignShot(Animation anim, AnimationClip original, float release)
+        {
+            var rig=Rig(anim);
+            var hip=rig["Hips"].bone;
+            original.SampleAnimation(anim.gameObject,original.length*release);
+            Vector3 aim=Vector3.ProjectOnPlane(rig["LeftHand"].bone.position-rig["RightHand"].bone.position,Vector3.up);
+            float yaw=Vector3.SignedAngle(aim,Vector3.forward,Vector3.up);
+            var output=UnityEngine.Object.Instantiate(original);
+            output.name="Board_"+original.name.Split('|').Last();
+            string path=AnimationUtility.CalculateTransformPath(hip,anim.transform);
+            var curves=Enumerable.Range(0,7).Select(_=>new AnimationCurve()).ToArray();
+            original.SampleAnimation(anim.gameObject,0f);
+            Vector3 pivot=hip.position;
+            Quaternion last=hip.localRotation;
+            int count=Mathf.CeilToInt(original.length*40f);
+            for(int i=0;i<=count;i++)
+            {
+                float phase=i/(float)count,time=original.length*phase;
+                original.SampleAnimation(anim.gameObject,time);
+                float entering=Mathf.SmoothStep(0,1,Mathf.InverseLerp(.03f,release*.86f,phase));
+                float leaving=1f-Mathf.SmoothStep(0,1,Mathf.InverseLerp(.73f,1f,phase));
+                var rotation=Quaternion.AngleAxis(yaw*entering*leaving,Vector3.up);
+                hip.SetPositionAndRotation(pivot+rotation*(hip.position-pivot),rotation*hip.rotation);
+                Quaternion q=hip.localRotation;
+                if(Quaternion.Dot(q,last)<0) q=new Quaternion(-q.x,-q.y,-q.z,-q.w);
+                last=q;
+                for(int a=0;a<3;a++) curves[a].AddKey(time,hip.localPosition[a]);
+                for(int a=0;a<4;a++) curves[3+a].AddKey(time,q[a]);
+            }
+            for(int i=0;i<7;i++)
+                AnimationUtility.SetEditorCurve(output,EditorCurveBinding.FloatCurve(path,typeof(Transform),
+                    i<3?"m_LocalPosition."+"xyz"[i]:"m_LocalRotation."+"xyzw"[i-3]),curves[i]);
+            output.EnsureQuaternionContinuity();
+            return output;
+        }
+
         public static AnimationClip AnchorAction(Animation anim, AnimationClip clip)
         {
             if(!clip) return null;
