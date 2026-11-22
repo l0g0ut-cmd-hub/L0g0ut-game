@@ -122,6 +122,7 @@ namespace BladePath
             public GameObject go; public Animation an; public string playing; public float actUntil, hitUntil;
             public Material surface;
             public TacticsFigureProfile figureProfile;
+            public Transform figureMount;
             public float gaitPhase;
             public Transform wingL, wingR;
             public Quaternion wingRestL, wingRestR;
@@ -1264,6 +1265,7 @@ namespace BladePath
                 s.surface = new Material(sh != null ? sh : Shader.Find("Standard"));
                 if (tex != null) s.surface.mainTexture = tex;
                 TacticsFigureProfile.Dress(go,s.surface);
+                s.figureMount = figure;
                 s.figureProfile = Resources.Load<TacticsFigureProfile>("ArmyFigures/" + resource);
                 s.go = go; s.an = go.GetComponentInChildren<Animation>();
                 bool dog = s.t.cell == 11;
@@ -1366,7 +1368,7 @@ namespace BladePath
                 }
             }
             var profile = Resources.Load<TacticsFigureProfile>("ArmyFigures/unit_general");
-            if (profile != null) profile.Fit(figure);
+            if (profile != null) profile.Fit(figure,90f);
             else FitFigure(generalGo, figure, 2.05f);
         }
         /// <summary>Полководец колдует — конь встаёт на дыбы.</summary>
@@ -1384,7 +1386,7 @@ namespace BladePath
             if (stage != null) Object.Destroy(stage);
             stage = null; liveCam = null;
             if (liveRT != null) { liveRT.Release(); Object.Destroy(liveRT); liveRT = null; }
-            foreach (Stack s in stacks) { if (s.surface != null) Object.Destroy(s.surface); s.surface = null; s.go = null; s.an = null; s.figureProfile = null; s.gaitPhase = 0f; s.wingL = s.wingR = null; s.hips = null; s.playing = null; s.previousClip = null; }
+            foreach (Stack s in stacks) { if (s.surface != null) Object.Destroy(s.surface); s.surface = null; s.go = null; s.an = null; s.figureProfile = null; s.figureMount = null; s.gaitPhase = 0f; s.wingL = s.wingR = null; s.hips = null; s.playing = null; s.previousClip = null; }
         }
         static void Close() { CleanupLive(); Open = false; }
 
@@ -1462,6 +1464,7 @@ namespace BladePath
                 else if (s.hitUntil > now && s.clipHit != null) { if (s.playing != s.clipHit) Play(s, s.clipHit, true); }
                 else if (finished && won && !s.enemy && s.clipWin != null) Play(s, s.clipWin, false);
                 else Play(s, s.clipIdle, false);
+                if (s.figureProfile != null) s.figureProfile.Fit(s.figureMount,s.go.transform.eulerAngles.y);
                 SamplePose(s, now);
                 if (s.wingL != null && s.wingR != null)
                 {

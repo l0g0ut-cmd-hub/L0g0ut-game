@@ -112,6 +112,7 @@ namespace BladePath.EditorTools
             if(!source)throw new Exception("Missing combat motion "+Motion);
             var names=Directory.GetFiles(Models,"*.fbx").OrderBy(p=>p).ToArray();
             var sheet=new Texture2D(Size*4,Size*names.Length,TextureFormat.RGBA32,false);
+            var gaitSheet=new Texture2D(Size*8,Size*names.Length,TextureFormat.RGBA32,false);
             var report=new List<string>{"model,stance_height,advance_height,attack_height,side2_height,stride"};
             using(var view=new View())
             {
@@ -157,27 +158,36 @@ namespace BladePath.EditorTools
                         anchor.transform.rotation=Quaternion.Euler(0,90,0);
                         Quaternion board=Quaternion.Euler(34,0,0);
                         Vector3 center=Vector3.up*target*.47f;
-                        var first=view.Frame(center,board,3.6f);
-                        float factor=target/first.size.y;
-                        profile.scale*=factor;profile.offset*=factor;profile.Fit(mount);
-                        profile.stride=Mathf.Clamp(rawStride*profile.scale,target*.5f,target*1.5f);
+                        const int directions=8;
+                        var factors=new float[directions];
+                        for(int i=0;i<directions;i++)
+                        {
+                            anchor.transform.rotation=Quaternion.Euler(0,i*360f/directions,0);
+                            var facing=view.Frame(center,board,3.6f);
+                            factors[i]=target/facing.size.y;
+                        }
+                        profile.headingScale=factors;
+                        profile.stride=Mathf.Clamp(rawStride*profile.scale*factors[2],target*.5f,target*1.5f);
                         float[] heights=new float[4];
                         for(int column=0;column<4;column++)
                         {
-                            var clip=column==1?(profile.advance?profile.advance:walk):column==2?hit:idle;
+                            var clip=column==1?(profile.advance?profile.advance:flying?idle:walk):column==2?hit:idle;
                             anchor.transform.rotation=Quaternion.Euler(0,column==3?-90:90,0);
+                            profile.Fit(mount,anchor.transform.eulerAngles.y);
                             clip.SampleAnimation(an.gameObject,clip.length*(column==1?.25f:column==2?.43f:.3f));
                             var visible=view.Frame(center,board,3.6f);heights[column]=visible.size.y;
                             // Fixed camera and origin for every row. A missing body or one moving into another hex fails.
                             if(visible.size.y<target*.42f||visible.size.y>target*1.9f||Mathf.Abs(visible.center.x)>1.2f)
                                 throw new Exception("Body outside its hex: "+clip.name+" "+visible);
-                            if(column==0&&Mathf.Abs(visible.size.y-target)>.07f) throw new Exception("Incorrect projected height "+visible.size.y+" expected "+target);
+                            if((column==0||column==3)&&Mathf.Abs(visible.size.y-target)>.07f) throw new Exception("Incorrect projected height "+visible.size.y+" expected "+target);
                             sheet.SetPixels32(column*Size,(names.Length-row-1)*Size,Size,Size,view.pixels);
                         }
                         if(profile.advance!=null)
                         {
                             Transform[] joints=model.GetComponentsInChildren<Transform>();
                             Transform foot=joints.First(t=>t.name=="LeftFoot"),hip=joints.First(t=>t.name=="Hips");
+                            anchor.transform.rotation=Quaternion.Euler(0,90,0);
+                            profile.Fit(mount,90f);
                             Vector3 firstFoot=Vector3.zero;float excursion=0f;
                             for(int i=0;i<8;i++)
                             {
@@ -186,6 +196,7 @@ namespace BladePath.EditorTools
                                 if(i==0)firstFoot=relative;
                                 excursion=Mathf.Max(excursion,(relative-firstFoot).magnitude);
                                 Bounds moving=view.Frame(center,board,3.6f);
+                                gaitSheet.SetPixels32(i*Size,(names.Length-row-1)*Size,Size,Size,view.pixels);
                                 if(moving.size.y<target*.55f||Mathf.Abs(moving.center.x)>1f)
                                     throw new Exception("Advance frame "+i+" outside cell: "+moving);
                             }
@@ -201,6 +212,7 @@ namespace BladePath.EditorTools
             }
             AssetDatabase.SaveAssets();
             sheet.Apply();File.WriteAllBytes(Capture+"/army-roster.png",sheet.EncodeToPNG());Object.DestroyImmediate(sheet);
+            gaitSheet.Apply();File.WriteAllBytes(Capture+"/army-advance.png",gaitSheet.EncodeToPNG());Object.DestroyImmediate(gaitSheet);
             File.WriteAllLines("build/army-roster.csv",report);
         }
     }

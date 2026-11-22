@@ -30,8 +30,38 @@ namespace BladePath.EditorTools
             return Quaternion.LookRotation(forward, up);
         }
 
-        // Keep native weapon carries. Replace only Casual_Walk with one coordinated,
-        // in-place capture. Bake real local rotations, including twist, for this skeleton.
+        static void Aim(Transform parent,Transform child,Vector3 target)
+        {
+            Vector3 before=child.position-parent.position;
+            if(before.sqrMagnitude>1e-12f && target.sqrMagnitude>1e-12f)
+                parent.rotation=Quaternion.FromToRotation(before,target)*parent.rotation;
+        }
+
+        static void PlaceLeg(Dictionary<string,Transform> source,Dictionary<string,Transform> target,
+            string side,Quaternion alignment)
+        {
+            Transform a=target[side+"UpLeg"], b=target[side+"Leg"], c=target[side+"Foot"];
+            Transform toe=target[side+"ToeBase"];
+            Vector3 from=source[side+"UpLeg"].position, knee=source[side+"Leg"].position;
+            Vector3 ankle=source[side+"Foot"].position;
+            float upper=Vector3.Distance(a.position,b.position),lower=Vector3.Distance(b.position,c.position);
+            float ratio=(upper+lower)/(Vector3.Distance(from,knee)+Vector3.Distance(knee,ankle));
+            Vector3 toAnkle=alignment*(ankle-from)*ratio;
+            Vector3 along=toAnkle.normalized;
+            float dist=Mathf.Clamp(toAnkle.magnitude,Mathf.Abs(upper-lower)+.00001f,(upper+lower)*.999f);
+            // The captured knee supplies the bend plane. This avoids reversed knees when the
+            // FBX bone roll or the bind-pose bend differs from that of the motion capture.
+            Vector3 pole=Vector3.ProjectOnPlane(alignment*(knee-from),along).normalized;
+            if(pole.sqrMagnitude<.1f) pole=Vector3.ProjectOnPlane(b.position-a.position,along).normalized;
+            float projection=(upper*upper-lower*lower+dist*dist)/(2f*dist);
+            Vector3 toKnee=along*projection+pole*Mathf.Sqrt(Mathf.Max(0f,upper*upper-projection*projection));
+            Vector3 footTarget=a.position+along*dist;
+            Aim(a,b,toKnee);Aim(b,c,footTarget-b.position);
+            Aim(c,toe,alignment*(source[side+"ToeBase"].position-ankle));
+        }
+
+        // One captured advance supplies foot contacts and weight transfer. Weapon-specific
+        // arm poses come from the original fighter and are baked on the same time axis.
         public static AnimationClip Bake(GameObject source, AnimationClip motion, GameObject model,
             AnimationClip idle, AnimationClip walk, out float stride)
         {
@@ -41,14 +71,13 @@ namespace BladePath.EditorTools
             bool replace = walk.name.IndexOf("casual", StringComparison.OrdinalIgnoreCase) >= 0;
             var src = SourceBones.Select(n => s[n]).ToArray();
             var dst = TargetBones.Select(n => b[n]).ToArray();
-            var srcRest = src.Select(t => t.rotation).ToArray();
-            var dstRest = dst.Select(t => t.rotation).ToArray();
+
             Quaternion map = Basis(b) * Quaternion.Inverse(Basis(s));
             float legRatio = (Vector3.Distance(b["LeftUpLeg"].position, b["LeftLeg"].position)
                             + Vector3.Distance(b["LeftLeg"].position, b["LeftFoot"].position))
                            / (Vector3.Distance(s["LeftUpLeg"].position, s["LeftLeg"].position)
                             + Vector3.Distance(s["LeftLeg"].position, s["LeftFoot"].position));
-            float length = replace ? motion.length : walk.length;
+            float length = motion.length;
             Transform animRoot = model.GetComponentInChildren<Animation>().transform;
             AnimationClip basis = replace ? idle : walk;
             // Clone all authored channels, including non-bone rig transforms.
@@ -70,35 +99,33 @@ namespace BladePath.EditorTools
             var keyed = all.Where(t => paths.Contains(AnimationUtility.CalculateTransformPath(t,animRoot)) || dst.Contains(t)).ToArray();
             var previous = new Quaternion[keyed.Length];
             var startP = new Vector3[keyed.Length]; var startQ = new Quaternion[keyed.Length]; var startS = new Vector3[keyed.Length];
-            basis.SampleAnimation(animRoot.gameObject,0);
+            idle.SampleAnimation(animRoot.gameObject,idle.length*.3f);
             Vector3 startHip = hips.position;
-            basis.SampleAnimation(animRoot.gameObject,basis.length);
-            Vector3 endHip = hips.position;
+            float groundToe=Mathf.Min(b["LeftToeBase"].position.y,b["RightToeBase"].position.y);
+            float groundHeel=Mathf.Min(b["LeftFoot"].position.y,b["RightFoot"].position.y);
+            var dstPose=dst.Select(t=>t.rotation).ToArray();
             var sourceRoot = source.GetComponentInChildren<Animation>().gameObject;
             motion.SampleAnimation(sourceRoot,0); Vector3 first = src[0].position;
+            var srcPose=src.Select(t=>t.rotation).ToArray();
             motion.SampleAnimation(sourceRoot,motion.length); Vector3 last = src[0].position;
-            float lo = float.PositiveInfinity, hi = float.NegativeInfinity;
-            Vector3 heading = model.transform.forward;
             const int count = 40;
             for (int frame=0;frame<=count;frame++)
             {
                 float phase=frame/(float)count, time=phase*length;
                 basis.SampleAnimation(animRoot.gameObject,basis.length*phase);
-                if (replace)
-                {
-                    motion.SampleAnimation(sourceRoot,motion.length*phase);
-                    Vector3 residual=src[0].position-Vector3.Lerp(first,last,phase);
-                    hips.position=startHip+map*residual*legRatio;
-                    for (int k=0;k<dst.Length;k++)
-                        dst[k].rotation=map*(src[k].rotation*Quaternion.Inverse(srcRest[k]))*Quaternion.Inverse(map)*dstRest[k];
-                }
-                else
-                {
-                    Vector3 drift=(endHip-startHip)*phase;
-                    hips.position-=Vector3.ProjectOnPlane(drift,Vector3.up);
-                }
-                float foot=Vector3.Dot(b["LeftFoot"].position-startHip,heading);
-                lo=Mathf.Min(lo,foot);hi=Mathf.Max(hi,foot);
+                motion.SampleAnimation(sourceRoot,motion.length*phase);
+                Vector3 residual=src[0].position-Vector3.Lerp(first,last,phase);
+                hips.position=startHip+map*residual*legRatio;
+                // Use motion relative to the guarded pose, preserving the original weapon grip.
+                // Absolute rest-pose rotation transfer can put already-bent limbs at the wrong angle.
+                int bodyBones=replace?6:1;
+                for(int k=0;k<bodyBones;k++)
+                    dst[k].rotation=map*(src[k].rotation*Quaternion.Inverse(srcPose[k]))*Quaternion.Inverse(map)*dstPose[k];
+                PlaceLeg(s,b,"Left",map);
+                PlaceLeg(s,b,"Right",map);
+                float toeError=Mathf.Min(b["LeftToeBase"].position.y,b["RightToeBase"].position.y)-groundToe;
+                float heelError=Mathf.Min(b["LeftFoot"].position.y,b["RightFoot"].position.y)-groundHeel;
+                hips.position-=Vector3.up*Mathf.Min(toeError,heelError);
                 for (int i=0;i<keyed.Length;i++)
                 {
                     Transform bone=keyed[i];
@@ -119,7 +146,7 @@ namespace BladePath.EditorTools
             var bindings=tracks.Keys.ToArray();
             AnimationUtility.SetEditorCurves(clip,bindings,bindings.Select(x=>tracks[x]).ToArray());
             clip.EnsureQuaternionContinuity();
-            stride=replace ? Vector3.ProjectOnPlane(last-first,Vector3.up).magnitude*legRatio : 2f*(hi-lo);
+            stride=Vector3.ProjectOnPlane(last-first,Vector3.up).magnitude*legRatio;
             return clip;
         }
     }

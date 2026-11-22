@@ -8,12 +8,20 @@ namespace BladePath
         public float scale;
         public Vector3 offset;
         public float stride;
+        public float[] headingScale;
         public AnimationClip advance;
 
-        public void Fit(Transform mount)
+        public void Fit(Transform mount, float yaw = 0f)
         {
-            mount.localScale = Vector3.one * scale;
-            mount.localPosition = offset;
+            float adjustment = 1f;
+            if (headingScale != null && headingScale.Length > 1)
+            {
+                float index = Mathf.Repeat(yaw,360f) * headingScale.Length / 360f;
+                int first = Mathf.FloorToInt(index) % headingScale.Length;
+                adjustment = Mathf.Lerp(headingScale[first],headingScale[(first+1)%headingScale.Length],index-Mathf.Floor(index));
+            }
+            mount.localScale = Vector3.one * (scale * adjustment);
+            mount.localPosition = offset * adjustment;
         }
 
         public static void Dress(GameObject figure, Material material)
