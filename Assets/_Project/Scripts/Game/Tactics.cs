@@ -121,6 +121,11 @@ namespace BladePath
             public float lunge; public Vector2 lungeDir; public float flash, die = -1f, born;
             public GameObject go; public Animation an; public string playing; public float actUntil, hitUntil;
             public Material surface;
+            public TacticsAdvance advance;
+            public AnimationState guard;
+            public Transform wingL, wingR;
+            public Quaternion wingRestL, wingRestR;
+            public float wingLift;
             public Transform hips;
             public Vector3 restHips;
             public float clipStart, previousStart, actStart, contactAt;
@@ -1094,6 +1099,7 @@ namespace BladePath
             float duration = ClipLen(s, s.clipAct, 0.7f);
             s.actUntil = Time.unscaledTime + duration;
             s.actStart = Time.unscaledTime;
+            impact = ContactPhase(s.clipAct, impact);
             s.contactAt = s.actStart + duration * impact;
             if (s.clipAct != null) Play(s, s.clipAct, true);
             else Play(s, s.clipIdle, false);
@@ -1152,12 +1158,20 @@ namespace BladePath
                 previous.time = PoseTime(s, previous, now - s.previousStart);
                 if (blend >= 1f) s.previousClip = null;
             }
+            float gaitWeight = s.playing == s.clipWalk ? blend : s.previousClip == s.clipWalk ? 1f - blend : 0f;
+            if (s.guard != null)
+            {
+                s.guard.enabled = gaitWeight > 0f;
+                s.guard.weight = gaitWeight;
+                s.guard.time = Mathf.Repeat(now - s.born, Mathf.Max(.01f, s.guard.length));
+            }
             current.enabled = true;
             current.weight = blend;
             current.time = PoseTime(s, current, elapsed);
             s.an.Sample();
             // The hex path owns horizontal travel. Keep vertical motion from the gait.
-            if (s.hips != null && s.playing == s.clipWalk)
+            if (s.advance != null) s.advance.Apply(gaitWeight);
+            else if (s.hips != null && s.playing == s.clipWalk)
             {
                 Vector3 local = s.go.transform.InverseTransformPoint(s.hips.position);
                 local.x = Mathf.Lerp(local.x, s.restHips.x, blend);
@@ -1181,19 +1195,43 @@ namespace BladePath
             return Mathf.Clamp(elapsed, 0f, clip.length);
         }
 
-        static float BodyHeight(GameObject model, bool humanoid, float boundsHeight)
+        // Fit the visible surface in its combat pose. Imported skin bounds include other clips,
+        // and head pivots sit at different heights inside different helmets.
+        static Transform SpawnFigure(GameObject prefab, Transform anchor)
         {
-            if (!humanoid) return boundsHeight;
-            Transform head = null, left = null, right = null;
-            foreach (Transform bone in model.GetComponentsInChildren<Transform>(true))
+            Transform mount = new GameObject("Figure").transform;
+            mount.SetParent(anchor, false);
+            Object.Instantiate(prefab, mount, false);
+            return mount;
+        }
+
+        static void FitFigure(GameObject anchor, Transform figure, float height)
+        {
+            var ys = new List<float>();
+            Mesh snapshot = new Mesh();
+            foreach (var skin in figure.GetComponentsInChildren<SkinnedMeshRenderer>())
             {
-                if (bone.name == "Head") head = bone;
-                else if (bone.name == "LeftFoot") left = bone;
-                else if (bone.name == "RightFoot") right = bone;
+                skin.BakeMesh(snapshot);
+                Matrix4x4 toAnchor = anchor.transform.worldToLocalMatrix * skin.localToWorldMatrix;
+                foreach (Vector3 v in snapshot.vertices) ys.Add(toAnchor.MultiplyPoint3x4(v).y);
             }
-            if (head == null || left == null || right == null) return boundsHeight;
-            float height = (head.position.y - (left.position.y + right.position.y) * 0.5f) / 0.79f;
-            return height > 0.01f ? height : boundsHeight;
+            Object.Destroy(snapshot);
+            if (ys.Count == 0) return;
+            ys.Sort();
+            float sole = ys[ys.Count / 500], top = ys[ys.Count - 1 - ys.Count / 200];
+            if (top <= sole + .001f) return;
+            float k = height / (top - sole);
+            figure.localScale *= k;
+            figure.localPosition = figure.localPosition * k - Vector3.up * (sole * k);
+        }
+
+        static float ContactPhase(string clip, float fallback)
+        {
+            string n = (clip ?? "").ToLowerInvariant();
+            if (n.Contains("right_hand_sword_slash")) return .36f;
+            if (n.Contains("thrust_slash") || n.Contains("double_combo_attack") || n.Contains("left_slash")) return .24f;
+            if (n.Contains("side_shot")) return .73f;
+            return fallback;
         }
 
         static void SetupLive()
@@ -1226,7 +1264,7 @@ namespace BladePath
                 if (pf == null) continue;
                 GameObject go = new GameObject("Unit_" + s.t.live);
                 go.transform.SetParent(stage.transform, false);
-                Object.Instantiate(pf, go.transform, false);
+                Transform figure = SpawnFigure(pf, go.transform);
                 foreach (Transform tr in go.GetComponentsInChildren<Transform>(true)) tr.gameObject.layer = LiveLayer;
                 Texture2D tex = Resources.Load<Texture2D>("Units/" + resource + "_albedo");
                 Shader sh = Resources.Load<Shader>("TacticsUnit");
@@ -1239,15 +1277,19 @@ namespace BladePath
                     r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                     SkinnedMeshRenderer sm = r as SkinnedMeshRenderer; if (sm != null) sm.updateWhenOffscreen = true;
                 }
-                // рост — по меркам модели
-                Bounds b = new Bounds(go.transform.position, Vector3.zero); bool has = false;
-                foreach (Renderer r in go.GetComponentsInChildren<Renderer>()) { if (!has) { b = r.bounds; has = true; } else b.Encapsulate(r.bounds); }
-                bool humanoid = resource != "unit_dog" && resource != "unit_cavalry" && s.t.cell != 11 && s.t.cell != 4;
-                float height = BodyHeight(go, humanoid, has ? b.size.y : 0f);
-                if (height > 0.01f) go.transform.localScale *= s.t.liveH / height;
                 s.go = go; s.an = go.GetComponentInChildren<Animation>();
-                foreach (Transform bone in go.GetComponentsInChildren<Transform>(true))
-                    if (bone.name == "Hips") { s.hips = bone; s.restHips = go.transform.InverseTransformPoint(bone.position); break; }
+                bool dog = s.t.cell == 11;
+                if (dog)
+                {
+                    // Retain the approved dog rig, scale and cycle.
+                    Bounds bounds = new Bounds(); bool first = true;
+                    foreach (Renderer r in figure.GetComponentsInChildren<Renderer>())
+                    {
+                        if (first) bounds = r.bounds; else bounds.Encapsulate(r.bounds);
+                        first = false;
+                    }
+                    if (bounds.size.y > .01f) go.transform.localScale *= s.t.liveH / bounds.size.y;
+                }
                 if (s.an != null)
                 {
                     s.an.Stop();
@@ -1271,6 +1313,38 @@ namespace BladePath
                         st.wrapMode = st.name == s.clipIdle || st.name == s.clipWalk ? WrapMode.Loop : st.name == s.clipDie ? WrapMode.ClampForever : WrapMode.Once;
                     }
                     s.idleYaw = ChestYaw(s);
+                    if (s.clipIdle != null)
+                        s.an.GetClip(s.clipIdle).SampleAnimation(s.an.gameObject, s.an[s.clipIdle].length * .3f);
+                    if (!dog)
+                    {
+                        float height = s.t.joust ? 1.95f : resource == "unit_oni" ? 1.7f : 1.40f;
+                        FitFigure(go, figure, height);
+                    }
+                    foreach (Transform bone in figure.GetComponentsInChildren<Transform>())
+                    {
+                        if (bone.name == "Hips") { s.hips = bone; s.restHips = go.transform.InverseTransformPoint(bone.position); }
+                        if (bone.name == "TenguWingL") { s.wingL = bone; s.wingRestL = bone.localRotation; }
+                        if (bone.name == "TenguWingR") { s.wingR = bone; s.wingRestR = bone.localRotation; }
+                    }
+                    if (!dog && !s.t.joust && !s.t.fly)
+                    {
+                        s.advance = TacticsAdvance.Bind(go.transform);
+                        // Bow and spear have a dedicated, armed upper-body walk already.
+                        string walk = (s.clipWalk ?? "").ToLowerInvariant();
+                        if (s.advance != null && s.clipIdle != null && walk.Contains("casual"))
+                        {
+                            s.an.AddClip(s.an.GetClip(s.clipIdle), "TravelGuard");
+                            Transform torso = null;
+                            foreach (Transform bone in figure.GetComponentsInChildren<Transform>())
+                                if (bone.name == "Spine02") { torso = bone; break; }
+                            if (torso != null)
+                            {
+                                s.guard = s.an["TravelGuard"];
+                                s.guard.AddMixingTransform(torso, true);
+                                s.guard.layer = 1; s.guard.speed = 0f; s.guard.wrapMode = WrapMode.Loop;
+                            }
+                        }
+                    }
                     Play(s, s.clipIdle, true);
                 }
             }
@@ -1286,7 +1360,9 @@ namespace BladePath
         {
             GameObject pf = Resources.Load<GameObject>("Units/unit_general");
             if (pf == null || stage == null) return;
-            generalGo = Object.Instantiate(pf, stage.transform); generalGo.name = "General";
+            generalGo = new GameObject("General");
+            generalGo.transform.SetParent(stage.transform, false);
+            Transform figure = SpawnFigure(pf, generalGo.transform);
             foreach (Transform tr in generalGo.GetComponentsInChildren<Transform>(true)) tr.gameObject.layer = LiveLayer;
             Texture2D tex = Resources.Load<Texture2D>("Units/unit_general_albedo");
             Material m = new Material(Shader.Find("Standard")); if (tex != null) m.mainTexture = tex;
@@ -1297,9 +1373,6 @@ namespace BladePath
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 SkinnedMeshRenderer sm = r as SkinnedMeshRenderer; if (sm != null) sm.updateWhenOffscreen = true;
             }
-            Bounds b = new Bounds(); bool has = false;
-            foreach (Renderer r in generalGo.GetComponentsInChildren<Renderer>()) { if (!has) { b = r.bounds; has = true; } else b.Encapsulate(r.bounds); }
-            if (has && b.size.y > 0.01f) generalGo.transform.localScale *= 2.7f / b.size.y;
             generalAn = generalGo.GetComponentInChildren<Animation>();
             genIdle = genCast = null;
             if (generalAn != null)
@@ -1311,8 +1384,13 @@ namespace BladePath
                     if (n.Contains("idle")) genIdle = st.name; else if (n.Contains("jump")) genCast = st.name;
                     st.wrapMode = n.Contains("idle") ? WrapMode.Loop : WrapMode.Once;
                 }
-                if (genIdle != null) generalAn.Play(genIdle);
+                if (genIdle != null)
+                {
+                    generalAn.GetClip(genIdle).SampleAnimation(generalAn.gameObject, 0f);
+                    generalAn.Play(genIdle);
+                }
             }
+            FitFigure(generalGo, figure, 2.05f);
         }
         /// <summary>Полководец колдует — конь встаёт на дыбы.</summary>
         static void GeneralCast()
@@ -1328,7 +1406,7 @@ namespace BladePath
             if (stage != null) Object.Destroy(stage);
             stage = null; liveCam = null;
             if (liveRT != null) { liveRT.Release(); Object.Destroy(liveRT); liveRT = null; }
-            foreach (Stack s in stacks) { if (s.surface != null) Object.Destroy(s.surface); s.surface = null; s.go = null; s.an = null; s.playing = null; s.previousClip = null; }
+            foreach (Stack s in stacks) { if (s.surface != null) Object.Destroy(s.surface); s.surface = null; s.go = null; s.an = null; s.advance = null; s.guard = null; s.wingL = s.wingR = null; s.hips = null; s.playing = null; s.previousClip = null; }
         }
         static void Close() { CleanupLive(); Open = false; }
 
@@ -1401,12 +1479,21 @@ namespace BladePath
                     tr.rotation = Quaternion.AngleAxis(-82f * k * k, tr.forward) * Quaternion.LookRotation(tr.forward, Vector3.up);
                 }
                 else if (dead) Play(s, s.clipDie, s.playing != s.clipDie);
-                else if (s.path.Count > 0) Play(s, s.clipWalk ?? s.clipIdle, false);
+                else if (s.path.Count > 0) Play(s, s.t.fly ? s.clipIdle : s.clipWalk ?? s.clipIdle, false);
                 else if (s.actUntil > now) { }
                 else if (s.hitUntil > now && s.clipHit != null) { if (s.playing != s.clipHit) Play(s, s.clipHit, true); }
                 else if (finished && won && !s.enemy && s.clipWin != null) Play(s, s.clipWin, false);
                 else Play(s, s.clipIdle, false);
                 SamplePose(s, now);
+                if (s.wingL != null && s.wingR != null)
+                {
+                    s.wingLift = Mathf.MoveTowards(s.wingLift, !dead && s.path.Count > 0 ? 1f : 0f, Time.unscaledDeltaTime * 4f);
+                    float beat = Mathf.Sin((now - s.born) * 8f);
+                    float angle = (8f + 23f * beat) * s.wingLift;
+                    s.wingL.localRotation = s.wingRestL * Quaternion.Euler(0f, 0f, angle);
+                    s.wingR.localRotation = s.wingRestR * Quaternion.Euler(0f, 0f, -angle);
+                    s.go.transform.position += Vector3.up * ((.28f + .045f * beat) * s.wingLift);
+                }
             }
             liveCam.Render();
             GUI.DrawTexture(new Rect(0f, 0f, W, 540f), liveRT, ScaleMode.StretchToFill, true);
@@ -1531,6 +1618,13 @@ namespace BladePath
                     Vector2 step = t - s.pos;
                     float groundDistance = new Vector2(step.x, step.y / Sq).magnitude;
                     float travel = BoardSpeed(s) * dt;
+                    if (s.advance != null && groundDistance > .001f)
+                    {
+                        Vector3 heading = new Vector3(step.x, 0f, -step.y / Sq) / groundDistance;
+                        float alignment = Vector3.Dot(s.go.transform.forward, heading);
+                        travel *= Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(-.4f, .85f, alignment));
+                    }
+                    if (s.advance != null) s.advance.Travel(Mathf.Min(groundDistance, travel) / PPM);
                     s.pos = groundDistance <= travel ? t : s.pos + step * (travel / groundDistance);
                     if ((s.pos - t).sqrMagnitude < 0.5f) { s.pos = t; s.path.RemoveAt(0); }
                 }
