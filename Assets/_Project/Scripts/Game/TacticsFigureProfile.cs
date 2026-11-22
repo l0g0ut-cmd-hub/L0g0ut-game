@@ -10,7 +10,8 @@ namespace BladePath
         public Vector3 offset;
         public float stride;
         public float[] headingScale;
-        public AnimationClip advance;
+        public AnimationClip advance, attack, reaction;
+        public float[] walkDistances;
 
         public sealed class CombatClips
         {
@@ -43,6 +44,28 @@ namespace BladePath
                 }
                 return null;
             }
+        }
+
+        public float StepTime(float distance)
+        {
+            if(walkDistances==null || walkDistances.Length<2) return distance;
+            float phase=Mathf.Repeat(distance,1f);
+            int lo=0,hi=walkDistances.Length-1;
+            while(hi-lo>1)
+            {
+                int mid=(lo+hi)/2;
+                if(walkDistances[mid]<=phase) lo=mid; else hi=mid;
+            }
+            return (lo+Mathf.InverseLerp(walkDistances[lo],walkDistances[hi],phase))/(walkDistances.Length-1);
+        }
+
+        public static string InstallAction(Animation anim, AnimationClip replacement, string original)
+        {
+            if(!replacement) return original;
+            anim.AddClip(replacement,replacement.name);
+            anim[replacement.name].speed=0f;
+            anim[replacement.name].wrapMode=WrapMode.Once;
+            return replacement.name;
         }
 
         float HeadingFactor(float yaw)

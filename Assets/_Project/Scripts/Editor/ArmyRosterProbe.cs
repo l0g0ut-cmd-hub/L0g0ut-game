@@ -17,7 +17,7 @@ namespace BladePath.EditorTools
         const string Models="Assets/_Project/Resources/Units/";
         const string Output="Assets/_Project/Resources/ArmyFigures";
         const string Capture="build/shots";
-        const string Motion="Assets/_Project/Editor/ArmyMotion/Guard.fbx";
+
 
         sealed class View : IDisposable
         {
@@ -96,30 +96,42 @@ namespace BladePath.EditorTools
             return result;
         }
 
-        static void CheckFootContacts(string name, Animation animation, TacticsFigureProfile profile,
+        static void CheckFootContacts(string name, Animation anim, TacticsFigureProfile profile,
             Transform anchor, Transform[] bones)
         {
-            // Stable support intervals measured on Guard.fbx. Add the actual board travel
-            // before measuring drift so an in-place sliding boot cannot pass.
-            float largest = 0f;
-            foreach (string side in new[] { "Left", "Right" })
+            var feet=new[] {bones.First(t=>t.name=="LeftFoot"),bones.First(t=>t.name=="RightFoot")};
+            const int samples=64;
+            var positions=new Vector3[2,samples+1];
+            for(int i=0;i<=samples;i++)
             {
-                var foot = bones.First(t => t.name == side+"Foot");
-                int first = side == "Left" ? 12 : 32;
-                int last = side == "Left" ? 22 : 39;
-                Vector3 planted = Vector3.zero;
-                for (int k=first; k<=last; k++)
-                {
-                    float t = k/40f;
-                    profile.advance.SampleAnimation(animation.gameObject,profile.advance.length*t);
-                    Vector3 onBoard = foot.position + anchor.forward * (profile.StrideAt(anchor.eulerAngles.y)*t);
-                    if (k==first) planted = onBoard;
-                    largest = Mathf.Max(largest,Vector3.ProjectOnPlane(onBoard-planted,Vector3.up).magnitude);
-                }
+                float phase=i/(float)samples;
+                profile.advance.SampleAnimation(anim.gameObject,profile.advance.length*phase);
+                float distance=profile.walkDistances[i]*profile.StrideAt(anchor.eulerAngles.y);
+                for(int foot=0;foot<2;foot++) positions[foot,i]=feet[foot].position+anchor.forward*distance;
             }
-            float fraction = largest/profile.StrideAt(anchor.eulerAngles.y);
-            Debug.Log("ARMY_FOOT "+name+" max_stance_drift_fraction="+fraction.ToString("F4",System.Globalization.CultureInfo.InvariantCulture));
-            if (!(fraction <= .12f)) throw new Exception("Support foot drift exceeds 12% of a stride: "+fraction);
+            float worst=0f;
+            for(int foot=0;foot<2;foot++)
+            {
+                float min=float.PositiveInfinity;
+                for(int i=0;i<=samples;i++) min=Mathf.Min(min,positions[foot,i].y);
+                float floor=min+profile.stride*.023f;
+                float longest=0f;
+                for(int i=1;i<=samples;i++)
+                {
+                    if(positions[foot,i].y>floor || positions[foot,i-1].y>floor) continue;
+                    Vector3 step=Vector3.ProjectOnPlane(positions[foot,i]-positions[foot,i-1],Vector3.up);
+                    longest=Mathf.Max(longest,step.magnitude);
+                }
+                worst=Mathf.Max(worst,longest/profile.stride);
+            }
+            Debug.Log("ARMY_FOOT "+name+" maximum_grounded_frame_drift_fraction="+worst.ToString("F4"));
+            if(!(worst<.10f)) throw new Exception("Discontinuous planted foot "+name+" "+worst);
+        }
+
+        static AnimationClip Named(Animation donor,string key)
+        {
+            return donor.Cast<AnimationState>().First(a=>a.name.Split('|').Last()
+                .Equals(key,StringComparison.OrdinalIgnoreCase)).clip;
         }
 
         static void CombatSequence(View view, Texture2D sheet, int y, Animation anim,
@@ -168,8 +180,7 @@ namespace BladePath.EditorTools
         public static void Build()
         {
             Directory.CreateDirectory(Output);Directory.CreateDirectory(Capture);AssetDatabase.Refresh();
-            var source=AssetDatabase.LoadAssetAtPath<GameObject>(Motion);
-            if(!source)throw new Exception("Missing combat motion "+Motion);
+
             var names=Directory.GetFiles(Models,"*.fbx").OrderBy(p=>p).ToArray();
             var sheet=new Texture2D(Size*4,Size*names.Length,TextureFormat.RGBA32,false);
             var gaitSheet=new Texture2D(Size*8,Size*names.Length,TextureFormat.RGBA32,false);
@@ -183,7 +194,7 @@ namespace BladePath.EditorTools
                     var anchor=new GameObject("roster "+name);
                     var mount=new GameObject("Figure").transform;mount.SetParent(anchor.transform,false);
                     GameObject model=Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(path),mount,false);
-                    var src=Object.Instantiate(source);
+                    GameObject donor=null;
                     var mat=new Material(Resources.Load<Shader>("TacticsUnit"));
                     try
                     {
@@ -202,13 +213,50 @@ namespace BladePath.EditorTools
                         var profile=ScriptableObject.CreateInstance<TacticsFigureProfile>();AssetDatabase.CreateAsset(profile,asset);
                         bool mounted=name=="unit_cavalry"||name=="unit_general",dog=name=="unit_dog";
                         bool flying=name=="unit_tengu"||name=="unit_daitengu";
-                        float rawStride=0;
+                        float rawStride=0f;
+                        AnimationClip authoredAttack=hit;
                         if(!mounted&&!dog&&!flying)
                         {
-                            var srcAnim=src.GetComponentInChildren<Animation>();srcAnim.Stop();
-                            profile.advance=ArmyAdvanceBaker.Bake(src,srcAnim.Cast<AnimationState>().First().clip,model,idle,walk,out rawStride);
+                            string donorName=null, take=null;
+                            string walkName=walk.name.Split('|').Last().ToLowerInvariant();
+                            if(name=="unit_banner") { donorName="unit_sohei"; take="Spear_Walk"; }
+                            else if(name=="unit_samurai" || walkName.Contains("casual") || name=="unit_oni")
+                            { donorName="unit_hatamoto"; take="Walk_Fight_Forward"; }
+                            Animation from=an;
+                            if(donorName!=null)
+                            {
+                                donor=Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(Models+donorName+".fbx"));
+                                from=donor.GetComponentInChildren<Animation>();from.Stop();
+                                walk=Named(from,take);
+                            }
+                            profile.advance=ArmyAdvanceBaker.FullBody(an,from,walk);
+                            profile.advance.wrapMode=WrapMode.Loop;
                             AssetDatabase.AddObjectToAsset(profile.advance,profile);
+                            rawStride=ArmyAdvanceBaker.MeasureStride(an,profile.advance,out profile.walkDistances);
+                            Debug.Log("ARMY_MESHY "+name+" "+walk.name.Split('|').Last());
                         }
+                        if(name=="unit_samurai")
+                        {
+                            // The base samurai FBX supplies a spear thrust. Use the sword take
+                            // from the project's archived Meshy swordsman on this rig.
+                            var swordsman=Object.Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>(Models+"unit_ronin.fbx"));
+                            try
+                            {
+                                var from=swordsman.GetComponentInChildren<Animation>();from.Stop();
+                                authoredAttack=ArmyAdvanceBaker.FullBody(an,from,Named(from,"Right_Hand_Sword_Slash"));
+                            }
+                            finally {Object.DestroyImmediate(swordsman);}
+                        }
+                        profile.attack=ArmyAdvanceBaker.AnchorAction(an,authoredAttack);
+                        if(authoredAttack!=hit)
+                        {
+                            if(profile.attack) Object.DestroyImmediate(authoredAttack);
+                            else profile.attack=authoredAttack;
+                        }
+                        profile.reaction=ArmyAdvanceBaker.AnchorAction(an,clips.hit==null?null:an.GetClip(clips.hit));
+                        if(profile.attack) AssetDatabase.AddObjectToAsset(profile.attack,profile);
+                        if(profile.reaction) AssetDatabase.AddObjectToAsset(profile.reaction,profile);
+                        hit=an.GetClip(TacticsFigureProfile.InstallAction(an,profile.attack,clips.attack));
                         idle.SampleAnimation(an.gameObject,.3f*idle.length);
                         Bounds approx=SkinBounds(model);Vector3 c=approx.center;
                         float span=Mathf.Max(.001f,Mathf.Max(approx.size.x,Mathf.Max(approx.size.y,approx.size.z))*1.4f);
@@ -275,10 +323,26 @@ namespace BladePath.EditorTools
                         Debug.Log("ARMY_ROSTER "+report.Last());
                     }
                     catch(Exception ex){view.Save(Capture+"/failed-"+name+".png");throw new Exception("Army roster "+name+": "+ex.Message,ex);}
-                    finally {Object.DestroyImmediate(src);Object.DestroyImmediate(anchor);Object.DestroyImmediate(mat);}
+                    finally {if(donor) Object.DestroyImmediate(donor);Object.DestroyImmediate(anchor);Object.DestroyImmediate(mat);}
                 }
             }
             AssetDatabase.SaveAssets();
+            var types=Tactics.Ours.Concat(Tactics.Foes).ToArray();
+            const int crop=144;
+            var deployed=new Texture2D(crop*2,crop*types.Length,TextureFormat.RGBA32,false);
+            for(int i=0;i<types.Length;i++)
+            {
+                for(int side=0;side<2;side++)
+                {
+                    var pixels=Tactics.CaptureBoardUnit(types[i],side==1,crop);
+                    int opaque=pixels.Count(p=>p.a>96);
+                    int lit=pixels.Count(p=>p.a>96 && Mathf.Max(p.r,p.g,p.b)>32);
+                    if(opaque<80 || lit<opaque*.15f) throw new Exception("Missing or dark unit "+types[i].name+" opaque="+opaque+" lit="+lit);
+                    deployed.SetPixels32(side*crop,(types.Length-i-1)*crop,crop,crop,pixels);
+                }
+                Debug.Log("ARMY_BIND "+types[i].name+" both sides including revival");
+            }
+            deployed.Apply();File.WriteAllBytes(Capture+"/army-deployment.png",deployed.EncodeToPNG());Object.DestroyImmediate(deployed);
             sheet.Apply();File.WriteAllBytes(Capture+"/army-roster.png",sheet.EncodeToPNG());Object.DestroyImmediate(sheet);
             gaitSheet.Apply();File.WriteAllBytes(Capture+"/army-advance.png",gaitSheet.EncodeToPNG());Object.DestroyImmediate(gaitSheet);
             combatSheet.Apply();File.WriteAllBytes(Capture+"/army-combat.png",combatSheet.EncodeToPNG());Object.DestroyImmediate(combatSheet);

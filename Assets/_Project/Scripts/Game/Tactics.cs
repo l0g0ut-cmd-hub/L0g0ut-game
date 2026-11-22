@@ -119,7 +119,7 @@ namespace BladePath
             public Vector2 pos;                 // где нарисован (виртуальные точки)
             public List<Vector2> path = new List<Vector2>();
             public float lunge; public Vector2 lungeDir; public float flash, die = -1f, born;
-            public GameObject go; public Animation an; public string playing; public float actUntil, hitUntil;
+            public GameObject go; public Animation an; public string playing; public float actUntil, hitUntil, hitStart;
             public Material surface;
             public TacticsFigureProfile figureProfile;
             public Transform figureMount;
@@ -134,7 +134,7 @@ namespace BladePath
             public string previousClip;
             public string clipIdle, clipWalk, clipAct, clipHit, clipDie, clipWin;
             public int run;                     // сколько клеток пробежал перед ударом (разгон конницы)
-            public float idleYaw;               // насколько стойка разворачивает грудь от носков (боевая стойка — боком); поправка, чтобы грудь смотрела на врага
+            public Vector3 facing;
             public int Total { get { return count <= 0 ? 0 : (count - 1) * t.hp + topHp; } }
             public bool Alive { get { return count > 0; } }
             public int Atk { get { return t.atk + atkB + (curseRounds > 0 ? -4 : 0) + (enemy ? 0 : gAtk + forge); } }
@@ -164,7 +164,7 @@ namespace BladePath
             int dmg = (gAtk + 2) * Random.Range(5, 9) * Mathf.Max(1, General.Val(9));
             Vector2 from = MachinePos(0) + new Vector2(R * 0.6f, -R * 0.5f);
             shots.Add(new Shot { a = from, b = best.pos + new Vector2(0f, -R * 0.8f), t0 = Time.unscaledTime, dur = 0.45f });
-            Hurt(best, dmg); best.flash = 1f; best.hitUntil = Time.unscaledTime + 0.8f;
+            Hurt(best,dmg,.8f);
             Burst("fx_arrow_hit", best.pos + new Vector2(0f, -R * 1.0f), R * 2.8f, 40f);
             texts.Add(new Float { p = best.pos + new Vector2(0f, -R * 2f), s = "−" + dmg, t0 = Time.unscaledTime + 0.3f, col = new Color(1f, 0.85f, 0.4f) });
             Log("Баллиста (наводка) → " + best.t.name + ": " + dmg + " урона.");
@@ -497,7 +497,7 @@ namespace BladePath
                     int dmg = (gAtk + 2) * Random.Range(5, 9);
                     Vector2 from = MachinePos(0) + new Vector2(R * 0.6f, -R * 0.5f);
                     shots.Add(new Shot { a = from, b = best.pos + new Vector2(0f, -R * 0.8f), t0 = Time.unscaledTime, dur = 0.45f });
-                    Hurt(best, dmg); best.flash = 1f; best.hitUntil = Time.unscaledTime + 0.8f;
+                    Hurt(best,dmg,.8f);
                     Burst("fx_arrow_hit", best.pos + new Vector2(0f, -R * 1.0f), R * 2.8f, 40f);
                     texts.Add(new Float { p = best.pos + new Vector2(0f, -R * 2f), s = "−" + dmg, t0 = Time.unscaledTime + 0.3f, col = new Color(1f, 0.85f, 0.4f) });
                     Log("Баллиста → " + best.t.name + ": " + dmg + " урона.");
@@ -565,7 +565,7 @@ namespace BladePath
                 if (best == null) continue;
                 int dmg = siegeDef ? Random.Range(10, 18) * (1 + Estate.ForgeBonus) * (1 + Realm.D.fort) : Random.Range(8, 15) * (1 + Profile.Cycle);
                 shots.Add(new Shot { a = Center(WallC, r) + new Vector2(0f, -R * 2f), b = best.pos + new Vector2(0f, -R * 0.8f), t0 = Time.unscaledTime, dur = 0.45f });
-                Hurt(best, dmg); best.flash = 1f; best.hitUntil = Time.unscaledTime + 0.8f;
+                Hurt(best,dmg,.8f);
                 texts.Add(new Float { p = best.pos + new Vector2(0f, -R * 2f), s = "−" + dmg, t0 = Time.unscaledTime + 0.3f, col = new Color(1f, 0.45f, 0.35f) });
                 Log("Башня → " + best.t.name + ": " + dmg + " урона.");
             }
@@ -776,14 +776,13 @@ namespace BladePath
             if (lucky) { dmg *= 2; texts.Add(new Float { p = a.pos + new Vector2(0f, -R * 2.6f), s = "УДАЧА!", t0 = Time.unscaledTime, col = new Color(0.6f, 1f, 0.5f) }); }
             int before = d.count;
             Hurt(d, dmg);
-            d.flash = 1f; d.hitUntil = Time.unscaledTime + 0.55f;
             if (!ranged) Burst("fx_slash_hit", d.pos + new Vector2(0f, -R * 1.1f), R * 3f, 36f);
             if (!ranged && a.t.sweep)
                 foreach (Vector2Int n in Nb(a.c, a.r))
                 {
                     Stack o = At(n.x, n.y);
                     if (o == null || o == d || o.enemy == a.enemy || !o.Alive) continue;
-                    int od = Damage(a, o, false, false); Hurt(o, od); o.flash = 1f; o.hitUntil = Time.unscaledTime + 0.55f;
+                    int od = Damage(a, o, false, false); Hurt(o,od);
                     Burst("fx_slash_hit", o.pos + new Vector2(0f, -R * 1.1f), R * 2.6f, 36f);
                     texts.Add(new Float { p = o.pos + new Vector2(0f, -R * 2f), s = "−" + od, t0 = Time.unscaledTime, col = o.enemy ? new Color(1f, 0.85f, 0.4f) : new Color(1f, 0.45f, 0.35f) });
                 }
@@ -814,8 +813,11 @@ namespace BladePath
             return Mathf.Max(1, Mathf.RoundToInt(b * m));
         }
 
-        static void Hurt(Stack d, int dmg)
+        static void Hurt(Stack d, int dmg, float reactionTime=.55f)
         {
+            d.flash=1f;
+            d.hitStart=Time.unscaledTime;
+            d.hitUntil=d.hitStart+reactionTime;
             int left = d.Total - dmg;
             if (left <= 0) { d.count = 0; d.topHp = 0; d.die = Time.unscaledTime; Burst("fx_death", d.pos + new Vector2(0f, -R * 0.9f), R * 3.4f, 30f); return; }
             d.count = Mathf.CeilToInt(left / (float)d.t.hp);
@@ -972,7 +974,7 @@ namespace BladePath
         static void HurtSpell(Stack s, int dmg)
         {
             int before = s.count;
-            Hurt(s, dmg); s.flash = 1f;
+            Hurt(s,dmg);
             int dead = before - Mathf.Max(0, s.count);
             texts.Add(new Float { p = s.pos + new Vector2(0f, -R * 2f), s = "−" + dmg + (dead > 0 ? "  (" + dead + " пало)" : ""), t0 = Time.unscaledTime, col = new Color(1f, 0.85f, 0.4f) });
             Log("Умение героя: " + s.t.name + " −" + dmg + (dead > 0 ? ", пало " + dead : "") + ".");
@@ -1111,28 +1113,6 @@ namespace BladePath
             if (s.an == null || c == null || s.an[c] == null) return def;
             return Mathf.Clamp(s.an[c].length, 0.3f, 2.2f);
         }
-        /// <summary>Угол, на который клип стойки поворачивает плечи относительно позы покоя (вокруг вертикали).</summary>
-        static float ChestYaw(Stack s)
-        {
-            if (s.an == null || s.clipIdle == null) return 0f;
-            Transform l = null, r = null;
-            foreach (Transform t in s.go.GetComponentsInChildren<Transform>(true))
-            {
-                if (l == null && t.name.EndsWith("LeftArm")) l = t;
-                if (r == null && t.name.EndsWith("RightArm")) r = t;
-            }
-            if (l == null || r == null) return 0f;
-            Transform root = s.go.transform;
-            Vector3 rest = root.InverseTransformVector(r.position - l.position);
-            AnimationState st = s.an[s.clipIdle];
-            st.enabled = true; st.weight = 1f; st.time = st.length * 0.3f; s.an.Sample();
-            Vector3 pose = root.InverseTransformVector(r.position - l.position);
-            st.enabled = false;
-            rest.y = 0f; pose.y = 0f;
-            if (rest.sqrMagnitude < 1e-6f || pose.sqrMagnitude < 1e-6f) return 0f;
-            return Mathf.Clamp(Vector3.SignedAngle(rest, pose, Vector3.up), -70f, 70f);
-        }
-
         static void Play(Stack s, string clip, bool restart)
         {
             if (s.an == null || clip == null || s.an[clip] == null) return;
@@ -1178,12 +1158,13 @@ namespace BladePath
             if (clip.length <= 0f) return 0f;
             if (clip.name == s.clipWalk)
             {
-                if (s.figureProfile != null && s.figureProfile.advance != null) return s.gaitPhase * clip.length;
+                if (s.figureProfile != null && s.figureProfile.advance != null) return s.figureProfile.StepTime(s.gaitPhase)*clip.length;
                 float stride = s.t.joust ? 2.3f : s.t.cell == 11 ? 1.05f : 1.45f;
                 float cycles = elapsed * BoardSpeed(s) / (PPM * stride);
                 return Mathf.Repeat(cycles, 1f) * clip.length;
             }
             if (clip.wrapMode == WrapMode.Loop) return Mathf.Repeat(elapsed, clip.length);
+            if(clip.name==s.clipHit) elapsed*=clip.length/Mathf.Max(.01f,s.hitUntil-s.hitStart);
             if (clip.name == s.clipAct)
                 elapsed *= clip.length / ClipLen(s, s.clipAct, 1f);
             return Mathf.Clamp(elapsed, 0f, clip.length);
@@ -1267,6 +1248,8 @@ namespace BladePath
                 TacticsFigureProfile.Dress(go,s.surface);
                 s.figureMount = figure;
                 s.figureProfile = Resources.Load<TacticsFigureProfile>("ArmyFigures/" + resource);
+                s.facing=s.enemy?Vector3.left:Vector3.right;
+                go.transform.rotation=Quaternion.LookRotation(s.facing);
                 s.go = go; s.an = go.GetComponentInChildren<Animation>();
                 bool dog = s.t.cell == 11;
                 if (s.figureProfile != null) s.figureProfile.Fit(figure);
@@ -1298,7 +1281,7 @@ namespace BladePath
                         st.speed = 0f;
                         st.wrapMode = st.name == s.clipIdle || st.name == s.clipWalk ? WrapMode.Loop : st.name == s.clipDie ? WrapMode.ClampForever : WrapMode.Once;
                     }
-                    s.idleYaw = ChestYaw(s);
+
                     if (s.clipIdle != null)
                         s.an.GetClip(s.clipIdle).SampleAnimation(s.an.gameObject, s.an[s.clipIdle].length * .3f);
                     if (!dog && s.figureProfile == null)
@@ -1311,6 +1294,11 @@ namespace BladePath
                         if (bone.name == "Hips") { s.hips = bone; s.restHips = go.transform.InverseTransformPoint(bone.position); }
                         if (bone.name == "TenguWingL") { s.wingL = bone; s.wingRestL = bone.localRotation; }
                         if (bone.name == "TenguWingR") { s.wingR = bone; s.wingRestR = bone.localRotation; }
+                    }
+                    if(s.figureProfile!=null)
+                    {
+                        s.clipAct=TacticsFigureProfile.InstallAction(s.an,s.figureProfile.attack,s.clipAct);
+                        s.clipHit=TacticsFigureProfile.InstallAction(s.an,s.figureProfile.reaction,s.clipHit);
                     }
                     if (s.figureProfile != null && s.figureProfile.advance != null)
                     {
@@ -1369,15 +1357,54 @@ namespace BladePath
             if (genIdle != null) generalAn.CrossFadeQueued(genIdle, 0.25f, QueueMode.CompleteOthers);
         }
 
+        static void ReleaseFigureObject(Object item)
+        {
+            if (Application.isPlaying) Object.Destroy(item); else Object.DestroyImmediate(item);
+        }
+
         static void CleanupLive()
         {
-            if (generalMaterial != null) Object.Destroy(generalMaterial);
+            if (generalMaterial != null) ReleaseFigureObject(generalMaterial);
+            generalMaterial=null;
             generalGo = null; generalAn = null;
-            if (stage != null) Object.Destroy(stage);
+            if (stage != null) ReleaseFigureObject(stage);
             stage = null; liveCam = null;
-            if (liveRT != null) { liveRT.Release(); Object.Destroy(liveRT); liveRT = null; }
-            foreach (Stack s in stacks) { if (s.surface != null) Object.Destroy(s.surface); s.surface = null; s.go = null; s.an = null; s.figureProfile = null; s.figureMount = null; s.gaitPhase = 0f; s.wingL = s.wingR = null; s.hips = null; s.playing = null; s.previousClip = null; }
+            if (liveRT != null) { liveRT.Release(); ReleaseFigureObject(liveRT); liveRT = null; }
+            foreach (Stack s in stacks) { if (s.surface != null) ReleaseFigureObject(s.surface); s.surface = null; s.go = null; s.an = null; s.figureProfile = null; s.figureMount = null; s.gaitPhase = 0f; s.wingL = s.wingR = null; s.hips = null; s.playing = null; s.previousClip = null; }
         }
+#if UNITY_EDITOR
+        public static Color32[] CaptureBoardUnit(UnitType type, bool enemy, int size)
+        {
+            if (Open || Application.isPlaying) throw new System.InvalidOperationException("Run roster checks outside play mode.");
+            var saved=new List<Stack>(stacks);
+            var previous=RenderTexture.active;
+            Texture2D frame=null;
+            try
+            {
+                stacks.Clear();
+                const int width=1140,height=540;
+                LayoutBoard(width);Add(type,4,enemy,enemy?Cols-2:1,6);
+                var s=stacks[0];s.pos=Home(s,s.c,s.r);
+                SetupLive();
+                if(!s.go || !s.an || !s.figureProfile || s.clipIdle==null || s.clipAct==null)
+                    throw new System.InvalidOperationException("Incomplete board unit "+type.name);
+                if(generalGo) generalGo.SetActive(false);
+                if(enemy) {s.go.SetActive(false);s.die=0f;}
+                RenderLive(width,height);
+                RenderTexture.active=liveRT;
+                frame=new Texture2D(size,size,TextureFormat.RGBA32,false);
+                int x=Mathf.RoundToInt(s.pos.x)-size/2,y=height-Mathf.RoundToInt(s.pos.y)-16;
+                frame.ReadPixels(new Rect(x,y,size,size),0,0);frame.Apply();
+                return frame.GetPixels32();
+            }
+            finally
+            {
+                RenderTexture.active=previous;
+                if(frame) Object.DestroyImmediate(frame);
+                CleanupLive();stacks.Clear();stacks.AddRange(saved);
+            }
+        }
+#endif
         static void Close() { CleanupLive(); Open = false; }
 
         static Vector2 UnitPosition(Stack s)
@@ -1405,6 +1432,14 @@ namespace BladePath
         {
             if (liveCam == null || Event.current.type != EventType.Repaint) return;
             int pw = Mathf.Max(64, Mathf.RoundToInt(W * UiKit.Scale)), ph = Mathf.Max(64, Mathf.RoundToInt(540f * UiKit.Scale));
+            RenderLive(pw,ph);
+            Color keepColor = GUI.color; GUI.color = Color.white;
+            GUI.DrawTexture(new Rect(0f, 0f, W, 540f), liveRT, ScaleMode.StretchToFill, true);
+            GUI.color = keepColor;
+        }
+
+        static void RenderLive(int pw,int ph)
+        {
             if (liveRT == null || liveRT.width != pw || liveRT.height != ph)
             {
                 if (liveRT != null) { liveRT.Release(); Object.Destroy(liveRT); }
@@ -1426,19 +1461,22 @@ namespace BladePath
             {
                 if (s.go == null) continue;
                 bool dead = !s.Alive;
-                if (dead && s.die > 0f && now - s.die > 6f) { s.go.SetActive(false); continue; }   // тело лежит — потом убирается
+                if (!dead && s.die>=0f)
+                {
+                    s.go.SetActive(true); s.die=-1f; s.hitUntil=s.actUntil=0f;
+                    if(s.an!=null) s.an.Stop();
+                    s.playing=s.previousClip=null;
+                    Play(s,s.clipIdle,true);
+                }
+                if (dead && s.die >= 0f && now - s.die > 6f) { s.go.SetActive(false); continue; }   // тело лежит — потом убирается
                 Vector2 p = UnitPosition(s);
                 s.go.transform.position = Ground(p);
-                // направление: на ходу — по пути, иначе — к врагам
-                Vector2 dir = s.path.Count > 0 ? s.path[0] - s.pos : new Vector2(s.enemy ? -1f : 1f, 0f);   // армии смотрят строго друг на друга (владелец)
-                if (s.actUntil > now && s.lungeDir.sqrMagnitude > 0.01f) dir = s.lungeDir;
-                if (dir.sqrMagnitude > 0.01f)
-                {
-                    Vector3 wd = new Vector3(dir.x, 0f, -dir.y / 0.559f);
-                    Quaternion want = Quaternion.LookRotation(wd.normalized, Vector3.up);
-                    if (s.path.Count == 0 && s.actUntil <= now && s.playing == s.clipIdle) want *= Quaternion.Euler(0f, -s.idleYaw * 0.85f, 0f);   // в стойке грудью к врагу
-                    s.go.transform.rotation = Quaternion.Slerp(s.go.transform.rotation, want, Mathf.Min(1f, Time.unscaledDeltaTime * 10f));
-                }
+                Vector2 dir=Vector2.zero;
+                if(!dead && s.path.Count>0) dir=s.path[0]-s.pos;
+                else if(!dead && s.actUntil>now) dir=s.lungeDir;
+                if(dir.sqrMagnitude>.01f) s.facing=new Vector3(dir.x,0f,-dir.y/Sq).normalized;
+                if(!dead && s.facing.sqrMagnitude>.5f)
+                    s.go.transform.rotation=Quaternion.RotateTowards(s.go.transform.rotation,Quaternion.LookRotation(s.facing),300f*Time.unscaledDeltaTime);
                 // вспышка попадания — цвет материала (у снимков — цвет картинки)
                 if (s.surface != null) s.surface.color = Color.Lerp(s.enemy ? new Color(1.05f, 0.95f, 0.92f) : new Color(1.12f, 1.1f, 1.06f), new Color(1.6f, 0.45f, 0.4f), s.flash);
                 if (dead && s.clipDie == null)
@@ -1451,7 +1489,7 @@ namespace BladePath
                 else if (dead) Play(s, s.clipDie, s.playing != s.clipDie);
                 else if (s.path.Count > 0) Play(s, s.t.fly ? s.clipIdle : s.clipWalk ?? s.clipIdle, false);
                 else if (s.actUntil > now) { }
-                else if (s.hitUntil > now && s.clipHit != null) { if (s.playing != s.clipHit) Play(s, s.clipHit, true); }
+                else if (s.hitUntil > now && s.clipHit != null) { if (s.playing != s.clipHit || s.clipStart < s.hitStart) Play(s, s.clipHit, true); }
                 else if (finished && won && !s.enemy && s.clipWin != null) Play(s, s.clipWin, false);
                 else Play(s, s.clipIdle, false);
                 if (s.figureProfile != null) s.figureProfile.Fit(s.figureMount,s.go.transform.eulerAngles.y);
@@ -1467,9 +1505,6 @@ namespace BladePath
                 }
             }
             liveCam.Render();
-            Color keepColor = GUI.color; GUI.color = Color.white;
-            GUI.DrawTexture(new Rect(0f, 0f, W, 540f), liveRT, ScaleMode.StretchToFill, true);
-            GUI.color = keepColor;
         }
 
         // ---------------------------------------------------------------- рисование
@@ -1532,12 +1567,17 @@ namespace BladePath
         static void Log(string s) { log.Add(s); if (log.Count > 4) log.RemoveAt(0); }
         static Stack info;
 
-        public static void Draw(float w)
+        static void LayoutBoard(float w)
         {
             W = w;
             R = Mathf.Min(W * 0.86f / 23f, 380f / (11.5f * 1.7320508f * Sq));
             hw = 1.5f * R; hh = 1.7320508f * R * Sq;
             ox = (W - (hw * (Cols - 1) + 2f * R)) * 0.5f + R; oy = 88f + hh * 0.5f;
+        }
+
+        public static void Draw(float w)
+        {
+            LayoutBoard(w);
             Event e = Event.current;
             if (e.type == EventType.Repaint)
             {

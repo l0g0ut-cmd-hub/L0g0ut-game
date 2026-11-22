@@ -8,150 +8,142 @@ namespace BladePath.EditorTools
 {
     internal static class ArmyAdvanceBaker
     {
-        static readonly string[] Sides = { "Left", "Right" };
-        static readonly string[] SourceBones = { "Hips", "Spine", "Spine1", "Spine2", "Neck", "Head",
-            "LeftUpLeg", "LeftLeg", "LeftFoot", "RightUpLeg", "RightLeg", "RightFoot" };
-        static readonly string[] TargetBones = { "Hips", "Spine02", "Spine01", "Spine", "neck", "Head",
-            "LeftUpLeg", "LeftLeg", "LeftFoot", "RightUpLeg", "RightLeg", "RightFoot" };
-
-        static Dictionary<string, Transform> Bones(GameObject root)
+        sealed class Joint
         {
-            var result = new Dictionary<string, Transform>();
-            foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
-                result[t.name.Substring(t.name.LastIndexOf(':') + 1)] = t;
+            public Transform bone;
+            public Quaternion bind;
+            public Vector3 origin;
+        }
+
+        static Dictionary<string,Joint> Rig(Animation anim)
+        {
+            var result=new Dictionary<string,Joint>();
+            foreach(var skin in anim.GetComponentsInChildren<SkinnedMeshRenderer>())
+            {
+                var binds=skin.sharedMesh.bindposes;
+                var bones=skin.bones;
+                for(int i=0;i<bones.Length;i++)
+                {
+                    var bone=bones[i];
+                    if(!bone || result.ContainsKey(bone.name)) continue;
+                    var rest=skin.localToWorldMatrix*binds[i].inverse;
+                    result[bone.name]=new Joint { bone=bone, bind=rest.rotation, origin=rest.MultiplyPoint3x4(Vector3.zero) };
+                }
+            }
             return result;
         }
 
-        static void Aim(Transform parent,Transform child,Vector3 target)
+        // Meshy's human FBXs share joint names but differ in proportions and bind rotations.
+        // Keep the destination's bone lengths and bring over the complete captured performance.
+        static AnimationClip Transfer(Animation donor, AnimationClip source, Animation target)
         {
-            Vector3 before=child.position-parent.position;
-            if(before.sqrMagnitude>1e-12f && target.sqrMagnitude>1e-12f)
-                parent.rotation=Quaternion.FromToRotation(before,target)*parent.rotation;
-        }
-
-        static void PlaceLeg(Dictionary<string,Transform> source,Dictionary<string,Transform> target,
-            string side,Quaternion alignment, Vector3 goal)
-        {
-            Transform a=target[side+"UpLeg"], b=target[side+"Leg"], c=target[side+"Foot"];
-            Transform toe=target[side+"ToeBase"];
-            Vector3 from=source[side+"UpLeg"].position, knee=source[side+"Leg"].position;
-            Vector3 ankle=source[side+"Foot"].position;
-            float upper=Vector3.Distance(a.position,b.position),lower=Vector3.Distance(b.position,c.position);
-            Vector3 toAnkle=goal-a.position;
-            Vector3 along=toAnkle.normalized;
-            float dist=Mathf.Clamp(toAnkle.magnitude,Mathf.Abs(upper-lower)+.00001f,(upper+lower)*.999f);
-            // The captured knee supplies the bend plane. This avoids reversed knees when the
-            // FBX bone roll or the bind-pose bend differs from that of the motion capture.
-            Vector3 pole=Vector3.ProjectOnPlane(alignment*(knee-from),along).normalized;
-            if(pole.sqrMagnitude<.1f) pole=Vector3.ProjectOnPlane(b.position-a.position,along).normalized;
-            float projection=(upper*upper-lower*lower+dist*dist)/(2f*dist);
-            Vector3 toKnee=along*projection+pole*Mathf.Sqrt(Mathf.Max(0f,upper*upper-projection*projection));
-            Vector3 footTarget=a.position+along*dist;
-            Aim(a,b,toKnee);Aim(b,c,footTarget-b.position);
-            Aim(c,toe,alignment*(source[side+"ToeBase"].position-ankle));
-        }
-
-        // One captured advance supplies foot contacts and weight transfer. Weapon-specific
-        // arm poses come from the original fighter and are baked on the same time axis.
-        public static AnimationClip Bake(GameObject source, AnimationClip motion, GameObject model,
-            AnimationClip idle, AnimationClip walk, out float stride)
-        {
-            var s = Bones(source);
-            var b = Bones(model);
-            var hips = b["Hips"];
-            bool replace = walk.name.IndexOf("casual", StringComparison.OrdinalIgnoreCase) >= 0;
-            var src = SourceBones.Select(n => s[n]).ToArray();
-            var dst = TargetBones.Select(n => b[n]).ToArray();
-
-            float legRatio = (Vector3.Distance(b["LeftUpLeg"].position, b["LeftLeg"].position)
-                            + Vector3.Distance(b["LeftLeg"].position, b["LeftFoot"].position))
-                           / (Vector3.Distance(s["LeftUpLeg"].position, s["LeftLeg"].position)
-                            + Vector3.Distance(s["LeftLeg"].position, s["LeftFoot"].position));
-            float length = motion.length;
-            Transform animRoot = model.GetComponentInChildren<Animation>().transform;
-            AnimationClip basis = replace ? idle : walk;
-            // Clone all authored channels, including non-bone rig transforms.
-            var clip = UnityEngine.Object.Instantiate(basis);
-            clip.legacy = true; clip.name = "BoardAdvance"; clip.wrapMode = WrapMode.Loop;
-            var tracks = new Dictionary<EditorCurveBinding, AnimationCurve>();
-            Action<Transform,string,float,float> key = (t, prop, time, val) =>
+            var src=Rig(donor);
+            var dst=Rig(target);
+            var joints=target.GetComponentsInChildren<Transform>().Where(t=>dst.ContainsKey(t.name)&&src.ContainsKey(t.name)).ToArray();
+            var hips=dst["Hips"];
+            float ratio=Vector3.Distance(dst["Head"].origin,hips.origin)/Vector3.Distance(src["Head"].origin,src["Hips"].origin);
+            int count=Mathf.Max(2,Mathf.CeilToInt(source.length*40f));
+            var curves=new List<AnimationCurve>();
+            var bindings=new List<EditorCurveBinding>();
+            var previous=new Quaternion[joints.Length];
+            var rootPath=AnimationUtility.CalculateTransformPath(hips.bone,target.transform);
+            foreach (char axis in "xyz")
             {
-                var bind = EditorCurveBinding.FloatCurve(AnimationUtility.CalculateTransformPath(t, animRoot), typeof(Transform), prop);
-                AnimationCurve curve;
-                if (!tracks.TryGetValue(bind,out curve)) tracks.Add(bind,curve=new AnimationCurve());
-                curve.AddKey(time,val);
-            };
-            // Resample upper-body and rig-node curves onto the new cycle as well.
-            // Otherwise a long idle curve can extend the legacy clip past the step seam.
-            foreach (var binding in AnimationUtility.GetCurveBindings(clip)) AnimationUtility.SetEditorCurve(clip,binding,null);
-            var all = animRoot.GetComponentsInChildren<Transform>(true);
-            var paths = new HashSet<string>(AnimationUtility.GetCurveBindings(basis).Select(x=>x.path));
-            var keyed = all.Where(t => paths.Contains(AnimationUtility.CalculateTransformPath(t,animRoot)) || dst.Contains(t)).ToArray();
-            var previous = new Quaternion[keyed.Length];
-            var startP = new Vector3[keyed.Length]; var startQ = new Quaternion[keyed.Length]; var startS = new Vector3[keyed.Length];
-            idle.SampleAnimation(animRoot.gameObject,idle.length*.3f);
-            Vector3 startHip = hips.position;
-            float groundHeel=Mathf.Min(b["LeftFoot"].position.y,b["RightFoot"].position.y);
-            float hipOffset = startHip.y - .5f * (b["LeftUpLeg"].position.y + b["RightUpLeg"].position.y);
-            var dstPose=dst.Select(t=>t.rotation).ToArray();
-            var sourceRoot = source.GetComponentInChildren<Animation>().gameObject;
-            motion.SampleAnimation(sourceRoot,0); Vector3 first = src[0].position;
-            var srcPose=src.Select(t=>t.rotation).ToArray();
-            motion.SampleAnimation(sourceRoot,motion.length); Vector3 last = src[0].position;
-            const int count = 40;
-            Vector3 travel = Vector3.ProjectOnPlane(last-first,Vector3.up);
-            if (travel.magnitude < .001f) throw new InvalidOperationException("Guard advance has no horizontal travel.");
-            Quaternion map = Quaternion.AngleAxis(Vector3.SignedAngle(travel,Vector3.forward,Vector3.up),Vector3.up);
-            float sourceGround = float.PositiveInfinity;
-            for (int frame=0; frame<count; frame++)
-            {
-                motion.SampleAnimation(sourceRoot,length*frame/count);
-                sourceGround = Mathf.Min(sourceGround, s["LeftFoot"].position.y, s["RightFoot"].position.y);
+                bindings.Add(EditorCurveBinding.FloatCurve(rootPath,typeof(Transform),"m_LocalPosition."+axis));
+                curves.Add(new AnimationCurve());
             }
-            for (int frame=0;frame<=count;frame++)
+            foreach(var t in joints)
             {
-                float phase=frame/(float)count, time=phase*length;
-                basis.SampleAnimation(animRoot.gameObject,basis.length*phase);
-                motion.SampleAnimation(sourceRoot,motion.length*phase);
-                Vector3 origin = first + travel*phase;
-                Vector3 pelvis = startHip + map*(src[0].position-origin)*legRatio;
-                float thighY = .5f*(s["LeftUpLeg"].position.y+s["RightUpLeg"].position.y);
-                pelvis.y = groundHeel + hipOffset + (thighY-sourceGround)*legRatio;
-                hips.position=pelvis;
-                // Use motion relative to the guarded pose, preserving the original weapon grip.
-                // Absolute rest-pose rotation transfer can put already-bent limbs at the wrong angle.
-                int bodyBones=replace?6:0;
-                for(int k=0;k<bodyBones;k++)
-                    dst[k].rotation=map*(src[k].rotation*Quaternion.Inverse(srcPose[k]))*Quaternion.Inverse(map)*dstPose[k];
-                foreach (string side in Sides)
+                string path=AnimationUtility.CalculateTransformPath(t,target.transform);
+                foreach(char axis in "xyzw")
                 {
-                    Vector3 foot = s[side+"Foot"].position;
-                    Vector3 goal = startHip + map*(foot-origin)*legRatio;
-                    goal.y = groundHeel + (foot.y-sourceGround)*legRatio;
-                    PlaceLeg(s,b,side,map,goal);
-                }
-                for (int i=0;i<keyed.Length;i++)
-                {
-                    Transform bone=keyed[i];
-                    Vector3 pos=bone.localPosition, scale=bone.localScale;
-                    Quaternion rot=bone.localRotation;
-                    if (frame==0) {startP[i]=pos;startQ[i]=rot;startS[i]=scale;}
-                    if (frame==count) {pos=startP[i];rot=startQ[i];scale=startS[i];}
-                    if (frame>0 && Quaternion.Dot(previous[i],rot)<0) rot=new Quaternion(-rot.x,-rot.y,-rot.z,-rot.w);
-                    previous[i]=rot;
-                    for(int axis=0;axis<3;axis++)
-                    {
-                        key(bone,"m_LocalPosition."+"xyz"[axis],time,pos[axis]);
-                        key(bone,"m_LocalScale."+"xyz"[axis],time,scale[axis]);
-                    }
-                    for(int axis=0;axis<4;axis++) key(bone,"m_LocalRotation."+"xyzw"[axis],time,rot[axis]);
+                    bindings.Add(EditorCurveBinding.FloatCurve(path,typeof(Transform),"m_LocalRotation."+axis));
+                    curves.Add(new AnimationCurve());
                 }
             }
-            var bindings=tracks.Keys.ToArray();
-            AnimationUtility.SetEditorCurves(clip,bindings,bindings.Select(x=>tracks[x]).ToArray());
+            for(int frame=0;frame<=count;frame++)
+            {
+                float time=source.length*frame/count;
+                source.SampleAnimation(donor.gameObject,time);
+                hips.bone.position=hips.origin+(src["Hips"].bone.position-src["Hips"].origin)*ratio;
+                for(int axis=0;axis<3;axis++) curves[axis].AddKey(time,hips.bone.localPosition[axis]);
+                for(int i=0;i<joints.Length;i++)
+                {
+                    var t=joints[i];var a=src[t.name];var b=dst[t.name];
+                    t.rotation=a.bone.rotation*Quaternion.Inverse(a.bind)*b.bind;
+                    Quaternion q=t.localRotation;
+                    if(frame>0 && Quaternion.Dot(previous[i],q)<0f) q=new Quaternion(-q.x,-q.y,-q.z,-q.w);
+                    previous[i]=q;
+                    for(int axis=0;axis<4;axis++) curves[3+i*4+axis].AddKey(time,q[axis]);
+                }
+            }
+            var clip=new AnimationClip { legacy=true,frameRate=40f };
+            AnimationUtility.SetEditorCurves(clip,bindings.ToArray(),curves.ToArray());
             clip.EnsureQuaternionContinuity();
-            stride=Vector3.ProjectOnPlane(last-first,Vector3.up).magnitude*legRatio;
             return clip;
+        }
+
+        public static AnimationClip FullBody(Animation target, Animation donor, AnimationClip authored)
+        {
+            var clip=target==donor ? UnityEngine.Object.Instantiate(authored) : Transfer(donor,authored,target);
+            clip.name="Board_"+authored.name.Split('|').Last();
+            return clip;
+        }
+
+        // A planted foot in an in-place Meshy cycle travels backward. Integrate its
+        // measured travel, then invert this table at runtime to drive the original clip by distance.
+        public static float MeasureStride(Animation anim, AnimationClip walk, out float[] distances)
+        {
+            var rig=Rig(anim);
+            Transform left=rig["LeftFoot"].bone,right=rig["RightFoot"].bone;
+            const int count=64;
+            distances=new float[count+1];
+            walk.SampleAnimation(anim.gameObject,0f);
+            Vector3 lastLeft=left.position,lastRight=right.position;
+            for(int i=1;i<=count;i++)
+            {
+                walk.SampleAnimation(anim.gameObject,walk.length*i/count);
+                float backward=Mathf.Max(lastLeft.z-left.position.z,lastRight.z-right.position.z);
+                distances[i]=distances[i-1]+Mathf.Max(0f,backward);
+                lastLeft=left.position;lastRight=right.position;
+            }
+            float stride=distances[count];
+            if(!(stride>.00001f)) throw new InvalidOperationException("No stride for "+walk.name);
+            for(int i=1;i<=count;i++) distances[i]/=stride;
+            return stride;
+        }
+
+        public static AnimationClip AnchorAction(Animation anim, AnimationClip clip)
+        {
+            if(!clip) return null;
+            var rig=Rig(anim);
+            if(!rig.TryGetValue("Hips",out var pelvis)) return null;
+            var hip=pelvis.bone;var left=rig["LeftFoot"].bone;var right=rig["RightFoot"].bone;
+            clip.SampleAnimation(anim.gameObject,0f);
+            Vector3 start=hip.position,left0=left.position,right0=right.position;
+            float height=Vector3.Distance(hip.position,rig["Head"].bone.position)+Vector3.Distance(hip.position,left.position);
+            float allowance=.11f*height;
+            var curves=new[]{new AnimationCurve(),new AnimationCurve(),new AnimationCurve()};
+            float max=0f;
+            int count=Mathf.Max(2,Mathf.CeilToInt(clip.length*40f));
+            for(int i=0;i<=count;i++)
+            {
+                float t=clip.length*i/count;
+                clip.SampleAnimation(anim.gameObject,t);
+                var offset=Vector3.ProjectOnPlane(hip.position-start,Vector3.up);
+                var dir=offset.normalized;
+                float common=Mathf.Max(0f,Mathf.Min(offset.magnitude,Vector3.Dot(left.position-left0,dir),Vector3.Dot(right.position-right0,dir)));
+                float correction=common-common/Mathf.Sqrt(1f+common*common/(allowance*allowance));
+                Vector3 local=hip.parent.InverseTransformPoint(hip.position-dir*correction);
+                for(int axis=0;axis<3;axis++) curves[axis].AddKey(t,local[axis]);
+                max=Mathf.Max(max,correction);
+            }
+            if(max<.012f*height) return null;
+            var output=UnityEngine.Object.Instantiate(clip);output.name="Board_"+clip.name.Split('|').Last();
+            string path=AnimationUtility.CalculateTransformPath(hip,anim.transform);
+            for(int axis=0;axis<3;axis++)
+                AnimationUtility.SetEditorCurve(output,EditorCurveBinding.FloatCurve(path,typeof(Transform),"m_LocalPosition."+"xyz"[axis]),curves[axis]);
+            return output;
         }
     }
 }
