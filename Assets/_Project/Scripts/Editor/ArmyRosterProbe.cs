@@ -19,14 +19,6 @@ namespace BladePath.EditorTools
         const string Capture="build/shots";
         const string Motion="Assets/_Project/Editor/ArmyMotion/Guard.fbx";
 
-        static AnimationClip SelectClip(Animation anim, params string[] fragments)
-        {
-            foreach (string fragment in fragments)
-                foreach (AnimationState state in anim)
-                    if (state.name.Split('|').Last().IndexOf(fragment,StringComparison.OrdinalIgnoreCase)>=0) return state.clip;
-            return null;
-        }
-
         sealed class View : IDisposable
         {
             readonly GameObject cameraRoot=new GameObject("Army roster camera");
@@ -104,6 +96,74 @@ namespace BladePath.EditorTools
             return result;
         }
 
+        static void CheckFootContacts(string name, Animation animation, TacticsFigureProfile profile,
+            Transform anchor, Transform[] bones)
+        {
+            // Stable support intervals measured on Guard.fbx. Add the actual board travel
+            // before measuring drift so an in-place sliding boot cannot pass.
+            float largest = 0f;
+            foreach (string side in new[] { "Left", "Right" })
+            {
+                var foot = bones.First(t => t.name == side+"Foot");
+                int first = side == "Left" ? 12 : 32;
+                int last = side == "Left" ? 22 : 39;
+                Vector3 planted = Vector3.zero;
+                for (int k=first; k<=last; k++)
+                {
+                    float t = k/40f;
+                    profile.advance.SampleAnimation(animation.gameObject,profile.advance.length*t);
+                    Vector3 onBoard = foot.position + anchor.forward * (profile.StrideAt(anchor.eulerAngles.y)*t);
+                    if (k==first) planted = onBoard;
+                    largest = Mathf.Max(largest,Vector3.ProjectOnPlane(onBoard-planted,Vector3.up).magnitude);
+                }
+            }
+            float fraction = largest/profile.StrideAt(anchor.eulerAngles.y);
+            Debug.Log("ARMY_FOOT "+name+" max_stance_drift_fraction="+fraction.ToString("F4",System.Globalization.CultureInfo.InvariantCulture));
+            if (!(fraction <= .12f)) throw new Exception("Support foot drift exceeds 12% of a stride: "+fraction);
+        }
+
+        static void CombatSequence(View view, Texture2D sheet, int y, Animation anim,
+            AnimationClip walk, AnimationClip hit, AnimationClip idle, Vector3 center, Quaternion board)
+        {
+            if (anim.GetClip(walk.name)==null) anim.AddClip(walk,walk.name);
+            var walking = anim[walk.name];
+            var attacking = anim[hit.name];
+            var standing = anim[idle.name];
+            for (int frame=0; frame<12; frame++)
+            {
+                // Sample the legacy blend used on the board, including both transitions.
+                anim.Stop();
+                AnimationState from, to;
+                float phase, blend;
+                if (frame<=3)
+                {
+                    from=walking; to=attacking;
+                    phase=Mathf.Max(0,frame-1)*.055f;
+                    blend=Mathf.Clamp01((frame-1)/2f);
+                    from.time=walk.length*(.25f+frame*.065f);
+                }
+                else if (frame<=8)
+                {
+                    from=walking; to=attacking; phase=(frame-3)/5f*.86f+.11f; blend=1f;
+                }
+                else
+                {
+                    from=attacking; to=standing;
+                    from.time=hit.length*.98f;
+                    phase=(frame-8)*.04f; blend=(frame-8)/3f;
+                }
+                // Flying units can use idle for both advancing and recovering.
+                from.enabled=true; from.speed=0; from.weight=1f-blend;
+                to.enabled=true; to.speed=0; to.weight=blend; to.time=phase*to.length;
+                anim.Sample();
+                Bounds body = view.Frame(center,board,4.2f);
+                if (body.size.y<.25f || Mathf.Abs(body.center.x)>1.55f)
+                    throw new Exception("Body outside combat frame "+frame+": "+body);
+                sheet.SetPixels32(frame*Size,y,Size,Size,view.pixels);
+            }
+            anim.Stop();
+        }
+
         [MenuItem("BladePath/Verify army roster")]
         public static void Build()
         {
@@ -113,6 +173,7 @@ namespace BladePath.EditorTools
             var names=Directory.GetFiles(Models,"*.fbx").OrderBy(p=>p).ToArray();
             var sheet=new Texture2D(Size*4,Size*names.Length,TextureFormat.RGBA32,false);
             var gaitSheet=new Texture2D(Size*8,Size*names.Length,TextureFormat.RGBA32,false);
+            var combatSheet=new Texture2D(Size*12,Size*names.Length,TextureFormat.RGBA32,false);
             var report=new List<string>{"model,stance_height,advance_height,attack_height,side2_height,stride"};
             using(var view=new View())
             {
@@ -127,12 +188,14 @@ namespace BladePath.EditorTools
                     try
                     {
                         mat.mainTexture=Resources.Load<Texture2D>("Units/"+name+"_albedo");
+                        if (mat.mainTexture == null) throw new Exception("Missing albedo "+name);
                         foreach(Transform t in model.GetComponentsInChildren<Transform>(true))t.gameObject.layer=Layer;
                         TacticsFigureProfile.Dress(model,mat);
                         var an=model.GetComponentInChildren<Animation>();an.Stop();an.playAutomatically=false;
-                        var idle=SelectClip(an,"combat_stance","dog_idle","idle","stance");
-                        var walk=SelectClip(an,"walk","canter","run");
-                        var hit=SelectClip(an,"thrust","slash","combo","archery_shot","side_shot","cast","jump","bite","attack","strike");
+                        var clips = new TacticsFigureProfile.CombatClips(an);
+                        var idle = clips.idle == null ? null : an.GetClip(clips.idle);
+                        var walk = clips.walk == null ? null : an.GetClip(clips.walk);
+                        var hit = clips.attack == null ? null : an.GetClip(clips.attack);
                         if(!idle||!walk||!hit)throw new Exception("Missing combat clip. Available: "+string.Join(", ",an.Cast<AnimationState>().Select(x=>x.name)));
                         string asset=Output+"/"+name+".asset";
                         if(AssetDatabase.LoadAssetAtPath<TacticsFigureProfile>(asset))AssetDatabase.DeleteAsset(asset);
@@ -167,7 +230,7 @@ namespace BladePath.EditorTools
                             factors[i]=target/facing.size.y;
                         }
                         profile.headingScale=factors;
-                        profile.stride=Mathf.Clamp(rawStride*profile.scale*factors[2],target*.5f,target*1.5f);
+                        profile.stride=rawStride*profile.scale*factors[2];
                         float[] heights=new float[4];
                         for(int column=0;column<4;column++)
                         {
@@ -202,6 +265,11 @@ namespace BladePath.EditorTools
                             }
                             if(excursion<target*.12f)throw new Exception("Insufficient foot travel: "+excursion);
                         }
+                        anchor.transform.rotation=Quaternion.Euler(0,90,0);
+                        profile.Fit(mount,90f);
+                        if(profile.advance) CheckFootContacts(name,an,profile,anchor.transform,model.GetComponentsInChildren<Transform>());
+                        CombatSequence(view,combatSheet,(names.Length-row-1)*Size,an,
+                            profile.advance?profile.advance:flying?idle:walk,hit,idle,center,board);
                         EditorUtility.SetDirty(profile);
                         report.Add(name+","+string.Join(",",heights.Select(h=>h.ToString("F3",System.Globalization.CultureInfo.InvariantCulture)))+","+profile.stride.ToString("F3",System.Globalization.CultureInfo.InvariantCulture));
                         Debug.Log("ARMY_ROSTER "+report.Last());
@@ -213,6 +281,7 @@ namespace BladePath.EditorTools
             AssetDatabase.SaveAssets();
             sheet.Apply();File.WriteAllBytes(Capture+"/army-roster.png",sheet.EncodeToPNG());Object.DestroyImmediate(sheet);
             gaitSheet.Apply();File.WriteAllBytes(Capture+"/army-advance.png",gaitSheet.EncodeToPNG());Object.DestroyImmediate(gaitSheet);
+            combatSheet.Apply();File.WriteAllBytes(Capture+"/army-combat.png",combatSheet.EncodeToPNG());Object.DestroyImmediate(combatSheet);
             File.WriteAllLines("build/army-roster.csv",report);
         }
     }

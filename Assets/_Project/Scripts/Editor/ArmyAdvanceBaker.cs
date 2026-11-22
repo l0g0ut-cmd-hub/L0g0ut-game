@@ -8,6 +8,7 @@ namespace BladePath.EditorTools
 {
     internal static class ArmyAdvanceBaker
     {
+        static readonly string[] Sides = { "Left", "Right" };
         static readonly string[] SourceBones = { "Hips", "Spine", "Spine1", "Spine2", "Neck", "Head",
             "LeftUpLeg", "LeftLeg", "LeftFoot", "RightUpLeg", "RightLeg", "RightFoot" };
         static readonly string[] TargetBones = { "Hips", "Spine02", "Spine01", "Spine", "neck", "Head",
@@ -21,15 +22,6 @@ namespace BladePath.EditorTools
             return result;
         }
 
-        static Quaternion Basis(Dictionary<string, Transform> b)
-        {
-            Vector3 up = (b["Head"].position - b["Hips"].position).normalized;
-            Vector3 across = b["LeftUpLeg"].position - b["RightUpLeg"].position;
-            Vector3 forward = Vector3.Cross(across, up).normalized;
-            if (Vector3.Dot(forward, b["LeftToeBase"].position - b["LeftFoot"].position) < 0) forward = -forward;
-            return Quaternion.LookRotation(forward, up);
-        }
-
         static void Aim(Transform parent,Transform child,Vector3 target)
         {
             Vector3 before=child.position-parent.position;
@@ -38,15 +30,14 @@ namespace BladePath.EditorTools
         }
 
         static void PlaceLeg(Dictionary<string,Transform> source,Dictionary<string,Transform> target,
-            string side,Quaternion alignment)
+            string side,Quaternion alignment, Vector3 goal)
         {
             Transform a=target[side+"UpLeg"], b=target[side+"Leg"], c=target[side+"Foot"];
             Transform toe=target[side+"ToeBase"];
             Vector3 from=source[side+"UpLeg"].position, knee=source[side+"Leg"].position;
             Vector3 ankle=source[side+"Foot"].position;
             float upper=Vector3.Distance(a.position,b.position),lower=Vector3.Distance(b.position,c.position);
-            float ratio=(upper+lower)/(Vector3.Distance(from,knee)+Vector3.Distance(knee,ankle));
-            Vector3 toAnkle=alignment*(ankle-from)*ratio;
+            Vector3 toAnkle=goal-a.position;
             Vector3 along=toAnkle.normalized;
             float dist=Mathf.Clamp(toAnkle.magnitude,Mathf.Abs(upper-lower)+.00001f,(upper+lower)*.999f);
             // The captured knee supplies the bend plane. This avoids reversed knees when the
@@ -72,7 +63,6 @@ namespace BladePath.EditorTools
             var src = SourceBones.Select(n => s[n]).ToArray();
             var dst = TargetBones.Select(n => b[n]).ToArray();
 
-            Quaternion map = Basis(b) * Quaternion.Inverse(Basis(s));
             float legRatio = (Vector3.Distance(b["LeftUpLeg"].position, b["LeftLeg"].position)
                             + Vector3.Distance(b["LeftLeg"].position, b["LeftFoot"].position))
                            / (Vector3.Distance(s["LeftUpLeg"].position, s["LeftLeg"].position)
@@ -101,31 +91,45 @@ namespace BladePath.EditorTools
             var startP = new Vector3[keyed.Length]; var startQ = new Quaternion[keyed.Length]; var startS = new Vector3[keyed.Length];
             idle.SampleAnimation(animRoot.gameObject,idle.length*.3f);
             Vector3 startHip = hips.position;
-            float groundToe=Mathf.Min(b["LeftToeBase"].position.y,b["RightToeBase"].position.y);
             float groundHeel=Mathf.Min(b["LeftFoot"].position.y,b["RightFoot"].position.y);
+            float hipOffset = startHip.y - .5f * (b["LeftUpLeg"].position.y + b["RightUpLeg"].position.y);
             var dstPose=dst.Select(t=>t.rotation).ToArray();
             var sourceRoot = source.GetComponentInChildren<Animation>().gameObject;
             motion.SampleAnimation(sourceRoot,0); Vector3 first = src[0].position;
             var srcPose=src.Select(t=>t.rotation).ToArray();
             motion.SampleAnimation(sourceRoot,motion.length); Vector3 last = src[0].position;
             const int count = 40;
+            Vector3 travel = Vector3.ProjectOnPlane(last-first,Vector3.up);
+            if (travel.magnitude < .001f) throw new InvalidOperationException("Guard advance has no horizontal travel.");
+            Quaternion map = Quaternion.AngleAxis(Vector3.SignedAngle(travel,Vector3.forward,Vector3.up),Vector3.up);
+            float sourceGround = float.PositiveInfinity;
+            for (int frame=0; frame<count; frame++)
+            {
+                motion.SampleAnimation(sourceRoot,length*frame/count);
+                sourceGround = Mathf.Min(sourceGround, s["LeftFoot"].position.y, s["RightFoot"].position.y);
+            }
             for (int frame=0;frame<=count;frame++)
             {
                 float phase=frame/(float)count, time=phase*length;
                 basis.SampleAnimation(animRoot.gameObject,basis.length*phase);
                 motion.SampleAnimation(sourceRoot,motion.length*phase);
-                Vector3 residual=src[0].position-Vector3.Lerp(first,last,phase);
-                hips.position=startHip+map*residual*legRatio;
+                Vector3 origin = first + travel*phase;
+                Vector3 pelvis = startHip + map*(src[0].position-origin)*legRatio;
+                float thighY = .5f*(s["LeftUpLeg"].position.y+s["RightUpLeg"].position.y);
+                pelvis.y = groundHeel + hipOffset + (thighY-sourceGround)*legRatio;
+                hips.position=pelvis;
                 // Use motion relative to the guarded pose, preserving the original weapon grip.
                 // Absolute rest-pose rotation transfer can put already-bent limbs at the wrong angle.
-                int bodyBones=replace?6:1;
+                int bodyBones=replace?6:0;
                 for(int k=0;k<bodyBones;k++)
                     dst[k].rotation=map*(src[k].rotation*Quaternion.Inverse(srcPose[k]))*Quaternion.Inverse(map)*dstPose[k];
-                PlaceLeg(s,b,"Left",map);
-                PlaceLeg(s,b,"Right",map);
-                float toeError=Mathf.Min(b["LeftToeBase"].position.y,b["RightToeBase"].position.y)-groundToe;
-                float heelError=Mathf.Min(b["LeftFoot"].position.y,b["RightFoot"].position.y)-groundHeel;
-                hips.position-=Vector3.up*Mathf.Min(toeError,heelError);
+                foreach (string side in Sides)
+                {
+                    Vector3 foot = s[side+"Foot"].position;
+                    Vector3 goal = startHip + map*(foot-origin)*legRatio;
+                    goal.y = groundHeel + (foot.y-sourceGround)*legRatio;
+                    PlaceLeg(s,b,side,map,goal);
+                }
                 for (int i=0;i<keyed.Length;i++)
                 {
                     Transform bone=keyed[i];

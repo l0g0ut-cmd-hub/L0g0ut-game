@@ -1286,18 +1286,13 @@ namespace BladePath
                     s.an.Stop();
                     s.an.playAutomatically = false;
                     s.an.cullingType = AnimationCullingType.AlwaysAnimate;
-                    List<string> names = new List<string>();
-                    foreach (AnimationState st in s.an) names.Add(st.name);
-                    // по очереди, чтобы «Shot_and_Fall» был смертью, а «Gunshot_Reaction» — попаданием, а не выстрелом
-                    s.clipDie = Find(names, "dying", "dead", "death", "fall", "knock");
-                    List<string> left = new List<string>(names); left.Remove(s.clipDie);
-                    s.clipHit = Find(left, "reaction", "hit"); left.Remove(s.clipHit);
-                    s.clipWin = Find(left, "victory", "cheer", "howl", "idle1"); left.Remove(s.clipWin);   // «wolf_idle1» — вой пса
-                    s.clipIdle = Find(left, "idle", "stance"); left.Remove(s.clipIdle);
-                    s.clipWalk = Find(left, "walk", "canter", "run"); left.Remove(s.clipWalk);
-                    s.clipAct = Find(left, "shot", "shoot", "slash", "thrust", "spell", "cast", "attack", "combo", "jump");
-                    if (s.clipAct == null) s.clipAct = Find(left, "bite", "strike", "swing", "punch", "kick", "fire");
-                    if (s.clipIdle == null && names.Count > 0) s.clipIdle = names[0];
+                    var clips = new TacticsFigureProfile.CombatClips(s.an);
+                    s.clipIdle = clips.idle;
+                    s.clipWalk = clips.walk;
+                    s.clipAct = clips.attack;
+                    s.clipDie = clips.die;
+                    s.clipHit = clips.hit;
+                    s.clipWin = clips.win;
                     foreach (AnimationState st in s.an)
                     {
                         st.speed = 0f;
@@ -1329,11 +1324,6 @@ namespace BladePath
                     Play(s, s.clipIdle, true);
                 }
             }
-        }
-        static string Find(List<string> names, params string[] keys)
-        {
-            foreach (string k in keys) { if (k == null) continue; foreach (string n in names) if (n.Substring(n.LastIndexOf('|') + 1).ToLowerInvariant().Contains(k)) return n; }
-            return null;
         }
         static Material generalMaterial;
         static GameObject generalGo; static Animation generalAn; static string genIdle, genCast;
@@ -1610,7 +1600,7 @@ namespace BladePath
                         float alignment = Vector3.Dot(s.go.transform.forward, heading);
                         travel *= Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(-.4f, .85f, alignment));
                     }
-                    if (advancing) s.gaitPhase = Mathf.Repeat(s.gaitPhase + Mathf.Min(groundDistance, travel) / (PPM * s.figureProfile.stride), 1f);
+                    if (advancing) s.gaitPhase = Mathf.Repeat(s.gaitPhase + Mathf.Min(groundDistance, travel) / (PPM * s.figureProfile.StrideAt(s.go.transform.eulerAngles.y)), 1f);
                     s.pos = groundDistance <= travel ? t : s.pos + step * (travel / groundDistance);
                     if ((s.pos - t).sqrMagnitude < 0.5f) { s.pos = t; s.path.RemoveAt(0); }
                 }
