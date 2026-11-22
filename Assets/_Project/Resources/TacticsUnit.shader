@@ -8,6 +8,7 @@ Shader "BladePath/TacticsUnit"
     SubShader
     {
         Tags { "RenderType"="Opaque" "Queue"="Geometry" }
+        Cull Off
         Pass
         {
             CGPROGRAM

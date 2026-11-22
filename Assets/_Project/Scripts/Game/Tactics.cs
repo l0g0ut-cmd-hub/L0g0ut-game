@@ -121,8 +121,8 @@ namespace BladePath
             public float lunge; public Vector2 lungeDir; public float flash, die = -1f, born;
             public GameObject go; public Animation an; public string playing; public float actUntil, hitUntil;
             public Material surface;
-            public TacticsAdvance advance;
-            public AnimationState guard;
+            public TacticsFigureProfile figureProfile;
+            public float gaitPhase;
             public Transform wingL, wingR;
             public Quaternion wingRestL, wingRestR;
             public float wingLift;
@@ -1158,20 +1158,12 @@ namespace BladePath
                 previous.time = PoseTime(s, previous, now - s.previousStart);
                 if (blend >= 1f) s.previousClip = null;
             }
-            float gaitWeight = s.playing == s.clipWalk ? blend : s.previousClip == s.clipWalk ? 1f - blend : 0f;
-            if (s.guard != null)
-            {
-                s.guard.enabled = gaitWeight > 0f;
-                s.guard.weight = gaitWeight;
-                s.guard.time = Mathf.Repeat(now - s.born, Mathf.Max(.01f, s.guard.length));
-            }
             current.enabled = true;
             current.weight = blend;
             current.time = PoseTime(s, current, elapsed);
             s.an.Sample();
             // The hex path owns horizontal travel. Keep vertical motion from the gait.
-            if (s.advance != null) s.advance.Apply(gaitWeight);
-            else if (s.hips != null && s.playing == s.clipWalk)
+            if (s.hips != null && s.playing == s.clipWalk && (s.figureProfile == null || s.figureProfile.advance == null))
             {
                 Vector3 local = s.go.transform.InverseTransformPoint(s.hips.position);
                 local.x = Mathf.Lerp(local.x, s.restHips.x, blend);
@@ -1185,6 +1177,7 @@ namespace BladePath
             if (clip.length <= 0f) return 0f;
             if (clip.name == s.clipWalk)
             {
+                if (s.figureProfile != null && s.figureProfile.advance != null) return s.gaitPhase * clip.length;
                 float stride = s.t.joust ? 2.3f : s.t.cell == 11 ? 1.05f : 1.45f;
                 float cycles = elapsed * BoardSpeed(s) / (PPM * stride);
                 return Mathf.Repeat(cycles, 1f) * clip.length;
@@ -1244,7 +1237,7 @@ namespace BladePath
             stage.transform.position = StageAt;
             GameObject cg = new GameObject("TacticsCam"); cg.transform.SetParent(stage.transform, false);
             liveCam = cg.AddComponent<Camera>();
-            liveCam.enabled = false; liveCam.orthographic = true;
+            liveCam.enabled = false; liveCam.orthographic = true; liveCam.useOcclusionCulling = false; liveCam.allowHDR = false;
             liveCam.clearFlags = CameraClearFlags.SolidColor; liveCam.backgroundColor = new Color(0f, 0f, 0f, 0f);
             liveCam.cullingMask = 1 << LiveLayer; liveCam.nearClipPlane = 0.1f; liveCam.farClipPlane = 200f; liveCam.allowMSAA = false;
             GameObject lg = new GameObject("TacticsSun"); lg.transform.SetParent(stage.transform, false);
@@ -1270,16 +1263,12 @@ namespace BladePath
                 Shader sh = Resources.Load<Shader>("TacticsUnit");
                 s.surface = new Material(sh != null ? sh : Shader.Find("Standard"));
                 if (tex != null) s.surface.mainTexture = tex;
-                foreach (Renderer r in go.GetComponentsInChildren<Renderer>(true))
-                {
-                    Material[] ms = new Material[r.sharedMaterials.Length]; for (int i = 0; i < ms.Length; i++) ms[i] = s.surface;
-                    r.sharedMaterials = ms;
-                    r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                    SkinnedMeshRenderer sm = r as SkinnedMeshRenderer; if (sm != null) sm.updateWhenOffscreen = true;
-                }
+                TacticsFigureProfile.Dress(go,s.surface);
+                s.figureProfile = Resources.Load<TacticsFigureProfile>("ArmyFigures/" + resource);
                 s.go = go; s.an = go.GetComponentInChildren<Animation>();
                 bool dog = s.t.cell == 11;
-                if (dog)
+                if (s.figureProfile != null) s.figureProfile.Fit(figure);
+                else if (dog)
                 {
                     // Retain the approved dog rig, scale and cycle.
                     Bounds bounds = new Bounds(); bool first = true;
@@ -1315,7 +1304,7 @@ namespace BladePath
                     s.idleYaw = ChestYaw(s);
                     if (s.clipIdle != null)
                         s.an.GetClip(s.clipIdle).SampleAnimation(s.an.gameObject, s.an[s.clipIdle].length * .3f);
-                    if (!dog)
+                    if (!dog && s.figureProfile == null)
                     {
                         float height = s.t.joust ? 1.95f : resource == "unit_oni" ? 1.7f : 1.40f;
                         FitFigure(go, figure, height);
@@ -1326,24 +1315,14 @@ namespace BladePath
                         if (bone.name == "TenguWingL") { s.wingL = bone; s.wingRestL = bone.localRotation; }
                         if (bone.name == "TenguWingR") { s.wingR = bone; s.wingRestR = bone.localRotation; }
                     }
-                    if (!dog && !s.t.joust && !s.t.fly)
+                    if (s.figureProfile != null && s.figureProfile.advance != null)
                     {
-                        s.advance = TacticsAdvance.Bind(go.transform);
-                        // Bow and spear have a dedicated, armed upper-body walk already.
-                        string walk = (s.clipWalk ?? "").ToLowerInvariant();
-                        if (s.advance != null && s.clipIdle != null && walk.Contains("casual"))
-                        {
-                            s.an.AddClip(s.an.GetClip(s.clipIdle), "TravelGuard");
-                            Transform torso = null;
-                            foreach (Transform bone in figure.GetComponentsInChildren<Transform>())
-                                if (bone.name == "Spine02") { torso = bone; break; }
-                            if (torso != null)
-                            {
-                                s.guard = s.an["TravelGuard"];
-                                s.guard.AddMixingTransform(torso, true);
-                                s.guard.layer = 1; s.guard.speed = 0f; s.guard.wrapMode = WrapMode.Loop;
-                            }
-                        }
+                        var clip = s.figureProfile.advance;
+                        s.an.AddClip(clip, clip.name);
+                        s.clipWalk = clip.name;
+                        var state = s.an[s.clipWalk];
+                        state.speed = 0f;
+                        state.wrapMode = WrapMode.Loop;
                     }
                     Play(s, s.clipIdle, true);
                 }
@@ -1354,6 +1333,7 @@ namespace BladePath
             foreach (string k in keys) { if (k == null) continue; foreach (string n in names) if (n.Substring(n.LastIndexOf('|') + 1).ToLowerInvariant().Contains(k)) return n; }
             return null;
         }
+        static Material generalMaterial;
         static GameObject generalGo; static Animation generalAn; static string genIdle, genCast;
         static Vector2 GeneralPos() { Vector2 c = Center(0, 1); return new Vector2(ox - R * 2.3f, c.y); }
         static void SpawnGeneral()
@@ -1365,14 +1345,9 @@ namespace BladePath
             Transform figure = SpawnFigure(pf, generalGo.transform);
             foreach (Transform tr in generalGo.GetComponentsInChildren<Transform>(true)) tr.gameObject.layer = LiveLayer;
             Texture2D tex = Resources.Load<Texture2D>("Units/unit_general_albedo");
-            Material m = new Material(Shader.Find("Standard")); if (tex != null) m.mainTexture = tex;
-            m.SetFloat("_Glossiness", 0.25f); m.SetFloat("_Metallic", 0.05f); m.color = new Color(1.12f, 1.1f, 1.06f);
-            foreach (Renderer r in generalGo.GetComponentsInChildren<Renderer>(true))
-            {
-                Material[] ms = new Material[r.sharedMaterials.Length]; for (int i = 0; i < ms.Length; i++) ms[i] = m; r.sharedMaterials = ms;
-                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                SkinnedMeshRenderer sm = r as SkinnedMeshRenderer; if (sm != null) sm.updateWhenOffscreen = true;
-            }
+            generalMaterial = new Material(Resources.Load<Shader>("TacticsUnit"));
+            generalMaterial.mainTexture = tex;
+            TacticsFigureProfile.Dress(generalGo,generalMaterial);
             generalAn = generalGo.GetComponentInChildren<Animation>();
             genIdle = genCast = null;
             if (generalAn != null)
@@ -1390,7 +1365,9 @@ namespace BladePath
                     generalAn.Play(genIdle);
                 }
             }
-            FitFigure(generalGo, figure, 2.05f);
+            var profile = Resources.Load<TacticsFigureProfile>("ArmyFigures/unit_general");
+            if (profile != null) profile.Fit(figure);
+            else FitFigure(generalGo, figure, 2.05f);
         }
         /// <summary>Полководец колдует — конь встаёт на дыбы.</summary>
         static void GeneralCast()
@@ -1402,11 +1379,12 @@ namespace BladePath
 
         static void CleanupLive()
         {
+            if (generalMaterial != null) Object.Destroy(generalMaterial);
             generalGo = null; generalAn = null;
             if (stage != null) Object.Destroy(stage);
             stage = null; liveCam = null;
             if (liveRT != null) { liveRT.Release(); Object.Destroy(liveRT); liveRT = null; }
-            foreach (Stack s in stacks) { if (s.surface != null) Object.Destroy(s.surface); s.surface = null; s.go = null; s.an = null; s.advance = null; s.guard = null; s.wingL = s.wingR = null; s.hips = null; s.playing = null; s.previousClip = null; }
+            foreach (Stack s in stacks) { if (s.surface != null) Object.Destroy(s.surface); s.surface = null; s.go = null; s.an = null; s.figureProfile = null; s.gaitPhase = 0f; s.wingL = s.wingR = null; s.hips = null; s.playing = null; s.previousClip = null; }
         }
         static void Close() { CleanupLive(); Open = false; }
 
@@ -1496,7 +1474,9 @@ namespace BladePath
                 }
             }
             liveCam.Render();
+            Color keepColor = GUI.color; GUI.color = Color.white;
             GUI.DrawTexture(new Rect(0f, 0f, W, 540f), liveRT, ScaleMode.StretchToFill, true);
+            GUI.color = keepColor;
         }
 
         // ---------------------------------------------------------------- рисование
@@ -1582,6 +1562,8 @@ namespace BladePath
             DrawRocks();
             DrawWall();
             DrawMachines();
+            foreach (Stack stack in stacks)
+                if (stack.Alive) UiKit.Disc(UnitPosition(stack) + new Vector2(0f, 2f), R * .5f, new Color(0f, 0f, 0f, .28f));
             DrawLive();
             DrawStacks();
             DrawFx();
@@ -1618,13 +1600,14 @@ namespace BladePath
                     Vector2 step = t - s.pos;
                     float groundDistance = new Vector2(step.x, step.y / Sq).magnitude;
                     float travel = BoardSpeed(s) * dt;
-                    if (s.advance != null && groundDistance > .001f)
+                    bool advancing = s.figureProfile != null && s.figureProfile.advance != null;
+                    if (advancing && groundDistance > .001f)
                     {
                         Vector3 heading = new Vector3(step.x, 0f, -step.y / Sq) / groundDistance;
                         float alignment = Vector3.Dot(s.go.transform.forward, heading);
                         travel *= Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(-.4f, .85f, alignment));
                     }
-                    if (s.advance != null) s.advance.Travel(Mathf.Min(groundDistance, travel) / PPM);
+                    if (advancing) s.gaitPhase = Mathf.Repeat(s.gaitPhase + Mathf.Min(groundDistance, travel) / (PPM * s.figureProfile.stride), 1f);
                     s.pos = groundDistance <= travel ? t : s.pos + step * (travel / groundDistance);
                     if ((s.pos - t).sqrMagnitude < 0.5f) { s.pos = t; s.path.RemoveAt(0); }
                 }
@@ -1724,7 +1707,7 @@ namespace BladePath
                 Vector2 p = UnitPosition(s);
                 float bob = Mathf.Sin(Time.unscaledTime * 2.2f + s.c * 1.7f + s.r) * 1.2f;
                 // тень
-                UiKit.Disc(p + new Vector2(0f, 2f), R * 0.5f, new Color(0f, 0f, 0f, 0.28f * fade));
+
                 if (s.go != null)
                 {   // живой боец — уже нарисован камерой; здесь — только число бойцов
                     if (!s.Alive) continue;

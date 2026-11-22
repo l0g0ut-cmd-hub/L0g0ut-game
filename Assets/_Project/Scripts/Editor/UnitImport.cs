@@ -11,7 +11,7 @@ namespace BladePath.EditorTools
         public override uint GetVersion() { return 1; }
         void OnPreprocessModel()
         {
-            if (!assetPath.StartsWith("Assets/_Project/Resources/Units/")) return;
+            if (!assetPath.StartsWith("Assets/_Project/Resources/Units/") && assetPath != "Assets/_Project/Editor/ArmyMotion/Guard.fbx") return;
             ModelImporter mi = (ModelImporter)assetImporter;
             mi.animationType = ModelImporterAnimationType.Legacy;
             mi.importAnimation = true;

@@ -47,6 +47,7 @@ namespace BladePath.EditorTools
                     new EditorBuildSettingsScene(scenes[1], true),
                 };
                 ConfigurePlayer(name);
+                ArmyRosterProbe.Build();
 
                 BuildPlayerOptions opts = new BuildPlayerOptions();
                 opts.scenes = scenes;
