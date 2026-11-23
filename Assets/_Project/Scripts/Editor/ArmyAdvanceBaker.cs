@@ -8,14 +8,14 @@ namespace BladePath.EditorTools
 {
     internal static class ArmyAdvanceBaker
     {
-        sealed class Joint
+        internal sealed class Joint
         {
             public Transform bone;
             public Quaternion bind;
             public Vector3 origin;
         }
 
-        static Dictionary<string,Joint> Rig(Animation anim)
+        internal static Dictionary<string,Joint> Rig(Animation anim)
         {
             var result=new Dictionary<string,Joint>();
             foreach(var skin in anim.GetComponentsInChildren<SkinnedMeshRenderer>())
@@ -29,6 +29,16 @@ namespace BladePath.EditorTools
                     var rest=skin.localToWorldMatrix*binds[i].inverse;
                     result[bone.name]=new Joint { bone=bone, bind=rest.rotation, origin=rest.MultiplyPoint3x4(Vector3.zero) };
                 }
+            }
+            // Unity may omit a non-weighted shoulder or toe from the skin palette
+            // while still importing it as an animated transform in the hierarchy.
+            foreach(var bone in anim.GetComponentsInChildren<Transform>())
+            {
+                if(result.ContainsKey(bone.name)||!bone.parent||!result.TryGetValue(bone.parent.name,out var parent))continue;
+                var original=PrefabUtility.GetCorrespondingObjectFromOriginalSource(bone);
+                var local=original?original:bone;
+                result[bone.name]=new Joint {bone=bone,bind=parent.bind*local.localRotation,
+                    origin=parent.origin+parent.bind*Vector3.Scale(local.localPosition,bone.parent.lossyScale)};
             }
             return result;
         }

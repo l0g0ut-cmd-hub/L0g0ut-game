@@ -12,6 +12,14 @@ namespace BladePath
     /// </summary>
     public static class Tactics
     {
+#if UNITY_EDITOR
+        static float captureTime=-1;
+        static float BattleNow => captureTime>=0?captureTime:Time.unscaledTime;
+        static float BattleDelta => captureTime>=0?1f/24f:Time.unscaledDeltaTime;
+#else
+        static float BattleNow => Time.unscaledTime;
+        static float BattleDelta => Time.unscaledDeltaTime;
+#endif
         public static bool Open { get; private set; }
 
         // ---------------------------------------------------------------- бойцы
@@ -123,7 +131,7 @@ namespace BladePath
             public Material surface;
             public TacticsFigureProfile figureProfile;
             public Transform figureMount;
-            public float gaitPhase;
+            public float gaitPhase, groundSpeed;
             public Transform wingL, wingR;
             public Quaternion wingRestL, wingRestR;
             public float wingLift;
@@ -133,7 +141,7 @@ namespace BladePath
             public float clipStart, previousStart, actStart, contactAt;
             public Vector2 attackStep;
             public string previousClip;
-            public string clipIdle, clipWalk, clipAct, clipMelee, clipHit, clipDie, clipWin;
+            public string clipIdle, clipWalk, clipAct, clipMelee, clipFollowup, clipHit, clipDie, clipWin;
             public int run;                     // сколько клеток пробежал перед ударом (разгон конницы)
             public Vector3 facing;
             public int Total { get { return count <= 0 ? 0 : (count - 1) * t.hp + topHp; } }
@@ -164,10 +172,10 @@ namespace BladePath
             ballistaReady = false; spellSel = -1;
             int dmg = (gAtk + 2) * Random.Range(5, 9) * Mathf.Max(1, General.Val(9));
             Vector2 from = MachinePos(0) + new Vector2(R * 0.6f, -R * 0.5f);
-            shots.Add(new Shot { a = from, b = best.pos + new Vector2(0f, -R * 0.8f), t0 = Time.unscaledTime, dur = 0.45f });
+            shots.Add(new Shot { a = from, b = best.pos + new Vector2(0f, -R * 0.8f), t0 = BattleNow, dur = 0.45f });
             Hurt(best,dmg,.8f);
             Burst("fx_arrow_hit", best.pos + new Vector2(0f, -R * 1.0f), R * 2.8f, 40f);
-            texts.Add(new Float { p = best.pos + new Vector2(0f, -R * 2f), s = "−" + dmg, t0 = Time.unscaledTime + 0.3f, col = new Color(1f, 0.85f, 0.4f) });
+            texts.Add(new Float { p = best.pos + new Vector2(0f, -R * 2f), s = "−" + dmg, t0 = BattleNow + 0.3f, col = new Color(1f, 0.85f, 0.4f) });
             Log("Баллиста (наводка) → " + best.t.name + ": " + dmg + " урона.");
             queue.RemoveAll(o => !o.Alive);
             CheckEnd();
@@ -460,7 +468,7 @@ namespace BladePath
             snapsTaken = false;
             PlaceRocks();
             NewRound();
-            running = null; busyUntil = Time.unscaledTime + 0.6f;
+            running = null; busyUntil = BattleNow + 0.6f;
             Log("Бой начался. Раунд 1.");
         }
 
@@ -481,7 +489,7 @@ namespace BladePath
         static void Add(UnitType t, int n, bool enemy, int c, int r)
         {
             if (t.wide) c = enemy ? Mathf.Min(c, Cols - 2) : Mathf.Max(c, 1);   // двухклеточному — место под круп у края
-            stacks.Add(new Stack { t = t, enemy = enemy, count = n, start = n, topHp = t.hp, shots = t.shots, c = c, r = r, born = Time.unscaledTime });
+            stacks.Add(new Stack { t = t, enemy = enemy, count = n, start = n, topHp = t.hp, shots = t.shots, c = c, r = r, born = BattleNow });
         }
 
         static Vector2 MachinePos(int m) { Vector2 c = Center(0, 4 + m * 3); return new Vector2(ox - R * 2.1f, c.y); }
@@ -497,10 +505,10 @@ namespace BladePath
                 {
                     int dmg = (gAtk + 2) * Random.Range(5, 9);
                     Vector2 from = MachinePos(0) + new Vector2(R * 0.6f, -R * 0.5f);
-                    shots.Add(new Shot { a = from, b = best.pos + new Vector2(0f, -R * 0.8f), t0 = Time.unscaledTime, dur = 0.45f });
+                    shots.Add(new Shot { a = from, b = best.pos + new Vector2(0f, -R * 0.8f), t0 = BattleNow, dur = 0.45f });
                     Hurt(best,dmg,.8f);
                     Burst("fx_arrow_hit", best.pos + new Vector2(0f, -R * 1.0f), R * 2.8f, 40f);
-                    texts.Add(new Float { p = best.pos + new Vector2(0f, -R * 2f), s = "−" + dmg, t0 = Time.unscaledTime + 0.3f, col = new Color(1f, 0.85f, 0.4f) });
+                    texts.Add(new Float { p = best.pos + new Vector2(0f, -R * 2f), s = "−" + dmg, t0 = BattleNow + 0.3f, col = new Color(1f, 0.85f, 0.4f) });
                     Log("Баллиста → " + best.t.name + ": " + dmg + " урона.");
                 }
             }
@@ -512,7 +520,7 @@ namespace BladePath
                 {
                     int h = Mathf.Min(hurt.t.hp - hurt.topHp, Random.Range(10, 26));
                     hurt.topHp += h;
-                    texts.Add(new Float { p = hurt.pos + new Vector2(0f, -R * 2f), s = "+" + h, t0 = Time.unscaledTime, col = new Color(0.55f, 1f, 0.55f) });
+                    texts.Add(new Float { p = hurt.pos + new Vector2(0f, -R * 2f), s = "+" + h, t0 = BattleNow, col = new Color(0.55f, 1f, 0.55f) });
                     Burst("fx_heal", hurt.pos + new Vector2(0f, -R * 0.9f), R * 2.6f);
                 }
             }
@@ -565,9 +573,9 @@ namespace BladePath
                 foreach (Stack o in stacks) if (o.Alive && Attacker(o) && (best == null || o.Total > best.Total)) best = o;
                 if (best == null) continue;
                 int dmg = siegeDef ? Random.Range(10, 18) * (1 + Estate.ForgeBonus) * (1 + Realm.D.fort) : Random.Range(8, 15) * (1 + Profile.Cycle);
-                shots.Add(new Shot { a = Center(WallC, r) + new Vector2(0f, -R * 2f), b = best.pos + new Vector2(0f, -R * 0.8f), t0 = Time.unscaledTime, dur = 0.45f });
+                shots.Add(new Shot { a = Center(WallC, r) + new Vector2(0f, -R * 2f), b = best.pos + new Vector2(0f, -R * 0.8f), t0 = BattleNow, dur = 0.45f });
                 Hurt(best,dmg,.8f);
-                texts.Add(new Float { p = best.pos + new Vector2(0f, -R * 2f), s = "−" + dmg, t0 = Time.unscaledTime + 0.3f, col = new Color(1f, 0.45f, 0.35f) });
+                texts.Add(new Float { p = best.pos + new Vector2(0f, -R * 2f), s = "−" + dmg, t0 = BattleNow + 0.3f, col = new Color(1f, 0.45f, 0.35f) });
                 Log("Башня → " + best.t.name + ": " + dmg + " урона.");
             }
         }
@@ -646,7 +654,7 @@ namespace BladePath
             cur.defending = false;
             if (!cur.enemy && !cur.t.undead && Morale < 0 && Random.value < -Morale / 12f)
             {   // дурной дух: отряд дрогнул и пропускает ход
-                texts.Add(new Float { p = cur.pos + new Vector2(0f, -R * 2.6f), s = "ДРОГНУЛИ", t0 = Time.unscaledTime, col = new Color(0.7f, 0.6f, 1f) });
+                texts.Add(new Float { p = cur.pos + new Vector2(0f, -R * 2.6f), s = "ДРОГНУЛИ", t0 = BattleNow, col = new Color(0.7f, 0.6f, 1f) });
                 Log(cur.t.name + ": дух пал — пропускают ход."); queue.RemoveAt(0); NextTurn(); return;
             }
             Flood(cur);
@@ -704,25 +712,44 @@ namespace BladePath
         {
             for (int guard = 0; guard < 32 && run.Count > 0; guard++)
             {
-                if (Time.unscaledTime < waitUntil) return;
+                if (BattleNow < waitUntil) return;
                 IEnumerator top = run.Peek();
                 if (!top.MoveNext())
                 {
                     run.Pop();
-                    if (run.Count == 0) { busyUntil = Time.unscaledTime + 0.15f; return; }
+                    if (run.Count == 0) { busyUntil = BattleNow + 0.15f; return; }
                     continue;
                 }
                 object y = top.Current;
                 if (y is IEnumerator) { run.Push((IEnumerator)y); continue; }
-                if (y is float) { waitUntil = Time.unscaledTime + (float)y; return; }
+                if (y is float) { waitUntil = BattleNow + (float)y; return; }
                 return;   // null — до следующего кадра
             }
         }
-        static bool Busy { get { return running != null || Time.unscaledTime < busyUntil; } }
+        static bool Busy { get { return running != null || BattleNow < busyUntil; } }
 
         static IEnumerator MoveAlong(Stack s, List<Vector2Int> path)
         {
-            foreach (Vector2Int p in path) s.path.Add(Home(s, p.x, p.y));
+            Vector2 previous=s.pos;
+            for(int i=0;i<path.Count;i++)
+            {
+                Vector2 cell=Home(s,path[i].x,path[i].y);
+                if(i+1<path.Count)
+                {
+                    Vector2 next=Home(s,path[i+1].x,path[i+1].y);
+                    Vector2 enter=Vector2.Lerp(cell,previous,.20f),exit=Vector2.Lerp(cell,next,.20f);
+                    // Round the turn inside the traversed hex. Logical cells and collision tests stay on the original path.
+                    if(Vector2.Angle(cell-previous,next-cell)>10f)
+                    {
+                        s.path.Add(enter);
+                        s.path.Add(enter*.25f+cell*.5f+exit*.25f);
+                        s.path.Add(exit);
+                    }
+                    else s.path.Add(cell);
+                }
+                else s.path.Add(cell);
+                previous=cell;
+            }
             if (path.Count > 0) { s.c = path[path.Count - 1].x; s.r = path[path.Count - 1].y; }
             while (s.path.Count > 0) yield return null;
         }
@@ -745,7 +772,7 @@ namespace BladePath
                 yield return 0.15f;
                 yield return Strike(d, a, false);
             }
-            if (a.t.dbl && a.Alive && d.Alive && !finished) { yield return 0.15f; Log(a.t.name + ": второй удар."); yield return Strike(a, d, false); }
+            if (a.t.dbl && a.Alive && d.Alive && !finished) { yield return 0.15f; Log(a.t.name + ": второй удар."); yield return Strike(a, d, false,true); }
             EndTurn();
         }
 
@@ -763,7 +790,7 @@ namespace BladePath
             float cells=direction.magnitude/Mathf.Max(R,1f);
             float flight=gun?Mathf.Clamp(cells*.006f,.05f,.14f):Mathf.Clamp(cells*.028f,.16f,.55f);
             if(gun) Burst("fx_musket",from,R*2.5f,48f,Mathf.Atan2(direction.y,direction.x)*Mathf.Rad2Deg);
-            else shots.Add(new Shot { a=from,b=to,t0=Time.unscaledTime,dur=flight,magic=a.t.magic });
+            else shots.Add(new Shot { a=from,b=to,t0=BattleNow,dur=flight,magic=a.t.magic });
             yield return flight;
             yield return Strike(a, d, true);
             EndTurn();
@@ -776,18 +803,18 @@ namespace BladePath
             return new Vector2(view.x*W,(1f-view.y)*540f);
         }
 
-        static IEnumerator Strike(Stack a, Stack d, bool ranged)
+        static IEnumerator Strike(Stack a, Stack d, bool ranged,bool followup=false)
         {
             if (a.an != null && !ranged)
             {   // живой боец: клип удара, урон — на середине замаха
                 a.lungeDir = (d.pos - a.pos).normalized;
                 a.attackStep = Vector2.ClampMagnitude((d.pos - a.pos) * 0.43f, R * 0.78f);
-                yield return Act(a, 0.45f);
+                yield return Act(a, 0.45f,false,followup);
             }
             else if (!ranged) { a.lungeDir = (d.pos - a.pos).normalized; a.lunge = 1f; yield return 0.18f; }
             int dmg = Damage(a, d, ranged, false);
             bool lucky = !a.enemy && Luck > 0 && Random.value < Luck / 12f;   // удача («Герои»): двойной урон
-            if (lucky) { dmg *= 2; texts.Add(new Float { p = a.pos + new Vector2(0f, -R * 2.6f), s = "УДАЧА!", t0 = Time.unscaledTime, col = new Color(0.6f, 1f, 0.5f) }); }
+            if (lucky) { dmg *= 2; texts.Add(new Float { p = a.pos + new Vector2(0f, -R * 2.6f), s = "УДАЧА!", t0 = BattleNow, col = new Color(0.6f, 1f, 0.5f) }); }
             int before = d.count;
             Hurt(d, dmg);
             if (!ranged) Burst("fx_slash_hit", d.pos + new Vector2(0f, -R * 1.1f), R * 3f, 36f);
@@ -800,15 +827,15 @@ namespace BladePath
                     if (o == null || o.enemy == a.enemy || !o.Alive || !struck.Add(o)) continue;
                     int od = Damage(a, o, false, false); Hurt(o,od);
                     Burst("fx_slash_hit", o.pos + new Vector2(0f, -R * 1.1f), R * 2.6f, 36f);
-                    texts.Add(new Float { p = o.pos + new Vector2(0f, -R * 2f), s = "−" + od, t0 = Time.unscaledTime, col = o.enemy ? new Color(1f, 0.85f, 0.4f) : new Color(1f, 0.45f, 0.35f) });
+                    texts.Add(new Float { p = o.pos + new Vector2(0f, -R * 2f), s = "−" + od, t0 = BattleNow, col = o.enemy ? new Color(1f, 0.85f, 0.4f) : new Color(1f, 0.45f, 0.35f) });
                 }
             }
             if (ranged && !a.t.magic && a.t.cell!=2) Burst("fx_arrow_hit", d.pos + new Vector2(0f, -R * 1.0f), R * 2.6f, 40f);
             int dead = before - Mathf.Max(0, d.count);
-            texts.Add(new Float { p = d.pos + new Vector2(0f, -R * 2f), s = "−" + dmg + (dead > 0 ? "  (" + dead + " пало)" : ""), t0 = Time.unscaledTime, col = d.enemy ? new Color(1f, 0.85f, 0.4f) : new Color(1f, 0.45f, 0.35f) });
+            texts.Add(new Float { p = d.pos + new Vector2(0f, -R * 2f), s = "−" + dmg + (dead > 0 ? "  (" + dead + " пало)" : ""), t0 = BattleNow, col = d.enemy ? new Color(1f, 0.85f, 0.4f) : new Color(1f, 0.45f, 0.35f) });
             Log((a.enemy ? "Враг: " : "") + a.t.name + " → " + d.t.name + ": " + dmg + " урона" + (dead > 0 ? ", пало " + dead : "") + ".");
             UiFx.Play("ui_taiko_heavy", ranged ? 0.3f : 0.5f);
-            yield return Mathf.Max(0.3f, a.actUntil - Time.unscaledTime);
+            yield return Mathf.Max(0.3f, a.actUntil - BattleNow);
         }
 
         static int Damage(Stack a, Stack d, bool ranged, bool estimate)
@@ -833,10 +860,10 @@ namespace BladePath
         static void Hurt(Stack d, int dmg, float reactionTime=.55f)
         {
             d.flash=1f;
-            d.hitStart=Time.unscaledTime;
+            d.hitStart=BattleNow;
             d.hitUntil=d.hitStart+reactionTime;
             int left = d.Total - dmg;
-            if (left <= 0) { d.count = 0; d.topHp = 0; d.die = Time.unscaledTime; Burst("fx_death", d.pos + new Vector2(0f, -R * 0.9f), R * 3.4f, 30f); return; }
+            if (left <= 0) { d.count = 0; d.topHp = 0; d.die = BattleNow; Burst("fx_death", d.pos + new Vector2(0f, -R * 0.9f), R * 3.4f, 30f); return; }
             d.count = Mathf.CeilToInt(left / (float)d.t.hp);
             d.topHp = left - (d.count - 1) * d.t.hp;
         }
@@ -850,7 +877,7 @@ namespace BladePath
             {
                 s.moraleUsed = true;
                 queue.Insert(0, s);
-                texts.Add(new Float { p = s.pos + new Vector2(0f, -R * 2.6f), s = "БОЕВОЙ ДУХ!", t0 = Time.unscaledTime, col = new Color(1f, 0.9f, 0.4f) });
+                texts.Add(new Float { p = s.pos + new Vector2(0f, -R * 2.6f), s = "БОЕВОЙ ДУХ!", t0 = BattleNow, col = new Color(1f, 0.9f, 0.4f) });
                 Log(s.t.name + ": боевой дух — ещё ход!");
             }
             NextTurn();
@@ -903,7 +930,7 @@ namespace BladePath
                 bool imm = target.t.fireImmune > 0 && (sp.icon == 4 || sp.icon == 8) || target.t.undead && (sp.icon == 9 || sp.icon == 16);
                 if (imm || target.t.resist > 0f && Random.value < target.t.resist)
                 {
-                    texts.Add(new Float { p = target.pos + new Vector2(0f, -R * 2.4f), s = imm ? "НЕ ДЕЙСТВУЕТ" : "СОПРОТИВЛЕНИЕ", t0 = Time.unscaledTime, col = new Color(0.7f, 0.85f, 1f) });
+                    texts.Add(new Float { p = target.pos + new Vector2(0f, -R * 2.4f), s = imm ? "НЕ ДЕЙСТВУЕТ" : "СОПРОТИВЛЕНИЕ", t0 = BattleNow, col = new Color(0.7f, 0.85f, 1f) });
                     Log(target.t.name + ": умение не подействовало."); UiFx.Play("ui_taiko_heavy", 0.3f);
                     if (cur != null && cur.Alive) Flood(cur);
                     return;
@@ -915,7 +942,7 @@ namespace BladePath
             if (sp.icon == 3) sheet = Burst(SpellFx[3], at + new Vector2(0f, -R * 0.6f), R * 6f, 26f);
             else if (sp.icon < SpellFx.Length && sp.target != 3) sheet = Burst(SpellFx[sp.icon], at + new Vector2(0f, -R * 0.9f), R * (sp.icon == 8 ? 5.5f : 4.2f));
             else if (sp.icon < SpellFx.Length) foreach (Stack o in stacks) if (o.Alive && o.enemy == (sp.icon == 5 || sp.icon == 12 || sp.icon == 15 || sp.icon == 20)) sheet |= Burst(SpellFx[sp.icon], o.pos + new Vector2(0f, -R * 0.9f), R * 3.5f);
-            if (!sheet) casts.Add(new Float { p = at, s = "", t0 = Time.unscaledTime, icon = sp.icon });
+            if (!sheet) casts.Add(new Float { p = at, s = "", t0 = BattleNow, icon = sp.icon });
             switch (sp.icon)
             {
                 case 0: HurtSpell(target, 30 + 15 * lv); break;
@@ -937,7 +964,7 @@ namespace BladePath
                     int heal = 50 + 10 * lv, max = target.start * target.t.hp;
                     int total = Mathf.Min(max, target.Total + heal);
                     target.count = Mathf.CeilToInt(total / (float)target.t.hp); target.topHp = total - (target.count - 1) * target.t.hp;
-                    texts.Add(new Float { p = target.pos + new Vector2(0f, -R * 2f), s = "+" + heal, t0 = Time.unscaledTime, col = new Color(0.5f, 1f, 0.6f) });
+                    texts.Add(new Float { p = target.pos + new Vector2(0f, -R * 2f), s = "+" + heal, t0 = BattleNow, col = new Color(0.5f, 1f, 0.6f) });
                     Log("Исцеление: " + target.t.name + " — теперь " + target.count + ".");
                     break;
                 }
@@ -968,7 +995,7 @@ namespace BladePath
                     for (int q = 0; q < 2 && q < near.Count; q++) { HurtSpell(near[q], (45 + 14 * lv) / 2); Burst("fx_thunder", near[q].pos + new Vector2(0f, -R * 0.9f), R * 4f); }
                     break;
                 }
-                case 18: foreach (Stack o in stacks) if (o.Alive && !o.enemy) { int h = Mathf.Min(o.t.hp - o.topHp, 25 + 8 * lv); o.topHp += h; if (h > 0) texts.Add(new Float { p = o.pos + new Vector2(0f, -R * 2f), s = "+" + h, t0 = Time.unscaledTime, col = new Color(0.5f, 1f, 0.6f) }); } Log("Целебный дождь."); break;
+                case 18: foreach (Stack o in stacks) if (o.Alive && !o.enemy) { int h = Mathf.Min(o.t.hp - o.topHp, 25 + 8 * lv); o.topHp += h; if (h > 0) texts.Add(new Float { p = o.pos + new Vector2(0f, -R * 2f), s = "+" + h, t0 = BattleNow, col = new Color(0.5f, 1f, 0.6f) }); } Log("Целебный дождь."); break;
                 case 19: target.spdB = 5; target.buffRounds = 1; Log("Врата теней: " + target.t.name + " быстрее."); break;
                 case 20: windRounds = Mathf.Max(windRounds, 2); foreach (Stack o in stacks) if (o.Alive && o.enemy) { o.spdB = -1; o.buffRounds = 2; } Log("Время замедлилось для врагов."); break;
                 case 21: target.atkB = 10; target.defB = -Mathf.CeilToInt(target.t.def * 0.5f); target.buffRounds = 1; Log("Берсерк: " + target.t.name + "."); break;
@@ -977,7 +1004,7 @@ namespace BladePath
                     int heal = 120 + 30 * lv, max = target.start * target.t.hp;
                     int total = Mathf.Min(max, target.Total + heal);
                     target.count = Mathf.CeilToInt(total / (float)target.t.hp); target.topHp = total - (target.count - 1) * target.t.hp;
-                    texts.Add(new Float { p = target.pos + new Vector2(0f, -R * 2f), s = "+" + heal, t0 = Time.unscaledTime, col = new Color(0.5f, 1f, 0.6f) });
+                    texts.Add(new Float { p = target.pos + new Vector2(0f, -R * 2f), s = "+" + heal, t0 = BattleNow, col = new Color(0.5f, 1f, 0.6f) });
                     Log("Павшие встают: " + target.t.name + " — теперь " + target.count + ".");
                     break;
                 }
@@ -993,7 +1020,7 @@ namespace BladePath
             int before = s.count;
             Hurt(s,dmg);
             int dead = before - Mathf.Max(0, s.count);
-            texts.Add(new Float { p = s.pos + new Vector2(0f, -R * 2f), s = "−" + dmg + (dead > 0 ? "  (" + dead + " пало)" : ""), t0 = Time.unscaledTime, col = new Color(1f, 0.85f, 0.4f) });
+            texts.Add(new Float { p = s.pos + new Vector2(0f, -R * 2f), s = "−" + dmg + (dead > 0 ? "  (" + dead + " пало)" : ""), t0 = BattleNow, col = new Color(1f, 0.85f, 0.4f) });
             Log("Умение героя: " + s.t.name + " −" + dmg + (dead > 0 ? ", пало " + dead : "") + ".");
         }
 
@@ -1114,9 +1141,9 @@ namespace BladePath
         static GameObject stage; static Camera liveCam; static RenderTexture liveRT;
         static float PPM { get { return R * 2.45f / (1.7f * 0.829f); } }   // точек на метр (рост 1,7 м = как снимок)
 
-        static IEnumerator Act(Stack s, float impact, bool ranged=false)
+        static IEnumerator Act(Stack s, float impact, bool ranged=false,bool followup=false)
         {
-            string action=ranged?s.clipAct:(s.clipMelee??s.clipAct);
+            string action=ranged?s.clipAct:((followup?s.clipFollowup:null)??s.clipMelee??s.clipAct);
             if(s.go && s.lungeDir.sqrMagnitude>.01f)
             {
                 s.facing=new Vector3(s.lungeDir.x,0f,-s.lungeDir.y/Sq).normalized;
@@ -1124,8 +1151,8 @@ namespace BladePath
                 if(turn>.06f) yield return turn;
             }
             float duration = ClipLen(s, action, 0.7f);
-            s.actUntil = Time.unscaledTime + duration;
-            s.actStart = Time.unscaledTime;
+            s.actUntil = BattleNow + duration;
+            s.actStart = BattleNow;
             impact = ContactPhase(action, impact);
             s.contactAt = s.actStart + duration * impact;
             if (action != null) Play(s, action, true);
@@ -1145,7 +1172,7 @@ namespace BladePath
             s.previousClip = clip != s.playing ? s.playing : null;
             s.previousStart = s.clipStart;
             s.playing = clip;
-            s.clipStart = Time.unscaledTime;
+            s.clipStart = BattleNow;
         }
 
         // The board advances on unscaled time, including while the duel is paused.
@@ -1154,7 +1181,7 @@ namespace BladePath
             if (s.an == null || s.playing == null) return;
             AnimationState current = s.an[s.playing];
             float elapsed = now - s.clipStart;
-            float blend = s.previousClip == null ? 1f : Mathf.Clamp01(elapsed / 0.12f);
+            float blend = s.previousClip == null ? 1f : Mathf.SmoothStep(0,1,Mathf.Clamp01(elapsed/(current.name==s.clipHit?.075f:.16f)));
             if (s.previousClip != null)
             {
                 AnimationState previous = s.an[s.previousClip];
@@ -1171,7 +1198,9 @@ namespace BladePath
             {
                 bool drawing=s.playing==s.clipAct && now<s.actUntil;
                 float phase=(now-s.actStart)/Mathf.Max(.01f,s.actUntil-s.actStart);
-                s.weapon.Pose(drawing,phase);
+                bool walking=s.playing==s.clipWalk;
+                bool ready=walking || s.playing==s.clipIdle || s.playing==s.clipAct || s.playing==s.clipMelee || s.playing==s.clipFollowup;
+                s.weapon.Pose(drawing,phase,walking,ready);
             }
             // The hex path owns horizontal travel. Keep vertical motion from the gait.
             if (s.hips != null && s.playing == s.clipWalk && (s.figureProfile == null || s.figureProfile.advance == null))
@@ -1195,7 +1224,7 @@ namespace BladePath
             }
             if (clip.wrapMode == WrapMode.Loop) return Mathf.Repeat(elapsed, clip.length);
             if(clip.name==s.clipHit) elapsed*=clip.length/Mathf.Max(.01f,s.hitUntil-s.hitStart);
-            if (clip.name == s.clipAct || clip.name == s.clipMelee)
+            if (clip.name == s.clipAct || clip.name == s.clipMelee || clip.name==s.clipFollowup)
                 elapsed *= clip.length / ClipLen(s, clip.name, 1f);
             return Mathf.Clamp(elapsed, 0f, clip.length);
         }
@@ -1234,6 +1263,8 @@ namespace BladePath
         static float ContactPhase(string clip, float fallback)
         {
             string n = (clip ?? "").ToLowerInvariant();
+            if(n.Contains("armysword_cut"))return .50f;
+            if(n.Contains("armysword_diagonal"))return .51f;
             if (n.Contains("right_hand_sword_slash")) return .36f;
             if (n.Contains("thrust_slash") || n.Contains("double_combo_attack") || n.Contains("left_slash")) return .24f;
             if (n.Contains("side_shot")) return GunRelease;
@@ -1334,7 +1365,13 @@ namespace BladePath
                     {
                         s.clipAct=TacticsFigureProfile.InstallAction(s.an,s.figureProfile.attack,s.clipAct);
                         s.clipMelee=TacticsFigureProfile.InstallAction(s.an,s.figureProfile.melee,s.clipAct);
-                        if(s.figureProfile.drawnBody)
+                        s.clipFollowup=TacticsFigureProfile.InstallAction(s.an,s.figureProfile.followup,null);
+                        if(s.figureProfile.guard)
+                        {
+                            s.clipIdle=TacticsFigureProfile.InstallAction(s.an,s.figureProfile.guard,s.clipIdle);
+                            s.an[s.clipIdle].wrapMode=WrapMode.Loop;
+                        }
+                        if(s.figureProfile.heldWeapon)
                             s.weapon=TacticsShotRig.Create(s.an.gameObject,s.figureProfile,s.leftHand,s.rightHand,s.t.cell==2);
                         s.clipHit=TacticsFigureProfile.InstallAction(s.an,s.figureProfile.reaction,s.clipHit);
                     }
@@ -1408,7 +1445,7 @@ namespace BladePath
             if (stage != null) ReleaseFigureObject(stage);
             stage = null; liveCam = null;
             if (liveRT != null) { liveRT.Release(); ReleaseFigureObject(liveRT); liveRT = null; }
-            foreach (Stack s in stacks) { if (s.surface != null) ReleaseFigureObject(s.surface); s.surface = null; s.go = null; s.an = null; s.figureProfile = null; s.figureMount = null; s.gaitPhase = 0f; s.wingL = s.wingR = null; s.weapon=null; s.hips=s.leftHand=s.rightHand=s.chest=null; s.playing = null; s.previousClip = null; }
+            foreach (Stack s in stacks) { if (s.surface != null) ReleaseFigureObject(s.surface); s.surface = null; s.go = null; s.an = null; s.figureProfile = null; s.figureMount = null; s.gaitPhase=s.groundSpeed=0f; s.wingL = s.wingR = null; s.weapon=null; s.hips=s.leftHand=s.rightHand=s.chest=null; s.playing = null; s.previousClip = null; }
         }
 #if UNITY_EDITOR
         public static void VerifyArmyHud()
@@ -1431,6 +1468,55 @@ namespace BladePath
             Debug.Log("ARMY_HUD command, log and hero bounds verified at 5 landscape widths with and without insets");
         }
 
+        static IEnumerator PreviewOrders(Stack attacker,Stack defender)
+        {
+            yield return MoveAlong(attacker,new List<Vector2Int>{new Vector2Int(5,6),new Vector2Int(6,5),new Vector2Int(7,5)});
+            attacker.lungeDir=(defender.pos-attacker.pos).normalized;
+            attacker.attackStep=Vector2.ClampMagnitude((defender.pos-attacker.pos)*.43f,R*.78f);
+            yield return Act(attacker,.45f);
+            Hurt(defender,1);
+            yield return Mathf.Max(0,attacker.actUntil-BattleNow)+.1f;
+            defender.lungeDir=-attacker.lungeDir;defender.attackStep=-attacker.attackStep;
+            yield return Act(defender,.45f);
+            Hurt(attacker,1);
+            yield return Mathf.Max(0,defender.actUntil-BattleNow)+.15f;
+        }
+        public static void RecordArmyExchange(UnitType first,UnitType second,string file)
+        {
+            if(Open||Application.isPlaying||running!=null)throw new System.InvalidOperationException("Capture requires inactive board");
+            var saved=new List<Stack>(stacks);var previous=RenderTexture.active;
+            const int width=1140,height=540,w=306,h=174,columns=8,rows=12;
+            var sequence=new Texture2D(columns*w,rows*h,TextureFormat.RGBA32,false);
+            var crop=new Texture2D(w,h,TextureFormat.RGBA32,false);
+            try
+            {
+                captureTime=10;stacks.Clear();LayoutBoard(width);
+                Add(first,20,false,4,6);Add(second,20,true,8,5);
+                var a=stacks[0];var b=stacks[1];a.pos=Home(a,a.c,a.r);b.pos=Home(b,b.c,b.r);
+                SetupLive();if(generalGo)generalGo.SetActive(false);
+                Vector2 center=(a.pos+b.pos)*.5f;int count=0;
+                Run(PreviewOrders(a,b));
+                for(int frame=0;frame<columns*rows*2;frame++)
+                {
+                    captureTime=10+frame/24f;
+                    Animate();Step();RenderLive(width,height);
+                    if(frame%2!=0)continue;
+                    RenderTexture.active=liveRT;
+                    crop.ReadPixels(new Rect(Mathf.RoundToInt(center.x-w*.5f),height-Mathf.RoundToInt(center.y)-45,w,h),0,0);crop.Apply();
+                    sequence.SetPixels32(count%columns*w,(rows-1-count/columns)*h,w,h,crop.GetPixels32());count++;
+                }
+                if(running!=null||a.Total==a.start*a.t.hp||b.Total==b.start*b.t.hp)
+                    throw new System.InvalidOperationException("Incomplete movement or exchange for "+first.name+" and "+second.name);
+                sequence.Apply();System.IO.File.WriteAllBytes(file,sequence.EncodeToPNG());
+                Debug.Log("ARMY_EXCHANGE "+first.name+" / "+second.name+" frames="+count+" sampled at 12 fps");
+            }
+            finally
+            {
+                running=null;busyUntil=waitUntil=0;captureTime=-1;RenderTexture.active=previous;
+                CleanupLive();stacks.Clear();stacks.AddRange(saved);Object.DestroyImmediate(crop);Object.DestroyImmediate(sequence);
+            }
+        }
+
         public static Color32[] CaptureBoardUnit(UnitType type, bool enemy, int size)
         {
             if (Open || Application.isPlaying) throw new System.InvalidOperationException("Run roster checks outside play mode.");
@@ -1446,6 +1532,8 @@ namespace BladePath
                 SetupLive();
                 if(!s.go || !s.an || !s.figureProfile || s.clipIdle==null || s.clipAct==null)
                     throw new System.InvalidOperationException("Incomplete board unit "+type.name);
+                if(type.up && s.figureProfile!=Resources.Load<TacticsFigureProfile>("ArmyFigures/"+type.live))
+                    throw new System.InvalidOperationException("Upgrade used another figure: "+type.name);
                 if(generalGo) generalGo.SetActive(false);
                 if(enemy) {s.go.SetActive(false);s.die=0f;}
                 RenderLive(width,height);
@@ -1467,7 +1555,7 @@ namespace BladePath
 
         static Vector2 UnitPosition(Stack s)
         {
-            float now = Time.unscaledTime;
+            float now = BattleNow;
             if (s.Alive && s.an != null && now < s.actUntil)
             {
                 float weight = now < s.contactAt
@@ -1509,7 +1597,7 @@ namespace BladePath
             liveCam.transform.rotation = Quaternion.Euler(34f, 0f, 0f);
             Vector3 centerGround = StageAt;
             liveCam.transform.position = centerGround - liveCam.transform.forward * 60f;
-            float now = Time.unscaledTime;
+            float now = BattleNow;
             if (generalGo != null)
             {
                 generalGo.transform.position = Ground(GeneralPos());
@@ -1534,7 +1622,7 @@ namespace BladePath
                 else if(!dead && s.actUntil>now) dir=s.lungeDir;
                 if(dir.sqrMagnitude>.01f) s.facing=new Vector3(dir.x,0f,-dir.y/Sq).normalized;
                 if(!dead && s.facing.sqrMagnitude>.5f)
-                    s.go.transform.rotation=Quaternion.RotateTowards(s.go.transform.rotation,Quaternion.LookRotation(s.facing),300f*Time.unscaledDeltaTime);
+                    s.go.transform.rotation=Quaternion.RotateTowards(s.go.transform.rotation,Quaternion.LookRotation(s.facing),300f*BattleDelta);
                 // вспышка попадания — цвет материала (у снимков — цвет картинки)
                 if (s.surface != null) s.surface.color = Color.Lerp(s.enemy ? new Color(1.05f, 0.95f, 0.92f) : new Color(1.12f, 1.1f, 1.06f), new Color(1.6f, 0.45f, 0.4f), s.flash);
                 if (dead && s.clipDie == null)
@@ -1554,7 +1642,7 @@ namespace BladePath
                 SamplePose(s, now);
                 if (s.wingL != null && s.wingR != null)
                 {
-                    s.wingLift = Mathf.MoveTowards(s.wingLift, !dead && s.path.Count > 0 ? 1f : 0f, Time.unscaledDeltaTime * 4f);
+                    s.wingLift = Mathf.MoveTowards(s.wingLift, !dead && s.path.Count > 0 ? 1f : 0f, BattleDelta * 4f);
                     float beat = Mathf.Sin((now - s.born) * 8f);
                     float angle = (8f + 23f * beat) * s.wingLift;
                     s.wingL.localRotation = s.wingRestL * Quaternion.Euler(0f, 0f, angle);
@@ -1582,7 +1670,7 @@ namespace BladePath
         static bool Burst(string sheet, Vector2 p, float size, float fps = 30f, float angle=0f)
         {
             if (string.IsNullOrEmpty(sheet) || UiKit.Tex("UI/Battle/" + sheet) == null) return false;
-            fxs.Add(new Fx { sheet = sheet, p = p, t0 = Time.unscaledTime, size = size, fps = fps, angle=angle });
+            fxs.Add(new Fx { sheet = sheet, p = p, t0 = BattleNow, size = size, fps = fps, angle=angle });
             return true;
         }
         static Rect FxCell(int i) { int c = i % 8, r = i / 8; return new Rect(c / 8f, 1f - (r + 1) / 6f, 1f / 8f, 1f / 6f); }
@@ -1599,7 +1687,7 @@ namespace BladePath
         static void DrawFxSheets()
         {
             if (Event.current.type != EventType.Repaint) return;
-            float now = Time.unscaledTime;
+            float now = BattleNow;
             // туман над полем врага, пока действует
             Texture2D fog = fogRounds > 0 ? UiKit.Tex("UI/Battle/fx_fog") : null;
             if (fog != null)
@@ -1689,7 +1777,7 @@ namespace BladePath
 
         static void Animate()
         {
-            float dt = Mathf.Min(0.05f, Time.unscaledDeltaTime);
+            float dt = Mathf.Min(0.05f, BattleDelta);
             foreach (Stack s in stacks)
             {
                 Vector2 home = Home(s, s.c, s.r);
@@ -1699,7 +1787,16 @@ namespace BladePath
                     Vector2 t = s.path[0];
                     Vector2 step = t - s.pos;
                     float groundDistance = new Vector2(step.x, step.y / Sq).magnitude;
-                    float travel = BoardSpeed(s) * dt;
+                    float maximum=BoardSpeed(s);
+                    float remaining=groundDistance;
+                    for(int i=1;i<s.path.Count && remaining<maximum*.35f;i++)
+                    {
+                        var segment=s.path[i]-s.path[i-1];remaining+=new Vector2(segment.x,segment.y/Sq).magnitude;
+                    }
+                    float acceleration=maximum*5f;
+                    float desired=Mathf.Min(maximum,Mathf.Sqrt(2f*acceleration*remaining));
+                    s.groundSpeed=Mathf.MoveTowards(s.groundSpeed,desired,acceleration*dt);
+                    float travel=s.groundSpeed*dt;
                     bool advancing = s.figureProfile != null && s.figureProfile.advance != null;
                     if (advancing && groundDistance > .001f)
                     {
@@ -1707,11 +1804,20 @@ namespace BladePath
                         float alignment = Vector3.Dot(s.go.transform.forward, heading);
                         travel *= Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(-.4f, .85f, alignment));
                     }
-                    if (advancing) s.gaitPhase = Mathf.Repeat(s.gaitPhase + Mathf.Min(groundDistance, travel) / (PPM * s.figureProfile.StrideAt(s.go.transform.eulerAngles.y)), 1f);
-                    s.pos = groundDistance <= travel ? t : s.pos + step * (travel / groundDistance);
-                    if ((s.pos - t).sqrMagnitude < 0.5f) { s.pos = t; s.path.RemoveAt(0); }
+                    float moved=0;
+                    while(travel>0 && s.path.Count>0)
+                    {
+                        Vector2 next=s.path[0],delta=next-s.pos;
+                        float distance=new Vector2(delta.x,delta.y/Sq).magnitude;
+                        float advance=Mathf.Min(distance,travel);
+                        moved+=advance;travel-=advance;
+                        if(distance<=advance+.0001f) {s.pos=next;s.path.RemoveAt(0);}
+                        else {s.pos+=delta*(advance/distance);break;}
+                    }
+                    if(advancing) s.gaitPhase=Mathf.Repeat(s.gaitPhase+moved/
+                        (PPM*s.figureProfile.StrideAt(s.go.transform.eulerAngles.y)),1);
                 }
-                else s.pos = Vector2.MoveTowards(s.pos, home, hw * 10f * dt);
+                else {s.groundSpeed=0f;s.pos=Vector2.MoveTowards(s.pos,home,hw*10f*dt);}
                 s.lunge = Mathf.Max(0f, s.lunge - dt * 4.5f);
                 s.flash = Mathf.Max(0f, s.flash - dt * 3f);
             }
@@ -1803,9 +1909,9 @@ namespace BladePath
             foreach (Stack s in order)
             {
                 float fade = 1f;
-                if (!s.Alive) { if (s.die < 0f) continue; fade = 1f - (Time.unscaledTime - s.die) / 0.8f; if (fade <= 0f) continue; }
+                if (!s.Alive) { if (s.die < 0f) continue; fade = 1f - (BattleNow - s.die) / 0.8f; if (fade <= 0f) continue; }
                 Vector2 p = UnitPosition(s);
-                float bob = Mathf.Sin(Time.unscaledTime * 2.2f + s.c * 1.7f + s.r) * 1.2f;
+                float bob = Mathf.Sin(BattleNow * 2.2f + s.c * 1.7f + s.r) * 1.2f;
                 // тень
 
                 if (s.go != null)
@@ -1860,7 +1966,7 @@ namespace BladePath
 
         static void DrawFx()
         {
-            float now = Time.unscaledTime;
+            float now = BattleNow;
             for (int i = shots.Count - 1; i >= 0; i--)
             {
                 Shot s = shots[i]; float k = (now - s.t0) / s.dur;
@@ -2232,8 +2338,8 @@ namespace BladePath
             Rect safe=SafeHud();
             bool board=safe.Contains(e.mousePosition) && e.mousePosition.y>safe.y+80f && e.mousePosition.y<new HudLayout(safe).footer.y;
             if(e.type==EventType.MouseUp && !board) {downOn=false;return;}
-            if (e.type == EventType.MouseDown && board) { downOn = true; downAt = Time.unscaledTime; downPos = e.mousePosition; }
-            if (e.type == EventType.Repaint && downOn && Time.unscaledTime - downAt > 0.5f)
+            if (e.type == EventType.MouseDown && board) { downOn = true; downAt = BattleNow; downPos = e.mousePosition; }
+            if (e.type == EventType.Repaint && downOn && BattleNow - downAt > 0.5f)
             {   // долгое нажатие — сведения об отряде
                 downOn = false;
                 Vector2Int h = Pick(downPos); Stack s = h.x >= 0 ? At(h.x, h.y) : null;

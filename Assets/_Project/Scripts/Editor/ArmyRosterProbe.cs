@@ -96,6 +96,14 @@ namespace BladePath.EditorTools
             return result;
         }
 
+        static float StandingHeight(Transform head,Transform left,Transform right,Quaternion camera)
+        {
+            Vector3 up=camera*Vector3.up;
+            float ankle=Mathf.Min(Vector3.Dot(up,left.position),Vector3.Dot(up,right.position));
+            float length=(head.position-(left.position+right.position)*.5f).magnitude;
+            return Vector3.Dot(up,head.position)-ankle+length*.115f;
+        }
+
         static void CheckFootContacts(string name, Animation anim, TacticsFigureProfile profile,
             Transform anchor, Transform[] bones)
         {
@@ -135,7 +143,7 @@ namespace BladePath.EditorTools
         }
 
         static void CombatSequence(View view, Texture2D sheet, int y, Animation anim,
-            AnimationClip walk, AnimationClip hit, AnimationClip idle, Vector3 center, Quaternion board)
+            AnimationClip walk, AnimationClip hit, AnimationClip idle, Vector3 center, Quaternion board,TacticsShotRig gear,bool shooter)
         {
             if (anim.GetClip(walk.name)==null) anim.AddClip(walk,walk.name);
             var walking = anim[walk.name];
@@ -168,6 +176,7 @@ namespace BladePath.EditorTools
                 from.enabled=true; from.speed=0; from.weight=1f-blend;
                 to.enabled=true; to.speed=0; to.weight=blend; to.time=phase*to.length;
                 anim.Sample();
+                if(gear!=null) gear.Pose(shooter && frame>=2 && frame<=8,phase,frame<3,true);
                 Bounds body = view.Frame(center,board,4.2f);
                 if (body.size.y<.25f || Mathf.Abs(body.center.x)>1.55f)
                     throw new Exception("Body outside combat frame "+frame+": "+body);
@@ -188,12 +197,12 @@ namespace BladePath.EditorTools
         }
 
         static void CaptureShot(View view,Texture2D sheet,Animation anim,AnimationClip take,
-            TacticsFigureProfile profile,Transform anchor,Vector3 center,Quaternion board,bool gun)
+            TacticsFigureProfile profile,Transform anchor,Vector3 center,Quaternion board,bool gun,bool elite,TacticsShotRig held)
         {
             var bones=anim.GetComponentsInChildren<Transform>();
             var left=bones.First(b=>b.name=="LeftHand");
             var right=bones.First(b=>b.name=="RightHand");
-            var held=TacticsShotRig.Create(anim.gameObject,profile,left,right,gun);
+
             if(held==null) throw new Exception("No equipped shooter: "+take.name);
             float release=gun?Tactics.GunRelease:Tactics.BowRelease;
             float[] phases={0,.12f,.25f,release-.03f,release,release+.035f,.79f,1f};
@@ -212,7 +221,7 @@ namespace BladePath.EditorTools
                         Debug.Log("ARMY_SHOT "+take.name+" release="+release+" alignment="+alignment+" side="+side);
                     }
                     view.Frame(center,board,2.65f);
-                    sheet.SetPixels32(i*Size,((gun?0:2)+side)*Size,Size,Size,view.pixels);
+                    sheet.SetPixels32(i*Size,((gun?0:2)+side+(elite?4:0))*Size,Size,Size,view.pixels);
                 }
             }
             held.Pose(false,1);anchor.rotation=Quaternion.Euler(0,90,0);
@@ -227,7 +236,7 @@ namespace BladePath.EditorTools
             var sheet=new Texture2D(Size*4,Size*names.Length,TextureFormat.RGBA32,false);
             var gaitSheet=new Texture2D(Size*8,Size*names.Length,TextureFormat.RGBA32,false);
             var combatSheet=new Texture2D(Size*12,Size*names.Length,TextureFormat.RGBA32,false);
-            var shooters=new Texture2D(Size*8,Size*4,TextureFormat.RGBA32,false);
+            var shooters=new Texture2D(Size*8,Size*8,TextureFormat.RGBA32,false);
             Tactics.VerifyArmyHud();
             var report=new List<string>{"model,stance_height,advance_height,attack_height,side2_height,stride"};
             using(var view=new View())
@@ -255,15 +264,24 @@ namespace BladePath.EditorTools
                         string asset=Output+"/"+name+".asset";
                         if(AssetDatabase.LoadAssetAtPath<TacticsFigureProfile>(asset))AssetDatabase.DeleteAsset(asset);
                         var profile=ScriptableObject.CreateInstance<TacticsFigureProfile>();AssetDatabase.CreateAsset(profile,asset);
-                        bool mounted=name=="unit_cavalry"||name=="unit_general",dog=name=="unit_dog";
+                        string role=name.EndsWith("2",StringComparison.Ordinal)?name.Substring(0,name.Length-1):name;
+                        bool mounted=role=="unit_cavalry"||role=="unit_general",dog=role=="unit_dog";
+                        bool bow=role=="unit_archer",gun=role=="unit_teppo";
+                        bool pole=role=="unit_ashigaru"||role=="unit_sohei"||role=="unit_yamabushi";
+                        bool swords=role=="unit_samurai"||role=="unit_hatamoto"||role=="unit_ronin"||role=="unit_shinobi"||
+                            role=="unit_shadow"||role=="unit_crimson"||role=="unit_shogun"||role=="unit_fallen"||
+                            role=="unit_bandit"||role=="unit_oni";
+                        int kind=bow?1:gun?2:swords?3:pole?4:0;
+                        if(kind>0) ArmyShotAssets.Bake(profile,an,name,kind);
+
                         bool flying=name=="unit_tengu"||name=="unit_daitengu";
                         float rawStride=0f;
                         AnimationClip authoredAttack=hit;
-                        if(!mounted&&!dog&&!flying)
+                        if(!mounted&&!dog&&!flying&&!swords)
                         {
                             string donorName=null, take=null;
                             string walkName=walk.name.Split('|').Last().ToLowerInvariant();
-                            if(name=="unit_banner") { donorName="unit_sohei"; take="Spear_Walk"; }
+                            if(role=="unit_banner" || (role=="unit_yamabushi" && walkName.Contains("casual"))) { donorName="unit_sohei"; take="Spear_Walk"; }
                             else if(name=="unit_samurai" || walkName.Contains("casual") || name=="unit_oni")
                             { donorName="unit_hatamoto"; take="Walk_Fight_Forward"; }
                             Animation from=an;
@@ -279,37 +297,59 @@ namespace BladePath.EditorTools
                             rawStride=ArmyAdvanceBaker.MeasureStride(an,profile.advance,out profile.walkDistances);
                             Debug.Log("ARMY_MESHY "+name+" "+walk.name.Split('|').Last());
                         }
-                        if(name=="unit_samurai")
+                        if(swords)
                         {
-                            authoredAttack=FromUnit(an,"unit_ronin","Right_Hand_Sword_Slash");
+                            profile.guard=ArmySwordBaker.Bake(an,ArmySwordBaker.Move.Guard);
+                            profile.advance=ArmySwordBaker.Bake(an,role=="unit_shinobi"||role=="unit_shadow"||role=="unit_bandit"?
+                                ArmySwordBaker.Move.Run:ArmySwordBaker.Move.Walk);
+                            rawStride=ArmyAdvanceBaker.MeasureStride(an,profile.advance,out profile.walkDistances);
+                            var move=role=="unit_hatamoto"||role=="unit_crimson"||role=="unit_shogun"?
+                                ArmySwordBaker.Move.Diagonal:ArmySwordBaker.Move.Cut;
+                            authoredAttack=ArmySwordBaker.Bake(an,move);
+                            if(role=="unit_hatamoto"||role=="unit_shogun"||role=="unit_crimson"||name=="unit_shinobi2")
+                            {
+                                profile.followup=ArmySwordBaker.Bake(an,move==ArmySwordBaker.Move.Cut?ArmySwordBaker.Move.Diagonal:ArmySwordBaker.Move.Cut);
+                                AssetDatabase.AddObjectToAsset(profile.followup,profile);
+                            }
+                            AssetDatabase.AddObjectToAsset(profile.guard,profile);
+                            AssetDatabase.AddObjectToAsset(profile.advance,profile);
+                            idle=an.GetClip(TacticsFigureProfile.InstallAction(an,profile.guard,clips.idle));
+                            an[idle.name].wrapMode=WrapMode.Loop;
+                            Debug.Log("ARMY_CAPTURED "+name+" "+profile.advance.name+" "+authoredAttack.name);
                         }
-                        bool bow=name=="unit_archer", gun=name=="unit_teppo";
-                        if(bow||gun) ArmyShotAssets.Bake(profile,an,gun);
                         if(bow||gun)
                             authoredAttack=ArmyAdvanceBaker.AlignShot(an,hit,bow?Tactics.BowRelease:Tactics.GunRelease);
                         if(name=="unit_daitengu")
                             authoredAttack=FromUnit(an,"unit_onmyoji","Charged_Spell_Cast");
-                        if(bow||gun||name=="unit_onmyoji"||name=="unit_kitsune"||name=="unit_daitengu"||
-                            hit.name.IndexOf("double_combo",StringComparison.OrdinalIgnoreCase)>=0)
+                        if(!swords&&(bow||gun||role=="unit_onmyoji"||role=="unit_kitsune"||role=="unit_daitengu"||
+                            hit.name.IndexOf("double_combo",StringComparison.OrdinalIgnoreCase)>=0))
                         {
-                            var close=FromUnit(an,gun||name=="unit_onmyoji"?"unit_sohei":"unit_ronin",
-                                gun||name=="unit_onmyoji"?"Thrust_Slash":"Right_Hand_Sword_Slash");
+                            var close=FromUnit(an,gun||role=="unit_onmyoji"?"unit_sohei":"unit_ronin",
+                                gun||role=="unit_onmyoji"?"Thrust_Slash":"Right_Hand_Sword_Slash");
                             profile.melee=ArmyAdvanceBaker.AnchorAction(an,close);
                             if(profile.melee) Object.DestroyImmediate(close); else profile.melee=close;
                             profile.melee.name="Melee_"+profile.melee.name;
                             AssetDatabase.AddObjectToAsset(profile.melee,profile);
                         }
-                        profile.attack=ArmyAdvanceBaker.AnchorAction(an,authoredAttack);
+                        profile.attack=swords?null:ArmyAdvanceBaker.AnchorAction(an,authoredAttack);
                         if(authoredAttack!=hit)
                         {
                             if(profile.attack) Object.DestroyImmediate(authoredAttack);
                             else profile.attack=authoredAttack;
                         }
-                        profile.reaction=ArmyAdvanceBaker.AnchorAction(an,clips.hit==null?null:an.GetClip(clips.hit));
+                        profile.reaction=swords?ArmySwordBaker.Bake(an,ArmySwordBaker.Move.Impact):ArmyAdvanceBaker.AnchorAction(an,clips.hit==null?null:an.GetClip(clips.hit));
                         if(profile.attack) AssetDatabase.AddObjectToAsset(profile.attack,profile);
                         if(profile.reaction) AssetDatabase.AddObjectToAsset(profile.reaction,profile);
                         hit=an.GetClip(TacticsFigureProfile.InstallAction(an,profile.attack,clips.attack));
                         idle.SampleAnimation(an.gameObject,.3f*idle.length);
+                        var bodySkin=an.GetComponentInChildren<SkinnedMeshRenderer>();
+                        var originalBody=bodySkin.sharedMesh;
+                        if(profile.drawnBody && profile.handCarried)bodySkin.sharedMesh=profile.drawnBody;
+                        var allJoints=an.GetComponentsInChildren<Transform>();
+                        var head=allJoints.FirstOrDefault(t=>t.name=="Head");
+                        var lf=allJoints.FirstOrDefault(t=>t.name=="LeftFoot");
+                        var rf=allJoints.FirstOrDefault(t=>t.name=="RightFoot");
+                        bool anatomical=!mounted&&!dog&&head&&lf&&rf;
                         Bounds approx=SkinBounds(model);Vector3 c=approx.center;
                         float span=Mathf.Max(.001f,Mathf.Max(approx.size.x,Mathf.Max(approx.size.y,approx.size.z))*1.4f);
                         var front=view.Frame(c,Quaternion.identity,span);
@@ -327,7 +367,8 @@ namespace BladePath.EditorTools
                         {
                             anchor.transform.rotation=Quaternion.Euler(0,i*360f/directions,0);
                             var facing=view.Frame(center,board,3.6f);
-                            factors[i]=target/facing.size.y;
+                            float size=anatomical?StandingHeight(head,lf,rf,board):facing.size.y;
+                            factors[i]=target/size;
                         }
                         profile.headingScale=factors;
                         profile.stride=rawStride*profile.scale*factors[2];
@@ -342,7 +383,11 @@ namespace BladePath.EditorTools
                             // Fixed camera and origin for every row. A missing body or one moving into another hex fails.
                             if(visible.size.y<target*.42f||visible.size.y>target*1.9f||Mathf.Abs(visible.center.x)>1.2f)
                                 throw new Exception("Body outside its hex: "+clip.name+" "+visible);
-                            if((column==0||column==3)&&Mathf.Abs(visible.size.y-target)>.07f) throw new Exception("Incorrect projected height "+visible.size.y+" expected "+target);
+                            if(column==0||column==3)
+                            {
+                                float height=anatomical?StandingHeight(head,lf,rf,board):visible.size.y;
+                                if(Mathf.Abs(height-target)>.07f)throw new Exception("Incorrect projected height "+height+" expected "+target);
+                            }
                             sheet.SetPixels32(column*Size,(names.Length-row-1)*Size,Size,Size,view.pixels);
                         }
                         if(profile.advance!=null)
@@ -368,9 +413,13 @@ namespace BladePath.EditorTools
                         anchor.transform.rotation=Quaternion.Euler(0,90,0);
                         profile.Fit(mount,90f);
                         if(profile.advance) CheckFootContacts(name,an,profile,anchor.transform,model.GetComponentsInChildren<Transform>());
+                        bodySkin.sharedMesh=originalBody;
+                        TacticsShotRig gear=null;
+                        if(kind>0)gear=TacticsShotRig.Create(an.gameObject,profile,allJoints.First(b=>b.name=="LeftHand"),
+                            allJoints.First(b=>b.name=="RightHand"),gun);
                         CombatSequence(view,combatSheet,(names.Length-row-1)*Size,an,
-                            profile.advance?profile.advance:flying?idle:walk,hit,idle,center,board);
-                        if(bow||gun) CaptureShot(view,shooters,an,hit,profile,anchor.transform,center,board,gun);
+                            profile.advance?profile.advance:flying?idle:walk,hit,idle,center,board,gear,bow||gun);
+                        if(bow||gun) CaptureShot(view,shooters,an,hit,profile,anchor.transform,center,board,gun,role!=name,gear);
                         EditorUtility.SetDirty(profile);
                         report.Add(name+","+string.Join(",",heights.Select(h=>h.ToString("F3",System.Globalization.CultureInfo.InvariantCulture)))+","+profile.stride.ToString("F3",System.Globalization.CultureInfo.InvariantCulture));
                         Debug.Log("ARMY_ROSTER "+report.Last());
@@ -400,6 +449,8 @@ namespace BladePath.EditorTools
             sheet.Apply();File.WriteAllBytes(Capture+"/army-roster.png",sheet.EncodeToPNG());Object.DestroyImmediate(sheet);
             gaitSheet.Apply();File.WriteAllBytes(Capture+"/army-advance.png",gaitSheet.EncodeToPNG());Object.DestroyImmediate(gaitSheet);
             combatSheet.Apply();File.WriteAllBytes(Capture+"/army-combat.png",combatSheet.EncodeToPNG());Object.DestroyImmediate(combatSheet);
+            Tactics.RecordArmyExchange(Tactics.Ours[15],Tactics.Foes[8],Capture+"/army-duel.png");
+            Tactics.RecordArmyExchange(Tactics.Ours[16],Tactics.Ours[23],Capture+"/army-charge.png");
             File.WriteAllLines("build/army-roster.csv",report);
         }
     }

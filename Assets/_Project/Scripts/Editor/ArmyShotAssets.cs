@@ -83,10 +83,15 @@ namespace BladePath.EditorTools
             }
         }
         static Vector3 V(float y,float z) { return new Vector3(0,y,z); }
-        public static void Bake(TacticsFigureProfile profile,Animation an,bool gun)
+        public static void Bake(TacticsFigureProfile profile,Animation an,string name,int kind)
         {
             var skin=an.GetComponentInChildren<SkinnedMeshRenderer>();
-            profile.drawnBody=DrawnSkin(skin.sharedMesh,gun);
+            bool gun=kind==2,bow=kind==1,blade=kind==3,staff=kind==4;
+            profile.gearKind=kind;
+            profile.drawnBody=ArmyGearBake.Prepared(skin,name);
+            if((bow||gun)&&!profile.drawnBody)profile.drawnBody=DrawnSkin(skin.sharedMesh,gun);
+            profile.handCarried=!bow&&!gun || name.EndsWith("2",StringComparison.Ordinal);
+
             var geo=new Surface();
             if(gun)
             {
@@ -95,6 +100,24 @@ namespace BladePath.EditorTools
                 geo.Tube(new[]{V(.016f,-.03f),V(.016f,.56f),V(.017f,.64f)},new[]{.022f,.017f,.021f},new[]{.022f,.017f,.021f},2);
                 foreach(float z in new[]{.09f,.28f,.49f})
                     geo.Tube(new[]{V(.003f,z),V(.003f,z+.018f)},new[]{.026f,.026f},new[]{.037f,.037f},3);
+            }
+            else if(blade||staff)
+            {
+                if(blade)
+                {
+                    geo.Tube(new[]{V(0,-.19f),V(0,-.01f)},new[]{.018f,.019f},new[]{.016f,.017f},4);
+                    for(int i=0;i<6;i++){float z=-.178f+i*.029f;geo.Tube(new[]{V(0,z),V(0,z+.008f)},new[]{.020f,.020f},new[]{.018f,.018f},3);}
+                    geo.Tube(new[]{V(0,-.007f),V(0,.005f)},new[]{.045f,.044f},new[]{.049f,.046f},3);
+                    geo.Tube(new[]{V(0,.005f),V(.005f,.27f),V(.025f,.49f),V(.056f,.67f),V(.078f,.738f)},
+                        new[]{.0065f,.006f,.005f,.004f,.001f},new[]{.026f,.025f,.020f,.014f,.001f},2,4);
+                }
+                else
+                {
+                    geo.Tube(new[]{V(0,-.69f),V(0,.71f)},new[]{.016f,.018f},new[]{.016f,.018f},0);
+                    geo.Tube(new[]{V(0,.66f),V(0,.75f)},new[]{.024f,.023f},new[]{.024f,.023f},3);
+                    geo.Tube(new[]{V(0,.75f),V(.008f,.83f),V(.025f,.94f),V(.05f,1.04f)},
+                        new[]{.009f,.012f,.008f,.001f},new[]{.022f,.046f,.030f,.001f},2,4);
+                }
             }
             else
             {
@@ -105,15 +128,15 @@ namespace BladePath.EditorTools
                 geo.Tube(new[]{V(-.067f,-.003f),V(.068f,.004f)},new[]{.019f,.019f},new[]{.020f,.020f},4);
                 for(int i=0;i<5;i++){float y=-.055f+.024f*i;geo.Tube(new[]{V(y,0),V(y+.007f,0)},new[]{.02f,.02f},new[]{.021f,.021f},3);}
             }
-            profile.heldWeapon=geo.Make(gun?"Teppo":"Yumi");
+            profile.heldWeapon=geo.Make(gun?"Teppo":bow?"Yumi":blade?"Katana":"Naginata");
             var line=new Surface();line.Tube(new[]{V(0,0),V(0,1)},new[]{.0028f,.0028f},new[]{.0028f,.0028f},5,5);
-            profile.bowCord=gun?null:line.Make("Yumi cord");
+            profile.bowCord=bow?line.Make("Yumi cord"):null;
             var palette=new Texture2D(6,1,TextureFormat.RGBA32,false){name="Lacquer, bamboo and silk",filterMode=FilterMode.Point};
-            palette.SetPixels32(new[]{new Color32(123,73,43,255),new Color32(153,92,49,255),new Color32(102,104,101,255),
+            palette.SetPixels32(new[]{new Color32(123,73,43,255),new Color32(153,92,49,255),new Color32(174,181,182,255),
                 new Color32(176,139,75,255),new Color32(76,49,37,255),new Color32(207,187,148,255)});
             palette.Apply();
             profile.weaponSurface=new Material(Resources.Load<Shader>("TacticsUnit")){name="Army equipment",mainTexture=palette};
-            AssetDatabase.AddObjectToAsset(profile.drawnBody,profile);AssetDatabase.AddObjectToAsset(profile.heldWeapon,profile);
+            if(profile.drawnBody) AssetDatabase.AddObjectToAsset(profile.drawnBody,profile);AssetDatabase.AddObjectToAsset(profile.heldWeapon,profile);
             AssetDatabase.AddObjectToAsset(palette,profile);AssetDatabase.AddObjectToAsset(profile.weaponSurface,profile);
             if(profile.bowCord) AssetDatabase.AddObjectToAsset(profile.bowCord,profile);
         }

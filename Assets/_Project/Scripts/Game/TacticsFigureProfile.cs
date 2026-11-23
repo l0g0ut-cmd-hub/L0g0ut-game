@@ -11,6 +11,9 @@ namespace BladePath
         public float stride;
         public float[] headingScale;
         public AnimationClip advance, attack, melee, reaction;
+        public int gearKind;
+        public bool handCarried;
+        public AnimationClip guard, followup;
         public Mesh drawnBody, heldWeapon, bowCord;
         public Material weaponSurface;
         public float[] walkDistances;
