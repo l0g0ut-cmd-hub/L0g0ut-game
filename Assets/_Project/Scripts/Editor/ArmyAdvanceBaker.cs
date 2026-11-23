@@ -159,37 +159,69 @@ namespace BladePath.EditorTools
             return output;
         }
 
-        public static AnimationClip AnchorAction(Animation anim, AnimationClip clip)
+        static void SetHipCurves(Animation anim,Transform hip,AnimationClip clip,AnimationCurve[] curves)
         {
-            if(!clip) return null;
-            var rig=Rig(anim);
-            if(!rig.TryGetValue("Hips",out var pelvis)) return null;
-            var hip=pelvis.bone;var left=rig["LeftFoot"].bone;var right=rig["RightFoot"].bone;
-            clip.SampleAnimation(anim.gameObject,0f);
-            Vector3 start=hip.position,left0=left.position,right0=right.position;
-            float height=Vector3.Distance(hip.position,rig["Head"].bone.position)+Vector3.Distance(hip.position,left.position);
-            float allowance=.11f*height;
-            var curves=new[]{new AnimationCurve(),new AnimationCurve(),new AnimationCurve()};
-            float max=0f;
-            int count=Mathf.Max(2,Mathf.CeilToInt(clip.length*40f));
+            string path=AnimationUtility.CalculateTransformPath(hip,anim.transform);
+            for(int axis=0;axis<3;axis++) AnimationUtility.SetEditorCurve(clip,
+                EditorCurveBinding.FloatCurve(path,typeof(Transform),"m_LocalPosition."+"xyz"[axis]),curves[axis]);
+        }
+
+        public static void AlignCycle(Animation anim,AnimationClip cycle,AnimationClip idle)
+        {
+            var hip=Rig(anim)["Hips"].bone;
+            idle.SampleAnimation(anim.gameObject,.3f*idle.length);
+            Vector3 stance=hip.position;
+            int count=Mathf.Max(2,Mathf.CeilToInt(cycle.length*40));
+            var positions=new Vector3[count+1];Vector3 mean=Vector3.zero;
             for(int i=0;i<=count;i++)
             {
-                float t=clip.length*i/count;
-                clip.SampleAnimation(anim.gameObject,t);
-                var offset=Vector3.ProjectOnPlane(hip.position-start,Vector3.up);
-                var dir=offset.normalized;
-                float common=Mathf.Max(0f,Mathf.Min(offset.magnitude,Vector3.Dot(left.position-left0,dir),Vector3.Dot(right.position-right0,dir)));
-                float correction=common-common/Mathf.Sqrt(1f+common*common/(allowance*allowance));
-                Vector3 local=hip.parent.InverseTransformPoint(hip.position-dir*correction);
-                for(int axis=0;axis<3;axis++) curves[axis].AddKey(t,local[axis]);
-                max=Mathf.Max(max,correction);
+                cycle.SampleAnimation(anim.gameObject,cycle.length*i/count);
+                positions[i]=hip.position;
             }
-            if(max<.012f*height) return null;
+            Vector3 drift=Vector3.ProjectOnPlane(positions[count]-positions[0],Vector3.up);
+            for(int i=0;i<count;i++) mean+=positions[i]-drift*(i/(float)count);
+            Vector3 offset=Vector3.ProjectOnPlane(stance-mean/count,Vector3.up);
+            var curves=new[]{new AnimationCurve(),new AnimationCurve(),new AnimationCurve()};
+            for(int i=0;i<=count;i++)
+            {
+                float t=cycle.length*i/count;cycle.SampleAnimation(anim.gameObject,t);
+                Vector3 v=hip.parent.InverseTransformPoint(positions[i]+offset-drift*(i/(float)count));
+                for(int axis=0;axis<3;axis++)curves[axis].AddKey(t,v[axis]);
+            }
+            SetHipCurves(anim,hip,cycle,curves);
+        }
+
+        public static AnimationClip AnchorAction(Animation anim, AnimationClip clip,AnimationClip idle)
+        {
+            if(!clip)return null;
+            var rig=Rig(anim);
+            if(!rig.TryGetValue("Hips",out var pelvis))return null;
+            var hip=pelvis.bone;
+            idle.SampleAnimation(anim.gameObject,idle.length*.3f);
+            Vector3 stance=hip.position;
+            float height=Vector3.Distance(hip.position,rig["Head"].bone.position)+
+                Vector3.Distance(hip.position,rig["LeftFoot"].bone.position);
+            clip.SampleAnimation(anim.gameObject,0);
+            Vector3 start=hip.position;
+            float allowance=Mathf.Max(.00001f,height*.14f);
+            var curves=new[]{new AnimationCurve(),new AnimationCurve(),new AnimationCurve()};
+            float max=0;
+            int count=Mathf.Max(2,Mathf.CeilToInt(clip.length*40));
+            for(int i=0;i<=count;i++)
+            {
+                float time=clip.length*i/count;clip.SampleAnimation(anim.gameObject,time);
+                // Meshy takes can start in entirely different places. The hex supplies
+                // approach and lunge. Retain the performer's small, continuous weight transfer.
+                Vector3 travel=Vector3.ProjectOnPlane(hip.position-start,Vector3.up);
+                Vector3 allowed=travel/Mathf.Sqrt(1+travel.sqrMagnitude/(allowance*allowance));
+                Vector3 correction=Vector3.ProjectOnPlane(stance-hip.position,Vector3.up)+allowed;
+                Vector3 local=hip.parent.InverseTransformPoint(hip.position+correction);
+                for(int axis=0;axis<3;axis++)curves[axis].AddKey(time,local[axis]);
+                max=Mathf.Max(max,correction.magnitude);
+            }
+            if(max<.008f*height)return null;
             var output=UnityEngine.Object.Instantiate(clip);output.name="Board_"+clip.name.Split('|').Last();
-            string path=AnimationUtility.CalculateTransformPath(hip,anim.transform);
-            for(int axis=0;axis<3;axis++)
-                AnimationUtility.SetEditorCurve(output,EditorCurveBinding.FloatCurve(path,typeof(Transform),"m_LocalPosition."+"xyz"[axis]),curves[axis]);
-            return output;
+            SetHipCurves(anim,hip,output,curves);return output;
         }
     }
 }

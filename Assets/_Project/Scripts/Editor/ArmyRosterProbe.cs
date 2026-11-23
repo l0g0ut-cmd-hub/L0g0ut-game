@@ -239,6 +239,7 @@ namespace BladePath.EditorTools
             var shooters=new Texture2D(Size*8,Size*8,TextureFormat.RGBA32,false);
             Tactics.VerifyArmyHud();
             var report=new List<string>{"model,stance_height,advance_height,attack_height,side2_height,stride"};
+            var failures=new List<string>();
             using(var view=new View())
             {
                 for(int row=0;row<names.Length;row++)
@@ -292,6 +293,7 @@ namespace BladePath.EditorTools
                                 walk=Named(from,take);
                             }
                             profile.advance=ArmyAdvanceBaker.FullBody(an,from,walk);
+                            ArmyAdvanceBaker.AlignCycle(an,profile.advance,idle);
                             profile.advance.wrapMode=WrapMode.Loop;
                             AssetDatabase.AddObjectToAsset(profile.advance,profile);
                             rawStride=ArmyAdvanceBaker.MeasureStride(an,profile.advance,out profile.walkDistances);
@@ -326,18 +328,18 @@ namespace BladePath.EditorTools
                         {
                             var close=FromUnit(an,gun||role=="unit_onmyoji"?"unit_sohei":"unit_ronin",
                                 gun||role=="unit_onmyoji"?"Thrust_Slash":"Right_Hand_Sword_Slash");
-                            profile.melee=ArmyAdvanceBaker.AnchorAction(an,close);
+                            profile.melee=ArmyAdvanceBaker.AnchorAction(an,close,idle);
                             if(profile.melee) Object.DestroyImmediate(close); else profile.melee=close;
                             profile.melee.name="Melee_"+profile.melee.name;
                             AssetDatabase.AddObjectToAsset(profile.melee,profile);
                         }
-                        profile.attack=swords?null:ArmyAdvanceBaker.AnchorAction(an,authoredAttack);
+                        profile.attack=swords?null:ArmyAdvanceBaker.AnchorAction(an,authoredAttack,idle);
                         if(authoredAttack!=hit)
                         {
                             if(profile.attack) Object.DestroyImmediate(authoredAttack);
                             else profile.attack=authoredAttack;
                         }
-                        profile.reaction=swords?ArmySwordBaker.Bake(an,ArmySwordBaker.Move.Impact):ArmyAdvanceBaker.AnchorAction(an,clips.hit==null?null:an.GetClip(clips.hit));
+                        profile.reaction=swords?ArmySwordBaker.Bake(an,ArmySwordBaker.Move.Impact):ArmyAdvanceBaker.AnchorAction(an,clips.hit==null?null:an.GetClip(clips.hit),idle);
                         if(profile.attack) AssetDatabase.AddObjectToAsset(profile.attack,profile);
                         if(profile.reaction) AssetDatabase.AddObjectToAsset(profile.reaction,profile);
                         hit=an.GetClip(TacticsFigureProfile.InstallAction(an,profile.attack,clips.attack));
@@ -424,10 +426,16 @@ namespace BladePath.EditorTools
                         report.Add(name+","+string.Join(",",heights.Select(h=>h.ToString("F3",System.Globalization.CultureInfo.InvariantCulture)))+","+profile.stride.ToString("F3",System.Globalization.CultureInfo.InvariantCulture));
                         Debug.Log("ARMY_ROSTER "+report.Last());
                     }
-                    catch(Exception ex){view.Save(Capture+"/failed-"+name+".png");throw new Exception("Army roster "+name+": "+ex.Message,ex);}
+                    catch(Exception ex)
+                    {
+                        view.Save(Capture+"/failed-"+name+".png");
+                        failures.Add(name+": "+ex.Message);
+                        Debug.LogError("ARMY_CHECK "+name+" "+ex);
+                    }
                     finally {if(donor) Object.DestroyImmediate(donor);Object.DestroyImmediate(anchor);Object.DestroyImmediate(mat);}
                 }
             }
+            if(failures.Count>0)throw new Exception("Army roster: "+string.Join(" | ",failures));
             AssetDatabase.SaveAssets();
             var types=Tactics.Ours.Concat(Tactics.Foes).ToArray();
             const int crop=144;
