@@ -2256,7 +2256,10 @@ namespace BladePath
                 if(spellSel==QuickSpells[i]) UiKit.Ring(r.center,15f,Gold,true);
                 if(GUI.Button(r,GUIContent.none,GUIStyle.none) && can) Select(QuickSpells[i]);
             }
-            string[] tips={"ЖДАТЬ","ЗАЩИТА",autoOurs?"АВТО: ВКЛ":"АВТОБОЙ","БЕГСТВО","СДАТЬСЯ","УМЕНИЯ"};
+            // сдача — за выкуп; не хватает мон — кнопка тусклая и при нажатии говорит об этом крупно (раньше — строка в журнале, «не работает»)
+            int ransomNow = Ransom();
+            bool canPay = Profile.Gold >= ransomNow;
+            string[] tips={"ЖДАТЬ","ЗАЩИТА",autoOurs?"АВТО: ВКЛ":"АВТОБОЙ","БЕГСТВО",canPay?"СДАТЬСЯ":"ВЫКУП "+ransomNow,"УМЕНИЯ"};
             bool ourTurn = cur != null && !cur.enemy && !Busy && !finished && !autoOurs;
             for (int i = 0; i < 6; i++)
             {
@@ -2264,7 +2267,7 @@ namespace BladePath
                 float iconSize=Mathf.Max(16f,Mathf.Min(43f,Mathf.Min(r.width-2f,r.height-19f)));   // над плашкой подписи, не под ней
                 Rect icon=new Rect(r.center.x-iconSize*.5f,r.y,iconSize,iconSize);
                 Texture2D t = UiKit.Tex("UI/Battle/btn_" + i);
-                bool on = i == 2 || i == 3 || i == 4 || ourTurn && (i != 0 || !cur.waited) || i == 5 && !finished;
+                bool on = (i == 2 || i == 3) && !finished || i == 4 && canPay && !finished || ourTurn && i < 2 && (i != 0 || !cur.waited) || i == 5 && !finished;
                 Color oc = GUI.color; GUI.color = on ? Color.white : new Color(1f, 1f, 1f, 0.4f);
                 if(t!=null) GUI.DrawTexture(icon,t); else UiKit.Rect(icon,new Color(.3f,.1f,.05f));
                 GUI.color = oc;
@@ -2272,12 +2275,19 @@ namespace BladePath
                 Texture2D plate=UiKit.Tex("UI/Battle/Kit/hud_slot_label")??UiKit.Tex("UI/Battle/count_plaque");
                 if(plate) GUI.DrawTexture(band,plate);
                 Label(new Rect(band.x+band.width*.14f,band.y+band.height*.16f,band.width*.72f,band.height*.68f),tips[i],10f,on?Ink:Dim);   // внутри рамки плашки
-                if (!GUI.Button(r, GUIContent.none, GUIStyle.none) || !on) continue;
+                bool pressed = GUI.Button(r, GUIContent.none, GUIStyle.none);
+                if (pressed && i == 4 && !canPay && !finished)
+                {
+                    texts.Add(new Float { p = new Vector2(W * 0.5f, 250f), s = "Выкуп " + ransomNow + " мон — не хватает (есть " + Profile.Gold + ")", t0 = BattleNow, col = new Color(1f, 0.6f, 0.45f) });
+                    Log("Сдаться нельзя: выкуп " + ransomNow + " мон, есть " + Profile.Gold + ".");
+                    continue;
+                }
+                if (!pressed || !on) continue;
                 switch (i)
                 {
                     case 0: Wait(); break;
                     case 1: Defend(); break;
-                    case 2: autoOurs = !autoOurs; break;
+                    case 2: autoOurs = !autoOurs; Log(autoOurs ? "Автобой включён: отряды ходят сами." : "Автобой выключен."); break;
                     case 3: case 4:
                     {
                         int ransom = Ransom();
@@ -2290,6 +2300,15 @@ namespace BladePath
                     }
                     case 5: bookOpen = !bookOpen; break;
                 }
+            }
+            if (autoOurs && !finished)
+            {   // автобой виден сразу и выключается касанием (раньше включённый автобой замечали, только когда отряды сами пошли)
+                Rect ab = new Rect(W * 0.5f - 150f, hud.footer.y - 40f, 300f, 30f);
+                float pulse = 0.75f + 0.25f * Mathf.Sin(Time.unscaledTime * 4f);
+                UiKit.Rect(ab, new Color(0.35f, 0.06f, 0.04f, 0.88f * pulse));
+                UiKit.Rect(new Rect(ab.x, ab.y, ab.width, 1.5f), Gold); UiKit.Rect(new Rect(ab.x, ab.yMax - 1.5f, ab.width, 1.5f), Gold);
+                Label(new Rect(ab.x + 8f, ab.y + 3f, ab.width - 16f, ab.height - 6f), "АВТОБОЙ ВКЛ — нажми, чтобы выключить", 12f, Gold);
+                if (GUI.Button(ab, GUIContent.none, GUIStyle.none)) { autoOurs = false; Log("Автобой выключен."); }
             }
             // ход и подсказка
             string line = finished ? "" : cur == null ? "" : cur.enemy ? "Ход врага: " + cur.t.name + " ×" + cur.count
