@@ -2436,35 +2436,39 @@ namespace BladePath
         static void DrawInfo()
         {
             Stack s = info;
-            Rect r = new Rect(W * 0.5f - 260f, 120f, 520f, 280f);
+            // пропорции — как у картины recruit_window 1484×1005 (было 520×280: картину тянуло по ширине на треть, всё внутри съезжало);
+            // доли ниже — замер по картине (28.11): рамка портрета 63…596 × 131…881, плашки параметров 800…1405 с центрами
+            // строк 182/307/432/555, полоса ползунка 630…745 (колонка от значков 663 до края плашек 1405), кнопки 665…1005 и 1057…1406 × 767…882
+            float ww = 520f, wh = ww * 1005f / 1484f;
+            Rect r = new Rect(W * 0.5f - ww * 0.5f, (540f - wh) * 0.5f, ww, wh);
+            System.Func<float, float, float, float, Rect> A = (x0, y0, x1, y1) => new Rect(r.x + r.width * x0 / 1484f, r.y + r.height * y0 / 1005f, r.width * (x1 - x0) / 1484f, r.height * (y1 - y0) / 1005f);
             Texture2D win = UiKit.Tex("UI/Battle/recruit_window");
             if (win != null) GUI.DrawTexture(r, win); else UiKit.Rect(r, new Color(0.08f, 0.04f, 0.03f, 0.97f));
-            Rect pf = new Rect(r.x + r.width * 0.075f, r.y + r.height * 0.155f, r.width * 0.31f, r.height * 0.7f);
-            DrawPortrait(new Rect(pf.center.x - pf.width * 0.45f, pf.center.y - pf.width * 0.45f, pf.width * 0.9f, pf.width * 0.9f), s.t);
-            Label(new Rect(pf.x, pf.yMax - 26f, pf.width, 22f), s.t.name.ToUpper(), 13f, Gold);
+            Rect pf = A(80f, 148f, 580f, 866f);   // внутреннее поле рамки портрета
+            float d = pf.width * 0.86f;
+            DrawPortrait(new Rect(pf.center.x - d * 0.5f, pf.y + pf.height * 0.40f - d * 0.5f, d, d), s.t);
+            Label(new Rect(pf.x + pf.width * 0.06f, pf.y + pf.height * 0.80f, pf.width * 0.88f, pf.height * 0.11f), s.t.name.ToUpper(), 13f, Gold);
             string[] vals = { "Атака " + s.Atk + "   урон " + s.t.dmin + "–" + s.t.dmax, "Защита " + s.Def, "Здоровье " + s.t.hp + "   у первого " + s.topHp, "Скорость " + s.Spd + (s.t.shots > 0 ? "   выстрелов " + s.shots : "") };
+            float[] rowC = { 182f, 307f, 432f, 555f };
             for (int i = 0; i < 4; i++)
-                Label(new Rect(r.x + r.width * 0.56f, r.y + r.height * (0.15f + 0.122f * i), r.width * 0.37f, r.height * 0.09f), vals[i], 11.5f, Ink, TextAnchor.MiddleLeft);
-            // картина — окно найма: ползунок численности здесь не нужен — закрыт плашкой со способностью отряда,
-            // а численность — в левой плашке-кнопке (раньше надпись ложилась на ползунок, левая кнопка была пустой)
-            Rect band = new Rect(r.x + r.width * 0.428f, r.y + r.height * 0.622f, r.width * 0.536f, r.height * 0.128f);
+                Label(A(830f, rowC[i] - 34f, 1385f, rowC[i] + 34f), vals[i], 11.5f, Ink, TextAnchor.MiddleLeft);
+            // ползунок окна найма закрыт плашкой со способностью отряда (ровно по колонке параметров), численность — в левой кнопке
+            Rect band = A(663f, 632f, 1406f, 744f);
             Texture2D lp = UiKit.Tex("UI/Battle/Kit/long_plaque");
             Rect body = band;
+            UiKit.Rect(A(640f, 626f, 1430f, 750f), new Color(0.17f, 0.05f, 0.035f, 1f));   // ползунок не просвечивает (концы с шариками шире колонки)
             if (lp != null)
-            {   // плашка атласа Kit (930×205, тело с 60-й строки — выше герб): тело плашки ровно на месте ползунка
-                // без герба (он налезал на плашку «Скорость»): только тело плашки, строки 60…205
-                UiKit.Rect(new Rect(band.x + 2f, band.y + 1f, band.width - 4f, band.height - 2f), new Color(0.17f, 0.05f, 0.035f, 1f));   // ползунок под плашкой не просвечивает
-                BodySlice(band, lp, 60f / 205f, 1f, 0.07f);
-                body = new Rect(band.x + band.width * 0.06f, band.y + band.height * 0.12f, band.width * 0.88f, band.height * 0.72f);
+            {   // плашка атласа Kit — только тело, без герба и его обрубка (строки 75…205)
+                BodySlice(band, lp, 75f / 205f, 1f, 0.07f);
+                body = new Rect(band.x + band.width * 0.06f, band.y + band.height * 0.14f, band.width * 0.88f, band.height * 0.72f);
             }
-            else
-            {
-                UiKit.Rect(band, new Color(0.17f, 0.05f, 0.035f, 1f));
-                UiKit.Rect(new Rect(band.x + 4f, band.y + 3f, band.width - 8f, band.height - 6f), new Color(0.11f, 0.035f, 0.025f, 1f));
-            }
+            else UiKit.Rect(new Rect(band.x + 4f, band.y + 3f, band.width - 8f, band.height - 6f), new Color(0.11f, 0.035f, 0.025f, 1f));
             Label(body, s.t.Ability.Length > 0 ? s.t.Ability : "без особых способностей", 11f, s.t.Ability.Length > 0 ? Gold : Dim, TextAnchor.MiddleCenter, true);
-            Label(new Rect(r.x + r.width * 0.462f, r.y + r.height * 0.775f, r.width * 0.21f, r.height * 0.1f), "Бойцов: " + s.count + " из " + s.start, 11f, Ink);
-            if (HudButton(new Rect(r.x + r.width * 0.7f, r.y + r.height * 0.77f, r.width * 0.22f, r.height * 0.12f), "ЗАКРЫТЬ", true, false)) info = null;
+            Label(A(690f, 790f, 980f, 860f), "Бойцов: " + s.count + " из " + s.start, 11f, Ink);
+            // «ЗАКРЫТЬ» — подпись в нарисованной кнопке картины (раньше поверх неё рисовалась вторая кнопка со своей рамкой)
+            Rect closeR = A(1057f, 767f, 1406f, 882f);
+            Label(A(1082f, 790f, 1381f, 860f), "ЗАКРЫТЬ", 13f, Gold);
+            if (GUI.Button(closeR, GUIContent.none, GUIStyle.none)) info = null;
         }
 
         static void DrawResult()
