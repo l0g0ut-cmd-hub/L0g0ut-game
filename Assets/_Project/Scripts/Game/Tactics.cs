@@ -621,7 +621,9 @@ namespace BladePath
             {
                 if (!on[m]) continue;
                 Vector2 p = MachinePos(m); float w = R * 2.4f, h = w * 0.9f;
-                GUI.DrawTextureWithTexCoords(new Rect(p.x - w * 0.5f, p.y - h * 0.7f, w, h), t, new Rect(m / 3f, 0f, 1f / 3f, 1f));
+                float bottom = p.y + h * 0.3f;
+                if (m == 1) { w *= 1.4f; h *= 1.4f; }   // палатка лекаря нарисована общим планом — рядом с баллистой и повозкой казалась карликовой
+                GUI.DrawTextureWithTexCoords(new Rect(p.x - w * 0.5f, bottom - h, w, h), t, new Rect(m / 3f, 0f, 1f / 3f, 1f));
             }
         }
 
@@ -2043,8 +2045,13 @@ namespace BladePath
                 plaqueOnly:
                 // число бойцов
                 Rect pr=new Rect(p.x-R*.59f,p.y+R*.05f,R*1.18f,R*.46f);
-                if (plaque != null) GUI.DrawTexture(pr, plaque); else UiKit.Rect(pr, new Color(0.15f, 0.05f, 0.03f, 0.9f));
-                Label(new Rect(pr.x+pr.width*.12f,pr.y+pr.height*.10f,pr.width*.76f,pr.height*.80f), s.count.ToString(), Mathf.Max(10f, R * 0.3f), s.enemy ? new Color(1f, 0.62f, 0.5f) : new Color(1f, 0.9f, 0.62f));
+                // своя/чужая табличка — по цвету (как кольца очереди): свои синеватые, враги красноватые
+                Color side = s.enemy ? new Color(1f, 0.45f, 0.4f) : new Color(0.5f, 0.72f, 1f);
+                Color pc = GUI.color; GUI.color = side;
+                if (plaque != null) GUI.DrawTexture(pr, plaque); else UiKit.Rect(pr, s.enemy ? new Color(0.35f, 0.06f, 0.04f, 0.92f) : new Color(0.06f, 0.14f, 0.32f, 0.92f));
+                GUI.color = pc;
+                UiKit.Rect(new Rect(pr.x + pr.width * 0.12f, pr.y + pr.height * 0.2f, pr.width * 0.76f, pr.height * 0.6f), s.enemy ? new Color(0.32f, 0.04f, 0.03f, 0.55f) : new Color(0.04f, 0.1f, 0.28f, 0.55f));
+                Label(new Rect(pr.x+pr.width*.12f,pr.y+pr.height*.10f,pr.width*.76f,pr.height*.80f), s.count.ToString(), Mathf.Max(10f, R * 0.3f), s.enemy ? new Color(1f, 0.82f, 0.76f) : new Color(0.86f, 0.94f, 1f));
                 if (s.defending) UiKit.Text(new Rect(pr.x - R * 0.5f, pr.y, R * 0.5f, pr.height), "⛨", R * 0.32f, Gold);
             }
         }
