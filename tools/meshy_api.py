@@ -5,7 +5,8 @@
   {"action": "balance"}                                         — сколько кредитов осталось
   {"action": "text",  "name": "lantern", "prompt": "...",       — текст → модель (черновик, затем текстура)
    "refine": true, "texture_prompt": "...", "art_style": "realistic", "polycount": 20000, "topology": "triangle",
-   "enable_pbr": false, "ai_model": "", "symmetry_mode": "auto"}
+   "enable_pbr": false, "ai_model": "", "symmetry_mode": "auto", "pose_mode": "a-pose",
+   "rig": true, "height": 1.75, "action_ids": [...], "fps": 30}                    — и сразу скелет Meshy + клипы библиотеки
   {"action": "image", "name": "oni_mask", "image": "tools/meshy/in/oni.png", "rig": true, "height": 1.7,  — картинка → модель (+скелет Meshy)
    "polycount": 20000, "topology": "triangle", "texture": true, "enable_pbr": false, "pose_mode": "", "texture_prompt": ""}
   {"action": "rig",   "name": "ronin", "task_id": "..." | "model_url": "...", "height": 1.7, ["action_ids": [...], "fps": 30]}   — скелет (+ клипы библиотеки)
@@ -117,7 +118,12 @@ def do(r):
             b2 = {"mode": "refine", "preview_task_id": tid}
             opt(b2, r, "texture_prompt"); opt(b2, r, "enable_pbr"); opt(b2, r, "ai_model")
             tid2 = call("POST", "/v2/text-to-3d", b2)["result"]; log("  текстура:", tid2)
-            save(name, wait("/v2/text-to-3d", tid2), "refine")
+            j2 = wait("/v2/text-to-3d", tid2); save(name, j2, "refine")
+            if r.get("rig") and j2.get("status") == "SUCCEEDED":   # скелет Meshy и клипы библиотеки — как у заявки image
+                rb = {"input_task_id": tid2, "height_meters": r.get("height", 1.7)}
+                rid = call("POST", "/v1/rigging", rb)["result"]; log("  риг:", rid)
+                jr = wait("/v1/rigging", rid); save(name, jr, "rig")
+                if jr.get("status") == "SUCCEEDED": anim_after(name, rid, r)
         return
     if a == "image":
         p = r["image"]
