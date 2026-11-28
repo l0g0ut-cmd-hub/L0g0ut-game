@@ -77,6 +77,21 @@ namespace BladePath.EditorTools
                 if (b == 0)
                     for (int k = 0; k < 4; k++) { yield return new WaitForSecondsRealtime(0.6f); yield return Shot("game_battle0_t" + k); }
                 if (b == 1) { Set(typeof(Tactics), "bookOpen", true); yield return new WaitForSecondsRealtime(0.5f); yield return Shot("game_spellbook"); Set(typeof(Tactics), "bookOpen", false); }
+                if (b == 2)
+                {   // окно отряда и окно итога боя (28.11.2026: проверка арта атласов Kit)
+                    var all = Get(typeof(Tactics), "stacks") as System.Collections.IList;
+                    if (all != null && all.Count > 0)
+                    {
+                        Set(typeof(Tactics), "info", all[0]); yield return new WaitForSecondsRealtime(0.5f); yield return Shot("game_unit_info");
+                        Set(typeof(Tactics), "info", all[all.Count - 1]); yield return new WaitForSecondsRealtime(0.5f); yield return Shot("game_unit_info_enemy");
+                        Set(typeof(Tactics), "info", null);
+                    }
+                    Set(typeof(Tactics), "autoOurs", false);
+                    Set(typeof(Tactics), "resultText", "Враг разбит. Сражено врагов: 57, наших потерь: 21.\nДобыча: 402 мон.\nОпыт полководца: +302 — новый уровень!");
+                    Set(typeof(Tactics), "won", true); Set(typeof(Tactics), "finished", true);
+                    yield return new WaitForSecondsRealtime(0.6f); yield return Shot("game_result_win");
+                    Set(typeof(Tactics), "finished", false);
+                }
                 try { Call(typeof(Tactics), "Close"); } catch (Exception e) { VisualQARunner.Fail("close: " + e.Message); }
                 yield return new WaitForSecondsRealtime(0.5f);
             }
