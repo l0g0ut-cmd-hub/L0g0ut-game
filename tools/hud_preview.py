@@ -13,6 +13,7 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RES = os.path.join(ROOT, "Assets/_Project/Resources")
 FONT = os.path.join(RES, "Fonts/OldStandard-Bold.ttf")
+TCAPTION, TBODY, TSTRONG, THEAD, TTITLE = 9.5, 11.0, 13.0, 16.0, 22.0   # шкала шрифтов Tactics.cs
 GOLD = (230, 194, 120); INK = (237, 227, 204); DIM = (173, 163, 143)
 
 sw, sh = (int(sys.argv[1]), int(sys.argv[2])) if len(sys.argv) > 2 else (2280, 1080)
@@ -130,10 +131,10 @@ slice3((0, footer[1] - (66 + 20) * bk, W, 235 * bk), bar, bk, 0.015, 0.26)
 hx, hy, hw_, hh_ = hero
 face = min(44.0, hh_ - 14)
 hp = (hx + 3, hy + (hh_ - face - 12) * .5, face, face)
-rect(hp, (60, 30, 20, 255)); ring((hp[0] + face / 2, hp[1] + face / 2), face / 2 + .5, GOLD)
-label((hx, hp[1] + face + 1, face + 6, 12), "ДУХ 5/5", 9.5, (168, 214, 255))
+draw_tex((hp[0] - 4, hp[1] - 4, face + 8, face + 8), tex("UI/Battle/Kit/hud_round")); rect((hp[0] + 9, hp[1] + 9, face - 18, face - 18), (90, 50, 40, 200))
+label((hx, hp[1] + face + 1, face + 6, 12), "ДУХ 5/5", TCAPTION, (168, 214, 255))
 sx = hp[0] + face + 8; swd = hx + hw_ - sx
-label((sx, hy, swd, 15), "УР. 1  АТК 1  ЗАЩ 1  СИЛ 1  ЗНА 1", 11.5, GOLD, "left")
+label((sx, hy, swd, 15), "УР. 1  АТК 1  ЗАЩ 1  СИЛ 1  ЗНА 1", TBODY, GOLD, "left")
 cell = min(46.0, swd / 4); icon = min(40.0, hh_ - 19, cell - 6)
 rnd = tex("UI/Battle/Kit/hud_round")
 for i in range(4):
@@ -145,9 +146,9 @@ for i in range(4):
 ox, oy, ow, oh = orders
 rect((ox, oy + 1, 1, oh - 2), (150, 102, 48, 165))
 oy0 = oy + (oh - 58) * .5
-label((ox + 7, oy0, ow - 13, 15), "Онмёдзи-архимаги: дух пал — пропускают ход.", 10.5, DIM, "left")
-label((ox + 7, oy0 + 15, ow - 13, 15), "Враг: Ронины → Мастера синоби: 36 урона, пало 2.", 10.5, INK, "left")
-label((ox + 7, oy0 + 31, ow - 13, 27), "Ход врага: Ронины ×9", 13, GOLD, "left")
+label((ox + 7, oy0, ow - 13, 15), "Онмёдзи-архимаги: дух пал — пропускают ход.", TBODY, DIM, "left")
+label((ox + 7, oy0 + 15, ow - 13, 15), "Враг: Ронины → Мастера синоби: 36 урона, пало 2.", TBODY, INK, "left")
+label((ox + 7, oy0 + 31, ow - 13, 27), "Ход врага: Ронины ×9", TSTRONG, GOLD, "left")
 
 # кнопки
 tips = ["ЖДАТЬ", "ЗАЩИТА", "АВТОБОЙ", "БЕГСТВО", "СДАТЬСЯ", "УМЕНИЯ"]
@@ -179,7 +180,7 @@ for i in range(10):
     draw_tex((c[0] - side / 2, c[1] - side / 2, side, side), tex("UI/Battle/Kit/ring_foe" if i % 2 else "UI/Battle/Kit/ring_ours"))
 rr = (qr[0] + qw + 6, qr[1] + qh / 2 - 19, 128, 38)
 draw_tex(rr, tex("UI/Battle/Kit/btn_secondary"))
-label((rr[0] + rr[2] * .1, rr[1] + rr[3] * .18, rr[2] * .8, rr[3] * .64), "РАУНД 1", 14, GOLD)
+label((rr[0] + rr[2] * .1, rr[1] + rr[3] * .18, rr[2] * .8, rr[3] * .64), "РАУНД 1", TSTRONG, GOLD)
 
 os.makedirs(os.path.dirname(out), exist_ok=True)
 img.convert("RGB").save(out)
