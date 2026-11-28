@@ -1,0 +1,49 @@
+{
+ "id": "01a22325-6d94-7666-86f3-c3274ce50ee7",
+ "type": "text-to-3d-preview",
+ "mode": "preview",
+ "name": "",
+ "model_type": "standard",
+ "seed": 1965432827,
+ "prompt": "full body tengu warrior, Japanese yokai crow-man, standing in A-pose, black crow head with short sharp curved beak, fierce eyes, large black crow wings folded behind the back with detailed layered feathers, dark grey yamabushi mountain monk robes, white bonten pom-pom bead sash on the chest, red cords, black hakama, straw sandals, empty open hands, dark fantasy game character",
+ "texture_prompt": "",
+ "texture_image_url": "",
+ "status": "SUCCEEDED",
+ "created_at": 1795885987173,
+ "progress": 100,
+ "started_at": 1795885987195,
+ "finished_at": 1795886106300,
+ "model_urls": {
+  "glb": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a22325-6d94-7666-86f3-c3274ce50ee7/output/model.glb?Expires=4949424000&Signature=lYnjmJQAPq3486gNL-ijaEp0eSKaYN07QcHfYToEyC9WzrSJqigaxC~x0XbfMiMbjSzBzYLHs7zoLEI5ig8jid7K2r9ArjL8kvZ2mfqGD3gtmRmbUPYr~ZL9UAGWo0ocfR5wWjg94HvwDnY2bAYpM04lofAzdV2rVuwzKtJWJ7rkGGoqFoUAZSPOyXYqKW4Q91ZG6eJPtsJEvd7l0-mlvsbGXNupELhVl0q8Rf6JklVLg~OR5i1UvaIknA-M0COl0wGTPGPeL~gTYA8XucjfZ9IcDM68~Qg11BXE0jhXa7YxGw-DjkNrIKTGdfhMBYhTY5aEr7koNH9g0Eh8yBqibA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "fbx": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a22325-6d94-7666-86f3-c3274ce50ee7/output/model.fbx?Expires=4949424000&Signature=RgaYJzFpo6fMIz1sZr6J3Kk-Rk~kuhHgXNzAaFOMVpZB30HIxU5hG~KsXRaUG6zQSTxYKE9CjvWl8G~6CpZSh3cGMUFDWwJhkxswgSv14yzg1-5qeGxU3AioT32NYdHb~qaED-CyeqiLPXI0T~zDv0OnvkBljh6RvkPdDbOuAYnJeTy8A~vGqr8BSBAblXPMJlSlvRvzdwRufg~xQ6WAIOa2vr5u5eVgdn4G-ctSpBetCpRQi1jzmX5jUL1jd7RmPRXl8monwcKMu9fXaO7KnNJV46HI7-ok~95dl9CthzuDr6eQlh26yf~DHun4Q714O25w5fr1uhBFuASsuMbm9g__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "usdz": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a22325-6d94-7666-86f3-c3274ce50ee7/output/model.usdz?Expires=4949424000&Signature=A1dW-341xOVhmFZknPFOqiTR0-KUdyDYw3P9wWmlQDSheOH7YuNPz3pxEwGPlt6Fm0xDdy78h9tC3k~8DGoaUp-c~d8NnbOuKVQUYXnz0GIUwRdktIOGmeoXLExdZjq7yiuHsmWjZryGFE-bCL8qnbGsPjaxecaIXdpLdejIyTe8SQGhqtxwSV1Liz8l0pa0fPqfuzlzGjFys44P3xVkRzzingo~n1T1lPVgqjkyWBpwGpUY9pSEiJZYKZJ2t-8z8zRVHcwmM0JhUsWokxK1F4isEX6EMi4mnip5lvBSEoFRf8zMN9oxmBk06IuZksiDNQk0Bf5JFBRaF8-JJLmB4g__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "obj": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a22325-6d94-7666-86f3-c3274ce50ee7/output/model.obj?Expires=4949424000&Signature=OHOvNNmuUpXu9ZKt6BxJq8oRTVGGITV5Aq-nmoZqJqOKoXLzGvy1QdKfk63SRLZ0uI2vaoFgYVEQFCJ5WJMBjm-w2BtipCB44IS9EVjbYuypSrcj7jfxMVqouOb9n1OIkQYhHtkUeDulu9g5X9HSJppts2UIzUxuhaZco9zY-r~6tvgltz9xn5z7IcGFLd9P8eX3sGyR7~MgTtIQVEEm2oPDhg3dSlyGUSfkJgXaqelWgegNc6PjXZyYj7d8ccQACKaF5Zn-f6roogGN49A4r1QTIXVsUBbB1iceGx1EUpk2MN~rBRKrsEW7EmCyH3VqvyxzlGUaq6TQRHHwZ6WAkw__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "stl": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a22325-6d94-7666-86f3-c3274ce50ee7/output/model.stl?Expires=4949424000&Signature=ipCkV8CQXrWLftzIS1ts2Dpy4PI1~j1Z4-PHurvxT-pD-LDHc9M0SomLLOsrbyAvmoSf5g8GajKmlnxFFHqoGRaMKwMbZBjmP0OUYbsQgLOEzyLKaYxmdZhShX71aFlC8QWiFTqtDeJ~oIuMmEqi1fSl68VD5JqfiILVvNyEj6TWKfBRoCaDEYRFAySvbFjBbvrUMIg~V~MjHHF3SiSyNlqsEhIkKF57l2P-spcRVyey7vroyxkqv~JIJNpEImeI3PyuSGytyshPaq2Fc7Ie4Mlgr3QdFDnpUlHZNnYkZrBQePcD6o8o26~-Jd~aSTEDAgtgX4TfoGn89oY7LqctPA__&Key-Pair-Id=K1VGYTHIYLM9UM"
+ },
+ "thumbnail_url": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a22325-6d94-7666-86f3-c3274ce50ee7/output/preview.png?Expires=4949424000&Signature=cn~AuzF6DSyN4G5GiRVP98Pa0LoKcmJrF-yyO6IbI2YBXYE09UsDsDmRZlF6fgXvoEfBSuIppTAE8sixmf2AL3T6C~4c3s95a4snmxVmJvAxWVWQlJaEPixZfPIYQHDT1BFTu8hUOg9VhLVOH4M8u7S9h0-vHuXz8HSkDyEEyczNhU1w7uLns3wpRTr~mUc8k-VRUk4dXq1k~vHGpUBScZUedKhcLBntaAu8jBepz8taYJUmWzBrsHXnsynBeQ~WAO081NnqEEyq7j7o4F6rFZbIuwfop5jX5VOvbEIjIYHH3DUIC10JFfBsN0-N-VA3zGTL35uEiNPbRnwX9xPsMg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+ "texture_urls": [],
+ "consumed_credits": 20,
+ "task_error": null,
+ "expires_at": null,
+ "input": {
+  "mode": "preview",
+  "pose_mode": "a-pose",
+  "prompt": "full body tengu warrior, Japanese yokai crow-man, standing in A-pose, black crow head with short sharp curved beak, fierce eyes, large black crow wings folded behind the back with detailed layered feathers, dark grey yamabushi mountain monk robes, white bonten pom-pom bead sash on the chest, red cords, black hakama, straw sandals, empty open hands, dark fantasy game character",
+  "should_remesh": true,
+  "target_polycount": 20000,
+  "topology": "triangle"
+ },
+ "output": {
+  "seed": 1965432827,
+  "model_urls": {
+   "fbx": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a22325-6d94-7666-86f3-c3274ce50ee7/output/model.fbx?Expires=4949424000&Signature=RgaYJzFpo6fMIz1sZr6J3Kk-Rk~kuhHgXNzAaFOMVpZB30HIxU5hG~KsXRaUG6zQSTxYKE9CjvWl8G~6CpZSh3cGMUFDWwJhkxswgSv14yzg1-5qeGxU3AioT32NYdHb~qaED-CyeqiLPXI0T~zDv0OnvkBljh6RvkPdDbOuAYnJeTy8A~vGqr8BSBAblXPMJlSlvRvzdwRufg~xQ6WAIOa2vr5u5eVgdn4G-ctSpBetCpRQi1jzmX5jUL1jd7RmPRXl8monwcKMu9fXaO7KnNJV46HI7-ok~95dl9CthzuDr6eQlh26yf~DHun4Q714O25w5fr1uhBFuASsuMbm9g__&Key-Pair-Id=K1VGYTHIYLM9UM",
+   "glb": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a22325-6d94-7666-86f3-c3274ce50ee7/output/model.glb?Expires=4949424000&Signature=lYnjmJQAPq3486gNL-ijaEp0eSKaYN07QcHfYToEyC9WzrSJqigaxC~x0XbfMiMbjSzBzYLHs7zoLEI5ig8jid7K2r9ArjL8kvZ2mfqGD3gtmRmbUPYr~ZL9UAGWo0ocfR5wWjg94HvwDnY2bAYpM04lofAzdV2rVuwzKtJWJ7rkGGoqFoUAZSPOyXYqKW4Q91ZG6eJPtsJEvd7l0-mlvsbGXNupELhVl0q8Rf6JklVLg~OR5i1UvaIknA-M0COl0wGTPGPeL~gTYA8XucjfZ9IcDM68~Qg11BXE0jhXa7YxGw-DjkNrIKTGdfhMBYhTY5aEr7koNH9g0Eh8yBqibA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+   "obj": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a22325-6d94-7666-86f3-c3274ce50ee7/output/model.obj?Expires=4949424000&Signature=OHOvNNmuUpXu9ZKt6BxJq8oRTVGGITV5Aq-nmoZqJqOKoXLzGvy1QdKfk63SRLZ0uI2vaoFgYVEQFCJ5WJMBjm-w2BtipCB44IS9EVjbYuypSrcj7jfxMVqouOb9n1OIkQYhHtkUeDulu9g5X9HSJppts2UIzUxuhaZco9zY-r~6tvgltz9xn5z7IcGFLd9P8eX3sGyR7~MgTtIQVEEm2oPDhg3dSlyGUSfkJgXaqelWgegNc6PjXZyYj7d8ccQACKaF5Zn-f6roogGN49A4r1QTIXVsUBbB1iceGx1EUpk2MN~rBRKrsEW7EmCyH3VqvyxzlGUaq6TQRHHwZ6WAkw__&Key-Pair-Id=K1VGYTHIYLM9UM",
+   "stl": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a22325-6d94-7666-86f3-c3274ce50ee7/output/model.stl?Expires=4949424000&Signature=ipCkV8CQXrWLftzIS1ts2Dpy4PI1~j1Z4-PHurvxT-pD-LDHc9M0SomLLOsrbyAvmoSf5g8GajKmlnxFFHqoGRaMKwMbZBjmP0OUYbsQgLOEzyLKaYxmdZhShX71aFlC8QWiFTqtDeJ~oIuMmEqi1fSl68VD5JqfiILVvNyEj6TWKfBRoCaDEYRFAySvbFjBbvrUMIg~V~MjHHF3SiSyNlqsEhIkKF57l2P-spcRVyey7vroyxkqv~JIJNpEImeI3PyuSGytyshPaq2Fc7Ie4Mlgr3QdFDnpUlHZNnYkZrBQePcD6o8o26~-Jd~aSTEDAgtgX4TfoGn89oY7LqctPA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+   "usdz": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a22325-6d94-7666-86f3-c3274ce50ee7/output/model.usdz?Expires=4949424000&Signature=A1dW-341xOVhmFZknPFOqiTR0-KUdyDYw3P9wWmlQDSheOH7YuNPz3pxEwGPlt6Fm0xDdy78h9tC3k~8DGoaUp-c~d8NnbOuKVQUYXnz0GIUwRdktIOGmeoXLExdZjq7yiuHsmWjZryGFE-bCL8qnbGsPjaxecaIXdpLdejIyTe8SQGhqtxwSV1Liz8l0pa0fPqfuzlzGjFys44P3xVkRzzingo~n1T1lPVgqjkyWBpwGpUY9pSEiJZYKZJ2t-8z8zRVHcwmM0JhUsWokxK1F4isEX6EMi4mnip5lvBSEoFRf8zMN9oxmBk06IuZksiDNQk0Bf5JFBRaF8-JJLmB4g__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a22325-6d94-7666-86f3-c3274ce50ee7/output/preview.png?Expires=4949424000&Signature=cn~AuzF6DSyN4G5GiRVP98Pa0LoKcmJrF-yyO6IbI2YBXYE09UsDsDmRZlF6fgXvoEfBSuIppTAE8sixmf2AL3T6C~4c3s95a4snmxVmJvAxWVWQlJaEPixZfPIYQHDT1BFTu8hUOg9VhLVOH4M8u7S9h0-vHuXz8HSkDyEEyczNhU1w7uLns3wpRTr~mUc8k-VRUk4dXq1k~vHGpUBScZUedKhcLBntaAu8jBepz8taYJUmWzBrsHXnsynBeQ~WAO081NnqEEyq7j7o4F6rFZbIuwfop5jX5VOvbEIjIYHH3DUIC10JFfBsN0-N-VA3zGTL35uEiNPbRnwX9xPsMg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "alpha_thumbnail_url": null,
+  "texture_urls": []
+ }
+}

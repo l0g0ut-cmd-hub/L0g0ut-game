@@ -1,0 +1,49 @@
+{
+ "id": "01a2232a-3683-7333-a50a-5134486fabf3",
+ "type": "text-to-3d-preview",
+ "mode": "preview",
+ "name": "",
+ "model_type": "standard",
+ "seed": 3224694737,
+ "prompt": "full body daitengu, great tengu elder of Japanese folklore, standing in A-pose, red face with very long nose, wild long grey hair, stern old face, huge spread black crow wings on the back with detailed layered feathers, ornate yamabushi robes black and gold, large white bonten pom-pom beads on the chest, small black tokin cap, tall geta sandals, empty open hands, majestic dark fantasy game character",
+ "texture_prompt": "",
+ "texture_image_url": "",
+ "status": "SUCCEEDED",
+ "created_at": 1795886300606,
+ "progress": 100,
+ "started_at": 1795886300613,
+ "finished_at": 1795886386434,
+ "model_urls": {
+  "glb": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a2232a-3683-7333-a50a-5134486fabf3/output/model.glb?Expires=4949424000&Signature=NSDJb8rEU0DsAS6ZAgU13PRwnvTYn48RiPhXft0u39sgMOw-bHE8G3arqCWRjwjObIlS3Mfk7l3Z6U-HrsuVGz6pYlbQkEcdrYpfug-b92m7wGEF-P6Np2ShU3tONrTEYBih1lgeD1wHlCMyu4tX0C-D-M2q02nxuPfy4drjrqJ0oqN7DiZaUeCSZEBTQxd3Z89N3t1~~Nt5vZOoTrUreWFUJHN7h-xJyW3oXBCr0oQF-SV4wbubGWtr8F6hl34Nl-qHP02uLERWT2Z48vSRvsW9hIzqVdJayUwIFshzilGp31gpFdvYQjhP~7hnGoAP24luCj1A3T9J4Sh~a0JOFQ__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "fbx": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a2232a-3683-7333-a50a-5134486fabf3/output/model.fbx?Expires=4949424000&Signature=WrHBW0vADhkbxHGQPumxYPMZqCY0bWLQ9chKgCKBjVtl7uioXgZC1qAcLXRFqegRVQ5NmnLpwyU3J5dLJxNYJBXm1~xXt6ZTgit8VjJxu4NM3LSRiEv~vvM6q7ySron045DnywUYUOyzQYs72FjW5mcLNZvP67lj7fmTy2N0NHDqQmLEcKRZOijcg5XKObN67XwYmo8lqQApkR1hY~FBcd1LQxwVRsJX5r6Iaw~NevmdKOjR4RjhZWdDU~SuF79kqb18RPOhozVvn9AttbS80ZHY685ISOFBOknrkji7K4R4zgLDa3UE~b3HwJSoWcdHbtPc6N4P0sM4PrG-z2ygWw__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "usdz": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a2232a-3683-7333-a50a-5134486fabf3/output/model.usdz?Expires=4949424000&Signature=ME95XunvK3ktdgP78QsVWlGieq8CnY~HiMz404kle9nhL5TC20DRPl93rQKZOPl5Pqr6Ez3OQFnnKJJruL1w2CJSn7-a~HkWFhKYaiLo49cjU2-WG42YbozIVvdT1kswUkBkc7FHQUS1-AlcqnAJgMUgLAAVqkR8B6xB~IJ5Jlp7mvcThkDHaLIxzXcBWblrx2ttSt-f03ufv~76KsEhQpQ6NStA95xsh0FgE7tpHb7oT5FT51QhEGj9CJhzNGxaVRWspyMWSlY5NPTx8jeS6rkEmA9igogBYNfHLcPR4yxQ12Cv4mUrrVydFxh2WcwwW~QL40MYgsOJgua0LP0VGA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "obj": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a2232a-3683-7333-a50a-5134486fabf3/output/model.obj?Expires=4949424000&Signature=mZ7W1Yh1NeROkoZdtoNW1FyNMiaWK0-rY0YEHMaID0G4zgApTqCe~lJrzyehcGIufEwEJXpwSXAdKowzEOfFZA01pbmq2NtkWWibrfUQbNBkTQY7rveklXgJ~Jkf3Y~Xdv~Fm8K8IC8WxMYGrgNlLNRqxWoY~93Zq-5kTuBK4TrYJO8K1JfyCHeIk6Yw4-lw7e5iT4dO~mzXvaQLqlSh7ewuTEyyr7dQrm-GOLB~n9x5wwd~QK8hJJHTTajKNcgoTFkj1oX7PfAt~fhEYu77IutXyk1tGDwhXmmxTZlAEYWftBmvE8RVaac0U5tghApJjg5c7jgdbaAXb-ZfthosSg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "stl": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a2232a-3683-7333-a50a-5134486fabf3/output/model.stl?Expires=4949424000&Signature=DkS7xdJ2gbCNOuVJOwB-XWc8KQrBbuatH37M55LWi8jNYJsejQXUBCDBrak-RDXz-TfzFEosdghG1ORFVts7CXYNOt-Ktd8KnvUhEA2oyJNg1kBDTQJW2pWTJVqZORk9Ho~z1IduyoFw4Amhg-xHUTeTQpF3lI8PsWCYBCJHWTuWX~ACXKwfMQozd6U-PZuL6KisJ4rnz7byTwalbAqkWnhdCTW6-VJ7nkm9recqCkC3Keec2BkQT7h2E6ZK0oYKmzEEGy2ZSa~M4b~c8eOz4dxzQ6n9t3ZZBecWOEnCAeKN9lelGjOMo6TAfu-xQnp9fOUWHrr55WvU3acOMORMuA__&Key-Pair-Id=K1VGYTHIYLM9UM"
+ },
+ "thumbnail_url": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a2232a-3683-7333-a50a-5134486fabf3/output/preview.png?Expires=4949424000&Signature=TuyPvf6bBXEM-Pt7HiSCeZZMDqZQn4NdsyaxyagXlk83-Wz3D32A-vAn9iCF5gFx~Pi~kL6-erCH4nyz~c3Shpt18ZXIUkF7T153zacA9L~15lwkjt9M2nhKMmv99Jbl6xvXCX-CNOPz6LC1BRIBQrQKLcGn8qcu44NrFgHtUCYB~B~zcbN0U4EdkFAVm-S4fZliMJpTpUyTXmhjaOWZps3frPjNs707wfSMeDLJ6AgpzL0ziWspyA0OGKgEaesCkCCtXrnFFSKzs~6WJqWLYxv72JuXXE8kJJeAdbkgaKjSe8jYCJYgsqVhnUR9Hlwy0lYcIshezDEpB-4wU09n~w__&Key-Pair-Id=K1VGYTHIYLM9UM",
+ "texture_urls": [],
+ "consumed_credits": 20,
+ "task_error": null,
+ "expires_at": null,
+ "input": {
+  "mode": "preview",
+  "pose_mode": "a-pose",
+  "prompt": "full body daitengu, great tengu elder of Japanese folklore, standing in A-pose, red face with very long nose, wild long grey hair, stern old face, huge spread black crow wings on the back with detailed layered feathers, ornate yamabushi robes black and gold, large white bonten pom-pom beads on the chest, small black tokin cap, tall geta sandals, empty open hands, majestic dark fantasy game character",
+  "should_remesh": true,
+  "target_polycount": 20000,
+  "topology": "triangle"
+ },
+ "output": {
+  "seed": 3224694737,
+  "model_urls": {
+   "fbx": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a2232a-3683-7333-a50a-5134486fabf3/output/model.fbx?Expires=4949424000&Signature=WrHBW0vADhkbxHGQPumxYPMZqCY0bWLQ9chKgCKBjVtl7uioXgZC1qAcLXRFqegRVQ5NmnLpwyU3J5dLJxNYJBXm1~xXt6ZTgit8VjJxu4NM3LSRiEv~vvM6q7ySron045DnywUYUOyzQYs72FjW5mcLNZvP67lj7fmTy2N0NHDqQmLEcKRZOijcg5XKObN67XwYmo8lqQApkR1hY~FBcd1LQxwVRsJX5r6Iaw~NevmdKOjR4RjhZWdDU~SuF79kqb18RPOhozVvn9AttbS80ZHY685ISOFBOknrkji7K4R4zgLDa3UE~b3HwJSoWcdHbtPc6N4P0sM4PrG-z2ygWw__&Key-Pair-Id=K1VGYTHIYLM9UM",
+   "glb": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a2232a-3683-7333-a50a-5134486fabf3/output/model.glb?Expires=4949424000&Signature=NSDJb8rEU0DsAS6ZAgU13PRwnvTYn48RiPhXft0u39sgMOw-bHE8G3arqCWRjwjObIlS3Mfk7l3Z6U-HrsuVGz6pYlbQkEcdrYpfug-b92m7wGEF-P6Np2ShU3tONrTEYBih1lgeD1wHlCMyu4tX0C-D-M2q02nxuPfy4drjrqJ0oqN7DiZaUeCSZEBTQxd3Z89N3t1~~Nt5vZOoTrUreWFUJHN7h-xJyW3oXBCr0oQF-SV4wbubGWtr8F6hl34Nl-qHP02uLERWT2Z48vSRvsW9hIzqVdJayUwIFshzilGp31gpFdvYQjhP~7hnGoAP24luCj1A3T9J4Sh~a0JOFQ__&Key-Pair-Id=K1VGYTHIYLM9UM",
+   "obj": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a2232a-3683-7333-a50a-5134486fabf3/output/model.obj?Expires=4949424000&Signature=mZ7W1Yh1NeROkoZdtoNW1FyNMiaWK0-rY0YEHMaID0G4zgApTqCe~lJrzyehcGIufEwEJXpwSXAdKowzEOfFZA01pbmq2NtkWWibrfUQbNBkTQY7rveklXgJ~Jkf3Y~Xdv~Fm8K8IC8WxMYGrgNlLNRqxWoY~93Zq-5kTuBK4TrYJO8K1JfyCHeIk6Yw4-lw7e5iT4dO~mzXvaQLqlSh7ewuTEyyr7dQrm-GOLB~n9x5wwd~QK8hJJHTTajKNcgoTFkj1oX7PfAt~fhEYu77IutXyk1tGDwhXmmxTZlAEYWftBmvE8RVaac0U5tghApJjg5c7jgdbaAXb-ZfthosSg__&Key-Pair-Id=K1VGYTHIYLM9UM",
+   "stl": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a2232a-3683-7333-a50a-5134486fabf3/output/model.stl?Expires=4949424000&Signature=DkS7xdJ2gbCNOuVJOwB-XWc8KQrBbuatH37M55LWi8jNYJsejQXUBCDBrak-RDXz-TfzFEosdghG1ORFVts7CXYNOt-Ktd8KnvUhEA2oyJNg1kBDTQJW2pWTJVqZORk9Ho~z1IduyoFw4Amhg-xHUTeTQpF3lI8PsWCYBCJHWTuWX~ACXKwfMQozd6U-PZuL6KisJ4rnz7byTwalbAqkWnhdCTW6-VJ7nkm9recqCkC3Keec2BkQT7h2E6ZK0oYKmzEEGy2ZSa~M4b~c8eOz4dxzQ6n9t3ZZBecWOEnCAeKN9lelGjOMo6TAfu-xQnp9fOUWHrr55WvU3acOMORMuA__&Key-Pair-Id=K1VGYTHIYLM9UM",
+   "usdz": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a2232a-3683-7333-a50a-5134486fabf3/output/model.usdz?Expires=4949424000&Signature=ME95XunvK3ktdgP78QsVWlGieq8CnY~HiMz404kle9nhL5TC20DRPl93rQKZOPl5Pqr6Ez3OQFnnKJJruL1w2CJSn7-a~HkWFhKYaiLo49cjU2-WG42YbozIVvdT1kswUkBkc7FHQUS1-AlcqnAJgMUgLAAVqkR8B6xB~IJ5Jlp7mvcThkDHaLIxzXcBWblrx2ttSt-f03ufv~76KsEhQpQ6NStA95xsh0FgE7tpHb7oT5FT51QhEGj9CJhzNGxaVRWspyMWSlY5NPTx8jeS6rkEmA9igogBYNfHLcPR4yxQ12Cv4mUrrVydFxh2WcwwW~QL40MYgsOJgua0LP0VGA__&Key-Pair-Id=K1VGYTHIYLM9UM"
+  },
+  "thumbnail_url": "https://assets.meshy.ai/857373a2-adae-4bf3-98c9-7e4a9b0f0dba/tasks/01a2232a-3683-7333-a50a-5134486fabf3/output/preview.png?Expires=4949424000&Signature=TuyPvf6bBXEM-Pt7HiSCeZZMDqZQn4NdsyaxyagXlk83-Wz3D32A-vAn9iCF5gFx~Pi~kL6-erCH4nyz~c3Shpt18ZXIUkF7T153zacA9L~15lwkjt9M2nhKMmv99Jbl6xvXCX-CNOPz6LC1BRIBQrQKLcGn8qcu44NrFgHtUCYB~B~zcbN0U4EdkFAVm-S4fZliMJpTpUyTXmhjaOWZps3frPjNs707wfSMeDLJ6AgpzL0ziWspyA0OGKgEaesCkCCtXrnFFSKzs~6WJqWLYxv72JuXXE8kJJeAdbkgaKjSe8jYCJYgsqVhnUR9Hlwy0lYcIshezDEpB-4wU09n~w__&Key-Pair-Id=K1VGYTHIYLM9UM",
+  "alpha_thumbnail_url": null,
+  "texture_urls": []
+ }
+}
