@@ -1,0 +1,2 @@
+STARTED: Unity Play Mode visual QA
+FAIL: Timeout waiting for game frames
