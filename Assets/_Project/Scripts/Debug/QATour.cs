@@ -102,7 +102,19 @@ namespace BladePath
         IEnumerator Shot(string name)
         {
             yield return new WaitForSecondsRealtime(Settle);
-            Mark(name);
+            // кадр — сразу в конце этого кадра через текстуру: ScreenCapture.CaptureScreenshot на эмуляторе отставал
+            // ровно на один снимок (в «node_smith» лежал храм и т. д., тур 28.11.2026)
+            yield return new WaitForEndOfFrame();
+            shotIndex++;
+            string file = shotIndex.ToString("00") + "_" + name;
+            try
+            {
+                Texture2D tex = ScreenCapture.CaptureScreenshotAsTexture();
+                System.IO.File.WriteAllBytes(System.IO.Path.Combine(Application.persistentDataPath, "qa_" + file + ".png"), tex.EncodeToPNG());
+                Destroy(tex);
+            }
+            catch (Exception ex) { Debug.LogWarning("QATOUR_WARN capture " + ex.Message); }
+            Debug.Log("QATOUR_SHOT " + file);
             yield return new WaitForSecondsRealtime(Hold);
         }
 

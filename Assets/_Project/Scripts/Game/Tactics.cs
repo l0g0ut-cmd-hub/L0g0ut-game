@@ -2052,6 +2052,18 @@ namespace BladePath
             else GUI.DrawTexture(r, p);
         }
 
+        /// <summary>Плашка в три куска по ширине (края не тянутся), только строки v0…v1 картинки (доли сверху) — без герба над телом.</summary>
+        static void BodySlice(Rect r, Texture2D t, float v0, float v1, float cap)
+        {
+            if (t == null || r.width < 2f || r.height < 2f) return;
+            float k = r.height / ((v1 - v0) * t.height);
+            float cw = Mathf.Min(r.width * 0.45f, cap * t.width * k);
+            float y = 1f - v1, h = v1 - v0;   // uv снизу вверх
+            GUI.DrawTextureWithTexCoords(new Rect(r.x, r.y, cw + 0.6f, r.height), t, new Rect(0f, y, cap, h));
+            GUI.DrawTextureWithTexCoords(new Rect(r.x + cw, r.y, r.width - 2f * cw + 0.6f, r.height), t, new Rect(cap, y, 1f - 2f * cap, h));
+            GUI.DrawTextureWithTexCoords(new Rect(r.xMax - cw, r.y, cw, r.height), t, new Rect(1f - cap, y, cap, h));
+        }
+
         static void DrawFx()
         {
             float now = BattleNow;
@@ -2215,15 +2227,11 @@ namespace BladePath
             Rect footerBand=new Rect(0f,hud.footer.y,W,540f-hud.footer.y);
             Texture2D bar=UiKit.Tex("UI/Battle/Kit/hud_bar");
             if(bar!=null)
-            {   // полоса атласа Kit (1515×235, тело с 66-й строки, выше — герб по центру): тело — на всю панель, герб не растягивается
-                float bk=footerBand.height/(235f-66f);
-                UiKit.Slice(new Rect(0f,footerBand.y-66f*bk,W,235f*bk),bar,bk,0.015f,0.26f,0.5f,0f,Color.white);
-                Texture2D logPlate=UiKit.Tex("UI/Battle/Kit/hud_log");
-                if(logPlate!=null)
-                {
-                    Rect o=hud.orders; float lk=(o.height+8f)/307f;
-                    UiKit.Slice(new Rect(o.x-4f,o.y-6f,o.width+8f,o.height+8f),logPlate,lk,0.06f,0.3f,0.5f,0f,Color.white);
-                }
+            {   // полоса атласа Kit (1515×235, тело с 66-й строки, верхняя золотая кромка ~20 строк, выше — герб по центру):
+                // кромка — над панелью, чтобы не перечёркивать строки героя и журнала (снимки тура эмулятора 28.11);
+                // плашку журнала не кладём — второй герб по центру и рамка поверх первой строки журнала
+                float bk=footerBand.height/(235f-66f-20f);
+                UiKit.Slice(new Rect(0f,footerBand.y-(66f+20f)*bk,W,235f*bk),bar,bk,0.015f,0.26f,0.5f,0f,Color.white);
             }
             else
             {
@@ -2333,7 +2341,7 @@ namespace BladePath
                     GUI.DrawTexture(new Rect(r.x + 1542f * k - es * 0.5f, r.y + (262f + t * 150f) * k - es * 0.5f, es, es), em);
                     GUI.color = ec;
                 }
-                Label(new Rect(tr.x + 4f * k, tr.y, tr.width * 0.62f, tr.height), Realm.SchoolName(t), 9.5f, t == bookPage ? Gold : Dim);
+                Label(new Rect(r.x + 1436f * k, tr.y, (1504f - 1436f) * k, tr.height), Realm.SchoolName(t), 9.5f, t == bookPage ? Gold : Dim);   // левее значка школы
                 if (GUI.Button(tr, GUIContent.none, GUIStyle.none)) { bookPage = t; bookFocus = -1; }
             }
             var page = new List<int>();
@@ -2396,10 +2404,9 @@ namespace BladePath
             Rect body = band;
             if (lp != null)
             {   // плашка атласа Kit (930×205, тело с 60-й строки — выше герб): тело плашки ровно на месте ползунка
-                float kk = band.height / (205f - 60f);
-                Rect pr = new Rect(band.x, band.y - 60f * kk, band.width, 205f * kk);
+                // без герба (он налезал на плашку «Скорость»): только тело плашки, строки 60…205
                 UiKit.Rect(new Rect(band.x + 2f, band.y + 1f, band.width - 4f, band.height - 2f), new Color(0.17f, 0.05f, 0.035f, 1f));   // ползунок под плашкой не просвечивает
-                UiKit.Slice(pr, lp, kk, 0.07f, 0.4f, 0.5f, 0f, Color.white);
+                BodySlice(band, lp, 60f / 205f, 1f, 0.07f);
                 body = new Rect(band.x + band.width * 0.06f, band.y + band.height * 0.12f, band.width * 0.88f, band.height * 0.72f);
             }
             else
