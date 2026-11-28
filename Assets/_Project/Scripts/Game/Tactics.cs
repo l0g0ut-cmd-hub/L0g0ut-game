@@ -2262,7 +2262,7 @@ namespace BladePath
             Rect hp=new Rect(h.x+2f,h.y+1f,30f,30f);
             General.DrawFace(hp);
             UiKit.Ring(hp.center,15.5f,Gold);
-            Label(new Rect(h.x+37,h.y,h.width-38,16),"ГЕРОЙ · УР. "+heroLv+"    А"+gAtk+"  З"+gDef+"  С"+General.Power+"  Зн"+General.Know,12f,Gold,TextAnchor.MiddleLeft);
+            Label(new Rect(h.x+37,h.y,h.width-38,16),"УР. "+heroLv+"   АТК "+gAtk+"  ЗАЩ "+gDef+"  СИЛ "+General.Power+"  ЗНА "+General.Know,12f,Gold,TextAnchor.MiddleLeft);
             Label(new Rect(h.x+37,h.y+16,h.width-38,14),"Дух "+spirit+"/"+spiritMax+(castThisRound?" · умение применено":""),10.5f,new Color(.66f,.84f,1f),TextAnchor.MiddleLeft);
             for(int i=0;i<QuickSpells.Length;i++)
             {
