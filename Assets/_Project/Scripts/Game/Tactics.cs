@@ -788,8 +788,11 @@ namespace BladePath
             if (a.an != null) yield return Act(a, 0.55f, true);
             if (a.an != null) SamplePose(a,a.contactAt);
             bool gun=a.t.cell==2;
-            Vector2 from=ScreenPoint(a.weapon!=null ? a.weapon.tip : a.leftHand,a.pos+Vector2.up*(-R));
-            Vector2 to=ScreenPoint(d.chest,d.pos+Vector2.up*(-R));
+            // точка вылета — кончик оружия на экране; если проекция неправдоподобна (дальше, чем фигура дотянется),
+            // — у самого стрелка на уровне груди, чуть впереди (жалоба владельца 28.11: вспышка и стрелы — посреди поля)
+            float side=d.pos.x>=a.pos.x?1f:-1f;
+            Vector2 from=Plausible(ScreenPoint(a.weapon!=null ? a.weapon.tip : a.leftHand,Vector2.zero),a,new Vector2(side*R*0.8f,-R*1.7f),"from");
+            Vector2 to=Plausible(ScreenPoint(d.chest,Vector2.zero),d,new Vector2(0f,-R*1.5f),"to");
             Vector2 direction=to-from;
             float cells=direction.magnitude/Mathf.Max(R,1f);
             float flight=gun?Mathf.Clamp(cells*.006f,.05f,.14f):Mathf.Clamp(cells*.028f,.16f,.55f);
@@ -800,6 +803,14 @@ namespace BladePath
             EndTurn();
         }
 
+        static Vector2 Plausible(Vector2 p,Stack s,Vector2 near,string what)
+        {
+            Vector2 d=p-s.pos;
+            float up=R*(1.2f+2.4f*Mathf.Max(1f,s.t.liveH)/1.7f);
+            bool ok=p!=Vector2.zero && Mathf.Abs(d.x)<=R*2.6f && d.y<=R*0.6f && d.y>=-up;
+            if(!ok) Debug.LogWarning("TACTICS_SHOT_POINT "+what+" "+s.t.name+" projected="+p+" unit="+s.pos+" — у фигуры");
+            return ok?p:s.pos+near;
+        }
         static Vector2 ScreenPoint(Transform joint,Vector2 fallback)
         {
             if(!joint || !liveCam) return fallback;
@@ -1720,7 +1731,7 @@ namespace BladePath
                     tr.rotation = Quaternion.AngleAxis(-82f * k * k, tr.forward) * Quaternion.LookRotation(tr.forward, Vector3.up);
                 }
                 else if (dead) Play(s, s.clipDie, s.playing != s.clipDie);
-                else if (s.path.Count > 0) Play(s, s.t.fly ? s.clipIdle : s.clipWalk ?? s.clipIdle, false);
+                else if (s.path.Count > 0) Play(s, s.clipWalk ?? s.clipIdle, false);   // летуны (новые тэнгу из Meshy) тоже шагают — у старых был только взмах крыльев
                 else if (s.actUntil > now) { }
                 else if (s.hitUntil > now && s.clipHit != null) { if (s.playing != s.clipHit || s.clipStart < s.hitStart) Play(s, s.clipHit, true); }
                 else if (finished && won && !s.enemy && s.clipWin != null) Play(s, s.clipWin, false);
@@ -1807,9 +1818,11 @@ namespace BladePath
         {
             W = w;
             var bounds=SafeHud();
-            R=Mathf.Min(bounds.width*.86f/23f,(bounds.height-160f)/(11.5f*1.7320508f*Sq));
+            // поле начинается под полосой очереди (её крупнее сделали 28.11 по просьбе владельца) — очередь не перекрывает поле
+            float top=QueueRect().yMax+4f-bounds.y;
+            R=Mathf.Min(bounds.width*.86f/23f,(bounds.height-top-72f)/(11.5f*1.7320508f*Sq));
             hw = 1.5f * R; hh = 1.7320508f * R * Sq;
-            ox=bounds.center.x-hw*(Cols-1)*.5f;oy=bounds.y+88f+hh*.5f;
+            ox=bounds.center.x-hw*(Cols-1)*.5f;oy=bounds.y+top+hh*.5f;
         }
 
         public static void Draw(float w)
@@ -1847,7 +1860,7 @@ namespace BladePath
             if (deploy && !finished)
             {
                 UiKit.Text(new Rect(0f, 70f, W, 22f), "РАССТАНОВКА («Тактика»): коснись отряда, затем клетки в синих столбцах", 13f, new Color(0.6f, 0.85f, 1f));
-                if (VisualIdentity.KitButton(new Rect(W * 0.5f - 80f, 96f, 160f, 34f), "В БОЙ", true, true)) { deploy = false; deploySel = null; if (cur != null && !cur.enemy) Flood(cur); }
+                if (VisualIdentity.KitButton(new Rect(W * 0.5f - 80f, QueueRect().yMax + 6f, 160f, 34f), "В БОЙ", true, true)) { deploy = false; deploySel = null; if (cur != null && !cur.enemy) Flood(cur); }
             }
             GUI.enabled=enabled;
             if(finished) DrawResult();
@@ -2166,12 +2179,19 @@ namespace BladePath
             return hit;
         }
 
+        /// <summary>Полоса очереди: крупнее прежней (380 → 520 точек), поле боя раскладывается под ней (LayoutBoard).</summary>
+        static Rect QueueRect()
+        {
+            Texture2D q = UiKit.Tex("UI/Battle/queue_bar");
+            float qw = Mathf.Min(W * 0.56f, 520f), qh = q != null ? qw * q.height / q.width : 80f;
+            Rect safe=SafeHud();
+            return new Rect(safe.center.x-qw*.5f,safe.y+4f,qw,qh);
+        }
         static void DrawQueue()
         {
             Texture2D q = UiKit.Tex("UI/Battle/queue_bar");
-            float qw = Mathf.Min(W * 0.42f, 380f), qh = q != null ? qw * q.height / q.width : 60f;
-            Rect safe=SafeHud();
-            Rect qr = new Rect(safe.center.x-qw*.5f,safe.y+4f,qw,qh);
+            Rect qr = QueueRect();
+            float qw = qr.width, qh = qr.height;
             if (q != null) GUI.DrawTexture(qr, q); else UiKit.Rect(qr, new Color(0.1f, 0.05f, 0.03f, 0.9f));
             // очередь: этот раунд, затем следующий (по скорости)
             List<Stack> l = new List<Stack>(queue);
@@ -2207,7 +2227,7 @@ namespace BladePath
                     UiKit.Line(new Vector2(x, c.y - ringR), new Vector2(x, c.y + ringR), 2f, Gold);
                 }
             }
-            Label(new Rect(qr.xMax + 8f, qr.y + 6f, 120f, 22f), "РАУНД " + round, 14f, Gold, TextAnchor.MiddleLeft);
+            Label(new Rect(qr.xMax + 8f, qr.y + 6f, 120f, 26f), "РАУНД " + round, 16f, Gold, TextAnchor.MiddleLeft);
         }
 
         static readonly float[] QueueSlotX = { 99f, 217f, 332f, 446f, 558f, 669f, 780f, 891f, 1004f, 1117f };
