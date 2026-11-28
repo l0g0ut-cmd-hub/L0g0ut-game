@@ -472,6 +472,8 @@ namespace BladePath
         static readonly int[] SpellSchool = { 0, 3, 2, 2, 0, 3, 1, 1, 0, 2, 3, 1, 2, 0, 2, 3, 3, 3, 1, 3, 3, 0, 1 };
         static readonly int[] SpellFloor = { 1, 1, 1, 2, 2, 2, 1, 2, 3, 3, 1, 2, 4, 2, 3, 3, 3, 4, 3, 2, 5, 4, 5 };
         /// <summary>Знает ли полководец умение (зал магии построен до его этажа).</summary>
+        public static int SchoolOf(int spell) { return spell >= 0 && spell < SpellSchool.Length ? SpellSchool[spell] : 0; }
+        public static string SchoolName(int school) { return Schools[Mathf.Clamp(school, 0, Schools.Length - 1)]; }
         public static bool Knows(int spell) { return spell < 0 || spell >= SpellFloor.Length || SpellFloor[spell] <= Mathf.Max(1, D.mage); }
         static readonly int[] FloorGold = { 0, 0, 1000, 2000, 3000, 5000 }, FloorCrystal = { 0, 0, 3, 6, 10, 15 };
         static int school;

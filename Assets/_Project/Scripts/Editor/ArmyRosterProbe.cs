@@ -320,7 +320,11 @@ namespace BladePath.EditorTools
                             Debug.Log("ARMY_CAPTURED "+name+" "+profile.advance.name+" "+authoredAttack.name);
                         }
                         if(bow||gun)
-                            authoredAttack=ArmyAdvanceBaker.AlignShot(an,hit,bow?Tactics.BowRelease:Tactics.GunRelease);
+                        {
+                            authoredAttack=ArmyAdvanceBaker.AlignShot(an,hit,bow?Tactics.BowRelease:Tactics.GunRelease,out Vector3 aimHeading);
+                            profile.guard=ArmyAdvanceBaker.ShotGuard(an,idle,aimHeading);
+                            AssetDatabase.AddObjectToAsset(profile.guard,profile);
+                        }
                         if(name=="unit_daitengu")
                             authoredAttack=FromUnit(an,"unit_onmyoji","Charged_Spell_Cast");
                         if(!swords&&(bow||gun||role=="unit_onmyoji"||role=="unit_kitsune"||role=="unit_daitengu"||

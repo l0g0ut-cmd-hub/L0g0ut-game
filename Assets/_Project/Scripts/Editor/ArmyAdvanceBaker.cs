@@ -123,32 +123,35 @@ namespace BladePath.EditorTools
             return stride;
         }
 
-        public static AnimationClip AlignShot(Animation anim, AnimationClip original, float release)
+        // Курс корпуса: поперёк бёдер (левое бедро − правое) и вверх — куда смотрит таз, без наклонов.
+        static Vector3 Heading(Dictionary<string,Joint> rig)
         {
-            var rig=Rig(anim);
-            var hip=rig["Hips"].bone;
-            original.SampleAnimation(anim.gameObject,original.length*release);
-            Vector3 aim=Vector3.ProjectOnPlane(rig["LeftHand"].bone.position-rig["RightHand"].bone.position,Vector3.up);
-            float yaw=Vector3.SignedAngle(aim,Vector3.forward,Vector3.up);
+            Vector3 across=Vector3.zero;
+            if(rig.TryGetValue("LeftUpLeg",out var l)&&rig.TryGetValue("RightUpLeg",out var r)) across=l.bone.position-r.bone.position;
+            Vector3 h=across.sqrMagnitude>1e-8f?Vector3.Cross(Vector3.up,across):rig["Hips"].bone.forward;
+            h=Vector3.ProjectOnPlane(h,Vector3.up);
+            return h.sqrMagnitude>1e-8f?h.normalized:Vector3.forward;
+        }
+
+        // Rotate the hips about their own position by a yaw per frame and record full hip curves.
+        static AnimationClip YawClip(Animation anim,AnimationClip original,string label,Func<float,float> yawAt)
+        {
+            var rig=Rig(anim);var hip=rig["Hips"].bone;
             var output=UnityEngine.Object.Instantiate(original);
-            output.name="Board_"+original.name.Split('|').Last();
+            output.name=label+original.name.Split('|').Last();
             string path=AnimationUtility.CalculateTransformPath(hip,anim.transform);
             var curves=Enumerable.Range(0,7).Select(_=>new AnimationCurve()).ToArray();
-            original.SampleAnimation(anim.gameObject,0f);
-            Vector3 pivot=hip.position;
-            Quaternion last=hip.localRotation;
-            int count=Mathf.CeilToInt(original.length*40f);
+            Quaternion last=Quaternion.identity;bool first=true;
+            int count=Mathf.Max(2,Mathf.CeilToInt(original.length*40f));
             for(int i=0;i<=count;i++)
             {
-                float phase=i/(float)count,time=original.length*phase;
+                float time=original.length*i/count;
                 original.SampleAnimation(anim.gameObject,time);
-                float entering=Mathf.SmoothStep(0,1,Mathf.InverseLerp(.03f,release*.86f,phase));
-                float leaving=1f-Mathf.SmoothStep(0,1,Mathf.InverseLerp(.73f,1f,phase));
-                var rotation=Quaternion.AngleAxis(yaw*entering*leaving,Vector3.up);
-                hip.SetPositionAndRotation(pivot+rotation*(hip.position-pivot),rotation*hip.rotation);
+                var rotation=Quaternion.AngleAxis(yawAt(time),Vector3.up);
+                hip.rotation=rotation*hip.rotation;
                 Quaternion q=hip.localRotation;
-                if(Quaternion.Dot(q,last)<0) q=new Quaternion(-q.x,-q.y,-q.z,-q.w);
-                last=q;
+                if(!first&&Quaternion.Dot(q,last)<0) q=new Quaternion(-q.x,-q.y,-q.z,-q.w);
+                last=q;first=false;
                 for(int a=0;a<3;a++) curves[a].AddKey(time,hip.localPosition[a]);
                 for(int a=0;a<4;a++) curves[3+a].AddKey(time,q[a]);
             }
@@ -157,6 +160,39 @@ namespace BladePath.EditorTools
                     i<3?"m_LocalPosition."+"xyz"[i]:"m_LocalRotation."+"xyzw"[i-3]),curves[i]);
             output.EnsureQuaternionContinuity();
             return output;
+        }
+
+        // Выстрел (28.11.2026). Раньше всё тело вместе со ступнями плавно прокручивалось на угол прицела
+        // перед выстрелом и обратно после — со стороны это «разворот». Теперь курс таза весь клип держится
+        // таким, каким он должен быть в миг выстрела (линия правая рука → левая смотрит на цель), а свои
+        // повороты корпуса из захвата Meshy снимаются. aimHeading — этот курс: под него ставится стойка (ShotGuard).
+        public static AnimationClip AlignShot(Animation anim, AnimationClip original, float release, out Vector3 aimHeading)
+        {
+            var rig=Rig(anim);
+            original.SampleAnimation(anim.gameObject,original.length*release);
+            Vector3 aim=Vector3.ProjectOnPlane(rig["LeftHand"].bone.position-rig["RightHand"].bone.position,Vector3.up);
+            float yaw=aim.sqrMagnitude>1e-8f?Vector3.SignedAngle(aim,Vector3.forward,Vector3.up):0f;
+            Vector3 releaseHeading=Heading(rig);
+            aimHeading=Quaternion.AngleAxis(yaw,Vector3.up)*releaseHeading;
+            Vector3 target=aimHeading;
+            return YawClip(anim,original,"Board_",time=>
+            {
+                original.SampleAnimation(anim.gameObject,time);
+                return Vector3.SignedAngle(Heading(rig),target,Vector3.up);
+            });
+        }
+
+        // Стойка стрелка повёрнута так же, как тело в выстреле: из стойки в выстрел — без поворота.
+        public static AnimationClip ShotGuard(Animation anim, AnimationClip idle, Vector3 aimHeading)
+        {
+            var rig=Rig(anim);
+            var guard=YawClip(anim,idle,"Guard_",time=>
+            {
+                idle.SampleAnimation(anim.gameObject,time);
+                return Vector3.SignedAngle(Heading(rig),aimHeading,Vector3.up);
+            });
+            guard.wrapMode=WrapMode.Loop;
+            return guard;
         }
 
         static void SetHipCurves(Animation anim,Transform hip,AnimationClip clip,AnimationCurve[] curves)
