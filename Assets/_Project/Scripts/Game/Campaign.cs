@@ -222,6 +222,7 @@ namespace BladePath
                     foreach (MapNode gn in d.nodes)
                         if (!gn.done && Mathf.Abs(gn.x - GroveSpots[g].x) < 0.002f && Mathf.Abs(gn.y - GroveSpots[g].y) < 0.003f && gn.type != (int)GroveSpots[g].z)
                         { gn.type = (int)GroveSpots[g].z; gn.foe = 0; gn.lair = false; if (gn.extra != null) gn.extra.Clear(); }
+            if (d.region == 0 && d.customPlus == 0) MoveSavedStart(d);
             LinkByRoads(d);   // и старые сохранения ездят по нарисованным дорогам
             if (d.region == 0)   // сильные противники Леса теней — алый самурай (2026-11-20)
                 foreach (MapNode en in d.nodes)
@@ -243,6 +244,20 @@ namespace BladePath
             }
         }
         /// <summary>Старое сохранение: каждое место переезжает на новое место своего слоя (ближайшее старое → тот же номер).</summary>
+        // Карта версии 16: старт Леса теней перенесён от храма с Буддой к деревне (MapStore.MoveStartToVillage).
+        // Сохранённый поход: узел старта — туда, где старт стоит на карте сейчас; ход и пройденный путь не меняются.
+        static void MoveSavedStart(Data dd)
+        {
+            MapData md = MapStore.GetPlain(0);
+            if (md == null || md.places == null) return;
+            MapPlace start = null;
+            foreach (MapPlace p in md.places) if (p.id == "S") start = p;
+            if (start == null || (Mathf.Abs(start.x - MapStore.OldStart.x) < 0.002f && Mathf.Abs(start.y - MapStore.OldStart.y) < 0.003f)) return;
+            foreach (MapNode n in dd.nodes)
+                if (n.Type == NodeType.Start && Mathf.Abs(n.x - MapStore.OldStart.x) < 0.002f && Mathf.Abs(n.y - MapStore.OldStart.y) < 0.003f)
+                { n.x = start.x; n.y = start.y; links = null; }
+        }
+
         static void MigrateSpots(Data dd)
         {
             if (dd.roadsVer >= 3) return;

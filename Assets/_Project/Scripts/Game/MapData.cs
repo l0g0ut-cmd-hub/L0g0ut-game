@@ -149,6 +149,35 @@ namespace BladePath
             return GetPlain(region);
         }
 
+        /// <summary>
+        /// Карта версии 16 (2026-11-28, по просьбе владельца): поход Леса теней начинается не у лестницы храма с Буддой,
+        /// а выше и правее — у деревни (рудник Realm.Objs[0]), на бывшей развилке Ja. Дорога от храма к развилке убрана,
+        /// дороги развилки начинаются от старта. Правку карты на устройстве переносим так же, если старт в ней не двигали.
+        /// </summary>
+        public static readonly Vector2 OldStart = new Vector2(0.1086f, 0.8881f);
+        static void MoveStartToVillage(MapData m)
+        {
+            if (m.places == null || m.points == null || m.roads == null) return;
+            MapPlace start = null; MapPoint fork = null;
+            foreach (MapPlace p in m.places) if (p.id == "S") start = p;
+            foreach (MapPoint p in m.points) if (p.id == "Ja") fork = p;
+            if (start == null || fork == null) return;
+            if (Mathf.Abs(start.x - OldStart.x) > 0.004f || Mathf.Abs(start.y - OldStart.y) > 0.006f) return;
+            start.x = fork.x; start.y = fork.y;
+            var points = new List<MapPoint>();
+            foreach (MapPoint p in m.points) if (p != fork) points.Add(p);
+            m.points = points.ToArray();
+            var roads = new List<MapRoad>();
+            foreach (MapRoad r in m.roads)
+            {
+                if ((r.a == "S" && r.b == "Ja") || (r.a == "Ja" && r.b == "S")) continue;
+                if (r.a == "Ja") r.a = "S";
+                if (r.b == "Ja") r.b = "S";
+                roads.Add(r);
+            }
+            m.roads = roads.ToArray();
+        }
+
         /// <summary>Карта встроенной области (без своей области поверх неё).</summary>
         public static MapData GetPlain(int region)
         {
@@ -176,6 +205,7 @@ namespace BladePath
                         if (bundled != null && bundled.width == m.width &&
                             bundled.height == m.height && bundled.version > m.version)
                         {
+                            if (m.version < 16) MoveStartToVillage(m);
                             m.effects = bundled.effects;
                             m.version = bundled.version;
                         }
