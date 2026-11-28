@@ -2165,21 +2165,29 @@ namespace BladePath
             next.Sort((a, b) => a.Spd != b.Spd ? b.Spd.CompareTo(a.Spd) : a.enemy.CompareTo(b.enemy));
             int sep = l.Count;
             l.AddRange(next);
-            float d = qh * 0.42f;
+            // портрет — в проём золотого гнезда картины queue_bar (1214×269): центры гнёзд и проём ~47 точек замерены по картине;
+            // раньше портреты были крупнее проёма, выше центра и налезали на кольца и друг на друга
+            float d = qh * (2f * 46f / 269f), ringR = qh * 52.5f / 269f;
             for (int i = 0; i < 10 && i < l.Count; i++)
             {
-                Vector2 c = new Vector2(qr.x + qw * (0.0824f + 0.0927f * i), qr.y + qh * 0.5f);
+                Vector2 c = new Vector2(qr.x + qw * QueueSlotX[i] / 1214f, qr.y + qh * QueueSlotY[i] / 269f);
                 Rect pr = new Rect(c.x - d * 0.5f, c.y - d * 0.5f, d, d);
                 Color oc = GUI.color; if (i >= sep) GUI.color = new Color(1f, 1f, 1f, 0.55f);
                 DrawPortrait(pr, l[i].t);
                 GUI.color = oc;
-                UiKit.Ring(c, d * 0.5f + 1f, l[i].enemy ? new Color(0.85f, 0.25f, 0.2f, 0.9f) : new Color(0.4f, 0.75f, 1f, 0.9f));
-                if (i == 0 && cur != null) UiKit.Ring(c, d * 0.5f + 3.5f, Gold, true);
-                if (i == sep && sep < l.Count) UiKit.Line(new Vector2(c.x - qw * 0.046f, qr.y + qh * 0.2f), new Vector2(c.x - qw * 0.046f, qr.y + qh * 0.8f), 2f, Gold);
+                UiKit.Ring(c, d * 0.5f, l[i].enemy ? new Color(0.85f, 0.25f, 0.2f, 0.95f) : new Color(0.4f, 0.75f, 1f, 0.95f), true);   // цвет стороны — тонко внутри золотого кольца
+                if (i == 0 && cur != null) UiKit.Ring(c, ringR + 3f, Gold, true);
+                if (i == sep && sep < l.Count)
+                {
+                    float x = (c.x + qr.x + qw * QueueSlotX[i - 1 < 0 ? 0 : i - 1] / 1214f) * 0.5f;
+                    UiKit.Line(new Vector2(x, c.y - ringR), new Vector2(x, c.y + ringR), 2f, Gold);
+                }
             }
             Label(new Rect(qr.xMax + 8f, qr.y + 6f, 120f, 22f), "РАУНД " + round, 14f, Gold, TextAnchor.MiddleLeft);
         }
 
+        static readonly float[] QueueSlotX = { 99f, 217f, 332f, 446f, 558f, 669f, 780f, 891f, 1004f, 1117f };
+        static readonly float[] QueueSlotY = { 144f, 144f, 144f, 144f, 144f, 144f, 143f, 142f, 142f, 144f };
         static readonly int[] QuickSpells = { 0, 1, 4, 6 };
         static void DrawBallistaButton()
         {
@@ -2191,8 +2199,10 @@ namespace BladePath
         static void DrawHud()
         {
             var hud=new HudLayout(SafeHud());
-            UiKit.Rect(hud.footer,new Color(.045f,.028f,.022f,.90f));
-            UiKit.Rect(new Rect(hud.footer.x,hud.footer.y,hud.footer.width,1f),new Color(.63f,.44f,.21f,.85f));
+            // фон панели — от края до края экрана и до самого низа (вырез под камеру не оставляет пустую полосу); содержимое — в безопасной зоне
+            Rect footerBand=new Rect(0f,hud.footer.y,W,540f-hud.footer.y);
+            UiKit.Rect(footerBand,new Color(.045f,.028f,.022f,.90f));
+            UiKit.Rect(new Rect(footerBand.x,footerBand.y,footerBand.width,1f),new Color(.63f,.44f,.21f,.85f));
             Rect h=hud.hero;
             Rect hp=new Rect(h.x+2f,h.y+1f,30f,30f);
             General.DrawFace(hp);
@@ -2224,7 +2234,7 @@ namespace BladePath
                 Rect band=new Rect(r.x,r.yMax-18,r.width,18);
                 Texture2D plate=UiKit.Tex("UI/Battle/count_plaque");
                 if(plate) GUI.DrawTexture(band,plate);
-                Label(new Rect(band.x+4,band.y+1,band.width-8,band.height-2),tips[i],10f,on?Ink:Dim);
+                Label(new Rect(band.x+band.width*.14f,band.y+band.height*.16f,band.width*.72f,band.height*.68f),tips[i],10f,on?Ink:Dim);   // внутри рамки плашки
                 if (!GUI.Button(r, GUIContent.none, GUIStyle.none) || !on) continue;
                 switch (i)
                 {
@@ -2377,9 +2387,11 @@ namespace BladePath
                     Color oc = GUI.color; if (lost <= 0) GUI.color = new Color(1f, 1f, 1f, 0.5f);
                     DrawPortrait(new Rect(c.x - d * 0.5f, c.y - d * 0.5f, d, d), st.t);
                     GUI.color = oc;
-                    Rect pl = new Rect(c.x - d * 0.42f, c.y + d * 0.22f, d * 0.84f, d * 0.32f);
-                    UiKit.Rect(pl, new Color(0.08f, 0.03f, 0.02f, 0.85f));
-                    Label(pl, lost > 0 ? "−" + lost : "0", 11f, lost > 0 ? new Color(1f, 0.6f, 0.5f) : Dim);
+                    // число потерь — на плашке под кольцом (кольцо на картине r=69 при портрете 128), а не тёмным прямоугольником шире круга
+                    Rect pl = new Rect(c.x - d * 0.31f, c.y + d * 0.40f, d * 0.62f, d * 0.24f);
+                    Texture2D badge = UiKit.Tex("UI/Battle/count_plaque");
+                    if (badge != null) GUI.DrawTexture(pl, badge); else UiKit.Rect(pl, new Color(0.08f, 0.03f, 0.02f, 0.9f));
+                    Label(new Rect(pl.x + pl.width * 0.12f, pl.y + pl.height * 0.1f, pl.width * 0.76f, pl.height * 0.8f), lost > 0 ? "−" + lost : "0", 10.5f, lost > 0 ? new Color(1f, 0.6f, 0.5f) : Dim);
                     q++;
                 }
             }
