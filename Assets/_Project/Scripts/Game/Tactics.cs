@@ -86,7 +86,7 @@ namespace BladePath
             new UnitType("Знамя клана", 5, 8, 2, 3, 20, 6, 0, -1) { cell = 9, up = true, live = "unit_banner2" },
             new UnitType("Гвардия сёгуна", 16, 18, 12, 22, 100, 6, 0, 3) { cell = 10, up = true, live = "unit_hatamoto2", liveH = 1.9f, dbl = true },
             new UnitType("Псы Они", 9, 5, 3, 6, 18, 10, 0, -99) { cell = 11, up = true, live = "unit_dog2", liveH = 1.0f, dbl = true },
-            new UnitType("Павшие воины", 5, 5, 2, 4, 10, 4, 0, 4) { portrait = "UI/portrait_fallen", live = "unit_fallen", undead = true },   // 24: некромантия
+            new UnitType("Павшие воины", 5, 5, 2, 4, 10, 4, 0, 4) { portrait = "UI/portrait_raised", live = "unit_fallen", undead = true },   // 24: некромантия
         };
         public const int RisenUnit = 24;
         public const int BaseUnits = 12;
@@ -98,7 +98,7 @@ namespace BladePath
             new UnitType("Ямабуси", 6, 5, 2, 4, 15, 5, 0, 7) { portrait = "UI/portrait_yamabushi", live = "unit_yamabushi", liveH = 1.76f },
             new UnitType("Дезертиры", 4, 5, 1, 3, 10, 4, 0, 8) { portrait = "UI/portrait_ashigaru", live = "unit_ashigaru" },
             new UnitType("Маски кицунэ", 8, 6, 3, 5, 18, 7, 6, 9) { portrait = "UI/portrait_kitsune", magic = true, live = "unit_kitsune", liveH = 1.64f, noMeleePen = true },
-            new UnitType("Поверженные", 7, 7, 3, 6, 25, 4, 0, 4) { portrait = "UI/portrait_fallen", live = "unit_fallen", liveH = 1.75f, undead = true },
+            new UnitType("Поверженные", 7, 7, 3, 6, 25, 4, 0, 4) { portrait = "UI/portrait_fallen2", live = "unit_fallen", liveH = 1.75f, undead = true },
             new UnitType("Клан теней", 9, 5, 3, 6, 15, 8, 0, 5) { portrait = "UI/portrait_shadow", noRetal = true, live = "unit_shadow" },
             new UnitType("Они", 14, 12, 12, 20, 100, 5, 0, 2) { portrait = "UI/portrait_oni", live = "unit_oni", liveH = 2.3f, sweep = true, wide = true, fireImmune = 1 },
             new UnitType("Сёгун", 16, 16, 20, 30, 180, 6, 0, 3) { portrait = "UI/portrait_shogun", live = "unit_shogun", liveH = 1.85f, dbl = true, unlimRet = true, undead = true, resist = 0.3f },
@@ -2082,7 +2082,10 @@ namespace BladePath
                 Rect r = new Rect(f.p.x - 120f, f.p.y - k * 34f, 240f, 24f);
                 // подложка: число урона читается и поверх плашек численности соседних рядов
                 float tw = Mathf.Min(236f, 16f + f.s.Length * 8.2f);
-                UiKit.Rect(new Rect(f.p.x - tw * 0.5f, r.y + 2f, tw, r.height - 4f), new Color(0.05f, 0.02f, 0.01f, 0.62f * c.a));
+                Texture2D rib = UiKit.Tex("UI/Battle/Kit/dmg_ribbon");
+                Rect rb = new Rect(f.p.x - tw * 0.62f, r.y - 3f, tw * 1.24f, r.height + 6f);
+                if (rib != null) { Color rc = GUI.color; GUI.color = new Color(1f, 1f, 1f, 0.9f * c.a); GUI.DrawTexture(rb, rib); GUI.color = rc; }
+                else UiKit.Rect(new Rect(f.p.x - tw * 0.5f, r.y + 2f, tw, r.height - 4f), new Color(0.05f, 0.02f, 0.01f, 0.62f * c.a));
                 UiKit.Text(new Rect(r.x + 1.5f, r.y + 1.5f, r.width, r.height), f.s, 16f, new Color(0f, 0f, 0f, c.a));
                 UiKit.Text(r, f.s, 16f, c);
             }
@@ -2175,8 +2178,17 @@ namespace BladePath
                 Color oc = GUI.color; if (i >= sep) GUI.color = new Color(1f, 1f, 1f, 0.55f);
                 DrawPortrait(pr, l[i].t);
                 GUI.color = oc;
-                UiKit.Ring(c, d * 0.5f, l[i].enemy ? new Color(0.85f, 0.25f, 0.2f, 0.95f) : new Color(0.4f, 0.75f, 1f, 0.95f), true);   // цвет стороны — тонко внутри золотого кольца
-                if (i == 0 && cur != null) UiKit.Ring(c, ringR + 3f, Gold, true);
+                // кольцо стороны (атлас Kit: синяя/красная эмаль) ложится на запечённое золотое гнездо; ход — сияющее золотое
+                float side = qh * 125f / 269f;
+                Texture2D ring = UiKit.Tex(l[i].enemy ? "UI/Battle/Kit/ring_foe" : "UI/Battle/Kit/ring_ours");
+                if (ring != null) GUI.DrawTexture(new Rect(c.x - side * 0.5f, c.y - side * 0.5f, side, side), ring);
+                else UiKit.Ring(c, d * 0.5f, l[i].enemy ? new Color(0.85f, 0.25f, 0.2f, 0.95f) : new Color(0.4f, 0.75f, 1f, 0.95f), true);
+                if (i == 0 && cur != null)
+                {
+                    Texture2D turnRing = UiKit.Tex("UI/Battle/Kit/ring_turn");
+                    float ts = side * 1.1f;
+                    if (turnRing != null) GUI.DrawTexture(new Rect(c.x - ts * 0.5f, c.y - ts * 0.5f, ts, ts), turnRing); else UiKit.Ring(c, ringR + 3f, Gold, true);
+                }
                 if (i == sep && sep < l.Count)
                 {
                     float x = (c.x + qr.x + qw * QueueSlotX[i - 1 < 0 ? 0 : i - 1] / 1214f) * 0.5f;
@@ -2201,8 +2213,23 @@ namespace BladePath
             var hud=new HudLayout(SafeHud());
             // фон панели — от края до края экрана и до самого низа (вырез под камеру не оставляет пустую полосу); содержимое — в безопасной зоне
             Rect footerBand=new Rect(0f,hud.footer.y,W,540f-hud.footer.y);
-            UiKit.Rect(footerBand,new Color(.045f,.028f,.022f,.90f));
-            UiKit.Rect(new Rect(footerBand.x,footerBand.y,footerBand.width,1f),new Color(.63f,.44f,.21f,.85f));
+            Texture2D bar=UiKit.Tex("UI/Battle/Kit/hud_bar");
+            if(bar!=null)
+            {   // полоса атласа Kit (1515×235, тело с 66-й строки, выше — герб по центру): тело — на всю панель, герб не растягивается
+                float bk=footerBand.height/(235f-66f);
+                UiKit.Slice(new Rect(0f,footerBand.y-66f*bk,W,235f*bk),bar,bk,0.015f,0.26f,0.5f,0f,Color.white);
+                Texture2D logPlate=UiKit.Tex("UI/Battle/Kit/hud_log");
+                if(logPlate!=null)
+                {
+                    Rect o=hud.orders; float lk=(o.height+8f)/307f;
+                    UiKit.Slice(new Rect(o.x-4f,o.y-6f,o.width+8f,o.height+8f),logPlate,lk,0.06f,0.3f,0.5f,0f,Color.white);
+                }
+            }
+            else
+            {
+                UiKit.Rect(footerBand,new Color(.045f,.028f,.022f,.90f));
+                UiKit.Rect(new Rect(footerBand.x,footerBand.y,footerBand.width,1f),new Color(.63f,.44f,.21f,.85f));
+            }
             Rect h=hud.hero;
             Rect hp=new Rect(h.x+2f,h.y+1f,30f,30f);
             General.DrawFace(hp);
@@ -2214,8 +2241,10 @@ namespace BladePath
                 Spell sp=Spells[QuickSpells[i]];
                 Rect r=new Rect(h.x+1f+i*34f,h.yMax-29,28,28);
                 bool can=CanCast(sp);
+                Texture2D roundSlot=UiKit.Tex("UI/Battle/Kit/hud_round");
+                if(roundSlot!=null) GUI.DrawTexture(new Rect(r.x-3f,r.y-3f,r.width+6f,r.height+6f),roundSlot);   // золотая оправа умения (атлас Kit) — под значком: середина у неё непрозрачная
                 Color oc=GUI.color;GUI.color=can?Color.white:new Color(1,1,1,.38f);
-                SpellIcon(r,sp.icon);GUI.color=oc;
+                SpellIcon(new Rect(r.x+3f,r.y+3f,r.width-6f,r.height-6f),sp.icon);GUI.color=oc;
                 if(spellSel==QuickSpells[i]) UiKit.Ring(r.center,15f,Gold,true);
                 if(GUI.Button(r,GUIContent.none,GUIStyle.none) && can) Select(QuickSpells[i]);
             }
@@ -2232,7 +2261,7 @@ namespace BladePath
                 if(t!=null) GUI.DrawTexture(icon,t); else UiKit.Rect(icon,new Color(.3f,.1f,.05f));
                 GUI.color = oc;
                 Rect band=new Rect(r.x,r.yMax-18,r.width,18);
-                Texture2D plate=UiKit.Tex("UI/Battle/count_plaque");
+                Texture2D plate=UiKit.Tex("UI/Battle/Kit/hud_slot_label")??UiKit.Tex("UI/Battle/count_plaque");
                 if(plate) GUI.DrawTexture(band,plate);
                 Label(new Rect(band.x+band.width*.14f,band.y+band.height*.16f,band.width*.72f,band.height*.68f),tips[i],10f,on?Ink:Dim);   // внутри рамки плашки
                 if (!GUI.Button(r, GUIContent.none, GUIStyle.none) || !on) continue;
@@ -2295,6 +2324,15 @@ namespace BladePath
             for (int t = 0; t < 4; t++)
             {
                 Rect tr = new Rect(r.x + 1430f * k, r.y + (222f + t * 150f) * k, 140f * k, 80f * k);
+                // значок школы (атлас Kit) — на месте цветка закладки (x≈1542, y≈262+150·t на картине книги)
+                Texture2D em = UiKit.Tex("UI/Battle/Kit/school_" + t);
+                if (em != null)
+                {
+                    float es = (t == bookPage ? 74f : 64f) * k;
+                    Color ec = GUI.color; if (t != bookPage) GUI.color = new Color(0.78f, 0.78f, 0.78f, 1f);
+                    GUI.DrawTexture(new Rect(r.x + 1542f * k - es * 0.5f, r.y + (262f + t * 150f) * k - es * 0.5f, es, es), em);
+                    GUI.color = ec;
+                }
                 Label(new Rect(tr.x + 4f * k, tr.y, tr.width * 0.62f, tr.height), Realm.SchoolName(t), 9.5f, t == bookPage ? Gold : Dim);
                 if (GUI.Button(tr, GUIContent.none, GUIStyle.none)) { bookPage = t; bookFocus = -1; }
             }
@@ -2354,9 +2392,22 @@ namespace BladePath
             // картина — окно найма: ползунок численности здесь не нужен — закрыт плашкой со способностью отряда,
             // а численность — в левой плашке-кнопке (раньше надпись ложилась на ползунок, левая кнопка была пустой)
             Rect band = new Rect(r.x + r.width * 0.428f, r.y + r.height * 0.622f, r.width * 0.536f, r.height * 0.128f);
-            UiKit.Rect(band, new Color(0.17f, 0.05f, 0.035f, 1f));
-            UiKit.Rect(new Rect(band.x + 4f, band.y + 3f, band.width - 8f, band.height - 6f), new Color(0.11f, 0.035f, 0.025f, 1f));
-            Label(new Rect(band.x + 8f, band.y + 4f, band.width - 16f, band.height - 8f), s.t.Ability.Length > 0 ? s.t.Ability : "без особых способностей", 11f, s.t.Ability.Length > 0 ? Gold : Dim, TextAnchor.MiddleCenter, true);
+            Texture2D lp = UiKit.Tex("UI/Battle/Kit/long_plaque");
+            Rect body = band;
+            if (lp != null)
+            {   // плашка атласа Kit (930×205, тело с 60-й строки — выше герб): тело плашки ровно на месте ползунка
+                float kk = band.height / (205f - 60f);
+                Rect pr = new Rect(band.x, band.y - 60f * kk, band.width, 205f * kk);
+                UiKit.Rect(new Rect(band.x + 2f, band.y + 1f, band.width - 4f, band.height - 2f), new Color(0.17f, 0.05f, 0.035f, 1f));   // ползунок под плашкой не просвечивает
+                UiKit.Slice(pr, lp, kk, 0.07f, 0.4f, 0.5f, 0f, Color.white);
+                body = new Rect(band.x + band.width * 0.06f, band.y + band.height * 0.12f, band.width * 0.88f, band.height * 0.72f);
+            }
+            else
+            {
+                UiKit.Rect(band, new Color(0.17f, 0.05f, 0.035f, 1f));
+                UiKit.Rect(new Rect(band.x + 4f, band.y + 3f, band.width - 8f, band.height - 6f), new Color(0.11f, 0.035f, 0.025f, 1f));
+            }
+            Label(body, s.t.Ability.Length > 0 ? s.t.Ability : "без особых способностей", 11f, s.t.Ability.Length > 0 ? Gold : Dim, TextAnchor.MiddleCenter, true);
             Label(new Rect(r.x + r.width * 0.462f, r.y + r.height * 0.775f, r.width * 0.21f, r.height * 0.1f), "Бойцов: " + s.count + " из " + s.start, 11f, Ink);
             if (HudButton(new Rect(r.x + r.width * 0.7f, r.y + r.height * 0.77f, r.width * 0.22f, r.height * 0.12f), "ЗАКРЫТЬ", true, false)) info = null;
         }
@@ -2388,10 +2439,10 @@ namespace BladePath
                     DrawPortrait(new Rect(c.x - d * 0.5f, c.y - d * 0.5f, d, d), st.t);
                     GUI.color = oc;
                     // число потерь — на плашке под кольцом (кольцо на картине r=69 при портрете 128), а не тёмным прямоугольником шире круга
-                    Rect pl = new Rect(c.x - d * 0.31f, c.y + d * 0.40f, d * 0.62f, d * 0.24f);
-                    Texture2D badge = UiKit.Tex("UI/Battle/count_plaque");
+                    Rect pl = new Rect(c.x - d * 0.34f, c.y + d * 0.38f, d * 0.68f, d * 0.34f);
+                    Texture2D badge = UiKit.Tex("UI/Battle/Kit/count_badge") ?? UiKit.Tex("UI/Battle/count_plaque");
                     if (badge != null) GUI.DrawTexture(pl, badge); else UiKit.Rect(pl, new Color(0.08f, 0.03f, 0.02f, 0.9f));
-                    Label(new Rect(pl.x + pl.width * 0.12f, pl.y + pl.height * 0.1f, pl.width * 0.76f, pl.height * 0.8f), lost > 0 ? "−" + lost : "0", 10.5f, lost > 0 ? new Color(1f, 0.6f, 0.5f) : Dim);
+                    Label(new Rect(pl.x + pl.width * 0.2f, pl.y + pl.height * 0.26f, pl.width * 0.6f, pl.height * 0.5f), lost > 0 ? "−" + lost : "0", 10.5f, lost > 0 ? new Color(1f, 0.6f, 0.5f) : Dim);
                     q++;
                 }
             }
@@ -2408,7 +2459,18 @@ namespace BladePath
                 else ShowDev((region + 1) % 3);
                 return;
             }
-            if (mapNode < 0 && neutralDone == null && HudButton(Px(1000, 920, 190, 64), "ВЫЙТИ", true, false)) Close();   // справа от главной кнопки, не на углу рамки
+            if (mapNode < 0 && neutralDone == null)
+            {   // второстепенная кнопка (атлас Kit) справа от главной, не на углу рамки
+                Rect xb = Px(990, 921, 230, 68);
+                Texture2D sec = UiKit.Tex("UI/Battle/Kit/btn_secondary");
+                if (sec != null)
+                {
+                    GUI.DrawTexture(xb, sec);
+                    Label(new Rect(xb.x + xb.width * 0.12f, xb.y + xb.height * 0.2f, xb.width * 0.76f, xb.height * 0.6f), "ВЫЙТИ", 13f, Ink);
+                    if (GUI.Button(xb, GUIContent.none, GUIStyle.none)) Close();
+                }
+                else if (HudButton(xb, "ВЫЙТИ", true, false)) Close();
+            }
         }
 
         static void DrawResultPlain()
