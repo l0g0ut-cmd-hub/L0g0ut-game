@@ -75,6 +75,21 @@ namespace BladePath
             Debug.LogWarning("QATOUR_WARN no method " + name);
             return null;
         }
+        // статические поля и методы экранов (пошаговый бой Tactics — статический класс)
+        const BindingFlags StaticAny = BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public;
+        static object GetS(Type t, string name) { FieldInfo f = t.GetField(name, StaticAny); return f != null ? f.GetValue(null) : null; }
+        static void SetS(Type t, string name, object value)
+        {
+            FieldInfo f = t.GetField(name, StaticAny);
+            if (f == null) { Debug.LogWarning("QATOUR_WARN no static field " + name); return; }
+            f.SetValue(null, value);
+        }
+        static void CallS(Type t, string name)
+        {
+            MethodInfo m = t.GetMethod(name, StaticAny, null, Type.EmptyTypes, null);
+            if (m == null) { Debug.LogWarning("QATOUR_WARN no static method " + name); return; }
+            m.Invoke(null, null);
+        }
         static MonoBehaviour FindAny(string typeName)
         {
             foreach (MonoBehaviour b in FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Include, FindObjectsSortMode.None))
@@ -203,6 +218,10 @@ namespace BladePath
 
             yield return Step("inventory", () => Inventory());
             try { InventoryScreen.Hide(); } catch { }
+
+            yield return Step("army_battle", () => ArmyBattle());
+            try { CallS(typeof(BladePath.Tactics), "Close"); } catch { }
+            yield return new WaitForSecondsRealtime(1f);
 
             yield return Step("fight", () => Fight());
             yield return Step("defeat_victory", () => DefeatAndVictory());
@@ -415,6 +434,35 @@ namespace BladePath
             if (input != null) { Set(input, "devOpen", true); yield return Shot("pause_dev_menu"); Set(input, "devOpen", false); }
             dm.SetPaused(false);
             yield return new WaitForSecondsRealtime(3f);   // меню паузы уходит с экрана медленного эмулятора до следующего кадра
+        }
+
+        /// <summary>Бой армий (28.11.2026): поле, несколько ходов автобоя, окно отряда, книга умений по школам, итог боя.</summary>
+        IEnumerator ArmyBattle()
+        {
+            Type t = typeof(BladePath.Tactics);
+            BladePath.Tactics.ShowDev(0);
+            yield return Until(() => BladePath.Tactics.Open, 20f);
+            yield return new WaitForSecondsRealtime(5f);   // фигуры отрядов и сцена
+            yield return Shot("army_battle");
+            SetS(t, "autoOurs", true);
+            for (int k = 0; k < 3; k++) { yield return new WaitForSecondsRealtime(3f); yield return Shot("army_turn_" + k); }
+            SetS(t, "autoOurs", false);
+            yield return new WaitForSecondsRealtime(2.5f);
+            var all = GetS(t, "stacks") as IList;
+            if (all != null && all.Count > 0)
+            {
+                SetS(t, "info", all[0]); yield return Shot("army_unit_info");
+                SetS(t, "info", all[all.Count - 1]); yield return Shot("army_unit_info_enemy");
+                SetS(t, "info", null);
+            }
+            SetS(t, "bookOpen", true);
+            SetS(t, "bookPage", 0); yield return Shot("army_book_fire");
+            SetS(t, "bookPage", 3); yield return Shot("army_book_air");
+            SetS(t, "bookOpen", false);
+            SetS(t, "resultText", "Враг разбит. Сражено врагов: 57, наших потерь: 21.\nДобыча: 402 мон.\nОпыт полководца: +302 — новый уровень!");
+            SetS(t, "won", true); SetS(t, "finished", true);
+            yield return Shot("army_result");
+            SetS(t, "finished", false);
         }
 
         IEnumerator DefeatAndVictory()
