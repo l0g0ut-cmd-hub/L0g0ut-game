@@ -1,41 +1,7 @@
-== image unit_general
-  задача: 01a1f9ea-75f5-7419-b584-2120379e8cdf
-  /v1/image-to-3d 01a1f9ea-75f5-7419-b584-2120379e8cdf: IN_PROGRESS 1%
-  /v1/image-to-3d 01a1f9ea-75f5-7419-b584-2120379e8cdf: IN_PROGRESS 9%
-  /v1/image-to-3d 01a1f9ea-75f5-7419-b584-2120379e8cdf: IN_PROGRESS 24%
-  /v1/image-to-3d 01a1f9ea-75f5-7419-b584-2120379e8cdf: IN_PROGRESS 45%
-  /v1/image-to-3d 01a1f9ea-75f5-7419-b584-2120379e8cdf: IN_PROGRESS 67%
-  /v1/image-to-3d 01a1f9ea-75f5-7419-b584-2120379e8cdf: IN_PROGRESS 84%
-  /v1/image-to-3d 01a1f9ea-75f5-7419-b584-2120379e8cdf: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/unit_general/unit_general_image.glb 6795644 байт
-  скачано /home/runner/work/_temp/out/unit_general/unit_general_image.fbx 5855388 байт
-  скачано /home/runner/work/_temp/out/unit_general/unit_general_image_thumb.png 139113 байт
-  скачано /home/runner/work/_temp/out/unit_general/unit_general_image_base_color.png 6901499 байт
-  риг: 01a1f9ec-0743-7298-a596-2844050a4e5f
-  /v1/rigging 01a1f9ec-0743-7298-a596-2844050a4e5f: IN_PROGRESS 0%
-  /v1/rigging 01a1f9ec-0743-7298-a596-2844050a4e5f: IN_PROGRESS 47%
-  /v1/rigging 01a1f9ec-0743-7298-a596-2844050a4e5f: IN_PROGRESS 60%
-  /v1/rigging 01a1f9ec-0743-7298-a596-2844050a4e5f: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/unit_general/unit_general_rigged_character_fbx_url.fbx 7228220 байт
-  скачано /home/runner/work/_temp/out/unit_general/unit_general_rigged_character_glb_url.glb 8275316 байт
-  скачано /home/runner/work/_temp/out/unit_general/unit_general_walking_glb_url.glb 8380552 байт
-  скачано /home/runner/work/_temp/out/unit_general/unit_general_walking_fbx_url.fbx 7297564 байт
-  скачано /home/runner/work/_temp/out/unit_general/unit_general_walking_armature_glb_url.glb 11676 байт
-  скачано /home/runner/work/_temp/out/unit_general/unit_general_running_glb_url.glb 8363064 байт
-  скачано /home/runner/work/_temp/out/unit_general/unit_general_running_fbx_url.fbx 7269660 байт
-  скачано /home/runner/work/_temp/out/unit_general/unit_general_running_armature_glb_url.glb 11676 байт
-  анимация: 01a1f9ec-8492-770f-9ab9-c5ce84a58e6c
-  /v1/animations 01a1f9ec-8492-770f-9ab9-c5ce84a58e6c: IN_PROGRESS 0%
-  /v1/animations 01a1f9ec-8492-770f-9ab9-c5ce84a58e6c: IN_PROGRESS 80%
-  /v1/animations 01a1f9ec-8492-770f-9ab9-c5ce84a58e6c: IN_PROGRESS 82%
-  /v1/animations 01a1f9ec-8492-770f-9ab9-c5ce84a58e6c: IN_PROGRESS 85%
-  /v1/animations 01a1f9ec-8492-770f-9ab9-c5ce84a58e6c: IN_PROGRESS 87%
-  /v1/animations 01a1f9ec-8492-770f-9ab9-c5ce84a58e6c: IN_PROGRESS 90%
-  /v1/animations 01a1f9ec-8492-770f-9ab9-c5ce84a58e6c: IN_PROGRESS 92%
-  /v1/animations 01a1f9ec-8492-770f-9ab9-c5ce84a58e6c: IN_PROGRESS 95%
-  /v1/animations 01a1f9ec-8492-770f-9ab9-c5ce84a58e6c: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/unit_general/unit_general_animation_glb_url.glb 8120308 байт
-  скачано /home/runner/work/_temp/out/unit_general/unit_general_animation_fbx_url.fbx 8667980 байт
-  скачано /home/runner/work/_temp/out/unit_general/unit_general_processed_animation_fps_fbx_url.fbx 8668924 байт
-  аккаунт 1 MESHY_KEY — остаток кредитов: 948
-  аккаунт 2 ALT1 — остаток кредитов: 948
+== balance model
+  баланс: {"balance": 336, "monthly_credits": 0, "permanent_credits": 336, "monthly_resets_at": 1797218968000}
+  аккаунт 1 MESHY_KEY — остаток кредитов: 336
+  аккаунт 2 ALT1 — остаток кредитов: 336
+  аккаунт 3 : ключа нет
+  аккаунт 4 : ключа нет
+  аккаунт 5 : ключа нет
