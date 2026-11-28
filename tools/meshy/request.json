@@ -1,7 +1,3 @@
 [
- {"action": "balance", "account": "1"},
- {"action": "balance", "account": "2"},
- {"action": "balance", "account": "3"},
- {"action": "balance", "account": "4"},
- {"action": "balance", "account": "5"}
+ {"action": "balance", "account": "1"}
 ]

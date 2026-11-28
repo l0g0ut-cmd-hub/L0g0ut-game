@@ -164,19 +164,26 @@ def do(r):
     raise RuntimeError("неизвестное действие: " + str(a))
 
 
+def hide(text):
+    text = str(text)
+    for k in [v for n, v in KEYS.items() if not n.endswith("name") and v]: text = text.replace(k, "***")
+    return text
+
+
 def main():
+    global KEY
     os.makedirs(OUT, exist_ok=True); ok = True
     if not KEYS.get("1") and not KEYS.get("2"): log("нет ключей Meshy"); ok = False
     else:
         req = json.load(open(sys.argv[1] if len(sys.argv) > 1 else "tools/meshy/request.json"))
         for r in (req if isinstance(req, list) else [req]):
             try: do(r)
-            except Exception as e: ok = False; log("  ОШИБКА:", str(e).replace(KEY, "***"))
-    for acc in ("1", "2"):
+            except Exception as e: ok = False; log("  ОШИБКА:", hide(e))
+    for acc in ("1", "2", "3", "4", "5"):
         KEY = KEYS.get(acc, "")
         if not KEY: log("  аккаунт", acc, ": ключа нет"); continue
-        try: log("  аккаунт", acc, (KEYS.get(acc + "name", "") if acc == "2" else "MESHY_KEY"), "— остаток кредитов:", call("GET", "/v1/balance").get("balance"))
-        except Exception as e: log("  аккаунт", acc, ": баланс не получен:", str(e).replace(KEY, "***"))
+        try: log("  аккаунт", acc, (KEYS.get(acc + "name", "") if acc == "2" else "MESHY_KEY" + ("" if acc == "1" else acc)), "— остаток кредитов:", call("GET", "/v1/balance").get("balance"))
+        except Exception as e: log("  аккаунт", acc, ": баланс не получен:", hide(e))
     with open(os.path.join(OUT, "log.txt"), "w") as f: f.write("\n".join(LOG) + "\n")
     sys.exit(0 if ok else 1)
 
