@@ -1,98 +1,52 @@
-== text unit_tengu
-  черновик: 01a22325-6d94-7666-86f3-c3274ce50ee7
-  /v2/text-to-3d 01a22325-6d94-7666-86f3-c3274ce50ee7: IN_PROGRESS 1%
-  /v2/text-to-3d 01a22325-6d94-7666-86f3-c3274ce50ee7: IN_PROGRESS 7%
-  /v2/text-to-3d 01a22325-6d94-7666-86f3-c3274ce50ee7: IN_PROGRESS 20%
-  /v2/text-to-3d 01a22325-6d94-7666-86f3-c3274ce50ee7: IN_PROGRESS 46%
-  /v2/text-to-3d 01a22325-6d94-7666-86f3-c3274ce50ee7: IN_PROGRESS 72%
-  /v2/text-to-3d 01a22325-6d94-7666-86f3-c3274ce50ee7: IN_PROGRESS 99%
-  /v2/text-to-3d 01a22325-6d94-7666-86f3-c3274ce50ee7: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/unit_tengu/unit_tengu_preview.glb 1192104 байт
-  скачано /home/runner/work/_temp/out/unit_tengu/unit_tengu_preview.fbx 876508 байт
-  скачано /home/runner/work/_temp/out/unit_tengu/unit_tengu_preview_thumb.png 161609 байт
-  текстура: 01a22327-4fff-756a-9a55-5ac1772bbce0
-  /v2/text-to-3d 01a22327-4fff-756a-9a55-5ac1772bbce0: IN_PROGRESS 0%
-  /v2/text-to-3d 01a22327-4fff-756a-9a55-5ac1772bbce0: IN_PROGRESS 34%
-  /v2/text-to-3d 01a22327-4fff-756a-9a55-5ac1772bbce0: IN_PROGRESS 69%
-  /v2/text-to-3d 01a22327-4fff-756a-9a55-5ac1772bbce0: IN_PROGRESS 99%
-  /v2/text-to-3d 01a22327-4fff-756a-9a55-5ac1772bbce0: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/unit_tengu/unit_tengu_refine.glb 3952396 байт
-  скачано /home/runner/work/_temp/out/unit_tengu/unit_tengu_refine.fbx 3519452 байт
-  скачано /home/runner/work/_temp/out/unit_tengu/unit_tengu_refine_thumb.png 159335 байт
-  скачано /home/runner/work/_temp/out/unit_tengu/unit_tengu_refine_base_color.png 5233420 байт
-  риг: 01a22327-f78a-705b-b367-9ffb7e42fa1f
-  /v1/rigging 01a22327-f78a-705b-b367-9ffb7e42fa1f: IN_PROGRESS 0%
-  /v1/rigging 01a22327-f78a-705b-b367-9ffb7e42fa1f: IN_PROGRESS 31%
-  /v1/rigging 01a22327-f78a-705b-b367-9ffb7e42fa1f: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/unit_tengu/unit_tengu_rigged_character_fbx_url.fbx 4241212 байт
-  скачано /home/runner/work/_temp/out/unit_tengu/unit_tengu_rigged_character_glb_url.glb 5147376 байт
-  скачано /home/runner/work/_temp/out/unit_tengu/unit_tengu_walking_glb_url.glb 5127588 байт
-  скачано /home/runner/work/_temp/out/unit_tengu/unit_tengu_walking_fbx_url.fbx 4277564 байт
-  скачано /home/runner/work/_temp/out/unit_tengu/unit_tengu_walking_armature_glb_url.glb 90036 байт
-  скачано /home/runner/work/_temp/out/unit_tengu/unit_tengu_running_glb_url.glb 5116968 байт
-  скачано /home/runner/work/_temp/out/unit_tengu/unit_tengu_running_fbx_url.fbx 4260572 байт
-  скачано /home/runner/work/_temp/out/unit_tengu/unit_tengu_running_armature_glb_url.glb 79404 байт
-  анимация: 01a22328-5a6d-7654-ab0a-0ee9b39119d7
-  /v1/animations 01a22328-5a6d-7654-ab0a-0ee9b39119d7: IN_PROGRESS 1%
-  /v1/animations 01a22328-5a6d-7654-ab0a-0ee9b39119d7: IN_PROGRESS 68%
-  /v1/animations 01a22328-5a6d-7654-ab0a-0ee9b39119d7: IN_PROGRESS 82%
-  /v1/animations 01a22328-5a6d-7654-ab0a-0ee9b39119d7: IN_PROGRESS 84%
-  /v1/animations 01a22328-5a6d-7654-ab0a-0ee9b39119d7: IN_PROGRESS 87%
-  /v1/animations 01a22328-5a6d-7654-ab0a-0ee9b39119d7: IN_PROGRESS 90%
-  /v1/animations 01a22328-5a6d-7654-ab0a-0ee9b39119d7: IN_PROGRESS 92%
-  /v1/animations 01a22328-5a6d-7654-ab0a-0ee9b39119d7: IN_PROGRESS 95%
-  /v1/animations 01a22328-5a6d-7654-ab0a-0ee9b39119d7: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/unit_tengu/unit_tengu_animation_glb_url.glb 4821932 байт
-  скачано /home/runner/work/_temp/out/unit_tengu/unit_tengu_animation_fbx_url.fbx 5348412 байт
-  скачано /home/runner/work/_temp/out/unit_tengu/unit_tengu_processed_animation_fps_fbx_url.fbx 5349372 байт
-== text unit_daitengu
-  черновик: 01a2232a-3683-7333-a50a-5134486fabf3
-  /v2/text-to-3d 01a2232a-3683-7333-a50a-5134486fabf3: IN_PROGRESS 1%
-  /v2/text-to-3d 01a2232a-3683-7333-a50a-5134486fabf3: IN_PROGRESS 7%
-  /v2/text-to-3d 01a2232a-3683-7333-a50a-5134486fabf3: IN_PROGRESS 25%
-  /v2/text-to-3d 01a2232a-3683-7333-a50a-5134486fabf3: IN_PROGRESS 55%
-  /v2/text-to-3d 01a2232a-3683-7333-a50a-5134486fabf3: IN_PROGRESS 99%
-  /v2/text-to-3d 01a2232a-3683-7333-a50a-5134486fabf3: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/unit_daitengu/unit_daitengu_preview.glb 1470496 байт
-  скачано /home/runner/work/_temp/out/unit_daitengu/unit_daitengu_preview.fbx 953692 байт
-  скачано /home/runner/work/_temp/out/unit_daitengu/unit_daitengu_preview_thumb.png 201577 байт
-  текстура: 01a2232b-a263-7650-b9b4-2f5ce907b1eb
-  /v2/text-to-3d 01a2232b-a263-7650-b9b4-2f5ce907b1eb: IN_PROGRESS 0%
-  /v2/text-to-3d 01a2232b-a263-7650-b9b4-2f5ce907b1eb: IN_PROGRESS 34%
-  /v2/text-to-3d 01a2232b-a263-7650-b9b4-2f5ce907b1eb: IN_PROGRESS 69%
-  /v2/text-to-3d 01a2232b-a263-7650-b9b4-2f5ce907b1eb: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/unit_daitengu/unit_daitengu_refine.glb 4704408 байт
-  скачано /home/runner/work/_temp/out/unit_daitengu/unit_daitengu_refine.fbx 4072460 байт
-  скачано /home/runner/work/_temp/out/unit_daitengu/unit_daitengu_refine_thumb.png 212422 байт
-  скачано /home/runner/work/_temp/out/unit_daitengu/unit_daitengu_refine_base_color.png 5348907 байт
-  риг: 01a2232c-23ba-77ec-90b2-8c5588ecea27
-  /v1/rigging 01a2232c-23ba-77ec-90b2-8c5588ecea27: IN_PROGRESS 0%
-  /v1/rigging 01a2232c-23ba-77ec-90b2-8c5588ecea27: IN_PROGRESS 31%
-  /v1/rigging 01a2232c-23ba-77ec-90b2-8c5588ecea27: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/unit_daitengu/unit_daitengu_rigged_character_fbx_url.fbx 4960236 байт
-  скачано /home/runner/work/_temp/out/unit_daitengu/unit_daitengu_rigged_character_glb_url.glb 6225040 байт
-  скачано /home/runner/work/_temp/out/unit_daitengu/unit_daitengu_walking_glb_url.glb 6205132 байт
-  скачано /home/runner/work/_temp/out/unit_daitengu/unit_daitengu_walking_fbx_url.fbx 4996604 байт
-  скачано /home/runner/work/_temp/out/unit_daitengu/unit_daitengu_walking_armature_glb_url.glb 90344 байт
-  скачано /home/runner/work/_temp/out/unit_daitengu/unit_daitengu_running_glb_url.glb 6194496 байт
-  скачано /home/runner/work/_temp/out/unit_daitengu/unit_daitengu_running_fbx_url.fbx 4979612 байт
-  скачано /home/runner/work/_temp/out/unit_daitengu/unit_daitengu_running_armature_glb_url.glb 79696 байт
-  анимация: 01a2232c-8756-70e5-ba9b-5ba709b5f1d1
-  /v1/animations 01a2232c-8756-70e5-ba9b-5ba709b5f1d1: IN_PROGRESS 0%
-  /v1/animations 01a2232c-8756-70e5-ba9b-5ba709b5f1d1: IN_PROGRESS 68%
-  /v1/animations 01a2232c-8756-70e5-ba9b-5ba709b5f1d1: IN_PROGRESS 82%
-  /v1/animations 01a2232c-8756-70e5-ba9b-5ba709b5f1d1: IN_PROGRESS 84%
-  /v1/animations 01a2232c-8756-70e5-ba9b-5ba709b5f1d1: IN_PROGRESS 87%
-  /v1/animations 01a2232c-8756-70e5-ba9b-5ba709b5f1d1: IN_PROGRESS 89%
-  /v1/animations 01a2232c-8756-70e5-ba9b-5ba709b5f1d1: IN_PROGRESS 92%
-  /v1/animations 01a2232c-8756-70e5-ba9b-5ba709b5f1d1: IN_PROGRESS 94%
-  /v1/animations 01a2232c-8756-70e5-ba9b-5ba709b5f1d1: IN_PROGRESS 95%
-  /v1/animations 01a2232c-8756-70e5-ba9b-5ba709b5f1d1: SUCCEEDED 100%
-  скачано /home/runner/work/_temp/out/unit_daitengu/unit_daitengu_animation_glb_url.glb 5813164 байт
-  скачано /home/runner/work/_temp/out/unit_daitengu/unit_daitengu_animation_fbx_url.fbx 6155452 байт
-  скачано /home/runner/work/_temp/out/unit_daitengu/unit_daitengu_processed_animation_fps_fbx_url.fbx 6156284 байт
-  аккаунт 1 MESHY_KEY — остаток кредитов: 230
-  аккаунт 2 ALT1 — остаток кредитов: 230
+== text unit_tengu_wings
+  черновик: 01a22342-ae44-718a-a5b1-ec6537f7f860
+  /v2/text-to-3d 01a22342-ae44-718a-a5b1-ec6537f7f860: IN_PROGRESS 1%
+  /v2/text-to-3d 01a22342-ae44-718a-a5b1-ec6537f7f860: IN_PROGRESS 7%
+  /v2/text-to-3d 01a22342-ae44-718a-a5b1-ec6537f7f860: IN_PROGRESS 20%
+  /v2/text-to-3d 01a22342-ae44-718a-a5b1-ec6537f7f860: IN_PROGRESS 49%
+  /v2/text-to-3d 01a22342-ae44-718a-a5b1-ec6537f7f860: IN_PROGRESS 99%
+  /v2/text-to-3d 01a22342-ae44-718a-a5b1-ec6537f7f860: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/unit_tengu_wings/unit_tengu_wings_preview.glb 1404872 байт
+  скачано /home/runner/work/_temp/out/unit_tengu_wings/unit_tengu_wings_preview.fbx 922892 байт
+  скачано /home/runner/work/_temp/out/unit_tengu_wings/unit_tengu_wings_preview_thumb.png 198712 байт
+  текстура: 01a22345-8076-748f-8949-5b8a1dc8c51a
+  /v2/text-to-3d 01a22345-8076-748f-8949-5b8a1dc8c51a: IN_PROGRESS 0%
+  /v2/text-to-3d 01a22345-8076-748f-8949-5b8a1dc8c51a: IN_PROGRESS 19%
+  /v2/text-to-3d 01a22345-8076-748f-8949-5b8a1dc8c51a: IN_PROGRESS 49%
+  /v2/text-to-3d 01a22345-8076-748f-8949-5b8a1dc8c51a: IN_PROGRESS 69%
+  /v2/text-to-3d 01a22345-8076-748f-8949-5b8a1dc8c51a: IN_PROGRESS 99%
+  /v2/text-to-3d 01a22345-8076-748f-8949-5b8a1dc8c51a: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/unit_tengu_wings/unit_tengu_wings_refine.glb 4786564 байт
+  скачано /home/runner/work/_temp/out/unit_tengu_wings/unit_tengu_wings_refine.fbx 4189116 байт
+  скачано /home/runner/work/_temp/out/unit_tengu_wings/unit_tengu_wings_refine_thumb.png 206241 байт
+  скачано /home/runner/work/_temp/out/unit_tengu_wings/unit_tengu_wings_refine_base_color.png 5951744 байт
+  риг: 01a22346-cd53-7517-9adc-16ee2843b57b
+  /v1/rigging 01a22346-cd53-7517-9adc-16ee2843b57b: IN_PROGRESS 0%
+  /v1/rigging 01a22346-cd53-7517-9adc-16ee2843b57b: IN_PROGRESS 31%
+  /v1/rigging 01a22346-cd53-7517-9adc-16ee2843b57b: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/unit_tengu_wings/unit_tengu_wings_rigged_character_fbx_url.fbx 5041180 байт
+  скачано /home/runner/work/_temp/out/unit_tengu_wings/unit_tengu_wings_rigged_character_glb_url.glb 6228312 байт
+  скачано /home/runner/work/_temp/out/unit_tengu_wings/unit_tengu_wings_walking_glb_url.glb 6209592 байт
+  скачано /home/runner/work/_temp/out/unit_tengu_wings/unit_tengu_wings_walking_fbx_url.fbx 5077548 байт
+  скачано /home/runner/work/_temp/out/unit_tengu_wings/unit_tengu_wings_walking_armature_glb_url.glb 89084 байт
+  скачано /home/runner/work/_temp/out/unit_tengu_wings/unit_tengu_wings_running_glb_url.glb 6198980 байт
+  скачано /home/runner/work/_temp/out/unit_tengu_wings/unit_tengu_wings_running_fbx_url.fbx 5060540 байт
+  скачано /home/runner/work/_temp/out/unit_tengu_wings/unit_tengu_wings_running_armature_glb_url.glb 78460 байт
+  анимация: 01a22347-368c-7360-b27e-8480cd300be4
+  /v1/animations 01a22347-368c-7360-b27e-8480cd300be4: IN_PROGRESS 1%
+  /v1/animations 01a22347-368c-7360-b27e-8480cd300be4: IN_PROGRESS 68%
+  /v1/animations 01a22347-368c-7360-b27e-8480cd300be4: IN_PROGRESS 82%
+  /v1/animations 01a22347-368c-7360-b27e-8480cd300be4: IN_PROGRESS 84%
+  /v1/animations 01a22347-368c-7360-b27e-8480cd300be4: IN_PROGRESS 87%
+  /v1/animations 01a22347-368c-7360-b27e-8480cd300be4: IN_PROGRESS 89%
+  /v1/animations 01a22347-368c-7360-b27e-8480cd300be4: IN_PROGRESS 92%
+  /v1/animations 01a22347-368c-7360-b27e-8480cd300be4: IN_PROGRESS 95%
+  /v1/animations 01a22347-368c-7360-b27e-8480cd300be4: SUCCEEDED 100%
+  скачано /home/runner/work/_temp/out/unit_tengu_wings/unit_tengu_wings_animation_glb_url.glb 5795832 байт
+  скачано /home/runner/work/_temp/out/unit_tengu_wings/unit_tengu_wings_animation_fbx_url.fbx 6148748 байт
+  скачано /home/runner/work/_temp/out/unit_tengu_wings/unit_tengu_wings_processed_animation_fps_fbx_url.fbx 6149964 байт
+  аккаунт 1 MESHY_KEY — остаток кредитов: 177
+  аккаунт 2 ALT1 — остаток кредитов: 177
   аккаунт 3 : ключа нет
   аккаунт 4 : ключа нет
   аккаунт 5 : ключа нет
