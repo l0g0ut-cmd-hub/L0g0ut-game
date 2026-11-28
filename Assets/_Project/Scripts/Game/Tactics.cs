@@ -1514,11 +1514,9 @@ namespace BladePath
                     if (n.Contains("idle")) genIdle = st.name; else if (n.Contains("jump")) genCast = st.name;
                     st.wrapMode = n.Contains("idle") ? WrapMode.Loop : WrapMode.Once;
                 }
-                if (genIdle != null)
-                {
-                    generalAn.GetClip(genIdle).SampleAnimation(generalAn.gameObject, 0f);
-                    generalAn.Play(genIdle);
-                }
+                // покой полководца позируется вручную у спокойного кадра (как у отрядов): свободно игравший horse_Idle
+                // поворачивал коня корпусом — в бою полководец смотрел по диагонали (скриншот владельца 28.11)
+                if (genIdle != null) generalAn.GetClip(genIdle).SampleAnimation(generalAn.gameObject, 0f);
             }
             var profile = Resources.Load<TacticsFigureProfile>("ArmyFigures/unit_general");
             if (profile != null) profile.Fit(figure,90f);
@@ -1528,8 +1526,7 @@ namespace BladePath
         static void GeneralCast()
         {
             if (generalAn == null || genCast == null) return;
-            generalAn[genCast].time = 0f; generalAn.Play(genCast);
-            if (genIdle != null) generalAn.CrossFadeQueued(genIdle, 0.25f, QueueMode.CompleteOthers);
+            generalAn[genCast].time = 0f; generalAn.Play(genCast);   // после каста — снова покой у спокойного кадра (RenderLive)
         }
 
         static void ReleaseFigureObject(Object item)
@@ -1702,6 +1699,11 @@ namespace BladePath
             {
                 generalGo.transform.position = Ground(GeneralPos());
                 generalGo.transform.rotation = Quaternion.LookRotation(Vector3.right, Vector3.up);
+                if (generalAn != null && genIdle != null && !(genCast != null && generalAn.IsPlaying(genCast)))
+                {
+                    AnimationClip idleClip = generalAn.GetClip(genIdle);
+                    if (idleClip != null) idleClip.SampleAnimation(generalAn.gameObject, Mathf.Min(idleClip.length, 0.12f * (1f + Mathf.Sin(now * 1.3f))));
+                }
             }
             foreach (Stack s in stacks)
             {
@@ -2475,9 +2477,11 @@ namespace BladePath
             Rect r = new Rect((W - 1448f * k) * 0.5f, (540f - 1086f * k) * 0.5f, 1448f * k, 1086f * k);
             System.Func<float, float, float, float, Rect> Px = (x, y, w, h) => new Rect(r.x + x * k, r.y + y * k, w * k, h * k);
             GUI.DrawTexture(r, win);
-            Label(Px(238, 50, 937, 80), won ? "ПОБЕДА" : "ПОРАЖЕНИЕ", 22f, won ? Gold : new Color(1f, 0.55f, 0.45f));
-            Label(Px(122, 198, 525, 79), "НАШИ ПОТЕРИ", 12f, Ink);
-            Label(Px(779, 196, 533, 81), "ПОТЕРИ ВРАГА", 12f, Ink);
+            // подписи — по центрам областей картины (замер 28.11): красная середина знамени — строки 81…158, по центру окна (x 724);
+            // плашки колонок — 178…611 и зеркально 837…1270, строки 206…267
+            Label(Px(299, 82, 850, 76), won ? "ПОБЕДА" : "ПОРАЖЕНИЕ", 22f, won ? Gold : new Color(1f, 0.55f, 0.45f));
+            Label(Px(198, 208, 393, 58), "НАШИ ПОТЕРИ", 12f, Ink);
+            Label(Px(857, 208, 393, 58), "ПОТЕРИ ВРАГА", 12f, Ink);
             float[] cx = { 226f, 391f, 557f }, cy = { 368f, 528f, 688f };
             for (int side = 0; side < 2; side++)
             {
@@ -2502,8 +2506,8 @@ namespace BladePath
             string line = resultText;
             Label(Px(352, 819, 744, 60), line, 11f, Ink,TextAnchor.MiddleCenter,true);   // внутри плашки (818…880 на картине), шрифт ужмётся
             string main = mapNode >= 0 || neutralDone != null ? "НА КАРТУ" : fromEstate ? "В ПОМЕСТЬЕ" : "ЕЩЁ БОЙ";
-            Rect mb = Px(476, 914, 477, 76);
-            Label(mb, main, 14f, Gold);
+            Rect mb = Px(476, 914, 496, 84);   // кнопка целиком (нажатие)
+            Label(Px(520, 924, 408, 63), main, 14f, Gold);   // красная середина кнопки: x по центру окна, строки 922…989
             if (GUI.Button(mb, GUIContent.none, GUIStyle.none))
             {
                 if (neutralDone != null) { System.Action<bool> cb = neutralDone; neutralDone = null; cb(won); Close(); returned = true; }
