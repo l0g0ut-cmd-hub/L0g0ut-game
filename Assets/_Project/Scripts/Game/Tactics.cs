@@ -142,7 +142,11 @@ namespace BladePath
             public Vector2 attackStep;
             public string previousClip;
             public string clipIdle, clipWalk, clipAct, clipMelee, clipFollowup, clipHit, clipDie, clipWin;
-            public int run;                     // сколько клеток пробежал перед ударом (разгон конницы)
+            // покой: дыхание у спокойного кадра стойки, озирание — редко и у каждого в своё время
+            public float idleCalm, idleSway, idleBreathW, idleBreathFrom, idleLookSpeed, idleNextLook, idleLookStart = -1f;
+            public int idleCycle;
+            public System.Random idleRng;
+            public int run;                    // сколько клеток пробежал перед ударом (разгон конницы)
             public Vector3 facing;
             public int Total { get { return count <= 0 ? 0 : (count - 1) * t.hp + topHp; } }
             public bool Alive { get { return count > 0; } }
@@ -1222,11 +1226,90 @@ namespace BladePath
                 float cycles = elapsed * BoardSpeed(s) / (PPM * stride);
                 return Mathf.Repeat(cycles, 1f) * clip.length;
             }
+            if (clip.name == s.clipIdle && s.idleRng != null) return IdleTime(s, clip.length);
             if (clip.wrapMode == WrapMode.Loop) return Mathf.Repeat(elapsed, clip.length);
             if(clip.name==s.clipHit) elapsed*=clip.length/Mathf.Max(.01f,s.hitUntil-s.hitStart);
             if (clip.name == s.clipAct || clip.name == s.clipMelee || clip.name==s.clipFollowup)
                 elapsed *= clip.length / ClipLen(s, clip.name, 1f);
             return Mathf.Clamp(elapsed, 0f, clip.length);
+        }
+
+        // Покой. Клипы стойки (great sword idle, Meshy Combat_Stance) озираются по сторонам:
+        // по кругу без пауз и у всех с одного кадра это выглядело как общее «озирание».
+        // Теперь боец дышит возле самого спокойного кадра стойки, а весь клип играет изредка —
+        // каждый в своё время, со своим темпом.
+        static void SetupIdle(Stack s, int index)
+        {
+            s.idleRng = null;
+            if (s.an == null || s.clipIdle == null || s.an[s.clipIdle] == null) return;
+            AnimationClip clip = s.an.GetClip(s.clipIdle);
+            float len = s.an[s.clipIdle].length;
+            if (clip == null || len < .5f) return;
+            var rng = new System.Random(index * 7919 + (s.enemy ? 104729 : 0) + s.clipIdle.Length);
+            s.idleCalm = len * .3f;
+            Transform head = null;
+            foreach (Transform bone in s.an.GetComponentsInChildren<Transform>())
+                if (string.Equals(bone.name, "Head", System.StringComparison.OrdinalIgnoreCase)) { head = bone; break; }
+            if (head != null)
+            {
+                const int N = 40;
+                var look = new Vector3[N];
+                Vector3 mean = Vector3.zero;
+                Quaternion toLocal = Quaternion.Inverse(s.an.transform.rotation);
+                for (int i = 0; i < N; i++)
+                {
+                    clip.SampleAnimation(s.an.gameObject, len * i / N);
+                    look[i] = toLocal * head.forward;
+                    mean += look[i];
+                }
+                if (mean.sqrMagnitude > 1e-6f)
+                {
+                    mean.Normalize();
+                    float best = float.MaxValue;
+                    for (int i = 0; i < N; i++)
+                    {
+                        float drift = Vector3.Angle(look[i], mean);
+                        float motion = Vector3.Angle(look[(i + N - 1) % N], look[(i + 1) % N]);
+                        float score = drift + 1.5f * motion;
+                        if (score < best) { best = score; s.idleCalm = len * i / N; }
+                    }
+                }
+                clip.SampleAnimation(s.an.gameObject, s.idleCalm);
+            }
+            s.idleSway = Mathf.Min(.3f, len * .07f);
+            s.idleBreathW = 2f * Mathf.PI / (3.2f + (float)rng.NextDouble() * 1.4f);
+            s.idleBreathFrom = BattleNow - (float)rng.NextDouble() * 2f * Mathf.PI / s.idleBreathW;
+            s.idleCycle = int.MinValue;
+            s.idleLookSpeed = .85f + (float)rng.NextDouble() * .3f;
+            s.idleNextLook = BattleNow + 9f + (float)rng.NextDouble() * 15f;
+            s.idleLookStart = -1f;
+            s.idleRng = rng;
+        }
+
+        static float IdleTime(Stack s, float len)
+        {
+            float now = BattleNow;
+            if (s.idleLookStart >= 0f)
+            {
+                float u = (now - s.idleLookStart) * s.idleLookSpeed;
+                if (u < len) return Mathf.Repeat(s.idleCalm + u, len);
+                // клип прошёл круг и вернулся к спокойному кадру — снова дыхание
+                s.idleLookStart = -1f;
+                s.idleBreathFrom = now;
+                s.idleCycle = int.MinValue;
+                s.idleNextLook = now + 10f + (float)s.idleRng.NextDouble() * 14f;
+                return s.idleCalm;
+            }
+            float phase = (now - s.idleBreathFrom) * s.idleBreathW;
+            int cycle = Mathf.FloorToInt(phase / (2f * Mathf.PI));
+            // озирание начинается, когда дыхание проходит спокойный кадр — без рывка
+            if (s.idleCycle != int.MinValue && cycle != s.idleCycle && now >= s.idleNextLook)
+            {
+                s.idleLookStart = now;
+                return s.idleCalm;
+            }
+            s.idleCycle = cycle;
+            return Mathf.Repeat(s.idleCalm + s.idleSway * Mathf.Sin(phase), len);
         }
 
         // Fit the visible surface in its combat pose. Imported skin bounds include other clips,
@@ -1385,6 +1468,7 @@ namespace BladePath
                         state.wrapMode = WrapMode.Loop;
                     }
                     Play(s, s.clipIdle, true);
+                    SetupIdle(s, stacks.IndexOf(s));
                 }
             }
         }
