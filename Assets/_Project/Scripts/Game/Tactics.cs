@@ -1490,6 +1490,7 @@ namespace BladePath
         }
         static Material generalMaterial;
         static GameObject generalGo; static Animation generalAn; static string genIdle, genCast;
+        static Quaternion generalYaw = Quaternion.identity;   // поправка курса модели полководца (она сгенерирована развёрнутой ~на 35°)
         static Vector2 GeneralPos() { Vector2 c = Center(0, 1); return new Vector2(ox - R * 2.3f, c.y); }
         static void SpawnGeneral()
         {
@@ -1521,6 +1522,43 @@ namespace BladePath
             var profile = Resources.Load<TacticsFigureProfile>("ArmyFigures/unit_general");
             if (profile != null) profile.Fit(figure,90f);
             else FitFigure(generalGo, figure, 2.05f);
+            generalYaw = HorseHeading(generalGo);
+        }
+
+        /// <summary>
+        /// Курс коня по самой модели: главная ось вершин в горизонтальной плоскости (длина коня) — к локальному «вперёд».
+        /// Модель полководца из Meshy развёрнута относительно своего «вперёд», поэтому в бою он стоял по диагонали
+        /// (скриншоты владельца 28.11), тогда как модель конницы стоит ровно боком.
+        /// </summary>
+        static Quaternion HorseHeading(GameObject root)
+        {
+            if (root == null) return Quaternion.identity;
+            Quaternion keep = root.transform.rotation; root.transform.rotation = Quaternion.identity;
+            double sx = 0, sz = 0, sxx = 0, szz = 0, sxz = 0; int n = 0;
+            Mesh snap = new Mesh();
+            foreach (SkinnedMeshRenderer skin in root.GetComponentsInChildren<SkinnedMeshRenderer>())
+            {
+                skin.BakeMesh(snap);
+                Matrix4x4 m = root.transform.worldToLocalMatrix * skin.transform.localToWorldMatrix;
+                Vector3[] v = snap.vertices;
+                for (int i = 0; i < v.Length; i += 3)
+                {
+                    Vector3 p = m.MultiplyPoint3x4(v[i]);
+                    sx += p.x; sz += p.z; sxx += p.x * p.x; szz += p.z * p.z; sxz += p.x * p.z; n++;
+                }
+            }
+            Object.Destroy(snap);
+            root.transform.rotation = keep;
+            if (n < 50) return Quaternion.identity;
+            double mx = sx / n, mz = sz / n;
+            double cxx = sxx / n - mx * mx, czz = szz / n - mz * mz, cxz = sxz / n - mx * mz;
+            float angle = 0.5f * Mathf.Atan2((float)(2.0 * cxz), (float)(cxx - czz));   // главная ось от оси X
+            Vector3 axis = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+            if (axis.z < 0f) axis = -axis;   // конь и так смотрит вперёд (вправо в бою) — берём ту сторону оси
+            if (Mathf.Abs(axis.z) < 0.2f) return Quaternion.identity;   // ось почти поперёк — данным не доверяем
+            Quaternion fix = Quaternion.FromToRotation(axis, Vector3.forward);
+            Debug.Log("TACTICS_GENERAL_HEADING axis=" + axis + " fix=" + fix.eulerAngles.y);
+            return fix;
         }
         /// <summary>Полководец колдует — конь встаёт на дыбы.</summary>
         static void GeneralCast()
@@ -1698,7 +1736,7 @@ namespace BladePath
             if (generalGo != null)
             {
                 generalGo.transform.position = Ground(GeneralPos());
-                generalGo.transform.rotation = Quaternion.LookRotation(Vector3.right, Vector3.up);
+                generalGo.transform.rotation = Quaternion.LookRotation(Vector3.right, Vector3.up) * generalYaw;
                 if (generalAn != null && genIdle != null && !(genCast != null && generalAn.IsPlaying(genCast)))
                 {
                     AnimationClip idleClip = generalAn.GetClip(genIdle);
